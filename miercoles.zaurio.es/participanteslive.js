@@ -32,7 +32,7 @@ function render(list){
           <div class="avatar">
             <img src="${url}" alt="">
           </div>
-          <img class="framePng" src="./assets/participante-frame.png?v=${now}" alt="">
+          <img class="framePng" src="./assets/participantes-frame.png?v=${now}" alt="">
         </div>
         <div class="name">${esc(p.nombre)}</div>
       </div>
