@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Participantes — Miércoles</title>
-
   <link rel="icon" href="./assets/favicon.png">
 
   <style>
@@ -48,6 +47,7 @@
       font-size:16px;
       outline:none;
     }
+
     .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
 
     .btn{
@@ -106,7 +106,6 @@
       display:grid;place-items:center;
     }
     .preview img{ width:100%;height:100%;object-fit:cover;display:block; }
-
     .hint{ opacity:.8; font-size:13px; }
   </style>
 </head>
@@ -116,7 +115,7 @@
     <div class="card">
       <div class="head">
         <h1>👑 Participantes</h1>
-        <p>Sube tu foto y tu nombre para aparecer en el directo.</p>
+        <p>Sube tu foto y tu nombre. Aparecerás cuando Zaurio te apruebe.</p>
       </div>
 
       <div class="body">
@@ -124,12 +123,8 @@
         <input id="foto" class="field" type="file" accept="image/*" />
 
         <div class="previewWrap">
-          <div class="preview" id="previewBox">
-            <span class="hint">Preview</span>
-          </div>
-          <div class="hint">
-            Recomendado: selfie clara. Se recorta en círculo.
-          </div>
+          <div class="preview" id="previewBox"><span class="hint">Preview</span></div>
+          <div class="hint">Se recorta en círculo. Mejor una selfie clara.</div>
         </div>
 
         <div class="row">
