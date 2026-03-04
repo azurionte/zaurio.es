@@ -7,13 +7,14 @@
   <style>
     body{background:radial-gradient(circle,#1a002a,#000);color:#fff;font-family:Arial,system-ui,sans-serif;margin:0}
     .wrap{width:min(1040px,92vw);margin:34px auto}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
     .pill{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px);box-shadow:0 0 18px rgba(255,0,170,.25)}
     .btn{border:none;cursor:pointer;padding:10px 14px;border-radius:999px;font-weight:900;transition:transform .12s ease,box-shadow .12s ease;user-select:none}
     .btn:active{transform:scale(.96)}
     .btn-primary{background:#ffee00;color:#1a002a;box-shadow:0 0 18px rgba(255,238,0,.25)}
     .btn-danger{background:#ff00aa;color:#fff;box-shadow:0 0 18px rgba(255,0,170,.25)}
     .btn-ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.16)}
+    .btn-warn{background:rgba(0,0,0,.35);color:#ffee00;border:1px solid rgba(255,238,0,.25);box-shadow:0 0 18px rgba(255,238,0,.15)}
     .login{max-width:420px;margin:70px auto;padding:22px;border-radius:22px;background:rgba(36,0,70,.82);border:1px solid rgba(255,255,255,.14);box-shadow:0 0 45px rgba(255,0,170,.20)}
     .field{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.20);color:#fff;font-size:15px;outline:none;margin-top:10px}
     .row{display:flex;gap:10px;margin-top:12px}
@@ -31,32 +32,42 @@
 </head>
 <body>
   <div class="wrap">
+
+    <!-- LOGIN -->
     <div id="login" class="login">
       <h1 style="margin:0 0 6px;">🔒 Admin</h1>
       <p style="margin:0;opacity:.85;">Miércoles de dramas y chismes</p>
+
       <input id="email" class="field" placeholder="Email" value="dramasaurio@zaurio.es" />
       <input id="pass" class="field" type="password" placeholder="Contraseña" />
+
       <div class="row">
         <button id="btnLogin" class="btn btn-primary" style="flex:1;">Entrar</button>
       </div>
+
       <div id="loginMsg" style="margin-top:12px;font-weight:900;"></div>
       <div id="fatal" class="debug"></div>
     </div>
 
+    <!-- PANEL -->
     <div id="panel" class="panel">
       <div class="top">
         <div class="pill">💜 Pendientes: <b id="count">0</b></div>
-        <div style="display:flex;gap:10px;">
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="btnClearLive" class="btn btn-warn">Limpiar Live</button>
           <button id="btnRefresh" class="btn btn-ghost">Actualizar</button>
           <button id="btnLogout" class="btn btn-ghost">Salir</button>
         </div>
       </div>
 
+      <!-- CONSIGNA -->
       <div class="cardBox">
         <div style="font-weight:900;margin-bottom:6px;">🟡 Consigna (sale en el live)</div>
         <input id="consigna" class="field" maxlength="120" placeholder="Escribe la consigna…" />
         <div class="actions">
           <button id="btnSaveConsigna" class="btn btn-primary">Guardar consigna</button>
+          <button id="btnClearLive2" class="btn btn-warn">Limpiar Live</button>
         </div>
         <div id="consignaMsg" class="meta"></div>
       </div>
@@ -64,6 +75,7 @@
       <div id="status" style="opacity:.85;margin:0 0 12px;"></div>
       <div id="grid" class="grid"></div>
     </div>
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -82,6 +94,9 @@
     const btnRefresh = document.getElementById('btnRefresh');
     const btnLogout = document.getElementById('btnLogout');
 
+    const btnClearLive = document.getElementById('btnClearLive');
+    const btnClearLive2 = document.getElementById('btnClearLive2');
+
     const inpConsigna = document.getElementById('consigna');
     const btnSaveConsigna = document.getElementById('btnSaveConsigna');
     const consignaMsg = document.getElementById('consignaMsg');
@@ -89,9 +104,7 @@
     function fatal(msg){ elFatal.style.display='block'; elFatal.textContent = msg; }
     window.onerror = (m,s,l)=>fatal("JS ERROR:\n"+m+"\n"+(s||"")+":"+l);
 
-    if (typeof supabaseClient === 'undefined') {
-      fatal("FATAL: supabaseClient no existe.\nRevisa ./supabase.js");
-    }
+    if (typeof supabaseClient === 'undefined') fatal("FATAL: supabaseClient no existe. Revisa ./supabase.js");
 
     function esc(s){
       return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
@@ -105,7 +118,7 @@
       if (error) fatal("FATAL session: "+error.message);
       if (data?.session){
         showPanel();
-        await cargarConsigna();      // ✅ ya no se “borra”
+        await cargarConsigna();
         await cargarPendientes();
       } else {
         showLogin();
@@ -142,7 +155,7 @@
       });
     }
 
-    // ✅ solo 1 mostrado a la vez
+    // ✅ Solo uno mostrado a la vez
     async function mostrarSoloUno(id){
       const r1 = await supabaseClient
         .from('mensajes')
@@ -171,6 +184,21 @@
       await cargarPendientes();
     }
 
+    // ✅ NUEVO: archivar el mostrado (limpiar live)
+    async function limpiarLive(){
+      const r = await supabaseClient
+        .from('mensajes')
+        .update({ estado: 'archivado' })
+        .eq('estado', 'mostrado');
+
+      if (r.error){
+        alert("Error limpiando live: " + r.error.message);
+        return;
+      }
+
+      status("✅ Live limpio (queda solo la consigna)");
+    }
+
     async function cargarConsigna(){
       const { data, error } = await supabaseClient
         .from('config')
@@ -183,7 +211,6 @@
         return;
       }
 
-      // ✅ NO pisamos con vacío; solo seteamos si viene algo
       inpConsigna.value = (data?.consigna ?? inpConsigna.value ?? "");
       consignaMsg.textContent = "";
     }
@@ -191,7 +218,6 @@
     async function guardarConsigna(){
       const v = inpConsigna.value.trim();
 
-      // ✅ UPSERT: si no existe id=1, lo crea. Si existe, lo actualiza.
       const { error } = await supabaseClient
         .from('config')
         .upsert({ id: 1, consigna: v, actualizado: new Date().toISOString() }, { onConflict: 'id' });
@@ -233,6 +259,9 @@
     });
 
     btnSaveConsigna.addEventListener('click', guardarConsigna);
+
+    btnClearLive.addEventListener('click', limpiarLive);
+    btnClearLive2.addEventListener('click', limpiarLive);
 
     ensureSession();
   </script>
