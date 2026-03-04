@@ -146,38 +146,33 @@
 
       <!-- CONSIGNA -->
       <div class="cardBox">
-        <div style="font-weight:900; margin-bottom:6px;">🟡 Consigna (sale en el live)</div>
-        <input id="consigna" class="field" maxlength="120" placeholder="Escribe la consigna…" />
-        <div class="actions">
-          <button id="btnSaveConsigna" class="btn btn-primary">Guardar consigna</button>
-        </div>
-        <div id="consignaMsg" class="meta"></div>
-      </div>
+// Consigna
+async function cargarConsigna(){
+  const { data, error } = await supabaseClient
+    .from('config')
+    .select('consigna')
+    .eq('id', 1)
+    .maybeSingle();
 
-      <div id="status" style="opacity:.85;margin:0 0 12px;"></div>
-      <div id="grid" class="grid"></div>
-    </div>
+  if (error){
+    consignaMsg.textContent = "❌ No se pudo cargar consigna: " + error.message;
+    return;
+  }
 
-  </div>
+  inpConsigna.value = data?.consigna || "";
+  consignaMsg.textContent = "";
+}
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./supabase.js"></script>
+async function guardarConsigna(){
+  const v = inpConsigna.value.trim();
 
-  <script>
-    const elLogin = document.getElementById('login');
-    const elPanel = document.getElementById('panel');
-    const elGrid  = document.getElementById('grid');
-    const elCount = document.getElementById('count');
-    const elStatus = document.getElementById('status');
-    const elLoginMsg = document.getElementById('loginMsg');
+  const { error } = await supabaseClient
+    .from('config')
+    .update({ consigna: v, actualizado: new Date().toISOString() })
+    .eq('id', 1);
 
-    const btnLogin = document.getElementById('btnLogin');
-    const btnRefresh = document.getElementById('btnRefresh');
-    const btnLogout = document.getElementById('btnLogout');
-
-    const inpConsigna = document.getElementById('consigna');
-    const btnSaveConsigna = document.getElementById('btnSaveConsigna');
-    const consignaMsg = document.getElementById('consignaMsg');
+  consignaMsg.textContent = error ? ("❌ " + error.message) : "✅ Guardada";
+}
 
     function esc(s){
       return (s||"")
