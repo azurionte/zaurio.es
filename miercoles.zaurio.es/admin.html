@@ -4,32 +4,169 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin — Miércoles</title>
+  <link rel="icon" href="./assets/favicon.png">
+
   <style>
-    body{background:radial-gradient(circle,#1a002a,#000);color:#fff;font-family:Arial,system-ui,sans-serif;margin:0}
-    .wrap{width:min(1040px,92vw);margin:34px auto}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-    .pill{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px);box-shadow:0 0 18px rgba(255,0,170,.25)}
-    .btn{border:none;cursor:pointer;padding:10px 14px;border-radius:999px;font-weight:900;transition:transform .12s ease,box-shadow .12s ease;user-select:none}
-    .btn:active{transform:scale(.96)}
-    .btn-primary{background:#ffee00;color:#1a002a;box-shadow:0 0 18px rgba(255,238,0,.25)}
-    .btn-danger{background:#ff00aa;color:#fff;box-shadow:0 0 18px rgba(255,0,170,.25)}
-    .btn-ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.16)}
-    .btn-warn{background:rgba(0,0,0,.35);color:#ffee00;border:1px solid rgba(255,238,0,.25);box-shadow:0 0 18px rgba(255,238,0,.15)}
-    .login{max-width:420px;margin:70px auto;padding:22px;border-radius:22px;background:rgba(36,0,70,.82);border:1px solid rgba(255,255,255,.14);box-shadow:0 0 45px rgba(255,0,170,.20)}
-    .field{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.20);color:#fff;font-size:15px;outline:none;margin-top:10px}
-    .row{display:flex;gap:10px;margin-top:12px}
-    .meta{opacity:.78;font-size:12px;display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-    .panel{display:none}
-    .panel.on{display:block}
-    .cardBox{background:rgba(36,0,70,.78);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px;box-shadow:0 0 30px rgba(255,0,170,.18);margin-bottom:14px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-    .card{background:rgba(36,0,70,.78);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px;box-shadow:0 0 30px rgba(255,0,170,.18);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
-    .card:hover{transform:translateY(-2px);border-color:rgba(255,255,0,.35);box-shadow:0 0 40px rgba(255,0,170,.28)}
-    .msg{white-space:pre-wrap;word-break:break-word;margin:0 0 10px;font-size:16px;line-height:1.35}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .debug{margin-top:12px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.16);color:#ffee00;font-weight:900;white-space:pre-wrap;display:none}
+    :root{
+      --card: rgba(36,0,70,.82);
+      --stroke: rgba(255,255,255,.14);
+      --yellow:#ffee00;
+      --pink:#ff00aa;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      background: radial-gradient(circle,#1a002a,#000);
+      color:#fff;
+      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin:0;
+    }
+    .wrap{ width:min(1120px, 94vw); margin:34px auto; }
+
+    .login{
+      max-width:420px;
+      margin:70px auto;
+      padding:22px;
+      border-radius:22px;
+      background: var(--card);
+      border:1px solid var(--stroke);
+      box-shadow: 0 0 45px rgba(255,0,170,.20);
+    }
+
+    .field{
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.20);
+      color:#fff;
+      font-size:15px;
+      outline:none;
+      margin-top:10px;
+    }
+
+    .btn{
+      border:none; cursor:pointer;
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:1000;
+      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:active{ transform:scale(.96); }
+    .btn-primary{
+      background:var(--yellow); color:#1a002a;
+      box-shadow: 0 0 18px rgba(255,238,0,.25);
+    }
+    .btn-danger{
+      background:var(--pink); color:#fff;
+      box-shadow: 0 0 18px rgba(255,0,170,.25);
+    }
+    .btn-ghost{
+      background: rgba(255,255,255,.10);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.16);
+    }
+
+    .panel{ display:none; }
+    .panel.on{ display:block; }
+
+    .top{
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:10px 14px; border-radius:999px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 18px rgba(255,0,170,.25);
+      font-weight:900;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .tab{
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:1000;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.10);
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.on{
+      background: rgba(255,238,0,.20);
+      border-color: rgba(255,238,0,.35);
+      box-shadow: 0 0 18px rgba(255,238,0,.10);
+    }
+
+    .cardBox{
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 0 30px rgba(255,0,170,.18);
+      margin-bottom:14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap:14px;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 0 30px rgba(255,0,170,.18);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      animation: pop .25s ease both;
+    }
+    .card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,0,.35);
+      box-shadow: 0 0 40px rgba(255,0,170,.28);
+    }
+
+    .msg{
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin:0 0 10px;
+      font-size:16px;
+      line-height:1.35;
+    }
+
+    .meta{ opacity:.78; font-size:12px; display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+
+    .pRow{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .pAvatar{
+      width:56px;height:56px;border-radius:999px;overflow:hidden;
+      border:2px solid rgba(255,238,0,.22);
+      box-shadow:0 0 18px rgba(255,0,170,.12);
+      background:rgba(0,0,0,.20);
+      flex:0 0 auto;
+    }
+    .pAvatar img{ width:100%;height:100%;object-fit:cover;display:block; }
+
+    @keyframes pop{ from{opacity:0; transform:translateY(6px) scale(.98)} to{opacity:1; transform:none} }
   </style>
 </head>
+
 <body>
   <div class="wrap">
 
@@ -41,39 +178,59 @@
       <input id="email" class="field" placeholder="Email" value="dramasaurio@zaurio.es" />
       <input id="pass" class="field" type="password" placeholder="Contraseña" />
 
-      <div class="row">
+      <div style="display:flex; gap:10px; margin-top:12px;">
         <button id="btnLogin" class="btn btn-primary" style="flex:1;">Entrar</button>
       </div>
 
-      <div id="loginMsg" style="margin-top:12px;font-weight:900;"></div>
-      <div id="fatal" class="debug"></div>
+      <div id="loginMsg" style="margin-top:12px;font-weight:1000;"></div>
+      <div class="meta">Usa Supabase Auth.</div>
     </div>
 
     <!-- PANEL -->
     <div id="panel" class="panel">
       <div class="top">
-        <div class="pill">💜 Pendientes: <b id="count">0</b></div>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button id="btnClearLive" class="btn btn-warn">Limpiar Live</button>
+        <div class="pill">💜 Pendientes: <span id="countMsgs">0</span> · 👑 Participantes: <span id="countParts">0</span></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button id="btnRefresh" class="btn btn-ghost">Actualizar</button>
           <button id="btnLogout" class="btn btn-ghost">Salir</button>
         </div>
       </div>
 
-      <!-- CONSIGNA -->
-      <div class="cardBox">
-        <div style="font-weight:900;margin-bottom:6px;">🟡 Consigna (sale en el live)</div>
-        <input id="consigna" class="field" maxlength="120" placeholder="Escribe la consigna…" />
-        <div class="actions">
-          <button id="btnSaveConsigna" class="btn btn-primary">Guardar consigna</button>
-          <button id="btnClearLive2" class="btn btn-warn">Limpiar Live</button>
-        </div>
-        <div id="consignaMsg" class="meta"></div>
+      <div class="tabs">
+        <div class="tab on" data-tab="mensajes">Mensajes</div>
+        <div class="tab" data-tab="participantes">Participantes</div>
       </div>
 
-      <div id="status" style="opacity:.85;margin:0 0 12px;"></div>
-      <div id="grid" class="grid"></div>
+      <!-- ======= TAB: MENSAJES ======= -->
+      <div id="tabMensajes">
+        <div class="cardBox">
+          <div style="font-weight:1000; margin-bottom:6px;">🟡 Consigna (sale en el live)</div>
+          <input id="consigna" class="field" maxlength="120" placeholder="Escribe la consigna…" />
+          <div class="actions">
+            <button id="btnSaveConsigna" class="btn btn-primary">Guardar consigna</button>
+            <button id="btnClearLive" class="btn btn-ghost">Limpiar live (solo consigna)</button>
+          </div>
+          <div id="consignaMsg" class="meta"></div>
+        </div>
+
+        <div id="statusMsgs" style="opacity:.85;margin:0 0 12px;"></div>
+        <div id="gridMsgs" class="grid"></div>
+      </div>
+
+      <!-- ======= TAB: PARTICIPANTES ======= -->
+      <div id="tabParticipantes" style="display:none;">
+        <div class="cardBox">
+          <div style="font-weight:1000; margin-bottom:6px;">👑 Pendientes</div>
+          <div id="statusParts" class="meta" style="margin-bottom:8px;"></div>
+          <div id="gridPartsPend" class="grid"></div>
+        </div>
+
+        <div class="cardBox">
+          <div style="font-weight:1000; margin-bottom:6px;">✅ Aprobados (salen en /participanteslive)</div>
+          <div id="gridPartsOk" class="grid"></div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -84,65 +241,86 @@
   <script>
     const elLogin = document.getElementById('login');
     const elPanel = document.getElementById('panel');
-    const elGrid  = document.getElementById('grid');
-    const elCount = document.getElementById('count');
-    const elStatus = document.getElementById('status');
     const elLoginMsg = document.getElementById('loginMsg');
-    const elFatal = document.getElementById('fatal');
 
     const btnLogin = document.getElementById('btnLogin');
     const btnRefresh = document.getElementById('btnRefresh');
     const btnLogout = document.getElementById('btnLogout');
 
-    const btnClearLive = document.getElementById('btnClearLive');
-    const btnClearLive2 = document.getElementById('btnClearLive2');
+    const tabs = document.querySelectorAll('.tab');
+    const tabMensajes = document.getElementById('tabMensajes');
+    const tabParticipantes = document.getElementById('tabParticipantes');
 
+    // Mensajes UI
+    const elGridMsgs  = document.getElementById('gridMsgs');
+    const elCountMsgs = document.getElementById('countMsgs');
+    const elStatusMsgs = document.getElementById('statusMsgs');
     const inpConsigna = document.getElementById('consigna');
     const btnSaveConsigna = document.getElementById('btnSaveConsigna');
+    const btnClearLive = document.getElementById('btnClearLive');
     const consignaMsg = document.getElementById('consignaMsg');
 
-    function fatal(msg){ elFatal.style.display='block'; elFatal.textContent = msg; }
-    window.onerror = (m,s,l)=>fatal("JS ERROR:\n"+m+"\n"+(s||"")+":"+l);
-
-    if (typeof supabaseClient === 'undefined') fatal("FATAL: supabaseClient no existe. Revisa ./supabase.js");
+    // Participantes UI
+    const elCountParts = document.getElementById('countParts');
+    const elStatusParts = document.getElementById('statusParts');
+    const elGridPend = document.getElementById('gridPartsPend');
+    const elGridOk = document.getElementById('gridPartsOk');
 
     function esc(s){
-      return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+      return (s||"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
     }
+
     function showPanel(){ elLogin.style.display='none'; elPanel.classList.add('on'); }
     function showLogin(){ elPanel.classList.remove('on'); elLogin.style.display='block'; }
-    function status(t){ elStatus.textContent = t || ""; }
+
+    function setTab(name){
+      tabs.forEach(t => t.classList.toggle('on', t.dataset.tab === name));
+      tabMensajes.style.display = (name === 'mensajes') ? 'block' : 'none';
+      tabParticipantes.style.display = (name === 'participantes') ? 'block' : 'none';
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));
 
     async function ensureSession(){
-      const { data, error } = await supabaseClient.auth.getSession();
-      if (error) fatal("FATAL session: "+error.message);
-      if (data?.session){
+      const { data } = await supabaseClient.auth.getSession();
+      if (data.session){
         showPanel();
         await cargarConsigna();
         await cargarPendientes();
+        await cargarParticipantes();
       } else {
         showLogin();
       }
     }
 
+    // =========================
+    // MENSAJES
+    // =========================
+    function statusMsgs(t){ elStatusMsgs.textContent = t || ""; }
+
     async function cargarPendientes(){
-      status("Cargando pendientes…");
+      statusMsgs("Cargando pendientes…");
       const { data, error } = await supabaseClient
         .from('mensajes')
-        .select('id,texto,creado')
+        .select('id,texto,creado,estado')
         .eq('estado','pendiente')
         .order('creado',{ ascending:false });
 
-      if (error){ status("❌ "+error.message); return; }
+      if (error){ statusMsgs("❌ " + error.message); return; }
 
-      elCount.textContent = String(data.length);
-      status(data.length ? "" : "No hay pendientes ✨");
+      elCountMsgs.textContent = String(data.length);
+      statusMsgs(data.length ? "" : "No hay pendientes ✨");
 
-      elGrid.innerHTML = "";
-      data.forEach(m=>{
+      elGridMsgs.innerHTML = "";
+      data.forEach(m => {
         const d = new Date(m.creado);
         const div = document.createElement('div');
-        div.className = 'card';
+        div.className = "card";
         div.innerHTML = `
           <p class="msg">${esc(m.texto)}</p>
           <div class="meta"><span>🕒 ${d.toLocaleString()}</span><span>🧾 ${m.id.slice(0,8)}…</span></div>
@@ -151,25 +329,24 @@
             <button class="btn btn-danger"  data-act="discard" data-id="${m.id}">Descartar</button>
           </div>
         `;
-        elGrid.appendChild(div);
+        elGridMsgs.appendChild(div);
       });
     }
 
-    // ✅ Solo uno mostrado a la vez
     async function mostrarSoloUno(id){
       const r1 = await supabaseClient
         .from('mensajes')
         .update({ estado: 'archivado' })
         .eq('estado', 'mostrado');
 
-      if (r1.error){ alert("Error archivando anterior: "+r1.error.message); return; }
+      if (r1.error){ alert("Error archivando anterior: " + r1.error.message); return; }
 
       const r2 = await supabaseClient
         .from('mensajes')
         .update({ estado: 'mostrado' })
         .eq('id', id);
 
-      if (r2.error){ alert("Error mostrando: "+r2.error.message); return; }
+      if (r2.error){ alert("Error mostrando: " + r2.error.message); return; }
 
       await cargarPendientes();
     }
@@ -180,53 +357,48 @@
         .update({ estado: 'descartado' })
         .eq('id', id);
 
-      if (r.error){ alert("Error descartando: "+r.error.message); return; }
+      if (r.error){ alert("Error descartando: " + r.error.message); return; }
       await cargarPendientes();
     }
 
-    // ✅ NUEVO: archivar el mostrado (limpiar live)
+    async function cargarConsigna(){
+      const r = await supabaseClient
+        .from('config')
+        .select('consigna')
+        .eq('id', 1)
+        .maybeSingle();
+
+      if (r.error){
+        consignaMsg.textContent = "❌ No se pudo cargar consigna: " + r.error.message;
+        return;
+      }
+      inpConsigna.value = r.data?.consigna || "";
+      consignaMsg.textContent = "";
+    }
+
+    async function guardarConsigna(){
+      const v = inpConsigna.value.trim();
+      const r = await supabaseClient
+        .from('config')
+        .update({ consigna: v, actualizado: new Date().toISOString() })
+        .eq('id', 1);
+
+      consignaMsg.textContent = r.error ? ("❌ " + r.error.message) : "✅ Guardada";
+    }
+
     async function limpiarLive(){
       const r = await supabaseClient
         .from('mensajes')
         .update({ estado: 'archivado' })
         .eq('estado', 'mostrado');
 
-      if (r.error){
-        alert("Error limpiando live: " + r.error.message);
-        return;
-      }
-
-      status("✅ Live limpio (queda solo la consigna)");
+      if (r.error){ alert("Error limpiando live: " + r.error.message); return; }
+      alert("✅ Live limpio (solo consigna).");
     }
 
-    async function cargarConsigna(){
-      const { data, error } = await supabaseClient
-        .from('config')
-        .select('id, consigna')
-        .eq('id', 1)
-        .maybeSingle();
-
-      if (error){
-        consignaMsg.textContent = "❌ No se pudo cargar: " + error.message;
-        return;
-      }
-
-      inpConsigna.value = (data?.consigna ?? inpConsigna.value ?? "");
-      consignaMsg.textContent = "";
-    }
-
-    async function guardarConsigna(){
-      const v = inpConsigna.value.trim();
-
-      const { error } = await supabaseClient
-        .from('config')
-        .upsert({ id: 1, consigna: v, actualizado: new Date().toISOString() }, { onConflict: 'id' });
-
-      consignaMsg.textContent = error ? ("❌ " + error.message) : "✅ Guardada";
-    }
-
-    elGrid.addEventListener('click', (e)=>{
-      const b = e.target.closest('button'); if(!b) return;
+    elGridMsgs.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
       const id = b.getAttribute('data-id');
       const act = b.getAttribute('data-act');
       if (!id || !act) return;
@@ -234,7 +406,117 @@
       if (act === 'discard') descartar(id);
     });
 
-    btnLogin.addEventListener('click', async ()=>{
+    // =========================
+    // PARTICIPANTES
+    // =========================
+    async function cargarParticipantes(){
+      elStatusParts.textContent = "Cargando participantes…";
+
+      const pend = await supabaseClient
+        .from('participantes')
+        .select('id,nombre,foto_path,creado,estado')
+        .eq('estado','pendiente')
+        .order('creado',{ascending:false});
+
+      const ok = await supabaseClient
+        .from('participantes')
+        .select('id,nombre,foto_path,creado,aprobado_at,estado')
+        .eq('estado','aprobado')
+        .order('aprobado_at',{ascending:false, nullsFirst:false})
+        .order('creado',{ascending:false})
+        .limit(25);
+
+      if (pend.error){ elStatusParts.textContent = "❌ " + pend.error.message; return; }
+      if (ok.error){ elStatusParts.textContent = "❌ " + ok.error.message; return; }
+
+      elCountParts.textContent = String(pend.data.length);
+
+      elStatusParts.textContent = pend.data.length ? "" : "No hay pendientes 👀";
+
+      // Pendientes
+      elGridPend.innerHTML = "";
+      pend.data.forEach(p => {
+        const pub = supabaseClient.storage.from("participantes").getPublicUrl(p.foto_path);
+        const url = (pub.data?.publicUrl || "") + "?v=" + Date.now();
+
+        const d = new Date(p.creado);
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <div class="pRow">
+            <div class="pAvatar"><img src="${url}" alt=""></div>
+            <div style="flex:1;">
+              <div style="font-weight:1000;font-size:16px;">${esc(p.nombre)}</div>
+              <div class="meta"><span>🕒 ${d.toLocaleString()}</span><span>🧾 ${p.id.slice(0,8)}…</span></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" data-pact="approve" data-pid="${p.id}">Aprobar</button>
+            <button class="btn btn-danger" data-pact="archive" data-pid="${p.id}">Archivar</button>
+          </div>
+        `;
+        elGridPend.appendChild(div);
+      });
+
+      // Aprobados
+      elGridOk.innerHTML = "";
+      ok.data.forEach(p => {
+        const pub = supabaseClient.storage.from("participantes").getPublicUrl(p.foto_path);
+        const url = (pub.data?.publicUrl || "") + "?v=" + Date.now();
+
+        const d = new Date(p.aprobado_at || p.creado);
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <div class="pRow">
+            <div class="pAvatar"><img src="${url}" alt=""></div>
+            <div style="flex:1;">
+              <div style="font-weight:1000;font-size:16px;">${esc(p.nombre)}</div>
+              <div class="meta"><span>✅ ${d.toLocaleString()}</span><span>🧾 ${p.id.slice(0,8)}…</span></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-danger" data-pact="archive" data-pid="${p.id}">Archivar</button>
+          </div>
+        `;
+        elGridOk.appendChild(div);
+      });
+    }
+
+    async function aprobarParticipante(id){
+      const r = await supabaseClient
+        .from('participantes')
+        .update({ estado:'aprobado', aprobado_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (r.error){ alert("Error aprobando: " + r.error.message); return; }
+      await cargarParticipantes();
+    }
+
+    async function archivarParticipante(id){
+      const r = await supabaseClient
+        .from('participantes')
+        .update({ estado:'archivado' })
+        .eq('id', id);
+
+      if (r.error){ alert("Error archivando: " + r.error.message); return; }
+      await cargarParticipantes();
+    }
+
+    tabParticipantes.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      const id = b.getAttribute('data-pid');
+      const act = b.getAttribute('data-pact');
+      if (!id || !act) return;
+      if (act === 'approve') aprobarParticipante(id);
+      if (act === 'archive') archivarParticipante(id);
+    });
+
+    // =========================
+    // AUTH / UI
+    // =========================
+    btnLogin.addEventListener('click', async () => {
       elLoginMsg.textContent = "Entrando…";
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('pass').value;
@@ -246,22 +528,21 @@
       showPanel();
       await cargarConsigna();
       await cargarPendientes();
+      await cargarParticipantes();
     });
 
-    btnRefresh.addEventListener('click', async ()=>{
-      await cargarConsigna();
+    btnRefresh.addEventListener('click', async () => {
       await cargarPendientes();
+      await cargarParticipantes();
     });
 
-    btnLogout.addEventListener('click', async ()=>{
+    btnLogout.addEventListener('click', async () => {
       await supabaseClient.auth.signOut();
       showLogin();
     });
 
     btnSaveConsigna.addEventListener('click', guardarConsigna);
-
     btnClearLive.addEventListener('click', limpiarLive);
-    btnClearLive2.addEventListener('click', limpiarLive);
 
     ensureSession();
   </script>
