@@ -1,0 +1,28 @@
+<div id="card"></div>
+
+<script>
+
+async function actualizar(){
+
+const {data}= await supabaseClient
+.from("mensajes")
+.select("*")
+.eq("estado","mostrado")
+.order("creado",{ascending:false})
+.limit(1)
+
+if(data.length>0){
+
+document.getElementById("card").innerHTML=
+`
+<div class="livecard">
+${data[0].texto}
+</div>
+`
+}
+
+}
+
+setInterval(actualizar,2000)
+
+</script>
