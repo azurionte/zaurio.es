@@ -4,29 +4,47 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Live — Miércoles</title>
-  <link rel="stylesheet" href="./style.css" />
   <style>
-    body{ background:transparent; }
+    body{
+      margin:0;
+      background: transparent; /* para OBS/TikTok */
+      font-family: Arial, sans-serif;
+      color: white;
+    }
     .stage{
       width: min(900px, 92vw);
       margin: 0 auto;
       padding: 20px;
     }
-    .livecard{
-      background: rgba(36,0,70,.82);
-      border: 2px solid rgba(255,255,0,.35);
-      box-shadow: 0 0 35px rgba(255,0,170,.25);
+
+    fieldset.bubble{
+      border: 2px solid rgba(255,255,0,.38);
       border-radius: 22px;
-      padding: 18px 20px;
-      color: white;
-      font-size: 26px;
-      line-height: 1.25;
-      white-space: pre-wrap;
-      word-break: break-word;
+      padding: 16px 18px 18px;
+      background: rgba(36,0,70,.82);
+      box-shadow: 0 0 35px rgba(255,0,170,.25);
       backdrop-filter: blur(10px);
       animation: in .35s ease both;
     }
-    .meta{ opacity:.75; font-size: 14px; margin-top: 10px; }
+    fieldset.bubble legend{
+      padding: 0 10px;
+      font-weight: 900;
+      font-size: 14px;
+      color: #ffee00;
+      text-shadow: 0 0 10px rgba(255,238,0,.25);
+    }
+    .liveText{
+      font-size: 28px;
+      line-height: 1.22;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @keyframes in{
+      from{ opacity:0; transform: translateY(10px) scale(.98); }
+      to{ opacity:1; transform:none; }
+    }
+
     .err{
       color:#ffee00;
       font-weight:900;
@@ -37,14 +55,15 @@
       border-radius:12px;
       margin-top:10px;
       border:1px solid rgba(255,255,255,.18);
+      display:none;
     }
-    @keyframes in{ from{opacity:0; transform: translateY(10px) scale(.98)} to{opacity:1; transform:none} }
   </style>
 </head>
+
 <body>
   <div class="stage">
     <div id="card"></div>
-    <div id="err" class="err" style="display:none;"></div>
+    <div id="err" class="err"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -59,7 +78,10 @@
       errEl.style.display = "block";
       errEl.textContent = msg;
     }
-
+    function hideErr(){
+      errEl.style.display = "none";
+      errEl.textContent = "";
+    }
     function esc(s){
       return (s||"")
         .replaceAll("&","&amp;")
@@ -71,6 +93,19 @@
 
     async function tick(){
       try{
+        hideErr();
+
+        // 1) Consigna
+        const c = await supabaseClient
+          .from('config')
+          .select('consigna')
+          .eq('id', 1)
+          .single();
+
+        if (c.error) return showErr("CONFIG ERROR:\n" + c.error.message);
+        const consigna = c.data?.consigna || "";
+
+        // 2) Único mostrado (si hay varios por error, tomamos el más reciente)
         const { data, error } = await supabaseClient
           .from("mensajes")
           .select("id,texto,creado")
@@ -78,32 +113,31 @@
           .order("creado",{ ascending:false })
           .limit(1);
 
-        if (error) return showErr("SUPABASE ERROR:\n" + error.message);
+        if (error) return showErr("MENSAJES ERROR:\n" + error.message);
 
         if (!data || data.length === 0){
           cardEl.innerHTML = "";
+          lastId = null;
           return;
         }
 
         const m = data[0];
         if (m.id === lastId) return;
-
         lastId = m.id;
-        const d = new Date(m.creado);
 
         cardEl.innerHTML = `
-          <div class="livecard">
-            ${esc(m.texto)}
-            <div class="meta">🟣 Miércoles · ${d.toLocaleString()}</div>
-          </div>
+          <fieldset class="bubble">
+            <legend>${esc(consigna)}</legend>
+            <div class="liveText">${esc(m.texto)}</div>
+          </fieldset>
         `;
-      } catch (e){
+      } catch(e){
         showErr("JS ERROR:\n" + (e?.message || e));
       }
     }
 
     tick();
-    setInterval(tick, 1500);
+    setInterval(tick, 1200);
   </script>
 </body>
 </html>
