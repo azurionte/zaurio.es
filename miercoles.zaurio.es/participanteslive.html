@@ -7,8 +7,11 @@
 
 <style>
   :root{
-    --yellow:#ffee00;
-    --pink:#ff00aa;
+    --tileW: 148px;      /* ancho de cada participante (5 caben centrados) */
+    --gap: 14px;         /* separación entre participantes */
+    --frameSize: 118px;  /* tamaño del PNG marco */
+    --avatarSize: 86px;  /* tamaño de la foto redonda dentro */
+    --avatarTop: 6px;    /* ajuste fino vertical dentro del marco */
   }
 
   html,body{
@@ -33,67 +36,40 @@
     inset:0;
     display:flex;
     align-items:center;
-    justify-content:center; /* centrado */
-    gap:16px;
-    padding:10px 14px;
+    justify-content:center; /* centrado siempre */
+    gap: var(--gap);
+    padding: 10px 12px;
     box-sizing:border-box;
   }
 
   .p{
-    width:140px; /* 5 caben */
+    width: var(--tileW);
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:10px;
+    gap: 8px;
     animation: pop .22s ease both;
   }
 
-  /* ✅ MARCO 100% COMPATIBLE (sin conic-gradient) */
-  .avatarRing{
-    width:110px;
-    height:110px;
-    border-radius:999px;
+  /* Contenedor del avatar + marco PNG */
+  .avatarStack{
+    width: var(--frameSize);
+    height: var(--frameSize);
     position:relative;
     display:grid;
     place-items:center;
-    /* glow exterior */
-    box-shadow:
-      0 0 22px rgba(255,0,170,.32),
-      0 0 18px rgba(255,238,0,.18);
   }
 
-  /* anillo exterior amarillo */
-  .avatarRing::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    border-radius:999px;
-    border:5px solid rgba(255,238,0,.95);
-    box-shadow:
-      0 0 18px rgba(255,238,0,.22),
-      0 0 16px rgba(255,0,170,.18);
-    pointer-events:none;
-  }
-
-  /* anillo interior fucsia (un poquito hacia adentro) */
-  .avatarRing::after{
-    content:"";
-    position:absolute;
-    inset:7px;
-    border-radius:999px;
-    border:3px solid rgba(255,0,170,.70);
-    box-shadow: 0 0 14px rgba(255,0,170,.22);
-    pointer-events:none;
-  }
-
+  /* Foto redonda */
   .avatar{
-    width:90px;
-    height:90px;
-    border-radius:999px;
+    width: var(--avatarSize);
+    height: var(--avatarSize);
+    border-radius: 999px;
     overflow:hidden;
     background: rgba(0,0,0,.18);
-    box-shadow: inset 0 0 0 2px rgba(255,255,255,.14);
+    transform: translateY(var(--avatarTop));
+    box-shadow: 0 0 0 2px rgba(0,0,0,.25); /* borde suave para contraste */
   }
   .avatar img{
     width:100%;
@@ -102,18 +78,30 @@
     display:block;
   }
 
+  /* TU PNG encima */
+  .framePng{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    pointer-events:none;
+    /* para que se note en compresión */
+    filter: drop-shadow(0 0 10px rgba(0,0,0,.25));
+  }
+
   .name{
-    width:140px;
+    width: var(--tileW);
     text-align:center;
     font-weight:1000;
-    font-size:20px;
+    font-size: 20px;
     line-height:1.05;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
     text-shadow:
-      0 3px 0 rgba(0,0,0,.60),
-      0 0 16px rgba(255,0,170,.22);
+      0 3px 0 rgba(0,0,0,.65),
+      0 0 14px rgba(255,0,170,.18);
   }
 
   #heartbeat{
