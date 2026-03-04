@@ -4,159 +4,56 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin — Miércoles</title>
-
   <style>
-    body{
-      background: radial-gradient(circle,#1a002a,#000);
-      color:#fff;
-      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      margin:0;
-    }
-    .wrap{ width:min(1040px, 92vw); margin:34px auto; }
-    .top{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
-    .pill{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:10px 14px; border-radius:999px;
-      background: rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.14);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 18px rgba(255,0,170,.25);
-    }
-    .btn{
-      border:none; cursor:pointer;
-      padding:10px 14px;
-      border-radius:999px;
-      font-weight:900;
-      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
-      user-select:none;
-    }
-    .btn:active{ transform:scale(.96); }
-    .btn-primary{ background:#ffee00; color:#1a002a; box-shadow:0 0 18px rgba(255,238,0,.25); }
-    .btn-danger{ background:#ff00aa; color:#fff; box-shadow:0 0 18px rgba(255,0,170,.25); }
-    .btn-ghost{ background: rgba(255,255,255,.10); color:#fff; border:1px solid rgba(255,255,255,.16); }
-
-    .login{
-      max-width:420px;
-      margin:70px auto;
-      padding:22px;
-      border-radius:22px;
-      background: rgba(36,0,70,.82);
-      border:1px solid rgba(255,255,255,.14);
-      box-shadow: 0 0 45px rgba(255,0,170,.20);
-    }
-    .field{
-      width:100%;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.16);
-      background: rgba(0,0,0,.20);
-      color:#fff;
-      font-size:15px;
-      outline:none;
-      margin-top:10px;
-    }
-    .row{ display:flex; gap:10px; margin-top:12px; }
-    .meta{ opacity:.78; font-size:12px; display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
-
-    .panel{ display:none; }
-    .panel.on{ display:block; }
-
-    .cardBox{
-      background: rgba(36,0,70,.78);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 18px;
-      padding: 14px;
-      box-shadow: 0 0 30px rgba(255,0,170,.18);
-      animation: pop .25s ease both;
-      margin-bottom:14px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap:14px;
-    }
-    .card{
-      background: rgba(36,0,70,.78);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 18px;
-      padding: 14px;
-      box-shadow: 0 0 30px rgba(255,0,170,.18);
-      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-      animation: pop .25s ease both;
-    }
-    .card:hover{
-      transform: translateY(-2px);
-      border-color: rgba(255,255,0,.35);
-      box-shadow: 0 0 40px rgba(255,0,170,.28);
-    }
-    .msg{ white-space: pre-wrap; word-break: break-word; margin:0 0 10px; font-size:16px; line-height:1.35; }
-    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-
-    .debug{
-      margin-top:12px;
-      padding:10px 12px;
-      border-radius:14px;
-      background: rgba(0,0,0,.35);
-      border:1px solid rgba(255,255,255,.16);
-      color:#ffee00;
-      font-weight:900;
-      white-space:pre-wrap;
-      display:none;
-    }
-
-    .clickok{
-      display:inline-block;
-      margin-left:10px;
-      font-weight:900;
-      color:#ffee00;
-      text-shadow:0 0 10px rgba(255,238,0,.25);
-      opacity:.0;
-      transform: translateY(2px);
-      transition: opacity .15s ease, transform .15s ease;
-    }
-    .clickok.on{ opacity:1; transform:none; }
-
-    @keyframes pop{ from{opacity:0; transform:translateY(6px) scale(.98)} to{opacity:1; transform:none} }
+    body{background:radial-gradient(circle,#1a002a,#000);color:#fff;font-family:Arial,system-ui,sans-serif;margin:0}
+    .wrap{width:min(1040px,92vw);margin:34px auto}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .pill{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px);box-shadow:0 0 18px rgba(255,0,170,.25)}
+    .btn{border:none;cursor:pointer;padding:10px 14px;border-radius:999px;font-weight:900;transition:transform .12s ease,box-shadow .12s ease;user-select:none}
+    .btn:active{transform:scale(.96)}
+    .btn-primary{background:#ffee00;color:#1a002a;box-shadow:0 0 18px rgba(255,238,0,.25)}
+    .btn-danger{background:#ff00aa;color:#fff;box-shadow:0 0 18px rgba(255,0,170,.25)}
+    .btn-ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.16)}
+    .login{max-width:420px;margin:70px auto;padding:22px;border-radius:22px;background:rgba(36,0,70,.82);border:1px solid rgba(255,255,255,.14);box-shadow:0 0 45px rgba(255,0,170,.20)}
+    .field{width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.20);color:#fff;font-size:15px;outline:none;margin-top:10px}
+    .row{display:flex;gap:10px;margin-top:12px}
+    .meta{opacity:.78;font-size:12px;display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+    .panel{display:none}
+    .panel.on{display:block}
+    .cardBox{background:rgba(36,0,70,.78);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px;box-shadow:0 0 30px rgba(255,0,170,.18);margin-bottom:14px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .card{background:rgba(36,0,70,.78);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px;box-shadow:0 0 30px rgba(255,0,170,.18);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
+    .card:hover{transform:translateY(-2px);border-color:rgba(255,255,0,.35);box-shadow:0 0 40px rgba(255,0,170,.28)}
+    .msg{white-space:pre-wrap;word-break:break-word;margin:0 0 10px;font-size:16px;line-height:1.35}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .debug{margin-top:12px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.16);color:#ffee00;font-weight:900;white-space:pre-wrap;display:none}
   </style>
 </head>
-
 <body>
   <div class="wrap">
-
-    <!-- LOGIN -->
     <div id="login" class="login">
       <h1 style="margin:0 0 6px;">🔒 Admin</h1>
       <p style="margin:0;opacity:.85;">Miércoles de dramas y chismes</p>
-
       <input id="email" class="field" placeholder="Email" value="dramasaurio@zaurio.es" />
       <input id="pass" class="field" type="password" placeholder="Contraseña" />
-
       <div class="row">
-        <button id="btnLogin" class="btn btn-primary" style="flex:1;">
-          Entrar
-          <span id="clickok" class="clickok">CLICK ✅</span>
-        </button>
+        <button id="btnLogin" class="btn btn-primary" style="flex:1;">Entrar</button>
       </div>
-
       <div id="loginMsg" style="margin-top:12px;font-weight:900;"></div>
       <div id="fatal" class="debug"></div>
-      <div class="meta">Si algo falla, lo verás aquí (no queda “silencioso”).</div>
     </div>
 
-    <!-- PANEL -->
     <div id="panel" class="panel">
       <div class="top">
         <div class="pill">💜 Pendientes: <b id="count">0</b></div>
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex;gap:10px;">
           <button id="btnRefresh" class="btn btn-ghost">Actualizar</button>
           <button id="btnLogout" class="btn btn-ghost">Salir</button>
         </div>
       </div>
 
-      <!-- CONSIGNA -->
       <div class="cardBox">
-        <div style="font-weight:900; margin-bottom:6px;">🟡 Consigna (sale en el live)</div>
+        <div style="font-weight:900;margin-bottom:6px;">🟡 Consigna (sale en el live)</div>
         <input id="consigna" class="field" maxlength="120" placeholder="Escribe la consigna…" />
         <div class="actions">
           <button id="btnSaveConsigna" class="btn btn-primary">Guardar consigna</button>
@@ -167,31 +64,19 @@
       <div id="status" style="opacity:.85;margin:0 0 12px;"></div>
       <div id="grid" class="grid"></div>
     </div>
-
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase.js"></script>
 
   <script>
-    // Siempre muestra errores en pantalla (no en consola)
-    const elFatal = document.getElementById('fatal');
-    function fatal(msg){
-      elFatal.style.display = 'block';
-      elFatal.textContent = msg;
-    }
-    window.onerror = (m, s, l, c, e) => {
-      fatal("JS ERROR:\n" + m + "\n" + (s||"") + ":" + (l||""));
-    };
-
-    // Elementos
     const elLogin = document.getElementById('login');
     const elPanel = document.getElementById('panel');
     const elGrid  = document.getElementById('grid');
     const elCount = document.getElementById('count');
     const elStatus = document.getElementById('status');
     const elLoginMsg = document.getElementById('loginMsg');
-    const elClickOk = document.getElementById('clickok');
+    const elFatal = document.getElementById('fatal');
 
     const btnLogin = document.getElementById('btnLogin');
     const btnRefresh = document.getElementById('btnRefresh');
@@ -201,36 +86,26 @@
     const btnSaveConsigna = document.getElementById('btnSaveConsigna');
     const consignaMsg = document.getElementById('consignaMsg');
 
-    // Si supabaseClient no existe, el botón parecerá muerto
+    function fatal(msg){ elFatal.style.display='block'; elFatal.textContent = msg; }
+    window.onerror = (m,s,l)=>fatal("JS ERROR:\n"+m+"\n"+(s||"")+":"+l);
+
     if (typeof supabaseClient === 'undefined') {
-      fatal("FATAL: supabaseClient no existe.\n\nRevisa:\n1) que ./supabase.js esté junto a admin.html\n2) que NO uses 'export' ni 'import' ahí\n3) que el archivo contenga:\nconst supabaseClient = supabase.createClient(url, key)");
+      fatal("FATAL: supabaseClient no existe.\nRevisa ./supabase.js");
     }
 
     function esc(s){
-      return (s||"")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+      return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
-    function showPanel(){
-      elLogin.style.display = 'none';
-      elPanel.classList.add('on');
-    }
-    function showLogin(){
-      elPanel.classList.remove('on');
-      elLogin.style.display = 'block';
-    }
+    function showPanel(){ elLogin.style.display='none'; elPanel.classList.add('on'); }
+    function showLogin(){ elPanel.classList.remove('on'); elLogin.style.display='block'; }
     function status(t){ elStatus.textContent = t || ""; }
 
     async function ensureSession(){
       const { data, error } = await supabaseClient.auth.getSession();
-      if (error) fatal("FATAL session: " + error.message);
-
-      if (data && data.session){
+      if (error) fatal("FATAL session: "+error.message);
+      if (data?.session){
         showPanel();
-        await cargarConsigna();
+        await cargarConsigna();      // ✅ ya no se “borra”
         await cargarPendientes();
       } else {
         showLogin();
@@ -245,16 +120,16 @@
         .eq('estado','pendiente')
         .order('creado',{ ascending:false });
 
-      if (error){ status("❌ " + error.message); return; }
+      if (error){ status("❌ "+error.message); return; }
 
       elCount.textContent = String(data.length);
       status(data.length ? "" : "No hay pendientes ✨");
 
       elGrid.innerHTML = "";
-      data.forEach(m => {
+      data.forEach(m=>{
         const d = new Date(m.creado);
         const div = document.createElement('div');
-        div.className = "card";
+        div.className = 'card';
         div.innerHTML = `
           <p class="msg">${esc(m.texto)}</p>
           <div class="meta"><span>🕒 ${d.toLocaleString()}</span><span>🧾 ${m.id.slice(0,8)}…</span></div>
@@ -267,28 +142,21 @@
       });
     }
 
+    // ✅ solo 1 mostrado a la vez
     async function mostrarSoloUno(id){
-      // archiva el que esté mostrado actualmente (si hay)
       const r1 = await supabaseClient
         .from('mensajes')
         .update({ estado: 'archivado' })
         .eq('estado', 'mostrado');
 
-      if (r1.error){
-        alert("Error archivando el anterior: " + r1.error.message);
-        return;
-      }
+      if (r1.error){ alert("Error archivando anterior: "+r1.error.message); return; }
 
-      // muestra este
       const r2 = await supabaseClient
         .from('mensajes')
         .update({ estado: 'mostrado' })
         .eq('id', id);
 
-      if (r2.error){
-        alert("Error mostrando: " + r2.error.message);
-        return;
-      }
+      if (r2.error){ alert("Error mostrando: "+r2.error.message); return; }
 
       await cargarPendientes();
     }
@@ -299,56 +167,48 @@
         .update({ estado: 'descartado' })
         .eq('id', id);
 
-      if (r.error){
-        alert("Error descartando: " + r.error.message);
-        return;
-      }
+      if (r.error){ alert("Error descartando: "+r.error.message); return; }
       await cargarPendientes();
     }
 
     async function cargarConsigna(){
       const { data, error } = await supabaseClient
         .from('config')
-        .select('consigna')
+        .select('id, consigna')
         .eq('id', 1)
         .maybeSingle();
 
       if (error){
-        consignaMsg.textContent = "❌ No se pudo cargar consigna: " + error.message;
+        consignaMsg.textContent = "❌ No se pudo cargar: " + error.message;
         return;
       }
 
-      inpConsigna.value = data?.consigna || "";
+      // ✅ NO pisamos con vacío; solo seteamos si viene algo
+      inpConsigna.value = (data?.consigna ?? inpConsigna.value ?? "");
       consignaMsg.textContent = "";
     }
 
     async function guardarConsigna(){
       const v = inpConsigna.value.trim();
+
+      // ✅ UPSERT: si no existe id=1, lo crea. Si existe, lo actualiza.
       const { error } = await supabaseClient
         .from('config')
-        .update({ consigna: v, actualizado: new Date().toISOString() })
-        .eq('id', 1);
+        .upsert({ id: 1, consigna: v, actualizado: new Date().toISOString() }, { onConflict: 'id' });
 
       consignaMsg.textContent = error ? ("❌ " + error.message) : "✅ Guardada";
     }
 
-    // Eventos
-    elGrid.addEventListener('click', (e) => {
-      const b = e.target.closest('button');
-      if (!b) return;
+    elGrid.addEventListener('click', (e)=>{
+      const b = e.target.closest('button'); if(!b) return;
       const id = b.getAttribute('data-id');
       const act = b.getAttribute('data-act');
       if (!id || !act) return;
-
       if (act === 'show') mostrarSoloUno(id);
       if (act === 'discard') descartar(id);
     });
 
-    btnLogin.addEventListener('click', async () => {
-      // Feedback inmediato: si esto NO aparece, el JS no está corriendo
-      elClickOk.classList.add('on');
-      setTimeout(()=>elClickOk.classList.remove('on'), 900);
-
+    btnLogin.addEventListener('click', async ()=>{
       elLoginMsg.textContent = "Entrando…";
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('pass').value;
@@ -362,9 +222,12 @@
       await cargarPendientes();
     });
 
-    btnRefresh.addEventListener('click', cargarPendientes);
+    btnRefresh.addEventListener('click', async ()=>{
+      await cargarConsigna();
+      await cargarPendientes();
+    });
 
-    btnLogout.addEventListener('click', async () => {
+    btnLogout.addEventListener('click', async ()=>{
       await supabaseClient.auth.signOut();
       showLogin();
     });
