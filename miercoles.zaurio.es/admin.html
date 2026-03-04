@@ -280,12 +280,12 @@
     }
 
     // Consigna
-    async function cargarConsigna(){
-      const { data, error } = await supabaseClient
-        .from('config')
-        .select('consigna')
-        .eq('id', 1)
-        .single();
+    const c = await supabaseClient
+  .from('config')
+  .select('consigna')
+  .eq('id', 1)
+  .maybeSingle();
+    const consigna = c.data?.consigna || "";
 
       if (error){
         consignaMsg.textContent = "❌ No se pudo cargar consigna: " + error.message;
