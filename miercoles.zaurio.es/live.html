@@ -1,28 +1,109 @@
-<div id="card"></div>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Live — Miércoles</title>
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    body{ background:transparent; }
+    .stage{
+      width: min(900px, 92vw);
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .livecard{
+      background: rgba(36,0,70,.82);
+      border: 2px solid rgba(255,255,0,.35);
+      box-shadow: 0 0 35px rgba(255,0,170,.25);
+      border-radius: 22px;
+      padding: 18px 20px;
+      color: white;
+      font-size: 26px;
+      line-height: 1.25;
+      white-space: pre-wrap;
+      word-break: break-word;
+      backdrop-filter: blur(10px);
+      animation: in .35s ease both;
+    }
+    .meta{ opacity:.75; font-size: 14px; margin-top: 10px; }
+    .err{
+      color:#ffee00;
+      font-weight:900;
+      font-size:14px;
+      white-space:pre-wrap;
+      background: rgba(0,0,0,.35);
+      padding:10px;
+      border-radius:12px;
+      margin-top:10px;
+      border:1px solid rgba(255,255,255,.18);
+    }
+    @keyframes in{ from{opacity:0; transform: translateY(10px) scale(.98)} to{opacity:1; transform:none} }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div id="card"></div>
+    <div id="err" class="err" style="display:none;"></div>
+  </div>
 
-<script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase.js"></script>
 
-async function actualizar(){
+  <script>
+    const cardEl = document.getElementById("card");
+    const errEl  = document.getElementById("err");
+    let lastId = null;
 
-const {data}= await supabaseClient
-.from("mensajes")
-.select("*")
-.eq("estado","mostrado")
-.order("creado",{ascending:false})
-.limit(1)
+    function showErr(msg){
+      errEl.style.display = "block";
+      errEl.textContent = msg;
+    }
 
-if(data.length>0){
+    function esc(s){
+      return (s||"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
 
-document.getElementById("card").innerHTML=
-`
-<div class="livecard">
-${data[0].texto}
-</div>
-`
-}
+    async function tick(){
+      try{
+        const { data, error } = await supabaseClient
+          .from("mensajes")
+          .select("id,texto,creado")
+          .eq("estado","mostrado")
+          .order("creado",{ ascending:false })
+          .limit(1);
 
-}
+        if (error) return showErr("SUPABASE ERROR:\n" + error.message);
 
-setInterval(actualizar,2000)
+        if (!data || data.length === 0){
+          cardEl.innerHTML = "";
+          return;
+        }
 
-</script>
+        const m = data[0];
+        if (m.id === lastId) return;
+
+        lastId = m.id;
+        const d = new Date(m.creado);
+
+        cardEl.innerHTML = `
+          <div class="livecard">
+            ${esc(m.texto)}
+            <div class="meta">🟣 Miércoles · ${d.toLocaleString()}</div>
+          </div>
+        `;
+      } catch (e){
+        showErr("JS ERROR:\n" + (e?.message || e));
+      }
+    }
+
+    tick();
+    setInterval(tick, 1500);
+  </script>
+</body>
+</html>
