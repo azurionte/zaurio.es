@@ -12,7 +12,7 @@ function esc(s){
 }
 
 function clear(){
-  mount.innerHTML = "";
+  mount.innerHTML = ""; // si no hay aprobados => NO se ve nada
 }
 
 function render(list){
@@ -28,10 +28,11 @@ function render(list){
 
     return `
       <div class="p">
-        <div class="avatarRing">
+        <div class="avatarStack">
           <div class="avatar">
             <img src="${url}" alt="">
           </div>
+          <img class="framePng" src="./assets/participante-frame.png?v=${now}" alt="">
         </div>
         <div class="name">${esc(p.nombre)}</div>
       </div>
@@ -75,11 +76,10 @@ function setupRealtime(){
     .subscribe();
 }
 
-// init
 loadApproved();
 setupRealtime();
 
-// fallback
+// fallback por si TikTok congela realtime
 setInterval(loadApproved, 2000);
 
 // anti-freeze
