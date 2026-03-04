@@ -33,7 +33,7 @@
     inset:0;
     display:flex;
     align-items:center;
-    justify-content:center;
+    justify-content:center; /* centrado */
     gap:16px;
     padding:10px 14px;
     box-sizing:border-box;
@@ -49,41 +49,52 @@
     animation: pop .22s ease both;
   }
 
-  /* Marco circular MUY visible: anillo doble + glow */
+  /* ✅ MARCO 100% COMPATIBLE (sin conic-gradient) */
   .avatarRing{
-    width:106px;
-    height:106px;
+    width:110px;
+    height:110px;
     border-radius:999px;
-    padding:5px;                 /* grosor anillo */
-    background: conic-gradient(from 180deg,
-      rgba(255,238,0,.95),
-      rgba(255,0,170,.95),
-      rgba(255,238,0,.95)
-    );
-    box-shadow:
-      0 0 22px rgba(255,0,170,.35),
-      0 0 18px rgba(255,238,0,.20);
+    position:relative;
     display:grid;
     place-items:center;
+    /* glow exterior */
+    box-shadow:
+      0 0 22px rgba(255,0,170,.32),
+      0 0 18px rgba(255,238,0,.18);
   }
 
-  .avatarOuter{
-    width:96px;height:96px;border-radius:999px;
-    background: rgba(0,0,0,.25);
-    padding:3px; /* segundo anillo interno */
-    box-shadow: inset 0 0 0 2px rgba(255,255,255,.14);
-    display:grid;
-    place-items:center;
-    overflow:hidden;
+  /* anillo exterior amarillo */
+  .avatarRing::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:999px;
+    border:5px solid rgba(255,238,0,.95);
+    box-shadow:
+      0 0 18px rgba(255,238,0,.22),
+      0 0 16px rgba(255,0,170,.18);
+    pointer-events:none;
+  }
+
+  /* anillo interior fucsia (un poquito hacia adentro) */
+  .avatarRing::after{
+    content:"";
+    position:absolute;
+    inset:7px;
+    border-radius:999px;
+    border:3px solid rgba(255,0,170,.70);
+    box-shadow: 0 0 14px rgba(255,0,170,.22);
+    pointer-events:none;
   }
 
   .avatar{
-    width:90px;height:90px;border-radius:999px;
+    width:90px;
+    height:90px;
+    border-radius:999px;
     overflow:hidden;
     background: rgba(0,0,0,.18);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.14);
   }
-
   .avatar img{
     width:100%;
     height:100%;
