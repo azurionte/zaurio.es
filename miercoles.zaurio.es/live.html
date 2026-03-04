@@ -14,25 +14,26 @@
     --glowP: rgba(255,0,170,.25);
     --glowY: rgba(255,238,0,.28);
 
-    /* TARJETA FIJA */
+    /* ✅ TARJETA FIJA */
     --W: 800px;
-    --H: 200px;
+    --H: 250px;
 
     /* Padding internos */
     --padX: 22px;
     --padY: 18px;
 
-    /* Label */
-    --labelH: 38px;      /* reserva visual arriba */
-    --labelFont: 22px;
+    /* ✅ LABEL (consigna) SIEMPRE igual cuando hay mensaje */
+    --labelTop: 10px;
+    --labelH: 44px;
+    --labelFont: 26px;
 
-    /* Texto */
-    --minFont: 18px;     /* mínimo legible móvil */
-    --maxFont: 54px;     /* máximo cuando hay poco texto */
+    /* ✅ Texto mensaje (más legible) */
+    --minFont: 22px;   /* subido: antes 18 */
+    --maxFont: 54px;
 
-    /* Consigna (prompt-only) */
-    --promptMin: 22px;
-    --promptMax: 52px;
+    /* Prompt-only (sin mensaje) */
+    --promptMin: 26px;
+    --promptMax: 56px;
   }
 
   html,body{
@@ -54,7 +55,6 @@
     background:transparent;
   }
 
-  /* Tarjeta SIEMPRE igual */
   .card{
     width: var(--W);
     height: var(--H);
@@ -73,10 +73,10 @@
     padding: var(--padY) var(--padX);
   }
 
-  /* Label (solo cuando hay mensaje) */
+  /* ✅ Label fijo */
   .label{
     position:absolute;
-    top: 10px;
+    top: var(--labelTop);
     left: 18px;
     right: 18px;
 
@@ -84,7 +84,7 @@
     display:flex;
     align-items:center;
 
-    padding: 0 14px;
+    padding: 0 16px;
     border-radius:999px;
 
     background: rgba(0,0,0,.45);
@@ -101,20 +101,20 @@
     text-overflow:ellipsis;
   }
 
-  /* Cuerpo cuando hay mensaje: ocupa todo lo que queda debajo del label */
+  /* ✅ Cuerpo mensaje: más alto útil */
   .body{
     position:absolute;
     left: var(--padX);
     right: var(--padX);
-    top: calc(10px + var(--labelH) + 10px);
-    bottom: var(--padY);
+
+    top: calc(var(--labelTop) + var(--labelH) + 12px);
+    bottom: 16px; /* más espacio abajo sin tocar altura total */
 
     display:flex;
     align-items:center;
     justify-content:center;
   }
 
-  /* Texto del mensaje (auto-fit) */
   .msg{
     width:100%;
     max-height:100%;
@@ -125,7 +125,7 @@
     white-space:pre-wrap;
     word-break:break-word;
 
-    line-height: 1.12;
+    line-height: 1.14;     /* un pelín más cómodo */
     font-weight: 900;
     color: rgba(255,255,255,.98);
 
@@ -134,7 +134,7 @@
       0 0 16px rgba(0,0,0,.35);
   }
 
-  /* ========= Prompt-only (sin mensaje) ========= */
+  /* ========= Prompt-only ========= */
   .promptOnly{
     width:100%;
     height:100%;
@@ -145,9 +145,9 @@
   }
 
   .crownWrap{
-    width:78px;
-    height:78px;
-    flex:0 0 78px;
+    width:82px;
+    height:82px;
+    flex:0 0 82px;
     display:grid;
     place-items:center;
     perspective: 900px;
@@ -155,15 +155,15 @@
   }
 
   .crown3d{
-    width:66px;
-    height:66px;
+    width:70px;
+    height:70px;
     transform-style: preserve-3d;
     animation: spin3d 2.6s linear infinite;
     will-change: transform;
   }
 
   .crown3d svg{
-    width:66px;height:66px;display:block;
+    width:70px;height:70px;display:block;
     filter: drop-shadow(0 0 10px rgba(255,238,0,.22));
   }
 
@@ -185,7 +185,6 @@
       0 0 12px rgba(255,238,0,.10);
   }
 
-  /* Anti-freeze TikTok */
   #heartbeat{
     position:absolute;
     width:1px;height:1px;
@@ -226,7 +225,7 @@
 
     function render(html){
       paintN++;
-      mount.setAttribute("data-paint", String(paintN)); // fuerza repaint en TikTok
+      mount.setAttribute("data-paint", String(paintN));
       mount.innerHTML = html;
     }
 
@@ -309,74 +308,56 @@
       `;
     }
 
-    // ======= AUTO-FIT REAL DE FUENTE =======
-    // Ajusta el font-size para que el elemento encaje en su caja (alto y ancho)
+    function cssVarPx(name){
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) ? n : 18;
+    }
+
     function fitText(el, minPx, maxPx){
       if (!el) return;
-
-      // Importante: que no tenga font-size heredado raro
-      el.style.fontSize = maxPx + "px";
-
       const parent = el.parentElement;
       if (!parent) return;
 
       const maxW = parent.clientWidth;
       const maxH = parent.clientHeight;
 
-      // Búsqueda binaria
       let lo = minPx;
       let hi = maxPx;
       let best = minPx;
 
       const fits = (px) => {
         el.style.fontSize = px + "px";
-        // forzar reflow
+        // reflow
         const w = el.scrollWidth;
         const h = el.scrollHeight;
         return (w <= maxW + 1) && (h <= maxH + 1);
       };
 
-      // Si incluso max cabe, nos quedamos con max
-      if (fits(maxPx)){
-        el.style.fontSize = maxPx + "px";
-        return;
-      }
-
-      // Si ni min cabe, ponemos min (igual cortará menos posible)
-      if (!fits(minPx)){
-        el.style.fontSize = minPx + "px";
-        return;
-      }
+      if (fits(maxPx)){ el.style.fontSize = maxPx + "px"; return; }
+      if (!fits(minPx)){ el.style.fontSize = minPx + "px"; return; }
 
       while (lo <= hi){
-        const mid = Math.floor((lo + hi) / 2);
-        if (fits(mid)){
-          best = mid;
-          lo = mid + 1;
-        } else {
-          hi = mid - 1;
-        }
+        const mid = (lo + hi) >> 1;
+        if (fits(mid)){ best = mid; lo = mid + 1; }
+        else { hi = mid - 1; }
       }
       el.style.fontSize = best + "px";
     }
 
-    // Ajustes específicos según modo
     function applyFits(){
       const msg = document.getElementById("fitMsg");
       if (msg){
-        // Mensaje: en .body (ya centrado)
-        fitText(msg, parseInt(getComputedStyle(document.documentElement).getPropertyValue("--minFont")), parseInt(getComputedStyle(document.documentElement).getPropertyValue("--maxFont")));
+        fitText(msg, cssVarPx("--minFont"), cssVarPx("--maxFont"));
       }
       const prm = document.getElementById("fitPrompt");
       if (prm){
-        // Prompt: en .promptOnly (izq con corona)
-        fitText(prm, parseInt(getComputedStyle(document.documentElement).getPropertyValue("--promptMin")), parseInt(getComputedStyle(document.documentElement).getPropertyValue("--promptMax")));
+        fitText(prm, cssVarPx("--promptMin"), cssVarPx("--promptMax"));
       }
     }
 
     async function tick(){
       try{
-        // Consigna
         const c = await supabaseClient
           .from("config")
           .select("consigna")
@@ -393,7 +374,6 @@
         }
         const consigna = c.data?.consigna || "";
 
-        // Mensaje mostrado
         const m = await supabaseClient
           .from("mensajes")
           .select("id,texto,creado")
@@ -417,11 +397,7 @@
           if (key !== lastState){
             lastState = key;
             render(templatePromptOnly(consigna));
-            requestAnimationFrame(() => {
-              applyFits();
-              // segundo frame por si TikTok/OBS tarda en calcular layout
-              requestAnimationFrame(applyFits);
-            });
+            requestAnimationFrame(() => { applyFits(); requestAnimationFrame(applyFits); });
           }
           return;
         }
@@ -431,10 +407,7 @@
         if (key !== lastState){
           lastState = key;
           render(templateMessage(consigna, msg.texto));
-          requestAnimationFrame(() => {
-            applyFits();
-            requestAnimationFrame(applyFits);
-          });
+          requestAnimationFrame(() => { applyFits(); requestAnimationFrame(applyFits); });
         }
 
       } catch(e){
@@ -446,18 +419,13 @@
       }
     }
 
-    // Refit al cambiar tamaño (por si TikTok/OBS hace scaling raro)
     window.addEventListener("resize", () => {
-      requestAnimationFrame(() => {
-        applyFits();
-        requestAnimationFrame(applyFits);
-      });
+      requestAnimationFrame(() => { applyFits(); requestAnimationFrame(applyFits); });
     });
 
     tick();
     setInterval(tick, 1000);
 
-    // Anti-freeze TikTok
     setInterval(()=>{ document.getElementById("heartbeat").textContent = Date.now(); }, 500);
   </script>
 </body>
