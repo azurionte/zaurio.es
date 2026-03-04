@@ -1,71 +1,287 @@
-<div id="login">
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Miércoles de Dramas</title>
 
-<input id="user">
-<input id="pass" type="password">
-<button onclick="login()">Entrar</button>
+  <link rel="stylesheet" href="./style.css" />
 
-</div>
+  <style>
+    /* Admin extra: bubbly neon */
+    .admin-wrap{ width:min(980px,92vw); margin:40px auto; }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; margin-bottom:18px;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 14px; border-radius:999px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 0 18px rgba(255,0,170,.25);
+      backdrop-filter: blur(8px);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap:14px;
+    }
+    .card{
+      background: rgba(36,0,70,.78);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 0 30px rgba(255,0,170,.18);
+      transform: translateY(0);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      animation: popIn .25s ease both;
+    }
+    .card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,0,.35);
+      box-shadow: 0 0 40px rgba(255,0,170,.28);
+    }
+    .msg{
+      font-size: 16px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0 0 10px 0;
+    }
+    .meta{
+      opacity:.75;
+      font-size: 12px;
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      border:none; cursor:pointer;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    .btn:active{ transform: scale(.96); }
+    .btn-show{
+      background: #ffee00;
+      color:#1a002a;
+      box-shadow: 0 0 18px rgba(255,238,0,.25);
+    }
+    .btn-discard{
+      background: #ff00aa;
+      color:white;
+      box-shadow: 0 0 18px rgba(255,0,170,.25);
+    }
+    .btn-refresh{
+      background: rgba(255,255,255,.10);
+      color:white;
+      border:1px solid rgba(255,255,255,.16);
+    }
+    .login-card{
+      max-width: 420px;
+      margin: 70px auto;
+      padding: 22px;
+      border-radius: 22px;
+      background: rgba(36,0,70,.82);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 0 45px rgba(255,0,170,.20);
+      animation: fadeIn 0.6s;
+    }
+    .field{
+      width:100%;
+      padding:12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.20);
+      color:white;
+      font-size: 15px;
+      outline:none;
+      margin-top:10px;
+    }
+    .row{ display:flex; gap:10px; margin-top:12px; }
+    .hint{ opacity:.75; font-size: 12px; margin-top: 10px; }
+    .hidden{ display:none !important; }
+    .toast{ margin-top:12px; font-weight:700; }
+    @keyframes popIn{ from{opacity:0; transform: translateY(6px) scale(.98)} to{opacity:1; transform:none} }
+  </style>
+</head>
 
-<div id="panel"></div>
+<body>
+  <div class="admin-wrap">
 
-<script>
+    <!-- LOGIN -->
+    <div id="login" class="login-card">
+      <h1 style="margin:0 0 6px 0;">🔒 Admin</h1>
+      <p style="margin:0; opacity:.85;">Miércoles de dramas y chismes</p>
 
-function login(){
+      <input id="user" class="field" autocomplete="username" placeholder="Usuario" />
+      <input id="pass" class="field" type="password" autocomplete="current-password" placeholder="Contraseña" />
 
-let u=document.getElementById("user").value
-let p=document.getElementById("pass").value
+      <div class="row">
+        <button id="btnLogin" class="btn btn-show" style="flex:1;">Entrar</button>
+      </div>
 
-if(u=="dramasaurio" && p=="cooper"){
-cargar()
-}
-}
+      <div id="loginMsg" class="toast"></div>
+      <div class="hint">Tip: esto es un “candado visual” en el navegador. Luego lo hacemos PRO con auth si quieres.</div>
+    </div>
 
-async function cargar(){
+    <!-- PANEL -->
+    <div id="panelArea" class="hidden">
+      <div class="topbar">
+        <div class="pill">
+          <span style="font-weight:900;">💜 Admin</span>
+          <span style="opacity:.8;">Pendientes:</span>
+          <span id="count" style="font-weight:900;">0</span>
+        </div>
 
-const {data}= await supabaseClient
-.from("mensajes")
-.select("*")
-.eq("estado","pendiente")
-.order("creado",{ascending:false})
+        <div style="display:flex; gap:10px;">
+          <button id="btnRefresh" class="btn btn-refresh">Actualizar</button>
+          <button id="btnLogout" class="btn btn-refresh">Salir</button>
+        </div>
+      </div>
 
-let panel=document.getElementById("panel")
+      <div id="status" style="opacity:.85; margin: 0 0 12px 0;"></div>
+      <div id="grid" class="grid"></div>
+    </div>
 
-panel.innerHTML=""
+  </div>
 
-data.forEach(m=>{
+  <!-- Supabase v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase.js"></script>
 
-panel.innerHTML+=`
+  <script>
+    // ====== CONFIG LOGIN (como pediste) ======
+    const ADMIN_USER = "dramasaurio";
+    const ADMIN_PASS = "cooper";
 
-<div class="card">
+    const elLogin = document.getElementById("login");
+    const elPanel = document.getElementById("panelArea");
+    const elLoginMsg = document.getElementById("loginMsg");
+    const elStatus = document.getElementById("status");
+    const elGrid = document.getElementById("grid");
+    const elCount = document.getElementById("count");
 
-${m.texto}
+    const btnLogin = document.getElementById("btnLogin");
+    const btnRefresh = document.getElementById("btnRefresh");
+    const btnLogout = document.getElementById("btnLogout");
 
-<button onclick="mostrar('${m.id}')">Mostrar</button>
-<button onclick="descartar('${m.id}')">Descartar</button>
+    function setStatus(msg){ elStatus.textContent = msg || ""; }
 
-</div>
-`
-})
-}
+    function isAuthed(){
+      return localStorage.getItem("admin_ok") === "1";
+    }
+    function setAuthed(v){
+      localStorage.setItem("admin_ok", v ? "1" : "0");
+    }
 
-async function mostrar(id){
+    async function cargarPendientes(){
+      setStatus("Cargando pendientes…");
 
-await supabaseClient
-.from("mensajes")
-.update({estado:"mostrado"})
-.eq("id",id)
+      const { data, error } = await supabaseClient
+        .from("mensajes")
+        .select("id,texto,creado,estado")
+        .eq("estado", "pendiente")
+        .order("creado", { ascending: false });
 
-cargar()
-}
+      if (error){
+        setStatus("❌ Error cargando: " + error.message);
+        return;
+      }
 
-async function descartar(id){
+      elCount.textContent = String(data.length);
+      setStatus(data.length ? "" : "No hay pendientes ahora mismo ✨");
 
-await supabaseClient
-.from("mensajes")
-.update({estado:"descartado"})
-.eq("id",id)
+      elGrid.innerHTML = "";
+      for (const m of data){
+        const d = new Date(m.creado);
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <p class="msg">${escapeHtml(m.texto)}</p>
+          <div class="meta">
+            <span>🕒 ${d.toLocaleString()}</span>
+            <span>🧾 ${m.id.slice(0,8)}…</span>
+          </div>
+          <div class="actions">
+            <button class="btn btn-show" data-act="show" data-id="${m.id}">Mostrar</button>
+            <button class="btn btn-discard" data-act="discard" data-id="${m.id}">Descartar</button>
+          </div>
+        `;
+        elGrid.appendChild(card);
+      }
+    }
 
-cargar()
-}
+    async function setEstado(id, estado){
+      // Nota: esto requiere que tus políticas permitan UPDATE desde anon NO (lo bloqueamos).
+      // Si ahora mismo NO te deja actualizar, me lo dices y lo ajustamos con una política segura.
+      const { error } = await supabaseClient
+        .from("mensajes")
+        .update({ estado })
+        .eq("id", id);
 
-</script>
+      if (error){
+        alert("Error actualizando: " + error.message);
+        return;
+      }
+      await cargarPendientes();
+    }
+
+    function escapeHtml(s){
+      return (s || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // ====== UI ======
+    function showPanel(){
+      elLogin.classList.add("hidden");
+      elPanel.classList.remove("hidden");
+      cargarPendientes();
+    }
+    function showLogin(){
+      elPanel.classList.add("hidden");
+      elLogin.classList.remove("hidden");
+    }
+
+    btnLogin.addEventListener("click", () => {
+      const u = document.getElementById("user").value.trim();
+      const p = document.getElementById("pass").value;
+
+      if (u === ADMIN_USER && p === ADMIN_PASS){
+        setAuthed(true);
+        elLoginMsg.textContent = "✅ Entraste.";
+        showPanel();
+      } else {
+        elLoginMsg.textContent = "❌ Usuario o contraseña incorrectos.";
+      }
+    });
+
+    btnRefresh?.addEventListener("click", cargarPendientes);
+
+    btnLogout?.addEventListener("click", () => {
+      setAuthed(false);
+      showLogin();
+    });
+
+    elGrid.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const id = btn.getAttribute("data-id");
+      const act = btn.getAttribute("data-act");
+      if (!id || !act) return;
+
+      if (act === "show") setEstado(id, "mostrado");
+      if (act === "discard") setEstado(id, "descartado");
+    });
+
+    // Auto login si ya entró antes (para no estar metiendo pass en stream)
+    if (isAuthed()) showPanel();
+  </script>
+</body>
+</html>
