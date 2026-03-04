@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Participantes — Miércoles</title>
+
+  <link rel="icon" href="./assets/favicon.png">
+
+  <style>
+    :root{
+      --card: rgba(36,0,70,.82);
+      --stroke: rgba(255,255,255,.14);
+      --yellow:#ffee00;
+      --pink:#ff00aa;
+    }
+    *{ box-sizing:border-box; }
+    html,body{
+      margin:0;
+      min-height:100%;
+      background: radial-gradient(circle at 30% 10%, #2a0046, #000);
+      color:#fff;
+      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .wrap{ width:min(720px,92vw); margin:24px auto; padding-bottom:24px; }
+    .card{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      border-radius:26px;
+      box-shadow:0 0 45px rgba(255,0,170,.20);
+      overflow:hidden;
+    }
+    .head{
+      padding:18px 18px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    h1{ margin:0; font-size:28px; font-weight:1000; }
+    p{ margin:8px 0 0; opacity:.85; }
+    .body{ padding:16px 18px 18px; display:flex; flex-direction:column; gap:12px; }
+
+    .field{
+      width:100%;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.22);
+      color:#fff;
+      font-size:16px;
+      outline:none;
+    }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+
+    .btn{
+      border:none; cursor:pointer;
+      padding:12px 18px;
+      border-radius:999px;
+      font-weight:1000;
+      transition:transform .12s ease, opacity .12s ease;
+      user-select:none;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+    }
+    .btn:active{ transform:scale(.98); }
+
+    .btnPrimary{
+      background:var(--yellow);
+      color:#1a002a;
+      box-shadow:0 0 18px rgba(255,238,0,.25);
+    }
+    .btnGhost{
+      background: rgba(255,255,255,.10);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.16);
+    }
+
+    #status{
+      font-weight:1000;
+      white-space:pre-wrap;
+      word-break:break-word;
+      min-height:22px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      box-shadow:0 0 22px rgba(255,0,170,.10);
+    }
+    #status:empty{
+      padding:0;border:none;background:transparent;box-shadow:none;min-height:0;
+    }
+
+    .previewWrap{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .preview{
+      width:86px;height:86px;border-radius:999px;
+      border:2px solid rgba(255,238,0,.25);
+      box-shadow:0 0 18px rgba(255,0,170,.15);
+      overflow:hidden;
+      background:rgba(0,0,0,.25);
+      display:grid;place-items:center;
+    }
+    .preview img{ width:100%;height:100%;object-fit:cover;display:block; }
+
+    .hint{ opacity:.8; font-size:13px; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="head">
+        <h1>👑 Participantes</h1>
+        <p>Sube tu foto y tu nombre para aparecer en el directo.</p>
+      </div>
+
+      <div class="body">
+        <input id="nombre" class="field" maxlength="40" placeholder="Tu nombre (máx. 40)" />
+        <input id="foto" class="field" type="file" accept="image/*" />
+
+        <div class="previewWrap">
+          <div class="preview" id="previewBox">
+            <span class="hint">Preview</span>
+          </div>
+          <div class="hint">
+            Recomendado: selfie clara. Se recorta en círculo.
+          </div>
+        </div>
+
+        <div class="row">
+          <a class="btn btnGhost" href="https://www.tiktok.com/@zaurio" target="_blank" rel="noopener noreferrer">
+            Volver al TikTok
+          </a>
+          <button id="enviar" class="btn btnPrimary">Enviar</button>
+        </div>
+
+        <div id="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase.js"></script>
+  <script src="./participantes.js"></script>
+</body>
+</html>
