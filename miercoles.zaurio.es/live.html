@@ -1,212 +1,334 @@
+
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Live — Miércoles</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Live — Miércoles</title>
 
-  <style>
-    :root{
-      --W: 800px;
-      --H: 180px;
+<style>
+  :root{
+    --bg: rgba(36,0,70,.86);
+    --stroke: rgba(255,255,255,.16);
+    --yellow:#ffee00;
+    --pink:#ff00aa;
+    --glowP: rgba(255,0,170,.25);
+    --glowY: rgba(255,238,0,.28);
+  }
 
-      --purple1: #12072a;
-      --purple2: #2a0a55;
+  html,body{
+    margin:0;
+    width:800px;
+    height:400px;
+    overflow:hidden;
+    background:transparent;
+    font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    color:white;
+  }
 
-      --yellow: #ffee00;
-      --pink: #ff00aa;
-      --cyan: #2fd3ff;
+  .stage{
+    width:800px;
+    height:400px;
+    padding:18px;
+    box-sizing:border-box;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
 
-      /* Tarjeta (más ancha, sin crecer en alto) */
-      --cardW: 786px;           /* ⬅️ ancho real dentro de 800 */
-      --cardHMax: 132px;        /* ⬅️ NO pasar de este alto */
+  .card{
+    width:100%;
+    border-radius:26px;
+    background: var(--bg);
+    border: 1px solid var(--stroke);
+    box-shadow: 0 0 28px var(--glowP), inset 0 0 0 1px rgba(255,255,255,.06);
+    backdrop-filter: blur(10px);
+    position:relative;
+    padding:18px;
+    box-sizing:border-box;
+    transition:all .25s ease;
+    animation: pop .35s ease both;
+  }
 
-      /* Tipos auto-ajustables */
-      --promptSize: clamp(22px, 3.2vw, 34px);  /* consigna grande */
-      --msgSize: clamp(15px, 2.0vw, 20px);     /* texto mensaje */
-      --labelSize: clamp(14px, 2.1vw, 22px);   /* etiqueta borde */
-    }
+  /* Label cuando hay mensaje mostrado */
+  .label{
+    position:absolute;
+    top:-14px;
+    left:20px;
+    padding:8px 14px;
+    border-radius:999px;
+    background: rgba(0,0,0,.45);
+    border: 1px solid rgba(255,238,0,.38);
+    box-shadow: 0 0 18px var(--glowY);
+    font-weight:900;
+    font-size:20px;
+    line-height:1;
+    color: var(--yellow);
+    text-shadow: 0 0 10px rgba(255,238,0,.25);
+    max-width: calc(100% - 40px);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
 
-    html,body{
-      margin:0;
-      width:var(--W);
-      height:var(--H);
-      overflow:hidden;
-      background: transparent;
-      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    }
+  .msg{
+    font-size:28px;
+    line-height:1.2;
+    white-space:pre-wrap;
+    word-break:break-word;
+    margin:0;
+    padding-top:6px;
+  }
 
-    /* stage 800x180 */
-    .stage{
-      width:var(--W);
-      height:var(--H);
-      position:relative;
-      background: transparent;
-    }
+  /* ========= Prompt-only (sin mensaje) ========= */
+  .promptOnly{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    min-height:120px;
+    padding:6px 10px;
+    box-sizing:border-box;
+  }
 
-    /* envoltorio centrado */
-    .wrap{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 0;
-      box-sizing:border-box;
-    }
+  /* Corona 3D a la izquierda */
+  .crownWrap{
+    width:74px;
+    height:74px;
+    flex:0 0 74px;
+    display:grid;
+    place-items:center;
+    perspective: 900px;
+    filter: drop-shadow(0 0 18px rgba(255,238,0,.18)) drop-shadow(0 0 18px rgba(255,0,170,.14));
+  }
 
-    /* tarjeta */
-    .card{
-      width: var(--cardW);
-      max-height: var(--cardHMax);
-      box-sizing:border-box;
-      padding: 14px 18px;
-      border-radius: 18px;
+  .crown3d{
+    width:64px;
+    height:64px;
+    transform-style: preserve-3d;
+    animation: spin3d 2.6s linear infinite;
+    will-change: transform;
+  }
 
-      background: linear-gradient(135deg, rgba(18,7,42,.88), rgba(42,10,85,.78));
-      border: 1px solid rgba(255,255,255,.14);
+  /* “Brillo” extra para que parezca más 3D */
+  .crown3d svg{
+    width:64px;height:64px;display:block;
+    filter: drop-shadow(0 0 10px rgba(255,238,0,.22));
+  }
 
-      box-shadow:
-        0 12px 28px rgba(0,0,0,.35),
-        0 0 24px rgba(255,0,170,.18);
+  /* Texto consigna grande */
+  .promptOnlyText{
+    font-weight:1000;
+    font-size:34px;
+    line-height:1.12;
+    text-align:left;
+    color:#fff;
+    text-shadow:
+      0 0 18px rgba(255,0,170,.22),
+      0 0 12px rgba(255,238,0,.10);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
 
-      position:relative;
+  /* Heartbeat invisible (anti-freeze TikTok) */
+  #heartbeat{
+    position:absolute;
+    width:1px;height:1px;
+    opacity:0;
+  }
 
-      display:flex;
-      align-items:center;
-      gap: 14px;
+  @keyframes pop{
+    from{opacity:0;transform:translateY(10px) scale(.985)}
+    to{opacity:1;transform:none}
+  }
 
-      animation: pop .22s ease both;
-    }
-
-    /* etiqueta consigna “cortando” borde cuando hay mensaje */
-    .card.hasMsg::before{
-      content: attr(data-label);
-      position:absolute;
-      top:-14px;
-      left: 18px;
-
-      padding: 5px 12px;
-      border-radius: 999px;
-
-      font-weight:1000;
-      font-size: var(--labelSize);
-
-      color: #1a002a;
-      background: var(--yellow);
-
-      box-shadow:
-        0 8px 18px rgba(0,0,0,.35),
-        0 0 16px rgba(255,238,0,.18);
-
-      max-width: calc(var(--cardW) - 36px);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* icono corona girando (solo en modo consigna) */
-    .crown{
-      width: 52px;
-      height: 52px;
-      flex: 0 0 52px;
-      display:none;
-      filter: drop-shadow(0 8px 14px rgba(0,0,0,.35));
-      transform-style: preserve-3d;
-      animation: spin 2.8s linear infinite;
-    }
-    .card.promptOnly .crown{ display:block; }
-
-    @keyframes spin{
-      from{ transform: rotateY(0deg) rotateZ(-10deg); }
-      to  { transform: rotateY(360deg) rotateZ(-10deg); }
-    }
-
-    /* contenido */
-    .content{
-      min-width: 0;
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap: 8px;
-    }
-
-    /* consigna grande cuando no hay mensaje */
-    .prompt{
-      font-weight: 1000;
-      font-size: var(--promptSize);
-      line-height: 1.05;
-      color: white;
-
-      text-shadow:
-        0 4px 0 rgba(0,0,0,.78),
-        0 0 18px rgba(0,0,0,.42),
-        0 0 18px rgba(255,0,170,.16);
-
-      /* para que no rompa */
-      overflow:hidden;
-      text-overflow: ellipsis;
-      display:-webkit-box;
-      -webkit-line-clamp: 2;            /* máximo 2 líneas */
-      -webkit-box-orient: vertical;
-    }
-
-    /* mensaje: no se sale, se corta bonito */
-    .msg{
-      font-size: var(--msgSize);
-      line-height: 1.25;
-      color: rgba(255,255,255,.95);
-
-      overflow:hidden;
-      display:-webkit-box;
-      -webkit-line-clamp: 5;            /* máximo 5 líneas */
-      -webkit-box-orient: vertical;
-
-      text-shadow:
-        0 3px 0 rgba(0,0,0,.65),
-        0 0 16px rgba(0,0,0,.35);
-    }
-
-    /* estado debug oculto (por si alguna vez) */
-    .tiny{
-      font-size:12px;
-      opacity:.65;
-      display:none;
-    }
-
-    /* anti-freeze tiktok */
-    #heartbeat{
-      position:absolute;
-      width:1px;height:1px;
-      opacity:0;
-    }
-
-    @keyframes pop{
-      from{ opacity:0; transform: translateY(6px) scale(.985); }
-      to  { opacity:1; transform:none; }
-    }
-  </style>
+  @keyframes spin3d{
+    0%   { transform: rotateX(16deg) rotateY(0deg)   rotateZ(-6deg); }
+    50%  { transform: rotateX(16deg) rotateY(180deg) rotateZ(6deg);  }
+    100% { transform: rotateX(16deg) rotateY(360deg) rotateZ(-6deg); }
+  }
+</style>
 </head>
 
 <body>
   <div class="stage">
-    <div class="wrap">
-      <div id="card" class="card" aria-live="polite">
-        <!-- corona 3D -->
-        <img class="crown" src="./assets/crown.png" alt="">
-        <div class="content">
-          <div id="prompt" class="prompt"></div>
-          <div id="msg" class="msg" style="display:none;"></div>
-          <div id="tiny" class="tiny"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="heartbeat"></div>
+    <div id="mount" style="width:100%;"></div>
   </div>
+
+  <div id="heartbeat"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase.js"></script>
-  <script src="./live.js"></script>
+
+  <script>
+    const mount = document.getElementById("mount");
+    let lastState = "";
+
+    function esc(s){
+      return (s||"")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function render(html){
+      mount.innerHTML = html;
+    }
+
+    function crownSVG(){
+      // Corona SVG con degradados para efecto “3D”
+      return `
+        <div class="crownWrap" aria-hidden="true">
+          <div class="crown3d">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#fff6a0"/>
+                  <stop offset="0.35" stop-color="#ffee00"/>
+                  <stop offset="0.7" stop-color="#ffb300"/>
+                  <stop offset="1" stop-color="#ff6bd6"/>
+                </linearGradient>
+                <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="rgba(255,255,255,.85)"/>
+                  <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Base -->
+              <path d="M10 44c0 6 4 10 10 10h24c6 0 10-4 10-10v-4H10v4z"
+                    fill="url(#gold)" opacity="0.95"/>
+              <path d="M12 42h40" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-linecap="round"/>
+
+              <!-- Picos -->
+              <path d="M10 40l8-18 14 14 14-14 8 18H10z"
+                    fill="url(#gold)" opacity="0.95"/>
+
+              <!-- Joyas -->
+              <circle cx="18" cy="22" r="4" fill="#7ff0ff" opacity="0.95"/>
+              <circle cx="32" cy="26" r="4.5" fill="#b7ff6a" opacity="0.95"/>
+              <circle cx="46" cy="22" r="4" fill="#ff6bd6" opacity="0.95"/>
+
+              <!-- Brillos -->
+              <path d="M14 40l6-14 12 12 12-12 6 14H14z"
+                    fill="url(#shine)" opacity="0.28"/>
+              <path d="M14 44c0 4 2 6 6 6h24c4 0 6-2 6-6"
+                    fill="url(#shine)" opacity="0.20"/>
+
+              <!-- Contorno -->
+              <path d="M10 40l8-18 14 14 14-14 8 18H10z"
+                    fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" />
+              <path d="M10 40h44" stroke="rgba(255,255,255,.14)" stroke-width="2" />
+            </svg>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPromptOnly(consigna){
+      return `
+        <div class="card">
+          <div class="promptOnly">
+            ${crownSVG()}
+            <div class="promptOnlyText">${esc(consigna || "—")}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMessage(consigna, texto){
+      return `
+        <div class="card">
+          <div class="label">${esc(consigna || "")}</div>
+          <p class="msg">${esc(texto || "")}</p>
+        </div>
+      `;
+    }
+
+    function renderError(msg){
+      return `
+        <div class="card">
+          <div style="
+            padding:10px 12px;border-radius:14px;
+            background:rgba(0,0,0,.35);
+            border:1px solid rgba(255,255,255,.16);
+            color:#ffee00;font-weight:900;white-space:pre-wrap;
+          ">${esc(msg)}</div>
+        </div>
+      `;
+    }
+
+    async function tick(){
+      try{
+        // Consigna
+        const c = await supabaseClient
+          .from("config")
+          .select("consigna")
+          .eq("id", 1)
+          .maybeSingle();
+
+        if (c.error){
+          const key = "ERR:CONFIG:" + c.error.message;
+          if (key !== lastState){
+            lastState = key;
+            render(renderError("CONFIG ERROR:\n" + c.error.message));
+          }
+          return;
+        }
+        const consigna = c.data?.consigna || "";
+
+        // Mensaje mostrado
+        const m = await supabaseClient
+          .from("mensajes")
+          .select("id,texto,creado")
+          .eq("estado","mostrado")
+          .order("creado",{ascending:false})
+          .limit(1);
+
+        if (m.error){
+          const key = "ERR:MSG:" + m.error.message;
+          if (key !== lastState){
+            lastState = key;
+            render(renderError("MENSAJES ERROR:\n" + m.error.message));
+          }
+          return;
+        }
+
+        const hasShown = m.data && m.data.length > 0;
+
+        // Regla:
+        // - sin mostrado => tarjeta = consigna + corona 3D
+        // - con mostrado => consigna en label, texto en body
+        if (!hasShown){
+          const key = "PROMPT_ONLY:" + consigna;
+          if (key !== lastState){
+            lastState = key;
+            render(renderPromptOnly(consigna));
+          }
+          return;
+        }
+
+        const msg = m.data[0];
+        const key = "MSG:" + msg.id + ":" + consigna;
+        if (key !== lastState){
+          lastState = key;
+          render(renderMessage(consigna, msg.texto));
+        }
+
+      } catch(e){
+        const key = "ERR:JS:" + (e?.message || e);
+        if (key !== lastState){
+          lastState = key;
+          render(renderError("JS ERROR:\n" + (e?.message || e)));
+        }
+      }
+    }
+
+    // Polling + heartbeat anti-freeze TikTok
+    tick();
+    setInterval(tick, 1000);
+    setInterval(()=>{ document.getElementById("heartbeat").textContent = Date.now(); }, 500);
+  </script>
 </body>
 </html>
