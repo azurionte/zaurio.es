@@ -21,7 +21,7 @@ function render(list){
     return;
   }
 
-  const now = Date.now(); // bust cache
+  const now = Date.now(); // bust cache para TikTok
   mount.innerHTML = list.map(p => {
     const pub = supabaseClient.storage.from("participantes").getPublicUrl(p.foto_path);
     const url = (pub.data?.publicUrl || "") + "?v=" + now;
@@ -29,10 +29,8 @@ function render(list){
     return `
       <div class="p">
         <div class="avatarRing">
-          <div class="avatarOuter">
-            <div class="avatar">
-              <img src="${url}" alt="">
-            </div>
+          <div class="avatar">
+            <img src="${url}" alt="">
           </div>
         </div>
         <div class="name">${esc(p.nombre)}</div>
@@ -65,7 +63,6 @@ async function loadApproved(){
 }
 
 function setupRealtime(){
-  // evita duplicar canales si TikTok recarga raro
   try { if (channel) supabaseClient.removeChannel(channel); } catch(_){}
 
   channel = supabaseClient
@@ -73,20 +70,17 @@ function setupRealtime(){
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "participantes" },
-      () => {
-        // cualquier insert/update/delete => refresca lista aprobados
-        loadApproved();
-      }
+      () => loadApproved()
     )
     .subscribe();
 }
 
-// Init
+// init
 loadApproved();
 setupRealtime();
 
-// Fallback polling por si TikTok “congela” realtime
+// fallback
 setInterval(loadApproved, 2000);
 
-// anti-freeze TikTok
+// anti-freeze
 setInterval(()=>{ document.getElementById("heartbeat").textContent = Date.now(); }, 500);
