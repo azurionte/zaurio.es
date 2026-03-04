@@ -12,7 +12,6 @@ mensaje.addEventListener("input", ()=>{
 });
 
 btn.addEventListener("click", async ()=>{
-
   const texto = mensaje.value.trim();
 
   if (!texto){
@@ -22,17 +21,12 @@ btn.addEventListener("click", async ()=>{
 
   btn.disabled = true;
   btn.style.opacity = "0.6";
-
   setStatus("Enviando…");
 
+  // ✅ inserta solo 'texto' (estado se queda en default 'pendiente')
   const { error } = await supabaseClient
     .from("mensajes")
-    .insert([
-      {
-        texto: texto,
-        estado: "pendiente"
-      }
-    ]);
+    .insert([{ texto }]);
 
   if (error){
     setStatus("❌ Error al enviar:\n" + error.message);
@@ -43,10 +37,8 @@ btn.addEventListener("click", async ()=>{
 
   mensaje.value = "";
   count.textContent = "0";
-
   setStatus("✅ Gracias por tu mensaje 💅");
 
   btn.disabled = false;
   btn.style.opacity = "1";
-
 });
