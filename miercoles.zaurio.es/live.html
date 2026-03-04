@@ -14,14 +14,12 @@
     --glowP: rgba(255,0,170,.25);
     --glowY: rgba(255,238,0,.28);
 
-    /* ====== NUEVO: control de ancho/alto de la tarjeta ====== */
-    --cardMaxW: 780px;     /* ⬅️ más ancho, casi todo el overlay de 800 */
-    --cardMaxH: 180px;     /* ⬅️ NO crecer más que esto (no cambia el alto total visual) */
+    --cardMaxW: 780px;
+    --cardMaxH: 180px;
 
-    /* ====== NUEVO: tipografías auto-ajustables ====== */
-    --labelSize: clamp(18px, 2.6vw, 30px);     /* consigna en borde, más grande */
-    --msgSize:   clamp(18px, 2.3vw, 28px);     /* mensaje */
-    --promptSize: clamp(24px, 3.4vw, 44px);    /* consigna grande (sin mensaje) */
+    --labelSize: clamp(18px, 2.6vw, 30px);
+    --msgSize:   clamp(18px, 2.3vw, 28px);
+    --promptSize: clamp(24px, 3.4vw, 44px);
   }
 
   html,body{
@@ -42,10 +40,10 @@
     display:flex;
     align-items:flex-end;
     justify-content:center;
+    background: transparent;
   }
 
   .card{
-    /* ⬅️ NUEVO: ensanchar sin tocar altura */
     width: min(100%, var(--cardMaxW));
     max-height: var(--cardMaxH);
 
@@ -53,19 +51,25 @@
     background: var(--bg);
     border: 1px solid var(--stroke);
     box-shadow: 0 0 28px var(--glowP), inset 0 0 0 1px rgba(255,255,255,.06);
-    backdrop-filter: blur(10px);
-    position:relative;
 
+    /* TikTok a veces odia backdrop-filter → fallback seguro */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    position:relative;
     padding:18px;
     box-sizing:border-box;
     transition:all .25s ease;
     animation: pop .35s ease both;
 
-    /* para que nada “explote” en altura */
     overflow:hidden;
   }
 
-  /* Label cuando hay mensaje mostrado */
+  /* Si backdrop-filter no está soportado, igual se ve */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+    .card{ background: rgba(36,0,70,.94); }
+  }
+
   .label{
     position:absolute;
     top:-14px;
@@ -76,10 +80,7 @@
     border: 1px solid rgba(255,238,0,.38);
     box-shadow: 0 0 18px var(--glowY);
     font-weight:900;
-
-    /* ⬅️ NUEVO: auto-size para que se vea más grande */
     font-size: var(--labelSize);
-
     line-height:1;
     color: var(--yellow);
     text-shadow: 0 0 10px rgba(255,238,0,.25);
@@ -90,19 +91,15 @@
   }
 
   .msg{
-    /* ⬅️ NUEVO: auto-size del mensaje */
     font-size: var(--msgSize);
-
     line-height:1.18;
     white-space:pre-wrap;
     word-break:break-word;
     margin:0;
+    padding-top: 10px;
 
-    padding-top: 10px; /* deja aire debajo del label */
-
-    /* ⬅️ NUEVO: no dejar que el texto se coma el alto */
     display:-webkit-box;
-    -webkit-line-clamp: 5;     /* máximo 5 líneas en 800x400 se ve perfecto */
+    -webkit-line-clamp: 5;
     -webkit-box-orient: vertical;
     overflow:hidden;
 
@@ -111,21 +108,16 @@
       0 0 16px rgba(0,0,0,.35);
   }
 
-  /* ========= Prompt-only (sin mensaje) ========= */
   .promptOnly{
     display:flex;
     align-items:center;
     justify-content:center;
     gap:16px;
-
-    /* ⬅️ NUEVO: control alto interno sin crecer el overlay */
-    min-height: 120px;
-
+    min-height:120px;
     padding:6px 10px;
     box-sizing:border-box;
   }
 
-  /* Corona 3D a la izquierda */
   .crownWrap{
     width:74px;
     height:74px;
@@ -149,13 +141,9 @@
     filter: drop-shadow(0 0 10px rgba(255,238,0,.22));
   }
 
-  /* Texto consigna grande */
   .promptOnlyText{
     font-weight:1000;
-
-    /* ⬅️ NUEVO: auto-size grande, para que se lea mucho mejor */
     font-size: var(--promptSize);
-
     line-height:1.08;
     text-align:left;
     color:#fff;
@@ -163,9 +151,8 @@
       0 0 18px rgba(255,0,170,.22),
       0 0 12px rgba(255,238,0,.10);
 
-    /* ⬅️ NUEVO: no dejar que rompa el alto */
     display:-webkit-box;
-    -webkit-line-clamp: 3;     /* máximo 3 líneas */
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow:hidden;
 
@@ -173,11 +160,17 @@
     word-break:break-word;
   }
 
-  /* Heartbeat invisible (anti-freeze TikTok) */
+  /* Anti-freeze + force repaint helper */
   #heartbeat{
     position:absolute;
     width:1px;height:1px;
     opacity:0;
+  }
+
+  /* Este “pixel” invisible cambia el layout lo justo para forzar repaint */
+  .tickPixel{
+    width:1px;height:1px;
+    opacity:0.001;
   }
 
   @keyframes pop{
@@ -206,6 +199,7 @@
   <script>
     const mount = document.getElementById("mount");
     let lastState = "";
+    let paintN = 0;
 
     function esc(s){
       return (s||"")
@@ -217,7 +211,10 @@
     }
 
     function render(html){
-      mount.innerHTML = html;
+      // ⬅️ FIX: fuerza a TikTok a repintar
+      paintN++;
+      mount.setAttribute("data-paint", String(paintN));
+      mount.innerHTML = html + `<div class="tickPixel">${paintN}</div>`;
     }
 
     function crownSVG(){
@@ -337,6 +334,9 @@
           if (key !== lastState){
             lastState = key;
             render(renderPromptOnly(consigna));
+          } else {
+            // aunque no cambie, fuerza repaint cada X ticks por TikTok
+            if ((paintN % 10) === 0) render(renderPromptOnly(consigna));
           }
           return;
         }
@@ -346,6 +346,8 @@
         if (key !== lastState){
           lastState = key;
           render(renderMessage(consigna, msg.texto));
+        } else {
+          if ((paintN % 10) === 0) render(renderMessage(consigna, msg.texto));
         }
 
       } catch(e){
