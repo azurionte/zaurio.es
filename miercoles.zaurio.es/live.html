@@ -100,7 +100,7 @@
           .from('config')
           .select('consigna')
           .eq('id', 1)
-          .single();
+          .maybeSingle();
 
         if (c.error) return showErr("CONFIG ERROR:\n" + c.error.message);
         const consigna = c.data?.consigna || "";
