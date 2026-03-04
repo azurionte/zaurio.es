@@ -1,31 +1,51 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Miércoles de Dramas con Zaurio</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Miércoles — Envíame tu drama</title>
+  <style>
+    body{margin:0;background:radial-gradient(circle,#1a002a,#000);color:white;font-family:Arial,system-ui,sans-serif}
+    .wrap{width:min(720px,92vw);margin:46px auto}
+    .box{background:rgba(36,0,70,.82);border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:18px 18px 16px;box-shadow:0 0 45px rgba(255,0,170,.20)}
+    h1{margin:0 0 8px}
+    .sub{opacity:.85;margin:0 0 14px}
+    textarea{
+      width:100%;min-height:140px;resize:none;
+      padding:12px 14px;border-radius:16px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.20);
+      color:#fff;font-size:16px;outline:none;
+    }
+    .row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px}
+    .btn{border:none;cursor:pointer;padding:12px 16px;border-radius:999px;font-weight:900;background:#ffee00;color:#1a002a;box-shadow:0 0 18px rgba(255,238,0,.25)}
+    .btn:active{transform:scale(.98)}
+    .small{opacity:.75;font-size:12px}
+    #status{margin-top:10px;font-weight:900;color:#ffee00;white-space:pre-wrap}
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="box">
+      <h1>💜 Miércoles de Dramas</h1>
+      <p class="sub">Envía tu pregunta / drama / chisme (anónimo). Máx. 350 caracteres.</p>
 
-<div class="container">
+      <textarea id="mensaje" maxlength="350" placeholder="Escribe aquí…"></textarea>
 
-<h1>💜 Miércoles de Dramas 💜</h1>
-<p>Envía tu drama, chisme o pregunta</p>
+      <div class="row">
+        <div class="small"><span id="count">0</span>/350</div>
+        <button id="enviar" class="btn">Enviar</button>
+      </div>
 
-<textarea id="mensaje" maxlength="350" placeholder="Escribe aquí..."></textarea>
+      <div id="status"></div>
+      <div class="small" style="margin-top:8px;opacity:.6">
+        Tip: para testear sin esperar 5 min, usa <b>?dev=1</b> al final de la URL.
+      </div>
+    </div>
+  </div>
 
-<div id="contador">350</div>
-
-<button id="enviar">Enviar</button>
-
-<p id="status"></p>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="supabase.js"></script>
-<script src="app.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
