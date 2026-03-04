@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin — Miércoles</title>
-  <link rel="stylesheet" href="./style.css" />
+
   <style>
     body{
       background: radial-gradient(circle,#1a002a,#000);
       color:#fff;
-      font-family: Arial, sans-serif;
+      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       margin:0;
     }
     .wrap{ width:min(1040px, 92vw); margin:34px auto; }
@@ -28,6 +28,7 @@
       border-radius:999px;
       font-weight:900;
       transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+      user-select:none;
     }
     .btn:active{ transform:scale(.96); }
     .btn-primary{ background:#ffee00; color:#1a002a; box-shadow:0 0 18px rgba(255,238,0,.25); }
@@ -92,7 +93,7 @@
     .msg{ white-space: pre-wrap; word-break: break-word; margin:0 0 10px; font-size:16px; line-height:1.35; }
     .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
 
-    .err{
+    .debug{
       margin-top:12px;
       padding:10px 12px;
       border-radius:14px;
@@ -103,6 +104,18 @@
       white-space:pre-wrap;
       display:none;
     }
+
+    .clickok{
+      display:inline-block;
+      margin-left:10px;
+      font-weight:900;
+      color:#ffee00;
+      text-shadow:0 0 10px rgba(255,238,0,.25);
+      opacity:.0;
+      transform: translateY(2px);
+      transition: opacity .15s ease, transform .15s ease;
+    }
+    .clickok.on{ opacity:1; transform:none; }
 
     @keyframes pop{ from{opacity:0; transform:translateY(6px) scale(.98)} to{opacity:1; transform:none} }
   </style>
@@ -120,12 +133,15 @@
       <input id="pass" class="field" type="password" placeholder="Contraseña" />
 
       <div class="row">
-        <button id="btnLogin" class="btn btn-primary" style="flex:1;">Entrar</button>
+        <button id="btnLogin" class="btn btn-primary" style="flex:1;">
+          Entrar
+          <span id="clickok" class="clickok">CLICK ✅</span>
+        </button>
       </div>
 
       <div id="loginMsg" style="margin-top:12px;font-weight:900;"></div>
-      <div id="fatal" class="err"></div>
-      <div class="meta">Si el botón “no hace nada”, aquí verás el error real.</div>
+      <div id="fatal" class="debug"></div>
+      <div class="meta">Si algo falla, lo verás aquí (no queda “silencioso”).</div>
     </div>
 
     <!-- PANEL -->
@@ -158,13 +174,24 @@
   <script src="./supabase.js"></script>
 
   <script>
+    // Siempre muestra errores en pantalla (no en consola)
+    const elFatal = document.getElementById('fatal');
+    function fatal(msg){
+      elFatal.style.display = 'block';
+      elFatal.textContent = msg;
+    }
+    window.onerror = (m, s, l, c, e) => {
+      fatal("JS ERROR:\n" + m + "\n" + (s||"") + ":" + (l||""));
+    };
+
+    // Elementos
     const elLogin = document.getElementById('login');
     const elPanel = document.getElementById('panel');
     const elGrid  = document.getElementById('grid');
     const elCount = document.getElementById('count');
     const elStatus = document.getElementById('status');
     const elLoginMsg = document.getElementById('loginMsg');
-    const elFatal = document.getElementById('fatal');
+    const elClickOk = document.getElementById('clickok');
 
     const btnLogin = document.getElementById('btnLogin');
     const btnRefresh = document.getElementById('btnRefresh');
@@ -174,14 +201,9 @@
     const btnSaveConsigna = document.getElementById('btnSaveConsigna');
     const consignaMsg = document.getElementById('consignaMsg');
 
-    function fatal(msg){
-      elFatal.style.display = 'block';
-      elFatal.textContent = msg;
-    }
-
-    // Validaciones mínimas: si supabaseClient no existe, el botón "no hace nada"
+    // Si supabaseClient no existe, el botón parecerá muerto
     if (typeof supabaseClient === 'undefined') {
-      fatal("FATAL: supabaseClient no existe.\nRevisa que ./supabase.js esté en la misma carpeta y que contenga:\nconst supabaseClient = supabase.createClient(url, key)");
+      fatal("FATAL: supabaseClient no existe.\n\nRevisa:\n1) que ./supabase.js esté junto a admin.html\n2) que NO uses 'export' ni 'import' ahí\n3) que el archivo contenga:\nconst supabaseClient = supabase.createClient(url, key)");
     }
 
     function esc(s){
@@ -246,7 +268,7 @@
     }
 
     async function mostrarSoloUno(id){
-      // Archiva el que esté mostrado actualmente (si hay)
+      // archiva el que esté mostrado actualmente (si hay)
       const r1 = await supabaseClient
         .from('mensajes')
         .update({ estado: 'archivado' })
@@ -257,7 +279,7 @@
         return;
       }
 
-      // Muestra este
+      // muestra este
       const r2 = await supabaseClient
         .from('mensajes')
         .update({ estado: 'mostrado' })
@@ -323,6 +345,10 @@
     });
 
     btnLogin.addEventListener('click', async () => {
+      // Feedback inmediato: si esto NO aparece, el JS no está corriendo
+      elClickOk.classList.add('on');
+      setTimeout(()=>elClickOk.classList.remove('on'), 900);
+
       elLoginMsg.textContent = "Entrando…";
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('pass').value;
