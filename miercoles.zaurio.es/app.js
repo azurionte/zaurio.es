@@ -20,10 +20,9 @@ btn.addEventListener("click", async ()=>{
   }
 
   btn.disabled = true;
-  btn.style.opacity = "0.6";
+  btn.style.opacity = "0.65";
   setStatus("Enviando…");
 
-  // ✅ inserta solo 'texto' (estado se queda en default 'pendiente')
   const { error } = await supabaseClient
     .from("mensajes")
     .insert([{ texto }]);
