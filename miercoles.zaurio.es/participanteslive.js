@@ -10,58 +10,52 @@ function esc(s){
     .replaceAll("'","&#039;");
 }
 
-function renderEmpty(){
-  mount.innerHTML = `
-    <div class="empty pop">👑 Esperando participante…</div>
-  `;
+function clear(){
+  mount.innerHTML = ""; // ← si no hay nada, NO se ve nada
 }
 
-function renderOne(nombre, publicUrl){
-  mount.innerHTML = `
-    <div class="avatarWrap pop">
-      <img src="${publicUrl}" alt="">
-    </div>
-    <div class="name pop">${esc(nombre)}</div>
-  `;
+function render(list){
+  if (!list || list.length === 0){
+    clear();
+    return;
+  }
+
+  mount.innerHTML = list.map(p => {
+    const pub = supabaseClient.storage.from("participantes").getPublicUrl(p.foto_path);
+    const url = (pub.data?.publicUrl || "") + "?v=" + Date.now(); // bust cache TikTok
+    return `
+      <div class="p">
+        <div class="avatar"><img src="${url}" alt=""></div>
+        <div class="name">${esc(p.nombre)}</div>
+      </div>
+    `;
+  }).join("");
 }
 
 async function tick(){
-  // trae el último
   const r = await supabaseClient
     .from("participantes")
-    .select("id,nombre,foto_path,creado")
-    .order("creado", { ascending:false })
-    .limit(1);
+    .select("id,nombre,foto_path,aprobado_at,creado,estado")
+    .eq("estado","aprobado")
+    .order("aprobado_at",{ascending:false, nullsFirst:false})
+    .order("creado",{ascending:false})
+    .limit(5);
 
   if (r.error){
-    // no muestro error feo en stream, dejo empty
-    renderEmpty();
+    clear();
     return;
   }
 
-  if (!r.data || r.data.length === 0){
-    lastKey = "EMPTY";
-    renderEmpty();
-    return;
-  }
-
-  const p = r.data[0];
-  const key = `${p.id}:${p.foto_path}:${p.nombre}`;
-
+  const data = r.data || [];
+  const key = data.map(x => x.id).join("|");
   if (key === lastKey) return;
   lastKey = key;
 
-  const pub = supabaseClient
-    .storage
-    .from("participantes")
-    .getPublicUrl(p.foto_path);
-
-  const url = pub.data?.publicUrl || "";
-  renderOne(p.nombre, url + "?v=" + Date.now()); // bust cache para TikTok
+  render(data);
 }
 
 tick();
 setInterval(tick, 1000);
 
-// anti-freeze
+// anti-freeze TikTok
 setInterval(()=>{ document.getElementById("heartbeat").textContent = Date.now(); }, 500);
