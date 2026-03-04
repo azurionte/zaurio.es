@@ -4,8 +4,9 @@ const btn = document.getElementById("enviar");
 const status = document.getElementById("status");
 const previewBox = document.getElementById("previewBox");
 
-function setStatus(t){
+function setStatus(t, tone="ok"){
   status.textContent = t || "";
+  status.dataset.tone = tone;
 }
 
 function canVibrate(){
@@ -26,7 +27,6 @@ inpFoto.addEventListener("change", () => {
     previewBox.innerHTML = `<span class="hint">Preview</span>`;
     return;
   }
-
   const img = document.createElement("img");
   img.alt = "preview";
   img.src = URL.createObjectURL(selectedFile);
@@ -38,24 +38,22 @@ btn.addEventListener("click", async () => {
 
   if (!nombre){
     vib(15);
-    setStatus("Escribe tu nombre 😈");
+    setStatus("Escribe tu nombre 😈","warn");
     return;
   }
   if (!selectedFile){
     vib(15);
-    setStatus("Sube una foto 📸");
+    setStatus("Sube una foto 📸","warn");
     return;
   }
 
   btn.disabled = true;
   btn.style.opacity = "0.65";
-  setStatus("Subiendo… 💜");
+  setStatus("Subiendo… 💜","info");
 
   try{
-    // 1) Subir a Supabase Storage
     const ext = (selectedFile.name.split(".").pop() || "png").toLowerCase();
     const safeExt = ["png","jpg","jpeg","webp"].includes(ext) ? ext : "png";
-
     const fileName = `${crypto.randomUUID()}.${safeExt}`;
 
     const up = await supabaseClient.storage
@@ -68,29 +66,27 @@ btn.addEventListener("click", async () => {
 
     if (up.error){
       vib([25,60,25]);
-      setStatus("❌ Error subiendo imagen:\n" + up.error.message);
+      setStatus("❌ Error subiendo imagen:\n" + up.error.message,"error");
       btn.disabled = false;
       btn.style.opacity = "1";
       return;
     }
 
-    // 2) Insertar fila en tabla
     const ins = await supabaseClient
       .from("participantes")
-      .insert([{ nombre, foto_path: fileName }]);
+      .insert([{ nombre, foto_path: fileName, estado: "pendiente" }]);
 
     if (ins.error){
       vib([25,60,25]);
-      setStatus("❌ Error guardando participante:\n" + ins.error.message);
+      setStatus("❌ Error guardando:\n" + ins.error.message,"error");
       btn.disabled = false;
       btn.style.opacity = "1";
       return;
     }
 
     vib([18,50,18]);
-    setStatus("✅ Listo. Podrías aparecer en el directo 👑");
+    setStatus("✅ Listo. Estás en cola. Zaurio te aprueba en directo 👑","ok");
 
-    // limpiar
     inpNombre.value = "";
     inpFoto.value = "";
     selectedFile = null;
@@ -98,7 +94,7 @@ btn.addEventListener("click", async () => {
 
   } catch(e){
     vib([25,60,25]);
-    setStatus("❌ Error:\n" + (e?.message || e));
+    setStatus("❌ Error:\n" + (e?.message || e),"error");
   }
 
   btn.disabled = false;
