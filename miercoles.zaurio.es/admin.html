@@ -1,0 +1,71 @@
+<div id="login">
+
+<input id="user">
+<input id="pass" type="password">
+<button onclick="login()">Entrar</button>
+
+</div>
+
+<div id="panel"></div>
+
+<script>
+
+function login(){
+
+let u=document.getElementById("user").value
+let p=document.getElementById("pass").value
+
+if(u=="dramasaurio" && p=="cooper"){
+cargar()
+}
+}
+
+async function cargar(){
+
+const {data}= await supabaseClient
+.from("mensajes")
+.select("*")
+.eq("estado","pendiente")
+.order("creado",{ascending:false})
+
+let panel=document.getElementById("panel")
+
+panel.innerHTML=""
+
+data.forEach(m=>{
+
+panel.innerHTML+=`
+
+<div class="card">
+
+${m.texto}
+
+<button onclick="mostrar('${m.id}')">Mostrar</button>
+<button onclick="descartar('${m.id}')">Descartar</button>
+
+</div>
+`
+})
+}
+
+async function mostrar(id){
+
+await supabaseClient
+.from("mensajes")
+.update({estado:"mostrado"})
+.eq("id",id)
+
+cargar()
+}
+
+async function descartar(id){
+
+await supabaseClient
+.from("mensajes")
+.update({estado:"descartado"})
+.eq("id",id)
+
+cargar()
+}
+
+</script>
