@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -14,6 +13,15 @@
     --pink:#ff00aa;
     --glowP: rgba(255,0,170,.25);
     --glowY: rgba(255,238,0,.28);
+
+    /* ====== NUEVO: control de ancho/alto de la tarjeta ====== */
+    --cardMaxW: 780px;     /* ⬅️ más ancho, casi todo el overlay de 800 */
+    --cardMaxH: 180px;     /* ⬅️ NO crecer más que esto (no cambia el alto total visual) */
+
+    /* ====== NUEVO: tipografías auto-ajustables ====== */
+    --labelSize: clamp(18px, 2.6vw, 30px);     /* consigna en borde, más grande */
+    --msgSize:   clamp(18px, 2.3vw, 28px);     /* mensaje */
+    --promptSize: clamp(24px, 3.4vw, 44px);    /* consigna grande (sin mensaje) */
   }
 
   html,body{
@@ -37,17 +45,24 @@
   }
 
   .card{
-    width:100%;
+    /* ⬅️ NUEVO: ensanchar sin tocar altura */
+    width: min(100%, var(--cardMaxW));
+    max-height: var(--cardMaxH);
+
     border-radius:26px;
     background: var(--bg);
     border: 1px solid var(--stroke);
     box-shadow: 0 0 28px var(--glowP), inset 0 0 0 1px rgba(255,255,255,.06);
     backdrop-filter: blur(10px);
     position:relative;
+
     padding:18px;
     box-sizing:border-box;
     transition:all .25s ease;
     animation: pop .35s ease both;
+
+    /* para que nada “explote” en altura */
+    overflow:hidden;
   }
 
   /* Label cuando hay mensaje mostrado */
@@ -61,7 +76,10 @@
     border: 1px solid rgba(255,238,0,.38);
     box-shadow: 0 0 18px var(--glowY);
     font-weight:900;
-    font-size:20px;
+
+    /* ⬅️ NUEVO: auto-size para que se vea más grande */
+    font-size: var(--labelSize);
+
     line-height:1;
     color: var(--yellow);
     text-shadow: 0 0 10px rgba(255,238,0,.25);
@@ -72,12 +90,25 @@
   }
 
   .msg{
-    font-size:28px;
-    line-height:1.2;
+    /* ⬅️ NUEVO: auto-size del mensaje */
+    font-size: var(--msgSize);
+
+    line-height:1.18;
     white-space:pre-wrap;
     word-break:break-word;
     margin:0;
-    padding-top:6px;
+
+    padding-top: 10px; /* deja aire debajo del label */
+
+    /* ⬅️ NUEVO: no dejar que el texto se coma el alto */
+    display:-webkit-box;
+    -webkit-line-clamp: 5;     /* máximo 5 líneas en 800x400 se ve perfecto */
+    -webkit-box-orient: vertical;
+    overflow:hidden;
+
+    text-shadow:
+      0 3px 0 rgba(0,0,0,.65),
+      0 0 16px rgba(0,0,0,.35);
   }
 
   /* ========= Prompt-only (sin mensaje) ========= */
@@ -86,7 +117,10 @@
     align-items:center;
     justify-content:center;
     gap:16px;
-    min-height:120px;
+
+    /* ⬅️ NUEVO: control alto interno sin crecer el overlay */
+    min-height: 120px;
+
     padding:6px 10px;
     box-sizing:border-box;
   }
@@ -110,7 +144,6 @@
     will-change: transform;
   }
 
-  /* “Brillo” extra para que parezca más 3D */
   .crown3d svg{
     width:64px;height:64px;display:block;
     filter: drop-shadow(0 0 10px rgba(255,238,0,.22));
@@ -119,13 +152,23 @@
   /* Texto consigna grande */
   .promptOnlyText{
     font-weight:1000;
-    font-size:34px;
-    line-height:1.12;
+
+    /* ⬅️ NUEVO: auto-size grande, para que se lea mucho mejor */
+    font-size: var(--promptSize);
+
+    line-height:1.08;
     text-align:left;
     color:#fff;
     text-shadow:
       0 0 18px rgba(255,0,170,.22),
       0 0 12px rgba(255,238,0,.10);
+
+    /* ⬅️ NUEVO: no dejar que rompa el alto */
+    display:-webkit-box;
+    -webkit-line-clamp: 3;     /* máximo 3 líneas */
+    -webkit-box-orient: vertical;
+    overflow:hidden;
+
     white-space:pre-wrap;
     word-break:break-word;
   }
@@ -152,7 +195,7 @@
 
 <body>
   <div class="stage">
-    <div id="mount" style="width:100%;"></div>
+    <div id="mount" style="width:100%; display:flex; justify-content:center;"></div>
   </div>
 
   <div id="heartbeat"></div>
@@ -178,7 +221,6 @@
     }
 
     function crownSVG(){
-      // Corona SVG con degradados para efecto “3D”
       return `
         <div class="crownWrap" aria-hidden="true">
           <div class="crown3d">
@@ -196,27 +238,22 @@
                 </linearGradient>
               </defs>
 
-              <!-- Base -->
               <path d="M10 44c0 6 4 10 10 10h24c6 0 10-4 10-10v-4H10v4z"
                     fill="url(#gold)" opacity="0.95"/>
               <path d="M12 42h40" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-linecap="round"/>
 
-              <!-- Picos -->
               <path d="M10 40l8-18 14 14 14-14 8 18H10z"
                     fill="url(#gold)" opacity="0.95"/>
 
-              <!-- Joyas -->
               <circle cx="18" cy="22" r="4" fill="#7ff0ff" opacity="0.95"/>
               <circle cx="32" cy="26" r="4.5" fill="#b7ff6a" opacity="0.95"/>
               <circle cx="46" cy="22" r="4" fill="#ff6bd6" opacity="0.95"/>
 
-              <!-- Brillos -->
               <path d="M14 40l6-14 12 12 12-12 6 14H14z"
                     fill="url(#shine)" opacity="0.28"/>
               <path d="M14 44c0 4 2 6 6 6h24c4 0 6-2 6-6"
                     fill="url(#shine)" opacity="0.20"/>
 
-              <!-- Contorno -->
               <path d="M10 40l8-18 14 14 14-14 8 18H10z"
                     fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" />
               <path d="M10 40h44" stroke="rgba(255,255,255,.14)" stroke-width="2" />
@@ -261,7 +298,6 @@
 
     async function tick(){
       try{
-        // Consigna
         const c = await supabaseClient
           .from("config")
           .select("consigna")
@@ -278,7 +314,6 @@
         }
         const consigna = c.data?.consigna || "";
 
-        // Mensaje mostrado
         const m = await supabaseClient
           .from("mensajes")
           .select("id,texto,creado")
@@ -297,9 +332,6 @@
 
         const hasShown = m.data && m.data.length > 0;
 
-        // Regla:
-        // - sin mostrado => tarjeta = consigna + corona 3D
-        // - con mostrado => consigna en label, texto en body
         if (!hasShown){
           const key = "PROMPT_ONLY:" + consigna;
           if (key !== lastState){
@@ -325,7 +357,6 @@
       }
     }
 
-    // Polling + heartbeat anti-freeze TikTok
     tick();
     setInterval(tick, 1000);
     setInterval(()=>{ document.getElementById("heartbeat").textContent = Date.now(); }, 500);
