@@ -5,61 +5,39 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Live — Miércoles</title>
   <style>
-    body{
-      margin:0;
-      background: transparent; /* para OBS/TikTok */
-      font-family: Arial, sans-serif;
-      color: white;
-    }
-    .stage{
-      width: min(900px, 92vw);
-      margin: 0 auto;
-      padding: 20px;
-    }
-
+    body{margin:0;background:transparent;font-family:Arial,system-ui,sans-serif;color:white}
+    .stage{width:min(900px,92vw);margin:0 auto;padding:20px}
     fieldset.bubble{
-      border: 2px solid rgba(255,255,0,.38);
-      border-radius: 22px;
-      padding: 16px 18px 18px;
-      background: rgba(36,0,70,.82);
-      box-shadow: 0 0 35px rgba(255,0,170,.25);
-      backdrop-filter: blur(10px);
-      animation: in .35s ease both;
+      border:2px solid rgba(255,255,0,.38);
+      border-radius:22px;
+      padding:16px 18px 18px;
+      background:rgba(36,0,70,.82);
+      box-shadow:0 0 35px rgba(255,0,170,.25);
+      backdrop-filter:blur(10px);
+      animation:in .35s ease both;
     }
     fieldset.bubble legend{
-      padding: 0 10px;
-      font-weight: 900;
-      font-size: 14px;
-      color: #ffee00;
-      text-shadow: 0 0 10px rgba(255,238,0,.25);
-    }
-    .liveText{
-      font-size: 28px;
-      line-height: 1.22;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    @keyframes in{
-      from{ opacity:0; transform: translateY(10px) scale(.98); }
-      to{ opacity:1; transform:none; }
-    }
-
-    .err{
-      color:#ffee00;
+      padding:0 10px;
       font-weight:900;
       font-size:14px;
-      white-space:pre-wrap;
-      background: rgba(0,0,0,.35);
-      padding:10px;
-      border-radius:12px;
-      margin-top:10px;
-      border:1px solid rgba(255,255,255,.18);
+      color:#ffee00;
+      text-shadow:0 0 10px rgba(255,238,0,.25);
+    }
+    .liveText{font-size:28px;line-height:1.22;white-space:pre-wrap;word-break:break-word}
+    @keyframes in{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+    .err{
       display:none;
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.16);
+      color:#ffee00;
+      font-weight:900;
+      white-space:pre-wrap;
     }
   </style>
 </head>
-
 <body>
   <div class="stage">
     <div id="card"></div>
@@ -70,65 +48,54 @@
   <script src="./supabase.js"></script>
 
   <script>
-    const cardEl = document.getElementById("card");
-    const errEl  = document.getElementById("err");
+    const cardEl = document.getElementById('card');
+    const errEl = document.getElementById('err');
     let lastId = null;
 
-    function showErr(msg){
-      errEl.style.display = "block";
-      errEl.textContent = msg;
-    }
-    function hideErr(){
-      errEl.style.display = "none";
-      errEl.textContent = "";
-    }
     function esc(s){
-      return (s||"")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+      return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
+    function showErr(msg){ errEl.style.display='block'; errEl.textContent=msg; }
+    function hideErr(){ errEl.style.display='none'; errEl.textContent=''; }
 
     async function tick(){
       try{
         hideErr();
 
-        // 1) Consigna
+        // consigna
         const c = await supabaseClient
           .from('config')
           .select('consigna')
-          .eq('id', 1)
+          .eq('id',1)
           .maybeSingle();
 
         if (c.error) return showErr("CONFIG ERROR:\n" + c.error.message);
         const consigna = c.data?.consigna || "";
 
-        // 2) Único mostrado (si hay varios por error, tomamos el más reciente)
-        const { data, error } = await supabaseClient
-          .from("mensajes")
-          .select("id,texto,creado")
-          .eq("estado","mostrado")
-          .order("creado",{ ascending:false })
+        // mensaje mostrado
+        const m = await supabaseClient
+          .from('mensajes')
+          .select('id,texto,creado')
+          .eq('estado','mostrado')
+          .order('creado',{ ascending:false })
           .limit(1);
 
-        if (error) return showErr("MENSAJES ERROR:\n" + error.message);
+        if (m.error) return showErr("MENSAJES ERROR:\n" + m.error.message);
 
-        if (!data || data.length === 0){
+        if (!m.data || m.data.length === 0){
           cardEl.innerHTML = "";
           lastId = null;
           return;
         }
 
-        const m = data[0];
-        if (m.id === lastId) return;
-        lastId = m.id;
+        const msg = m.data[0];
+        if (msg.id === lastId) return;
+        lastId = msg.id;
 
         cardEl.innerHTML = `
           <fieldset class="bubble">
             <legend>${esc(consigna)}</legend>
-            <div class="liveText">${esc(m.texto)}</div>
+            <div class="liveText">${esc(msg.texto)}</div>
           </fieldset>
         `;
       } catch(e){
