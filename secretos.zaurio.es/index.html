@@ -35,15 +35,12 @@
     html,body{
       margin:0;
       min-height:100%;
-      background:
-        radial-gradient(circle at top, #2a0046 0%, #12001d 35%, #000 100%);
+      background: radial-gradient(circle at top, #2a0046 0%, #12001d 35%, #000 100%);
       color:var(--text);
       font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
     }
 
-    body.modal-open{
-      overflow:hidden;
-    }
+    body.modal-open{ overflow:hidden; }
 
     .wrap{
       width:min(1180px,94vw);
@@ -103,16 +100,16 @@
     }
 
     .menuLogo.zaurio{
-      max-height:46px;
+      max-height:44px;
       border-radius:10px;
     }
 
     .menuLogo.miercoles{
-      max-height:58px;
+      max-height:52px;
     }
 
     .menuLogo.confesionario{
-      max-height:64px;
+      max-height:58px;
     }
 
     .composeBtn{
@@ -121,15 +118,13 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
       min-width:48px;
       height:48px;
-      padding:0 16px;
+      padding:0 15px;
       border-radius:999px;
       background:rgba(255,238,0,.14);
       border:1px solid rgba(255,238,0,.26);
       color:#fff;
-      font-weight:1000;
       box-shadow:0 0 18px rgba(255,238,0,.10);
       transition:transform .14s ease, opacity .14s ease, background .14s ease;
       opacity:0;
@@ -141,9 +136,7 @@
       pointer-events:auto;
     }
 
-    .composeBtn:active{
-      transform:scale(.96);
-    }
+    .composeBtn:active{ transform:scale(.96); }
 
     .composeBtn svg{
       width:18px;
@@ -185,16 +178,27 @@
     .composerBody{
       padding:16px 18px 18px;
       display:grid;
-      grid-template-columns: 1fr;
+      grid-template-columns:1fr;
       gap:12px;
       align-items:end;
     }
 
     .topFieldsRow{
-      display:grid;
-      grid-template-columns:minmax(280px, 1fr) 160px;
-      gap:12px;
+      display:flex;
+      justify-content:center;
       align-items:end;
+      gap:14px;
+      flex-wrap:nowrap;
+    }
+
+    .identityBlock{
+      width:max-content;
+      flex:0 0 auto;
+    }
+
+    .ageBlock{
+      width:150px;
+      flex:0 0 150px;
     }
 
     .fieldLabel{
@@ -214,6 +218,7 @@
       align-items:center;
       gap:12px;
       min-height:52px;
+      width:max-content;
       padding:10px 12px;
       border-radius:999px;
       background:rgba(255,255,255,.08);
@@ -253,26 +258,19 @@
     .identityDot.active::after{
       content:"";
       position:absolute;
-      inset:50% auto auto 50%;
+      left:50%;
+      top:50%;
       width:8px;
       height:8px;
       border-radius:999px;
       background:#fff;
-      transform:translate(-50%, -50%);
+      transform:translate(-50%,-50%);
       box-shadow:0 0 10px rgba(255,255,255,.65);
     }
 
-    .identityDot.cyan{
-      background:var(--cyan);
-    }
-
-    .identityDot.green{
-      background:var(--green);
-    }
-
-    .identityDot.magenta{
-      background:#ff4fc9;
-    }
+    .identityDot.cyan{ background:var(--cyan); }
+    .identityDot.green{ background:var(--green); }
+    .identityDot.magenta{ background:#ff4fc9; }
 
     input, textarea, select{
       width:100%;
@@ -307,9 +305,7 @@
       transition:transform .12s ease,opacity .12s ease, box-shadow .12s ease, background .12s ease;
     }
 
-    .btn:active{
-      transform:scale(.98);
-    }
+    .btn:active{ transform:scale(.98); }
 
     .btnPrimary{
       background:var(--yellow);
@@ -344,9 +340,7 @@
       background:rgba(255,255,255,.04);
     }
 
-    .featuredBody{
-      padding:14px;
-    }
+    .featuredBody{ padding:14px; }
 
     .feedTop{
       display:flex;
@@ -382,7 +376,6 @@
     }
 
     .identityFilterBtn{
-      position:relative;
       width:24px;
       height:24px;
       border-radius:999px;
@@ -406,21 +399,12 @@
     }
 
     .identityFilterBtn.all{
-      background:
-        linear-gradient(90deg, var(--cyan) 0 33%, var(--green) 33% 66%, #ff4fc9 66% 100%);
+      background:linear-gradient(90deg, var(--cyan) 0 33%, var(--green) 33% 66%, #ff4fc9 66% 100%);
     }
 
-    .identityFilterBtn.cyan{
-      background:var(--cyan);
-    }
-
-    .identityFilterBtn.green{
-      background:var(--green);
-    }
-
-    .identityFilterBtn.magenta{
-      background:#ff4fc9;
-    }
+    .identityFilterBtn.cyan{ background:var(--cyan); }
+    .identityFilterBtn.green{ background:var(--green); }
+    .identityFilterBtn.magenta{ background:#ff4fc9; }
 
     .boards{
       display:grid;
@@ -649,9 +633,7 @@
       z-index:999;
     }
 
-    .modalOverlay.on{
-      display:flex;
-    }
+    .modalOverlay.on{ display:flex; }
 
     .modalCard{
       width:min(860px, 92vw);
@@ -686,9 +668,7 @@
     }
 
     @media (max-width: 980px){
-      .boards{
-        grid-template-columns:1fr;
-      }
+      .boards{ grid-template-columns:1fr; }
     }
 
     @media (max-width: 860px){
@@ -702,17 +682,9 @@
         padding:12px 10px;
       }
 
-      .menuLogo.confesionario{
-        max-height:54px;
-      }
-
-      .menuLogo.miercoles{
-        max-height:48px;
-      }
-
-      .menuLogo.zaurio{
-        max-height:38px;
-      }
+      .menuLogo.confesionario{ max-height:54px; }
+      .menuLogo.miercoles{ max-height:48px; }
+      .menuLogo.zaurio{ max-height:38px; }
 
       .composeBtn{
         min-width:46px;
@@ -720,17 +692,25 @@
         padding:0 14px;
       }
 
-      .logo{
-        width:min(260px,66%);
-      }
+      .logo{ width:min(260px,66%); }
 
       .sub{
         font-size:16px;
       }
 
       .topFieldsRow{
-        grid-template-columns:minmax(0,1fr) 112px;
+        justify-content:center;
         gap:10px;
+      }
+
+      .identityWrap{
+        gap:10px;
+        padding:10px 12px;
+      }
+
+      .ageBlock{
+        width:112px;
+        flex:0 0 112px;
       }
 
       textarea{
@@ -770,11 +750,6 @@
       .feedTop{
         align-items:stretch;
       }
-
-      .identityWrap{
-        gap:10px;
-        padding:10px 12px;
-      }
     }
   </style>
 </head>
@@ -787,11 +762,11 @@
       </a>
 
       <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles de dramas">
-        <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/logo-miercoles.png" alt="Miércoles de dramas y chismes">
+        <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/miercoles.png" alt="Miércoles">
       </a>
 
       <a class="menuLogoLink active" href="https://secretos.zaurio.es" aria-label="El Confesionario">
-        <img class="menuLogo confesionario" src="https://miercoles.zaurio.es/assets/confesionario.png" alt="El Confesionario">
+        <img class="menuLogo confesionario" src="https://miercoles.zaurio.es/assets/confesion.png" alt="El Confesionario">
       </a>
 
       <button id="composeBtn" class="composeBtn" aria-label="Escribir confesión" title="Escribir confesión">
@@ -803,14 +778,14 @@
     </div>
 
     <section class="pageIntro">
-      <img class="logo" src="https://miercoles.zaurio.es/assets/confesionario.png" alt="El Confesionario">
+      <img class="logo" src="https://miercoles.zaurio.es/assets/confesion.png" alt="El Confesionario">
       <p class="sub">Confiesa de forma anónima. Tú envías. Zaurio decide si se publica.</p>
     </section>
 
     <section class="composer" id="composer">
       <div class="composerBody">
         <div class="topFieldsRow">
-          <div class="fieldGroup">
+          <div class="fieldGroup identityBlock">
             <div class="fieldLabel">Identidad</div>
             <div class="identityWrap">
               <button id="btnHombre" class="identityDot cyan active" type="button" aria-label="Identidad 1"></button>
@@ -819,7 +794,7 @@
             </div>
           </div>
 
-          <div class="fieldGroup">
+          <div class="fieldGroup ageBlock">
             <div class="fieldLabel">Edad</div>
             <input id="edad" type="number" min="18" max="99" placeholder="18 - 99" />
           </div>
@@ -1107,11 +1082,9 @@
         boardH.style.display = "";
         boardL.style.display = "";
         boardM.style.display = "";
-
         const h = arr.filter(x=>x.genero==="hombre");
         const l = arr.filter(x=>x.genero==="libre");
         const m = arr.filter(x=>x.genero==="mujer");
-
         listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
         listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
         listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
@@ -1221,10 +1194,8 @@
       const sp = new URLSearchParams(location.search);
       const s = sp.get("s");
       if (!s) return;
-
       const target = secretos.find(x => String(x.numero_secreto) === String(s));
       if (!target) return;
-
       openModal(secretCard(target));
     }
 
