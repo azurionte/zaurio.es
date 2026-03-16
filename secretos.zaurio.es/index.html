@@ -3,18 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Secretos Zaurio</title>
-  <link rel="icon" href="../miercoles.zaurio.es/assets/favicon.png">
+  <title>El Confesionario</title>
+  <link rel="icon" href="https://miercoles.zaurio.es/assets/favicon.png">
   <style>
     :root{
-      --bg1:#170026;
-      --bg2:#000;
-      --card:rgba(36,0,70,.82);
-      --stroke:rgba(255,255,255,.14);
+      --card: rgba(36,0,70,.82);
+      --stroke: rgba(255,255,255,.14);
       --yellow:#ffee00;
       --pink:#ff00aa;
       --cyan:#2fd3ff;
+      --male:#2fd3ff;
+      --female:#ff6bd6;
       --text:#fff;
+      --muted:rgba(255,255,255,.78);
     }
     *{box-sizing:border-box}
     html,body{
@@ -58,18 +59,20 @@
       margin-bottom:18px;
     }
     .heroHead{
-      padding:18px 20px 10px;
+      padding:22px 20px 14px;
       border-bottom:1px solid rgba(255,255,255,.08);
+      text-align:center;
     }
-    h1{
-      margin:0;
-      font-size:40px;
-      line-height:1;
-      font-weight:1000;
+    .logo{
+      width:min(520px,90%);
+      height:auto;
+      display:block;
+      margin:0 auto 10px;
+      filter:drop-shadow(0 0 18px rgba(255,0,170,.18));
     }
     .sub{
-      margin:10px 0 0;
-      opacity:.88;
+      margin:0;
+      opacity:.92;
       font-size:16px;
     }
     .heroBody{
@@ -84,10 +87,7 @@
       margin-bottom:6px;
       font-weight:700;
     }
-    .fieldGroup{
-      display:flex;
-      flex-direction:column;
-    }
+    .fieldGroup{display:flex;flex-direction:column}
     .toggle{
       display:flex;
       gap:10px;
@@ -103,7 +103,9 @@
       color:#fff;
       border:1px solid rgba(255,255,255,.16);
       min-width:120px;
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
     }
+    .toggle button:active{transform:scale(.98)}
     .toggle button.on{
       background:rgba(255,238,0,.16);
       border-color:rgba(255,238,0,.35);
@@ -137,7 +139,7 @@
       padding:12px 18px;
       border-radius:999px;
       font-weight:1000;
-      transition:transform .12s ease,opacity .12s ease;
+      transition:transform .12s ease,opacity .12s ease, box-shadow .12s ease;
     }
     .btn:active{transform:scale(.98)}
     .btnPrimary{
@@ -156,6 +158,23 @@
       flex-direction:column;
       gap:14px;
     }
+    .featured{
+      background:linear-gradient(135deg, rgba(255,238,0,.08), rgba(255,0,170,.10));
+      border:1px solid rgba(255,238,0,.18);
+      border-radius:24px;
+      box-shadow:0 0 35px rgba(255,238,0,.08), 0 0 28px rgba(255,0,170,.10);
+      overflow:hidden;
+    }
+    .featuredHead{
+      padding:14px 16px;
+      font-weight:1000;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+    }
+    .featuredBody{
+      padding:14px;
+    }
+
     .feedTop{
       display:flex;
       justify-content:space-between;
@@ -207,7 +226,19 @@
       border:1px solid rgba(255,255,255,.10);
       padding:14px;
       box-shadow:0 0 18px rgba(255,0,170,.08);
+      position:relative;
     }
+    .secret.male{
+      border-color:rgba(47,211,255,.28);
+      box-shadow:0 0 18px rgba(47,211,255,.08);
+      background:linear-gradient(180deg, rgba(47,211,255,.07), rgba(0,0,0,.22));
+    }
+    .secret.female{
+      border-color:rgba(255,107,214,.28);
+      box-shadow:0 0 18px rgba(255,107,214,.08);
+      background:linear-gradient(180deg, rgba(255,107,214,.07), rgba(0,0,0,.22));
+    }
+
     .secretMeta{
       display:flex;
       gap:10px;
@@ -222,17 +253,91 @@
       word-break:break-word;
       line-height:1.35;
       font-size:15px;
+      margin-bottom:12px;
     }
+
+    .reactionBar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:6px;
+    }
+    .reactionBtn{
+      border:none;
+      cursor:pointer;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      font-weight:1000;
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .reactionBtn:active{
+      transform:scale(.94);
+    }
+    .reactionBtn.bump{
+      animation:bump .24s ease;
+    }
+    .reactionIcon{
+      width:18px;
+      height:18px;
+      object-fit:contain;
+      display:block;
+    }
+    .reactionBtn.voted{
+      background:rgba(255,238,0,.12);
+      border-color:rgba(255,238,0,.22);
+      box-shadow:0 0 14px rgba(255,238,0,.10);
+    }
+
+    .shareBtn{
+      border:none;
+      cursor:pointer;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      font-weight:1000;
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .shareBtn:active{transform:scale(.96)}
+    .shareBtn.ok{
+      box-shadow:0 0 14px rgba(255,238,0,.12);
+      border-color:rgba(255,238,0,.25);
+    }
+
+    .footerRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
     .empty{
       opacity:.72;
       font-weight:700;
       padding:8px 2px;
     }
 
+    @keyframes bump{
+      0%{transform:scale(1)}
+      40%{transform:scale(1.12)}
+      100%{transform:scale(1)}
+    }
+
     @media (max-width: 860px){
       .heroBody{grid-template-columns:1fr}
       .boards{grid-template-columns:1fr}
-      h1{font-size:34px}
     }
   </style>
 </head>
@@ -241,13 +346,13 @@
 
     <div class="nav">
       <a href="https://miercoles.zaurio.es">Miércoles</a>
-      <a href="https://secretos.zaurio.es" class="active">Secretos</a>
+      <a href="https://secretos.zaurio.es" class="active">El Confesionario</a>
     </div>
 
     <section class="hero">
       <div class="heroHead">
-        <h1>Secretos Zaurio</h1>
-        <p class="sub">Confiesa de forma anónima. Tú envías. Zaurio decide si aparece.</p>
+        <img class="logo" src="https://miercoles.zaurio.es/assets/confesionario.png" alt="El Confesionario">
+        <p class="sub">Confiesa de forma anónima. Tú envías. Zaurio decide si se publica.</p>
       </div>
 
       <div class="heroBody">
@@ -265,32 +370,46 @@
         </div>
 
         <div class="fieldGroup full">
-          <div class="fieldLabel">Tu secreto</div>
+          <div class="fieldLabel">Tu confesión</div>
           <textarea id="texto" maxlength="700" placeholder="Cuenta tu secreto aquí..."></textarea>
         </div>
 
         <div class="fieldGroup full">
           <div class="actions">
             <div id="status" class="status"></div>
-            <button id="btnEnviar" class="btn btnPrimary">Enviar secreto</button>
+            <button id="btnEnviar" class="btn btnPrimary">Enviar confesión</button>
           </div>
         </div>
       </div>
     </section>
 
     <section class="feedWrap">
+      <section class="featured" id="featuredBox" style="display:none;">
+        <div class="featuredHead">🔥 Más reaccionado</div>
+        <div class="featuredBody" id="featuredBody"></div>
+      </section>
+
       <div class="feedTop">
-        <h2 style="margin:0;font-size:26px;">Secretos publicados</h2>
+        <h2 style="margin:0;font-size:26px;">Confesiones publicadas</h2>
         <div class="filters">
           <select id="sortSelect">
             <option value="new">Más recientes primero</option>
             <option value="old">Más antiguos primero</option>
           </select>
+
           <select id="viewSelect">
             <option value="split">2 columnas por género</option>
             <option value="all">Todos mezclados</option>
             <option value="hombre">Solo hombres</option>
             <option value="mujer">Solo mujeres</option>
+          </select>
+
+          <select id="reactionFilter">
+            <option value="all">Todas las reacciones</option>
+            <option value="fire">🔥 Fire</option>
+            <option value="heart">💖 Heart</option>
+            <option value="fear">😱 Fear</option>
+            <option value="sob">😭 Sob</option>
           </select>
         </div>
       </div>
@@ -312,6 +431,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase.js"></script>
   <script>
+    const ASSET = {
+      logo: "https://miercoles.zaurio.es/assets/confesionario.png",
+      fire: "https://miercoles.zaurio.es/assets/fire.png",
+      heart: "https://miercoles.zaurio.es/assets/heart.png",
+      fear: "https://miercoles.zaurio.es/assets/fear.png",
+      sob: "https://miercoles.zaurio.es/assets/sob.png"
+    };
+
     const btnHombre = document.getElementById("btnHombre");
     const btnMujer = document.getElementById("btnMujer");
     const edad = document.getElementById("edad");
@@ -321,12 +448,14 @@
 
     const sortSelect = document.getElementById("sortSelect");
     const viewSelect = document.getElementById("viewSelect");
+    const reactionFilter = document.getElementById("reactionFilter");
 
-    const boards = document.getElementById("boards");
     const boardH = document.getElementById("boardH");
     const boardM = document.getElementById("boardM");
     const listH = document.getElementById("listH");
     const listM = document.getElementById("listM");
+    const featuredBox = document.getElementById("featuredBox");
+    const featuredBody = document.getElementById("featuredBody");
 
     let genero = "hombre";
     let secretos = [];
@@ -360,30 +489,116 @@
       return d.toLocaleDateString() + " · " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
     }
 
-    function secretCard(s){
+    function permalink(s){
+      return `${location.origin}/?s=${encodeURIComponent(s.numero_secreto)}`;
+    }
+
+    function votedMap(){
+      try{
+        return JSON.parse(localStorage.getItem("zaurio_confesionario_votes") || "{}");
+      }catch{
+        return {};
+      }
+    }
+
+    function setVoted(secretId, reaction){
+      const map = votedMap();
+      map[secretId] = reaction;
+      localStorage.setItem("zaurio_confesionario_votes", JSON.stringify(map));
+    }
+
+    function getVoted(secretId){
+      return votedMap()[secretId] || null;
+    }
+
+    function reactionBtn(secretId, type, count){
+      const voted = getVoted(secretId) === type ? " voted" : "";
       return `
-        <article class="secret">
+        <button class="reactionBtn${voted}" data-react="${type}" data-id="${secretId}">
+          <img class="reactionIcon" src="${ASSET[type]}" alt="${type}">
+          <span>${count}</span>
+        </button>
+      `;
+    }
+
+    function secretCard(s){
+      const tint = s.genero === "hombre" ? "male" : "female";
+      return `
+        <article class="secret ${tint}" id="secret-${s.numero_secreto}">
           <div class="secretMeta">
             <span>#${s.numero_secreto ?? "—"}</span>
             <span>${s.genero === "hombre" ? "♂ Hombre" : "♀ Mujer"}</span>
             <span>${s.edad} años</span>
             <span>${formatDate(s.creado)}</span>
           </div>
+
           <div class="secretText">${esc(s.texto)}</div>
+
+          <div class="footerRow">
+            <div class="reactionBar">
+              ${reactionBtn(s.id, "fire", s.fire_count || 0)}
+              ${reactionBtn(s.id, "heart", s.heart_count || 0)}
+              ${reactionBtn(s.id, "fear", s.fear_count || 0)}
+              ${reactionBtn(s.id, "sob", s.sob_count || 0)}
+            </div>
+
+            <button class="shareBtn" data-share="${s.numero_secreto}">
+              Compartir
+            </button>
+          </div>
         </article>
       `;
     }
 
-    function renderLists(){
+    function currentList(){
+      let arr = [...secretos];
+
       const sort = sortSelect.value;
       const view = viewSelect.value;
+      const rf = reactionFilter.value;
 
-      let arr = [...secretos];
+      if (rf !== "all"){
+        arr = arr.filter(x => (x[rf + "_count"] || 0) > 0);
+      }
+
       arr.sort((a,b)=>{
         const da = new Date(a.creado).getTime();
         const db = new Date(b.creado).getTime();
         return sort === "new" ? db - da : da - db;
       });
+
+      return { arr, view };
+    }
+
+    function renderFeatured(arr){
+      if (!arr.length){
+        featuredBox.style.display = "none";
+        featuredBody.innerHTML = "";
+        return;
+      }
+
+      const sorted = [...arr].sort((a,b)=>{
+        const ta = a.total_reacciones || 0;
+        const tb = b.total_reacciones || 0;
+        if (tb !== ta) return tb - ta;
+        return new Date(b.creado) - new Date(a.creado);
+      });
+
+      const top = sorted[0];
+      if (!top || (top.total_reacciones || 0) <= 0){
+        featuredBox.style.display = "none";
+        featuredBody.innerHTML = "";
+        return;
+      }
+
+      featuredBox.style.display = "";
+      featuredBody.innerHTML = secretCard(top);
+    }
+
+    function renderLists(){
+      const { arr, view } = currentList();
+
+      renderFeatured(arr);
 
       listH.innerHTML = "";
       listM.innerHTML = "";
@@ -392,7 +607,7 @@
         boardH.style.display = "";
         boardM.style.display = "none";
         boardH.querySelector(".boardHead").textContent = "Todos";
-        listH.innerHTML = arr.length ? arr.map(secretCard).join("") : `<div class="empty">No hay secretos todavía.</div>`;
+        listH.innerHTML = arr.length ? arr.map(secretCard).join("") : `<div class="empty">No hay confesiones todavía.</div>`;
         return;
       }
 
@@ -401,7 +616,7 @@
         boardM.style.display = "none";
         boardH.querySelector(".boardHead").textContent = "♂ Hombre";
         const h = arr.filter(x=>x.genero==="hombre");
-        listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay secretos de hombres.</div>`;
+        listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones de hombres.</div>`;
         return;
       }
 
@@ -409,41 +624,105 @@
         boardH.style.display = "none";
         boardM.style.display = "";
         const m = arr.filter(x=>x.genero==="mujer");
-        listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay secretos de mujeres.</div>`;
+        listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones de mujeres.</div>`;
         return;
       }
 
-      // split
       boardH.style.display = "";
       boardM.style.display = "";
       boardH.querySelector(".boardHead").textContent = "♂ Hombre";
+      boardM.querySelector(".boardHead").textContent = "♀ Mujer";
 
       const h = arr.filter(x=>x.genero==="hombre");
       const m = arr.filter(x=>x.genero==="mujer");
 
-      listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay secretos de hombres.</div>`;
-      listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay secretos de mujeres.</div>`;
+      listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones de hombres.</div>`;
+      listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones de mujeres.</div>`;
     }
 
     async function cargarSecretos(){
       const { data, error } = await supabaseClient
-        .from("secretos")
-        .select("id,numero_secreto,genero,edad,texto,creado,estado")
+        .from("secretos_con_reacciones")
+        .select("*")
         .eq("estado","aprobado")
-        .limit(200);
+        .limit(300);
 
       if (error){
-        listH.innerHTML = `<div class="empty">Error cargando secretos.</div>`;
+        listH.innerHTML = `<div class="empty">Error cargando confesiones.</div>`;
         listM.innerHTML = "";
         return;
       }
 
       secretos = data || [];
       renderLists();
+      jumpToPermalink();
+    }
+
+    async function votar(secretId, reaction, btn){
+      const currentVote = getVoted(secretId);
+      if (currentVote){
+        btn.classList.add("bump");
+        setTimeout(()=>btn.classList.remove("bump"), 240);
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("secreto_reacciones")
+        .insert([{ secreto_id: secretId, reaccion: reaction }]);
+
+      if (error){
+        setStatus("❌ No se pudo registrar la reacción.", false);
+        return;
+      }
+
+      setVoted(secretId, reaction);
+      btn.classList.add("voted", "bump");
+      setTimeout(()=>btn.classList.remove("bump"), 240);
+      await cargarSecretos();
+    }
+
+    async function compartir(numero, btn){
+      const url = `${location.origin}/?s=${encodeURIComponent(numero)}`;
+      try{
+        await navigator.clipboard.writeText(url);
+        btn.classList.add("ok");
+        btn.textContent = "Copiado";
+        setTimeout(()=>{
+          btn.classList.remove("ok");
+          btn.textContent = "Compartir";
+        }, 1300);
+      }catch{
+        prompt("Copia este enlace:", url);
+      }
+    }
+
+    function jumpToPermalink(){
+      const sp = new URLSearchParams(location.search);
+      const s = sp.get("s");
+      if (!s) return;
+      const el = document.getElementById("secret-" + s);
+      if (!el) return;
+      el.scrollIntoView({ behavior:"smooth", block:"center" });
+      el.style.boxShadow = "0 0 24px rgba(255,238,0,.22), 0 0 22px rgba(255,0,170,.14)";
+      setTimeout(()=>{ el.style.boxShadow = ""; }, 1800);
     }
 
     sortSelect.addEventListener("change", renderLists);
     viewSelect.addEventListener("change", renderLists);
+    reactionFilter.addEventListener("change", renderLists);
+
+    document.addEventListener("click", async (e)=>{
+      const reactBtn = e.target.closest(".reactionBtn");
+      if (reactBtn){
+        await votar(reactBtn.dataset.id, reactBtn.dataset.react, reactBtn);
+        return;
+      }
+
+      const shareBtn = e.target.closest(".shareBtn");
+      if (shareBtn){
+        await compartir(shareBtn.dataset.share, shareBtn);
+      }
+    });
 
     btnEnviar.addEventListener("click", async ()=>{
       const e = parseInt(edad.value, 10);
@@ -458,7 +737,7 @@
         return;
       }
       if (t.length < 15){
-        setStatus("El secreto debe tener al menos 15 caracteres.", false);
+        setStatus("La confesión debe tener al menos 15 caracteres.", false);
         return;
       }
 
@@ -485,7 +764,7 @@
       texto.value = "";
       edad.value = "";
       setGenero("hombre");
-      setStatus("✅ Secreto enviado. Zaurio lo revisará.", true);
+      setStatus("✅ Confesión enviada. Zaurio la revisará.", true);
 
       btnEnviar.disabled = false;
       btnEnviar.style.opacity = "1";
