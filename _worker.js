@@ -3,26 +3,27 @@ export default {
 
     const url = new URL(request.url)
     const host = url.hostname
-
     let path = url.pathname
 
-    if (path === "/") {
-      path = "/index.html"
+    if (path === "/") path = "/index.html"
+
+    let folder = ""
+
+    if (host === "miercoles.zaurio.es") {
+      folder = "/miercoles.zaurio.es"
     }
 
-    // routing por subdominio
-    if (host.startsWith("secretos.zaurio.es")) {
-      path = "/secretos.zaurio.es" + path
+    if (host === "secretos.zaurio.es") {
+      folder = "/secretos.zaurio.es"
     }
 
-    if (host.startsWith("miercoles.zaurio.es")) {
-      path = "/miercoles.zaurio.es" + path
+    // dominio principal
+    if (host === "zaurio.es" || host === "www.zaurio.es") {
+      folder = ""
     }
 
-    const asset = await env.ASSETS.fetch(
-      new Request(url.origin + path, request)
-    )
+    const assetUrl = new URL(folder + path, url.origin)
 
-    return asset
+    return env.ASSETS.fetch(new Request(assetUrl, request))
   }
 }
