@@ -25,7 +25,6 @@
       --freeB: rgba(121,216,93,.08);
 
       --text:#fff;
-      --muted:rgba(255,255,255,.78);
       --glass: rgba(0,0,0,.22);
       --blurBg: rgba(8,4,16,.55);
     }
@@ -51,11 +50,9 @@
       position:sticky;
       top:10px;
       z-index:50;
-      display:flex;
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items:center;
-      justify-content:center;
-      gap:18px;
-      flex-wrap:wrap;
       margin-bottom:18px;
       padding:12px 16px;
       border-radius:999px;
@@ -64,6 +61,28 @@
       box-shadow:0 0 24px rgba(255,0,170,.08);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+    }
+
+    .menuLeft{
+      display:flex;
+      justify-content:flex-start;
+      align-items:center;
+      min-width:0;
+    }
+
+    .menuCenter{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:22px;
+      min-width:0;
+    }
+
+    .menuRight{
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+      min-width:0;
     }
 
     .menuLogoLink{
@@ -100,16 +119,16 @@
     }
 
     .menuLogo.zaurio{
-      max-height:44px;
+      max-height:52px;
       border-radius:10px;
     }
 
     .menuLogo.miercoles{
-      max-height:52px;
+      max-height:50px;
     }
 
-    .menuLogo.confesionario{
-      max-height:58px;
+    .menuLogo.confesion{
+      max-height:54px;
     }
 
     .composeBtn{
@@ -462,32 +481,20 @@
 
     .secret.male{
       border-color:rgba(47,211,255,.34);
-      background:
-        linear-gradient(180deg, var(--maleA), var(--maleB)),
-        rgba(0,0,0,.22);
-      box-shadow:
-        0 0 18px rgba(47,211,255,.09),
-        inset 0 0 0 1px rgba(47,211,255,.12);
+      background:linear-gradient(180deg, var(--maleA), var(--maleB)), rgba(0,0,0,.22);
+      box-shadow:0 0 18px rgba(47,211,255,.09), inset 0 0 0 1px rgba(47,211,255,.12);
     }
 
     .secret.female{
       border-color:rgba(255,107,214,.48);
-      background:
-        linear-gradient(180deg, var(--femaleA), var(--femaleB)),
-        rgba(0,0,0,.22);
-      box-shadow:
-        0 0 24px rgba(255,107,214,.16),
-        inset 0 0 0 1px rgba(255,107,214,.16);
+      background:linear-gradient(180deg, var(--femaleA), var(--femaleB)), rgba(0,0,0,.22);
+      box-shadow:0 0 24px rgba(255,107,214,.16), inset 0 0 0 1px rgba(255,107,214,.16);
     }
 
     .secret.free{
       border-color:rgba(121,216,93,.34);
-      background:
-        linear-gradient(180deg, var(--freeA), var(--freeB)),
-        rgba(0,0,0,.22);
-      box-shadow:
-        0 0 18px rgba(121,216,93,.10),
-        inset 0 0 0 1px rgba(121,216,93,.12);
+      background:linear-gradient(180deg, var(--freeA), var(--freeB)), rgba(0,0,0,.22);
+      box-shadow:0 0 18px rgba(121,216,93,.10), inset 0 0 0 1px rgba(121,216,93,.12);
     }
 
     .secretMeta{
@@ -555,13 +562,9 @@
       box-shadow:0 0 16px rgba(255,255,255,.06);
     }
 
-    .reactionBtn:active{
-      transform:scale(.94);
-    }
+    .reactionBtn:active{ transform:scale(.94); }
 
-    .reactionBtn.bump{
-      animation:bump .24s ease;
-    }
+    .reactionBtn.bump{ animation:bump .24s ease; }
 
     .reactionIcon{
       width:24px;
@@ -596,9 +599,7 @@
       box-shadow:0 0 16px rgba(255,255,255,.05);
     }
 
-    .shareBtn:active{
-      transform:scale(.96);
-    }
+    .shareBtn:active{ transform:scale(.96); }
 
     .shareBtn.ok{
       box-shadow:0 0 14px rgba(255,238,0,.12);
@@ -678,13 +679,18 @@
       }
 
       .topMenu{
-        gap:16px;
+        grid-template-columns: auto 1fr auto;
+        gap:10px;
         padding:12px 10px;
       }
 
-      .menuLogo.confesionario{ max-height:54px; }
-      .menuLogo.miercoles{ max-height:48px; }
-      .menuLogo.zaurio{ max-height:38px; }
+      .menuCenter{
+        gap:14px;
+      }
+
+      .menuLogo.zaurio{ max-height:42px; }
+      .menuLogo.miercoles{ max-height:42px; }
+      .menuLogo.confesion{ max-height:46px; }
 
       .composeBtn{
         min-width:46px;
@@ -694,9 +700,7 @@
 
       .logo{ width:min(260px,66%); }
 
-      .sub{
-        font-size:16px;
-      }
+      .sub{ font-size:16px; }
 
       .topFieldsRow{
         justify-content:center;
@@ -713,13 +717,9 @@
         flex:0 0 112px;
       }
 
-      textarea{
-        min-height:96px;
-      }
+      textarea{ min-height:96px; }
 
-      .reactionBar{
-        gap:6px;
-      }
+      .reactionBar{ gap:6px; }
 
       .reactionBtn{
         padding:8px 8px;
@@ -732,9 +732,7 @@
         flex:0 0 26px;
       }
 
-      .reactionBtn span{
-        font-size:14px;
-      }
+      .reactionBtn span{ font-size:14px; }
     }
 
     @media (max-width: 560px){
@@ -757,28 +755,34 @@
   <div class="wrap">
 
     <div class="topMenu">
-      <a class="menuLogoLink" href="https://zaurio.es" aria-label="Zaurio">
-        <img class="menuLogo zaurio" src="https://miercoles.zaurio.es/assets/favicon-32x32.png" alt="Zaurio">
-      </a>
+      <div class="menuLeft">
+        <a class="menuLogoLink" href="https://zaurio.es" aria-label="Zaurio">
+          <img class="menuLogo zaurio" src="https://miercoles.zaurio.es/assets/favicon-32x32.png" alt="Zaurio">
+        </a>
+      </div>
 
-      <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles de dramas">
-        <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/miercoles.png" alt="Miércoles">
-      </a>
+      <div class="menuCenter">
+        <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles">
+          <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/miercoles.png" alt="Miércoles">
+        </a>
 
-      <a class="menuLogoLink active" href="https://secretos.zaurio.es" aria-label="El Confesionario">
-        <img class="menuLogo confesionario" src="https://miercoles.zaurio.es/assets/confesion.png" alt="El Confesionario">
-      </a>
+        <a class="menuLogoLink active" href="https://secretos.zaurio.es" aria-label="El Confesionario">
+          <img class="menuLogo confesion" src="https://miercoles.zaurio.es/assets/confesion.png" alt="El Confesionario">
+        </a>
+      </div>
 
-      <button id="composeBtn" class="composeBtn" aria-label="Escribir confesión" title="Escribir confesión">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 20h9"/>
-          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
-        </svg>
-      </button>
+      <div class="menuRight">
+        <button id="composeBtn" class="composeBtn" aria-label="Escribir confesión" title="Escribir confesión">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <section class="pageIntro">
-      <img class="logo" src="https://miercoles.zaurio.es/assets/confesion.png" alt="El Confesionario">
+      <img class="logo" src="https://miercoles.zaurio.es/assets/confesionario.png" alt="El Confesionario">
       <p class="sub">Confiesa de forma anónima. Tú envías. Zaurio decide si se publica.</p>
     </section>
 
