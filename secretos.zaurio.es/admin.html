@@ -3,13 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin Secretos — Zaurio</title>
+  <title>Admin — El Confesionario</title>
+  <link rel="icon" href="https://miercoles.zaurio.es/assets/favicon.png">
   <style>
     :root{
       --card: rgba(36,0,70,.82);
       --stroke: rgba(255,255,255,.14);
       --yellow:#ffee00;
       --pink:#ff00aa;
+      --male:#2fd3ff;
+      --female:#ff6bd6;
     }
     *{box-sizing:border-box}
     body{
@@ -19,9 +22,7 @@
       font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
     }
     .wrap{width:min(1180px,94vw);margin:24px auto}
-    .nav{
-      display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;
-    }
+    .nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
     .nav a{
       text-decoration:none;color:white;background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.16);
@@ -30,6 +31,12 @@
     .nav a.active{
       background:rgba(255,238,0,.16);
       border-color:rgba(255,238,0,.28);
+    }
+    .logo{
+      width:min(420px,90%);
+      display:block;
+      margin:0 auto 12px;
+      filter:drop-shadow(0 0 18px rgba(255,0,170,.18));
     }
     .login{
       max-width:420px;margin:70px auto;padding:22px;border-radius:22px;
@@ -69,6 +76,14 @@
       background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.10);
       border-radius:18px;padding:14px;
     }
+    .card.male{
+      border-color:rgba(47,211,255,.28);
+      background:linear-gradient(180deg, rgba(47,211,255,.07), rgba(0,0,0,.22));
+    }
+    .card.female{
+      border-color:rgba(255,107,214,.28);
+      background:linear-gradient(180deg, rgba(255,107,214,.07), rgba(0,0,0,.22));
+    }
     .meta{
       display:flex;gap:10px;flex-wrap:wrap;font-size:12px;opacity:.82;margin-bottom:10px;font-weight:700;
     }
@@ -76,18 +91,21 @@
       white-space:pre-wrap;word-break:break-word;line-height:1.35;
     }
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .reactions{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:13px;font-weight:1000;opacity:.9;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="nav">
       <a href="https://miercoles.zaurio.es">Miércoles</a>
-      <a href="https://secretos.zaurio.es">Secretos</a>
-      <a href="https://secretos.zaurio.es/admin" class="active">Admin Secretos</a>
+      <a href="https://secretos.zaurio.es">El Confesionario</a>
+      <a href="https://secretos.zaurio.es/admin.html" class="active">Admin Confesionario</a>
     </div>
 
     <div id="login" class="login">
-      <h1 style="margin:0 0 6px;">🔒 Admin Secretos</h1>
+      <img class="logo" src="https://miercoles.zaurio.es/assets/confesionario.png" alt="El Confesionario">
       <p style="margin:0;opacity:.85;">Moderación de confesiones</p>
       <input id="email" class="field" placeholder="Email" value="dramasaurio@zaurio.es" />
       <input id="pass" class="field" type="password" placeholder="Contraseña" />
@@ -147,8 +165,9 @@
     }
 
     function card(s, pending=true){
+      const tint = s.genero === "hombre" ? "male" : "female";
       return `
-        <article class="card">
+        <article class="card ${tint}">
           <div class="meta">
             <span>#${s.numero_secreto ?? "—"}</span>
             <span>${s.genero === "hombre" ? "♂ Hombre" : "♀ Mujer"}</span>
@@ -156,6 +175,15 @@
             <span>${new Date(s.creado).toLocaleDateString()} · ${new Date(s.creado).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</span>
           </div>
           <div class="text">${esc(s.texto)}</div>
+
+          <div class="reactions">
+            <span>🔥 ${s.fire_count || 0}</span>
+            <span>💖 ${s.heart_count || 0}</span>
+            <span>😱 ${s.fear_count || 0}</span>
+            <span>😭 ${s.sob_count || 0}</span>
+            <span>Σ ${s.total_reacciones || 0}</span>
+          </div>
+
           <div class="actions">
             ${pending ? `<button class="btn btnPrimary" data-act="approve" data-id="${s.id}">Aprobar</button>` : ``}
             <button class="btn btnDanger" data-act="archive" data-id="${s.id}">Archivar</button>
@@ -166,20 +194,20 @@
 
     async function loadData(){
       const pend = await supabaseClient
-        .from("secretos")
-        .select("id,numero_secreto,genero,edad,texto,creado,estado")
+        .from("secretos_con_reacciones")
+        .select("*")
         .eq("estado","pendiente")
         .order("creado",{ascending:false});
 
       const ok = await supabaseClient
-        .from("secretos")
-        .select("id,numero_secreto,genero,edad,texto,creado,estado")
+        .from("secretos_con_reacciones")
+        .select("*")
         .eq("estado","aprobado")
         .order("creado",{ascending:false})
         .limit(20);
 
       if (pend.error || ok.error){
-        pendGrid.innerHTML = `<div>❌ Error cargando secretos.</div>`;
+        pendGrid.innerHTML = `<div>❌ Error cargando confesiones.</div>`;
         okGrid.innerHTML = "";
         return;
       }
