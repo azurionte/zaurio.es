@@ -214,7 +214,6 @@
       flex-direction:column;
     }
 
-    /* switch triple */
     .switchRow{
       display:flex;
       gap:12px;
@@ -232,76 +231,70 @@
       min-width:180px;
     }
 
-    .switchWrap{
-      position:relative;
-      width:100%;
-      max-width:430px;
+    .identityPicker{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:10px 14px;
+      min-height:54px;
+      border-radius:999px;
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.14);
-      border-radius:999px;
-      padding:6px;
-      overflow:hidden;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
     }
 
-    .switchTrack{
-      position:relative;
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
+    .identityDots{
+      display:flex;
       align-items:center;
-      min-height:52px;
+      gap:14px;
     }
 
-    .switchThumb{
-      position:absolute;
-      top:4px;
-      left:4px;
-      width:calc((100% - 8px) / 3);
-      height:calc(100% - 8px);
+    .identityBtn{
+      width:28px;
+      height:28px;
       border-radius:999px;
-      transition:transform .22s ease, background .22s ease, box-shadow .22s ease;
-      box-shadow:0 0 16px rgba(255,255,255,.06);
-      z-index:1;
-    }
-
-    .switchThumb.hombre{
-      background:rgba(47,211,255,.18);
-      box-shadow:0 0 18px rgba(47,211,255,.12);
-      transform:translateX(0);
-    }
-
-    .switchThumb.libre{
-      background:rgba(121,216,93,.18);
-      box-shadow:0 0 18px rgba(121,216,93,.10);
-      transform:translateX(100%);
-    }
-
-    .switchThumb.mujer{
-      background:rgba(255,107,214,.20);
-      box-shadow:0 0 18px rgba(255,107,214,.12);
-      transform:translateX(200%);
-    }
-
-    .switchOption{
-      position:relative;
-      z-index:2;
       border:none;
-      background:transparent;
-      color:#fff;
-      font-weight:1000;
-      font-size:15px;
       cursor:pointer;
-      padding:0 8px;
-      height:52px;
-      transition:transform .12s ease, opacity .12s ease;
-      opacity:.86;
+      position:relative;
+      transition:transform .14s ease, box-shadow .14s ease, opacity .14s ease;
+      opacity:.84;
+      flex:0 0 28px;
     }
 
-    .switchOption:active{
-      transform:scale(.98);
-    }
-
-    .switchOption.active{
+    .identityBtn:hover{
+      transform:scale(1.08);
       opacity:1;
+    }
+
+    .identityBtn:active{
+      transform:scale(.96);
+    }
+
+    .identityBtn.active{
+      opacity:1;
+      box-shadow:0 0 0 3px rgba(255,255,255,.18), 0 0 18px rgba(255,255,255,.08);
+    }
+
+    .identityBtn.cyan{
+      background:var(--cyan);
+      box-shadow:0 0 16px rgba(47,211,255,.24);
+    }
+
+    .identityBtn.green{
+      background:var(--green);
+      box-shadow:0 0 16px rgba(121,216,93,.22);
+    }
+
+    .identityBtn.magenta{
+      background:#ff58d6;
+      box-shadow:0 0 16px rgba(255,88,214,.24);
+    }
+
+    .identityHint{
+      font-size:14px;
+      font-weight:900;
+      opacity:.82;
+      min-width:80px;
     }
 
     input, textarea, select{
@@ -425,6 +418,9 @@
       font-weight:1000;
       border-bottom:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.04);
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
 
     .boardBody{
@@ -484,7 +480,21 @@
       opacity:.86;
       margin-bottom:10px;
       font-weight:700;
+      align-items:center;
     }
+
+    .idDot{
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      display:inline-block;
+      flex:0 0 14px;
+      box-shadow:0 0 12px rgba(255,255,255,.10);
+    }
+
+    .idDot.male{ background:var(--cyan); }
+    .idDot.free{ background:var(--green); }
+    .idDot.female{ background:#ff58d6; }
 
     .secretText{
       white-space:pre-wrap;
@@ -496,10 +506,11 @@
 
     .reactionBar{
       display:flex;
-      gap:10px;
-      flex-wrap:wrap;
+      gap:8px;
+      flex-wrap:nowrap;
       align-items:center;
       margin-top:6px;
+      width:100%;
     }
 
     .reactionBtn{
@@ -511,10 +522,13 @@
       color:#fff;
       display:inline-flex;
       align-items:center;
-      gap:9px;
-      padding:9px 13px;
+      justify-content:center;
+      gap:8px;
+      padding:9px 10px;
       font-weight:1000;
       transition:transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+      flex:1 1 0;
+      min-width:0;
     }
 
     .reactionBtn:hover{
@@ -530,11 +544,11 @@
     }
 
     .reactionIcon{
-      width:22px;
-      height:22px;
+      width:24px;
+      height:24px;
       object-fit:contain;
       display:block;
-      flex:0 0 22px;
+      flex:0 0 24px;
     }
 
     .reactionBtn.voted{
@@ -703,16 +717,12 @@
       }
 
       .reactionBar{
-        width:100%;
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
+        gap:6px;
       }
 
       .reactionBtn{
-        width:100%;
-        justify-content:center;
-        padding:11px 14px;
+        padding:8px 8px;
+        gap:6px;
       }
 
       .reactionIcon{
@@ -757,13 +767,13 @@
         <div class="fieldGroup full switchRow">
           <div class="identityBlock">
             <div class="fieldLabel">Identidad</div>
-            <div class="switchWrap">
-              <div id="switchThumb" class="switchThumb hombre"></div>
-              <div class="switchTrack">
-                <button id="btnHombre" class="switchOption active" type="button">♂ Hombre</button>
-                <button id="btnLibre" class="switchOption" type="button">◌ Libre</button>
-                <button id="btnMujer" class="switchOption" type="button">♀ Mujer</button>
+            <div class="identityPicker">
+              <div class="identityDots">
+                <button id="btnHombre" class="identityBtn cyan active" type="button" aria-label="Identidad cyan"></button>
+                <button id="btnLibre" class="identityBtn green" type="button" aria-label="Identidad verde"></button>
+                <button id="btnMujer" class="identityBtn magenta" type="button" aria-label="Identidad magenta"></button>
               </div>
+              <div id="identityHint" class="identityHint">Cyan</div>
             </div>
           </div>
 
@@ -804,9 +814,9 @@
           <select id="viewSelect">
             <option value="split">Columnas por identidad</option>
             <option value="all">Todos mezclados</option>
-            <option value="hombre">Solo hombres</option>
-            <option value="libre">Solo libre</option>
-            <option value="mujer">Solo mujeres</option>
+            <option value="hombre">Solo cyan</option>
+            <option value="libre">Solo verde</option>
+            <option value="mujer">Solo magenta</option>
           </select>
 
           <select id="reactionFilter">
@@ -821,17 +831,17 @@
 
       <div id="boards" class="boards">
         <div class="board" id="boardH">
-          <div class="boardHead">♂ Hombre</div>
+          <div class="boardHead"><span class="idDot male"></span> Cyan</div>
           <div class="boardBody" id="listH"></div>
         </div>
 
         <div class="board" id="boardL">
-          <div class="boardHead">◌ Libre</div>
+          <div class="boardHead"><span class="idDot free"></span> Verde</div>
           <div class="boardBody" id="listL"></div>
         </div>
 
         <div class="board" id="boardM">
-          <div class="boardHead">♀ Mujer</div>
+          <div class="boardHead"><span class="idDot female"></span> Magenta</div>
           <div class="boardBody" id="listM"></div>
         </div>
       </div>
@@ -859,7 +869,7 @@
     const btnHombre = document.getElementById("btnHombre");
     const btnLibre = document.getElementById("btnLibre");
     const btnMujer = document.getElementById("btnMujer");
-    const switchThumb = document.getElementById("switchThumb");
+    const identityHint = document.getElementById("identityHint");
 
     const edad = document.getElementById("edad");
     const texto = document.getElementById("texto");
@@ -897,7 +907,9 @@
       btnLibre.classList.toggle("active", v === "libre");
       btnMujer.classList.toggle("active", v === "mujer");
 
-      switchThumb.className = "switchThumb " + v;
+      if (v === "hombre") identityHint.textContent = "Cyan";
+      else if (v === "mujer") identityHint.textContent = "Magenta";
+      else identityHint.textContent = "Verde";
     }
 
     btnHombre.addEventListener("click", ()=>setGenero("hombre"));
@@ -953,13 +965,13 @@
       `;
     }
 
-    function labelGenero(g){
-      if (g === "hombre") return "♂ Hombre";
-      if (g === "mujer") return "♀ Mujer";
-      return "◌ Libre";
+    function classGenero(g){
+      if (g === "hombre") return "male";
+      if (g === "mujer") return "female";
+      return "free";
     }
 
-    function classGenero(g){
+    function dotGenero(g){
       if (g === "hombre") return "male";
       if (g === "mujer") return "female";
       return "free";
@@ -967,11 +979,13 @@
 
     function secretCard(s){
       const tint = classGenero(s.genero);
+      const dot = dotGenero(s.genero);
+
       return `
         <article class="secret ${tint}" id="secret-${s.numero_secreto}">
           <div class="secretMeta">
             <span>#${s.numero_secreto ?? "—"}</span>
-            <span>${labelGenero(s.genero)}</span>
+            <span class="idDot ${dot}"></span>
             <span>${s.edad} años</span>
             <span>${formatDate(s.creado)}</span>
           </div>
@@ -1052,7 +1066,7 @@
         boardH.style.display = "";
         boardL.style.display = "none";
         boardM.style.display = "none";
-        boardH.querySelector(".boardHead").textContent = "Todos";
+        boardH.querySelector(".boardHead").innerHTML = `<span>Todos</span>`;
         listH.innerHTML = arr.length ? arr.map(secretCard).join("") : `<div class="empty">No hay confesiones todavía.</div>`;
         return;
       }
@@ -1061,9 +1075,9 @@
         boardH.style.display = "";
         boardL.style.display = "none";
         boardM.style.display = "none";
-        boardH.querySelector(".boardHead").textContent = "♂ Hombre";
+        boardH.querySelector(".boardHead").innerHTML = `<span class="idDot male"></span> Cyan`;
         const h = arr.filter(x=>x.genero==="hombre");
-        listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones de hombres.</div>`;
+        listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones cyan.</div>`;
         return;
       }
 
@@ -1072,7 +1086,7 @@
         boardL.style.display = "";
         boardM.style.display = "none";
         const l = arr.filter(x=>x.genero==="libre");
-        listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones libres.</div>`;
+        listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones verdes.</div>`;
         return;
       }
 
@@ -1081,24 +1095,24 @@
         boardL.style.display = "none";
         boardM.style.display = "";
         const m = arr.filter(x=>x.genero==="mujer");
-        listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones de mujeres.</div>`;
+        listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones magenta.</div>`;
         return;
       }
 
       boardH.style.display = "";
       boardL.style.display = "";
       boardM.style.display = "";
-      boardH.querySelector(".boardHead").textContent = "♂ Hombre";
-      boardL.querySelector(".boardHead").textContent = "◌ Libre";
-      boardM.querySelector(".boardHead").textContent = "♀ Mujer";
+      boardH.querySelector(".boardHead").innerHTML = `<span class="idDot male"></span> Cyan`;
+      boardL.querySelector(".boardHead").innerHTML = `<span class="idDot free"></span> Verde`;
+      boardM.querySelector(".boardHead").innerHTML = `<span class="idDot female"></span> Magenta`;
 
       const h = arr.filter(x=>x.genero==="hombre");
       const l = arr.filter(x=>x.genero==="libre");
       const m = arr.filter(x=>x.genero==="mujer");
 
-      listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones de hombres.</div>`;
-      listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones libres.</div>`;
-      listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones de mujeres.</div>`;
+      listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones cyan.</div>`;
+      listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones verdes.</div>`;
+      listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones magenta.</div>`;
     }
 
     async function cargarSecretos(){
