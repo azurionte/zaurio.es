@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>El Confesionario</title>
   <link rel="icon" href="https://miercoles.zaurio.es/assets/favicon.png">
+
   <style>
     :root{
       --card: rgba(36,0,70,.82);
@@ -12,44 +13,102 @@
       --yellow:#ffee00;
       --pink:#ff00aa;
       --cyan:#2fd3ff;
-      --male:#2fd3ff;
-      --female:#ff6bd6;
+      --maleA: rgba(47,211,255,.12);
+      --maleB: rgba(47,211,255,.06);
+      --femaleA: rgba(255,107,214,.18);
+      --femaleB: rgba(255,0,170,.08);
       --text:#fff;
       --muted:rgba(255,255,255,.78);
+      --glass: rgba(0,0,0,.22);
+      --blurBg: rgba(8,4,16,.55);
     }
-    *{box-sizing:border-box}
+
+    *{ box-sizing:border-box; }
+
     html,body{
       margin:0;
       min-height:100%;
-      background:radial-gradient(circle at top,#2a0046 0%,#12001d 35%,#000 100%);
+      background:
+        radial-gradient(circle at top, #2a0046 0%, #12001d 35%, #000 100%);
       color:var(--text);
       font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
     }
+
+    body.modal-open{
+      overflow:hidden;
+    }
+
     .wrap{
       width:min(1180px,94vw);
       margin:20px auto 40px;
     }
-    .nav{
+
+    /* =========================
+       TOP LOGO MENU
+    ========================= */
+    .topMenu{
       display:flex;
-      gap:10px;
+      align-items:center;
+      justify-content:center;
+      gap:22px;
       flex-wrap:wrap;
-      margin-bottom:16px;
-    }
-    .nav a{
-      text-decoration:none;
-      color:white;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.16);
-      padding:10px 14px;
+      margin-bottom:18px;
+      padding:10px 12px;
       border-radius:999px;
-      font-weight:1000;
-      box-shadow:0 0 18px rgba(255,0,170,.12);
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 0 24px rgba(255,0,170,.08);
+      backdrop-filter: blur(8px);
     }
-    .nav a.active{
-      background:rgba(255,238,0,.16);
-      border-color:rgba(255,238,0,.28);
-      color:#fff;
+
+    .menuLogoLink{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      transition:transform .16s ease, filter .16s ease, opacity .16s ease;
+      transform-origin:center center;
+      opacity:.78;
+      filter: grayscale(1) brightness(.7);
     }
+
+    .menuLogoLink:hover{
+      transform:translateY(-2px) scale(1.03);
+      opacity:1;
+      filter: grayscale(0) brightness(1);
+    }
+
+    .menuLogoLink.active{
+      opacity:1;
+      filter: grayscale(0) brightness(1);
+    }
+
+    .menuLogoLink.active .menuLogo{
+      filter: drop-shadow(0 0 18px rgba(255,0,170,.16));
+    }
+
+    .menuLogo{
+      display:block;
+      height:auto;
+      max-height:42px;
+      width:auto;
+    }
+
+    .menuLogo.zaurio{
+      max-height:38px;
+    }
+
+    .menuLogo.miercoles{
+      max-height:40px;
+    }
+
+    .menuLogo.confesionario{
+      max-height:44px;
+    }
+
+    /* =========================
+       HERO
+    ========================= */
     .hero{
       background:var(--card);
       border:1px solid var(--stroke);
@@ -58,11 +117,13 @@
       overflow:hidden;
       margin-bottom:18px;
     }
+
     .heroHead{
       padding:22px 20px 14px;
       border-bottom:1px solid rgba(255,255,255,.08);
       text-align:center;
     }
+
     .logo{
       width:min(520px,90%);
       height:auto;
@@ -70,29 +131,38 @@
       margin:0 auto 10px;
       filter:drop-shadow(0 0 18px rgba(255,0,170,.18));
     }
+
     .sub{
       margin:0;
       opacity:.92;
       font-size:16px;
     }
+
     .heroBody{
       padding:18px 20px 20px;
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:14px;
     }
+
     .fieldLabel{
       font-size:13px;
       opacity:.82;
       margin-bottom:6px;
       font-weight:700;
     }
-    .fieldGroup{display:flex;flex-direction:column}
+
+    .fieldGroup{
+      display:flex;
+      flex-direction:column;
+    }
+
     .toggle{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
     }
+
     .toggle button{
       border:none;
       cursor:pointer;
@@ -105,15 +175,20 @@
       min-width:120px;
       transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
     }
-    .toggle button:active{transform:scale(.98)}
+
+    .toggle button:active{
+      transform:scale(.98);
+    }
+
     .toggle button.on{
       background:rgba(255,238,0,.16);
       border-color:rgba(255,238,0,.35);
       box-shadow:0 0 18px rgba(255,238,0,.10);
     }
+
     input, textarea, select{
       width:100%;
-      background:rgba(0,0,0,.22);
+      background:var(--glass);
       color:#fff;
       border:1px solid rgba(255,255,255,.16);
       border-radius:18px;
@@ -121,11 +196,16 @@
       font-size:16px;
       outline:none;
     }
+
     textarea{
       min-height:180px;
       resize:vertical;
     }
-    .full{grid-column:1 / -1}
+
+    .full{
+      grid-column:1 / -1;
+    }
+
     .actions{
       display:flex;
       justify-content:space-between;
@@ -133,31 +213,41 @@
       gap:12px;
       flex-wrap:wrap;
     }
+
     .btn{
       border:none;
       cursor:pointer;
       padding:12px 18px;
       border-radius:999px;
       font-weight:1000;
-      transition:transform .12s ease,opacity .12s ease, box-shadow .12s ease;
+      transition:transform .12s ease,opacity .12s ease, box-shadow .12s ease, background .12s ease;
     }
-    .btn:active{transform:scale(.98)}
+
+    .btn:active{
+      transform:scale(.98);
+    }
+
     .btnPrimary{
       background:var(--yellow);
       color:#1a002a;
       box-shadow:0 0 18px rgba(255,238,0,.25);
     }
+
     .status{
       font-weight:1000;
       min-height:22px;
       white-space:pre-wrap;
     }
 
+    /* =========================
+       FEED
+    ========================= */
     .feedWrap{
       display:flex;
       flex-direction:column;
       gap:14px;
     }
+
     .featured{
       background:linear-gradient(135deg, rgba(255,238,0,.08), rgba(255,0,170,.10));
       border:1px solid rgba(255,238,0,.18);
@@ -165,12 +255,14 @@
       box-shadow:0 0 35px rgba(255,238,0,.08), 0 0 28px rgba(255,0,170,.10);
       overflow:hidden;
     }
+
     .featuredHead{
       padding:14px 16px;
       font-weight:1000;
       border-bottom:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.04);
     }
+
     .featuredBody{
       padding:14px;
     }
@@ -182,11 +274,13 @@
       flex-wrap:wrap;
       align-items:center;
     }
+
     .filters{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
     }
+
     .filters select{
       width:auto;
       min-width:180px;
@@ -207,12 +301,14 @@
       box-shadow:0 0 35px rgba(255,0,170,.16);
       overflow:hidden;
     }
+
     .boardHead{
       padding:14px 16px;
       font-weight:1000;
       border-bottom:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.04);
     }
+
     .boardBody{
       padding:14px;
       display:flex;
@@ -220,6 +316,9 @@
       gap:12px;
     }
 
+    /* =========================
+       SECRET CARD
+    ========================= */
     .secret{
       border-radius:18px;
       background:rgba(0,0,0,.22);
@@ -228,15 +327,25 @@
       box-shadow:0 0 18px rgba(255,0,170,.08);
       position:relative;
     }
+
     .secret.male{
-      border-color:rgba(47,211,255,.28);
-      box-shadow:0 0 18px rgba(47,211,255,.08);
-      background:linear-gradient(180deg, rgba(47,211,255,.07), rgba(0,0,0,.22));
+      border-color:rgba(47,211,255,.32);
+      background:
+        linear-gradient(180deg, var(--maleA), var(--maleB)),
+        rgba(0,0,0,.22);
+      box-shadow:
+        0 0 18px rgba(47,211,255,.08),
+        inset 0 0 0 1px rgba(47,211,255,.10);
     }
+
     .secret.female{
-      border-color:rgba(255,107,214,.28);
-      box-shadow:0 0 18px rgba(255,107,214,.08);
-      background:linear-gradient(180deg, rgba(255,107,214,.07), rgba(0,0,0,.22));
+      border-color:rgba(255,107,214,.42);
+      background:
+        linear-gradient(180deg, var(--femaleA), var(--femaleB)),
+        rgba(0,0,0,.22);
+      box-shadow:
+        0 0 22px rgba(255,107,214,.12),
+        inset 0 0 0 1px rgba(255,107,214,.12);
     }
 
     .secretMeta{
@@ -244,10 +353,11 @@
       gap:10px;
       flex-wrap:wrap;
       font-size:12px;
-      opacity:.82;
+      opacity:.86;
       margin-bottom:10px;
       font-weight:700;
     }
+
     .secretText{
       white-space:pre-wrap;
       word-break:break-word;
@@ -263,6 +373,7 @@
       align-items:center;
       margin-top:6px;
     }
+
     .reactionBtn{
       border:none;
       cursor:pointer;
@@ -275,20 +386,28 @@
       gap:8px;
       padding:8px 12px;
       font-weight:1000;
-      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
     }
+
+    .reactionBtn:hover{
+      box-shadow:0 0 16px rgba(255,255,255,.06);
+    }
+
     .reactionBtn:active{
       transform:scale(.94);
     }
+
     .reactionBtn.bump{
       animation:bump .24s ease;
     }
+
     .reactionIcon{
       width:18px;
       height:18px;
       object-fit:contain;
       display:block;
     }
+
     .reactionBtn.voted{
       background:rgba(255,238,0,.12);
       border-color:rgba(255,238,0,.22);
@@ -307,12 +426,21 @@
       gap:8px;
       padding:8px 12px;
       font-weight:1000;
-      transition:transform .12s ease, box-shadow .12s ease;
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
     }
-    .shareBtn:active{transform:scale(.96)}
+
+    .shareBtn:hover{
+      box-shadow:0 0 16px rgba(255,255,255,.05);
+    }
+
+    .shareBtn:active{
+      transform:scale(.96);
+    }
+
     .shareBtn.ok{
       box-shadow:0 0 14px rgba(255,238,0,.12);
       border-color:rgba(255,238,0,.25);
+      background:rgba(255,238,0,.10);
     }
 
     .footerRow{
@@ -329,6 +457,52 @@
       padding:8px 2px;
     }
 
+    /* =========================
+       MODAL PERMALINK
+    ========================= */
+    .modalOverlay{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      background:var(--blurBg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index:999;
+    }
+
+    .modalOverlay.on{
+      display:flex;
+    }
+
+    .modalCard{
+      width:min(860px, 92vw);
+      max-height:85vh;
+      overflow:auto;
+      border-radius:24px;
+      background:rgba(20,10,34,.95);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 0 42px rgba(255,0,170,.22);
+      padding:16px;
+      position:relative;
+    }
+
+    .modalClose{
+      position:absolute;
+      top:12px;
+      right:12px;
+      border:none;
+      cursor:pointer;
+      border-radius:999px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.16);
+      color:#fff;
+      padding:8px 12px;
+      font-weight:1000;
+    }
+
     @keyframes bump{
       0%{transform:scale(1)}
       40%{transform:scale(1.12)}
@@ -338,15 +512,37 @@
     @media (max-width: 860px){
       .heroBody{grid-template-columns:1fr}
       .boards{grid-template-columns:1fr}
+      .topMenu{
+        gap:16px;
+        padding:10px;
+      }
+      .menuLogo.confesionario{
+        max-height:38px;
+      }
+      .menuLogo.miercoles{
+        max-height:34px;
+      }
+      .menuLogo.zaurio{
+        max-height:30px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
 
-    <div class="nav">
-      <a href="https://miercoles.zaurio.es">Miércoles</a>
-      <a href="https://secretos.zaurio.es" class="active">El Confesionario</a>
+    <div class="topMenu">
+      <a class="menuLogoLink" href="https://zaurio.es" aria-label="Zaurio">
+        <img class="menuLogo zaurio" src="https://miercoles.zaurio.es/assets/favicon.png" alt="Zaurio">
+      </a>
+
+      <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles de dramas">
+        <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/logo-miercoles.png" alt="Miércoles de dramas y chismes">
+      </a>
+
+      <a class="menuLogoLink active" href="https://secretos.zaurio.es" aria-label="El Confesionario">
+        <img class="menuLogo confesionario" src="https://miercoles.zaurio.es/assets/confesionario.png" alt="El Confesionario">
+      </a>
     </div>
 
     <section class="hero">
@@ -428,6 +624,13 @@
     </section>
   </div>
 
+  <div id="modalOverlay" class="modalOverlay">
+    <div class="modalCard">
+      <button id="modalClose" class="modalClose">Cerrar</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase.js"></script>
   <script>
@@ -436,7 +639,9 @@
       fire: "https://miercoles.zaurio.es/assets/fire.png",
       heart: "https://miercoles.zaurio.es/assets/heart.png",
       fear: "https://miercoles.zaurio.es/assets/fear.png",
-      sob: "https://miercoles.zaurio.es/assets/sob.png"
+      sob: "https://miercoles.zaurio.es/assets/sob.png",
+      zaurio: "https://miercoles.zaurio.es/assets/favicon.png",
+      miercoles: "https://miercoles.zaurio.es/assets/logo-miercoles.png"
     };
 
     const btnHombre = document.getElementById("btnHombre");
@@ -456,6 +661,10 @@
     const listM = document.getElementById("listM");
     const featuredBox = document.getElementById("featuredBox");
     const featuredBody = document.getElementById("featuredBody");
+
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalBody = document.getElementById("modalBody");
+    const modalClose = document.getElementById("modalClose");
 
     let genero = "hombre";
     let secretos = [];
@@ -655,7 +864,7 @@
 
       secretos = data || [];
       renderLists();
-      jumpToPermalink();
+      openPermalinkIfPresent();
     }
 
     async function votar(secretId, reaction, btn){
@@ -696,15 +905,32 @@
       }
     }
 
-    function jumpToPermalink(){
+    function openModal(html){
+      modalBody.innerHTML = html;
+      modalOverlay.classList.add("on");
+      document.body.classList.add("modal-open");
+    }
+
+    function closeModal(){
+      modalOverlay.classList.remove("on");
+      document.body.classList.remove("modal-open");
+      modalBody.innerHTML = "";
+    }
+
+    modalClose.addEventListener("click", closeModal);
+    modalOverlay.addEventListener("click", (e)=>{
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    function openPermalinkIfPresent(){
       const sp = new URLSearchParams(location.search);
       const s = sp.get("s");
       if (!s) return;
-      const el = document.getElementById("secret-" + s);
-      if (!el) return;
-      el.scrollIntoView({ behavior:"smooth", block:"center" });
-      el.style.boxShadow = "0 0 24px rgba(255,238,0,.22), 0 0 22px rgba(255,0,170,.14)";
-      setTimeout(()=>{ el.style.boxShadow = ""; }, 1800);
+
+      const target = secretos.find(x => String(x.numero_secreto) === String(s));
+      if (!target) return;
+
+      openModal(secretCard(target));
     }
 
     sortSelect.addEventListener("change", renderLists);
