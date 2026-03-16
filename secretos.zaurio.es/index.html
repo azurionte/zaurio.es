@@ -50,23 +50,17 @@
       margin:18px auto 40px;
     }
 
-    /* =========================
-       TOP MENU
-    ========================= */
     .topMenu{
       position:sticky;
       top:10px;
       z-index:50;
-
       display:flex;
       align-items:center;
       justify-content:center;
       gap:18px;
       flex-wrap:wrap;
-
       margin-bottom:18px;
       padding:12px 16px;
-
       border-radius:999px;
       background:rgba(32,8,56,.78);
       border:1px solid rgba(255,255,255,.10);
@@ -157,16 +151,13 @@
       display:block;
     }
 
-    /* =========================
-       HEADER OUTSIDE COMPOSER
-    ========================= */
     .pageIntro{
       text-align:center;
       margin-bottom:14px;
     }
 
     .logo{
-      width:min(320px,72%);
+      width:min(300px,68%);
       height:auto;
       display:block;
       margin:0 auto 10px;
@@ -181,9 +172,6 @@
       line-height:1.32;
     }
 
-    /* =========================
-       COMPOSER
-    ========================= */
     .composer{
       background:var(--card);
       border:1px solid var(--stroke);
@@ -197,7 +185,14 @@
     .composerBody{
       padding:16px 18px 18px;
       display:grid;
-      grid-template-columns: minmax(340px, 1fr) 180px;
+      grid-template-columns: 1fr;
+      gap:12px;
+      align-items:end;
+    }
+
+    .topFieldsRow{
+      display:grid;
+      grid-template-columns:minmax(280px, 1fr) 160px;
       gap:12px;
       align-items:end;
     }
@@ -214,87 +209,69 @@
       flex-direction:column;
     }
 
-    .switchRow{
-      display:flex;
-      gap:12px;
-      align-items:end;
-      flex-wrap:wrap;
-    }
-
-    .identityBlock{
-      flex:1;
-      min-width:280px;
-    }
-
-    .ageBlock{
-      width:180px;
-      min-width:180px;
-    }
-
-    .identityPicker{
+    .identityWrap{
       display:flex;
       align-items:center;
-      gap:16px;
-      padding:10px 14px;
-      min-height:54px;
+      gap:12px;
+      min-height:52px;
+      padding:10px 12px;
       border-radius:999px;
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.14);
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+      overflow:hidden;
     }
 
-    .identityDots{
-      display:flex;
-      align-items:center;
-      gap:14px;
-    }
-
-    .identityBtn{
-      width:28px;
-      height:28px;
+    .identityDot{
+      position:relative;
+      width:30px;
+      height:30px;
       border-radius:999px;
       border:none;
       cursor:pointer;
-      position:relative;
       transition:transform .14s ease, box-shadow .14s ease, opacity .14s ease;
-      opacity:.84;
-      flex:0 0 28px;
+      box-shadow:0 0 0 2px rgba(255,255,255,.10);
+      opacity:.82;
+      flex:0 0 30px;
     }
 
-    .identityBtn:hover{
+    .identityDot:hover{
       transform:scale(1.08);
       opacity:1;
     }
 
-    .identityBtn:active{
-      transform:scale(.96);
+    .identityDot:active{
+      transform:scale(.95);
     }
 
-    .identityBtn.active{
+    .identityDot.active{
       opacity:1;
-      box-shadow:0 0 0 3px rgba(255,255,255,.18), 0 0 18px rgba(255,255,255,.08);
+      box-shadow:
+        0 0 0 3px rgba(255,255,255,.18),
+        0 0 18px rgba(255,255,255,.12);
     }
 
-    .identityBtn.cyan{
+    .identityDot.active::after{
+      content:"";
+      position:absolute;
+      inset:50% auto auto 50%;
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:#fff;
+      transform:translate(-50%, -50%);
+      box-shadow:0 0 10px rgba(255,255,255,.65);
+    }
+
+    .identityDot.cyan{
       background:var(--cyan);
-      box-shadow:0 0 16px rgba(47,211,255,.24);
     }
 
-    .identityBtn.green{
+    .identityDot.green{
       background:var(--green);
-      box-shadow:0 0 16px rgba(121,216,93,.22);
     }
 
-    .identityBtn.magenta{
-      background:#ff58d6;
-      box-shadow:0 0 16px rgba(255,88,214,.24);
-    }
-
-    .identityHint{
-      font-size:14px;
-      font-weight:900;
-      opacity:.82;
-      min-width:80px;
+    .identityDot.magenta{
+      background:#ff4fc9;
     }
 
     input, textarea, select{
@@ -311,10 +288,6 @@
     textarea{
       min-height:96px;
       resize:vertical;
-    }
-
-    .full{
-      grid-column:1 / -1;
     }
 
     .actions{
@@ -350,9 +323,6 @@
       white-space:pre-wrap;
     }
 
-    /* =========================
-       FEED
-    ========================= */
     .feedWrap{
       display:flex;
       flex-direction:column;
@@ -390,6 +360,7 @@
       display:flex;
       gap:10px;
       flex-wrap:wrap;
+      align-items:center;
     }
 
     .filters select{
@@ -397,6 +368,58 @@
       min-width:180px;
       border-radius:999px;
       padding:11px 14px;
+    }
+
+    .identityFilter{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-height:46px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+    }
+
+    .identityFilterBtn{
+      position:relative;
+      width:24px;
+      height:24px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      opacity:.82;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      flex:0 0 24px;
+    }
+
+    .identityFilterBtn:hover{
+      transform:scale(1.08);
+      opacity:1;
+    }
+
+    .identityFilterBtn.active{
+      opacity:1;
+      box-shadow:
+        0 0 0 3px rgba(255,255,255,.18),
+        0 0 16px rgba(255,255,255,.10);
+    }
+
+    .identityFilterBtn.all{
+      background:
+        linear-gradient(90deg, var(--cyan) 0 33%, var(--green) 33% 66%, #ff4fc9 66% 100%);
+    }
+
+    .identityFilterBtn.cyan{
+      background:var(--cyan);
+    }
+
+    .identityFilterBtn.green{
+      background:var(--green);
+    }
+
+    .identityFilterBtn.magenta{
+      background:#ff4fc9;
     }
 
     .boards{
@@ -421,7 +444,21 @@
       display:flex;
       align-items:center;
       gap:10px;
+      min-height:54px;
     }
+
+    .boardHeadDot{
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      display:inline-block;
+      flex:0 0 14px;
+      box-shadow:0 0 0 2px rgba(255,255,255,.10);
+    }
+
+    .boardHeadDot.male{ background:var(--cyan); }
+    .boardHeadDot.free{ background:var(--green); }
+    .boardHeadDot.female{ background:#ff4fc9; }
 
     .boardBody{
       padding:14px;
@@ -430,9 +467,6 @@
       gap:12px;
     }
 
-    /* =========================
-       SECRET CARD
-    ========================= */
     .secret{
       border-radius:18px;
       background:rgba(0,0,0,.22);
@@ -476,25 +510,25 @@
       display:flex;
       gap:10px;
       flex-wrap:wrap;
+      align-items:center;
       font-size:12px;
       opacity:.86;
       margin-bottom:10px;
       font-weight:700;
-      align-items:center;
     }
 
-    .idDot{
-      width:14px;
-      height:14px;
+    .identityChip{
+      width:12px;
+      height:12px;
       border-radius:999px;
       display:inline-block;
-      flex:0 0 14px;
-      box-shadow:0 0 12px rgba(255,255,255,.10);
+      box-shadow:0 0 0 2px rgba(255,255,255,.10);
+      flex:0 0 12px;
     }
 
-    .idDot.male{ background:var(--cyan); }
-    .idDot.free{ background:var(--green); }
-    .idDot.female{ background:#ff58d6; }
+    .identityChip.male{ background:var(--cyan); }
+    .identityChip.female{ background:#ff4fc9; }
+    .identityChip.free{ background:var(--green); }
 
     .secretText{
       white-space:pre-wrap;
@@ -511,6 +545,7 @@
       align-items:center;
       margin-top:6px;
       width:100%;
+      overflow:hidden;
     }
 
     .reactionBtn{
@@ -523,12 +558,13 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
-      padding:9px 10px;
+      gap:7px;
+      padding:8px 10px;
       font-weight:1000;
       transition:transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
       flex:1 1 0;
       min-width:0;
+      white-space:nowrap;
     }
 
     .reactionBtn:hover{
@@ -600,9 +636,6 @@
       padding:8px 2px;
     }
 
-    /* =========================
-       MODAL PERMALINK
-    ========================= */
     .modalOverlay{
       position:fixed;
       inset:0;
@@ -695,21 +728,9 @@
         font-size:16px;
       }
 
-      .composerBody{
-        grid-template-columns:1fr;
+      .topFieldsRow{
+        grid-template-columns:minmax(0,1fr) 112px;
         gap:10px;
-        padding:14px 16px 16px;
-      }
-
-      .switchRow{
-        flex-direction:column;
-        align-items:stretch;
-      }
-
-      .identityBlock,
-      .ageBlock{
-        width:100%;
-        min-width:0;
       }
 
       textarea{
@@ -729,6 +750,30 @@
         width:26px;
         height:26px;
         flex:0 0 26px;
+      }
+
+      .reactionBtn span{
+        font-size:14px;
+      }
+    }
+
+    @media (max-width: 560px){
+      .filters{
+        width:100%;
+      }
+
+      .filters select{
+        min-width:0;
+        width:100%;
+      }
+
+      .feedTop{
+        align-items:stretch;
+      }
+
+      .identityWrap{
+        gap:10px;
+        padding:10px 12px;
       }
     }
   </style>
@@ -764,31 +809,28 @@
 
     <section class="composer" id="composer">
       <div class="composerBody">
-        <div class="fieldGroup full switchRow">
-          <div class="identityBlock">
+        <div class="topFieldsRow">
+          <div class="fieldGroup">
             <div class="fieldLabel">Identidad</div>
-            <div class="identityPicker">
-              <div class="identityDots">
-                <button id="btnHombre" class="identityBtn cyan active" type="button" aria-label="Identidad cyan"></button>
-                <button id="btnLibre" class="identityBtn green" type="button" aria-label="Identidad verde"></button>
-                <button id="btnMujer" class="identityBtn magenta" type="button" aria-label="Identidad magenta"></button>
-              </div>
-              <div id="identityHint" class="identityHint">Cyan</div>
+            <div class="identityWrap">
+              <button id="btnHombre" class="identityDot cyan active" type="button" aria-label="Identidad 1"></button>
+              <button id="btnLibre" class="identityDot green" type="button" aria-label="Identidad 2"></button>
+              <button id="btnMujer" class="identityDot magenta" type="button" aria-label="Identidad 3"></button>
             </div>
           </div>
 
-          <div class="ageBlock">
+          <div class="fieldGroup">
             <div class="fieldLabel">Edad</div>
             <input id="edad" type="number" min="18" max="99" placeholder="18 - 99" />
           </div>
         </div>
 
-        <div class="fieldGroup full">
+        <div class="fieldGroup">
           <div class="fieldLabel">Tu confesión</div>
           <textarea id="texto" maxlength="700" placeholder="Cuenta tu secreto aquí..."></textarea>
         </div>
 
-        <div class="fieldGroup full">
+        <div class="fieldGroup">
           <div class="actions">
             <div id="status" class="status"></div>
             <button id="btnEnviar" class="btn btnPrimary">Enviar confesión</button>
@@ -807,17 +849,16 @@
         <h2 style="margin:0;font-size:26px;">Confesiones publicadas</h2>
         <div class="filters">
           <select id="sortSelect">
-            <option value="new">Más recientes primero</option>
+            <option value="new" selected>Más recientes primero</option>
             <option value="old">Más antiguos primero</option>
           </select>
 
-          <select id="viewSelect">
-            <option value="split">Columnas por identidad</option>
-            <option value="all">Todos mezclados</option>
-            <option value="hombre">Solo cyan</option>
-            <option value="libre">Solo verde</option>
-            <option value="mujer">Solo magenta</option>
-          </select>
+          <div class="identityFilter" aria-label="Filtro de identidad">
+            <button class="identityFilterBtn all active" data-view="all" title="Todas"></button>
+            <button class="identityFilterBtn cyan" data-view="hombre" title="Filtro 1"></button>
+            <button class="identityFilterBtn green" data-view="libre" title="Filtro 2"></button>
+            <button class="identityFilterBtn magenta" data-view="mujer" title="Filtro 3"></button>
+          </div>
 
           <select id="reactionFilter">
             <option value="all">Todas las reacciones</option>
@@ -830,18 +871,18 @@
       </div>
 
       <div id="boards" class="boards">
-        <div class="board" id="boardH">
-          <div class="boardHead"><span class="idDot male"></span> Cyan</div>
+        <div class="board" id="boardH" style="display:none;">
+          <div class="boardHead"><span class="boardHeadDot male"></span></div>
           <div class="boardBody" id="listH"></div>
         </div>
 
-        <div class="board" id="boardL">
-          <div class="boardHead"><span class="idDot free"></span> Verde</div>
+        <div class="board" id="boardL" style="display:none;">
+          <div class="boardHead"><span class="boardHeadDot free"></span></div>
           <div class="boardBody" id="listL"></div>
         </div>
 
-        <div class="board" id="boardM">
-          <div class="boardHead"><span class="idDot female"></span> Magenta</div>
+        <div class="board" id="boardM" style="display:none;">
+          <div class="boardHead"><span class="boardHeadDot female"></span></div>
           <div class="boardBody" id="listM"></div>
         </div>
       </div>
@@ -859,7 +900,6 @@
   <script src="./supabase.js"></script>
   <script>
     const ASSET = {
-      logo: "https://miercoles.zaurio.es/assets/confesionario.png",
       fire: "https://miercoles.zaurio.es/assets/fire.png",
       heart: "https://miercoles.zaurio.es/assets/heart.png",
       fear: "https://miercoles.zaurio.es/assets/fear.png",
@@ -869,7 +909,6 @@
     const btnHombre = document.getElementById("btnHombre");
     const btnLibre = document.getElementById("btnLibre");
     const btnMujer = document.getElementById("btnMujer");
-    const identityHint = document.getElementById("identityHint");
 
     const edad = document.getElementById("edad");
     const texto = document.getElementById("texto");
@@ -879,8 +918,8 @@
     const composer = document.getElementById("composer");
 
     const sortSelect = document.getElementById("sortSelect");
-    const viewSelect = document.getElementById("viewSelect");
     const reactionFilter = document.getElementById("reactionFilter");
+    const identityFilterBtns = [...document.querySelectorAll(".identityFilterBtn")];
 
     const boardH = document.getElementById("boardH");
     const boardL = document.getElementById("boardL");
@@ -899,24 +938,28 @@
 
     let genero = "hombre";
     let secretos = [];
+    let viewMode = "all";
 
     function setGenero(v){
       genero = v;
-
       btnHombre.classList.toggle("active", v === "hombre");
       btnLibre.classList.toggle("active", v === "libre");
       btnMujer.classList.toggle("active", v === "mujer");
+    }
 
-      if (v === "hombre") identityHint.textContent = "Cyan";
-      else if (v === "mujer") identityHint.textContent = "Magenta";
-      else identityHint.textContent = "Verde";
+    function setView(v){
+      viewMode = v;
+      identityFilterBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.view === v));
+      renderLists();
     }
 
     btnHombre.addEventListener("click", ()=>setGenero("hombre"));
     btnLibre.addEventListener("click", ()=>setGenero("libre"));
     btnMujer.addEventListener("click", ()=>setGenero("mujer"));
+    identityFilterBtns.forEach(btn => btn.addEventListener("click", ()=>setView(btn.dataset.view)));
 
     setGenero("hombre");
+    setView("all");
 
     function esc(s){
       return (s||"")
@@ -971,7 +1014,7 @@
       return "free";
     }
 
-    function dotGenero(g){
+    function chipGenero(g){
       if (g === "hombre") return "male";
       if (g === "mujer") return "female";
       return "free";
@@ -979,13 +1022,13 @@
 
     function secretCard(s){
       const tint = classGenero(s.genero);
-      const dot = dotGenero(s.genero);
+      const chip = chipGenero(s.genero);
 
       return `
         <article class="secret ${tint}" id="secret-${s.numero_secreto}">
           <div class="secretMeta">
             <span>#${s.numero_secreto ?? "—"}</span>
-            <span class="idDot ${dot}"></span>
+            <span class="identityChip ${chip}"></span>
             <span>${s.edad} años</span>
             <span>${formatDate(s.creado)}</span>
           </div>
@@ -1010,9 +1053,7 @@
 
     function currentList(){
       let arr = [...secretos];
-
       const sort = sortSelect.value;
-      const view = viewSelect.value;
       const rf = reactionFilter.value;
 
       if (rf !== "all"){
@@ -1025,7 +1066,7 @@
         return sort === "new" ? db - da : da - db;
       });
 
-      return { arr, view };
+      return arr;
     }
 
     function renderFeatured(arr){
@@ -1054,7 +1095,7 @@
     }
 
     function renderLists(){
-      const { arr, view } = currentList();
+      const arr = currentList();
 
       renderFeatured(arr);
 
@@ -1062,57 +1103,44 @@
       listL.innerHTML = "";
       listM.innerHTML = "";
 
-      if (view === "all"){
+      if (viewMode === "all"){
         boardH.style.display = "";
-        boardL.style.display = "none";
-        boardM.style.display = "none";
-        boardH.querySelector(".boardHead").innerHTML = `<span>Todos</span>`;
-        listH.innerHTML = arr.length ? arr.map(secretCard).join("") : `<div class="empty">No hay confesiones todavía.</div>`;
-        return;
-      }
+        boardL.style.display = "";
+        boardM.style.display = "";
 
-      if (view === "hombre"){
-        boardH.style.display = "";
-        boardL.style.display = "none";
-        boardM.style.display = "none";
-        boardH.querySelector(".boardHead").innerHTML = `<span class="idDot male"></span> Cyan`;
         const h = arr.filter(x=>x.genero==="hombre");
-        listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones cyan.</div>`;
+        const l = arr.filter(x=>x.genero==="libre");
+        const m = arr.filter(x=>x.genero==="mujer");
+
+        listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
+        listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
+        listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
         return;
       }
 
-      if (view === "libre"){
+      if (viewMode === "hombre"){
+        boardH.style.display = "";
+        boardL.style.display = "none";
+        boardM.style.display = "none";
+        const h = arr.filter(x=>x.genero==="hombre");
+        listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
+        return;
+      }
+
+      if (viewMode === "libre"){
         boardH.style.display = "none";
         boardL.style.display = "";
         boardM.style.display = "none";
         const l = arr.filter(x=>x.genero==="libre");
-        listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones verdes.</div>`;
+        listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
         return;
       }
 
-      if (view === "mujer"){
-        boardH.style.display = "none";
-        boardL.style.display = "none";
-        boardM.style.display = "";
-        const m = arr.filter(x=>x.genero==="mujer");
-        listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones magenta.</div>`;
-        return;
-      }
-
-      boardH.style.display = "";
-      boardL.style.display = "";
+      boardH.style.display = "none";
+      boardL.style.display = "none";
       boardM.style.display = "";
-      boardH.querySelector(".boardHead").innerHTML = `<span class="idDot male"></span> Cyan`;
-      boardL.querySelector(".boardHead").innerHTML = `<span class="idDot free"></span> Verde`;
-      boardM.querySelector(".boardHead").innerHTML = `<span class="idDot female"></span> Magenta`;
-
-      const h = arr.filter(x=>x.genero==="hombre");
-      const l = arr.filter(x=>x.genero==="libre");
       const m = arr.filter(x=>x.genero==="mujer");
-
-      listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones cyan.</div>`;
-      listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones verdes.</div>`;
-      listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones magenta.</div>`;
+      listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
     }
 
     async function cargarSecretos(){
@@ -1201,7 +1229,6 @@
     }
 
     sortSelect.addEventListener("change", renderLists);
-    viewSelect.addEventListener("change", renderLists);
     reactionFilter.addEventListener("change", renderLists);
 
     composeBtn.addEventListener("click", ()=>{
