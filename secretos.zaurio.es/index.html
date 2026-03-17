@@ -184,6 +184,12 @@
       line-height:1.32;
     }
 
+    /* ESTE es el ancho corregido de verdad */
+    .narrow{
+      width:min(860px, 100%);
+      margin-inline:auto;
+    }
+
     .composer{
       background:var(--card);
       border:1px solid var(--stroke);
@@ -234,10 +240,7 @@
       width:100%;
     }
 
-    .identityBlock .fieldLabel{
-      text-align:center;
-    }
-
+    .identityBlock .fieldLabel,
     .ageBlock .fieldLabel{
       text-align:center;
     }
@@ -386,38 +389,41 @@
 
     .filters{
       display:flex;
-      gap:10px;
-      flex-wrap:wrap;
+      gap:8px;
+      flex-wrap:nowrap;
       align-items:center;
+      min-width:0;
     }
 
     .filters select{
       width:auto;
-      min-width:180px;
+      min-width:152px;
       border-radius:999px;
-      padding:11px 14px;
+      padding:10px 13px;
+      flex:0 0 auto;
     }
 
     .identityFilter{
       display:flex;
       align-items:center;
-      gap:10px;
-      min-height:46px;
-      padding:8px 12px;
+      gap:8px;
+      min-height:42px;
+      padding:7px 10px;
       border-radius:999px;
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.14);
+      flex:0 0 auto;
     }
 
     .identityFilterBtn{
-      width:24px;
-      height:24px;
+      width:22px;
+      height:22px;
       border-radius:999px;
       border:none;
       cursor:pointer;
       opacity:.82;
       transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-      flex:0 0 24px;
+      flex:0 0 22px;
     }
 
     .identityFilterBtn:hover{
@@ -679,15 +685,10 @@
       opacity:1;
     }
 
-    @media (min-width: 981px){
-      .boards.mixed{
-        display:grid;
-        grid-template-columns:1fr 1fr 1fr;
-      }
-
-      .boards.mixed .board{
-        display:block !important;
-      }
+    @keyframes bump{
+      0%{transform:scale(1)}
+      40%{transform:scale(1.12)}
+      100%{transform:scale(1)}
     }
 
     @media (max-width: 980px){
@@ -695,23 +696,9 @@
         grid-template-columns:1fr;
       }
 
-      .boards.mixed{
-        display:block;
+      .narrow{
+        width:100%;
       }
-
-      .boards.mixed .board{
-        display:none !important;
-      }
-
-      .boards.mixed #boardH{
-        display:block !important;
-      }
-    }
-
-    @keyframes bump{
-      0%{transform:scale(1)}
-      40%{transform:scale(1.12)}
-      100%{transform:scale(1)}
     }
 
     @media (max-width: 860px){
@@ -761,6 +748,26 @@
 
       textarea{ min-height:96px; }
 
+      .filters{
+        width:100%;
+        flex-wrap:wrap;
+        gap:8px;
+      }
+
+      .filters select{
+        min-width:0;
+        width:100%;
+      }
+
+      .identityFilter{
+        width:100%;
+        justify-content:center;
+      }
+
+      .feedTop{
+        align-items:stretch;
+      }
+
       .reactionBar{ gap:6px; }
 
       .reactionBtn{
@@ -775,21 +782,6 @@
       }
 
       .reactionBtn span{ font-size:14px; }
-    }
-
-    @media (max-width: 560px){
-      .filters{
-        width:100%;
-      }
-
-      .filters select{
-        min-width:0;
-        width:100%;
-      }
-
-      .feedTop{
-        align-items:stretch;
-      }
     }
   </style>
 </head>
@@ -828,7 +820,7 @@
       <p class="sub">Envía tu confesión y espera a que sea aprobada para aparecer publicada.</p>
     </section>
 
-    <section class="composer" id="composer">
+    <section class="composer narrow" id="composer">
       <div class="composerBody">
         <div class="topFieldsRow">
           <div class="fieldGroup identityBlock">
@@ -860,7 +852,7 @@
       </div>
     </section>
 
-    <section class="feedWrap">
+    <section class="feedWrap narrow">
       <section class="featured" id="featuredBox" style="display:none;">
         <div class="featuredHead">🔥 Más reaccionado</div>
         <div class="featuredBody" id="featuredBody"></div>
@@ -891,7 +883,7 @@
         </div>
       </div>
 
-      <div id="boards" class="boards mixed">
+      <div id="boards" class="boards">
         <div class="board" id="boardH">
           <div class="boardHead"><span class="boardHeadDot male"></span></div>
           <div class="boardBody" id="listH"></div>
@@ -942,7 +934,6 @@
     const reactionFilter = document.getElementById("reactionFilter");
     const identityFilterBtns = [...document.querySelectorAll(".identityFilterBtn")];
 
-    const boards = document.getElementById("boards");
     const boardH = document.getElementById("boardH");
     const boardL = document.getElementById("boardL");
     const boardM = document.getElementById("boardM");
@@ -1116,6 +1107,14 @@
       featuredBody.innerHTML = secretCard(top);
     }
 
+    function distributeRoundRobin(arr, cols){
+      const buckets = Array.from({length: cols}, ()=>[]);
+      arr.forEach((item, i) => {
+        buckets[i % cols].push(item);
+      });
+      return buckets;
+    }
+
     function renderLists(){
       const arr = currentList();
       renderFeatured(arr);
@@ -1126,36 +1125,30 @@
 
       const mobile = window.innerWidth <= 980;
 
-      if (viewMode === "all" && mobile){
-        boards.classList.add("mixed");
-        boardH.style.display = "block";
-        boardL.style.display = "none";
-        boardM.style.display = "none";
-        boardH.querySelector(".boardHead").innerHTML = `<span class="boardHeadDot male"></span>`;
-        listH.innerHTML = arr.length ? arr.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
-        return;
-      }
+      if (viewMode === "all"){
+        if (mobile){
+          boardH.style.display = "block";
+          boardL.style.display = "none";
+          boardM.style.display = "none";
+          boardH.querySelector(".boardHead").innerHTML = `<span class="boardHeadDot male"></span><span class="boardHeadDot free"></span><span class="boardHeadDot female"></span>`;
+          listH.innerHTML = arr.length ? arr.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
+          return;
+        }
 
-      if (viewMode === "all" && !mobile){
-        boards.classList.add("mixed");
         boardH.style.display = "block";
         boardL.style.display = "block";
         boardM.style.display = "block";
-        boardH.querySelector(".boardHead").innerHTML = `<span class="boardHeadDot male"></span>`;
-        boardL.querySelector(".boardHead").innerHTML = `<span class="boardHeadDot free"></span>`;
-        boardM.querySelector(".boardHead").innerHTML = `<span class="boardHeadDot female"></span>`;
 
-        const h = arr.filter(x=>x.genero==="hombre");
-        const l = arr.filter(x=>x.genero==="libre");
-        const m = arr.filter(x=>x.genero==="mujer");
+        boardH.querySelector(".boardHead").innerHTML = `<span class="boardHeadDot male"></span><span class="boardHeadDot free"></span><span class="boardHeadDot female"></span>`;
+        boardL.querySelector(".boardHead").innerHTML = `<span class="boardHeadDot male"></span><span class="boardHeadDot free"></span><span class="boardHeadDot female"></span>`;
+        boardM.querySelector(".boardHead").innerHTML = `<span class="boardHeadDot male"></span><span class="boardHeadDot free"></span><span class="boardHeadDot female"></span>`;
 
-        listH.innerHTML = h.length ? h.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
-        listL.innerHTML = l.length ? l.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
-        listM.innerHTML = m.length ? m.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
+        const [c1, c2, c3] = distributeRoundRobin(arr, 3);
+        listH.innerHTML = c1.length ? c1.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
+        listL.innerHTML = c2.length ? c2.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
+        listM.innerHTML = c3.length ? c3.map(secretCard).join("") : `<div class="empty">No hay confesiones.</div>`;
         return;
       }
-
-      boards.classList.remove("mixed");
 
       if (viewMode === "hombre"){
         boardH.style.display = "block";
