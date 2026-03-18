@@ -50,6 +50,7 @@
     .card{
       width:100%;
       max-width:100%;
+      min-height:170px;
       border-radius:26px;
       background: var(--bg);
       border: 1px solid var(--stroke);
@@ -60,6 +61,7 @@
       box-sizing:border-box;
       transition:all .25s ease;
       animation: pop .35s ease both;
+      overflow:hidden;
     }
 
     .card.male{
@@ -115,6 +117,12 @@
       max-width: calc(100% - 40px);
     }
 
+    .sourceLabel.centered{
+      left:50%;
+      transform:translateX(-50%);
+      text-align:center;
+    }
+
     .meta{
       display:flex;
       gap:10px;
@@ -140,16 +148,26 @@
     .identityChip.female{ background:var(--magenta); }
     .identityChip.free{ background:var(--green); }
 
+    .textWrap{
+      width:100%;
+      height:260px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
+      overflow:hidden;
+    }
+
     .text{
-      font-size:28px;
-      line-height:1.18;
+      line-height:1.16;
       white-space:pre-wrap;
       word-break:break-word;
       margin:0;
+      width:100%;
+      overflow:hidden;
     }
 
     .emptyWrap{
-      min-height:120px;
+      min-height:190px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -207,12 +225,13 @@
 
     function render(html){
       mount.innerHTML = html;
+      fitSecretText();
     }
 
     function renderEmpty(){
       return `
         <div class="card">
-          <div class="sourceLabel">secretos.zaurio.es</div>
+          <div class="sourceLabel centered">secretos.zaurio.es</div>
           <div class="emptyWrap">Ninguna confesión en live</div>
         </div>
       `;
@@ -230,7 +249,9 @@
             <span>${esc(String(s.edad ?? ""))} años</span>
           </div>
 
-          <p class="text">${esc(s.texto || "")}</p>
+          <div class="textWrap">
+            <p id="secretText" class="text">${esc(s.texto || "")}</p>
+          </div>
         </div>
       `;
     }
@@ -238,7 +259,7 @@
     function renderError(msg){
       return `
         <div class="card">
-          <div class="sourceLabel">secretos.zaurio.es</div>
+          <div class="sourceLabel centered">secretos.zaurio.es</div>
           <div style="
             padding:10px 12px;border-radius:14px;
             background:rgba(0,0,0,.35);
@@ -247,6 +268,19 @@
           ">${esc(msg)}</div>
         </div>
       `;
+    }
+
+    function fitSecretText(){
+      const el = document.getElementById("secretText");
+      if (!el) return;
+
+      let size = 30;
+      el.style.fontSize = size + "px";
+
+      while (size > 16 && el.scrollHeight > el.clientHeight + 2){
+        size -= 1;
+        el.style.fontSize = size + "px";
+      }
     }
 
     async function tick(){
@@ -283,6 +317,8 @@
         if (key !== lastState){
           lastState = key;
           render(renderSecret(s));
+        } else {
+          fitSecretText();
         }
 
       } catch(e){
@@ -297,6 +333,7 @@
     tick();
     setInterval(tick, 1000);
     setInterval(()=>{ document.getElementById("heartbeat").textContent = Date.now(); }, 500);
+    window.addEventListener("resize", fitSecretText);
   </script>
 </body>
 </html>
