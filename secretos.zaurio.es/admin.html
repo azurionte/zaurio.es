@@ -35,11 +35,9 @@
       position:sticky;
       top:10px;
       z-index:50;
-      display:flex;
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items:center;
-      justify-content:center;
-      gap:18px;
-      flex-wrap:wrap;
       margin-bottom:18px;
       padding:12px 16px;
       border-radius:999px;
@@ -49,6 +47,10 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
+
+    .menuLeft{display:flex;justify-content:flex-start;align-items:center}
+    .menuCenter{display:flex;justify-content:center;align-items:center;gap:22px}
+    .menuRight{display:flex;justify-content:flex-end;align-items:center}
 
     .menuLogoLink{
       display:flex;
@@ -83,18 +85,9 @@
       object-fit:contain;
     }
 
-    .menuLogo.zaurio{
-      max-height:44px;
-      border-radius:10px;
-    }
-
-    .menuLogo.miercoles{
-      max-height:52px;
-    }
-
-    .menuLogo.confesionario{
-      max-height:58px;
-    }
+    .menuLogo.zaurio{max-height:52px;border-radius:10px}
+    .menuLogo.miercoles{max-height:50px}
+    .menuLogo.confesion{max-height:54px}
 
     .login{
       max-width:420px;
@@ -134,6 +127,8 @@
     .btnPrimary{background:var(--yellow);color:#1a002a;box-shadow:0 0 18px rgba(255,238,0,.25)}
     .btnDanger{background:var(--pink);color:#fff;box-shadow:0 0 18px rgba(255,0,170,.25)}
     .btnGhost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.16)}
+    .btnLive{background:rgba(255,238,0,.16);color:#fff;border:1px solid rgba(255,238,0,.30)}
+    .btnOff{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.16)}
 
     .top{
       display:flex;
@@ -166,7 +161,7 @@
 
     .grid{
       display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+      grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
       gap:14px;
     }
 
@@ -192,6 +187,11 @@
       background:linear-gradient(180deg, rgba(121,216,93,.08), rgba(0,0,0,.22));
     }
 
+    .card.liveNow{
+      box-shadow:0 0 28px rgba(255,238,0,.16);
+      border-color:rgba(255,238,0,.30);
+    }
+
     .meta{
       display:flex;
       gap:10px;
@@ -215,6 +215,19 @@
     .chip.male{ background:var(--male); }
     .chip.female{ background:var(--female); }
     .chip.free{ background:var(--free); }
+
+    .livePill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,238,0,.12);
+      border:1px solid rgba(255,238,0,.22);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+    }
 
     .text{
       white-space:pre-wrap;
@@ -243,17 +256,23 @@
 <body>
   <div class="wrap">
     <div class="topMenu">
-      <a class="menuLogoLink" href="https://zaurio.es" aria-label="Zaurio">
-        <img class="menuLogo zaurio" src="https://miercoles.zaurio.es/assets/favicon-32x32.png" alt="Zaurio">
-      </a>
+      <div class="menuLeft">
+        <a class="menuLogoLink" href="https://zaurio.es" aria-label="Zaurio">
+          <img class="menuLogo zaurio" src="https://miercoles.zaurio.es/assets/favicon-32x32.png" alt="Zaurio">
+        </a>
+      </div>
 
-      <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles">
-        <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/miercoles.png" alt="Miércoles">
-      </a>
+      <div class="menuCenter">
+        <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles">
+          <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/miercoles.png" alt="Miércoles">
+        </a>
 
-      <a class="menuLogoLink active" href="https://secretos.zaurio.es" aria-label="El Confesionario">
-        <img class="menuLogo confesionario" src="https://miercoles.zaurio.es/assets/confesion.png" alt="El Confesionario">
-      </a>
+        <a class="menuLogoLink active" href="https://secretos.zaurio.es" aria-label="El Confesionario">
+          <img class="menuLogo confesion" src="https://miercoles.zaurio.es/assets/confesion.png" alt="El Confesionario">
+        </a>
+      </div>
+
+      <div class="menuRight"></div>
     </div>
 
     <div id="login" class="login">
@@ -269,7 +288,11 @@
 
     <div id="panel" class="panel">
       <div class="top">
-        <div class="pill">Pendientes: <span id="countPend">0</span></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <div class="pill">Pendientes: <span id="countPend">0</span></div>
+          <div class="pill">Live: <span id="countLive">0</span></div>
+        </div>
+
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button id="btnRefresh" class="btn btnGhost">Actualizar</button>
           <button id="btnLogout" class="btn btnGhost">Salir</button>
@@ -297,6 +320,7 @@
     const pendGrid = document.getElementById("pendGrid");
     const okGrid = document.getElementById("okGrid");
     const countPend = document.getElementById("countPend");
+    const countLive = document.getElementById("countLive");
 
     function esc(s){
       return (s||"")
@@ -332,14 +356,16 @@
     function card(s, pending=true){
       const tint = tintClass(s.genero);
       const chip = chipClass(s.genero);
+      const liveNow = s.show_live ? " liveNow" : "";
 
       return `
-        <article class="card ${tint}">
+        <article class="card ${tint}${liveNow}">
           <div class="meta">
             <span>#${s.numero_secreto ?? "—"}</span>
             <span class="chip ${chip}"></span>
             <span>${s.edad} años</span>
             <span>${new Date(s.creado).toLocaleDateString()} · ${new Date(s.creado).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</span>
+            ${s.show_live ? `<span class="livePill">● En live</span>` : ``}
           </div>
 
           <div class="text">${esc(s.texto)}</div>
@@ -354,6 +380,8 @@
 
           <div class="actions">
             ${pending ? `<button class="btn btnPrimary" data-act="approve" data-id="${s.id}">Aprobar</button>` : ``}
+            ${!pending ? `<button class="btn btnLive" data-act="showlive" data-id="${s.id}">Mostrar en live</button>` : ``}
+            ${!pending && s.show_live ? `<button class="btn btnOff" data-act="hidelive" data-id="${s.id}">Quitar de live</button>` : ``}
             <button class="btn btnDanger" data-act="archive" data-id="${s.id}">Archivar</button>
           </div>
         </article>
@@ -372,17 +400,29 @@
         .select("*")
         .eq("estado","aprobado")
         .order("creado",{ascending:false})
-        .limit(20);
+        .limit(30);
 
-      if (pend.error || ok.error){
+      const live = await supabaseClient
+        .from("secretos")
+        .select("id")
+        .eq("show_live", true);
+
+      if (pend.error || ok.error || live.error){
         pendGrid.innerHTML = `<div>❌ Error cargando confesiones.</div>`;
         okGrid.innerHTML = "";
         return;
       }
 
       countPend.textContent = String(pend.data.length);
-      pendGrid.innerHTML = pend.data.length ? pend.data.map(x=>card(x,true)).join("") : `<div style="opacity:.75">No hay pendientes.</div>`;
-      okGrid.innerHTML = ok.data.length ? ok.data.map(x=>card(x,false)).join("") : `<div style="opacity:.75">No hay aprobados.</div>`;
+      countLive.textContent = String(live.data.length);
+
+      pendGrid.innerHTML = pend.data.length
+        ? pend.data.map(x=>card(x,true)).join("")
+        : `<div style="opacity:.75">No hay pendientes.</div>`;
+
+      okGrid.innerHTML = ok.data.length
+        ? ok.data.map(x=>card(x,false)).join("")
+        : `<div style="opacity:.75">No hay aprobados.</div>`;
     }
 
     async function approve(id){
@@ -398,10 +438,51 @@
     async function archiveSecret(id){
       const { error } = await supabaseClient
         .from("secretos")
-        .update({ estado:"archivado" })
+        .update({ estado:"archivado", show_live:false })
         .eq("id", id);
 
       if (error){ alert(error.message); return; }
+      await loadData();
+    }
+
+    async function showInLive(id){
+      const clear = await supabaseClient
+        .from("secretos")
+        .update({ show_live:false })
+        .eq("show_live", true);
+
+      if (clear.error){
+        alert(clear.error.message);
+        return;
+      }
+
+      const set = await supabaseClient
+        .from("secretos")
+        .update({
+          show_live:true,
+          live_updated_at:new Date().toISOString()
+        })
+        .eq("id", id);
+
+      if (set.error){
+        alert(set.error.message);
+        return;
+      }
+
+      await loadData();
+    }
+
+    async function hideFromLive(id){
+      const { error } = await supabaseClient
+        .from("secretos")
+        .update({ show_live:false })
+        .eq("id", id);
+
+      if (error){
+        alert(error.message);
+        return;
+      }
+
       await loadData();
     }
 
@@ -410,6 +491,7 @@
       if (!b) return;
       const id = b.dataset.id;
       const act = b.dataset.act;
+
       if (act === "approve") await approve(id);
       if (act === "archive") await archiveSecret(id);
     });
@@ -419,7 +501,10 @@
       if (!b) return;
       const id = b.dataset.id;
       const act = b.dataset.act;
+
       if (act === "archive") await archiveSecret(id);
+      if (act === "showlive") await showInLive(id);
+      if (act === "hidelive") await hideFromLive(id);
     });
 
     document.getElementById("btnLogin").addEventListener("click", async ()=>{
