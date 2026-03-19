@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Debt & Budget Planner Pro</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --panel:#121933;
+    --panel-2:#0f1630;
+    --muted:#8ea0c6;
+    --text:#eef4ff;
+    --line:#243055;
+    --accent:#7c9cff;
+    --accent-2:#4ade80;
+    --danger:#fb7185;
+    --warn:#fbbf24;
+    --cyan:#22d3ee;
+    --shadow:0 12px 32px rgba(0,0,0,.28);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:linear-gradient(180deg,#0a0f1d,#0d1430 25%,#0b1020);
+    color:var(--text);
+  }
+  .app{
+    max-width:1400px;
+    margin:0 auto;
+    padding:20px;
+  }
+  .topbar{
+    display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .brand h1{margin:0; font-size:24px}
+  .brand p{margin:4px 0 0; color:var(--muted); font-size:13px}
+  .actions{display:flex; gap:10px; flex-wrap:wrap}
+  button, .btn{
+    border:none; background:#1a2348; color:var(--text);
+    padding:10px 14px; border-radius:12px; cursor:pointer;
+    box-shadow:var(--shadow); font-weight:600;
+  }
+  button.primary{background:linear-gradient(135deg,#5b7cff,#7c9cff)}
+  button.good{background:linear-gradient(135deg,#149f5c,#4ade80)}
+  button.warn{background:linear-gradient(135deg,#b7791f,#fbbf24); color:#2a1b00}
+  button.danger{background:linear-gradient(135deg,#b6294d,#fb7185)}
+  button.ghost{background:#0d1430;border:1px solid var(--line);box-shadow:none}
+  .tabs{
+    display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;
+  }
+  .tab{
+    padding:11px 16px; border-radius:999px; background:#111937; color:var(--muted); cursor:pointer; font-weight:700;
+    border:1px solid var(--line);
+  }
+  .tab.active{background:linear-gradient(135deg,#20346e,#2f4fb8); color:#fff}
+  .panel{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px;
+  }
+  .grid-2{display:grid; grid-template-columns:1.2fr .8fr; gap:16px}
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+  .section-title{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;
+  }
+  .section-title h2,.section-title h3{margin:0}
+  .sub{color:var(--muted); font-size:13px}
+  .stack{display:flex; flex-direction:column; gap:14px}
+  .list{
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .item{
+    background:#0c1330; border:1px solid var(--line); border-radius:14px; padding:12px;
+    display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:center;
+  }
+  .item .meta{display:flex; flex-direction:column; gap:4px}
+  .item .name{font-weight:800}
+  .item .desc{font-size:12px; color:var(--muted)}
+  .pill{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); padding:5px 9px; border-radius:999px; color:var(--muted); font-size:12px}
+  .money{font-weight:900}
+  .pos{color:var(--accent-2)}
+  .neg{color:var(--danger)}
+  .muted{color:var(--muted)}
+  .summary{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+  }
+  .card{
+    background:#0c1330; border:1px solid var(--line); border-radius:16px; padding:14px;
+  }
+  .card .label{color:var(--muted); font-size:12px; margin-bottom:6px}
+  .card .value{font-size:28px; font-weight:900}
+  .kpi-green{color:var(--accent-2)}
+  .kpi-red{color:var(--danger)}
+  .kpi-cyan{color:var(--cyan)}
+  .kpi-yellow{color:var(--warn)}
+  .forecast-toolbar{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:16px;
+  }
+  .field{
+    display:flex; flex-direction:column; gap:7px;
+  }
+  .field label{font-size:12px; color:var(--muted)}
+  .field input,.field select,.field textarea{
+    background:#0a1128; color:var(--text); border:1px solid var(--line); border-radius:12px;
+    padding:10px 12px; outline:none;
+  }
+  .months-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px;
+  }
+  .month{
+    background:#0c1330; border:1px solid var(--line); border-radius:18px; padding:14px; cursor:pointer;
+    transition:.18s transform ease,.18s border-color ease;
+  }
+  .month:hover{transform:translateY(-2px); border-color:#3f5bc9}
+  .month h4{margin:0 0 8px}
+  .month .rows{display:grid; grid-template-columns:1fr auto; row-gap:8px; column-gap:8px; font-size:13px}
+  .month .rows .lab{color:var(--muted)}
+  .month .recovered{font-weight:900; color:var(--accent-2)}
+  .month .net.pos{color:var(--accent-2)}
+  .month .net.neg{color:var(--danger)}
+  .month .savings1{color:var(--cyan)}
+  .month .savings2{color:#c084fc}
+  .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+  .modal{
+    position:fixed; inset:0; background:rgba(6,10,23,.72); display:none; align-items:center; justify-content:center; padding:16px; z-index:999;
+  }
+  .modal.open{display:flex}
+  .modal-box{
+    width:min(1100px,100%); max-height:92vh; overflow:auto; background:linear-gradient(180deg,#131d3e,#0d1430);
+    border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); padding:18px;
+  }
+  .modal-header{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;
+    position:sticky; top:0; background:linear-gradient(180deg,#131d3e,#0d1430); padding-bottom:10px;
+  }
+  .modal-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px}
+  .mini-table{width:100%; border-collapse:collapse}
+  .mini-table th,.mini-table td{border:1px solid var(--line); padding:8px; font-size:13px}
+  .mini-table th{color:var(--muted); background:#0a1128}
+  .empty{
+    border:1px dashed var(--line); border-radius:14px; padding:18px; color:var(--muted); text-align:center;
+  }
+  .inline-actions{display:flex; gap:8px; flex-wrap:wrap}
+  .radio-row{display:flex; gap:10px; flex-wrap:wrap}
+  .radio{
+    background:#0a1128; border:1px solid var(--line); border-radius:999px; padding:8px 12px; cursor:pointer;
+  }
+  .badge{
+    display:inline-flex; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:800;
+    border:1px solid var(--line);
+  }
+  .badge.good{color:#052e16;background:#86efac}
+  .badge.warn{color:#422006;background:#fde68a}
+  .badge.bad{color:#4c0519;background:#fda4af}
+  .footer-note{margin-top:12px; color:var(--muted); font-size:12px}
+  .divider{height:1px; background:var(--line); margin:10px 0}
+  @media (max-width:1100px){
+    .grid-2,.grid-3,.modal-grid,.summary,.forecast-toolbar{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <h1>Gestor Pro de Deudas, Gastos e Ingresos</h1>
+      <p>Configura, previsualiza y ajusta tu futuro mes a mes. Todo en un único archivo.</p>
+    </div>
+    <div class="actions">
+      <button class="ghost" id="seedDemoBtn">Cargar demo de este chat</button>
+      <button class="ghost" id="exportBtn">Exportar JSON</button>
+      <button class="ghost" id="importBtn">Importar JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+      <button class="primary" id="saveBtn">Guardar en navegador</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="config">Configuración</div>
+    <div class="tab" data-tab="forecast">Previsión</div>
+  </div>
+
+  <section id="tab-config" class="stack">
+    <div class="summary">
+      <div class="card"><div class="label">Ingresos mensuales base</div><div class="value kpi-cyan" id="kpiIncome">0 €</div></div>
+      <div class="card"><div class="label">Gastos base mensuales</div><div class="value kpi-red" id="kpiFixed">0 €</div></div>
+      <div class="card"><div class="label">Deuda base mensual</div><div class="value kpi-yellow" id="kpiDebt">0 €</div></div>
+      <div class="card"><div class="label">Margen base</div><div class="value" id="kpiBaseNet">0 €</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="stack">
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h2>Ingresos</h2>
+              <div class="sub">Añade sueldo, bonus, alquiler cobrado, side income o lo que quieras.</div>
+            </div>
+            <button class="good" id="addIncomeBtn">+ Añadir ingreso</button>
+          </div>
+          <div id="incomeList" class="list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h2>Gastos fijos y variables</h2>
+              <div class="sub">Cada gasto tiene nombre, importe y periodicidad.</div>
+            </div>
+            <button class="good" id="addExpenseBtn">+ Añadir gasto</button>
+          </div>
+          <div id="expenseList" class="list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h2>Objetivos de ahorro</h2>
+              <div class="sub">Puedes tener dos bolsas de ahorro fijas en previsión y extras por mes.</div>
+            </div>
+            <button class="good" id="addSavingsGoalBtn">+ Añadir objetivo</button>
+          </div>
+          <div id="goalList" class="list"></div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h2>Deudas</h2>
+              <div class="sub">Préstamo o tarjeta. Calcula fin por cuotas restantes o fecha final.</div>
+            </div>
+            <button class="good" id="addDebtBtn">+ Añadir deuda</button>
+          </div>
+          <div id="debtList" class="list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h2>Resumen rápido</h2>
+              <div class="sub">Esto es la foto base antes de entrar a previsión.</div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:10px">
+            <div class="label">Colchón inicial</div>
+            <div class="inline-actions">
+              <input id="initialReserve" type="number" step="0.01" placeholder="0" style="max-width:220px;background:#0a1128;color:white;border:1px solid var(--line);border-radius:12px;padding:10px 12px;">
+              <button class="ghost" id="updateReserveBtn">Actualizar</button>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:10px">
+            <div class="label">Mes por defecto para empezar la previsión</div>
+            <div class="inline-actions">
+              <input id="defaultStart" type="month" style="max-width:220px;background:#0a1128;color:white;border:1px solid var(--line);border-radius:12px;padding:10px 12px;">
+              <button class="ghost" id="syncStartBtn">Usar en previsión</button>
+            </div>
+          </div>
+          <div class="footer-note">
+            Consejo: configura todo aquí y luego abre <strong>Previsión</strong> para ver el calendario mes a mes.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-forecast" class="stack" style="display:none">
+    <div class="panel">
+      <div class="forecast-toolbar">
+        <div class="field">
+          <label>Desde</label>
+          <input type="month" id="forecastFrom">
+        </div>
+        <div class="field">
+          <label>Hasta</label>
+          <input type="month" id="forecastTo">
+        </div>
+        <div class="field">
+          <label>Ahorro fijo 1</label>
+          <select id="forecastGoal1"></select>
+        </div>
+        <div class="field">
+          <label>Ahorro fijo 2</label>
+          <select id="forecastGoal2"></select>
+        </div>
+        <div class="field" style="display:flex;align-items:end">
+          <button class="primary" id="generateForecastBtn">Generar previsión</button>
+        </div>
+      </div>
+
+      <div class="summary" style="margin-bottom:16px">
+        <div class="card"><div class="label">Sobrante neto total</div><div class="value" id="forecastTotalNet">0 €</div></div>
+        <div class="card"><div class="label">Recuperado total</div><div class="value kpi-green" id="forecastRecovered">0 €</div></div>
+        <div class="card"><div class="label">Ahorro 1 acumulado</div><div class="value kpi-cyan" id="forecastGoal1Total">0 €</div></div>
+        <div class="card"><div class="label">Ahorro 2 acumulado</div><div class="value" style="color:#c084fc" id="forecastGoal2Total">0 €</div></div>
+      </div>
+
+      <div class="legend">
+        <span class="pill"><span style="color:var(--accent-2)">+ Recuperado</span> = cuota que terminó el mes anterior</span>
+        <span class="pill"><span style="color:var(--cyan)">Ahorrado 1</span> = ahorro objetivo 1</span>
+        <span class="pill"><span style="color:#c084fc">Ahorrado 2</span> = ahorro objetivo 2</span>
+        <span class="pill">Toca un mes para ver detalles y editarlo</span>
+      </div>
+    </div>
+
+    <div id="monthsGrid" class="months-grid"></div>
+  </section>
+</div>
+
+<div id="genericModal" class="modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <h2 id="modalTitle" style="margin:0">Modal</h2>
+        <div id="modalSubtitle" class="sub"></div>
+      </div>
+      <button class="danger" onclick="closeModal()">Cerrar</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'debtPlannerPro_v1';
+
+const state = {
+  reserveInitial: 0,
+  defaultStartMonth: todayMonth(),
+  incomes: [],
+  expenses: [],
+  savingsGoals: [],
+  debts: [],
+  monthAdjustments: {}, // YYYY-MM: {oneTimeIncome, oneTimeExpense, oneTimeDebt, manualSavings:[...], actions:[...]}
+  forecast: { from: todayMonth(), to: addMonthsStr(todayMonth(), 12), goal1Id: '', goal2Id: '' }
+};
+
+function todayMonth(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function addMonthsStr(ym, add){
+  const [y,m] = ym.split('-').map(Number);
+  const d = new Date(y, m-1+add, 1);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function monthLabel(ym){
+  const [y,m] = ym.split('-').map(Number);
+  return new Date(y,m-1,1).toLocaleDateString('es-ES',{month:'long', year:'numeric'});
+}
+function euros(n){
+  const num = Number(n || 0);
+  return num.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2});
+}
+function uid(prefix='id'){
+  return prefix + '_' + Math.random().toString(36).slice(2,10);
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return false;
+  try{
+    const parsed = JSON.parse(raw);
+    Object.assign(state, parsed);
+    if(!state.monthAdjustments) state.monthAdjustments = {};
+    if(!state.forecast) state.forecast = { from: todayMonth(), to: addMonthsStr(todayMonth(), 12), goal1Id:'', goal2Id:'' };
+    return true;
+  }catch(e){ return false; }
+}
+function openModal(title, subtitle, html){
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSubtitle').textContent = subtitle || '';
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('genericModal').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('genericModal').classList.remove('open');
+}
+document.getElementById('genericModal').addEventListener('click', (e)=> {
+  if(e.target.id === 'genericModal') closeModal();
+});
+
+function setTab(name){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.getElementById('tab-config').style.display = name === 'config' ? '' : 'none';
+  document.getElementById('tab-forecast').style.display = name === 'forecast' ? '' : 'none';
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', ()=> setTab(t.dataset.tab)));
+
+function renderList(containerId, arr, type){
+  const el = document.getElementById(containerId);
+  if(!arr.length){
+    el.innerHTML = '<div class="empty">No hay elementos todavía.</div>';
+    return;
+  }
+  el.innerHTML = arr.map(item => {
+    const meta = getItemMeta(item, type);
+    return `
+      <div class="item">
+        <div class="meta">
+          <div class="name">${escapeHtml(item.name || item.entity || 'Sin nombre')}</div>
+          <div class="desc">${meta}</div>
+        </div>
+        <div class="money">${euros(item.amountMonthly || item.amount || item.currentPayment || item.monthlyPayment || 0)}</div>
+        <div class="inline-actions">
+          <button class="ghost" onclick="editItem('${type}','${item.id}')">Editar</button>
+          <button class="danger" onclick="deleteItem('${type}','${item.id}')">Eliminar</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function getItemMeta(item, type){
+  if(type === 'income') return `${item.periodicity || 'monthly'} · empieza ${item.startMonth || state.defaultStartMonth}`;
+  if(type === 'expense') return `${item.kind || 'fixed'} · ${translatePeriodicity(item.periodicity)} · empieza ${item.startMonth || state.defaultStartMonth}`;
+  if(type === 'goal') return `${translatePeriodicity(item.periodicity)} · ${item.notes || 'objetivo de ahorro'}`;
+  if(type === 'debt'){
+    if(item.debtType === 'loan'){
+      return `Préstamo · cuota ${euros(item.monthlyPayment)} · ${item.endMode === 'remaining' ? item.remainingInstallments + ' cuotas restantes' : 'hasta ' + monthLabel(item.lastMonth)}`;
+    }
+    if(item.cardType === 'revolving'){
+      return `Tarjeta revolving · deuda ${euros(item.currentDebt)} · cuota ${euros(item.currentPayment)} · TIN ${item.tin || 0}% · TAE ${item.tae || 0}%`;
+    }
+    if(item.cardType === 'pay_end_month'){
+      return `Tarjeta paga fin de mes · ${euros(item.amount)}${item.periodicity ? ' · ' + translatePeriodicity(item.periodicity) : ''}`;
+    }
+    if(item.cardType === 'installment'){
+      return `Compra aplazada · cuota ${euros(item.monthlyPayment)} · ${item.endMode === 'remaining' ? item.remainingInstallments + ' cuotas restantes' : 'hasta ' + monthLabel(item.lastMonth)}`;
+    }
+  }
+  return '';
+}
+function translatePeriodicity(p){
+  return {
+    monthly:'mensual',
+    bimonthly:'bimestral',
+    quarterly:'trimestral',
+    yearly:'anual',
+    one_time:'puntual'
+  }[p] || p || 'mensual';
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function deleteItem(type, id){
+  const map = {income:'incomes', expense:'expenses', goal:'savingsGoals', debt:'debts'};
+  state[map[type]] = state[map[type]].filter(x => x.id !== id);
+  rerender();
+}
+function editItem(type, id){
+  const map = {income:'incomes', expense:'expenses', goal:'savingsGoals', debt:'debts'};
+  const item = state[map[type]].find(x => x.id === id);
+  if(!item) return;
+  if(type === 'income') showIncomeModal(item);
+  if(type === 'expense') showExpenseModal(item);
+  if(type === 'goal') showGoalModal(item);
+  if(type === 'debt') showDebtModal(item);
+}
+
+function incomeMonthApplies(item, ym){
+  const start = item.startMonth || state.defaultStartMonth;
+  if(ym < start) return false;
+  if(item.endMonth && ym > item.endMonth) return false;
+  return periodicityApplies(item.periodicity || 'monthly', start, ym);
+}
+function expenseMonthApplies(item, ym){
+  const start = item.startMonth || state.defaultStartMonth;
+  if(ym < start) return false;
+  if(item.endMonth && ym > item.endMonth) return false;
+  return periodicityApplies(item.periodicity || 'monthly', start, ym);
+}
+function goalMonthApplies(item, ym){
+  const start = item.startMonth || state.defaultStartMonth;
+  if(ym < start) return false;
+  if(item.endMonth && ym > item.endMonth) return false;
+  return periodicityApplies(item.periodicity || 'monthly', start, ym);
+}
+function periodicityApplies(periodicity, startYm, ym){
+  if(periodicity === 'one_time') return ym === startYm;
+  const diff = monthDiff(startYm, ym);
+  if(diff < 0) return false;
+  if(periodicity === 'monthly') return true;
+  if(periodicity === 'bimonthly') return diff % 2 === 0;
+  if(periodicity === 'quarterly') return diff % 3 === 0;
+  if(periodicity === 'yearly') return diff % 12 === 0;
+  return true;
+}
+function monthDiff(fromYm, toYm){
+  const [fy,fm] = fromYm.split('-').map(Number);
+  const [ty,tm] = toYm.split('-').map(Number);
+  return (ty-fy)*12 + (tm-fm);
+}
+function monthsBetween(fromYm, toYm){
+  const out = [];
+  let cur = fromYm;
+  while(cur <= toYm){
+    out.push(cur);
+    cur = addMonthsStr(cur, 1);
+  }
+  return out;
+}
+function getDebtMonthlyAmount(debt, ym){
+  if(debt.debtType === 'loan') return debtAppliesInstallment(debt, ym) ? Number(debt.monthlyPayment||0) : 0;
+  if(debt.cardType === 'pay_end_month'){
+    if(debt.periodicity === 'one_time'){
+      return ym === debt.startMonth ? Number(debt.amount||0) : 0;
+    }
+    return expenseMonthApplies({
+      periodicity: debt.periodicity || 'monthly',
+      startMonth: debt.startMonth || state.defaultStartMonth,
+      endMonth: debt.endMonth
+    }, ym) ? Number(debt.amount||0) : 0;
+  }
+  if(debt.cardType === 'installment'){
+    return debtAppliesInstallment(debt, ym) ? Number(debt.monthlyPayment||0) : 0;
+  }
+  if(debt.cardType === 'revolving'){
+    const payoff = simulateRevolvingMonths(debt);
+    const start = debt.startMonth || state.defaultStartMonth;
+    const end = addMonthsStr(start, Math.max(0,payoff.months-1));
+    return ym >= start && ym <= end ? Number(debt.currentPayment||0) : 0;
+  }
+  return 0;
+}
+function debtAppliesInstallment(debt, ym){
+  const start = debt.startMonth || state.defaultStartMonth;
+  if(ym < start) return false;
+  if(debt.endMode === 'remaining'){
+    const diff = monthDiff(start, ym);
+    return diff >= 0 && diff < Number(debt.remainingInstallments||0);
+  }
+  if(debt.endMode === 'date'){
+    return ym >= start && ym <= debt.lastMonth;
+  }
+  return false;
+}
+function getDebtRecoveredThisMonth(debt, ym){
+  const prev = addMonthsStr(ym, -1);
+  const hadPrev = getDebtMonthlyAmount(debt, prev) > 0;
+  const nowHas = getDebtMonthlyAmount(debt, ym) > 0;
+  if(hadPrev && !nowHas){
+    return getDebtMonthlyAmount(debt, prev);
+  }
+  return 0;
+}
+function simulateRevolvingMonths(debt){
+  let balance = Number(debt.currentDebt || debt.owedCurrent || 0);
+  let payment = Number(debt.currentPayment || 0);
+  const annual = Number(debt.tin || debt.tae || 0) / 100;
+  const monthlyRate = annual / 12;
+  if(payment <= 0 || balance <= 0) return {months:0, endMonth: debt.startMonth || state.defaultStartMonth};
+  let months = 0;
+  let safe = 0;
+  while(balance > 0.01 && safe < 1200){
+    const interest = balance * monthlyRate;
+    balance = balance + interest - payment;
+    months++;
+    safe++;
+    if(balance > 1e9) break;
+    if(payment <= interest){
+      return {months:999, endMonth:addMonthsStr(debt.startMonth || state.defaultStartMonth, 998), impossible:true};
+    }
+  }
+  return {months, endMonth:addMonthsStr(debt.startMonth || state.defaultStartMonth, Math.max(0,months-1))};
+}
+function getAdjustment(ym){
+  if(!state.monthAdjustments[ym]){
+    state.monthAdjustments[ym] = {
+      extraIncomes: [],
+      extraExpenses: [],
+      extraDebts: [],
+      savingsAdds: [],
+      debtActions: [] // {debtId, type:'skip'|'payoff_full'|'custom_amount', amount}
+    };
+  }
+  return state.monthAdjustments[ym];
+}
+function getMonthForecast(ym){
+  const incomes = state.incomes.filter(i => incomeMonthApplies(i, ym));
+  const expenses = state.expenses.filter(e => expenseMonthApplies(e, ym));
+  const debts = state.debts;
+  const adj = getAdjustment(ym);
+
+  let incomeTotal = incomes.reduce((a,b)=>a+Number(b.amount||0),0) + adj.extraIncomes.reduce((a,b)=>a+Number(b.amount||0),0);
+  let expenseItems = expenses.map(e => ({name:e.name, amount:Number(e.amount||0), source:'expense'}));
+  expenseItems.push(...adj.extraExpenses.map(e => ({name:e.name, amount:Number(e.amount||0), source:'extra'})));
+
+  let debtItems = [];
+  let recovered = 0;
+
+  debts.forEach(d => {
+    let amt = getDebtMonthlyAmount(d, ym);
+    recovered += getDebtRecoveredThisMonth(d, ym);
+
+    const action = adj.debtActions.find(a => a.debtId === d.id);
+    if(action){
+      if(action.type === 'skip') amt = 0;
+      if(action.type === 'custom_amount') amt = Number(action.amount || amt);
+      if(action.type === 'payoff_full'){
+        const payoffAmount = getDebtPayoffEstimate(d, ym);
+        debtItems.push({name:d.name || d.entity, amount:payoffAmount, source:'debt_payoff', debtId:d.id});
+        amt = 0;
+      }
+    }
+    if(amt > 0) debtItems.push({name:d.name || d.entity, amount:amt, source:'debt', debtId:d.id});
+  });
+
+  const savings1Goal = state.savingsGoals.find(g => g.id === state.forecast.goal1Id);
+  const savings2Goal = state.savingsGoals.find(g => g.id === state.forecast.goal2Id);
+  const save1 = savings1Goal && goalMonthApplies(savings1Goal, ym) ? Number(savings1Goal.amount || 0) : 0;
+  const save2 = savings2Goal && goalMonthApplies(savings2Goal, ym) ? Number(savings2Goal.amount || 0) : 0;
+  const extraSavingsAdds = adj.savingsAdds || [];
+
+  const expenseTotal = expenseItems.reduce((a,b)=>a+b.amount,0);
+  const debtTotal = debtItems.reduce((a,b)=>a+b.amount,0);
+  const save1Extra = extraSavingsAdds.filter(x => x.goalId === (state.forecast.goal1Id || '__none__')).reduce((a,b)=>a+Number(b.amount||0),0);
+  const save2Extra = extraSavingsAdds.filter(x => x.goalId === (state.forecast.goal2Id || '__none__')).reduce((a,b)=>a+Number(b.amount||0),0);
+  const savings1 = save1 + save1Extra;
+  const savings2 = save2 + save2Extra;
+  const net = incomeTotal - expenseTotal - debtTotal - savings1 - savings2;
+
+  return {
+    month: ym,
+    label: monthLabel(ym),
+    incomes,
+    expenses: expenseItems,
+    debts: debtItems,
+    incomeTotal,
+    expenseTotal,
+    debtTotal,
+    recovered,
+    savings1,
+    savings2,
+    net
+  };
+}
+function getDebtPayoffEstimate(d, ym){
+  if(d.debtType === 'loan' || d.cardType === 'installment'){
+    if(d.endMode === 'remaining'){
+      const start = d.startMonth || state.defaultStartMonth;
+      const monthsPaid = Math.max(0, monthDiff(start, ym));
+      const remaining = Math.max(0, Number(d.remainingInstallments||0) - monthsPaid);
+      return Number(d.monthlyPayment||0) * remaining;
+    }
+    if(d.endMode === 'date'){
+      const remainingMonths = monthDiff(ym, d.lastMonth) + 1;
+      return Math.max(0, remainingMonths) * Number(d.monthlyPayment||0);
+    }
+  }
+  if(d.cardType === 'revolving'){
+    return Number(d.currentDebt || d.owedCurrent || 0);
+  }
+  if(d.cardType === 'pay_end_month'){
+    return Number(d.amount||0);
+  }
+  return 0;
+}
+function rerender(){
+  document.getElementById('initialReserve').value = state.reserveInitial || 0;
+  document.getElementById('defaultStart').value = state.defaultStartMonth || todayMonth();
+
+  renderList('incomeList', state.incomes, 'income');
+  renderList('expenseList', state.expenses, 'expense');
+  renderList('goalList', state.savingsGoals, 'goal');
+  renderList('debtList', state.debts, 'debt');
+
+  const baseIncome = state.incomes.filter(i => incomeMonthApplies(i, state.defaultStartMonth)).reduce((a,b)=>a+Number(b.amount||0),0);
+  const baseFixed = state.expenses.filter(e => expenseMonthApplies(e, state.defaultStartMonth)).reduce((a,b)=>a+Number(b.amount||0),0);
+  const baseDebt = state.debts.reduce((a,b)=>a+getDebtMonthlyAmount(b, state.defaultStartMonth),0);
+
+  document.getElementById('kpiIncome').textContent = euros(baseIncome);
+  document.getElementById('kpiFixed').textContent = euros(baseFixed);
+  document.getElementById('kpiDebt').textContent = euros(baseDebt);
+  const net = baseIncome - baseFixed - baseDebt;
+  const kpi = document.getElementById('kpiBaseNet');
+  kpi.textContent = euros(net);
+  kpi.className = 'value ' + (net >= 0 ? 'kpi-green' : 'kpi-red');
+
+  const goalOptions = ['<option value="">— ninguno —</option>']
+    .concat(state.savingsGoals.map(g => `<option value="${g.id}">${escapeHtml(g.name)} · ${euros(g.amount||0)}</option>`));
+  document.getElementById('forecastGoal1').innerHTML = goalOptions.join('');
+  document.getElementById('forecastGoal2').innerHTML = goalOptions.join('');
+  document.getElementById('forecastFrom').value = state.forecast.from || state.defaultStartMonth;
+  document.getElementById('forecastTo').value = state.forecast.to || addMonthsStr(state.defaultStartMonth, 12);
+  document.getElementById('forecastGoal1').value = state.forecast.goal1Id || '';
+  document.getElementById('forecastGoal2').value = state.forecast.goal2Id || '';
+
+  saveState();
+}
+function syncForecastControls(){
+  state.forecast.from = document.getElementById('forecastFrom').value;
+  state.forecast.to = document.getElementById('forecastTo').value;
+  state.forecast.goal1Id = document.getElementById('forecastGoal1').value;
+  state.forecast.goal2Id = document.getElementById('forecastGoal2').value;
+  saveState();
+}
+function renderForecast(){
+  syncForecastControls();
+  const from = state.forecast.from;
+  const to = state.forecast.to;
+  if(!from || !to || from > to) return;
+
+  const months = monthsBetween(from, to);
+  let reserve = Number(state.reserveInitial || 0);
+  let goal1Acc = 0;
+  let goal2Acc = 0;
+  let totalNet = 0;
+  let totalRecovered = 0;
+  const grid = document.getElementById('monthsGrid');
+
+  const arr = months.map(m => {
+    const fc = getMonthForecast(m);
+    reserve += fc.net;
+    goal1Acc += fc.savings1;
+    goal2Acc += fc.savings2;
+    totalNet += fc.net;
+    totalRecovered += fc.recovered;
+    return {...fc, reserveAfter: reserve, goal1Acc, goal2Acc};
+  });
+
+  grid.innerHTML = arr.map(fc => `
+    <div class="month" onclick="openMonthDetail('${fc.month}')">
+      <h4>${fc.label}</h4>
+      <div class="rows">
+        <div class="lab">Total ingreso</div><div>${euros(fc.incomeTotal)}</div>
+        <div class="lab">Total deuda</div><div>${euros(fc.debtTotal)}</div>
+        <div class="lab">Total gastos</div><div>${euros(fc.expenseTotal)}</div>
+        <div class="lab">Sobrante</div><div class="net ${fc.net>=0?'pos':'neg'}">${euros(fc.net)}</div>
+        <div class="lab">Recuperado</div><div class="recovered">${fc.recovered>0?'+ '+euros(fc.recovered):'—'}</div>
+        <div class="lab">Ahorrado 1</div><div class="savings1">${euros(fc.savings1)}</div>
+        <div class="lab">Ahorrado 2</div><div class="savings2">${euros(fc.savings2)}</div>
+        <div class="lab">Colchón acumulado</div><div class="${fc.reserveAfter>=0?'pos':'neg'}">${euros(fc.reserveAfter)}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('forecastTotalNet').textContent = euros(totalNet);
+  document.getElementById('forecastRecovered').textContent = euros(totalRecovered);
+  document.getElementById('forecastGoal1Total').textContent = euros(goal1Acc);
+  document.getElementById('forecastGoal2Total').textContent = euros(goal2Acc);
+}
+function openMonthDetail(ym){
+  const fc = getMonthForecast(ym);
+  const adj = getAdjustment(ym);
+  const debtOptions = state.debts.map(d => `<option value="${d.id}">${escapeHtml(d.name || d.entity)}</option>`).join('');
+  const goalOptions = [`<option value="${state.forecast.goal1Id || '__none__'}">${state.forecast.goal1Id ? 'Ahorro 1 activo' : 'Ahorro 1 (si no hay, se suma igual)'}</option>`,
+                       `<option value="${state.forecast.goal2Id || '__none2__'}">${state.forecast.goal2Id ? 'Ahorro 2 activo' : 'Ahorro 2 (si no hay, se suma igual)'}</option>`].join('');
+  const html = `
+    <div class="modal-grid">
+      <div class="panel">
+        <h3 style="margin-top:0">Preview del mes</h3>
+        <table class="mini-table">
+          <tr><th>Concepto</th><th>Total</th></tr>
+          <tr><td>Ingreso</td><td>${euros(fc.incomeTotal)}</td></tr>
+          <tr><td>Gastos</td><td>${euros(fc.expenseTotal)}</td></tr>
+          <tr><td>Deuda</td><td>${euros(fc.debtTotal)}</td></tr>
+          <tr><td>Recuperado</td><td style="color:#4ade80">${fc.recovered>0?'+ '+euros(fc.recovered):'—'}</td></tr>
+          <tr><td>Ahorro 1</td><td>${euros(fc.savings1)}</td></tr>
+          <tr><td>Ahorro 2</td><td>${euros(fc.savings2)}</td></tr>
+          <tr><td><strong>Sobrante</strong></td><td><strong style="color:${fc.net>=0?'#4ade80':'#fb7185'}">${euros(fc.net)}</strong></td></tr>
+        </table>
+        <div class="divider"></div>
+        <h4>Items activos</h4>
+        <table class="mini-table">
+          <tr><th>Tipo</th><th>Nombre</th><th>Importe</th></tr>
+          ${fc.incomes.map(i => `<tr><td>Ingreso</td><td>${escapeHtml(i.name)}</td><td>${euros(i.amount)}</td></tr>`).join('')}
+          ${fc.expenses.map(e => `<tr><td>Gasto</td><td>${escapeHtml(e.name)}</td><td>${euros(e.amount)}</td></tr>`).join('')}
+          ${fc.debts.map(d => `<tr><td>Deuda</td><td>${escapeHtml(d.name)}</td><td>${euros(d.amount)}</td></tr>`).join('')}
+        </table>
+      </div>
+
+      <div class="stack">
+        <div class="panel">
+          <h3 style="margin-top:0">Ajustes de este mes</h3>
+          <div class="field"><label>Ingreso puntual</label>
+            <div class="inline-actions">
+              <input id="oneIncomeName" placeholder="Nombre">
+              <input id="oneIncomeAmount" type="number" step="0.01" placeholder="Monto">
+              <button class="good" onclick="addMonthIncome('${ym}')">Añadir</button>
+            </div>
+          </div>
+          <div class="field"><label>Gasto puntual</label>
+            <div class="inline-actions">
+              <input id="oneExpenseName" placeholder="Nombre">
+              <input id="oneExpenseAmount" type="number" step="0.01" placeholder="Monto">
+              <button class="good" onclick="addMonthExpense('${ym}')">Añadir</button>
+            </div>
+          </div>
+          <div class="field"><label>Ahorro puntual / recurrente</label>
+            <div class="inline-actions">
+              <select id="oneSaveGoal">${goalOptions}</select>
+              <input id="oneSaveName" placeholder="Para qué">
+              <input id="oneSaveAmount" type="number" step="0.01" placeholder="Monto">
+              <button class="good" onclick="addMonthSaving('${ym}')">Añadir</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0">Acciones sobre deudas</h3>
+          <div class="field"><label>Aplicar al mes ${monthLabel(ym)}</label>
+            <div class="inline-actions">
+              <select id="debtActionDebt">${debtOptions}</select>
+              <select id="debtActionType">
+                <option value="skip">Aplazar / saltar cuota</option>
+                <option value="payoff_full">Pagar completa la deuda</option>
+                <option value="custom_amount">Monto personalizado</option>
+              </select>
+              <input id="debtActionAmount" type="number" step="0.01" placeholder="Monto si aplica">
+              <button class="good" onclick="addDebtAction('${ym}')">Aplicar</button>
+            </div>
+          </div>
+          <div class="footer-note">Estas acciones recalculan el mes y los siguientes.</div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0">Ajustes ya guardados</h3>
+          <div class="sub">Puedes eliminarlos si te equivocaste.</div>
+          <div class="list">
+            ${(adj.extraIncomes||[]).map((x,i)=>itemAdjustmentHtml('Ingreso puntual', x.name, x.amount, `removeAdj('${ym}','extraIncomes',${i})`)).join('')}
+            ${(adj.extraExpenses||[]).map((x,i)=>itemAdjustmentHtml('Gasto puntual', x.name, x.amount, `removeAdj('${ym}','extraExpenses',${i})`)).join('')}
+            ${(adj.savingsAdds||[]).map((x,i)=>itemAdjustmentHtml('Ahorro', x.name, x.amount, `removeAdj('${ym}','savingsAdds',${i})`)).join('')}
+            ${(adj.debtActions||[]).map((x,i)=>itemAdjustmentHtml('Acción deuda', getDebtName(x.debtId)+' · '+x.type, x.amount||0, `removeAdj('${ym}','debtActions',${i})`)).join('') || '<div class="empty">No hay ajustes en este mes.</div>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  openModal('Detalle del mes', monthLabel(ym), html);
+}
+function itemAdjustmentHtml(type, name, amount, onclick){
+  return `<div class="item"><div class="meta"><div class="name">${escapeHtml(type)}</div><div class="desc">${escapeHtml(name||'')}</div></div><div class="money">${euros(amount||0)}</div><div><button class="danger" onclick="${onclick}">Eliminar</button></div></div>`;
+}
+function getDebtName(id){
+  const d = state.debts.find(x => x.id === id);
+  return d ? (d.name || d.entity) : 'Deuda';
+}
+function removeAdj(ym, key, idx){
+  const adj = getAdjustment(ym);
+  adj[key].splice(idx,1);
+  saveState();
+  renderForecast();
+  openMonthDetail(ym);
+}
+function addMonthIncome(ym){
+  const name = document.getElementById('oneIncomeName').value.trim();
+  const amount = Number(document.getElementById('oneIncomeAmount').value || 0);
+  if(!name || !amount) return;
+  getAdjustment(ym).extraIncomes.push({name, amount});
+  saveState(); renderForecast(); openMonthDetail(ym);
+}
+function addMonthExpense(ym){
+  const name = document.getElementById('oneExpenseName').value.trim();
+  const amount = Number(document.getElementById('oneExpenseAmount').value || 0);
+  if(!name || !amount) return;
+  getAdjustment(ym).extraExpenses.push({name, amount});
+  saveState(); renderForecast(); openMonthDetail(ym);
+}
+function addMonthSaving(ym){
+  const goalId = document.getElementById('oneSaveGoal').value;
+  const name = document.getElementById('oneSaveName').value.trim() || 'Ahorro puntual';
+  const amount = Number(document.getElementById('oneSaveAmount').value || 0);
+  if(!amount) return;
+  getAdjustment(ym).savingsAdds.push({goalId, name, amount});
+  saveState(); renderForecast(); openMonthDetail(ym);
+}
+function addDebtAction(ym){
+  const debtId = document.getElementById('debtActionDebt').value;
+  const type = document.getElementById('debtActionType').value;
+  const amount = Number(document.getElementById('debtActionAmount').value || 0);
+  if(!debtId || !type) return;
+  const arr = getAdjustment(ym).debtActions;
+  const existing = arr.find(x => x.debtId === debtId);
+  if(existing){
+    existing.type = type;
+    existing.amount = amount;
+  }else{
+    arr.push({debtId, type, amount});
+  }
+  saveState(); renderForecast(); openMonthDetail(ym);
+}
+function showIncomeModal(item=null){
+  openModal(item?'Editar ingreso':'Añadir ingreso', 'Nombre y monto', `
+    <div class="modal-grid">
+      <div class="field"><label>Nombre</label><input id="m_name" value="${item?escapeHtml(item.name):''}"></div>
+      <div class="field"><label>Monto</label><input id="m_amount" type="number" step="0.01" value="${item?item.amount:''}"></div>
+      <div class="field"><label>Periodicidad</label>
+        <select id="m_periodicity">
+          ${option('monthly','Mensual',item?.periodicity||'monthly')}
+          ${option('bimonthly','Bimestral',item?.periodicity||'monthly')}
+          ${option('quarterly','Trimestral',item?.periodicity||'monthly')}
+          ${option('yearly','Anual',item?.periodicity||'monthly')}
+          ${option('one_time','Puntual',item?.periodicity||'monthly')}
+        </select>
+      </div>
+      <div class="field"><label>Empieza en</label><input id="m_start" type="month" value="${item?.startMonth || state.defaultStartMonth}"></div>
+      <div class="field"><label>Termina en (opcional)</label><input id="m_end" type="month" value="${item?.endMonth || ''}"></div>
+      <div></div>
+    </div>
+    <div class="inline-actions" style="margin-top:14px">
+      <button class="primary" onclick="saveIncome('${item?.id || ''}')">Guardar</button>
+    </div>
+  `);
+}
+function saveIncome(id){
+  const obj = {
+    id: id || uid('income'),
+    name: document.getElementById('m_name').value.trim(),
+    amount: Number(document.getElementById('m_amount').value || 0),
+    periodicity: document.getElementById('m_periodicity').value,
+    startMonth: document.getElementById('m_start').value,
+    endMonth: document.getElementById('m_end').value
+  };
+  if(!obj.name || !obj.amount) return;
+  upsert('incomes', obj);
+  closeModal(); rerender();
+}
+function showExpenseModal(item=null){
+  openModal(item?'Editar gasto':'Añadir gasto', 'Fijo o variable, con periodicidad', `
+    <div class="modal-grid">
+      <div class="field"><label>Nombre</label><input id="m_name" value="${item?escapeHtml(item.name):''}"></div>
+      <div class="field"><label>Monto</label><input id="m_amount" type="number" step="0.01" value="${item?item.amount:''}"></div>
+      <div class="field"><label>Tipo</label>
+        <select id="m_kind">
+          ${option('fixed','Fijo',item?.kind||'fixed')}
+          ${option('variable','Variable',item?.kind||'fixed')}
+        </select>
+      </div>
+      <div class="field"><label>Periodicidad</label>
+        <select id="m_periodicity">
+          ${option('monthly','Mensual',item?.periodicity||'monthly')}
+          ${option('bimonthly','Bimestral',item?.periodicity||'monthly')}
+          ${option('quarterly','Trimestral',item?.periodicity||'monthly')}
+          ${option('yearly','Anual',item?.periodicity||'monthly')}
+          ${option('one_time','Puntual',item?.periodicity||'monthly')}
+        </select>
+      </div>
+      <div class="field"><label>Empieza en</label><input id="m_start" type="month" value="${item?.startMonth || state.defaultStartMonth}"></div>
+      <div class="field"><label>Termina en (opcional)</label><input id="m_end" type="month" value="${item?.endMonth || ''}"></div>
+    </div>
+    <div class="inline-actions" style="margin-top:14px">
+      <button class="primary" onclick="saveExpense('${item?.id || ''}')">Guardar</button>
+    </div>
+  `);
+}
+function saveExpense(id){
+  const obj = {
+    id: id || uid('expense'),
+    name: document.getElementById('m_name').value.trim(),
+    amount: Number(document.getElementById('m_amount').value || 0),
+    kind: document.getElementById('m_kind').value,
+    periodicity: document.getElementById('m_periodicity').value,
+    startMonth: document.getElementById('m_start').value,
+    endMonth: document.getElementById('m_end').value
+  };
+  if(!obj.name || !obj.amount) return;
+  upsert('expenses', obj);
+  closeModal(); rerender();
+}
+function showGoalModal(item=null){
+  openModal(item?'Editar objetivo':'Añadir objetivo de ahorro', 'Nombre, monto y periodicidad', `
+    <div class="modal-grid">
+      <div class="field"><label>Nombre</label><input id="m_name" value="${item?escapeHtml(item.name):''}"></div>
+      <div class="field"><label>Monto</label><input id="m_amount" type="number" step="0.01" value="${item?item.amount:''}"></div>
+      <div class="field"><label>Periodicidad</label>
+        <select id="m_periodicity">
+          ${option('monthly','Mensual',item?.periodicity||'monthly')}
+          ${option('bimonthly','Bimestral',item?.periodicity||'monthly')}
+          ${option('quarterly','Trimestral',item?.periodicity||'monthly')}
+          ${option('yearly','Anual',item?.periodicity||'monthly')}
+          ${option('one_time','Puntual',item?.periodicity||'monthly')}
+        </select>
+      </div>
+      <div class="field"><label>Empieza en</label><input id="m_start" type="month" value="${item?.startMonth || state.defaultStartMonth}"></div>
+      <div class="field"><label>Termina en (opcional)</label><input id="m_end" type="month" value="${item?.endMonth || ''}"></div>
+      <div class="field" style="grid-column:1 / -1"><label>Notas</label><textarea id="m_notes">${item?.notes || ''}</textarea></div>
+    </div>
+    <div class="inline-actions" style="margin-top:14px">
+      <button class="primary" onclick="saveGoal('${item?.id || ''}')">Guardar</button>
+    </div>
+  `);
+}
+function saveGoal(id){
+  const obj = {
+    id: id || uid('goal'),
+    name: document.getElementById('m_name').value.trim(),
+    amount: Number(document.getElementById('m_amount').value || 0),
+    periodicity: document.getElementById('m_periodicity').value,
+    startMonth: document.getElementById('m_start').value,
+    endMonth: document.getElementById('m_end').value,
+    notes: document.getElementById('m_notes').value.trim()
+  };
+  if(!obj.name || !obj.amount) return;
+  upsert('savingsGoals', obj);
+  closeModal(); rerender();
+}
+function showDebtModal(item=null){
+  const debtType = item?.debtType || 'loan';
+  openModal(item?'Editar deuda':'Añadir deuda', 'Entidad + tipo + datos de vencimiento', `
+    <div class="modal-grid">
+      <div class="field"><label>Nombre / entidad</label><input id="d_name" value="${item?escapeHtml(item.name || item.entity || ''):''}"></div>
+      <div class="field"><label>Empieza en</label><input id="d_start" type="month" value="${item?.startMonth || state.defaultStartMonth}"></div>
+      <div class="field"><label>Tipo</label>
+        <select id="d_debtType" onchange="renderDebtDynamic('${item?.id || ''}')">
+          ${option('loan','Préstamo',debtType)}
+          ${option('card','Tarjeta de crédito',debtType)}
+        </select>
+      </div>
+      <div id="debtDynamic" style="grid-column:1 / -1"></div>
+    </div>
+    <div class="inline-actions" style="margin-top:14px">
+      <button class="primary" onclick="saveDebt('${item?.id || ''}')">Guardar</button>
+    </div>
+  `);
+  window.currentDebtEdit = item ? JSON.parse(JSON.stringify(item)) : null;
+  renderDebtDynamic(item?.id || '');
+}
+function renderDebtDynamic(id){
+  const type = document.getElementById('d_debtType').value;
+  const item = window.currentDebtEdit || {};
+  const container = document.getElementById('debtDynamic');
+  if(type === 'loan'){
+    container.innerHTML = `
+      <div class="modal-grid">
+        <div class="field"><label>Cuota mensual</label><input id="d_monthly" type="number" step="0.01" value="${item.monthlyPayment || ''}"></div>
+        <div class="field"><label>Modo de fin</label>
+          <select id="d_endMode" onchange="toggleDebtEndMode()">
+            ${option('remaining','Cuotas restantes',item.endMode || 'remaining')}
+            ${option('date','Fecha de última cuota',item.endMode || 'remaining')}
+          </select>
+        </div>
+        <div class="field" id="wrapRemaining"><label>Cuotas restantes</label><input id="d_remaining" type="number" step="1" value="${item.remainingInstallments || ''}"></div>
+        <div class="field" id="wrapDate"><label>Última cuota</label><input id="d_lastMonth" type="month" value="${item.lastMonth || ''}"></div>
+      </div>`;
+    setTimeout(toggleDebtEndMode,0);
+    return;
+  }
+  const cardType = item.cardType || 'revolving';
+  container.innerHTML = `
+    <div class="modal-grid">
+      <div class="field"><label>Tipo de tarjeta</label>
+        <select id="d_cardType" onchange="toggleCardSubtype()">
+          ${option('revolving','Revolving',cardType)}
+          ${option('pay_end_month','Paga fin de mes',cardType)}
+          ${option('installment','Compra aplazada',cardType)}
+        </select>
+      </div>
+      <div id="cardSubtypeFields" style="grid-column:1 / -1"></div>
+    </div>`;
+  setTimeout(toggleCardSubtype,0);
+}
+function toggleDebtEndMode(){
+  const mode = document.getElementById('d_endMode').value;
+  document.getElementById('wrapRemaining').style.display = mode === 'remaining' ? '' : 'none';
+  document.getElementById('wrapDate').style.display = mode === 'date' ? '' : 'none';
+}
+function toggleCardSubtype(){
+  const item = window.currentDebtEdit || {};
+  const subtype = document.getElementById('d_cardType').value;
+  const wrap = document.getElementById('cardSubtypeFields');
+  if(subtype === 'revolving'){
+    const payoff = item.cardType === 'revolving' ? simulateRevolvingMonths(item) : null;
+    wrap.innerHTML = `
+      <div class="modal-grid">
+        <div class="field"><label>Total deuda / adeudado actual</label><input id="d_currentDebt" type="number" step="0.01" value="${item.currentDebt || item.owedCurrent || ''}"></div>
+        <div class="field"><label>Cuota actual</label><input id="d_currentPayment" type="number" step="0.01" value="${item.currentPayment || ''}"></div>
+        <div class="field"><label>TIN %</label><input id="d_tin" type="number" step="0.01" value="${item.tin || ''}"></div>
+        <div class="field"><label>TAE %</label><input id="d_tae" type="number" step="0.01" value="${item.tae || ''}"></div>
+        <div class="field" style="grid-column:1 / -1"><label>Fecha estimada fin (calculada)</label><input id="d_revolvingPreview" disabled value="${payoff && !payoff.impossible ? monthLabel(payoff.endMonth) : 'Se calculará al guardar'}"></div>
+      </div>`;
+      return;
+  }
+  if(subtype === 'pay_end_month'){
+    wrap.innerHTML = `
+      <div class="modal-grid">
+        <div class="field"><label>Monto</label><input id="d_amount" type="number" step="0.01" value="${item.amount || ''}"></div>
+        <div class="field"><label>Periodicidad</label>
+          <select id="d_periodicity">
+            ${option('monthly','Mensual',item.periodicity || 'monthly')}
+            ${option('one_time','Puntual',item.periodicity || 'monthly')}
+          </select>
+        </div>
+        <div class="field"><label>Termina en (opcional)</label><input id="d_endMonth" type="month" value="${item.endMonth || ''}"></div>
+      </div>`;
+      return;
+  }
+  wrap.innerHTML = `
+    <div class="modal-grid">
+      <div class="field"><label>Monto de la cuota</label><input id="d_monthly" type="number" step="0.01" value="${item.monthlyPayment || ''}"></div>
+      <div class="field"><label>Modo de fin</label>
+        <select id="d_endMode" onchange="toggleDebtEndMode()">
+          ${option('remaining','Cuotas restantes',item.endMode || 'remaining')}
+          ${option('date','Fecha de última cuota',item.endMode || 'remaining')}
+        </select>
+      </div>
+      <div class="field" id="wrapRemaining"><label>Cuotas restantes</label><input id="d_remaining" type="number" step="1" value="${item.remainingInstallments || ''}"></div>
+      <div class="field" id="wrapDate"><label>Última cuota</label><input id="d_lastMonth" type="month" value="${item.lastMonth || ''}"></div>
+    </div>`;
+  setTimeout(toggleDebtEndMode,0);
+}
+function saveDebt(id){
+  const debtType = document.getElementById('d_debtType').value;
+  const name = document.getElementById('d_name').value.trim();
+  const startMonth = document.getElementById('d_start').value;
+  if(!name) return;
+  let obj = { id: id || uid('debt'), name, startMonth, debtType };
+
+  if(debtType === 'loan'){
+    obj.monthlyPayment = Number(document.getElementById('d_monthly').value || 0);
+    obj.endMode = document.getElementById('d_endMode').value;
+    obj.remainingInstallments = Number(document.getElementById('d_remaining')?.value || 0);
+    obj.lastMonth = document.getElementById('d_lastMonth')?.value || '';
+    if(!obj.monthlyPayment) return;
+  } else {
+    obj.cardType = document.getElementById('d_cardType').value;
+    if(obj.cardType === 'revolving'){
+      obj.currentDebt = Number(document.getElementById('d_currentDebt').value || 0);
+      obj.currentPayment = Number(document.getElementById('d_currentPayment').value || 0);
+      obj.tin = Number(document.getElementById('d_tin').value || 0);
+      obj.tae = Number(document.getElementById('d_tae').value || 0);
+      if(!obj.currentDebt || !obj.currentPayment) return;
+    } else if(obj.cardType === 'pay_end_month'){
+      obj.amount = Number(document.getElementById('d_amount').value || 0);
+      obj.periodicity = document.getElementById('d_periodicity').value;
+      obj.endMonth = document.getElementById('d_endMonth').value;
+      if(!obj.amount) return;
+    } else {
+      obj.monthlyPayment = Number(document.getElementById('d_monthly').value || 0);
+      obj.endMode = document.getElementById('d_endMode').value;
+      obj.remainingInstallments = Number(document.getElementById('d_remaining')?.value || 0);
+      obj.lastMonth = document.getElementById('d_lastMonth')?.value || '';
+      if(!obj.monthlyPayment) return;
+    }
+  }
+  upsert('debts', obj);
+  closeModal(); rerender();
+}
+function option(value,label,current){
+  return `<option value="${value}" ${current===value?'selected':''}>${label}</option>`;
+}
+function upsert(key, obj){
+  const idx = state[key].findIndex(x => x.id === obj.id);
+  if(idx >= 0) state[key][idx] = obj;
+  else state[key].push(obj);
+}
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'debt_planner_data.json';
+  a.click();
+}
+function importJSON(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      Object.keys(state).forEach(k => delete state[k]);
+      Object.assign(state, parsed);
+      if(!state.monthAdjustments) state.monthAdjustments = {};
+      if(!state.forecast) state.forecast = { from: state.defaultStartMonth || todayMonth(), to: addMonthsStr(state.defaultStartMonth || todayMonth(), 12), goal1Id:'', goal2Id:'' };
+      rerender();
+      renderForecast();
+    }catch(e){
+      alert('No se pudo importar el JSON.');
+    }
+  };
+  reader.readAsText(file);
+}
+function seedDemo(){
+  state.reserveInitial = 0;
+  state.defaultStartMonth = '2026-03';
+  state.incomes = [
+    {id:uid('income'), name:'Sueldo neto', amount:3095, periodicity:'monthly', startMonth:'2026-03', endMonth:''}
+  ];
+  state.expenses = [
+    {id:uid('expense'), name:'Alquiler', amount:1114, kind:'fixed', periodicity:'monthly', startMonth:'2026-03', endMonth:''},
+    {id:uid('expense'), name:'Comida', amount:350, kind:'variable', periodicity:'monthly', startMonth:'2026-03', endMonth:''},
+    {id:uid('expense'), name:'Vodafone', amount:116, kind:'fixed', periodicity:'monthly', startMonth:'2026-03', endMonth:''},
+    {id:uid('expense'), name:'Luz', amount:90, kind:'fixed', periodicity:'monthly', startMonth:'2026-03', endMonth:''},
+    {id:uid('expense'), name:'Agua', amount:45, kind:'fixed', periodicity:'bimonthly', startMonth:'2026-03', endMonth:''},
+    {id:uid('expense'), name:'ChatGPT', amount:23, kind:'fixed', periodicity:'monthly', startMonth:'2026-03', endMonth:''},
+    {id:uid('expense'), name:'Spotify', amount:22, kind:'fixed', periodicity:'monthly', startMonth:'2026-03', endMonth:''},
+    {id:uid('expense'), name:'Bolsa comida Cooper', amount:22, kind:'fixed', periodicity:'monthly', startMonth:'2026-03', endMonth:''},
+    {id:uid('expense'), name:'Hacienda urgente', amount:800, kind:'variable', periodicity:'one_time', startMonth:'2026-04', endMonth:''},
+    {id:uid('expense'), name:'Hacienda fraccionada', amount:80, kind:'variable', periodicity:'monthly', startMonth:'2026-04', endMonth:'2026-06'},
+    {id:uid('expense'), name:'Tarjeta nueva', amount:94, kind:'variable', periodicity:'monthly', startMonth:'2026-04', endMonth:'2026-06'},
+    {id:uid('expense'), name:'Renta 2025 tramo 1', amount:210, kind:'variable', periodicity:'one_time', startMonth:'2026-06', endMonth:''},
+    {id:uid('expense'), name:'Renta 2025 tramo 2', amount:90, kind:'variable', periodicity:'one_time', startMonth:'2026-11', endMonth:''}
+  ];
+  state.savingsGoals = [
+    {id:uid('goal'), name:'Ahorro piso', amount:300, periodicity:'monthly', startMonth:'2026-10', endMonth:'', notes:'entrada/fianza'},
+    {id:uid('goal'), name:'Colchón extra', amount:0, periodicity:'monthly', startMonth:'2026-10', endMonth:'', notes:'se ve en saldo/colchón'}
+  ];
+  state.debts = [
+    {id:uid('debt'), name:'Alma', debtType:'loan', monthlyPayment:91, endMode:'remaining', remainingInstallments:10, startMonth:'2026-04'},
+    {id:uid('debt'), name:'Sequra', debtType:'loan', monthlyPayment:13, endMode:'remaining', remainingInstallments:2, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Klarna 12,08', debtType:'loan', monthlyPayment:12.08, endMode:'remaining', remainingInstallments:2, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Klarna 51,68', debtType:'loan', monthlyPayment:51.68, endMode:'remaining', remainingInstallments:2, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Cofidis 19,14', debtType:'loan', monthlyPayment:19.14, endMode:'remaining', remainingInstallments:7, startMonth:'2026-04'},
+    {id:uid('debt'), name:'Cofidis 31,48', debtType:'loan', monthlyPayment:31.48, endMode:'remaining', remainingInstallments:11, startMonth:'2026-04'},
+    {id:uid('debt'), name:'Cofidis 65', debtType:'loan', monthlyPayment:65, endMode:'date', lastMonth:'2028-02', startMonth:'2026-03'},
+    {id:uid('debt'), name:'Cetelem 372', debtType:'loan', monthlyPayment:372, endMode:'date', lastMonth:'2026-09', startMonth:'2026-03'},
+    {id:uid('debt'), name:'Cetelem 61,21', debtType:'loan', monthlyPayment:61.21, endMode:'date', lastMonth:'2026-10', startMonth:'2026-03'},
+    {id:uid('debt'), name:'Cetelem revolving', debtType:'card', cardType:'revolving', currentDebt:7639, currentPayment:229, tin:20, tae:24, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Bankinter compra 94', debtType:'card', cardType:'installment', monthlyPayment:94, endMode:'remaining', remainingInstallments:1, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Bankinter 94,79', debtType:'card', cardType:'installment', monthlyPayment:94.79, endMode:'remaining', remainingInstallments:7, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Bankinter 139,18', debtType:'card', cardType:'installment', monthlyPayment:139.18, endMode:'remaining', remainingInstallments:6, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Bankinter 41,92', debtType:'card', cardType:'installment', monthlyPayment:41.92, endMode:'remaining', remainingInstallments:7, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Bankinter 44,04', debtType:'card', cardType:'installment', monthlyPayment:44.04, endMode:'remaining', remainingInstallments:5, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Bankinter 36,12', debtType:'card', cardType:'installment', monthlyPayment:36.12, endMode:'remaining', remainingInstallments:10, startMonth:'2026-03'},
+    {id:uid('debt'), name:'BBVA PC', debtType:'loan', monthlyPayment:105, endMode:'remaining', remainingInstallments:34, startMonth:'2026-03'},
+    {id:uid('debt'), name:'BBVA revolving', debtType:'card', cardType:'revolving', currentDebt:1495, currentPayment:40, tin:18, tae:22, startMonth:'2026-03'},
+    {id:uid('debt'), name:'Caixa revolving', debtType:'card', cardType:'revolving', currentDebt:2000, currentPayment:40, tin:18, tae:22, startMonth:'2026-03'}
+  ];
+  state.forecast = { from:'2026-03', to:'2028-06', goal1Id: state.savingsGoals[0].id, goal2Id:'' };
+  state.monthAdjustments = {};
+  rerender();
+  renderForecast();
+}
+document.getElementById('addIncomeBtn').onclick = ()=> showIncomeModal();
+document.getElementById('addExpenseBtn').onclick = ()=> showExpenseModal();
+document.getElementById('addSavingsGoalBtn').onclick = ()=> showGoalModal();
+document.getElementById('addDebtBtn').onclick = ()=> showDebtModal();
+document.getElementById('saveBtn').onclick = ()=> { saveState(); alert('Guardado en tu navegador.'); };
+document.getElementById('exportBtn').onclick = exportJSON;
+document.getElementById('importBtn').onclick = ()=> document.getElementById('importFile').click();
+document.getElementById('importFile').addEventListener('change', e => e.target.files[0] && importJSON(e.target.files[0]));
+document.getElementById('seedDemoBtn').onclick = seedDemo;
+document.getElementById('updateReserveBtn').onclick = ()=> { state.reserveInitial = Number(document.getElementById('initialReserve').value || 0); rerender(); renderForecast(); };
+document.getElementById('syncStartBtn').onclick = ()=> {
+  state.defaultStartMonth = document.getElementById('defaultStart').value || todayMonth();
+  document.getElementById('forecastFrom').value = state.defaultStartMonth;
+  state.forecast.from = state.defaultStartMonth;
+  rerender(); renderForecast();
+};
+document.getElementById('generateForecastBtn').onclick = renderForecast;
+['forecastFrom','forecastTo','forecastGoal1','forecastGoal2'].forEach(id => {
+  document.getElementById(id).addEventListener('change', ()=> { syncForecastControls(); renderForecast(); });
+});
+
+if(!loadState()){
+  seedDemo();
+}else{
+  rerender();
+  renderForecast();
+}
+</script>
+</body>
+</html>
