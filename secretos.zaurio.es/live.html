@@ -49,8 +49,7 @@
 
     .card{
       width:100%;
-      max-width:100%;
-      min-height:170px;
+      height:220px;
       border-radius:26px;
       background: var(--bg);
       border: 1px solid var(--stroke);
@@ -62,6 +61,8 @@
       transition:all .25s ease;
       animation: pop .35s ease both;
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
     }
 
     .card.male{
@@ -131,8 +132,9 @@
       font-size:15px;
       font-weight:900;
       opacity:.95;
-      margin-bottom:12px;
+      margin-bottom:10px;
       padding-top:2px;
+      flex:0 0 auto;
     }
 
     .identityChip{
@@ -149,25 +151,27 @@
     .identityChip.free{ background:var(--green); }
 
     .textWrap{
-      width:100%;
-      height:260px;
+      flex:1 1 auto;
+      min-height:0;
+      overflow:hidden;
       display:flex;
       align-items:flex-start;
       justify-content:flex-start;
-      overflow:hidden;
     }
 
     .text{
-      line-height:1.16;
+      line-height:1.14;
       white-space:pre-wrap;
       word-break:break-word;
+      overflow-wrap:anywhere;
       margin:0;
       width:100%;
-      overflow:hidden;
+      display:block;
     }
 
     .emptyWrap{
-      min-height:190px;
+      flex:1 1 auto;
+      min-height:0;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -225,7 +229,11 @@
 
     function render(html){
       mount.innerHTML = html;
-      fitSecretText();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          fitSecretText();
+        });
+      });
     }
 
     function renderEmpty(){
@@ -249,7 +257,7 @@
             <span>${esc(String(s.edad ?? ""))} años</span>
           </div>
 
-          <div class="textWrap">
+          <div id="textWrap" class="textWrap">
             <p id="secretText" class="text">${esc(s.texto || "")}</p>
           </div>
         </div>
@@ -260,26 +268,33 @@
       return `
         <div class="card">
           <div class="sourceLabel centered">secretos.zaurio.es</div>
-          <div style="
-            padding:10px 12px;border-radius:14px;
-            background:rgba(0,0,0,.35);
-            border:1px solid rgba(255,255,255,.16);
-            color:#ffee00;font-weight:900;white-space:pre-wrap;
-          ">${esc(msg)}</div>
+          <div class="emptyWrap" style="font-size:24px;">${esc(msg)}</div>
         </div>
       `;
     }
 
     function fitSecretText(){
-      const el = document.getElementById("secretText");
-      if (!el) return;
+      const text = document.getElementById("secretText");
+      const wrap = document.getElementById("textWrap");
+      if (!text || !wrap) return;
 
       let size = 30;
-      el.style.fontSize = size + "px";
+      const minSize = 14;
 
-      while (size > 16 && el.scrollHeight > el.clientHeight + 2){
+      text.style.fontSize = size + "px";
+      text.style.lineHeight = "1.14";
+
+      while (size > minSize && (text.scrollHeight > wrap.clientHeight || text.scrollWidth > wrap.clientWidth)) {
         size -= 1;
-        el.style.fontSize = size + "px";
+        text.style.fontSize = size + "px";
+      }
+
+      if (text.scrollHeight > wrap.clientHeight) {
+        text.style.lineHeight = "1.08";
+        while (size > 12 && text.scrollHeight > wrap.clientHeight) {
+          size -= 1;
+          text.style.fontSize = size + "px";
+        }
       }
     }
 
@@ -297,7 +312,7 @@
           const key = "ERR:" + q.error.message;
           if (key !== lastState){
             lastState = key;
-            render(renderError("LIVE ERROR:\n" + q.error.message));
+            render(renderError("LIVE ERROR: " + q.error.message));
           }
           return;
         }
@@ -325,7 +340,7 @@
         const key = "JS:" + (e?.message || e);
         if (key !== lastState){
           lastState = key;
-          render(renderError("JS ERROR:\n" + (e?.message || e)));
+          render(renderError("JS ERROR: " + (e?.message || e)));
         }
       }
     }
@@ -333,7 +348,7 @@
     tick();
     setInterval(tick, 1000);
     setInterval(()=>{ document.getElementById("heartbeat").textContent = Date.now(); }, 500);
-    window.addEventListener("resize", fitSecretText);
+    window.addEventListener("resize", () => requestAnimationFrame(fitSecretText));
   </script>
 </body>
 </html>
