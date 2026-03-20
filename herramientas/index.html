@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Herramientas · Zaurio</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0a0f1f;
+      color: white;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px);
+    }
+
+    .menu {
+      display: flex;
+      gap: 10px;
+    }
+
+    .menu a {
+      padding: 10px 14px;
+      border-radius: 20px;
+      text-decoration: none;
+      color: #aaa;
+      background: #111;
+      font-weight: bold;
+    }
+
+    .menu a.active {
+      background: #2a3cff;
+      color: white;
+    }
+
+    /* ICONOS */
+    .icons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .icons img {
+      width: 28px;
+      height: 28px;
+    }
+
+    .gray {
+      filter: grayscale(1);
+      opacity: 0.5;
+    }
+
+    /* CONTENIDO */
+    .container {
+      padding: 40px 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #aaa;
+    }
+
+    /* TOOL CARD */
+    .tool {
+      margin-top: 40px;
+      padding: 20px;
+      border-radius: 20px;
+      background: #111;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .tool:hover {
+      transform: translateY(-3px);
+      background: #1a1a1a;
+    }
+
+    .tool img {
+      width: 120px;
+    }
+
+    .tool-info h2 {
+      margin: 0;
+    }
+
+    .tool-info p {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+
+    <div class="menu">
+      <a href="https://zaurio.es">Inicio</a>
+      <a href="https://miercoles.zaurio.es">Miércoles</a>
+      <a href="https://secretos.zaurio.es">Secretos</a>
+      <a href="https://herramientas.zaurio.es" class="active">Herramientas</a>
+    </div>
+
+    <div class="icons">
+      <img src="https://miercoles.zaurio.es/assets/toolbox.png">
+      <img src="https://miercoles.zaurio.es/assets/piggy.png" class="gray">
+    </div>
+
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="container">
+
+    <h1>Herramientas</h1>
+    <p>Tu hub de utilidades de Zaurio</p>
+
+    <!-- TOOL -->
+    <a href="/dinerozaurio/" style="text-decoration:none; color:inherit;">
+      <div class="tool">
+
+        <img src="https://miercoles.zaurio.es/assets/dinerozaurio.png">
+
+        <div class="tool-info">
+          <h2>DineroZaurio</h2>
+          <p>Gestor de ingresos, gastos, deudas y previsión</p>
+        </div>
+
+      </div>
+    </a>
+
+  </div>
+
+</body>
+</html>
