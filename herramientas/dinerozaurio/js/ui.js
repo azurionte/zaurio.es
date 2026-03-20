@@ -1,9 +1,10 @@
-import { supabase } from './supabase.js';
-// Importa `state` desde utils.js. state.js solo exporta supabase y funciones de auth
+// Importa la instancia de Supabase desde state.js (es donde se crea el cliente)
+import { supabase } from './state.js';
+// Importa el estado global (plan, incomes, etc.) desde utils.js
 import { state } from './utils.js';
 import { ymNow } from './utils.js';
 
-// Crea o actualiza el perfil del usuario en Supabase
+// Crea o actualiza el perfil del usuario
 export async function ensureProfile(user) {
   await supabase.from('profiles').upsert({
     id: user.id,
@@ -42,7 +43,7 @@ export async function loadOrCreateDefaultPlan(userId) {
   return plan;
 }
 
-// Carga todos los datos asociados a un plan (ingresos, gastos, deudas, objetivos, ajustes)
+// Carga todos los datos asociados a un plan
 export async function loadPlanData(planId) {
   const [incomes, expenses, debts, goals, adjustments] = await Promise.all([
     supabase.from('income_items').select('*').eq('plan_id', planId).order('created_at'),
@@ -75,7 +76,7 @@ export async function loadPlanData(planId) {
   }
 }
 
-// Guarda los metadatos del plan (nombre, colchón inicial, mes de inicio)
+// Guarda los metadatos del plan (nombre, reserva inicial, mes de inicio)
 export async function savePlanMeta() {
   return supabase
     .from('plans')
@@ -105,7 +106,7 @@ export const upsertExpense = (item) => upsert('expense_items', item);
 export const upsertDebt = (item) => upsert('debt_items', item);
 export const upsertGoal = (item) => upsert('savings_goals', item);
 
-// Elimina elementos individuales por id
+// Elimina elementos por id
 export async function deleteIncome(id) {
   const { error } = await supabase.from('income_items').delete().eq('id', id);
   if (error) throw error;
