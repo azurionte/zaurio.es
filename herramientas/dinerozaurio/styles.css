@@ -226,3 +226,62 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* Splash screen displayed after login */
+.splash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+}
+.splash-card {
+  text-align: center;
+  background: rgba(32, 8, 56, 0.85);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 24px rgba(255, 0, 170, 0.12);
+}
+.spinner {
+  margin-top: 16px;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--pink);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Wizard incomes list */
+.income-list .income-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.income-list .income-row input {
+  flex: 1;
+}
+
+/* Deudas list rows mimic the styles of incomes list */
+.debt-list .debt-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.debt-list .debt-row input,
+.debt-list .debt-row select {
+  flex: 1;
+}

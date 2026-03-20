@@ -44,6 +44,16 @@
     </div>
   </div>
 
+  <!-- Pantalla de bienvenida tras login -->
+  <div id="splash" class="splash hidden">
+    <div class="splash-card">
+      <!-- Texto de bienvenida con nombre del usuario (se rellena desde wizard.js) -->
+      <h2 id="welcomeMsg">Bienvenido</h2>
+      <!-- Spinner de carga -->
+      <div class="spinner"></div>
+    </div>
+  </div>
+
   <!-- Landing pre-registro -->
   <div id="authGate" class="auth-gate">
     <div class="auth-card">
@@ -59,9 +69,11 @@
   <div id="wizard" class="wizard hidden">
     <!-- Paso 1: ingresos -->
     <div class="wizard-step" data-step="1">
-      <h2>Ingresos</h2>
-      <p class="muted">Introduce tus ingresos mensuales.</p>
-      <input type="number" id="incomeAmount" placeholder="Importe mensual en €" class="input" />
+      <h2>Vamos a configurar tu perfil</h2>
+      <p class="muted">Indica tu ingreso principal y añade otros si los tienes.</p>
+      <!-- Lista dinámica de ingresos -->
+      <div id="incomeList" class="income-list"></div>
+      <button id="addIncomeBtn" class="btn ghost small">Añadir otro ingreso</button>
       <div class="wizard-buttons">
         <button id="next1" class="btn primary">Siguiente</button>
       </div>
@@ -79,8 +91,10 @@
     <!-- Paso 3: deudas -->
     <div class="wizard-step hidden" data-step="3">
       <h2>Deudas</h2>
-      <p class="muted">Introduce tus deudas actuales.</p>
-      <input type="number" id="debtAmount" placeholder="Importe total de deudas en €" class="input" />
+      <p class="muted">Añade tus deudas actuales (préstamos o tarjetas).</p>
+      <!-- Lista dinámica de deudas -->
+      <div id="debtList" class="debt-list"></div>
+      <button id="addDebtBtn" class="btn ghost small">Añadir otra deuda</button>
       <div class="wizard-buttons">
         <button id="prev3" class="btn">Anterior</button>
         <button id="next3" class="btn primary">Siguiente</button>
