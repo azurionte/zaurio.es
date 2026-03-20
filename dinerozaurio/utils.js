@@ -1,0 +1,2 @@
+export const state = { session:null, profile:null, plan:null, incomes:[], expenses:[], debts:[], goals:[], adjustments:{}, forecast:{ from:'', to:'', goal1Id:'', goal2Id:'' } };
+export function resetStateButKeepSession(){ state.profile=null; state.plan=null; state.incomes=[]; state.expenses=[]; state.debts=[]; state.goals=[]; state.adjustments={}; state.forecast={ from:'', to:'', goal1Id:'', goal2Id:'' }; }

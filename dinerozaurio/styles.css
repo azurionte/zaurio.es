@@ -1,0 +1,66 @@
+# DineroZaurio con Supabase
+
+## Qué hace
+- Login con Google usando Supabase Auth
+- Datos privados por usuario
+- Ingresos, gastos, deudas, objetivos de ahorro
+- Previsión mensual
+- Ajustes por mes
+
+## Archivos
+```text
+dinerozaurio_supabase/
+  index.html
+  styles.css
+  js/
+    app.js
+    config.js
+    config.example.js
+    supabase.js
+    state.js
+    utils.js
+    forecast.js
+    db.js
+    ui.js
+  supabase_schema.sql
+```
+
+## Pasos
+
+### 1) Supabase
+- Crea proyecto
+- Abre SQL Editor
+- Ejecuta `supabase_schema.sql`
+
+### 2) Google Login
+En Google Cloud Console:
+- crea OAuth Client ID tipo Web app
+- Authorized JavaScript origins:
+  - https://herramientas.zaurio.es
+  - http://localhost:5500
+- Authorized redirect URI:
+  - https://TU-PROYECTO.supabase.co/auth/v1/callback
+
+En Supabase:
+- Authentication > URL Configuration
+  - Site URL: https://herramientas.zaurio.es/dinerozaurio/
+  - Redirect URLs:
+    - https://herramientas.zaurio.es/dinerozaurio/
+    - http://localhost:5500/dinerozaurio/
+- Authentication > Providers > Google
+  - pega Client ID y Client Secret
+
+### 3) Frontend
+Copia `js/config.example.js` a `js/config.js` y mete tu URL y anon key.
+
+### 4) Publicación
+Sube esta carpeta al path:
+`/dinerozaurio/`
+
+Resultado:
+`https://herramientas.zaurio.es/dinerozaurio/`
+
+## Notas
+- RLS está activado en todas las tablas.
+- La previsión de revolving es aproximada.
+- Puedes extender esto con gráficos, snowball y avalanche.
