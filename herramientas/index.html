@@ -8,9 +8,11 @@
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0a0f1f;
-      color: white;
+      min-height: 100%;
+      /* Aplica un degradado similar al de los otros sitios */
+      background: radial-gradient(circle at top, #2a0046 0%, #12001d 35%, #000 100%);
+      color: #fff;
+      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     }
 
     /* TOP BAR */
@@ -18,9 +20,15 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px 20px;
-      background: rgba(0,0,0,0.6);
+      padding: 12px 16px;
+      margin: 18px auto 30px;
+      border-radius: 999px;
+      /* Fondo semitransparente y difuminado similar al de Miércoles/Secretos */
+      background: rgba(32,8,56,.78);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 0 24px rgba(255,0,170,.08);
       backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     .menu {
@@ -29,17 +37,21 @@
     }
 
     .menu a {
-      padding: 10px 14px;
-      border-radius: 20px;
+      padding: 8px 14px;
+      border-radius: 999px;
       text-decoration: none;
-      color: #aaa;
-      background: #111;
+      color: rgba(255,255,255,.75);
+      border: 1px solid transparent;
       font-weight: bold;
+      transition: transform .16s ease, color .16s ease;
     }
-
+    .menu a:hover {
+      transform: translateY(-2px) scale(1.04);
+      color: #fff;
+    }
     .menu a.active {
-      background: #2a3cff;
-      color: white;
+      color: #ff00aa;
+      border: 1px solid #ff00aa;
     }
 
     /* ICONOS */
@@ -80,17 +92,17 @@
       margin-top: 40px;
       padding: 20px;
       border-radius: 20px;
-      background: #111;
+      background: rgba(36,0,70,.82);
+      border: 1px solid rgba(255,255,255,.14);
       display: flex;
       align-items: center;
       gap: 20px;
       cursor: pointer;
-      transition: 0.2s;
+      transition: transform .2s ease, background .2s ease;
     }
-
     .tool:hover {
       transform: translateY(-3px);
-      background: #1a1a1a;
+      background: rgba(36,0,70,.94);
     }
 
     .tool img {
