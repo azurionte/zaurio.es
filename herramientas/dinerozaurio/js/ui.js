@@ -1,10 +1,11 @@
-// Importa la instancia de Supabase desde state.js (es donde se crea el cliente)
+// Importa la instancia de Supabase desde state.js
 import { supabase } from './state.js';
-// Importa el estado global (plan, incomes, etc.) desde utils.js
+// Importa el estado global (plan, ingresos, etc.) desde utils.js
 import { state } from './utils.js';
-import { ymNow } from './utils.js';
+// Importa ymNow desde forecast.js (utils.js no lo exporta)
+import { ymNow } from './forecast.js';
 
-// Crea o actualiza el perfil del usuario
+// Crea o actualiza el perfil del usuario en Supabase
 export async function ensureProfile(user) {
   await supabase.from('profiles').upsert({
     id: user.id,
@@ -26,12 +27,15 @@ export async function loadOrCreateDefaultPlan(userId) {
 
   let plan = plans?.[0];
   if (!plan) {
-    const ins = await supabase.from('plans').insert({
-      user_id: userId,
-      name: 'Plan principal',
-      initial_reserve: 0,
-      default_start_month: ymNow()
-    }).select().single();
+    const ins = await supabase.from('plans')
+      .insert({
+        user_id: userId,
+        name: 'Plan principal',
+        initial_reserve: 0,
+        default_start_month: ymNow()
+      })
+      .select()
+      .single();
     if (ins.error) throw ins.error;
     plan = ins.data;
   }
@@ -43,7 +47,7 @@ export async function loadOrCreateDefaultPlan(userId) {
   return plan;
 }
 
-// Carga todos los datos asociados a un plan
+// Carga todos los datos asociados a un plan (ingresos, gastos, deudas, objetivos, ajustes)
 export async function loadPlanData(planId) {
   const [incomes, expenses, debts, goals, adjustments] = await Promise.all([
     supabase.from('income_items').select('*').eq('plan_id', planId).order('created_at'),
@@ -101,12 +105,12 @@ async function upsert(table, item) {
 }
 
 // Inserta o actualiza ingresos, gastos, deudas y objetivos
-export const upsertIncome = (item) => upsert('income_items', item);
+export const upsertIncome  = (item) => upsert('income_items', item);
 export const upsertExpense = (item) => upsert('expense_items', item);
-export const upsertDebt = (item) => upsert('debt_items', item);
-export const upsertGoal = (item) => upsert('savings_goals', item);
+export const upsertDebt    = (item) => upsert('debt_items', item);
+export const upsertGoal    = (item) => upsert('savings_goals', item);
 
-// Elimina elementos por id
+// Elimina elementos individuales por id
 export async function deleteIncome(id) {
   const { error } = await supabase.from('income_items').delete().eq('id', id);
   if (error) throw error;
