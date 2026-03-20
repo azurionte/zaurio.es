@@ -129,11 +129,12 @@ body {
 }
 
 /* Estilo para la tarjeta de autenticación (landing) */
+/* Ajustamos la landing para que el cuadro de login esté más cerca de la barra de navegación */
 .auth-gate {
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: calc(100vh - 140px);
+  align-items: flex-start;
+  margin-top: 80px;
 }
 .auth-card {
   background: var(--card);
@@ -146,6 +147,15 @@ body {
 }
 .auth-card h1 {
   margin-top: 0;
+}
+
+/* Logotipo de DineroZaurio en la tarjeta de login */
+.login-logo {
+  max-width: 220px;
+  width: 80%;
+  height: auto;
+  margin: 0 auto 16px auto;
+  display: block;
 }
 
 /* Estilos del asistente (wizard) */
