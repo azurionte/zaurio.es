@@ -1,6 +1,6 @@
 // Lógica para el asistente (wizard) de configuración inicial.
 
-import { supabase, signInWithGoogle } from './supabase.js';
+import { supabase, signInWithGoogle } from './state.js';
 
 // Maneja el clic en el botón de inicio de sesión con Google.
 const loginBtn = document.getElementById('googleLoginBtn');
@@ -16,7 +16,9 @@ if (loginBtn) {
 
 // Comprueba la sesión y muestra el asistente o la app según corresponda.
 async function init() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
   toggleUI(session);
   // Escucha los cambios de autenticación para actualizar la interfaz en tiempo real.
   supabase.auth.onAuthStateChange((_event, sessionNow) => {
