@@ -164,7 +164,12 @@
     .pos{color:#4ade80}.neg{color:var(--danger)}
     .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
     .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:5px 9px;border-radius:999px;color:var(--muted);font-size:12px}
-    @media (max-width:1100px){.grid-2,.summary,.forecast-toolbar{grid-template-columns:1fr}}
+    .modalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:140;padding:18px}
+    .modalCard{width:min(760px,100%);max-height:90vh;overflow:auto;background:linear-gradient(180deg,#121933,#0f1630);border:1px solid var(--line);border-radius:20px;padding:18px}
+    .modalHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .modalGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .modalGrid.full .field{grid-column:1/-1}
+    @media (max-width:1100px){.grid-2,.summary,.forecast-toolbar,.modalGrid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -390,6 +395,8 @@
     </section>
   </div>
 
+  <div id="modalRoot" class="hidden"></div>
+
   <script>
     const STORAGE_KEY = 'dinerozaurio_step1_state';
 
@@ -421,6 +428,103 @@
     }
     function euros(n){ return Number(n||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2}); }
     function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,10); }
+
+    function copy(obj){ return JSON.parse(JSON.stringify(obj)); }
+    function defaultDebt(){
+      return {
+        id: uid('debt'),
+        name: '',
+        debtKind: 'loan',
+        cardSubtype: 'revolving',
+        startMonth: state.defaultStartMonth,
+        monthlyPayment: 0,
+        remainingInstallments: 0,
+        lastMonth: '',
+        amount: 0,
+        currentDebt: 0,
+        currentPayment: 0,
+        tin: 20,
+        tae: 24,
+        periodicity: 'monthly'
+      };
+    }
+    function debtDescription(d){
+      if((d.debtKind||'loan') === 'loan'){
+        if(d.lastMonth) return `Préstamo · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`;
+        return `Préstamo · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
+      }
+      if((d.cardSubtype||'revolving') === 'revolving'){
+        return `Tarjeta revolving · deuda ${euros(d.currentDebt||0)} · cuota ${euros(d.currentPayment||0)} · TIN ${Number(d.tin||0)}% · TAE ${Number(d.tae||0)}%`;
+      }
+      if(d.cardSubtype === 'pay_end_month'){
+        return `Tarjeta fin de mes · ${euros(d.amount||0)} ${d.periodicity==='one_time'?'puntual':'mensual'}`;
+      }
+      if(d.cardSubtype === 'installment'){
+        if(d.lastMonth) return `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`;
+        return `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
+      }
+      return 'Deuda';
+    }
+    function monthDiff(a,b){
+      const [ay,am] = a.split('-').map(Number);
+      const [by,bm] = b.split('-').map(Number);
+      return (by-ay)*12 + (bm-am);
+    }
+    function debtMonthlyAmount(d, ym){
+      const start = d.startMonth || state.defaultStartMonth;
+      if(ym < start) return 0;
+      if((d.debtKind||'loan') === 'loan'){
+        const monthly = Number(d.monthlyPayment||0);
+        if(d.lastMonth) return ym <= d.lastMonth ? monthly : 0;
+        const diff = monthDiff(start, ym);
+        return diff >= 0 && diff < Number(d.remainingInstallments||0) ? monthly : 0;
+      }
+      if((d.cardSubtype||'revolving') === 'revolving'){
+        const debt = Number(d.currentDebt||0);
+        const payment = Number(d.currentPayment||0);
+        const annual = Number(d.tin || d.tae || 0) / 100;
+        const monthlyRate = annual / 12;
+        let balance = debt;
+        let cur = start;
+        let safe = 0;
+        while(cur < ym && balance > 0.01 && safe < 240){
+          const interest = balance * monthlyRate;
+          balance = balance + interest - payment;
+          cur = addMonthsStr(cur, 1);
+          safe++;
+        }
+        return balance > 0.01 ? payment : 0;
+      }
+      if(d.cardSubtype === 'pay_end_month'){
+        if(d.periodicity === 'one_time') return ym === start ? Number(d.amount||0) : 0;
+        return ym >= start ? Number(d.amount||0) : 0;
+      }
+      if(d.cardSubtype === 'installment'){
+        const monthly = Number(d.monthlyPayment||0);
+        if(d.lastMonth) return ym <= d.lastMonth ? monthly : 0;
+        const diff = monthDiff(start, ym);
+        return diff >= 0 && diff < Number(d.remainingInstallments||0) ? monthly : 0;
+      }
+      return 0;
+    }
+    function debtRecoveryMonth(d){
+      const start = d.startMonth || state.defaultStartMonth;
+      if((d.debtKind||'loan') === 'loan'){
+        if(d.lastMonth) return addMonthsStr(d.lastMonth, 1);
+        return addMonthsStr(start, Number(d.remainingInstallments||0));
+      }
+      if((d.cardSubtype||'revolving') === 'revolving'){
+        return '';
+      }
+      if(d.cardSubtype === 'pay_end_month'){
+        return d.periodicity === 'one_time' ? addMonthsStr(start, 1) : '';
+      }
+      if(d.cardSubtype === 'installment'){
+        if(d.lastMonth) return addMonthsStr(d.lastMonth, 1);
+        return addMonthsStr(start, Number(d.remainingInstallments||0));
+      }
+      return '';
+    }
     function loadLocal(){
       const raw = localStorage.getItem(STORAGE_KEY);
       if(!raw) return;
@@ -450,9 +554,7 @@
     function makeGoalRow(item={}){
       return { id:item.id||uid('goal'), name:item.name||'', amount:Number(item.amount||0) };
     }
-    function makeDebtRow(item={}){
-      return { id:item.id||uid('debt'), name:item.name||'', type:item.type||'loan', amount:Number(item.amount||0) };
-    }
+    function makeDebtRow(item={}){ return { ...defaultDebt(), ...copy(item), id:item.id||uid('debt') }; }
 
     function renderWizardRows(list, mountId, kind){
       const mount = document.getElementById(mountId);
@@ -490,6 +592,150 @@
       });
     }
 
+
+    function openSimpleEditor(kind, item){
+      const clone = copy(item);
+      const titleMap = { income:'Ingreso', expense:'Gasto', goal:'Objetivo de ahorro' };
+      document.getElementById('modalRoot').classList.remove('hidden');
+      document.getElementById('modalRoot').innerHTML = `<div class="modalBackdrop">
+        <div class="modalCard">
+          <div class="modalHead"><h3>${titleMap[kind] || 'Elemento'}</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+          <div class="modalGrid">
+            <div class="field"><label>Nombre</label><input id="editName" class="input" value="${escapeHtml(clone.name||'')}"></div>
+            <div class="field"><label>Monto</label><input id="editAmount" class="input" type="number" step="0.01" value="${clone.amount||0}"></div>
+          </div>
+          <div class="btnRow" style="margin-top:16px"><button id="saveSimpleBtn" class="btn primary">Guardar</button></div>
+        </div>
+      </div>`;
+      document.getElementById('closeModalBtn').onclick = closeModal;
+      document.getElementById('saveSimpleBtn').onclick = () => {
+        item.name = document.getElementById('editName').value.trim();
+        item.amount = Number(document.getElementById('editAmount').value||0);
+        closeModal();
+        renderManualLists();
+        renderForecast();
+        saveLocal();
+      };
+    }
+
+    function openDebtEditor(item, fromWizard=false){
+      const clone = copy(item);
+      document.getElementById('modalRoot').classList.remove('hidden');
+      document.getElementById('modalRoot').innerHTML = `<div class="modalBackdrop">
+        <div class="modalCard">
+          <div class="modalHead"><h3>Configurar deuda</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+          <div class="modalGrid">
+            <div class="field"><label>Nombre / entidad</label><input id="debtName" class="input" value="${escapeHtml(clone.name||'')}"></div>
+            <div class="field"><label>Empieza en</label><input id="debtStart" class="input" type="month" value="${clone.startMonth||state.defaultStartMonth}"></div>
+            <div class="field"><label>Tipo</label>
+              <select id="debtKind" class="select">
+                <option value="loan" ${clone.debtKind==='loan'?'selected':''}>Préstamo</option>
+                <option value="card" ${clone.debtKind==='card'?'selected':''}>Tarjeta</option>
+              </select>
+            </div>
+            <div class="field"><label>Subtipo</label>
+              <select id="debtSubtype" class="select">
+                <option value="revolving" ${(clone.cardSubtype||'revolving')==='revolving'?'selected':''}>Revolving</option>
+                <option value="pay_end_month" ${(clone.cardSubtype||'revolving')==='pay_end_month'?'selected':''}>Paga fin de mes</option>
+                <option value="installment" ${(clone.cardSubtype||'revolving')==='installment'?'selected':''}>Compra aplazada</option>
+              </select>
+            </div>
+          </div>
+          <div id="debtDynamicFields" style="margin-top:14px"></div>
+          <div class="btnRow" style="margin-top:16px"><button id="saveDebtBtn" class="btn primary">Guardar deuda</button></div>
+        </div>
+      </div>`;
+
+      function renderDynamic(){
+        const debtKind = document.getElementById('debtKind').value;
+        const subtype = document.getElementById('debtSubtype').value;
+        const wrap = document.getElementById('debtDynamicFields');
+        if(debtKind === 'loan'){
+          wrap.innerHTML = `<div class="modalGrid">
+            <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${clone.monthlyPayment||0}"></div>
+            <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${clone.remainingInstallments||0}"></div>
+            <div class="field" style="grid-column:1/-1"><label>o última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${clone.lastMonth||''}"></div>
+          </div>`;
+        } else if(subtype === 'revolving'){
+          wrap.innerHTML = `<div class="modalGrid">
+            <div class="field"><label>Deuda actual</label><input id="dCurrentDebt" class="input" type="number" step="0.01" value="${clone.currentDebt||0}"></div>
+            <div class="field"><label>Cuota actual</label><input id="dCurrentPayment" class="input" type="number" step="0.01" value="${clone.currentPayment||0}"></div>
+            <div class="field"><label>TIN %</label><input id="dTin" class="input" type="number" step="0.01" value="${clone.tin||20}"></div>
+            <div class="field"><label>TAE %</label><input id="dTae" class="input" type="number" step="0.01" value="${clone.tae||24}"></div>
+          </div>`;
+        } else if(subtype === 'pay_end_month'){
+          wrap.innerHTML = `<div class="modalGrid">
+            <div class="field"><label>Monto</label><input id="dAmount" class="input" type="number" step="0.01" value="${clone.amount||0}"></div>
+            <div class="field"><label>Periodicidad</label>
+              <select id="dPeriodicity" class="select">
+                <option value="monthly" ${clone.periodicity==='monthly'?'selected':''}>Mensual</option>
+                <option value="one_time" ${clone.periodicity==='one_time'?'selected':''}>Puntual</option>
+              </select>
+            </div>
+          </div>`;
+        } else {
+          wrap.innerHTML = `<div class="modalGrid">
+            <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${clone.monthlyPayment||0}"></div>
+            <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${clone.remainingInstallments||0}"></div>
+            <div class="field" style="grid-column:1/-1"><label>o última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${clone.lastMonth||''}"></div>
+          </div>`;
+        }
+      }
+
+      document.getElementById('closeModalBtn').onclick = closeModal;
+      document.getElementById('debtKind').onchange = renderDynamic;
+      document.getElementById('debtSubtype').onchange = renderDynamic;
+      renderDynamic();
+
+      document.getElementById('saveDebtBtn').onclick = () => {
+        item.name = document.getElementById('debtName').value.trim();
+        item.startMonth = document.getElementById('debtStart').value || state.defaultStartMonth;
+        item.debtKind = document.getElementById('debtKind').value;
+        item.cardSubtype = document.getElementById('debtSubtype').value;
+        item.monthlyPayment = 0;
+        item.remainingInstallments = 0;
+        item.lastMonth = '';
+        item.amount = 0;
+        item.currentDebt = 0;
+        item.currentPayment = 0;
+        item.tin = 20;
+        item.tae = 24;
+        item.periodicity = 'monthly';
+
+        if(item.debtKind === 'loan'){
+          item.monthlyPayment = Number(document.getElementById('dMonthly').value||0);
+          item.remainingInstallments = Number(document.getElementById('dRemaining').value||0);
+          item.lastMonth = document.getElementById('dLastMonth').value || '';
+        } else if(item.cardSubtype === 'revolving'){
+          item.currentDebt = Number(document.getElementById('dCurrentDebt').value||0);
+          item.currentPayment = Number(document.getElementById('dCurrentPayment').value||0);
+          item.tin = Number(document.getElementById('dTin').value||0);
+          item.tae = Number(document.getElementById('dTae').value||0);
+        } else if(item.cardSubtype === 'pay_end_month'){
+          item.amount = Number(document.getElementById('dAmount').value||0);
+          item.periodicity = document.getElementById('dPeriodicity').value;
+        } else {
+          item.monthlyPayment = Number(document.getElementById('dMonthly').value||0);
+          item.remainingInstallments = Number(document.getElementById('dRemaining').value||0);
+          item.lastMonth = document.getElementById('dLastMonth').value || '';
+        }
+        closeModal();
+        if(fromWizard){
+          renderWizardRows(state.debts, 'wizardDebtList', 'debt');
+        }
+        renderManualLists();
+        renderForecast();
+        saveLocal();
+      };
+    }
+
+    function closeModal(){
+      const root = document.getElementById('modalRoot');
+      root.classList.add('hidden');
+      root.innerHTML = '';
+    }
+
+
     function kpis(){
       const income = state.incomes.reduce((a,b)=>a+Number(b.amount||0),0);
       const expense = state.expenses.reduce((a,b)=>a+Number(b.amount||0),0);
@@ -508,11 +754,14 @@
       if(type==='income') desc = 'Ingreso base';
       if(type==='expense') desc = 'Gasto base';
       if(type==='goal') desc = 'Objetivo de ahorro';
-      if(type==='debt') desc = (item.type === 'card' ? 'Tarjeta' : 'Préstamo') + ' · base';
+      if(type==='debt') desc = debtDescription(item);
       return `<div class="item">
         <div class="meta"><div class="name">${escapeHtml(item.name||'Sin nombre')}</div><div class="desc">${escapeHtml(desc)}</div></div>
-        <div class="money">${euros(item.amount||0)}</div>
-        <div class="inline-actions"><button class="btn danger" data-del="${type}" data-id="${item.id}">Eliminar</button></div>
+        <div class="money">${euros(type==='debt' ? (item.debtKind==='loan' || item.cardSubtype==='installment' ? (item.monthlyPayment||0) : (item.currentPayment||item.amount||0)) : (item.amount||0))}</div>
+        <div class="inline-actions">
+          <button class="btn ghost" data-edit="${type}" data-id="${item.id}">Editar</button>
+          <button class="btn danger" data-del="${type}" data-id="${item.id}">Eliminar</button>
+        </div>
       </div>`;
     }
 
@@ -529,11 +778,20 @@
           el.innerHTML = '<div class="empty">No hay elementos todavía.</div>';
         }else{
           el.innerHTML = arr.map(x => itemCardHtml(x, type)).join('');
+          el.querySelectorAll('[data-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const item = arr.find(x => x.id === btn.dataset.id);
+              if(!item) return;
+              if(type === 'debt') openDebtEditor(item, false);
+              else openSimpleEditor(type, item);
+            });
+          });
           el.querySelectorAll('[data-del]').forEach(btn => {
             btn.addEventListener('click', () => {
               const idx = arr.findIndex(x => x.id === btn.dataset.id);
               if(idx >= 0) arr.splice(idx,1);
               renderManualLists();
+              renderForecast();
               kpis();
               saveLocal();
             });
@@ -546,6 +804,8 @@
       );
       document.getElementById('forecastGoal1').innerHTML = opts.join('');
       document.getElementById('forecastGoal2').innerHTML = opts.join('');
+      document.getElementById('forecastGoal1').value = state.forecast.goal1Id || '';
+      document.getElementById('forecastGoal2').value = state.forecast.goal2Id || '';
       document.getElementById('forecastFrom').value = state.forecast.from;
       document.getElementById('forecastTo').value = state.forecast.to;
       document.getElementById('defaultStart').value = state.defaultStartMonth;
@@ -561,12 +821,32 @@
       const months = [];
       let cur = from;
       while(cur <= to){ months.push(cur); cur = addMonthsStr(cur,1); }
+
+      const goal1Id = document.getElementById('forecastGoal1').value || '';
+      const goal2Id = document.getElementById('forecastGoal2').value || '';
+      state.forecast.goal1Id = goal1Id;
+      state.forecast.goal2Id = goal2Id;
+
       const income = state.incomes.reduce((a,b)=>a+Number(b.amount||0),0);
       const expense = state.expenses.reduce((a,b)=>a+Number(b.amount||0),0);
-      const debt = state.debts.reduce((a,b)=>a+Number(b.amount||0),0);
       let reserve = Number(state.reserveInitial||0);
+
       document.getElementById('monthsGrid').innerHTML = months.map(m => {
-        const net = income - expense - debt;
+        const debt = state.debts.reduce((a,b)=>a+debtMonthlyAmount(b,m),0);
+        const recovered = state.debts.reduce((a,b)=>{
+          const recMonth = debtRecoveryMonth(b);
+          let amount = 0;
+          if(recMonth && recMonth === m){
+            if((b.debtKind||'loan') === 'loan' || b.cardSubtype === 'installment') amount = Number(b.monthlyPayment||0);
+            else if(b.cardSubtype === 'pay_end_month') amount = Number(b.amount||0);
+          }
+          return a + amount;
+        },0);
+        const goal1 = state.goals.find(g => g.id === goal1Id);
+        const goal2 = state.goals.find(g => g.id === goal2Id);
+        const save1 = goal1 ? Number(goal1.amount||0) : 0;
+        const save2 = goal2 ? Number(goal2.amount||0) : 0;
+        const net = income - expense - debt - save1 - save2;
         reserve += net;
         return `<div class="month">
           <h4>${escapeHtml(m)}</h4>
@@ -574,6 +854,9 @@
             <div class="lab">Ingreso</div><div>${euros(income)}</div>
             <div class="lab">Gastos</div><div>${euros(expense)}</div>
             <div class="lab">Deuda</div><div>${euros(debt)}</div>
+            <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
+            <div class="lab">Ahorro 1</div><div>${euros(save1)}</div>
+            <div class="lab">Ahorro 2</div><div>${euros(save2)}</div>
             <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
             <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
           </div>
@@ -696,8 +979,10 @@
         renderWizardRows(state.expenses, 'wizardExpenseList', 'expense');
       });
       document.getElementById('addWizardDebt').addEventListener('click', () => {
-        state.debts.push(makeDebtRow());
+        const item = makeDebtRow();
+        state.debts.push(item);
         renderWizardRows(state.debts, 'wizardDebtList', 'debt');
+        openDebtEditor(item, true);
       });
       document.getElementById('addWizardGoal').addEventListener('click', () => {
         state.goals.push(makeGoalRow());
@@ -741,8 +1026,10 @@
         renderManualLists(); saveLocal();
       });
       document.getElementById('addDebtBtn').addEventListener('click', () => {
-        state.debts.push(makeDebtRow({ name:'Nueva deuda' }));
+        const item = makeDebtRow({ name:'Nueva deuda' });
+        state.debts.push(item);
         renderManualLists(); saveLocal();
+        openDebtEditor(item, false);
       });
 
       document.getElementById('initialReserve').addEventListener('input', e => {
@@ -754,6 +1041,8 @@
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
       document.getElementById('generateForecastBtn').addEventListener('click', renderForecast);
+      document.getElementById('forecastGoal1').addEventListener('change', renderForecast);
+      document.getElementById('forecastGoal2').addEventListener('change', renderForecast);
 
 
       const herramientasWrap = document.querySelector('.herramientasWrap');
