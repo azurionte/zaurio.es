@@ -126,6 +126,17 @@
     .panel{background:linear-gradient(180deg,#121933,#0f1630);border:1px solid var(--line);border-radius:16px;padding:16px}
     .section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
     .section-title h2,.section-title h3{margin:0}
+
+    .sectionBody{margin-top:10px}
+    .toggleSectionBtn{min-width:88px}
+    .select{
+      appearance:none;-webkit-appearance:none;-moz-appearance:none;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'><path d='M3.2 5.8a.75.75 0 0 1 1.06 0L8 9.54l3.74-3.74a.75.75 0 1 1 1.06 1.06l-4.27 4.27a.75.75 0 0 1-1.06 0L3.2 6.86a.75.75 0 0 1 0-1.06z'/></svg>");
+      background-repeat:no-repeat;background-position:right 12px center;padding-right:38px
+    }
+    input[type="month"], input[type="date"], input[type="number"], .input, .select{min-width:0;max-width:100%}
+    .modalGrid .field{min-width:0}
+
     .sub{color:var(--muted);font-size:13px}
     .list{display:flex;flex-direction:column;gap:10px}
     .item{background:#0c1330;border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}
@@ -173,11 +184,11 @@
         <a class="menuLogoLink" href="https://secretos.zaurio.es" aria-label="Secretos">
           <img class="menuLogo confesion" src="https://miercoles.zaurio.es/assets/confesion.png" alt="Secretos">
         </a>
-        <div class="menuLogoLink active herramientasWrap" aria-label="Herramientas">
-          <a class="herramientasMainLink" href="https://herramientas.zaurio.es/" aria-label="Herramientas">
+        <div class="menuLogoLink herramientasWrap" aria-label="Herramientas">
+          <a class="herramientasMainLink" id="herramientasMainLink" href="https://herramientas.zaurio.es/" aria-label="Herramientas">
             <img class="menuLogo herramientas" src="../assets/toolbox.png" alt="Herramientas">
           </a>
-          <div class="herramientasDropdown">
+          <div class="herramientasDropdown" id="herramientasDropdown">
             <a class="dropdownTool active" href="https://herramientas.zaurio.es/dinerozaurio/" aria-label="DineroZaurio">
               <img class="menuLogo dinero" src="../assets/piggy.png" alt="DineroZaurio">
               <span>DineroZaurio</span>
@@ -273,7 +284,7 @@
       <div class="topbar">
         <div class="brand">
           <h1>DineroZaurio</h1>
-          <p>Base estable con entrada, wizard y configurador manual inspirados en Debt Budget Planner Pro.</p>
+          <p id="lastUpdatedText">Última actualización de datos —</p>
         </div>
         <div class="actions">
           <button id="resetToWizardBtn" class="btn ghost">Volver al wizard</button>
@@ -291,85 +302,112 @@
           <div class="card"><div class="label">Ingresos mensuales base</div><div class="value kpi-cyan" id="kpiIncome">0 €</div></div>
           <div class="card"><div class="label">Gastos base mensuales</div><div class="value kpi-red" id="kpiExpense">0 €</div></div>
           <div class="card"><div class="label">Deuda base mensual</div><div class="value kpi-yellow" id="kpiDebt">0 €</div></div>
-          <div class="card"><div class="label">Margen base</div><div class="value" id="kpiNet">0 €</div></div>
+          <div class="card"><div class="label">Ahorro conseguido</div><div class="value kpi-green" id="kpiSavings">0 €</div></div>
         </div>
 
-        <div class="grid-2">
-          <div class="stack">
-            <div class="panel">
-              <div class="section-title">
-                <div>
-                  <h2>Ingresos</h2>
-                  <div class="sub">Añade sueldo, bonus, alquiler cobrado o side income.</div>
-                </div>
-                <button id="addIncomeBtn" class="btn good">+ Añadir ingreso</button>
+        <div class="stack compactSections">
+          <div class="panel">
+            <div class="section-title">
+              <div>
+                <h2>Ingresos</h2>
+                <div class="sub">Añade sueldo, bonus, alquiler cobrado o side income.</div>
               </div>
+              <div class="inline-actions">
+                <button class="btn ghost toggleSectionBtn" data-target="incomeSectionBody">Editar</button>
+              </div>
+            </div>
+            <div id="incomeSectionBody" class="sectionBody hidden">
+              <div class="btnRow" style="margin-bottom:12px"><button id="addIncomeBtn" class="btn good">+ Añadir ingreso</button></div>
               <div id="incomeList" class="list"></div>
             </div>
+          </div>
 
-            <div class="panel">
-              <div class="section-title">
-                <div>
-                  <h2>Gastos fijos y variables</h2>
-                  <div class="sub">Cada gasto tiene nombre, importe y periodicidad.</div>
-                </div>
-                <button id="addExpenseBtn" class="btn good">+ Añadir gasto</button>
+          <div class="panel">
+            <div class="section-title">
+              <div>
+                <h2>Gastos fijos y variables</h2>
+                <div class="sub">Cada gasto tiene nombre, importe y periodicidad.</div>
               </div>
+              <div class="inline-actions">
+                <button class="btn ghost toggleSectionBtn" data-target="expenseSectionBody">Editar</button>
+              </div>
+            </div>
+            <div id="expenseSectionBody" class="sectionBody hidden">
+              <div class="btnRow" style="margin-bottom:12px"><button id="addExpenseBtn" class="btn good">+ Añadir gasto</button></div>
               <div id="expenseList" class="list"></div>
             </div>
+          </div>
 
-            <div class="panel">
-              <div class="section-title">
-                <div>
-                  <h2>Objetivos de ahorro</h2>
-                  <div class="sub">Dos bolsas fijas o las que necesites.</div>
-                </div>
-                <button id="addGoalBtn" class="btn good">+ Añadir objetivo</button>
+          <div class="panel">
+            <div class="section-title">
+              <div>
+                <h2>Deudas</h2>
+                <div class="sub">Préstamos, compras aplazadas y tarjetas.</div>
               </div>
+              <div class="inline-actions">
+                <button class="btn ghost toggleSectionBtn" data-target="debtSectionBody">Editar</button>
+              </div>
+            </div>
+            <div id="debtSectionBody" class="sectionBody hidden">
+              <div class="btnRow" style="margin-bottom:12px"><button id="addDebtBtn" class="btn good">+ Añadir deuda</button></div>
+              <div id="debtList" class="list"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title">
+              <div>
+                <h2>Ahorros</h2>
+                <div class="sub">Ahorro fijo por mes o ahorro por objetivo.</div>
+              </div>
+              <div class="inline-actions">
+                <button class="btn ghost toggleSectionBtn" data-target="goalSectionBody">Editar</button>
+              </div>
+            </div>
+            <div id="goalSectionBody" class="sectionBody hidden">
+              <div class="btnRow" style="margin-bottom:12px"><button id="addGoalBtn" class="btn good">+ Añadir ahorro</button></div>
               <div id="goalList" class="list"></div>
             </div>
           </div>
 
-          <div class="stack">
+          <div class="grid-2">
             <div class="panel">
               <div class="section-title">
                 <div>
-                  <h2>Deudas</h2>
-                  <div class="sub">Préstamos, compras aplazadas y tarjetas.</div>
-                </div>
-                <button id="addDebtBtn" class="btn good">+ Añadir deuda</button>
-              </div>
-              <div id="debtList" class="list"></div>
-            </div>
-
-            <div class="panel">
-              <div class="section-title">
-                <div>
-                  <h2>Parámetros base</h2>
-                  <div class="sub">Solo lo esencial en esta primera parte.</div>
+                  <h2>Colchón</h2>
+                  <div class="sub">Indica aquí si existen ahorros previos a este plan.</div>
                 </div>
               </div>
               <div class="field">
                 <label>Colchón inicial</label>
                 <input id="initialReserve" class="input" type="number" step="0.01" value="0" />
               </div>
-              <div class="field" style="margin-top:12px">
+            </div>
+
+            <div class="panel">
+              <div class="section-title">
+                <div>
+                  <h2>Mes por defecto</h2>
+                  <div class="sub">Indica desde qué mes comienza este registro de deudas y gastos.</div>
+                </div>
+              </div>
+              <div class="field">
                 <label>Mes por defecto</label>
                 <input id="defaultStart" class="input" type="month" />
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </section></section>
 
       <section id="tab-forecast" class="stack hidden">
         <div class="panel">
           <div class="forecast-toolbar">
             <div class="field"><label>Desde</label><input id="forecastFrom" class="input" type="month" /></div>
             <div class="field"><label>Hasta</label><input id="forecastTo" class="input" type="month" /></div>
-            <div class="field"><label>Ahorro fijo 1</label><select id="forecastGoal1" class="select"></select></div>
-            <div class="field"><label>Ahorro fijo 2</label><select id="forecastGoal2" class="select"></select></div>
-            <div class="field" style="justify-content:end"><button id="generateForecastBtn" class="btn primary">Generar previsión</button></div>
+            <div class="field"><label>Leyenda</label><div class="pill">Recuperado = cuota liberada al terminar una deuda</div></div>
+            <div class="field"><label>Leyenda</label><div class="pill">Sobrante = ingreso - gastos - deuda - ahorro</div></div>
+            <div class="field"><label>Leyenda</label><div class="pill">Colchón = acumulado incluyendo meses anteriores</div></div>
           </div>
           <div class="legend">
             <span class="pill">Primera parte: la base ya no se rompe al entrar.</span>
@@ -637,7 +675,16 @@
         </div>
         <div class="btnRow" style="margin-top:16px"><button id="saveSimpleBtn" class="btn primary">Guardar</button></div>
       </div>`;
-      document.getElementById('closeModalBtn').onclick = closeModal;
+      document.getElementById('closeModalBtn').onclick = () => {
+        if((!item.name || item.name === '') && Number(item.amount||0) === 0){
+          const pool = kind === 'income' ? state.incomes : state.expenses;
+          const idx = pool.findIndex(x => x.id === item.id);
+          if(idx >= 0) pool.splice(idx,1);
+          renderManualLists();
+          saveLocal();
+        }
+        closeModal();
+      };
       document.getElementById('saveSimpleBtn').onclick = () => {
         item.name = document.getElementById('editName').value.trim();
         item.amount = Number(document.getElementById('editAmount').value||0);
@@ -670,7 +717,16 @@
       document.getElementById('goalType').addEventListener('change', (e) => {
         document.getElementById('goalAmountLabel').textContent = e.target.value === 'fixed' ? 'Monto por mes' : 'Objetivo total';
       });
-      document.getElementById('closeModalBtn').onclick = closeModal;
+      document.getElementById('closeModalBtn').onclick = () => {
+        if((!item.name || item.name === '') && Number(item.monthlyAmount||0) === 0 && Number(item.targetTotal||0) === 0){
+          const idx = state.goals.findIndex(x => x.id === item.id);
+          if(idx >= 0) state.goals.splice(idx,1);
+          if(fromWizard) renderWizardRows(state.goals, 'wizardGoalList', 'goal');
+          renderManualLists();
+          saveLocal();
+        }
+        closeModal();
+      };
       document.getElementById('saveGoalBtn').onclick = () => {
         item.name = document.getElementById('goalName').value.trim();
         item.goalType = document.getElementById('goalType').value;
@@ -753,7 +809,21 @@
         }
       }
 
-      document.getElementById('closeModalBtn').onclick = closeModal;
+      document.getElementById('closeModalBtn').onclick = () => {
+        const isEmpty = (!item.name || item.name === '') &&
+          Number(item.monthlyPayment||0) === 0 &&
+          Number(item.amount||0) === 0 &&
+          Number(item.currentDebt||0) === 0 &&
+          Number(item.currentPayment||0) === 0;
+        if(isEmpty){
+          const idx = state.debts.findIndex(x => x.id === item.id);
+          if(idx >= 0) state.debts.splice(idx,1);
+          if(fromWizard) renderWizardRows(state.debts, 'wizardDebtList', 'debt');
+          renderManualLists();
+          saveLocal();
+        }
+        closeModal();
+      };
       document.getElementById('debtKind').onchange = renderDynamic;
       document.getElementById('debtSubtype').onchange = renderDynamic;
       renderDynamic();
@@ -923,21 +993,18 @@
         }
       });
 
-      const opts = ['<option value="">— ninguno —</option>'].concat(
-        state.goals.map(g => {
-          const amount = (g.goalType||'fixed') === 'fixed' ? Number(g.monthlyAmount||0) : Number(g.targetTotal||0);
-          const mode = (g.goalType||'fixed') === 'fixed' ? 'fijo' : 'objetivo';
-          return `<option value="${g.id}">${escapeHtml(g.name)} · ${mode} · ${euros(amount)}</option>`;
-        })
-      );
-      document.getElementById('forecastGoal1').innerHTML = opts.join('');
-      document.getElementById('forecastGoal2').innerHTML = opts.join('');
-      document.getElementById('forecastGoal1').value = state.forecast.goal1Id || '';
-      document.getElementById('forecastGoal2').value = state.forecast.goal2Id || '';
       document.getElementById('forecastFrom').value = state.forecast.from;
       document.getElementById('forecastTo').value = state.forecast.to;
       document.getElementById('defaultStart').value = state.defaultStartMonth;
       document.getElementById('initialReserve').value = state.reserveInitial || 0;
+
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2,'0');
+      document.getElementById('lastUpdatedText').textContent =
+        `Última actualización de datos ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+      const savingsBase = state.goals.reduce((a,g)=>a+Number((g.goalType||'fixed')==='fixed' ? (g.monthlyAmount||0) : 0),0);
+      document.getElementById('kpiSavings').textContent = euros(savingsBase);
       kpis();
     }
 
@@ -946,8 +1013,6 @@
       const to = document.getElementById('forecastTo').value || addMonthsStr(from, 12);
       state.forecast.from = from;
       state.forecast.to = to;
-      state.forecast.goal1Id = document.getElementById('forecastGoal1').value || '';
-      state.forecast.goal2Id = document.getElementById('forecastGoal2').value || '';
 
       const months = monthsInRange(from, to);
       const incomeBase = state.incomes.reduce((a,b)=>a+Number(b.amount||0),0);
@@ -976,23 +1041,17 @@
         const income = incomeBase + extraIncome;
         const expense = expenseBase + extraExpense;
 
-        const goal1 = state.goals.find(g => g.id === state.forecast.goal1Id);
-        const goal2 = state.goals.find(g => g.id === state.forecast.goal2Id);
-        let save1 = 0, save2 = 0;
+        let totalSaving = extraSaving;
+        let remainingAvailable = income - expense - debt;
 
-        const availableBeforeTargets = income - expense - debt;
-        if(goal1){
-          const r1 = goalMonthlyForMonth(goal1, m, availableBeforeTargets);
-          save1 = r1.amount;
-          if(r1.issue) warnings.push({ goal: goal1.name || 'Ahorro 1', month: m, reason: r1.issue.reason });
-        }
-        if(goal2){
-          const r2 = goalMonthlyForMonth(goal2, m, Math.max(0, availableBeforeTargets - save1));
-          save2 = r2.amount;
-          if(r2.issue) warnings.push({ goal: goal2.name || 'Ahorro 2', month: m, reason: r2.issue.reason });
-        }
+        state.goals.forEach(goal => {
+          const r = goalMonthlyForMonth(goal, m, remainingAvailable);
+          totalSaving += r.amount;
+          remainingAvailable -= r.amount;
+          if(r.issue) warnings.push({ goal: goal.name || 'Ahorro', month: m, reason: r.issue.reason });
+        });
 
-        const net = income - expense - debt - save1 - save2 - extraSaving;
+        const net = income - expense - debt - totalSaving;
         reserve += net;
 
         return `<div class="month" data-month="${m}">
@@ -1002,8 +1061,7 @@
             <div class="lab">Gastos</div><div>${euros(expense)}</div>
             <div class="lab">Deuda</div><div>${euros(debt)}</div>
             <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
-            <div class="lab">Ahorro 1</div><div>${euros(save1)}</div>
-            <div class="lab">Ahorro 2</div><div>${euros(save2 + extraSaving)}</div>
+            <div class="lab">Ahorro</div><div>${euros(totalSaving)}</div>
             <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
             <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
           </div>
@@ -1217,12 +1275,14 @@
       renderWizardRows(state.goals, 'wizardGoalList', 'goal');
 
       document.getElementById('addIncomeBtn').addEventListener('click', () => {
-        state.incomes.push(makeIncomeRow({ name:'Nuevo ingreso' }));
-        renderManualLists(); saveLocal();
+        const item = makeIncomeRow({ name:'' });
+        state.incomes.push(item);
+        openSimpleEditor('income', item);
       });
       document.getElementById('addExpenseBtn').addEventListener('click', () => {
-        state.expenses.push(makeExpenseRow({ name:'Nuevo gasto' }));
-        renderManualLists(); saveLocal();
+        const item = makeExpenseRow({ name:'' });
+        state.expenses.push(item);
+        openSimpleEditor('expense', item);
       });
       document.getElementById('addGoalBtn').addEventListener('click', () => {
         const item = makeGoalRow({ name:'Nuevo objetivo' });
@@ -1245,22 +1305,30 @@
       });
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
-      document.getElementById('generateForecastBtn').addEventListener('click', renderForecast);
-      document.getElementById('forecastGoal1').addEventListener('change', renderForecast);
-      document.getElementById('forecastGoal2').addEventListener('change', renderForecast);
 
       const herramientasWrap = document.querySelector('.herramientasWrap');
       const herramientasMainLink = document.querySelector('.herramientasMainLink');
       if(herramientasWrap && herramientasMainLink){
         herramientasMainLink.addEventListener('click', (e) => {
           if(window.innerWidth <= 900){
-            e.preventDefault();
-            herramientasWrap.classList.toggle('open');
+            if(!herramientasWrap.classList.contains('open')){
+              e.preventDefault();
+              herramientasWrap.classList.add('open');
+            } else {
+              herramientasWrap.classList.remove('open');
+            }
           }
         });
         herramientasWrap.addEventListener('mouseenter', () => { if(window.innerWidth > 900) herramientasWrap.classList.add('open'); });
         herramientasWrap.addEventListener('mouseleave', () => { if(window.innerWidth > 900) herramientasWrap.classList.remove('open'); });
       }
+
+      document.querySelectorAll('.toggleSectionBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = document.getElementById(btn.dataset.target);
+          if(target) target.classList.toggle('hidden');
+        });
+      });
 
       document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
