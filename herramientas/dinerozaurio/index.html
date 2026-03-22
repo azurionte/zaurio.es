@@ -470,6 +470,7 @@
 
     const state = {
       session: null,
+      planId: null,
       reserveInitial: 0,
       defaultStartMonth: todayMonth(),
       incomes: [],
@@ -609,7 +610,7 @@
         Object.assign(state, parsed);
       }catch{}
     }
-    function saveLocal(){
+    function cacheLocal(){
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         reserveInitial: state.reserveInitial,
         defaultStartMonth: state.defaultStartMonth,
@@ -621,6 +622,239 @@
         forecast: state.forecast
       }));
     }
+    function saveLocal(){ cacheLocal(); }
+
+    async function ensureProfile(){
+      if(!window.dzSupabase || !state.session?.user) return;
+      const user = state.session.user;
+      await window.dzSupabase.from('profiles').upsert({
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+        avatar_url: user.user_metadata?.avatar_url || null
+      });
+    }
+
+    async function loadOrCreatePlan(){
+      if(!window.dzSupabase || !state.session?.user) return null;
+      const userId = state.session.user.id;
+      let { data: plans, error } = await window.dzSupabase
+        .from('plans')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true })
+        .limit(1);
+      if(error) throw error;
+      let plan = plans?.[0];
+      if(!plan){
+        const ins = await window.dzSupabase
+          .from('plans')
+          .insert({
+            user_id: userId,
+            name: 'Plan principal',
+            initial_reserve: Number(state.reserveInitial || 0),
+            default_start_month: state.defaultStartMonth || todayMonth()
+          })
+          .select()
+          .single();
+        if(ins.error) throw ins.error;
+        plan = ins.data;
+      }
+      state.planId = plan.id;
+      state.reserveInitial = Number(plan.initial_reserve || 0);
+      state.defaultStartMonth = plan.default_start_month || todayMonth();
+      return plan;
+    }
+
+    async function clearPlanData(planId){
+      if(!window.dzSupabase || !planId) return;
+      await Promise.all([
+        window.dzSupabase.from('income_items').delete().eq('plan_id', planId),
+        window.dzSupabase.from('expense_items').delete().eq('plan_id', planId),
+        window.dzSupabase.from('debt_items').delete().eq('plan_id', planId),
+        window.dzSupabase.from('savings_goals').delete().eq('plan_id', planId),
+        window.dzSupabase.from('month_adjustments').delete().eq('plan_id', planId)
+      ]);
+    }
+
+    async function saveToSupabase(){
+      cacheLocal();
+      if(!window.dzSupabase || !state.session?.user) return;
+      await ensureProfile();
+      const plan = await loadOrCreatePlan();
+      const planId = plan.id;
+
+      const planUpdate = await window.dzSupabase
+        .from('plans')
+        .update({
+          initial_reserve: Number(state.reserveInitial || 0),
+          default_start_month: state.defaultStartMonth || todayMonth()
+        })
+        .eq('id', planId);
+      if(planUpdate.error) throw planUpdate.error;
+
+      await clearPlanData(planId);
+
+      if(state.incomes.length){
+        const rows = state.incomes.map(it => ({
+          id: it.id,
+          plan_id: planId,
+          name: it.name || 'Ingreso',
+          amount: Number(it.amount || 0),
+          periodicity: 'monthly',
+          start_month: state.defaultStartMonth,
+          end_month: null
+        }));
+        const r = await window.dzSupabase.from('income_items').insert(rows);
+        if(r.error) throw r.error;
+      }
+
+      if(state.expenses.length){
+        const rows = state.expenses.map(it => ({
+          id: it.id,
+          plan_id: planId,
+          name: it.name || 'Gasto',
+          amount: Number(it.amount || 0),
+          kind: 'fixed',
+          periodicity: 'monthly',
+          start_month: state.defaultStartMonth,
+          end_month: null
+        }));
+        const r = await window.dzSupabase.from('expense_items').insert(rows);
+        if(r.error) throw r.error;
+      }
+
+      if(state.debts.length){
+        const rows = state.debts.map(it => ({
+          id: it.id,
+          plan_id: planId,
+          name: it.name || 'Deuda',
+          debt_type: (it.debtKind || 'loan') === 'loan' ? 'loan' : 'card',
+          card_type: it.cardSubtype || null,
+          amount: Number(it.amount || 0),
+          monthly_payment: Number(it.monthlyPayment || 0),
+          remaining_installments: Number(it.remainingInstallments || 0),
+          end_mode: it.lastMonth ? 'date' : 'remaining',
+          start_month: it.startMonth || state.defaultStartMonth,
+          last_month: it.lastMonth || null,
+          current_debt: Number(it.currentDebt || 0),
+          current_payment: Number(it.currentPayment || 0),
+          tin: Number(it.tin || 0),
+          tae: Number(it.tae || 0),
+          periodicity: it.periodicity || 'monthly'
+        }));
+        const r = await window.dzSupabase.from('debt_items').insert(rows);
+        if(r.error) throw r.error;
+      }
+
+      if(state.goals.length){
+        const rows = state.goals.map(it => ({
+          id: it.id,
+          plan_id: planId,
+          name: it.name || 'Ahorro',
+          goal_type: it.goalType || 'fixed',
+          monthly_amount: Number(it.monthlyAmount || 0),
+          target_total: Number(it.targetTotal || 0),
+          start_month: it.startMonth || state.defaultStartMonth,
+          end_month: it.endMonth || null
+        }));
+        const r = await window.dzSupabase.from('savings_goals').insert(rows);
+        if(r.error) throw r.error;
+      }
+
+      const adjEntries = Object.entries(state.monthAdjustments || {});
+      if(adjEntries.length){
+        const rows = adjEntries.map(([monthKey, v]) => ({
+          plan_id: planId,
+          month_key: monthKey,
+          extra_income_name: v.extraIncomeName || '',
+          extra_income_amount: Number(v.extraIncomeAmount || 0),
+          extra_expense_name: v.extraExpenseName || '',
+          extra_expense_amount: Number(v.extraExpenseAmount || 0),
+          extra_saving_name: v.extraSavingName || '',
+          extra_saving_amount: Number(v.extraSavingAmount || 0),
+          income_overrides: v.incomeOverrides || {},
+          expense_overrides: v.expenseOverrides || {},
+          goal_overrides: v.goalOverrides || {},
+          debt_overrides: v.debtOverrides || {}
+        }));
+        const r = await window.dzSupabase.from('month_adjustments').insert(rows);
+        if(r.error) throw r.error;
+      }
+    }
+
+    async function loadFromSupabase(){
+      if(!window.dzSupabase || !state.session?.user) return;
+      await ensureProfile();
+      const plan = await loadOrCreatePlan();
+      const planId = plan.id;
+
+      const [incomeRes, expenseRes, debtRes, goalRes, adjRes] = await Promise.all([
+        window.dzSupabase.from('income_items').select('*').eq('plan_id', planId).order('created_at'),
+        window.dzSupabase.from('expense_items').select('*').eq('plan_id', planId).order('created_at'),
+        window.dzSupabase.from('debt_items').select('*').eq('plan_id', planId).order('created_at'),
+        window.dzSupabase.from('savings_goals').select('*').eq('plan_id', planId).order('created_at'),
+        window.dzSupabase.from('month_adjustments').select('*').eq('plan_id', planId).order('month_key')
+      ]);
+      if(incomeRes.error) throw incomeRes.error;
+      if(expenseRes.error) throw expenseRes.error;
+      if(debtRes.error) throw debtRes.error;
+      if(goalRes.error) throw goalRes.error;
+      if(adjRes.error) throw adjRes.error;
+
+      state.incomes = (incomeRes.data || []).map(it => makeIncomeRow({
+        id: it.id, name: it.name, amount: Number(it.amount || 0)
+      }));
+      state.expenses = (expenseRes.data || []).map(it => makeExpenseRow({
+        id: it.id, name: it.name, amount: Number(it.amount || 0)
+      }));
+      state.debts = (debtRes.data || []).map(it => makeDebtRow({
+        id: it.id,
+        name: it.name,
+        debtKind: it.debt_type || 'loan',
+        cardSubtype: it.card_type || 'revolving',
+        amount: Number(it.amount || 0),
+        monthlyPayment: Number(it.monthly_payment || 0),
+        remainingInstallments: Number(it.remaining_installments || 0),
+        lastMonth: it.last_month || '',
+        startMonth: it.start_month || state.defaultStartMonth,
+        currentDebt: Number(it.current_debt || 0),
+        currentPayment: Number(it.current_payment || 0),
+        tin: Number(it.tin || 0),
+        tae: Number(it.tae || 0),
+        periodicity: it.periodicity || 'monthly'
+      }));
+      state.goals = (goalRes.data || []).map(it => makeGoalRow({
+        id: it.id,
+        name: it.name,
+        goalType: it.goal_type || 'fixed',
+        monthlyAmount: Number(it.monthly_amount || 0),
+        targetTotal: Number(it.target_total || 0),
+        startMonth: it.start_month || state.defaultStartMonth,
+        endMonth: it.end_month || addMonthsStr(state.defaultStartMonth, 11)
+      }));
+      state.monthAdjustments = {};
+      (adjRes.data || []).forEach(it => {
+        state.monthAdjustments[it.month_key] = {
+          extraIncomeName: it.extra_income_name || '',
+          extraIncomeAmount: Number(it.extra_income_amount || 0),
+          extraExpenseName: it.extra_expense_name || '',
+          extraExpenseAmount: Number(it.extra_expense_amount || 0),
+          extraSavingName: it.extra_saving_name || '',
+          extraSavingAmount: Number(it.extra_saving_amount || 0),
+          debtActionType: '',
+          debtActionDebtId: '',
+          debtActionAmount: 0,
+          incomeOverrides: it.income_overrides || {},
+          expenseOverrides: it.expense_overrides || {},
+          goalOverrides: it.goal_overrides || {},
+          debtOverrides: it.debt_overrides || {}
+        };
+      });
+
+      cacheLocal();
+    }
+
 
     function makeIncomeRow(item={}){
       return { id:item.id||uid('inc'), name:item.name||'', amount:Number(item.amount||0) };
@@ -771,17 +1005,14 @@
           const idx = pool.findIndex(x => x.id === item.id);
           if(idx >= 0) pool.splice(idx,1);
           renderManualLists();
-          saveLocal();
+          saveToSupabase().catch(err => console.error(err));
         }
         closeModal();
       };
       document.getElementById('saveSimpleBtn').onclick = () => {
         item.name = document.getElementById('editName').value.trim();
         item.amount = Number(document.getElementById('editAmount').value||0);
-        closeModal();
-        renderManualLists();
-        renderForecast();
-        saveLocal();
+        saveToSupabase().then(() => { closeModal(); renderManualLists(); renderForecast(); }).catch(err => console.error(err));
       };
     }
 
@@ -813,7 +1044,7 @@
           if(idx >= 0) state.goals.splice(idx,1);
           if(fromWizard) renderWizardRows(state.goals, 'wizardGoalList', 'goal');
           renderManualLists();
-          saveLocal();
+          saveToSupabase().catch(err => console.error(err));
         }
         closeModal();
       };
@@ -910,7 +1141,7 @@
           if(idx >= 0) state.debts.splice(idx,1);
           if(fromWizard) renderWizardRows(state.debts, 'wizardDebtList', 'debt');
           renderManualLists();
-          saveLocal();
+          saveToSupabase().catch(err => console.error(err));
         }
         closeModal();
       };
@@ -1089,7 +1320,7 @@
         ], () => {
           const amount = Number(document.getElementById('mi_amount').value||0);
           adj.incomeOverrides[item.id] = amount;
-          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
         });
       });
 
@@ -1100,7 +1331,7 @@
         ], () => {
           const amount = Number(document.getElementById('me_amount').value||0);
           adj.expenseOverrides[item.id] = amount;
-          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
         });
       });
 
@@ -1111,16 +1342,16 @@
         ], () => {
           const amount = Number(document.getElementById('md_amount').value||0);
           adj.debtOverrides[debt.id] = { mode:'custom', amount };
-          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
         });
       });
       root.querySelectorAll('[data-debt-skip]').forEach(btn => btn.onclick = () => {
         adj.debtOverrides[btn.dataset.debtSkip] = { mode:'skip' };
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
       });
       root.querySelectorAll('[data-debt-paid]').forEach(btn => btn.onclick = () => {
         adj.debtOverrides[btn.dataset.debtPaid] = { mode:'paid' };
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
       });
 
       root.querySelectorAll('[data-goal-edit]').forEach(btn => btn.onclick = () => {
@@ -1130,7 +1361,7 @@
         ], () => {
           const amount = Number(document.getElementById('ms_amount').value||0);
           adj.goalOverrides[goal.id] = { mode:'this_month', amount };
-          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
         });
       });
       root.querySelectorAll('[data-goal-remove]').forEach(btn => btn.onclick = () => {
@@ -1145,7 +1376,7 @@
           adj.goalOverrides[goalId] = mode === 'remove_from_here'
             ? { mode:'remove_from_here' }
             : { mode:'this_month', amount:0 };
-          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
         });
       });
 
@@ -1156,7 +1387,7 @@
         ], () => {
           adj.extraIncomeName = document.getElementById('ami_name').value.trim();
           adj.extraIncomeAmount = Number(document.getElementById('ami_amount').value||0);
-          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
         });
       };
       document.getElementById('addMonthExpenseBtn').onclick = () => {
@@ -1166,7 +1397,7 @@
         ], () => {
           adj.extraExpenseName = document.getElementById('ame_name').value.trim();
           adj.extraExpenseAmount = Number(document.getElementById('ame_amount').value||0);
-          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
         });
       };
       document.getElementById('addMonthSavingBtn').onclick = () => {
@@ -1176,7 +1407,7 @@
         ], () => {
           adj.extraSavingName = document.getElementById('ams_name').value.trim();
           adj.extraSavingAmount = Number(document.getElementById('ams_amount').value||0);
-          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
         });
       };
       document.getElementById('addMonthDebtBtn').onclick = () => {
@@ -1188,7 +1419,7 @@
           const amount = Number(document.getElementById('amd_amount').value||0);
           if(!name) return;
           state.debts.push(makeDebtRow({ name, debtKind:'loan', monthlyPayment:amount, remainingInstallments:1, startMonth:ym }));
-          closeModal(); renderManualLists(); renderForecast(); openMonthModal(ym); saveLocal();
+          saveToSupabase().then(() => { closeModal(); renderManualLists(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
         });
       };
 
@@ -1198,7 +1429,7 @@
       if(removeExtraIncomeBtn) removeExtraIncomeBtn.onclick = () => {
         adj.extraIncomeName = '';
         adj.extraIncomeAmount = 0;
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
       };
 
       const editExtraExpenseBtn = document.getElementById('editExtraExpenseBtn');
@@ -1207,7 +1438,7 @@
       if(removeExtraExpenseBtn) removeExtraExpenseBtn.onclick = () => {
         adj.extraExpenseName = '';
         adj.extraExpenseAmount = 0;
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
       };
 
       const editExtraSavingBtn = document.getElementById('editExtraSavingBtn');
@@ -1216,7 +1447,7 @@
       if(removeExtraSavingBtn) removeExtraSavingBtn.onclick = () => {
         adj.extraSavingName = '';
         adj.extraSavingAmount = 0;
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
       };
     }
 
@@ -1450,10 +1681,17 @@
       document.getElementById('forecastFrom').value = state.forecast.from;
       document.getElementById('forecastTo').value = state.forecast.to;
 
+      bindUi();
+
       if(client){
         const { data: { session } } = await client.auth.getSession();
         state.session = session;
         if(session){
+          try{
+            await loadFromSupabase();
+          }catch(err){
+            console.error('Error cargando desde Supabase', err);
+          }
           hide('authGate');
           await runPostLoginFlow(session, true);
         }
@@ -1464,6 +1702,11 @@
           }
           state.session = sessionNow;
           if(sessionNow){
+            try{
+              await loadFromSupabase();
+            }catch(err){
+              console.error('Error cargando desde Supabase', err);
+            }
             hide('authGate');
             await runPostLoginFlow(sessionNow, false);
           }else{
@@ -1473,7 +1716,6 @@
         });
       }
 
-      bindUi();
       renderManualLists();
       renderForecast();
     }
@@ -1516,12 +1758,13 @@
         });
       });
 
-      document.getElementById('useSavedBtn').addEventListener('click', () => {
+      document.getElementById('useSavedBtn').addEventListener('click', async () => {
+        try{ await loadFromSupabase(); }catch(err){ console.error(err); }
         flowStateSet('app');
         hide('choiceGate'); show('appShell'); renderManualLists(); renderForecast();
       });
 
-      document.getElementById('startFreshBtn').addEventListener('click', () => {
+      document.getElementById('startFreshBtn').addEventListener('click', async () => {
         state.incomes = [];
         state.expenses = [];
         state.goals = [];
@@ -1531,7 +1774,12 @@
         if(!state.expenses.length) state.expenses.push(makeExpenseRow());
         if(!state.debts.length) state.debts.push(makeDebtRow());
         if(!state.goals.length) state.goals.push(makeGoalRow());
-        saveLocal();
+        try{
+          if(state.planId) await clearPlanData(state.planId);
+        }catch(err){
+          console.error('Error limpiando plan', err);
+        }
+        await saveToSupabase();
         renderWizardRows(state.incomes, 'wizardIncomeList', 'income');
         renderWizardRows(state.expenses, 'wizardExpenseList', 'expense');
         renderWizardRows(state.debts, 'wizardDebtList', 'debt');
@@ -1585,8 +1833,8 @@
       document.getElementById('wizardPrev2').addEventListener('click', () => showWizardStep(1));
       document.getElementById('wizardNext2').addEventListener('click', () => { saveLocal(); showWizardStep(3); });
       document.getElementById('wizardPrev3').addEventListener('click', () => showWizardStep(2));
-      document.getElementById('finishWizard').addEventListener('click', () => {
-        saveLocal();
+      document.getElementById('finishWizard').addEventListener('click', async () => {
+        await saveToSupabase();
         flowStateSet('app');
         hide('wizard');
         show('appShell');
@@ -1617,21 +1865,21 @@
       document.getElementById('addGoalBtn').addEventListener('click', () => {
         const item = makeGoalRow({ name:'Nuevo objetivo' });
         state.goals.push(item);
-        renderManualLists(); saveLocal();
+        renderManualLists(); saveToSupabase().catch(err => console.error(err));
         openGoalEditor(item, false);
       });
       document.getElementById('addDebtBtn').addEventListener('click', () => {
         const item = makeDebtRow({ name:'Nueva deuda' });
         state.debts.push(item);
-        renderManualLists(); saveLocal();
+        renderManualLists(); saveToSupabase().catch(err => console.error(err));
         openDebtEditor(item, false);
       });
 
       document.getElementById('initialReserve').addEventListener('input', e => {
-        state.reserveInitial = Number(e.target.value||0); kpis(); saveLocal();
+        state.reserveInitial = Number(e.target.value||0); kpis(); saveToSupabase().catch(err => console.error(err));
       });
       document.getElementById('defaultStart').addEventListener('change', e => {
-        state.defaultStartMonth = e.target.value || todayMonth(); saveLocal();
+        state.defaultStartMonth = e.target.value || todayMonth(); saveToSupabase().catch(err => console.error(err));
       });
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
