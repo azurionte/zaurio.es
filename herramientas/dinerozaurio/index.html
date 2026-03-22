@@ -184,6 +184,23 @@
     .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:5px 9px;border-radius:999px;color:var(--muted);font-size:12px}
     .warnBox{background:rgba(255,91,127,.12);border:1px solid rgba(255,91,127,.35);border-radius:16px;padding:14px;margin-bottom:14px}
     .warnBox h4{margin:0 0 8px}
+
+    .compactGrid{display:grid;grid-template-columns:1.2fr .95fr;gap:16px}
+    .leftCol,.rightCol{display:flex;flex-direction:column;gap:16px}
+    .fullCol{grid-column:1 / -1}
+    .monthAcc{color:var(--purple)}
+    .monthSection{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+    .monthSection h4{margin:0 0 10px}
+    .miniList{display:flex;flex-direction:column;gap:8px}
+    .miniItem{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:#0c1330;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .miniMeta{display:flex;flex-direction:column;gap:4px}
+    .miniName{font-weight:800}
+    .miniSub{font-size:12px;color:var(--muted)}
+    .miniActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    @media (max-width:1100px){
+      .compactGrid{grid-template-columns:1fr}
+    }
+
     .warnDetails{margin-top:10px;padding-left:18px;color:var(--muted)}
     .month{cursor:pointer;transition:.16s ease all}
     .month:hover{transform:translateY(-2px);border-color:#3556b5}
@@ -323,68 +340,72 @@
       </div>
 
       <section id="tab-config" class="stack">
-        <div class="stack compactSections">
-          <div class="panel">
-            <div class="section-title">
-              <div>
-                <div class="label">Ingresos mensuales base</div>
-                <div class="value kpi-cyan" id="kpiIncome">0 €</div>
+        <div class="compactGrid">
+          <div class="leftCol">
+            <div class="panel">
+              <div class="section-title">
+                <div>
+                  <div class="label">Ingresos mensuales base</div>
+                  <div class="value kpi-cyan" id="kpiIncome">0 €</div>
+                </div>
+                <button class="btn ghost toggleSectionBtn" data-target="incomeSectionBody">Editar</button>
               </div>
-              <button class="btn ghost toggleSectionBtn" data-target="incomeSectionBody">Editar</button>
+              <div id="incomeSectionBody" class="sectionBody hidden" style="display:none">
+                <div class="sub" style="margin-bottom:12px">Añade sueldo, bonus, alquiler cobrado o side income.</div>
+                <div class="btnRow" style="margin-bottom:12px"><button id="addIncomeBtn" class="btn good">+ Añadir ingreso</button></div>
+                <div id="incomeList" class="list"></div>
+              </div>
             </div>
-            <div id="incomeSectionBody" class="sectionBody hidden" style="display:none">
-              <div class="sub" style="margin-bottom:12px">Añade sueldo, bonus, alquiler cobrado o side income.</div>
-              <div class="btnRow" style="margin-bottom:12px"><button id="addIncomeBtn" class="btn good">+ Añadir ingreso</button></div>
-              <div id="incomeList" class="list"></div>
+
+            <div class="panel">
+              <div class="section-title">
+                <div>
+                  <div class="label">Gastos base mensuales</div>
+                  <div class="value kpi-red" id="kpiExpense">0 €</div>
+                </div>
+                <button class="btn ghost toggleSectionBtn" data-target="expenseSectionBody">Editar</button>
+              </div>
+              <div id="expenseSectionBody" class="sectionBody hidden" style="display:none">
+                <div class="sub" style="margin-bottom:12px">Cada gasto tiene nombre, importe y periodicidad.</div>
+                <div class="btnRow" style="margin-bottom:12px"><button id="addExpenseBtn" class="btn good">+ Añadir gasto</button></div>
+                <div id="expenseList" class="list"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="section-title">
+                <div>
+                  <div class="label">Ahorro conseguido</div>
+                  <div class="value kpi-green" id="kpiSavings">0 €</div>
+                </div>
+                <button class="btn ghost toggleSectionBtn" data-target="goalSectionBody">Editar</button>
+              </div>
+              <div id="goalSectionBody" class="sectionBody hidden" style="display:none">
+                <div class="sub" style="margin-bottom:12px">Ahorro fijo por mes o ahorro por objetivo.</div>
+                <div class="btnRow" style="margin-bottom:12px"><button id="addGoalBtn" class="btn good">+ Añadir ahorro</button></div>
+                <div id="goalList" class="list"></div>
+              </div>
             </div>
           </div>
 
-          <div class="panel">
-            <div class="section-title">
-              <div>
-                <div class="label">Gastos base mensuales</div>
-                <div class="value kpi-red" id="kpiExpense">0 €</div>
+          <div class="rightCol">
+            <div class="panel">
+              <div class="section-title">
+                <div>
+                  <div class="label">Deuda base mensual</div>
+                  <div class="value kpi-yellow" id="kpiDebt">0 €</div>
+                </div>
+                <button class="btn ghost toggleSectionBtn" data-target="debtSectionBody">Editar</button>
               </div>
-              <button class="btn ghost toggleSectionBtn" data-target="expenseSectionBody">Editar</button>
-            </div>
-            <div id="expenseSectionBody" class="sectionBody hidden" style="display:none">
-              <div class="sub" style="margin-bottom:12px">Cada gasto tiene nombre, importe y periodicidad.</div>
-              <div class="btnRow" style="margin-bottom:12px"><button id="addExpenseBtn" class="btn good">+ Añadir gasto</button></div>
-              <div id="expenseList" class="list"></div>
+              <div id="debtSectionBody" class="sectionBody hidden" style="display:none">
+                <div class="sub" style="margin-bottom:12px">Préstamos, compras aplazadas y tarjetas.</div>
+                <div class="btnRow" style="margin-bottom:12px"><button id="addDebtBtn" class="btn good">+ Añadir deuda</button></div>
+                <div id="debtList" class="list"></div>
+              </div>
             </div>
           </div>
 
-          <div class="panel">
-            <div class="section-title">
-              <div>
-                <div class="label">Deuda base mensual</div>
-                <div class="value kpi-yellow" id="kpiDebt">0 €</div>
-              </div>
-              <button class="btn ghost toggleSectionBtn" data-target="debtSectionBody">Editar</button>
-            </div>
-            <div id="debtSectionBody" class="sectionBody hidden" style="display:none">
-              <div class="sub" style="margin-bottom:12px">Préstamos, compras aplazadas y tarjetas.</div>
-              <div class="btnRow" style="margin-bottom:12px"><button id="addDebtBtn" class="btn good">+ Añadir deuda</button></div>
-              <div id="debtList" class="list"></div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="section-title">
-              <div>
-                <div class="label">Ahorro conseguido</div>
-                <div class="value kpi-green" id="kpiSavings">0 €</div>
-              </div>
-              <button class="btn ghost toggleSectionBtn" data-target="goalSectionBody">Editar</button>
-            </div>
-            <div id="goalSectionBody" class="sectionBody hidden" style="display:none">
-              <div class="sub" style="margin-bottom:12px">Ahorro fijo por mes o ahorro por objetivo.</div>
-              <div class="btnRow" style="margin-bottom:12px"><button id="addGoalBtn" class="btn good">+ Añadir ahorro</button></div>
-              <div id="goalList" class="list"></div>
-            </div>
-          </div>
-
-          <div class="grid-2">
+          <div class="grid-2 fullCol">
             <div class="panel">
               <div class="section-title">
                 <div>
@@ -563,12 +584,19 @@
       return { amount: monthlyNeeded, issue:null };
     }
     function adjustmentForMonth(ym){
-      return state.monthAdjustments[ym] || {
-        extraIncomeName:'', extraIncomeAmount:0,
-        extraExpenseName:'', extraExpenseAmount:0,
-        extraSavingName:'', extraSavingAmount:0,
-        debtActionType:'', debtActionDebtId:'', debtActionAmount:0
-      };
+      if(!state.monthAdjustments[ym]){
+        state.monthAdjustments[ym] = {
+          extraIncomeName:'', extraIncomeAmount:0,
+          extraExpenseName:'', extraExpenseAmount:0,
+          extraSavingName:'', extraSavingAmount:0,
+          debtActionType:'', debtActionDebtId:'', debtActionAmount:0,
+          incomeOverrides:{},
+          expenseOverrides:{},
+          goalOverrides:{},
+          debtOverrides:{}
+        };
+      }
+      return state.monthAdjustments[ym];
     }
     function loadLocal(){
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -670,6 +698,50 @@
       });
     }
 
+
+
+    function goalMonthlyRaw(goal){
+      return (goal.goalType||'fixed') === 'fixed' ? Number(goal.monthlyAmount||0) : 0;
+    }
+    function monthlyActiveItems(ym){
+      const adj = adjustmentForMonth(ym);
+      const incomes = state.incomes.map(it => ({
+        ...it,
+        monthAmount: adj.incomeOverrides[it.id] !== undefined ? Number(adj.incomeOverrides[it.id]) : Number(it.amount||0)
+      })).filter(it => it.monthAmount !== 0);
+      const expenses = state.expenses.map(it => ({
+        ...it,
+        monthAmount: adj.expenseOverrides[it.id] !== undefined ? Number(adj.expenseOverrides[it.id]) : Number(it.amount||0)
+      })).filter(it => it.monthAmount !== 0);
+      const goals = state.goals.map(it => {
+        let monthAmount = 0;
+        const ov = adj.goalOverrides[it.id];
+        if(ov && ov.mode === 'this_month') monthAmount = Number(ov.amount||0);
+        else if(ov && ov.mode === 'remove_from_here') monthAmount = 0;
+        else {
+          const r = goalMonthlyForMonth(it, ym, 999999999);
+          monthAmount = r.amount;
+        }
+        return { ...it, monthAmount };
+      }).filter(it => it.monthAmount !== 0 || state.goals.some(g=>g.id===it.id));
+      const debts = state.debts.map(it => {
+        let monthAmount = debtMonthlyAmount(it, ym);
+        const ov = adj.debtOverrides[it.id];
+        if(ov){
+          if(ov.mode === 'skip') monthAmount = 0;
+          if(ov.mode === 'custom') monthAmount = Number(ov.amount||0);
+          if(ov.mode === 'paid') monthAmount = 0;
+        }
+        return { ...it, monthAmount };
+      }).filter(it => it.monthAmount !== 0 || state.debts.some(d=>d.id===it.id));
+      return { incomes, expenses, goals, debts };
+    }
+    function promptNumberValue(label, current){
+      const v = prompt(label, String(current ?? 0));
+      if(v === null) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
 
     function closeModal(){
       const root = document.getElementById('modalRoot');
@@ -884,48 +956,158 @@
 
     function openMonthModal(ym){
       const adj = adjustmentForMonth(ym);
-      const debtOptions = ['<option value="">— ninguna —</option>'].concat(
-        state.debts.map(d => `<option value="${d.id}" ${adj.debtActionDebtId===d.id?'selected':''}>${escapeHtml(d.name)}</option>`)
-      ).join('');
+      const current = monthlyActiveItems(ym);
       const root = document.getElementById('modalRoot');
+
+      function incomeListHtml(){
+        return current.incomes.length ? current.incomes.map(it => `
+          <div class="miniItem">
+            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Ingreso')}</div><div class="miniSub">${euros(it.monthAmount)}</div></div>
+            <div class="miniActions"><button class="btn ghost" data-income-edit="${it.id}">Editar</button></div>
+          </div>`).join('') : '<div class="empty">No hay ingresos activos este mes.</div>';
+      }
+      function expenseListHtml(){
+        return current.expenses.length ? current.expenses.map(it => `
+          <div class="miniItem">
+            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Gasto')}</div><div class="miniSub">${euros(it.monthAmount)}</div></div>
+            <div class="miniActions"><button class="btn ghost" data-expense-edit="${it.id}">Editar</button></div>
+          </div>`).join('') : '<div class="empty">No hay gastos activos este mes.</div>';
+      }
+      function debtListHtml(){
+        return current.debts.length ? current.debts.map(it => `
+          <div class="miniItem">
+            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Deuda')}</div><div class="miniSub">${escapeHtml(debtDescription(it))}</div></div>
+            <div class="miniActions">
+              <button class="btn ghost" data-debt-custom="${it.id}">Editar monto</button>
+              <button class="btn ghost" data-debt-skip="${it.id}">Aplazar cuota</button>
+              <button class="btn ghost" data-debt-paid="${it.id}">Pago completo</button>
+            </div>
+          </div>`).join('') : '<div class="empty">No hay deudas activas este mes.</div>';
+      }
+      function goalListHtml(){
+        return current.goals.length ? current.goals.map(it => `
+          <div class="miniItem">
+            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Ahorro')}</div><div class="miniSub">${euros(it.monthAmount)} · ${(it.goalType||'fixed')==='fixed'?'fijo':'objetivo'}</div></div>
+            <div class="miniActions">
+              <button class="btn ghost" data-goal-edit="${it.id}">Modificar</button>
+              <button class="btn ghost" data-goal-remove="${it.id}">Eliminar ahorro</button>
+            </div>
+          </div>`).join('') : '<div class="empty">No hay ahorros activos este mes.</div>';
+      }
+
       root.className = 'modalRoot';
       root.innerHTML = `<div class="modalCard">
-        <div class="modalHead"><h3>Ajustes de ${escapeHtml(ym)}</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
-        <div class="modalGrid">
-          <div class="field"><label>Ingreso puntual nombre</label><input id="adjIncomeName" class="input" value="${escapeHtml(adj.extraIncomeName||'')}"></div>
-          <div class="field"><label>Ingreso puntual monto</label><input id="adjIncomeAmount" class="input" type="number" step="0.01" value="${Number(adj.extraIncomeAmount||0)}"></div>
-          <div class="field"><label>Gasto puntual nombre</label><input id="adjExpenseName" class="input" value="${escapeHtml(adj.extraExpenseName||'')}"></div>
-          <div class="field"><label>Gasto puntual monto</label><input id="adjExpenseAmount" class="input" type="number" step="0.01" value="${Number(adj.extraExpenseAmount||0)}"></div>
-          <div class="field"><label>Ahorro puntual nombre</label><input id="adjSavingName" class="input" value="${escapeHtml(adj.extraSavingName||'')}"></div>
-          <div class="field"><label>Ahorro puntual monto</label><input id="adjSavingAmount" class="input" type="number" step="0.01" value="${Number(adj.extraSavingAmount||0)}"></div>
-          <div class="field"><label>Deuda</label><select id="adjDebtId" class="select">${debtOptions}</select></div>
-          <div class="field"><label>Acción deuda</label>
-            <select id="adjDebtType" class="select">
-              <option value="" ${!adj.debtActionType?'selected':''}>— ninguna —</option>
-              <option value="skip" ${adj.debtActionType==='skip'?'selected':''}>Aplazar cuota</option>
-              <option value="custom" ${adj.debtActionType==='custom'?'selected':''}>Monto personalizado</option>
-            </select>
-          </div>
-          <div class="field"><label>Monto acción deuda</label><input id="adjDebtAmount" class="input" type="number" step="0.01" value="${Number(adj.debtActionAmount||0)}"></div>
+        <div class="modalHead"><h3>Detalle de ${escapeHtml(ym)}</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+
+        <div class="monthSection">
+          <h4>Ingresos</h4>
+          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthIncomeBtn" class="btn good">+ Añadir ingreso puntual</button></div>
+          <div class="miniList">${incomeListHtml()}</div>
         </div>
-        <div class="btnRow" style="margin-top:16px"><button id="saveMonthAdjBtn" class="btn primary">Guardar ajustes</button></div>
+
+        <div class="monthSection">
+          <h4>Gastos</h4>
+          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthExpenseBtn" class="btn good">+ Añadir gasto puntual</button></div>
+          <div class="miniList">${expenseListHtml()}</div>
+        </div>
+
+        <div class="monthSection">
+          <h4>Deudas</h4>
+          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthDebtBtn" class="btn good">+ Añadir deuda</button></div>
+          <div class="miniList">${debtListHtml()}</div>
+        </div>
+
+        <div class="monthSection">
+          <h4>Ahorros</h4>
+          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthSavingBtn" class="btn good">+ Añadir ahorro puntual</button></div>
+          <div class="miniList">${goalListHtml()}</div>
+        </div>
       </div>`;
+
       document.getElementById('closeModalBtn').onclick = closeModal;
-      document.getElementById('saveMonthAdjBtn').onclick = () => {
-        state.monthAdjustments[ym] = {
-          extraIncomeName: document.getElementById('adjIncomeName').value.trim(),
-          extraIncomeAmount: Number(document.getElementById('adjIncomeAmount').value||0),
-          extraExpenseName: document.getElementById('adjExpenseName').value.trim(),
-          extraExpenseAmount: Number(document.getElementById('adjExpenseAmount').value||0),
-          extraSavingName: document.getElementById('adjSavingName').value.trim(),
-          extraSavingAmount: Number(document.getElementById('adjSavingAmount').value||0),
-          debtActionDebtId: document.getElementById('adjDebtId').value,
-          debtActionType: document.getElementById('adjDebtType').value,
-          debtActionAmount: Number(document.getElementById('adjDebtAmount').value||0)
-        };
-        closeModal();
-        renderForecast();
-        saveLocal();
+
+      root.querySelectorAll('[data-income-edit]').forEach(btn => btn.onclick = () => {
+        const amount = promptNumberValue('Nuevo monto para este ingreso en ' + ym, current.incomes.find(x=>x.id===btn.dataset.incomeEdit).monthAmount);
+        if(amount === null) return;
+        adj.incomeOverrides[btn.dataset.incomeEdit] = amount;
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      });
+
+      root.querySelectorAll('[data-expense-edit]').forEach(btn => btn.onclick = () => {
+        const amount = promptNumberValue('Nuevo monto para este gasto en ' + ym, current.expenses.find(x=>x.id===btn.dataset.expenseEdit).monthAmount);
+        if(amount === null) return;
+        adj.expenseOverrides[btn.dataset.expenseEdit] = amount;
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      });
+
+      root.querySelectorAll('[data-debt-custom]').forEach(btn => btn.onclick = () => {
+        const debt = current.debts.find(x=>x.id===btn.dataset.debtCustom);
+        const amount = promptNumberValue('Nuevo monto para esta deuda en ' + ym, debt.monthAmount);
+        if(amount === null) return;
+        adj.debtOverrides[debt.id] = { mode:'custom', amount };
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      });
+      root.querySelectorAll('[data-debt-skip]').forEach(btn => btn.onclick = () => {
+        adj.debtOverrides[btn.dataset.debtSkip] = { mode:'skip' };
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      });
+      root.querySelectorAll('[data-debt-paid]').forEach(btn => btn.onclick = () => {
+        adj.debtOverrides[btn.dataset.debtPaid] = { mode:'paid' };
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      });
+
+      root.querySelectorAll('[data-goal-edit]').forEach(btn => btn.onclick = () => {
+        const goal = current.goals.find(x=>x.id===btn.dataset.goalEdit);
+        const amount = promptNumberValue('Nuevo monto de ahorro para este mes', goal.monthAmount);
+        if(amount === null) return;
+        adj.goalOverrides[goal.id] = { mode:'this_month', amount };
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      });
+      root.querySelectorAll('[data-goal-remove]').forEach(btn => btn.onclick = () => {
+        const goalId = btn.dataset.goalRemove;
+        const removeSequence = confirm('Aceptar = eliminar desde este mes la secuencia de ahorro. Cancelar = solo suspender este mes.');
+        if(removeSequence){
+          adj.goalOverrides[goalId] = { mode:'remove_from_here' };
+        } else {
+          adj.goalOverrides[goalId] = { mode:'this_month', amount:0 };
+        }
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      });
+
+      document.getElementById('addMonthIncomeBtn').onclick = () => {
+        const name = prompt('Nombre del ingreso puntual');
+        if(!name) return;
+        const amount = promptNumberValue('Monto del ingreso puntual', 0);
+        if(amount === null) return;
+        adj.extraIncomeName = name;
+        adj.extraIncomeAmount = amount;
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      };
+      document.getElementById('addMonthExpenseBtn').onclick = () => {
+        const name = prompt('Nombre del gasto puntual');
+        if(!name) return;
+        const amount = promptNumberValue('Monto del gasto puntual', 0);
+        if(amount === null) return;
+        adj.extraExpenseName = name;
+        adj.extraExpenseAmount = amount;
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      };
+      document.getElementById('addMonthSavingBtn').onclick = () => {
+        const name = prompt('Nombre del ahorro puntual');
+        if(!name) return;
+        const amount = promptNumberValue('Monto del ahorro puntual', 0);
+        if(amount === null) return;
+        adj.extraSavingName = name;
+        adj.extraSavingAmount = amount;
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      };
+      document.getElementById('addMonthDebtBtn').onclick = () => {
+        const name = prompt('Nombre de la nueva deuda');
+        if(!name) return;
+        const amount = promptNumberValue('Monto mensual inicial de la deuda', 0);
+        if(amount === null) return;
+        state.debts.push(makeDebtRow({ name, debtKind:'loan', monthlyPayment:amount, remainingInstallments:1, startMonth:ym }));
+        closeModal(); renderManualLists(); renderForecast(); openMonthModal(ym); saveLocal();
       };
     }
 
@@ -1035,44 +1217,62 @@
       state.forecast.to = to;
 
       const months = monthsInRange(from, to);
-      const incomeBase = state.incomes.reduce((a,b)=>a+Number(b.amount||0),0);
-      const expenseBase = state.expenses.reduce((a,b)=>a+Number(b.amount||0),0);
-      let reserve = Number(state.reserveInitial||0);
       const warnings = [];
+      let reserve = Number(state.reserveInitial||0);
+      let cumulativeSavings = 0;
 
       document.getElementById('monthsGrid').innerHTML = months.map(m => {
         const adj = adjustmentForMonth(m);
-        let debt = state.debts.reduce((a,b)=>a+debtMonthlyAmount(b,m),0);
+
+        const income = state.incomes.reduce((a,b)=>{
+          const ov = adj.incomeOverrides[b.id];
+          return a + (ov !== undefined ? Number(ov) : Number(b.amount||0));
+        },0) + Number(adj.extraIncomeAmount||0);
+
+        const expense = state.expenses.reduce((a,b)=>{
+          const ov = adj.expenseOverrides[b.id];
+          return a + (ov !== undefined ? Number(ov) : Number(b.amount||0));
+        },0) + Number(adj.extraExpenseAmount||0);
+
+        let debt = state.debts.reduce((a,b)=>{
+          let amount = debtMonthlyAmount(b,m);
+          const ov = adj.debtOverrides[b.id];
+          if(ov){
+            if(ov.mode === 'skip' || ov.mode === 'paid') amount = 0;
+            if(ov.mode === 'custom') amount = Number(ov.amount||0);
+          }
+          return a + amount;
+        },0);
+
         const recovered = state.debts.reduce((a,b)=>a+debtRecoveryAmount(b,m),0);
 
-        if(adj.debtActionDebtId && adj.debtActionType){
-          const debtItem = state.debts.find(d => d.id === adj.debtActionDebtId);
-          if(debtItem){
-            const normal = debtMonthlyAmount(debtItem, m);
-            if(adj.debtActionType === 'skip') debt -= normal;
-            if(adj.debtActionType === 'custom') debt += Number(adj.debtActionAmount||0) - normal;
-          }
-        }
-
-        const extraIncome = Number(adj.extraIncomeAmount||0);
-        const extraExpense = Number(adj.extraExpenseAmount||0);
-        const extraSaving = Number(adj.extraSavingAmount||0);
-
-        const income = incomeBase + extraIncome;
-        const expense = expenseBase + extraExpense;
-
-        let totalSaving = extraSaving;
+        let totalSaving = Number(adj.extraSavingAmount||0);
         let remainingAvailable = income - expense - debt;
 
         state.goals.forEach(goal => {
-          const r = goalMonthlyForMonth(goal, m, remainingAvailable);
-          totalSaving += r.amount;
-          remainingAvailable -= r.amount;
-          if(r.issue) warnings.push({ goal: goal.name || 'Ahorro', month: m, reason: r.issue.reason });
+          const ov = adj.goalOverrides[goal.id];
+          if(ov && ov.mode === 'remove_from_here'){
+            if(monthDiff(m, goal.startMonth || state.defaultStartMonth) >= 0){
+              return;
+            }
+          }
+          let amount = 0;
+          if(ov && ov.mode === 'this_month'){
+            amount = Number(ov.amount||0);
+          } else if((goal.goalType||'fixed') === 'fixed'){
+            amount = goalMonthlyForMonth(goal, m, remainingAvailable).amount;
+          } else {
+            const r = goalMonthlyForMonth(goal, m, remainingAvailable);
+            amount = r.amount;
+            if(r.issue) warnings.push({ goal: goal.name || 'Ahorro', month: m, reason: r.issue.reason });
+          }
+          totalSaving += amount;
+          remainingAvailable -= amount;
         });
 
         const net = income - expense - debt - totalSaving;
         reserve += net;
+        cumulativeSavings += totalSaving;
 
         return `<div class="month" data-month="${m}">
           <h4>${escapeHtml(m)}</h4>
@@ -1082,6 +1282,7 @@
             <div class="lab">Deuda</div><div>${euros(debt)}</div>
             <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
             <div class="lab">Ahorro</div><div>${euros(totalSaving)}</div>
+            <div class="lab">Ahorro acumulado</div><div class="monthAcc">${euros(cumulativeSavings)}</div>
             <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
             <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
           </div>
