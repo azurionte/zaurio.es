@@ -933,14 +933,19 @@
     function kpis(){
       const income = state.incomes.reduce((a,b)=>a+Number(b.amount||0),0);
       const expense = state.expenses.reduce((a,b)=>a+Number(b.amount||0),0);
-      const debt = state.debts.reduce((a,b)=>a+Number(b.amount||0),0);
-      const net = income - expense - debt;
-      document.getElementById('kpiIncome').textContent = euros(income);
-      document.getElementById('kpiExpense').textContent = euros(expense);
-      document.getElementById('kpiDebt').textContent = euros(debt);
-      const el = document.getElementById('kpiNet');
-      el.textContent = euros(net);
-      el.className = 'value ' + (net >= 0 ? 'kpi-green' : 'kpi-red');
+      const debt = state.debts.reduce((a,b)=>a+debtMonthlyAmount(b, state.defaultStartMonth),0);
+      const savings = state.goals.reduce((a,g)=>{
+        if((g.goalType||'fixed') === 'fixed') return a + Number(g.monthlyAmount||0);
+        return a;
+      },0);
+      const incomeEl = document.getElementById('kpiIncome');
+      const expenseEl = document.getElementById('kpiExpense');
+      const debtEl = document.getElementById('kpiDebt');
+      const savingsEl = document.getElementById('kpiSavings');
+      if(incomeEl) incomeEl.textContent = euros(income);
+      if(expenseEl) expenseEl.textContent = euros(expense);
+      if(debtEl) debtEl.textContent = euros(debt);
+      if(savingsEl) savingsEl.textContent = euros(savings);
     }
 
     function itemCardHtml(item, type){
