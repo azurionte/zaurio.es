@@ -1648,7 +1648,7 @@
     function kpis(){
       const income = state.incomes.reduce((a,b)=>a+Number(b.amount||0),0);
       const expense = state.expenses.reduce((a,b)=>a+Number(b.amount||0),0);
-      const debt = state.debts.reduce((a,b)=>a+debtMonthlyAmount(b, state.defaultStartMonth),0);
+      const debt = state.debts.reduce((a,b)=>a + debtBaseDisplayAmount(b),0);
       const savings = state.goals.reduce((a,g)=>{
         if((g.goalType||'fixed') === 'fixed') return a + Number(g.monthlyAmount||0);
         return a;
