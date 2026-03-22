@@ -1769,13 +1769,13 @@
         },0) + Number(adj.extraExpenseAmount || 0);
 
         let debt = state.debts.reduce((a,b)=>{
-          let amount = debtStatusForMonth(b, m).monthAmount;
+          let amount = debtMonthlyAmount(b, m);
           const ov = adj.debtOverrides[b.id];
           if(ov){
             if(ov.mode === 'skip' || ov.mode === 'paid') amount = 0;
             if(ov.mode === 'custom') amount = Number(ov.amount || 0);
           }
-          return a + amount;
+          return a + Number(amount || 0);
         },0);
 
         const recovered = state.debts.reduce((a,b)=>a + debtRecoveryAmount(b, m), 0);
