@@ -197,6 +197,7 @@
     .miniName{font-weight:800}
     .miniSub{font-size:12px;color:var(--muted)}
     .miniActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .settledDebt{border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.08)}
 
     .inlineModalForm{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b122b}
 
@@ -590,63 +591,97 @@
         ? `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
         : `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
     }
-    function debtMonthlyAmount(d, ym){
-      const start = d.startMonth || state.defaultStartMonth;
+    function amountForSchedule(item, ym){
+      const start = item.startMonth || state.defaultStartMonth;
+      const end = item.endMonth || null;
       if(ym < start) return 0;
-      if((d.debtKind||'loan') === 'loan'){
-        if(d.lastMonth) return ym <= d.lastMonth ? Number(d.monthlyPayment||0) : 0;
-        const diff = monthDiff(start, ym);
-        return diff >= 0 && diff < Number(d.remainingInstallments||0) ? Number(d.monthlyPayment||0) : 0;
-      }
-      if((d.cardSubtype||'revolving') === 'revolving'){
-        const debt = Number(d.currentDebt||0);
-        const payment = Number(d.currentPayment||0);
-        const annual = Number(d.tin || d.tae || 0) / 100;
-        const monthlyRate = annual / 12;
-        let balance = debt;
-        let cur = start;
-        let safe = 0;
-        while(cur < ym && balance > 0.01 && safe < 240){
-          const interest = balance * monthlyRate;
-          balance = balance + interest - payment;
-          cur = addMonthsStr(cur, 1);
-          safe++;
-        }
-        return balance > 0.01 ? payment : 0;
-      }
-      if(d.cardSubtype === 'pay_end_month'){
-        if(d.periodicity === 'one_time') return ym === start ? Number(d.amount||0) : 0;
-        return ym >= start ? Number(d.amount||0) : 0;
-      }
-      if(d.lastMonth) return ym <= d.lastMonth ? Number(d.monthlyPayment||0) : 0;
+      if(end && ym > end) return 0;
+      const periodicity = item.periodicity || 'monthly';
       const diff = monthDiff(start, ym);
-      return diff >= 0 && diff < Number(d.remainingInstallments||0) ? Number(d.monthlyPayment||0) : 0;
+      if(periodicity === 'one_time') return ym === start ? Number(item.amount || 0) : 0;
+      if(periodicity === 'bimonthly') return diff % 2 === 0 ? Number(item.amount || 0) : 0;
+      if(periodicity === 'quarterly') return diff % 3 === 0 ? Number(item.amount || 0) : 0;
+      if(periodicity === 'yearly') return diff % 12 === 0 ? Number(item.amount || 0) : 0;
+      return Number(item.amount || 0);
     }
-    function debtRecoveryAmount(d, ym){
+
+    function debtEndMonth(d){
       const start = d.startMonth || state.defaultStartMonth;
-      let recoveryMonth = '';
-      let amount = 0;
-      if((d.debtKind||'loan') === 'loan'){
-        recoveryMonth = d.lastMonth ? addMonthsStr(d.lastMonth,1) : addMonthsStr(start, Number(d.remainingInstallments||0));
-        amount = Number(d.monthlyPayment||0);
-      } else if(d.cardSubtype === 'installment'){
-        recoveryMonth = d.lastMonth ? addMonthsStr(d.lastMonth,1) : addMonthsStr(start, Number(d.remainingInstallments||0));
-        amount = Number(d.monthlyPayment||0);
-      } else if(d.cardSubtype === 'pay_end_month' && d.periodicity === 'one_time'){
-        recoveryMonth = addMonthsStr(start,1);
-        amount = Number(d.amount||0);
+      if((d.debtKind || 'loan') === 'loan' || d.cardSubtype === 'installment'){
+        if(d.lastMonth) return d.lastMonth;
+        const count = Number(d.remainingInstallments || 0);
+        return count > 0 ? addMonthsStr(start, count - 1) : start;
       }
-      return recoveryMonth === ym ? amount : 0;
+      if(d.cardSubtype === 'pay_end_month' && d.periodicity === 'one_time'){
+        return start;
+      }
+      return null;
     }
+
+    function debtStatusForMonth(d, ym){
+      const start = d.startMonth || state.defaultStartMonth;
+      if(ym < start) return { visible:false, active:false, settled:false, recoveredAmount:0, monthAmount:0 };
+
+      if((d.cardSubtype || '') === 'revolving'){
+        const amount = debtMonthlyAmount(d, ym);
+        return { visible: amount > 0, active: amount > 0, settled:false, recoveredAmount:0, monthAmount:amount };
+      }
+
+      const end = debtEndMonth(d);
+      const recoveryMonth = end ? addMonthsStr(end, 1) : null;
+      const active = end ? (ym >= start && ym <= end) : false;
+      const settled = recoveryMonth ? ym === recoveryMonth : false;
+      const recoveredAmount = settled ? Number((d.debtKind || 'loan') === 'loan' || d.cardSubtype === 'installment' ? d.monthlyPayment || 0 : d.amount || 0) : 0;
+      const monthAmount = active ? debtMonthlyAmount(d, ym) : 0;
+      const visible = active || settled;
+      return { visible, active, settled, recoveredAmount, monthAmount };
+    }
+
+    function debtMonthlyAmount(d, ym){
+      const status = debtStatusForMonth(d, ym);
+      if(status.active) {
+        if((d.cardSubtype || 'revolving') === 'revolving'){
+          const debt = Number(d.currentDebt||0);
+          const payment = Number(d.currentPayment||0);
+          const annual = Number(d.tin || d.tae || 0) / 100;
+          const monthlyRate = annual / 12;
+          let balance = debt;
+          let cur = d.startMonth || state.defaultStartMonth;
+          let safe = 0;
+          while(cur < ym && balance > 0.01 && safe < 240){
+            const interest = balance * monthlyRate;
+            balance = balance + interest - payment;
+            cur = addMonthsStr(cur, 1);
+            safe++;
+          }
+          return balance > 0.01 ? payment : 0;
+        }
+        if((d.cardSubtype || '') === 'pay_end_month'){
+          if(d.periodicity === 'one_time') return ym === (d.startMonth || state.defaultStartMonth) ? Number(d.amount || 0) : 0;
+          return Number(d.amount || 0);
+        }
+        return Number(d.monthlyPayment || 0);
+      }
+      return 0;
+    }
+
+    function debtRecoveryAmount(d, ym){
+      return debtStatusForMonth(d, ym).recoveredAmount;
+    }
+
     function goalMonthlyForMonth(goal, ym, availableBeforeTarget){
       const start = goal.startMonth || state.defaultStartMonth;
-      const end = goal.endMonth || start;
-      if(ym < start || ym > end) return { amount:0, issue:null };
-      if((goal.goalType||'fixed') === 'fixed'){
-        return { amount:Number(goal.monthlyAmount||0), issue:null };
+      const end = goal.endMonth || null;
+      if(ym < start) return { amount:0, issue:null };
+      if(end && ym > end) return { amount:0, issue:null };
+
+      if((goal.goalType || 'fixed') === 'fixed'){
+        return { amount:Number(goal.monthlyAmount || 0), issue:null };
       }
-      const months = monthsInRange(start, end);
-      const monthlyNeeded = months.length ? Number(goal.targetTotal||0) / months.length : 0;
+
+      const effectiveEnd = end || start;
+      const months = monthsInRange(start, effectiveEnd);
+      const monthlyNeeded = months.length ? Number(goal.targetTotal || 0) / months.length : 0;
       if(availableBeforeTarget < monthlyNeeded){
         return {
           amount: monthlyNeeded,
@@ -655,6 +690,7 @@
       }
       return { amount: monthlyNeeded, issue:null };
     }
+
     function adjustmentForMonth(ym){
       if(!state.monthAdjustments[ym]){
         state.monthAdjustments[ym] = {
@@ -874,23 +910,8 @@
       if(goalRes.error) throw goalRes.error;
       if(adjRes.error) throw adjRes.error;
 
-      state.incomes = (incomeRes.data || []).map(it => makeIncomeRow({
-        id: ensureUuid(it.id),
-        name: it.name,
-        amount: Number(it.amount || 0),
-        periodicity: it.periodicity || 'monthly',
-        startMonth: it.start_month || state.defaultStartMonth,
-        endMonth: it.end_month || null
-      }));
-      state.expenses = (expenseRes.data || []).map(it => makeExpenseRow({
-        id: ensureUuid(it.id),
-        name: it.name,
-        amount: Number(it.amount || 0),
-        kind: it.kind || 'fixed',
-        periodicity: it.periodicity || 'monthly',
-        startMonth: it.start_month || state.defaultStartMonth,
-        endMonth: it.end_month || null
-      }));
+      state.incomes = (incomeRes.data || []).map(it => makeIncomeRow({ id: ensureUuid(it.id), name: it.name, amount: Number(it.amount || 0), periodicity: it.periodicity || 'monthly', startMonth: it.start_month || state.defaultStartMonth, endMonth: it.end_month || null }));
+      state.expenses = (expenseRes.data || []).map(it => makeExpenseRow({ id: ensureUuid(it.id), name: it.name, amount: Number(it.amount || 0), kind: it.kind || 'fixed', periodicity: it.periodicity || 'monthly', startMonth: it.start_month || state.defaultStartMonth, endMonth: it.end_month || null }));
       state.debts = (debtRes.data || []).map(it => makeDebtRow({
         id: ensureUuid(it.id),
         name: it.name,
@@ -964,7 +985,7 @@
 
     function makeIncomeRow(item={}){
       return {
-        id: ensureUuid(item.id || uid()),
+        id: item.id || uid(),
         name: item.name || '',
         amount: Number(item.amount || 0),
         periodicity: item.periodicity || 'monthly',
@@ -974,7 +995,7 @@
     }
     function makeExpenseRow(item={}){
       return {
-        id: ensureUuid(item.id || uid()),
+        id: item.id || uid(),
         name: item.name || '',
         amount: Number(item.amount || 0),
         kind: item.kind || 'fixed',
@@ -985,7 +1006,7 @@
     }
     function makeGoalRow(item={}){
       return {
-        id: ensureUuid(item.id || uid()),
+        id: item.id || uid(),
         name: item.name || '',
         goalType: item.goalType || 'fixed',
         monthlyAmount: Number(item.monthlyAmount || item.amount || 0),
@@ -996,15 +1017,16 @@
     }
     function makeDebtRow(item={}){
       return {
-        id: ensureUuid(item.id || uid()),
+        id: item.id || uid(),
         name: item.name || '',
         debtKind: item.debtKind || item.type || 'loan',
         cardSubtype: item.cardSubtype || 'revolving',
         amount: Number(item.amount || 0),
         monthlyPayment: Number(item.monthlyPayment || 0),
         remainingInstallments: Number(item.remainingInstallments || 0),
-        lastMonth: item.lastMonth || '',
+        endMode: item.endMode || '',
         startMonth: item.startMonth || state.defaultStartMonth,
+        lastMonth: item.lastMonth || null,
         currentDebt: Number(item.currentDebt || 0),
         currentPayment: Number(item.currentPayment || 0),
         tin: Number(item.tin || 0),
@@ -1084,59 +1106,38 @@
     function goalMonthlyRaw(goal){
       return (goal.goalType||'fixed') === 'fixed' ? Number(goal.monthlyAmount||0) : 0;
     }
-
-    function periodicityApplies(periodicity, startMonth, endMonth, ym){
-      if(startMonth && ym < startMonth) return false;
-      if(endMonth && ym > endMonth) return false;
-      const diff = monthDiff(startMonth || ym, ym);
-      switch(periodicity || 'monthly'){
-        case 'monthly': return true;
-        case 'bimonthly': return diff % 2 === 0;
-        case 'quarterly': return diff % 3 === 0;
-        case 'yearly': return diff % 12 === 0;
-        case 'one_time': return ym === (startMonth || ym);
-        default: return true;
-      }
-    }
-    function recurringItemMonthAmount(item, ym){
-      if(!periodicityApplies(item.periodicity || 'monthly', item.startMonth || state.defaultStartMonth, item.endMonth || null, ym)) return 0;
-      return Number(item.amount || 0);
-    }
-
     function monthlyActiveItems(ym){
       const adj = adjustmentForMonth(ym);
-      const incomes = state.incomes.map(it => {
-        const base = recurringItemMonthAmount(it, ym);
-        return {
-          ...it,
-          monthAmount: adj.incomeOverrides[it.id] !== undefined ? Number(adj.incomeOverrides[it.id]) : base
-        };
-      }).filter(it => it.monthAmount !== 0);
-      const expenses = state.expenses.map(it => {
-        const base = recurringItemMonthAmount(it, ym);
-        return {
-          ...it,
-          monthAmount: adj.expenseOverrides[it.id] !== undefined ? Number(adj.expenseOverrides[it.id]) : base
-        };
-      }).filter(it => it.monthAmount !== 0);
+      const incomes = state.incomes.map(it => ({
+        ...it,
+        monthAmount: adj.incomeOverrides[it.id] !== undefined ? Number(adj.incomeOverrides[it.id]) : amountForSchedule(it, ym)
+      })).filter(it => it.monthAmount !== 0);
+
+      const expenses = state.expenses.map(it => ({
+        ...it,
+        monthAmount: adj.expenseOverrides[it.id] !== undefined ? Number(adj.expenseOverrides[it.id]) : amountForSchedule(it, ym)
+      })).filter(it => it.monthAmount !== 0);
+
       const goals = state.goals.map(it => {
         let monthAmount = 0;
         const ov = adj.goalOverrides[it.id];
-        if(ov && ov.mode === 'this_month') monthAmount = Number(ov.amount||0);
+        if(ov && ov.mode === 'this_month') monthAmount = Number(ov.amount || 0);
         else if(ov && ov.mode === 'remove_from_here') monthAmount = 0;
         else monthAmount = goalMonthlyForMonth(it, ym, 999999999).amount;
-        return { ...it, monthAmount };
-      }).filter(it => it.monthAmount !== 0 || state.goals.some(g=>g.id===it.id));
+        return { ...it, monthAmount, active: monthAmount !== 0 };
+      }).filter(it => it.active);
+
       const debts = state.debts.map(it => {
-        let monthAmount = debtMonthlyAmount(it, ym);
+        const status = debtStatusForMonth(it, ym);
+        let monthAmount = status.monthAmount;
         const ov = adj.debtOverrides[it.id];
         if(ov){
-          if(ov.mode === 'skip') monthAmount = 0;
-          if(ov.mode === 'custom') monthAmount = Number(ov.amount||0);
-          if(ov.mode === 'paid') monthAmount = 0;
+          if(ov.mode === 'skip' || ov.mode === 'paid') monthAmount = 0;
+          if(ov.mode === 'custom') monthAmount = Number(ov.amount || 0);
         }
-        return { ...it, monthAmount };
-      }).filter(it => it.monthAmount !== 0 || state.debts.some(d=>d.id===it.id));
+        return { ...it, monthAmount, active: status.active, settled: status.settled, recoveredAmount: status.recoveredAmount, visible: status.visible };
+      }).filter(it => it.visible);
+
       return { incomes, expenses, goals, debts };
     }
     function promptNumberValue(label, current){
@@ -1393,12 +1394,16 @@
       }
       function debtListHtml(){
         return current.debts.length ? current.debts.map(it => `
-          <div class="miniItem">
-            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Deuda')}</div><div class="miniSub">${escapeHtml(debtDescription(it))}</div></div>
+          <div class="miniItem ${it.settled ? 'settledDebt' : ''}">
+            <div class="miniMeta">
+              <div class="miniName" style="${it.settled ? 'color:#4ade80' : ''}">${escapeHtml(it.name||'Deuda')}${it.settled ? ' · saldada' : ''}</div>
+              <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it))}</div>
+            </div>
             <div class="miniActions">
+              ${it.settled ? '' : `
               <button class="btn ghost" data-debt-custom="${it.id}">Editar monto</button>
               <button class="btn ghost" data-debt-skip="${it.id}">Aplazar cuota</button>
-              <button class="btn ghost" data-debt-paid="${it.id}">Pago completo</button>
+              <button class="btn ghost" data-debt-paid="${it.id}">Pago completo</button>`}
             </div>
           </div>`).join('') : '<div class="empty">No hay deudas activas este mes.</div>';
       }
@@ -1722,53 +1727,47 @@
       state.forecast.from = from;
       state.forecast.to = to;
 
-      const months = monthsInRange(from, to);
+      const allMonths = monthsInRange(state.defaultStartMonth, to);
       const warnings = [];
-      let reserve = Number(state.reserveInitial||0);
+      let reserve = Number(state.reserveInitial || 0);
       let cumulativeSavings = 0;
+      const visibleCards = [];
 
-      document.getElementById('monthsGrid').innerHTML = months.map(m => {
+      allMonths.forEach(m => {
         const adj = adjustmentForMonth(m);
 
         const income = state.incomes.reduce((a,b)=>{
           const ov = adj.incomeOverrides[b.id];
-          const base = recurringItemMonthAmount(b, m);
-          return a + (ov !== undefined ? Number(ov) : base);
-        },0) + Number(adj.extraIncomeAmount||0);
+          return a + (ov !== undefined ? Number(ov) : amountForSchedule(b, m));
+        },0) + Number(adj.extraIncomeAmount || 0);
 
         const expense = state.expenses.reduce((a,b)=>{
           const ov = adj.expenseOverrides[b.id];
-          const base = recurringItemMonthAmount(b, m);
-          return a + (ov !== undefined ? Number(ov) : base);
-        },0) + Number(adj.extraExpenseAmount||0);
+          return a + (ov !== undefined ? Number(ov) : amountForSchedule(b, m));
+        },0) + Number(adj.extraExpenseAmount || 0);
 
         let debt = state.debts.reduce((a,b)=>{
-          let amount = debtMonthlyAmount(b,m);
+          let amount = debtStatusForMonth(b, m).monthAmount;
           const ov = adj.debtOverrides[b.id];
           if(ov){
             if(ov.mode === 'skip' || ov.mode === 'paid') amount = 0;
-            if(ov.mode === 'custom') amount = Number(ov.amount||0);
+            if(ov.mode === 'custom') amount = Number(ov.amount || 0);
           }
           return a + amount;
         },0);
 
-        const recovered = state.debts.reduce((a,b)=>a+debtRecoveryAmount(b,m),0);
+        const recovered = state.debts.reduce((a,b)=>a + debtRecoveryAmount(b, m), 0);
 
-        let totalSaving = Number(adj.extraSavingAmount||0);
+        let totalSaving = Number(adj.extraSavingAmount || 0);
         let remainingAvailable = income - expense - debt;
 
         state.goals.forEach(goal => {
           const ov = adj.goalOverrides[goal.id];
-          if(ov && ov.mode === 'remove_from_here'){
-            if(monthDiff(m, goal.startMonth || state.defaultStartMonth) >= 0){
-              return;
-            }
-          }
           let amount = 0;
-          if(ov && ov.mode === 'this_month'){
-            amount = Number(ov.amount||0);
-          } else if((goal.goalType||'fixed') === 'fixed'){
-            amount = goalMonthlyForMonth(goal, m, remainingAvailable).amount;
+          if(ov && ov.mode === 'remove_from_here'){
+            amount = 0;
+          } else if(ov && ov.mode === 'this_month'){
+            amount = Number(ov.amount || 0);
           } else {
             const r = goalMonthlyForMonth(goal, m, remainingAvailable);
             amount = r.amount;
@@ -1782,20 +1781,24 @@
         reserve += net;
         cumulativeSavings += totalSaving;
 
-        return `<div class="month" data-month="${m}">
-          <h4>${escapeHtml(m)}</h4>
-          <div class="rows">
-            <div class="lab">Ingreso</div><div>${euros(income)}</div>
-            <div class="lab">Gastos</div><div>${euros(expense)}</div>
-            <div class="lab">Deuda</div><div>${euros(debt)}</div>
-            <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
-            <div class="lab">Ahorro</div><div>${euros(totalSaving)}</div>
-            <div class="lab">Ahorro acumulado</div><div class="monthAcc">${euros(cumulativeSavings)}</div>
-            <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
-            <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
-          </div>
-        </div>`;
-      }).join('');
+        if(m >= from && m <= to){
+          visibleCards.push(`<div class="month" data-month="${m}">
+            <h4>${escapeHtml(m)}</h4>
+            <div class="rows">
+              <div class="lab">Ingreso</div><div>${euros(income)}</div>
+              <div class="lab">Gastos</div><div>${euros(expense)}</div>
+              <div class="lab">Deuda</div><div>${euros(debt)}</div>
+              <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
+              <div class="lab">Ahorro</div><div>${euros(totalSaving)}</div>
+              <div class="lab">Ahorro acumulado</div><div class="monthAcc">${euros(cumulativeSavings)}</div>
+              <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
+              <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
+            </div>
+          </div>`);
+        }
+      });
+
+      document.getElementById('monthsGrid').innerHTML = visibleCards.join('');
 
       const warnEl = document.getElementById('forecastWarnings');
       if(warnings.length){
