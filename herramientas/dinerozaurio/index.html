@@ -491,7 +491,75 @@
       return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
     }
     function euros(n){ return Number(n||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2}); }
-    function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,10); }
+    function uid(){
+      return crypto.randomUUID();
+    }
+
+    function isUuid(value){
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
+    }
+
+    function ensureUuid(value){
+      return isUuid(value) ? value : crypto.randomUUID();
+    }
+
+    function normalizeStateIds(){
+      const incomeMap = {};
+      const expenseMap = {};
+      const debtMap = {};
+      const goalMap = {};
+
+      state.incomes = (state.incomes || []).map(item => {
+        const oldId = item.id;
+        const newId = ensureUuid(oldId);
+        incomeMap[oldId] = newId;
+        return { ...item, id: newId };
+      });
+
+      state.expenses = (state.expenses || []).map(item => {
+        const oldId = item.id;
+        const newId = ensureUuid(oldId);
+        expenseMap[oldId] = newId;
+        return { ...item, id: newId };
+      });
+
+      state.debts = (state.debts || []).map(item => {
+        const oldId = item.id;
+        const newId = ensureUuid(oldId);
+        debtMap[oldId] = newId;
+        return { ...item, id: newId };
+      });
+
+      state.goals = (state.goals || []).map(item => {
+        const oldId = item.id;
+        const newId = ensureUuid(oldId);
+        goalMap[oldId] = newId;
+        return { ...item, id: newId };
+      });
+
+      Object.keys(state.monthAdjustments || {}).forEach(monthKey => {
+        const adj = state.monthAdjustments[monthKey] || {};
+
+        const remapKeys = (obj, map) => {
+          const out = {};
+          Object.entries(obj || {}).forEach(([k, v]) => {
+            out[map[k] || k] = v;
+          });
+          return out;
+        };
+
+        if (adj.debtActionDebtId && debtMap[adj.debtActionDebtId]) {
+          adj.debtActionDebtId = debtMap[adj.debtActionDebtId];
+        }
+
+        adj.incomeOverrides = remapKeys(adj.incomeOverrides, incomeMap);
+        adj.expenseOverrides = remapKeys(adj.expenseOverrides, expenseMap);
+        adj.goalOverrides = remapKeys(adj.goalOverrides, goalMap);
+        adj.debtOverrides = remapKeys(adj.debtOverrides, debtMap);
+
+        state.monthAdjustments[monthKey] = adj;
+      });
+    }
 
     function flowStateGet(){ return sessionStorage.getItem('dz_flow_state') || ''; }
     function flowStateSet(v){ sessionStorage.setItem('dz_flow_state', v); }
@@ -608,7 +676,10 @@
       try{
         const parsed = JSON.parse(raw);
         Object.assign(state, parsed);
-      }catch{}
+        normalizeStateIds();
+      }catch(err){
+        console.error('Error leyendo localStorage', err);
+      }
     }
     function cacheLocal(){
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -678,6 +749,7 @@
     }
 
     async function saveToSupabase(){
+      normalizeStateIds();
       cacheLocal();
       if(!window.dzSupabase || !state.session?.user) return;
       await ensureProfile();
@@ -697,7 +769,7 @@
 
       if(state.incomes.length){
         const rows = state.incomes.map(it => ({
-          id: it.id,
+          id: ensureUuid(it.id),
           plan_id: planId,
           name: it.name || 'Ingreso',
           amount: Number(it.amount || 0),
@@ -711,7 +783,7 @@
 
       if(state.expenses.length){
         const rows = state.expenses.map(it => ({
-          id: it.id,
+          id: ensureUuid(it.id),
           plan_id: planId,
           name: it.name || 'Gasto',
           amount: Number(it.amount || 0),
@@ -726,7 +798,7 @@
 
       if(state.debts.length){
         const rows = state.debts.map(it => ({
-          id: it.id,
+          id: ensureUuid(it.id),
           plan_id: planId,
           name: it.name || 'Deuda',
           debt_type: (it.debtKind || 'loan') === 'loan' ? 'loan' : 'card',
@@ -749,7 +821,7 @@
 
       if(state.goals.length){
         const rows = state.goals.map(it => ({
-          id: it.id,
+          id: ensureUuid(it.id),
           plan_id: planId,
           name: it.name || 'Ahorro',
           goal_type: it.goalType || 'fixed',
@@ -803,13 +875,13 @@
       if(adjRes.error) throw adjRes.error;
 
       state.incomes = (incomeRes.data || []).map(it => makeIncomeRow({
-        id: it.id, name: it.name, amount: Number(it.amount || 0)
+        id: ensureUuid(it.id), name: it.name, amount: Number(it.amount || 0)
       }));
       state.expenses = (expenseRes.data || []).map(it => makeExpenseRow({
-        id: it.id, name: it.name, amount: Number(it.amount || 0)
+        id: ensureUuid(it.id), name: it.name, amount: Number(it.amount || 0)
       }));
       state.debts = (debtRes.data || []).map(it => makeDebtRow({
-        id: it.id,
+        id: ensureUuid(it.id),
         name: it.name,
         debtKind: it.debt_type || 'loan',
         cardSubtype: it.card_type || 'revolving',
@@ -825,7 +897,7 @@
         periodicity: it.periodicity || 'monthly'
       }));
       state.goals = (goalRes.data || []).map(it => makeGoalRow({
-        id: it.id,
+        id: ensureUuid(it.id),
         name: it.name,
         goalType: it.goal_type || 'fixed',
         monthlyAmount: Number(it.monthly_amount || 0),
