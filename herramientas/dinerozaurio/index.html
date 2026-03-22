@@ -53,24 +53,6 @@
     .menuLogo.herramientas{max-height:50px}
     .menuLogo.dinero{max-height:44px}
 
-    .herramientasWrap{position:relative;filter:none;opacity:1}
-    .herramientasMainLink{display:flex;align-items:center;justify-content:center}
-    .herramientasDropdown{
-      position:absolute;top:58px;left:50%;transform:translateX(-50%);
-      min-width:190px;background:rgba(32,8,56,.96);border:1px solid rgba(255,255,255,.12);
-      border-radius:16px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.35);
-      display:none;z-index:120
-    }
-    .herramientasWrap:hover .herramientasDropdown,
-    .herramientasWrap.open .herramientasDropdown{display:block}
-    .dropdownTool{
-      display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;
-      text-decoration:none;color:#fff;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)
-    }
-    .dropdownTool:hover{background:rgba(255,255,255,.1)}
-    .dropdownTool span{font-weight:800;font-size:14px}
-
-
     .page{max-width:1280px;margin:0 auto;padding:0 18px 28px}
     .hidden{display:none !important}
     .centerGate{
@@ -164,11 +146,15 @@
     .pos{color:#4ade80}.neg{color:var(--danger)}
     .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
     .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:5px 9px;border-radius:999px;color:var(--muted);font-size:12px}
-    .modalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:140;padding:18px}
-    .modalCard{width:min(760px,100%);max-height:90vh;overflow:auto;background:linear-gradient(180deg,#121933,#0f1630);border:1px solid var(--line);border-radius:20px;padding:18px}
-    .modalHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .warnBox{background:rgba(255,91,127,.12);border:1px solid rgba(255,91,127,.35);border-radius:16px;padding:14px;margin-bottom:14px}
+    .warnBox h4{margin:0 0 8px}
+    .warnDetails{margin-top:10px;padding-left:18px;color:var(--muted)}
+    .month{cursor:pointer;transition:.16s ease all}
+    .month:hover{transform:translateY(-2px);border-color:#3556b5}
+    .modalRoot{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:160;padding:18px}
+    .modalCard{width:min(760px,100%);max-height:88vh;overflow:auto;background:linear-gradient(180deg,#121933,#0f1630);border:1px solid var(--line);border-radius:20px;padding:18px}
+    .modalHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .modalGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .modalGrid.full .field{grid-column:1/-1}
     @media (max-width:1100px){.grid-2,.summary,.forecast-toolbar,.modalGrid{grid-template-columns:1fr}}
   </style>
 </head>
@@ -187,17 +173,9 @@
         <a class="menuLogoLink" href="https://secretos.zaurio.es" aria-label="Secretos">
           <img class="menuLogo confesion" src="https://miercoles.zaurio.es/assets/confesion.png" alt="Secretos">
         </a>
-        <div class="menuLogoLink active herramientasWrap" aria-label="Herramientas">
-          <a class="herramientasMainLink" href="https://herramientas.zaurio.es/" aria-label="Herramientas">
-            <img class="menuLogo herramientas" src="toolbox.png" alt="Herramientas">
-          </a>
-          <div class="herramientasDropdown" id="herramientasDropdown">
-            <a class="dropdownTool active" href="https://herramientas.zaurio.es/dinerozaurio/" aria-label="DineroZaurio">
-              <img class="menuLogo dinero" src="piggy.png" alt="DineroZaurio">
-              <span>DineroZaurio</span>
-            </a>
-          </div>
-        </div>
+        <a class="menuLogoLink active" href="#" aria-label="DineroZaurio">
+          <img class="menuLogo dinero" src="assets/dinerozaurio.png" alt="DineroZaurio">
+        </a>
       </div>
       <div class="menuRight"></div>
     </div>
@@ -205,12 +183,13 @@
 
   <div class="page">
     <section id="authGate" class="centerGate">
-      <img src="dinerozaurio.png" alt="DineroZaurio" class="logo-main" />
+      <img src="assets/dinerozaurio.png" alt="DineroZaurio" class="logo-main" />
       <h1>DineroZaurio</h1>
       <p class="muted">Accede con Google para continuar con tu planificación financiera.</p>
       <div class="btnRow" style="margin-top:18px">
         <button id="googleLoginBtn" class="btn primary full">Entrar con Google</button>
       </div>
+      <p id="authStatus" class="muted" style="margin-top:14px"></p>
     </section>
 
     <div id="splash" class="splash hidden">
@@ -390,7 +369,7 @@
             <span class="pill">Siguiente parte: modales y ajustes por mes.</span>
           </div>
         </div>
-        <div id="monthsGrid" class="months-grid"></div>
+        <div id="forecastWarnings"></div><div id="monthsGrid" class="months-grid"></div>
       </section>
     </section>
   </div>
@@ -401,9 +380,9 @@
     const STORAGE_KEY = 'dinerozaurio_step1_state';
 
     const CONFIG = {
-      supabaseUrl: 'https://adpjitccwwvlydrtvvqk.supabase.co',
-      supabaseAnonKey: 'sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk',
-      appBaseUrl: 'https://herramientas.zaurio.es/dinerozaurio/'
+      supabaseUrl: window.DINEROZAURIO_SUPABASE_URL || '',
+      supabaseAnonKey: window.DINEROZAURIO_SUPABASE_ANON_KEY || '',
+      appBaseUrl: window.location.origin + window.location.pathname
     };
 
     const state = {
@@ -414,6 +393,7 @@
       expenses: [],
       goals: [],
       debts: [],
+      monthAdjustments: {},
       forecast: { from: todayMonth(), to: addMonthsStr(todayMonth(), 12), goal1Id: '', goal2Id: '' }
     };
 
@@ -429,55 +409,42 @@
     function euros(n){ return Number(n||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2}); }
     function uid(prefix='id'){ return prefix + '_' + Math.random().toString(36).slice(2,10); }
 
-    function copy(obj){ return JSON.parse(JSON.stringify(obj)); }
-    function defaultDebt(){
-      return {
-        id: uid('debt'),
-        name: '',
-        debtKind: 'loan',
-        cardSubtype: 'revolving',
-        startMonth: state.defaultStartMonth,
-        monthlyPayment: 0,
-        remainingInstallments: 0,
-        lastMonth: '',
-        amount: 0,
-        currentDebt: 0,
-        currentPayment: 0,
-        tin: 20,
-        tae: 24,
-        periodicity: 'monthly'
-      };
+    function flowStateGet(){ return sessionStorage.getItem('dz_flow_state') || ''; }
+    function flowStateSet(v){ sessionStorage.setItem('dz_flow_state', v); }
+    function flowStateClear(){ sessionStorage.removeItem('dz_flow_state'); }
+        function monthDiff(a,b){
+      const [ay,am] = a.split('-').map(Number);
+      const [by,bm] = b.split('-').map(Number);
+      return (by-ay)*12 + (bm-am);
+    }
+    function monthsInRange(from,to){
+      const out=[]; let cur=from;
+      while(cur<=to){ out.push(cur); cur=addMonthsStr(cur,1); }
+      return out;
     }
     function debtDescription(d){
       if((d.debtKind||'loan') === 'loan'){
-        if(d.lastMonth) return `Préstamo · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`;
-        return `Préstamo · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
+        return d.lastMonth
+          ? `Préstamo · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
+          : `Préstamo · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
       }
       if((d.cardSubtype||'revolving') === 'revolving'){
         return `Tarjeta revolving · deuda ${euros(d.currentDebt||0)} · cuota ${euros(d.currentPayment||0)} · TIN ${Number(d.tin||0)}% · TAE ${Number(d.tae||0)}%`;
       }
       if(d.cardSubtype === 'pay_end_month'){
-        return `Tarjeta fin de mes · ${euros(d.amount||0)} ${d.periodicity==='one_time'?'puntual':'mensual'}`;
+        return `Tarjeta fin de mes · ${euros(d.amount||0)} · ${d.periodicity==='one_time'?'puntual':'mensual'}`;
       }
-      if(d.cardSubtype === 'installment'){
-        if(d.lastMonth) return `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`;
-        return `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
-      }
-      return 'Deuda';
-    }
-    function monthDiff(a,b){
-      const [ay,am] = a.split('-').map(Number);
-      const [by,bm] = b.split('-').map(Number);
-      return (by-ay)*12 + (bm-am);
+      return d.lastMonth
+        ? `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
+        : `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
     }
     function debtMonthlyAmount(d, ym){
       const start = d.startMonth || state.defaultStartMonth;
       if(ym < start) return 0;
       if((d.debtKind||'loan') === 'loan'){
-        const monthly = Number(d.monthlyPayment||0);
-        if(d.lastMonth) return ym <= d.lastMonth ? monthly : 0;
+        if(d.lastMonth) return ym <= d.lastMonth ? Number(d.monthlyPayment||0) : 0;
         const diff = monthDiff(start, ym);
-        return diff >= 0 && diff < Number(d.remainingInstallments||0) ? monthly : 0;
+        return diff >= 0 && diff < Number(d.remainingInstallments||0) ? Number(d.monthlyPayment||0) : 0;
       }
       if((d.cardSubtype||'revolving') === 'revolving'){
         const debt = Number(d.currentDebt||0);
@@ -499,31 +466,50 @@
         if(d.periodicity === 'one_time') return ym === start ? Number(d.amount||0) : 0;
         return ym >= start ? Number(d.amount||0) : 0;
       }
-      if(d.cardSubtype === 'installment'){
-        const monthly = Number(d.monthlyPayment||0);
-        if(d.lastMonth) return ym <= d.lastMonth ? monthly : 0;
-        const diff = monthDiff(start, ym);
-        return diff >= 0 && diff < Number(d.remainingInstallments||0) ? monthly : 0;
-      }
-      return 0;
+      if(d.lastMonth) return ym <= d.lastMonth ? Number(d.monthlyPayment||0) : 0;
+      const diff = monthDiff(start, ym);
+      return diff >= 0 && diff < Number(d.remainingInstallments||0) ? Number(d.monthlyPayment||0) : 0;
     }
-    function debtRecoveryMonth(d){
+    function debtRecoveryAmount(d, ym){
       const start = d.startMonth || state.defaultStartMonth;
+      let recoveryMonth = '';
+      let amount = 0;
       if((d.debtKind||'loan') === 'loan'){
-        if(d.lastMonth) return addMonthsStr(d.lastMonth, 1);
-        return addMonthsStr(start, Number(d.remainingInstallments||0));
+        recoveryMonth = d.lastMonth ? addMonthsStr(d.lastMonth,1) : addMonthsStr(start, Number(d.remainingInstallments||0));
+        amount = Number(d.monthlyPayment||0);
+      } else if(d.cardSubtype === 'installment'){
+        recoveryMonth = d.lastMonth ? addMonthsStr(d.lastMonth,1) : addMonthsStr(start, Number(d.remainingInstallments||0));
+        amount = Number(d.monthlyPayment||0);
+      } else if(d.cardSubtype === 'pay_end_month' && d.periodicity === 'one_time'){
+        recoveryMonth = addMonthsStr(start,1);
+        amount = Number(d.amount||0);
       }
-      if((d.cardSubtype||'revolving') === 'revolving'){
-        return '';
+      return recoveryMonth === ym ? amount : 0;
+    }
+    function goalMonthlyForMonth(goal, ym, availableBeforeTarget){
+      const start = goal.startMonth || state.defaultStartMonth;
+      const end = goal.endMonth || start;
+      if(ym < start || ym > end) return { amount:0, issue:null };
+      if((goal.goalType||'fixed') === 'fixed'){
+        return { amount:Number(goal.monthlyAmount||0), issue:null };
       }
-      if(d.cardSubtype === 'pay_end_month'){
-        return d.periodicity === 'one_time' ? addMonthsStr(start, 1) : '';
+      const months = monthsInRange(start, end);
+      const monthlyNeeded = months.length ? Number(goal.targetTotal||0) / months.length : 0;
+      if(availableBeforeTarget < monthlyNeeded){
+        return {
+          amount: monthlyNeeded,
+          issue: { month: ym, reason: `Margen insuficiente. Disponible ${euros(availableBeforeTarget)}, necesario ${euros(monthlyNeeded)}.` }
+        };
       }
-      if(d.cardSubtype === 'installment'){
-        if(d.lastMonth) return addMonthsStr(d.lastMonth, 1);
-        return addMonthsStr(start, Number(d.remainingInstallments||0));
-      }
-      return '';
+      return { amount: monthlyNeeded, issue:null };
+    }
+    function adjustmentForMonth(ym){
+      return state.monthAdjustments[ym] || {
+        extraIncomeName:'', extraIncomeAmount:0,
+        extraExpenseName:'', extraExpenseAmount:0,
+        extraSavingName:'', extraSavingAmount:0,
+        debtActionType:'', debtActionDebtId:'', debtActionAmount:0
+      };
     }
     function loadLocal(){
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -541,6 +527,7 @@
         expenses: state.expenses,
         goals: state.goals,
         debts: state.debts,
+        monthAdjustments: state.monthAdjustments,
         forecast: state.forecast
       }));
     }
@@ -554,38 +541,70 @@
     function makeGoalRow(item={}){
       return { id:item.id||uid('goal'), name:item.name||'', amount:Number(item.amount||0) };
     }
-    function makeDebtRow(item={}){ return { ...defaultDebt(), ...copy(item), id:item.id||uid('debt') }; }
+    function makeDebtRow(item={}){
+      return { id:item.id||uid('debt'), name:item.name||'', type:item.type||'loan', amount:Number(item.amount||0) };
+    }
 
     function renderWizardRows(list, mountId, kind){
       const mount = document.getElementById(mountId);
       mount.innerHTML = '';
       list.forEach((item) => {
         const row = document.createElement('div');
-        row.className = kind === 'debt' ? 'row row-5' : 'row';
-        row.innerHTML = kind === 'debt'
-          ? `<input class="input" placeholder="Entidad" value="${item.name||''}">
-             <select class="select"><option value="loan" ${item.type==='loan'?'selected':''}>Préstamo</option><option value="card" ${item.type==='card'?'selected':''}>Tarjeta</option></select>
-             <input class="input" type="number" step="0.01" placeholder="Monto €" value="${item.amount||''}">
-             <div></div>
-             <button class="btn danger">×</button>`
-          : `<input class="input" placeholder="Nombre" value="${item.name||''}">
-             <input class="input" type="number" step="0.01" placeholder="Monto €" value="${item.amount||''}">
-             <div></div>
-             <button class="btn danger">×</button>`;
-        const inputs = row.querySelectorAll('input,select');
         if(kind === 'debt'){
+          row.className = 'row row-5';
+          row.innerHTML = `
+            <input class="input" placeholder="Entidad" value="${item.name||''}">
+            <select class="select">
+              <option value="loan" ${(item.debtKind||'loan')==='loan'?'selected':''}>Préstamo</option>
+              <option value="card" ${(item.debtKind||'loan')==='card'?'selected':''}>Tarjeta</option>
+            </select>
+            <input class="input" type="number" step="0.01" placeholder="${(item.debtKind||'loan')==='loan'?'Cuota €':'Pago / monto €'}" value="${(item.debtKind||'loan')==='loan'?(item.monthlyPayment||''):(item.currentPayment||item.amount||'')}">
+            <button class="btn ghost">Detalles</button>
+            <button class="btn danger">×</button>`;
+          const inputs = row.querySelectorAll('input,select');
           inputs[0].addEventListener('input', e => item.name = e.target.value);
-          inputs[1].addEventListener('change', e => item.type = e.target.value);
-          inputs[2].addEventListener('input', e => item.amount = Number(e.target.value||0));
-        }else{
+          inputs[1].addEventListener('change', e => item.debtKind = e.target.value);
+          inputs[2].addEventListener('input', e => {
+            const v = Number(e.target.value||0);
+            if((item.debtKind||'loan') === 'loan') item.monthlyPayment = v;
+            else { item.currentPayment = v; item.amount = v; }
+          });
+          row.querySelector('.btn.ghost').addEventListener('click', () => openDebtEditor(item, true));
+        } else if(kind === 'goal'){
+          row.className = 'row row-5';
+          row.innerHTML = `
+            <input class="input" placeholder="Nombre" value="${item.name||''}">
+            <select class="select">
+              <option value="fixed" ${(item.goalType||'fixed')==='fixed'?'selected':''}>Ahorro fijo por mes</option>
+              <option value="target" ${(item.goalType||'fixed')==='target'?'selected':''}>Ahorro por objetivo</option>
+            </select>
+            <input class="input" type="number" step="0.01" placeholder="${(item.goalType||'fixed')==='fixed'?'Monto por mes €':'Objetivo total €'}" value="${(item.goalType||'fixed')==='fixed'?(item.monthlyAmount||''):(item.targetTotal||'')}">
+            <button class="btn ghost">Detalles</button>
+            <button class="btn danger">×</button>`;
+          const inputs = row.querySelectorAll('input,select');
+          inputs[0].addEventListener('input', e => item.name = e.target.value);
+          inputs[1].addEventListener('change', e => item.goalType = e.target.value);
+          inputs[2].addEventListener('input', e => {
+            const v = Number(e.target.value||0);
+            if((item.goalType||'fixed') === 'fixed') item.monthlyAmount = v;
+            else item.targetTotal = v;
+          });
+          row.querySelector('.btn.ghost').addEventListener('click', () => openGoalEditor(item, true));
+        } else {
+          row.className = 'row';
+          row.innerHTML = `
+            <input class="input" placeholder="Nombre" value="${item.name||''}">
+            <input class="input" type="number" step="0.01" placeholder="Monto €" value="${item.amount||''}">
+            <div></div>
+            <button class="btn danger">×</button>`;
+          const inputs = row.querySelectorAll('input');
           inputs[0].addEventListener('input', e => item.name = e.target.value);
           inputs[1].addEventListener('input', e => item.amount = Number(e.target.value||0));
         }
         row.querySelector('.btn.danger').addEventListener('click', () => {
-          const arr = kind==='income' ? state.incomes : kind==='expense' ? state.expenses : kind==='goal' ? state.goals : state.debts;
-          const idx = arr.findIndex(x => x.id === item.id);
-          if(idx >= 0) arr.splice(idx,1);
-          renderWizardRows(arr, mountId, kind);
+          const idx = list.findIndex(x => x.id === item.id);
+          if(idx >= 0) list.splice(idx,1);
+          renderWizardRows(list, mountId, kind);
           saveLocal();
         });
         mount.appendChild(row);
@@ -593,19 +612,23 @@
     }
 
 
+    function closeModal(){
+      const root = document.getElementById('modalRoot');
+      root.className = 'hidden';
+      root.innerHTML = '';
+    }
+
     function openSimpleEditor(kind, item){
-      const clone = copy(item);
-      const titleMap = { income:'Ingreso', expense:'Gasto', goal:'Objetivo de ahorro' };
-      document.getElementById('modalRoot').classList.remove('hidden');
-      document.getElementById('modalRoot').innerHTML = `<div class="modalBackdrop">
-        <div class="modalCard">
-          <div class="modalHead"><h3>${titleMap[kind] || 'Elemento'}</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
-          <div class="modalGrid">
-            <div class="field"><label>Nombre</label><input id="editName" class="input" value="${escapeHtml(clone.name||'')}"></div>
-            <div class="field"><label>Monto</label><input id="editAmount" class="input" type="number" step="0.01" value="${clone.amount||0}"></div>
-          </div>
-          <div class="btnRow" style="margin-top:16px"><button id="saveSimpleBtn" class="btn primary">Guardar</button></div>
+      const titleMap = { income:'Ingreso', expense:'Gasto' };
+      const root = document.getElementById('modalRoot');
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead"><h3>${titleMap[kind] || 'Elemento'}</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+        <div class="modalGrid">
+          <div class="field"><label>Nombre</label><input id="editName" class="input" value="${escapeHtml(item.name||'')}"></div>
+          <div class="field"><label>Monto</label><input id="editAmount" class="input" type="number" step="0.01" value="${Number(item.amount||0)}"></div>
         </div>
+        <div class="btnRow" style="margin-top:16px"><button id="saveSimpleBtn" class="btn primary">Guardar</button></div>
       </div>`;
       document.getElementById('closeModalBtn').onclick = closeModal;
       document.getElementById('saveSimpleBtn').onclick = () => {
@@ -618,32 +641,73 @@
       };
     }
 
-    function openDebtEditor(item, fromWizard=false){
-      const clone = copy(item);
-      document.getElementById('modalRoot').classList.remove('hidden');
-      document.getElementById('modalRoot').innerHTML = `<div class="modalBackdrop">
-        <div class="modalCard">
-          <div class="modalHead"><h3>Configurar deuda</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
-          <div class="modalGrid">
-            <div class="field"><label>Nombre / entidad</label><input id="debtName" class="input" value="${escapeHtml(clone.name||'')}"></div>
-            <div class="field"><label>Empieza en</label><input id="debtStart" class="input" type="month" value="${clone.startMonth||state.defaultStartMonth}"></div>
-            <div class="field"><label>Tipo</label>
-              <select id="debtKind" class="select">
-                <option value="loan" ${clone.debtKind==='loan'?'selected':''}>Préstamo</option>
-                <option value="card" ${clone.debtKind==='card'?'selected':''}>Tarjeta</option>
-              </select>
-            </div>
-            <div class="field"><label>Subtipo</label>
-              <select id="debtSubtype" class="select">
-                <option value="revolving" ${(clone.cardSubtype||'revolving')==='revolving'?'selected':''}>Revolving</option>
-                <option value="pay_end_month" ${(clone.cardSubtype||'revolving')==='pay_end_month'?'selected':''}>Paga fin de mes</option>
-                <option value="installment" ${(clone.cardSubtype||'revolving')==='installment'?'selected':''}>Compra aplazada</option>
-              </select>
-            </div>
+    function openGoalEditor(item, fromWizard){
+      const root = document.getElementById('modalRoot');
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead"><h3>Configurar ahorro</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+        <div class="modalGrid">
+          <div class="field"><label>Nombre</label><input id="goalName" class="input" value="${escapeHtml(item.name||'')}"></div>
+          <div class="field"><label>Tipo</label>
+            <select id="goalType" class="select">
+              <option value="fixed" ${(item.goalType||'fixed')==='fixed'?'selected':''}>Ahorro fijo por mes</option>
+              <option value="target" ${(item.goalType||'fixed')==='target'?'selected':''}>Ahorro por objetivo</option>
+            </select>
           </div>
-          <div id="debtDynamicFields" style="margin-top:14px"></div>
-          <div class="btnRow" style="margin-top:16px"><button id="saveDebtBtn" class="btn primary">Guardar deuda</button></div>
+          <div class="field"><label id="goalAmountLabel">${(item.goalType||'fixed')==='fixed'?'Monto por mes':'Objetivo total'}</label><input id="goalAmount" class="input" type="number" step="0.01" value="${(item.goalType||'fixed')==='fixed'?Number(item.monthlyAmount||0):Number(item.targetTotal||0)}"></div>
+          <div class="field"><label>Desde</label><input id="goalStart" class="input" type="month" value="${item.startMonth||state.defaultStartMonth}"></div>
+          <div class="field"><label>Hasta</label><input id="goalEnd" class="input" type="month" value="${item.endMonth||addMonthsStr(state.defaultStartMonth,11)}"></div>
         </div>
+        <div class="btnRow" style="margin-top:16px"><button id="saveGoalBtn" class="btn primary">Guardar ahorro</button></div>
+      </div>`;
+      document.getElementById('goalType').addEventListener('change', (e) => {
+        document.getElementById('goalAmountLabel').textContent = e.target.value === 'fixed' ? 'Monto por mes' : 'Objetivo total';
+      });
+      document.getElementById('closeModalBtn').onclick = closeModal;
+      document.getElementById('saveGoalBtn').onclick = () => {
+        item.name = document.getElementById('goalName').value.trim();
+        item.goalType = document.getElementById('goalType').value;
+        item.startMonth = document.getElementById('goalStart').value || state.defaultStartMonth;
+        item.endMonth = document.getElementById('goalEnd').value || addMonthsStr(state.defaultStartMonth,11);
+        if(item.goalType === 'fixed'){
+          item.monthlyAmount = Number(document.getElementById('goalAmount').value||0);
+          item.targetTotal = 0;
+        } else {
+          item.targetTotal = Number(document.getElementById('goalAmount').value||0);
+          item.monthlyAmount = 0;
+        }
+        closeModal();
+        if(fromWizard) renderWizardRows(state.goals, 'wizardGoalList', 'goal');
+        renderManualLists();
+        renderForecast();
+        saveLocal();
+      };
+    }
+
+    function openDebtEditor(item, fromWizard){
+      const root = document.getElementById('modalRoot');
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead"><h3>Configurar deuda</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+        <div class="modalGrid">
+          <div class="field"><label>Nombre / entidad</label><input id="debtName" class="input" value="${escapeHtml(item.name||'')}"></div>
+          <div class="field"><label>Empieza en</label><input id="debtStart" class="input" type="month" value="${item.startMonth||state.defaultStartMonth}"></div>
+          <div class="field"><label>Tipo</label>
+            <select id="debtKind" class="select">
+              <option value="loan" ${(item.debtKind||'loan')==='loan'?'selected':''}>Préstamo</option>
+              <option value="card" ${(item.debtKind||'loan')==='card'?'selected':''}>Tarjeta</option>
+            </select>
+          </div>
+          <div class="field"><label>Subtipo de tarjeta</label>
+            <select id="debtSubtype" class="select">
+              <option value="revolving" ${(item.cardSubtype||'revolving')==='revolving'?'selected':''}>Revolving</option>
+              <option value="pay_end_month" ${(item.cardSubtype||'revolving')==='pay_end_month'?'selected':''}>Paga fin de mes</option>
+              <option value="installment" ${(item.cardSubtype||'revolving')==='installment'?'selected':''}>Compra aplazada</option>
+            </select>
+          </div>
+        </div>
+        <div id="debtDynamicFields" style="margin-top:14px"></div>
+        <div class="btnRow" style="margin-top:16px"><button id="saveDebtBtn" class="btn primary">Guardar deuda</button></div>
       </div>`;
 
       function renderDynamic(){
@@ -652,32 +716,32 @@
         const wrap = document.getElementById('debtDynamicFields');
         if(debtKind === 'loan'){
           wrap.innerHTML = `<div class="modalGrid">
-            <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${clone.monthlyPayment||0}"></div>
-            <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${clone.remainingInstallments||0}"></div>
-            <div class="field" style="grid-column:1/-1"><label>o última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${clone.lastMonth||''}"></div>
+            <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${Number(item.monthlyPayment||0)}"></div>
+            <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${Number(item.remainingInstallments||0)}"></div>
+            <div class="field"><label>Última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${item.lastMonth||''}"></div>
           </div>`;
         } else if(subtype === 'revolving'){
           wrap.innerHTML = `<div class="modalGrid">
-            <div class="field"><label>Deuda actual</label><input id="dCurrentDebt" class="input" type="number" step="0.01" value="${clone.currentDebt||0}"></div>
-            <div class="field"><label>Cuota actual</label><input id="dCurrentPayment" class="input" type="number" step="0.01" value="${clone.currentPayment||0}"></div>
-            <div class="field"><label>TIN %</label><input id="dTin" class="input" type="number" step="0.01" value="${clone.tin||20}"></div>
-            <div class="field"><label>TAE %</label><input id="dTae" class="input" type="number" step="0.01" value="${clone.tae||24}"></div>
+            <div class="field"><label>Deuda actual</label><input id="dCurrentDebt" class="input" type="number" step="0.01" value="${Number(item.currentDebt||0)}"></div>
+            <div class="field"><label>Cuota actual</label><input id="dCurrentPayment" class="input" type="number" step="0.01" value="${Number(item.currentPayment||0)}"></div>
+            <div class="field"><label>TIN %</label><input id="dTin" class="input" type="number" step="0.01" value="${Number(item.tin||20)}"></div>
+            <div class="field"><label>TAE %</label><input id="dTae" class="input" type="number" step="0.01" value="${Number(item.tae||24)}"></div>
           </div>`;
         } else if(subtype === 'pay_end_month'){
           wrap.innerHTML = `<div class="modalGrid">
-            <div class="field"><label>Monto</label><input id="dAmount" class="input" type="number" step="0.01" value="${clone.amount||0}"></div>
+            <div class="field"><label>Monto</label><input id="dAmount" class="input" type="number" step="0.01" value="${Number(item.amount||0)}"></div>
             <div class="field"><label>Periodicidad</label>
               <select id="dPeriodicity" class="select">
-                <option value="monthly" ${clone.periodicity==='monthly'?'selected':''}>Mensual</option>
-                <option value="one_time" ${clone.periodicity==='one_time'?'selected':''}>Puntual</option>
+                <option value="monthly" ${item.periodicity==='monthly'?'selected':''}>Mensual</option>
+                <option value="one_time" ${item.periodicity==='one_time'?'selected':''}>Puntual</option>
               </select>
             </div>
           </div>`;
         } else {
           wrap.innerHTML = `<div class="modalGrid">
-            <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${clone.monthlyPayment||0}"></div>
-            <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${clone.remainingInstallments||0}"></div>
-            <div class="field" style="grid-column:1/-1"><label>o última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${clone.lastMonth||''}"></div>
+            <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${Number(item.monthlyPayment||0)}"></div>
+            <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${Number(item.remainingInstallments||0)}"></div>
+            <div class="field"><label>Última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${item.lastMonth||''}"></div>
           </div>`;
         }
       }
@@ -701,7 +765,6 @@
         item.tin = 20;
         item.tae = 24;
         item.periodicity = 'monthly';
-
         if(item.debtKind === 'loan'){
           item.monthlyPayment = Number(document.getElementById('dMonthly').value||0);
           item.remainingInstallments = Number(document.getElementById('dRemaining').value||0);
@@ -720,19 +783,58 @@
           item.lastMonth = document.getElementById('dLastMonth').value || '';
         }
         closeModal();
-        if(fromWizard){
-          renderWizardRows(state.debts, 'wizardDebtList', 'debt');
-        }
+        if(fromWizard) renderWizardRows(state.debts, 'wizardDebtList', 'debt');
         renderManualLists();
         renderForecast();
         saveLocal();
       };
     }
 
-    function closeModal(){
+    function openMonthModal(ym){
+      const adj = adjustmentForMonth(ym);
+      const debtOptions = ['<option value="">— ninguna —</option>'].concat(
+        state.debts.map(d => `<option value="${d.id}" ${adj.debtActionDebtId===d.id?'selected':''}>${escapeHtml(d.name)}</option>`)
+      ).join('');
       const root = document.getElementById('modalRoot');
-      root.classList.add('hidden');
-      root.innerHTML = '';
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead"><h3>Ajustes de ${escapeHtml(ym)}</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+        <div class="modalGrid">
+          <div class="field"><label>Ingreso puntual nombre</label><input id="adjIncomeName" class="input" value="${escapeHtml(adj.extraIncomeName||'')}"></div>
+          <div class="field"><label>Ingreso puntual monto</label><input id="adjIncomeAmount" class="input" type="number" step="0.01" value="${Number(adj.extraIncomeAmount||0)}"></div>
+          <div class="field"><label>Gasto puntual nombre</label><input id="adjExpenseName" class="input" value="${escapeHtml(adj.extraExpenseName||'')}"></div>
+          <div class="field"><label>Gasto puntual monto</label><input id="adjExpenseAmount" class="input" type="number" step="0.01" value="${Number(adj.extraExpenseAmount||0)}"></div>
+          <div class="field"><label>Ahorro puntual nombre</label><input id="adjSavingName" class="input" value="${escapeHtml(adj.extraSavingName||'')}"></div>
+          <div class="field"><label>Ahorro puntual monto</label><input id="adjSavingAmount" class="input" type="number" step="0.01" value="${Number(adj.extraSavingAmount||0)}"></div>
+          <div class="field"><label>Deuda</label><select id="adjDebtId" class="select">${debtOptions}</select></div>
+          <div class="field"><label>Acción deuda</label>
+            <select id="adjDebtType" class="select">
+              <option value="" ${!adj.debtActionType?'selected':''}>— ninguna —</option>
+              <option value="skip" ${adj.debtActionType==='skip'?'selected':''}>Aplazar cuota</option>
+              <option value="custom" ${adj.debtActionType==='custom'?'selected':''}>Monto personalizado</option>
+            </select>
+          </div>
+          <div class="field"><label>Monto acción deuda</label><input id="adjDebtAmount" class="input" type="number" step="0.01" value="${Number(adj.debtActionAmount||0)}"></div>
+        </div>
+        <div class="btnRow" style="margin-top:16px"><button id="saveMonthAdjBtn" class="btn primary">Guardar ajustes</button></div>
+      </div>`;
+      document.getElementById('closeModalBtn').onclick = closeModal;
+      document.getElementById('saveMonthAdjBtn').onclick = () => {
+        state.monthAdjustments[ym] = {
+          extraIncomeName: document.getElementById('adjIncomeName').value.trim(),
+          extraIncomeAmount: Number(document.getElementById('adjIncomeAmount').value||0),
+          extraExpenseName: document.getElementById('adjExpenseName').value.trim(),
+          extraExpenseAmount: Number(document.getElementById('adjExpenseAmount').value||0),
+          extraSavingName: document.getElementById('adjSavingName').value.trim(),
+          extraSavingAmount: Number(document.getElementById('adjSavingAmount').value||0),
+          debtActionDebtId: document.getElementById('adjDebtId').value,
+          debtActionType: document.getElementById('adjDebtType').value,
+          debtActionAmount: Number(document.getElementById('adjDebtAmount').value||0)
+        };
+        closeModal();
+        renderForecast();
+        saveLocal();
+      };
     }
 
 
@@ -751,13 +853,27 @@
 
     function itemCardHtml(item, type){
       let desc = '';
+      let money = Number(item.amount||0);
       if(type==='income') desc = 'Ingreso base';
       if(type==='expense') desc = 'Gasto base';
-      if(type==='goal') desc = 'Objetivo de ahorro';
-      if(type==='debt') desc = debtDescription(item);
+      if(type==='goal'){
+        if((item.goalType||'fixed') === 'fixed'){
+          desc = `Ahorro fijo · ${item.startMonth||state.defaultStartMonth} → ${item.endMonth||'sin fin'}`;
+          money = Number(item.monthlyAmount||0);
+        } else {
+          desc = `Objetivo total · ${item.startMonth||state.defaultStartMonth} → ${item.endMonth||'sin fin'}`;
+          money = Number(item.targetTotal||0);
+        }
+      }
+      if(type==='debt'){
+        desc = debtDescription(item);
+        money = (item.debtKind||'loan') === 'loan' || item.cardSubtype === 'installment'
+          ? Number(item.monthlyPayment||0)
+          : Number(item.currentPayment||item.amount||0);
+      }
       return `<div class="item">
         <div class="meta"><div class="name">${escapeHtml(item.name||'Sin nombre')}</div><div class="desc">${escapeHtml(desc)}</div></div>
-        <div class="money">${euros(type==='debt' ? (item.debtKind==='loan' || item.cardSubtype==='installment' ? (item.monthlyPayment||0) : (item.currentPayment||item.amount||0)) : (item.amount||0))}</div>
+        <div class="money">${euros(money)}</div>
         <div class="inline-actions">
           <button class="btn ghost" data-edit="${type}" data-id="${item.id}">Editar</button>
           <button class="btn danger" data-del="${type}" data-id="${item.id}">Eliminar</button>
@@ -782,7 +898,8 @@
             btn.addEventListener('click', () => {
               const item = arr.find(x => x.id === btn.dataset.id);
               if(!item) return;
-              if(type === 'debt') openDebtEditor(item, false);
+              if(type === 'goal') openGoalEditor(item, false);
+              else if(type === 'debt') openDebtEditor(item, false);
               else openSimpleEditor(type, item);
             });
           });
@@ -800,7 +917,11 @@
       });
 
       const opts = ['<option value="">— ninguno —</option>'].concat(
-        state.goals.map(g => `<option value="${g.id}">${escapeHtml(g.name)} · ${euros(g.amount||0)}</option>`)
+        state.goals.map(g => {
+          const amount = (g.goalType||'fixed') === 'fixed' ? Number(g.monthlyAmount||0) : Number(g.targetTotal||0);
+          const mode = (g.goalType||'fixed') === 'fixed' ? 'fijo' : 'objetivo';
+          return `<option value="${g.id}">${escapeHtml(g.name)} · ${mode} · ${euros(amount)}</option>`;
+        })
       );
       document.getElementById('forecastGoal1').innerHTML = opts.join('');
       document.getElementById('forecastGoal2').innerHTML = opts.join('');
@@ -818,37 +939,56 @@
       const to = document.getElementById('forecastTo').value || addMonthsStr(from, 12);
       state.forecast.from = from;
       state.forecast.to = to;
-      const months = [];
-      let cur = from;
-      while(cur <= to){ months.push(cur); cur = addMonthsStr(cur,1); }
+      state.forecast.goal1Id = document.getElementById('forecastGoal1').value || '';
+      state.forecast.goal2Id = document.getElementById('forecastGoal2').value || '';
 
-      const goal1Id = document.getElementById('forecastGoal1').value || '';
-      const goal2Id = document.getElementById('forecastGoal2').value || '';
-      state.forecast.goal1Id = goal1Id;
-      state.forecast.goal2Id = goal2Id;
-
-      const income = state.incomes.reduce((a,b)=>a+Number(b.amount||0),0);
-      const expense = state.expenses.reduce((a,b)=>a+Number(b.amount||0),0);
+      const months = monthsInRange(from, to);
+      const incomeBase = state.incomes.reduce((a,b)=>a+Number(b.amount||0),0);
+      const expenseBase = state.expenses.reduce((a,b)=>a+Number(b.amount||0),0);
       let reserve = Number(state.reserveInitial||0);
+      const warnings = [];
 
       document.getElementById('monthsGrid').innerHTML = months.map(m => {
-        const debt = state.debts.reduce((a,b)=>a+debtMonthlyAmount(b,m),0);
-        const recovered = state.debts.reduce((a,b)=>{
-          const recMonth = debtRecoveryMonth(b);
-          let amount = 0;
-          if(recMonth && recMonth === m){
-            if((b.debtKind||'loan') === 'loan' || b.cardSubtype === 'installment') amount = Number(b.monthlyPayment||0);
-            else if(b.cardSubtype === 'pay_end_month') amount = Number(b.amount||0);
+        const adj = adjustmentForMonth(m);
+        let debt = state.debts.reduce((a,b)=>a+debtMonthlyAmount(b,m),0);
+        const recovered = state.debts.reduce((a,b)=>a+debtRecoveryAmount(b,m),0);
+
+        if(adj.debtActionDebtId && adj.debtActionType){
+          const debtItem = state.debts.find(d => d.id === adj.debtActionDebtId);
+          if(debtItem){
+            const normal = debtMonthlyAmount(debtItem, m);
+            if(adj.debtActionType === 'skip') debt -= normal;
+            if(adj.debtActionType === 'custom') debt += Number(adj.debtActionAmount||0) - normal;
           }
-          return a + amount;
-        },0);
-        const goal1 = state.goals.find(g => g.id === goal1Id);
-        const goal2 = state.goals.find(g => g.id === goal2Id);
-        const save1 = goal1 ? Number(goal1.amount||0) : 0;
-        const save2 = goal2 ? Number(goal2.amount||0) : 0;
-        const net = income - expense - debt - save1 - save2;
+        }
+
+        const extraIncome = Number(adj.extraIncomeAmount||0);
+        const extraExpense = Number(adj.extraExpenseAmount||0);
+        const extraSaving = Number(adj.extraSavingAmount||0);
+
+        const income = incomeBase + extraIncome;
+        const expense = expenseBase + extraExpense;
+
+        const goal1 = state.goals.find(g => g.id === state.forecast.goal1Id);
+        const goal2 = state.goals.find(g => g.id === state.forecast.goal2Id);
+        let save1 = 0, save2 = 0;
+
+        const availableBeforeTargets = income - expense - debt;
+        if(goal1){
+          const r1 = goalMonthlyForMonth(goal1, m, availableBeforeTargets);
+          save1 = r1.amount;
+          if(r1.issue) warnings.push({ goal: goal1.name || 'Ahorro 1', month: m, reason: r1.issue.reason });
+        }
+        if(goal2){
+          const r2 = goalMonthlyForMonth(goal2, m, Math.max(0, availableBeforeTargets - save1));
+          save2 = r2.amount;
+          if(r2.issue) warnings.push({ goal: goal2.name || 'Ahorro 2', month: m, reason: r2.issue.reason });
+        }
+
+        const net = income - expense - debt - save1 - save2 - extraSaving;
         reserve += net;
-        return `<div class="month">
+
+        return `<div class="month" data-month="${m}">
           <h4>${escapeHtml(m)}</h4>
           <div class="rows">
             <div class="lab">Ingreso</div><div>${euros(income)}</div>
@@ -856,12 +996,31 @@
             <div class="lab">Deuda</div><div>${euros(debt)}</div>
             <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
             <div class="lab">Ahorro 1</div><div>${euros(save1)}</div>
-            <div class="lab">Ahorro 2</div><div>${euros(save2)}</div>
+            <div class="lab">Ahorro 2</div><div>${euros(save2 + extraSaving)}</div>
             <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
             <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
           </div>
         </div>`;
       }).join('');
+
+      const warnEl = document.getElementById('forecastWarnings');
+      if(warnings.length){
+        warnEl.innerHTML = `<div class="warnBox">
+          <h4>Hay objetivos de ahorro con meses conflictivos</h4>
+          <div class="muted">La previsión los ha aplicado igualmente para que puedas ajustar manualmente.</div>
+          <details style="margin-top:10px">
+            <summary>Ver detalle</summary>
+            <ul class="warnDetails">${warnings.map(w => `<li><strong>${escapeHtml(w.goal)}</strong> · ${escapeHtml(w.month)} · ${escapeHtml(w.reason)}</li>`).join('')}</ul>
+          </details>
+        </div>`;
+      } else {
+        warnEl.innerHTML = '';
+      }
+
+      document.querySelectorAll('.month').forEach(card => {
+        card.addEventListener('click', () => openMonthModal(card.dataset.month));
+      });
+
       saveLocal();
     }
 
@@ -901,14 +1060,19 @@
         state.session = session;
         if(session){
           hide('authGate');
-          await runPostLoginFlow(session);
+          await runPostLoginFlow(session, true);
         }
         client.auth.onAuthStateChange(async (_event, sessionNow) => {
+          if(sessionNow && state.session && state.session.user && sessionNow.user && state.session.user.id === sessionNow.user.id && flowStateGet()){
+            state.session = sessionNow;
+            return;
+          }
           state.session = sessionNow;
           if(sessionNow){
             hide('authGate');
-            await runPostLoginFlow(sessionNow);
+            await runPostLoginFlow(sessionNow, false);
           }else{
+            flowStateClear();
             show('authGate'); hide('choiceGate'); hide('wizard'); hide('appShell');
           }
         });
@@ -919,16 +1083,32 @@
       renderForecast();
     }
 
-    async function runPostLoginFlow(session){
+    async function runPostLoginFlow(session, initialLoad){
+      const currentFlow = flowStateGet();
+      if(currentFlow === 'app'){
+        hide('choiceGate'); hide('wizard'); show('appShell');
+        renderManualLists(); renderForecast();
+        return;
+      }
+      if(currentFlow === 'wizard'){
+        hide('choiceGate'); show('wizard'); hide('appShell');
+        return;
+      }
+
       const meta = session?.user?.user_metadata || {};
       const fullName = meta.full_name || meta.name || session.user.email || 'Zaurio';
       const firstName = fullName.split(' ')[0] || fullName;
-      document.getElementById('welcomeTitle').textContent = `Bienvenid@ ${firstName}`;
-      show('splash');
-      await new Promise(r => setTimeout(r, 1200));
-      hide('splash');
+
+      if(!initialLoad || !currentFlow){
+        document.getElementById('welcomeTitle').textContent = `Bienvenid@ ${firstName}`;
+        show('splash');
+        await new Promise(r => setTimeout(r, 1200));
+        hide('splash');
+      }
+
       const hasData = state.incomes.length || state.expenses.length || state.goals.length || state.debts.length;
-      if(hasData) show('choiceGate'); else show('wizard');
+      if(hasData){ show('choiceGate'); flowStateSet('choice'); }
+      else { show('wizard'); flowStateSet('wizard'); }
       hide('appShell');
     }
 
@@ -942,31 +1122,44 @@
       });
 
       document.getElementById('useSavedBtn').addEventListener('click', () => {
+        flowStateSet('app');
         hide('choiceGate'); show('appShell'); renderManualLists(); renderForecast();
       });
 
       document.getElementById('startFreshBtn').addEventListener('click', () => {
-        state.incomes = []; state.expenses = []; state.goals = []; state.debts = [];
+        state.incomes = [];
+        state.expenses = [];
+        state.goals = [];
+        state.debts = [];
+        state.monthAdjustments = {};
+        if(!state.incomes.length) state.incomes.push(makeIncomeRow());
+        if(!state.expenses.length) state.expenses.push(makeExpenseRow());
+        if(!state.debts.length) state.debts.push(makeDebtRow());
+        if(!state.goals.length) state.goals.push(makeGoalRow());
         saveLocal();
         renderWizardRows(state.incomes, 'wizardIncomeList', 'income');
         renderWizardRows(state.expenses, 'wizardExpenseList', 'expense');
         renderWizardRows(state.debts, 'wizardDebtList', 'debt');
         renderWizardRows(state.goals, 'wizardGoalList', 'goal');
+        flowStateSet('wizard');
         hide('choiceGate'); show('wizard'); hide('appShell');
         showWizardStep(0);
       });
 
       document.getElementById('cancelWizard').addEventListener('click', () => {
+        flowStateSet('app');
         hide('wizard'); show('appShell'); renderManualLists(); renderForecast();
       });
 
       document.getElementById('resetToWizardBtn').addEventListener('click', () => {
+        flowStateSet('wizard');
         hide('appShell'); show('wizard'); showWizardStep(0);
       });
 
       document.getElementById('logoutBtn').addEventListener('click', async () => {
         if(window.dzSupabase){ await window.dzSupabase.auth.signOut(); }
         state.session = null;
+        flowStateClear();
         hide('choiceGate'); hide('wizard'); hide('appShell'); show('authGate');
       });
 
@@ -985,8 +1178,10 @@
         openDebtEditor(item, true);
       });
       document.getElementById('addWizardGoal').addEventListener('click', () => {
-        state.goals.push(makeGoalRow());
+        const item = makeGoalRow();
+        state.goals.push(item);
         renderWizardRows(state.goals, 'wizardGoalList', 'goal');
+        openGoalEditor(item, true);
       });
 
       document.getElementById('wizardNext0').addEventListener('click', () => { saveLocal(); showWizardStep(1); });
@@ -997,6 +1192,7 @@
       document.getElementById('wizardPrev3').addEventListener('click', () => showWizardStep(2));
       document.getElementById('finishWizard').addEventListener('click', () => {
         saveLocal();
+        flowStateSet('app');
         hide('wizard');
         show('appShell');
         renderManualLists();
@@ -1022,8 +1218,10 @@
         renderManualLists(); saveLocal();
       });
       document.getElementById('addGoalBtn').addEventListener('click', () => {
-        state.goals.push(makeGoalRow({ name:'Nuevo objetivo' }));
+        const item = makeGoalRow({ name:'Nuevo objetivo' });
+        state.goals.push(item);
         renderManualLists(); saveLocal();
+        openGoalEditor(item, false);
       });
       document.getElementById('addDebtBtn').addEventListener('click', () => {
         const item = makeDebtRow({ name:'Nueva deuda' });
@@ -1044,7 +1242,6 @@
       document.getElementById('forecastGoal1').addEventListener('change', renderForecast);
       document.getElementById('forecastGoal2').addEventListener('change', renderForecast);
 
-
       const herramientasWrap = document.querySelector('.herramientasWrap');
       const herramientasMainLink = document.querySelector('.herramientasMainLink');
       if(herramientasWrap && herramientasMainLink){
@@ -1054,9 +1251,8 @@
             herramientasWrap.classList.toggle('open');
           }
         });
-        document.addEventListener('click', (e) => {
-          if(!herramientasWrap.contains(e.target)) herramientasWrap.classList.remove('open');
-        });
+        herramientasWrap.addEventListener('mouseenter', () => { if(window.innerWidth > 900) herramientasWrap.classList.add('open'); });
+        herramientasWrap.addEventListener('mouseleave', () => { if(window.innerWidth > 900) herramientasWrap.classList.remove('open'); });
       }
 
       document.querySelectorAll('.tab').forEach(tab => {
