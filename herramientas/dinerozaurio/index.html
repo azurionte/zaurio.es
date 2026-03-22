@@ -773,9 +773,9 @@
           plan_id: planId,
           name: it.name || 'Ingreso',
           amount: Number(it.amount || 0),
-          periodicity: 'monthly',
-          start_month: state.defaultStartMonth,
-          end_month: null
+          periodicity: it.periodicity || 'monthly',
+          start_month: it.startMonth || state.defaultStartMonth,
+          end_month: it.endMonth || null
         }));
         const r = await window.dzSupabase.from('income_items').insert(rows);
         if(r.error) throw r.error;
@@ -787,10 +787,10 @@
           plan_id: planId,
           name: it.name || 'Gasto',
           amount: Number(it.amount || 0),
-          kind: 'fixed',
-          periodicity: 'monthly',
-          start_month: state.defaultStartMonth,
-          end_month: null
+          kind: it.kind || 'fixed',
+          periodicity: it.periodicity || 'monthly',
+          start_month: it.startMonth || state.defaultStartMonth,
+          end_month: it.endMonth || null
         }));
         const r = await window.dzSupabase.from('expense_items').insert(rows);
         if(r.error) throw r.error;
@@ -875,10 +875,21 @@
       if(adjRes.error) throw adjRes.error;
 
       state.incomes = (incomeRes.data || []).map(it => makeIncomeRow({
-        id: ensureUuid(it.id), name: it.name, amount: Number(it.amount || 0)
+        id: ensureUuid(it.id),
+        name: it.name,
+        amount: Number(it.amount || 0),
+        periodicity: it.periodicity || 'monthly',
+        startMonth: it.start_month || state.defaultStartMonth,
+        endMonth: it.end_month || null
       }));
       state.expenses = (expenseRes.data || []).map(it => makeExpenseRow({
-        id: ensureUuid(it.id), name: it.name, amount: Number(it.amount || 0)
+        id: ensureUuid(it.id),
+        name: it.name,
+        amount: Number(it.amount || 0),
+        kind: it.kind || 'fixed',
+        periodicity: it.periodicity || 'monthly',
+        startMonth: it.start_month || state.defaultStartMonth,
+        endMonth: it.end_month || null
       }));
       state.debts = (debtRes.data || []).map(it => makeDebtRow({
         id: ensureUuid(it.id),
@@ -952,16 +963,54 @@
 
 
     function makeIncomeRow(item={}){
-      return { id:item.id||uid('inc'), name:item.name||'', amount:Number(item.amount||0) };
+      return {
+        id: ensureUuid(item.id || uid()),
+        name: item.name || '',
+        amount: Number(item.amount || 0),
+        periodicity: item.periodicity || 'monthly',
+        startMonth: item.startMonth || state.defaultStartMonth,
+        endMonth: item.endMonth || null
+      };
     }
     function makeExpenseRow(item={}){
-      return { id:item.id||uid('exp'), name:item.name||'', amount:Number(item.amount||0) };
+      return {
+        id: ensureUuid(item.id || uid()),
+        name: item.name || '',
+        amount: Number(item.amount || 0),
+        kind: item.kind || 'fixed',
+        periodicity: item.periodicity || 'monthly',
+        startMonth: item.startMonth || state.defaultStartMonth,
+        endMonth: item.endMonth || null
+      };
     }
     function makeGoalRow(item={}){
-      return { id:item.id||uid('goal'), name:item.name||'', amount:Number(item.amount||0) };
+      return {
+        id: ensureUuid(item.id || uid()),
+        name: item.name || '',
+        goalType: item.goalType || 'fixed',
+        monthlyAmount: Number(item.monthlyAmount || item.amount || 0),
+        targetTotal: Number(item.targetTotal || 0),
+        startMonth: item.startMonth || state.defaultStartMonth,
+        endMonth: item.endMonth || null
+      };
     }
     function makeDebtRow(item={}){
-      return { id:item.id||uid('debt'), name:item.name||'', type:item.type||'loan', amount:Number(item.amount||0) };
+      return {
+        id: ensureUuid(item.id || uid()),
+        name: item.name || '',
+        debtKind: item.debtKind || item.type || 'loan',
+        cardSubtype: item.cardSubtype || 'revolving',
+        amount: Number(item.amount || 0),
+        monthlyPayment: Number(item.monthlyPayment || 0),
+        remainingInstallments: Number(item.remainingInstallments || 0),
+        lastMonth: item.lastMonth || '',
+        startMonth: item.startMonth || state.defaultStartMonth,
+        currentDebt: Number(item.currentDebt || 0),
+        currentPayment: Number(item.currentPayment || 0),
+        tin: Number(item.tin || 0),
+        tae: Number(item.tae || 0),
+        periodicity: item.periodicity || 'monthly'
+      };
     }
 
     function renderWizardRows(list, mountId, kind){
@@ -1035,25 +1084,47 @@
     function goalMonthlyRaw(goal){
       return (goal.goalType||'fixed') === 'fixed' ? Number(goal.monthlyAmount||0) : 0;
     }
+
+    function periodicityApplies(periodicity, startMonth, endMonth, ym){
+      if(startMonth && ym < startMonth) return false;
+      if(endMonth && ym > endMonth) return false;
+      const diff = monthDiff(startMonth || ym, ym);
+      switch(periodicity || 'monthly'){
+        case 'monthly': return true;
+        case 'bimonthly': return diff % 2 === 0;
+        case 'quarterly': return diff % 3 === 0;
+        case 'yearly': return diff % 12 === 0;
+        case 'one_time': return ym === (startMonth || ym);
+        default: return true;
+      }
+    }
+    function recurringItemMonthAmount(item, ym){
+      if(!periodicityApplies(item.periodicity || 'monthly', item.startMonth || state.defaultStartMonth, item.endMonth || null, ym)) return 0;
+      return Number(item.amount || 0);
+    }
+
     function monthlyActiveItems(ym){
       const adj = adjustmentForMonth(ym);
-      const incomes = state.incomes.map(it => ({
-        ...it,
-        monthAmount: adj.incomeOverrides[it.id] !== undefined ? Number(adj.incomeOverrides[it.id]) : Number(it.amount||0)
-      })).filter(it => it.monthAmount !== 0);
-      const expenses = state.expenses.map(it => ({
-        ...it,
-        monthAmount: adj.expenseOverrides[it.id] !== undefined ? Number(adj.expenseOverrides[it.id]) : Number(it.amount||0)
-      })).filter(it => it.monthAmount !== 0);
+      const incomes = state.incomes.map(it => {
+        const base = recurringItemMonthAmount(it, ym);
+        return {
+          ...it,
+          monthAmount: adj.incomeOverrides[it.id] !== undefined ? Number(adj.incomeOverrides[it.id]) : base
+        };
+      }).filter(it => it.monthAmount !== 0);
+      const expenses = state.expenses.map(it => {
+        const base = recurringItemMonthAmount(it, ym);
+        return {
+          ...it,
+          monthAmount: adj.expenseOverrides[it.id] !== undefined ? Number(adj.expenseOverrides[it.id]) : base
+        };
+      }).filter(it => it.monthAmount !== 0);
       const goals = state.goals.map(it => {
         let monthAmount = 0;
         const ov = adj.goalOverrides[it.id];
         if(ov && ov.mode === 'this_month') monthAmount = Number(ov.amount||0);
         else if(ov && ov.mode === 'remove_from_here') monthAmount = 0;
-        else {
-          const r = goalMonthlyForMonth(it, ym, 999999999);
-          monthAmount = r.amount;
-        }
+        else monthAmount = goalMonthlyForMonth(it, ym, 999999999).amount;
         return { ...it, monthAmount };
       }).filter(it => it.monthAmount !== 0 || state.goals.some(g=>g.id===it.id));
       const debts = state.debts.map(it => {
@@ -1661,12 +1732,14 @@
 
         const income = state.incomes.reduce((a,b)=>{
           const ov = adj.incomeOverrides[b.id];
-          return a + (ov !== undefined ? Number(ov) : Number(b.amount||0));
+          const base = recurringItemMonthAmount(b, m);
+          return a + (ov !== undefined ? Number(ov) : base);
         },0) + Number(adj.extraIncomeAmount||0);
 
         const expense = state.expenses.reduce((a,b)=>{
           const ov = adj.expenseOverrides[b.id];
-          return a + (ov !== undefined ? Number(ov) : Number(b.amount||0));
+          const base = recurringItemMonthAmount(b, m);
+          return a + (ov !== undefined ? Number(ov) : base);
         },0) + Number(adj.extraExpenseAmount||0);
 
         let debt = state.debts.reduce((a,b)=>{
