@@ -197,6 +197,9 @@
     .miniName{font-weight:800}
     .miniSub{font-size:12px;color:var(--muted)}
     .miniActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+    .inlineModalForm{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b122b}
+
     @media (max-width:1100px){
       .compactGrid{grid-template-columns:1fr}
     }
@@ -1002,50 +1005,87 @@
         <div class="monthSection">
           <h4>Ingresos</h4>
           <div class="btnRow" style="margin-bottom:10px"><button id="addMonthIncomeBtn" class="btn good">+ Añadir ingreso puntual</button></div>
+          <div id="monthIncomeForm"></div>
           <div class="miniList">${incomeListHtml()}</div>
         </div>
 
         <div class="monthSection">
           <h4>Gastos</h4>
           <div class="btnRow" style="margin-bottom:10px"><button id="addMonthExpenseBtn" class="btn good">+ Añadir gasto puntual</button></div>
+          <div id="monthExpenseForm"></div>
           <div class="miniList">${expenseListHtml()}</div>
         </div>
 
         <div class="monthSection">
           <h4>Deudas</h4>
           <div class="btnRow" style="margin-bottom:10px"><button id="addMonthDebtBtn" class="btn good">+ Añadir deuda</button></div>
+          <div id="monthDebtForm"></div>
           <div class="miniList">${debtListHtml()}</div>
         </div>
 
         <div class="monthSection">
           <h4>Ahorros</h4>
           <div class="btnRow" style="margin-bottom:10px"><button id="addMonthSavingBtn" class="btn good">+ Añadir ahorro puntual</button></div>
+          <div id="monthSavingForm"></div>
           <div class="miniList">${goalListHtml()}</div>
         </div>
       </div>`;
 
       document.getElementById('closeModalBtn').onclick = closeModal;
 
+      function mountInlineForm(containerId, title, fields, onSave){
+        const box = document.getElementById(containerId);
+        if(!box) return;
+        box.innerHTML = `<div class="inlineModalForm">
+          <div class="sub" style="margin-bottom:10px">${title}</div>
+          <div class="modalGrid">
+            ${fields.map(f => {
+              if(f.type === 'select'){
+                return `<div class="field"><label>${f.label}</label><select id="${f.id}" class="select">${f.options}</select></div>`;
+              }
+              return `<div class="field"><label>${f.label}</label><input id="${f.id}" class="input" type="${f.type||'text'}" step="${f.step||''}" value="${f.value ?? ''}"></div>`;
+            }).join('')}
+          </div>
+          <div class="btnRow" style="margin-top:12px">
+            <button class="btn primary" id="${containerId}_save">Guardar</button>
+            <button class="btn ghost" id="${containerId}_cancel">Cancelar</button>
+          </div>
+        </div>`;
+        document.getElementById(`${containerId}_cancel`).onclick = () => { box.innerHTML = ''; };
+        document.getElementById(`${containerId}_save`).onclick = onSave;
+      }
+
       root.querySelectorAll('[data-income-edit]').forEach(btn => btn.onclick = () => {
-        const amount = promptNumberValue('Nuevo monto para este ingreso en ' + ym, current.incomes.find(x=>x.id===btn.dataset.incomeEdit).monthAmount);
-        if(amount === null) return;
-        adj.incomeOverrides[btn.dataset.incomeEdit] = amount;
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        const item = current.incomes.find(x=>x.id===btn.dataset.incomeEdit);
+        mountInlineForm('monthIncomeForm', 'Editar ingreso de este mes', [
+          { id:'mi_amount', label:'Monto', type:'number', step:'0.01', value:item.monthAmount }
+        ], () => {
+          const amount = Number(document.getElementById('mi_amount').value||0);
+          adj.incomeOverrides[item.id] = amount;
+          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        });
       });
 
       root.querySelectorAll('[data-expense-edit]').forEach(btn => btn.onclick = () => {
-        const amount = promptNumberValue('Nuevo monto para este gasto en ' + ym, current.expenses.find(x=>x.id===btn.dataset.expenseEdit).monthAmount);
-        if(amount === null) return;
-        adj.expenseOverrides[btn.dataset.expenseEdit] = amount;
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        const item = current.expenses.find(x=>x.id===btn.dataset.expenseEdit);
+        mountInlineForm('monthExpenseForm', 'Editar gasto de este mes', [
+          { id:'me_amount', label:'Monto', type:'number', step:'0.01', value:item.monthAmount }
+        ], () => {
+          const amount = Number(document.getElementById('me_amount').value||0);
+          adj.expenseOverrides[item.id] = amount;
+          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        });
       });
 
       root.querySelectorAll('[data-debt-custom]').forEach(btn => btn.onclick = () => {
         const debt = current.debts.find(x=>x.id===btn.dataset.debtCustom);
-        const amount = promptNumberValue('Nuevo monto para esta deuda en ' + ym, debt.monthAmount);
-        if(amount === null) return;
-        adj.debtOverrides[debt.id] = { mode:'custom', amount };
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        mountInlineForm('monthDebtForm', 'Editar deuda de este mes', [
+          { id:'md_amount', label:'Monto', type:'number', step:'0.01', value:debt.monthAmount }
+        ], () => {
+          const amount = Number(document.getElementById('md_amount').value||0);
+          adj.debtOverrides[debt.id] = { mode:'custom', amount };
+          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        });
       });
       root.querySelectorAll('[data-debt-skip]').forEach(btn => btn.onclick = () => {
         adj.debtOverrides[btn.dataset.debtSkip] = { mode:'skip' };
@@ -1058,56 +1098,71 @@
 
       root.querySelectorAll('[data-goal-edit]').forEach(btn => btn.onclick = () => {
         const goal = current.goals.find(x=>x.id===btn.dataset.goalEdit);
-        const amount = promptNumberValue('Nuevo monto de ahorro para este mes', goal.monthAmount);
-        if(amount === null) return;
-        adj.goalOverrides[goal.id] = { mode:'this_month', amount };
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        mountInlineForm('monthSavingForm', 'Modificar ahorro de este mes', [
+          { id:'ms_amount', label:'Monto', type:'number', step:'0.01', value:goal.monthAmount }
+        ], () => {
+          const amount = Number(document.getElementById('ms_amount').value||0);
+          adj.goalOverrides[goal.id] = { mode:'this_month', amount };
+          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        });
       });
       root.querySelectorAll('[data-goal-remove]').forEach(btn => btn.onclick = () => {
         const goalId = btn.dataset.goalRemove;
-        const removeSequence = confirm('Aceptar = eliminar desde este mes la secuencia de ahorro. Cancelar = solo suspender este mes.');
-        if(removeSequence){
-          adj.goalOverrides[goalId] = { mode:'remove_from_here' };
-        } else {
-          adj.goalOverrides[goalId] = { mode:'this_month', amount:0 };
-        }
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        mountInlineForm('monthSavingForm', 'Eliminar ahorro', [
+          { id:'ms_remove_mode', label:'Modo', type:'select', options:`
+            <option value="this_month">Suspender solo este mes</option>
+            <option value="remove_from_here">Eliminar desde este mes la secuencia</option>
+          `}
+        ], () => {
+          const mode = document.getElementById('ms_remove_mode').value;
+          adj.goalOverrides[goalId] = mode === 'remove_from_here'
+            ? { mode:'remove_from_here' }
+            : { mode:'this_month', amount:0 };
+          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        });
       });
 
       document.getElementById('addMonthIncomeBtn').onclick = () => {
-        const name = prompt('Nombre del ingreso puntual');
-        if(!name) return;
-        const amount = promptNumberValue('Monto del ingreso puntual', 0);
-        if(amount === null) return;
-        adj.extraIncomeName = name;
-        adj.extraIncomeAmount = amount;
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        mountInlineForm('monthIncomeForm', 'Añadir ingreso puntual', [
+          { id:'ami_name', label:'Nombre', type:'text', value:adj.extraIncomeName||'' },
+          { id:'ami_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraIncomeAmount||0 }
+        ], () => {
+          adj.extraIncomeName = document.getElementById('ami_name').value.trim();
+          adj.extraIncomeAmount = Number(document.getElementById('ami_amount').value||0);
+          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        });
       };
       document.getElementById('addMonthExpenseBtn').onclick = () => {
-        const name = prompt('Nombre del gasto puntual');
-        if(!name) return;
-        const amount = promptNumberValue('Monto del gasto puntual', 0);
-        if(amount === null) return;
-        adj.extraExpenseName = name;
-        adj.extraExpenseAmount = amount;
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        mountInlineForm('monthExpenseForm', 'Añadir gasto puntual', [
+          { id:'ame_name', label:'Nombre', type:'text', value:adj.extraExpenseName||'' },
+          { id:'ame_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraExpenseAmount||0 }
+        ], () => {
+          adj.extraExpenseName = document.getElementById('ame_name').value.trim();
+          adj.extraExpenseAmount = Number(document.getElementById('ame_amount').value||0);
+          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        });
       };
       document.getElementById('addMonthSavingBtn').onclick = () => {
-        const name = prompt('Nombre del ahorro puntual');
-        if(!name) return;
-        const amount = promptNumberValue('Monto del ahorro puntual', 0);
-        if(amount === null) return;
-        adj.extraSavingName = name;
-        adj.extraSavingAmount = amount;
-        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        mountInlineForm('monthSavingForm', 'Añadir ahorro puntual', [
+          { id:'ams_name', label:'Nombre', type:'text', value:adj.extraSavingName||'' },
+          { id:'ams_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraSavingAmount||0 }
+        ], () => {
+          adj.extraSavingName = document.getElementById('ams_name').value.trim();
+          adj.extraSavingAmount = Number(document.getElementById('ams_amount').value||0);
+          closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+        });
       };
       document.getElementById('addMonthDebtBtn').onclick = () => {
-        const name = prompt('Nombre de la nueva deuda');
-        if(!name) return;
-        const amount = promptNumberValue('Monto mensual inicial de la deuda', 0);
-        if(amount === null) return;
-        state.debts.push(makeDebtRow({ name, debtKind:'loan', monthlyPayment:amount, remainingInstallments:1, startMonth:ym }));
-        closeModal(); renderManualLists(); renderForecast(); openMonthModal(ym); saveLocal();
+        mountInlineForm('monthDebtForm', 'Añadir deuda', [
+          { id:'amd_name', label:'Nombre', type:'text', value:'' },
+          { id:'amd_amount', label:'Monto mensual inicial', type:'number', step:'0.01', value:0 }
+        ], () => {
+          const name = document.getElementById('amd_name').value.trim();
+          const amount = Number(document.getElementById('amd_amount').value||0);
+          if(!name) return;
+          state.debts.push(makeDebtRow({ name, debtKind:'loan', monthlyPayment:amount, remainingInstallments:1, startMonth:ym }));
+          closeModal(); renderManualLists(); renderForecast(); openMonthModal(ym); saveLocal();
+        });
       };
     }
 
