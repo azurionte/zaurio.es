@@ -607,62 +607,84 @@
 
     function debtEndMonth(d){
       const start = d.startMonth || state.defaultStartMonth;
+
       if((d.debtKind || 'loan') === 'loan' || d.cardSubtype === 'installment'){
         if(d.lastMonth) return d.lastMonth;
         const count = Number(d.remainingInstallments || 0);
         return count > 0 ? addMonthsStr(start, count - 1) : start;
       }
+
       if(d.cardSubtype === 'pay_end_month' && d.periodicity === 'one_time'){
         return start;
       }
+
       return null;
     }
 
     function debtStatusForMonth(d, ym){
       const start = d.startMonth || state.defaultStartMonth;
-      if(ym < start) return { visible:false, active:false, settled:false, recoveredAmount:0, monthAmount:0 };
+      if(ym < start) return { visible:false, active:false, settled:false, recoveredAmount:0 };
 
       if((d.cardSubtype || '') === 'revolving'){
-        const amount = debtMonthlyAmount(d, ym);
-        return { visible: amount > 0, active: amount > 0, settled:false, recoveredAmount:0, monthAmount:amount };
+        return { visible:true, active:true, settled:false, recoveredAmount:0 };
       }
 
       const end = debtEndMonth(d);
       const recoveryMonth = end ? addMonthsStr(end, 1) : null;
+
       const active = end ? (ym >= start && ym <= end) : false;
       const settled = recoveryMonth ? ym === recoveryMonth : false;
-      const recoveredAmount = settled ? Number((d.debtKind || 'loan') === 'loan' || d.cardSubtype === 'installment' ? d.monthlyPayment || 0 : d.amount || 0) : 0;
-      const monthAmount = active ? debtMonthlyAmount(d, ym) : 0;
+
+      const recoveredAmount = settled
+        ? Number(
+            (d.debtKind || 'loan') === 'loan' || d.cardSubtype === 'installment'
+              ? d.monthlyPayment || 0
+              : d.amount || 0
+          )
+        : 0;
+
       const visible = active || settled;
-      return { visible, active, settled, recoveredAmount, monthAmount };
+
+      return { visible, active, settled, recoveredAmount };
     }
 
     function debtMonthlyAmount(d, ym){
-      const status = debtStatusForMonth(d, ym);
-      if(status.active) {
-        if((d.cardSubtype || 'revolving') === 'revolving'){
-          const debt = Number(d.currentDebt||0);
-          const payment = Number(d.currentPayment||0);
-          const annual = Number(d.tin || d.tae || 0) / 100;
-          const monthlyRate = annual / 12;
-          let balance = debt;
-          let cur = d.startMonth || state.defaultStartMonth;
-          let safe = 0;
-          while(cur < ym && balance > 0.01 && safe < 240){
-            const interest = balance * monthlyRate;
-            balance = balance + interest - payment;
-            cur = addMonthsStr(cur, 1);
-            safe++;
-          }
-          return balance > 0.01 ? payment : 0;
+      const start = d.startMonth || state.defaultStartMonth;
+
+      if(ym < start) return 0;
+
+      if((d.cardSubtype || '') === 'revolving'){
+        const debt = Number(d.currentDebt || 0);
+        const payment = Number(d.currentPayment || 0);
+        const annual = Number(d.tin || d.tae || 0) / 100;
+        const monthlyRate = annual / 12;
+
+        let balance = debt;
+        let cur = start;
+        let safe = 0;
+
+        while(cur < ym && balance > 0.01 && safe < 240){
+          const interest = balance * monthlyRate;
+          balance = balance + interest - payment;
+          cur = addMonthsStr(cur, 1);
+          safe++;
         }
-        if((d.cardSubtype || '') === 'pay_end_month'){
-          if(d.periodicity === 'one_time') return ym === (d.startMonth || state.defaultStartMonth) ? Number(d.amount || 0) : 0;
-          return Number(d.amount || 0);
-        }
-        return Number(d.monthlyPayment || 0);
+
+        return balance > 0.01 ? payment : 0;
       }
-      return 0;
+
+      const end = debtEndMonth(d);
+
+      if(end && ym > end) return 0;
+
+      if((d.cardSubtype || '') === 'pay_end_month'){
+        if(d.periodicity === 'one_time'){
+          return ym === start ? Number(d.amount || 0) : 0;
+        }
+        return Number(d.amount || 0);
+      }
+
+      return Number(d.monthlyPayment || 0);
     }
 
     function debtRecoveryAmount(d, ym){
