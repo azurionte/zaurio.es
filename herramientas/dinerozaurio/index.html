@@ -52,6 +52,29 @@
     .menuLogo.confesion{max-height:54px}
     .menuLogo.herramientas{max-height:50px}
     .menuLogo.dinero{max-height:44px}
+    .herramientasWrap{
+      position:relative;filter:none;opacity:1;
+      padding-bottom:86px;margin-bottom:-86px;
+    }
+    .herramientasWrap::after{
+      content:'';position:absolute;left:50%;transform:translateX(-50%);
+      top:42px;width:170px;height:46px;background:transparent;
+    }
+    .herramientasMainLink{display:flex;align-items:center;justify-content:center}
+    .herramientasDropdown{
+      position:absolute;top:76px;left:50%;transform:translateX(-50%);
+      min-width:210px;background:rgba(32,8,56,.98);border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;padding:10px;box-shadow:0 18px 40px rgba(0,0,0,.35);
+      display:none;z-index:120
+    }
+    .herramientasWrap:hover .herramientasDropdown,
+    .herramientasWrap.open .herramientasDropdown{display:block}
+    .dropdownTool{
+      display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;
+      text-decoration:none;color:#fff;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)
+    }
+    .dropdownTool:hover{background:rgba(255,255,255,.10)}
+    .dropdownTool span{font-weight:800;font-size:14px}
 
     .page{max-width:1280px;margin:0 auto;padding:0 18px 28px}
     .hidden{display:none !important}
@@ -316,7 +339,7 @@
                 <button class="btn ghost toggleSectionBtn" data-target="incomeSectionBody">Editar</button>
               </div>
             </div>
-            <div id="incomeSectionBody" class="sectionBody hidden">
+            <div id="incomeSectionBody" class="sectionBody hidden" style="display:none">
               <div class="btnRow" style="margin-bottom:12px"><button id="addIncomeBtn" class="btn good">+ Añadir ingreso</button></div>
               <div id="incomeList" class="list"></div>
             </div>
@@ -332,7 +355,7 @@
                 <button class="btn ghost toggleSectionBtn" data-target="expenseSectionBody">Editar</button>
               </div>
             </div>
-            <div id="expenseSectionBody" class="sectionBody hidden">
+            <div id="expenseSectionBody" class="sectionBody hidden" style="display:none">
               <div class="btnRow" style="margin-bottom:12px"><button id="addExpenseBtn" class="btn good">+ Añadir gasto</button></div>
               <div id="expenseList" class="list"></div>
             </div>
@@ -348,7 +371,7 @@
                 <button class="btn ghost toggleSectionBtn" data-target="debtSectionBody">Editar</button>
               </div>
             </div>
-            <div id="debtSectionBody" class="sectionBody hidden">
+            <div id="debtSectionBody" class="sectionBody hidden" style="display:none">
               <div class="btnRow" style="margin-bottom:12px"><button id="addDebtBtn" class="btn good">+ Añadir deuda</button></div>
               <div id="debtList" class="list"></div>
             </div>
@@ -364,7 +387,7 @@
                 <button class="btn ghost toggleSectionBtn" data-target="goalSectionBody">Editar</button>
               </div>
             </div>
-            <div id="goalSectionBody" class="sectionBody hidden">
+            <div id="goalSectionBody" class="sectionBody hidden" style="display:none">
               <div class="btnRow" style="margin-bottom:12px"><button id="addGoalBtn" class="btn good">+ Añadir ahorro</button></div>
               <div id="goalList" class="list"></div>
             </div>
@@ -676,7 +699,8 @@
         <div class="btnRow" style="margin-top:16px"><button id="saveSimpleBtn" class="btn primary">Guardar</button></div>
       </div>`;
       document.getElementById('closeModalBtn').onclick = () => {
-        if((!item.name || item.name === '') && Number(item.amount||0) === 0){
+        const isEmpty = (!item.name || item.name === '') && Number(item.amount||0) === 0;
+        if(isEmpty){
           const pool = kind === 'income' ? state.incomes : state.expenses;
           const idx = pool.findIndex(x => x.id === item.id);
           if(idx >= 0) pool.splice(idx,1);
@@ -1314,19 +1338,23 @@
             if(!herramientasWrap.classList.contains('open')){
               e.preventDefault();
               herramientasWrap.classList.add('open');
-            } else {
-              herramientasWrap.classList.remove('open');
             }
           }
         });
-        herramientasWrap.addEventListener('mouseenter', () => { if(window.innerWidth > 900) herramientasWrap.classList.add('open'); });
-        herramientasWrap.addEventListener('mouseleave', () => { if(window.innerWidth > 900) herramientasWrap.classList.remove('open'); });
+        document.addEventListener('click', (e) => {
+          if(window.innerWidth <= 900 && !herramientasWrap.contains(e.target)){
+            herramientasWrap.classList.remove('open');
+          }
+        });
       }
 
       document.querySelectorAll('.toggleSectionBtn').forEach(btn => {
         btn.addEventListener('click', () => {
           const target = document.getElementById(btn.dataset.target);
-          if(target) target.classList.toggle('hidden');
+          if(!target) return;
+          const isHidden = target.classList.contains('hidden');
+          target.classList.toggle('hidden', !isHidden);
+          target.style.display = isHidden ? '' : 'none';
         });
       });
 
