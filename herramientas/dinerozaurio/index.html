@@ -1645,18 +1645,30 @@
     }
 
 
+    function debtBaseDisplayAmount(d){
+      if((d.cardSubtype || '') === 'revolving'){
+        return Number(d.currentPayment || 0);
+      }
+      if((d.cardSubtype || '') === 'pay_end_month'){
+        return Number(d.amount || 0);
+      }
+      return Number(d.monthlyPayment || 0);
+    }
+
     function kpis(){
-      const income = state.incomes.reduce((a,b)=>a+Number(b.amount||0),0);
-      const expense = state.expenses.reduce((a,b)=>a+Number(b.amount||0),0);
-      const debt = state.debts.reduce((a,b)=>a + debtBaseDisplayAmount(b),0);
+      const income = state.incomes.reduce((a,b)=>a + Number(b.amount || 0), 0);
+      const expense = state.expenses.reduce((a,b)=>a + Number(b.amount || 0), 0);
+      const debt = state.debts.reduce((a,b)=>a + debtBaseDisplayAmount(b), 0);
       const savings = state.goals.reduce((a,g)=>{
-        if((g.goalType||'fixed') === 'fixed') return a + Number(g.monthlyAmount||0);
+        if((g.goalType || 'fixed') === 'fixed') return a + Number(g.monthlyAmount || 0);
         return a;
-      },0);
+      }, 0);
+
       const incomeEl = document.getElementById('kpiIncome');
       const expenseEl = document.getElementById('kpiExpense');
       const debtEl = document.getElementById('kpiDebt');
       const savingsEl = document.getElementById('kpiSavings');
+
       if(incomeEl) incomeEl.textContent = euros(income);
       if(expenseEl) expenseEl.textContent = euros(expense);
       if(debtEl) debtEl.textContent = euros(debt);
