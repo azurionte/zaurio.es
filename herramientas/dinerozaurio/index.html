@@ -963,18 +963,36 @@
       const root = document.getElementById('modalRoot');
 
       function incomeListHtml(){
-        return current.incomes.length ? current.incomes.map(it => `
+        const base = current.incomes.length ? current.incomes.map(it => `
           <div class="miniItem">
             <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Ingreso')}</div><div class="miniSub">${euros(it.monthAmount)}</div></div>
             <div class="miniActions"><button class="btn ghost" data-income-edit="${it.id}">Editar</button></div>
-          </div>`).join('') : '<div class="empty">No hay ingresos activos este mes.</div>';
+          </div>`).join('') : '';
+        const punctual = adj.extraIncomeAmount ? `
+          <div class="miniItem">
+            <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraIncomeName||'Ingreso puntual')}</div><div class="miniSub">${euros(adj.extraIncomeAmount)} · puntual</div></div>
+            <div class="miniActions">
+              <button class="btn ghost" id="editExtraIncomeBtn">Editar</button>
+              <button class="btn danger" id="removeExtraIncomeBtn">Eliminar</button>
+            </div>
+          </div>` : '';
+        return (base + punctual) || '<div class="empty">No hay ingresos activos este mes.</div>';
       }
       function expenseListHtml(){
-        return current.expenses.length ? current.expenses.map(it => `
+        const base = current.expenses.length ? current.expenses.map(it => `
           <div class="miniItem">
             <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Gasto')}</div><div class="miniSub">${euros(it.monthAmount)}</div></div>
             <div class="miniActions"><button class="btn ghost" data-expense-edit="${it.id}">Editar</button></div>
-          </div>`).join('') : '<div class="empty">No hay gastos activos este mes.</div>';
+          </div>`).join('') : '';
+        const punctual = adj.extraExpenseAmount ? `
+          <div class="miniItem">
+            <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraExpenseName||'Gasto puntual')}</div><div class="miniSub">${euros(adj.extraExpenseAmount)} · puntual</div></div>
+            <div class="miniActions">
+              <button class="btn ghost" id="editExtraExpenseBtn">Editar</button>
+              <button class="btn danger" id="removeExtraExpenseBtn">Eliminar</button>
+            </div>
+          </div>` : '';
+        return (base + punctual) || '<div class="empty">No hay gastos activos este mes.</div>';
       }
       function debtListHtml(){
         return current.debts.length ? current.debts.map(it => `
@@ -988,14 +1006,23 @@
           </div>`).join('') : '<div class="empty">No hay deudas activas este mes.</div>';
       }
       function goalListHtml(){
-        return current.goals.length ? current.goals.map(it => `
+        const base = current.goals.length ? current.goals.map(it => `
           <div class="miniItem">
             <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Ahorro')}</div><div class="miniSub">${euros(it.monthAmount)} · ${(it.goalType||'fixed')==='fixed'?'fijo':'objetivo'}</div></div>
             <div class="miniActions">
               <button class="btn ghost" data-goal-edit="${it.id}">Modificar</button>
               <button class="btn ghost" data-goal-remove="${it.id}">Eliminar ahorro</button>
             </div>
-          </div>`).join('') : '<div class="empty">No hay ahorros activos este mes.</div>';
+          </div>`).join('') : '';
+        const punctual = adj.extraSavingAmount ? `
+          <div class="miniItem">
+            <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraSavingName||'Ahorro puntual')}</div><div class="miniSub">${euros(adj.extraSavingAmount)} · puntual</div></div>
+            <div class="miniActions">
+              <button class="btn ghost" id="editExtraSavingBtn">Editar</button>
+              <button class="btn danger" id="removeExtraSavingBtn">Eliminar</button>
+            </div>
+          </div>` : '';
+        return (base + punctual) || '<div class="empty">No hay ahorros activos este mes.</div>';
       }
 
       root.className = 'modalRoot';
@@ -1163,6 +1190,33 @@
           state.debts.push(makeDebtRow({ name, debtKind:'loan', monthlyPayment:amount, remainingInstallments:1, startMonth:ym }));
           closeModal(); renderManualLists(); renderForecast(); openMonthModal(ym); saveLocal();
         });
+      };
+
+      const editExtraIncomeBtn = document.getElementById('editExtraIncomeBtn');
+      if(editExtraIncomeBtn) editExtraIncomeBtn.onclick = () => document.getElementById('addMonthIncomeBtn').click();
+      const removeExtraIncomeBtn = document.getElementById('removeExtraIncomeBtn');
+      if(removeExtraIncomeBtn) removeExtraIncomeBtn.onclick = () => {
+        adj.extraIncomeName = '';
+        adj.extraIncomeAmount = 0;
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      };
+
+      const editExtraExpenseBtn = document.getElementById('editExtraExpenseBtn');
+      if(editExtraExpenseBtn) editExtraExpenseBtn.onclick = () => document.getElementById('addMonthExpenseBtn').click();
+      const removeExtraExpenseBtn = document.getElementById('removeExtraExpenseBtn');
+      if(removeExtraExpenseBtn) removeExtraExpenseBtn.onclick = () => {
+        adj.extraExpenseName = '';
+        adj.extraExpenseAmount = 0;
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
+      };
+
+      const editExtraSavingBtn = document.getElementById('editExtraSavingBtn');
+      if(editExtraSavingBtn) editExtraSavingBtn.onclick = () => document.getElementById('addMonthSavingBtn').click();
+      const removeExtraSavingBtn = document.getElementById('removeExtraSavingBtn');
+      if(removeExtraSavingBtn) removeExtraSavingBtn.onclick = () => {
+        adj.extraSavingName = '';
+        adj.extraSavingAmount = 0;
+        closeModal(); renderForecast(); openMonthModal(ym); saveLocal();
       };
     }
 
