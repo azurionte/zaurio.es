@@ -927,6 +927,29 @@
       cacheLocal();
     }
 
+    let syncQueue = Promise.resolve();
+
+    async function persistAndRefresh(options = {}){
+      const { reopenMonth = null } = options;
+      const run = async () => {
+        if(window.dzSupabase && state.session?.user){
+          await persistAndRefresh();
+          await loadFromSupabase();
+        } else {
+          cacheLocal();
+        }
+        renderManualLists();
+        renderForecast();
+        if(reopenMonth) openMonthModal(reopenMonth);
+      };
+      syncQueue = syncQueue.then(run).catch(err => {
+        console.error('Error sincronizando', err);
+        throw err;
+      });
+      return syncQueue;
+    }
+
+
 
     function makeIncomeRow(item={}){
       return { id:item.id||uid('inc'), name:item.name||'', amount:Number(item.amount||0) };
@@ -1077,14 +1100,14 @@
           const idx = pool.findIndex(x => x.id === item.id);
           if(idx >= 0) pool.splice(idx,1);
           renderManualLists();
-          saveToSupabase().catch(err => console.error(err));
+          persistAndRefresh().catch(err => console.error(err));
         }
         closeModal();
       };
       document.getElementById('saveSimpleBtn').onclick = () => {
         item.name = document.getElementById('editName').value.trim();
         item.amount = Number(document.getElementById('editAmount').value||0);
-        saveToSupabase().then(() => { closeModal(); renderManualLists(); renderForecast(); }).catch(err => console.error(err));
+        closeModal(); persistAndRefresh().catch(err => console.error(err));
       };
     }
 
@@ -1116,7 +1139,7 @@
           if(idx >= 0) state.goals.splice(idx,1);
           if(fromWizard) renderWizardRows(state.goals, 'wizardGoalList', 'goal');
           renderManualLists();
-          saveToSupabase().catch(err => console.error(err));
+          persistAndRefresh().catch(err => console.error(err));
         }
         closeModal();
       };
@@ -1213,7 +1236,7 @@
           if(idx >= 0) state.debts.splice(idx,1);
           if(fromWizard) renderWizardRows(state.debts, 'wizardDebtList', 'debt');
           renderManualLists();
-          saveToSupabase().catch(err => console.error(err));
+          persistAndRefresh().catch(err => console.error(err));
         }
         closeModal();
       };
@@ -1392,7 +1415,7 @@
         ], () => {
           const amount = Number(document.getElementById('mi_amount').value||0);
           adj.incomeOverrides[item.id] = amount;
-          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       });
 
@@ -1403,7 +1426,7 @@
         ], () => {
           const amount = Number(document.getElementById('me_amount').value||0);
           adj.expenseOverrides[item.id] = amount;
-          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       });
 
@@ -1414,16 +1437,16 @@
         ], () => {
           const amount = Number(document.getElementById('md_amount').value||0);
           adj.debtOverrides[debt.id] = { mode:'custom', amount };
-          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       });
       root.querySelectorAll('[data-debt-skip]').forEach(btn => btn.onclick = () => {
         adj.debtOverrides[btn.dataset.debtSkip] = { mode:'skip' };
-        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
       });
       root.querySelectorAll('[data-debt-paid]').forEach(btn => btn.onclick = () => {
         adj.debtOverrides[btn.dataset.debtPaid] = { mode:'paid' };
-        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
       });
 
       root.querySelectorAll('[data-goal-edit]').forEach(btn => btn.onclick = () => {
@@ -1433,7 +1456,7 @@
         ], () => {
           const amount = Number(document.getElementById('ms_amount').value||0);
           adj.goalOverrides[goal.id] = { mode:'this_month', amount };
-          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       });
       root.querySelectorAll('[data-goal-remove]').forEach(btn => btn.onclick = () => {
@@ -1448,7 +1471,7 @@
           adj.goalOverrides[goalId] = mode === 'remove_from_here'
             ? { mode:'remove_from_here' }
             : { mode:'this_month', amount:0 };
-          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       });
 
@@ -1459,7 +1482,7 @@
         ], () => {
           adj.extraIncomeName = document.getElementById('ami_name').value.trim();
           adj.extraIncomeAmount = Number(document.getElementById('ami_amount').value||0);
-          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       };
       document.getElementById('addMonthExpenseBtn').onclick = () => {
@@ -1469,7 +1492,7 @@
         ], () => {
           adj.extraExpenseName = document.getElementById('ame_name').value.trim();
           adj.extraExpenseAmount = Number(document.getElementById('ame_amount').value||0);
-          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       };
       document.getElementById('addMonthSavingBtn').onclick = () => {
@@ -1479,7 +1502,7 @@
         ], () => {
           adj.extraSavingName = document.getElementById('ams_name').value.trim();
           adj.extraSavingAmount = Number(document.getElementById('ams_amount').value||0);
-          saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       };
       document.getElementById('addMonthDebtBtn').onclick = () => {
@@ -1491,7 +1514,7 @@
           const amount = Number(document.getElementById('amd_amount').value||0);
           if(!name) return;
           state.debts.push(makeDebtRow({ name, debtKind:'loan', monthlyPayment:amount, remainingInstallments:1, startMonth:ym }));
-          saveToSupabase().then(() => { closeModal(); renderManualLists(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       };
 
@@ -1501,7 +1524,7 @@
       if(removeExtraIncomeBtn) removeExtraIncomeBtn.onclick = () => {
         adj.extraIncomeName = '';
         adj.extraIncomeAmount = 0;
-        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
       };
 
       const editExtraExpenseBtn = document.getElementById('editExtraExpenseBtn');
@@ -1510,7 +1533,7 @@
       if(removeExtraExpenseBtn) removeExtraExpenseBtn.onclick = () => {
         adj.extraExpenseName = '';
         adj.extraExpenseAmount = 0;
-        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
       };
 
       const editExtraSavingBtn = document.getElementById('editExtraSavingBtn');
@@ -1519,7 +1542,7 @@
       if(removeExtraSavingBtn) removeExtraSavingBtn.onclick = () => {
         adj.extraSavingName = '';
         adj.extraSavingAmount = 0;
-        saveToSupabase().then(() => { closeModal(); renderForecast(); openMonthModal(ym); }).catch(err => console.error(err));
+        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
       };
     }
 
@@ -1851,7 +1874,7 @@
         }catch(err){
           console.error('Error limpiando plan', err);
         }
-        await saveToSupabase();
+        await persistAndRefresh();
         renderWizardRows(state.incomes, 'wizardIncomeList', 'income');
         renderWizardRows(state.expenses, 'wizardExpenseList', 'expense');
         renderWizardRows(state.debts, 'wizardDebtList', 'debt');
@@ -1906,7 +1929,7 @@
       document.getElementById('wizardNext2').addEventListener('click', () => { saveLocal(); showWizardStep(3); });
       document.getElementById('wizardPrev3').addEventListener('click', () => showWizardStep(2));
       document.getElementById('finishWizard').addEventListener('click', async () => {
-        await saveToSupabase();
+        await persistAndRefresh();
         flowStateSet('app');
         hide('wizard');
         show('appShell');
@@ -1937,21 +1960,21 @@
       document.getElementById('addGoalBtn').addEventListener('click', () => {
         const item = makeGoalRow({ name:'Nuevo objetivo' });
         state.goals.push(item);
-        renderManualLists(); saveToSupabase().catch(err => console.error(err));
+        renderManualLists();
         openGoalEditor(item, false);
       });
       document.getElementById('addDebtBtn').addEventListener('click', () => {
         const item = makeDebtRow({ name:'Nueva deuda' });
         state.debts.push(item);
-        renderManualLists(); saveToSupabase().catch(err => console.error(err));
+        renderManualLists();
         openDebtEditor(item, false);
       });
 
-      document.getElementById('initialReserve').addEventListener('input', e => {
-        state.reserveInitial = Number(e.target.value||0); kpis(); saveToSupabase().catch(err => console.error(err));
+      document.getElementById('initialReserve').addEventListener('change', e => {
+        state.reserveInitial = Number(e.target.value||0); kpis(); persistAndRefresh().catch(err => console.error(err));
       });
       document.getElementById('defaultStart').addEventListener('change', e => {
-        state.defaultStartMonth = e.target.value || todayMonth(); saveToSupabase().catch(err => console.error(err));
+        state.defaultStartMonth = e.target.value || todayMonth(); persistAndRefresh().catch(err => console.error(err));
       });
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
