@@ -6,7 +6,7 @@
     "enabled": true
   },
   "assets": {
-    "directory": "miercoles.zaurio.es"
+    "directory": "."
   },
   "compatibility_flags": [
     "nodejs_compat"
