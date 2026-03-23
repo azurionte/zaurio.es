@@ -1,0 +1,5 @@
+_worker.js
+worker.js
+wrangler.jsonc
+node_modules
+.git
