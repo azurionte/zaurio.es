@@ -43,7 +43,41 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .sidebar-layout [data-zone="main"] > .section{ display:block; justify-self:stretch; min-width:0 }
 
     /* Header variants */
-    .topbar{border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));padding:16px}
+    .topbar{border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));padding:14px 16px}
+    .topbar > div{position:relative;display:block !important;min-height:120px}
+    .topbar > div > div:first-child{padding-right:156px;min-height:120px;display:flex;flex-direction:column;justify-content:flex-start}
+    .topbar .name{margin:0 0 12px}
+    .topbar .chips{gap:10px}
+    .topbar .avatar{
+      position:absolute;
+      right:0;
+      top:0;
+      align-self:auto;
+      justify-self:auto;
+      margin:0;
+    }
+    .topbar #chipAddBtn{
+      position:absolute !important;
+      right:0;
+      bottom:0;
+      margin:0 !important;
+      display:grid;
+      place-items:center;
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      background:#0b1022 !important;
+      color:#fff !important;
+      border:0;
+      box-shadow:0 8px 20px rgba(11,16,34,.28);
+      font-weight:800;
+      z-index:5;
+    }
+    .topbar[data-chip-count="1"],
+    .topbar[data-chip-count="2"],
+    .topbar[data-chip-count="3"],
+    .topbar[data-chip-count="4"],
+    .topbar[data-chip-count="5"]{padding-bottom:12px}
     .topbar .avatar{
       inline-size:120px;
       block-size:120px;
