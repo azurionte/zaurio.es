@@ -172,6 +172,24 @@ export function showActionFeedback(anchor, message, tone = 'default'){
   }, 1400);
 }
 
+export function showCenteredCardFeedback(card, message, tone = 'default'){
+  const target = card?.getBoundingClientRect?.();
+  if (!target) return showActionFeedback(card, message, tone);
+  const node = document.createElement('div');
+  node.className = `micro-feedback ${tone}`;
+  node.textContent = message;
+  document.body.appendChild(node);
+  const left = target.left + target.width / 2 - 90;
+  const top = target.top + target.height / 2 + 44;
+  node.style.left = `${Math.max(16, Math.min(window.innerWidth - 196, left))}px`;
+  node.style.top = `${Math.max(16, Math.min(window.innerHeight - 80, top))}px`;
+  requestAnimationFrame(() => node.classList.add('is-live'));
+  window.setTimeout(() => {
+    node.classList.remove('is-live');
+    window.setTimeout(() => node.remove(), 220);
+  }, 1600);
+}
+
 function sparkleNode(anchor){
   const target = anchor?.getBoundingClientRect?.();
   if (!target) return;
@@ -222,9 +240,10 @@ function renderProjectPreview(project){
   if (layout === 'fancy') {
     return `
       <div class="mini-resume mini-fancy" style="background:${surface};color:${ink}">
-        <div class="mini-hero" style="background:${accent}"></div>
-        <div class="mini-avatar floating"></div>
-        <div class="mini-name center">${name}</div>
+        <div class="mini-hero" style="background:${accent}">
+          <div class="mini-name center">${name}</div>
+          <div class="mini-avatar floating"></div>
+        </div>
         <div class="mini-line mid" style="background:${soft}"></div>
         <div class="mini-grid">
           <span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span>
@@ -291,9 +310,9 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .project-card.is-deleting{border:2px dashed rgba(239,68,68,.92);box-shadow:0 0 0 4px rgba(239,68,68,.08) inset, 0 22px 44px rgba(0,0,0,.22);background:linear-gradient(180deg,rgba(120,16,24,.16),rgba(255,255,255,.03));overflow:hidden}
       #projectLibrary .project-card.is-deleting .project-preview,
       #projectLibrary .project-card.is-deleting .project-meta,
-      #projectLibrary .project-card.is-deleting .project-open{opacity:.36;transition:opacity .42s ease, filter .42s ease;filter:saturate(.55)}
+      #projectLibrary .project-card.is-deleting .project-open{opacity:.24;transition:opacity .42s ease, filter .42s ease;filter:saturate(.55)}
       #projectLibrary .project-card.is-deleting .project-preview{filter:saturate(.54) blur(.8px)}
-      #projectLibrary .project-card.is-deleting .trash-pop{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;pointer-events:none;border-radius:999px;background:radial-gradient(circle,rgba(239,68,68,.24),rgba(239,68,68,0) 72%);box-shadow:0 0 48px rgba(239,68,68,.24);animation:trash-bye 1.15s ease forwards}
+      #projectLibrary .project-card.is-deleting .trash-pop{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-68px 0 0 -42px;pointer-events:none;border-radius:999px;background:radial-gradient(circle,rgba(239,68,68,.24),rgba(239,68,68,0) 72%);box-shadow:0 0 48px rgba(239,68,68,.24);animation:trash-bye 1.15s ease forwards}
       #projectLibrary .project-card.is-deleting .trash-pop::before{content:"";position:absolute;left:20px;right:20px;bottom:16px;height:34px;border:3px solid rgba(255,246,246,.98);border-top:0;border-radius:0 0 12px 12px;background:rgba(239,68,68,.24);box-shadow:0 12px 26px rgba(0,0,0,.18)}
       #projectLibrary .project-card.is-deleting .trash-pop::after{content:"";position:absolute;left:20px;right:20px;top:16px;height:10px;border-radius:10px;background:rgba(255,246,246,.98);transform-origin:10px 100%;animation:trash-lid 1.15s ease forwards}
       #projectLibrary .project-card.is-deleting .trash-pop .trash-handle{position:absolute;left:30px;right:30px;top:10px;height:7px;border:3px solid rgba(255,246,246,.98);border-bottom:0;border-radius:8px 8px 0 0}
@@ -310,18 +329,20 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .mini-line.short{width:48%}
       #projectLibrary .mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}
       #projectLibrary .mini-grid span{display:block;height:34px;border-radius:12px;background:rgba(18,7,27,.08)}
-      #projectLibrary .mini-avatar{width:34px;height:34px;border-radius:50%;background:#e0d7ec;border:3px solid #fff;box-shadow:0 8px 16px rgba(0,0,0,.14)}
+      #projectLibrary .mini-avatar{width:34px;height:34px;min-width:34px;min-height:34px;aspect-ratio:1 / 1;border-radius:50%;background:#e0d7ec;border:3px solid #fff;box-shadow:0 8px 16px rgba(0,0,0,.14)}
       #projectLibrary .mini-avatar.small{width:30px;height:30px}
       #projectLibrary .mini-avatar.floating{margin:-18px auto 0}
-      #projectLibrary .mini-top .mini-hero{display:flex;justify-content:space-between;align-items:flex-start;padding:12px;min-height:60px}
+      #projectLibrary .mini-top .mini-hero{display:grid;grid-template-columns:minmax(0,1fr) 34px;align-items:start;gap:8px;padding:12px;min-height:60px}
       #projectLibrary .mini-top-copy{display:grid;gap:8px}
       #projectLibrary .mini-side{grid-template-columns:72px minmax(0,1fr);gap:10px}
       #projectLibrary .mini-rail{border-radius:14px;background:linear-gradient(160deg,#6c7fca,#3b4b93);padding:10px;display:grid;justify-items:center;align-content:start;gap:10px}
       #projectLibrary .mini-chip{display:block;width:100%;height:8px;border-radius:999px;background:rgba(255,255,255,.84)}
       #projectLibrary .mini-chip.short{width:72%}
       #projectLibrary .mini-main{display:grid;align-content:start;gap:10px;padding-top:4px}
-      #projectLibrary .mini-fancy .mini-hero{min-height:52px}
-      #projectLibrary .mini-fancy .mini-name{margin-top:2px}
+      #projectLibrary .mini-fancy{grid-template-rows:74px 1fr auto}
+      #projectLibrary .mini-fancy .mini-hero{display:grid;grid-template-columns:minmax(0,1fr) 34px;align-items:center;gap:8px;padding:12px;min-height:74px}
+      #projectLibrary .mini-fancy .mini-avatar.floating{margin:0}
+      #projectLibrary .mini-fancy .mini-name{margin-top:0;text-align:center}
       #projectLibrary .project-meta h3{margin:0;color:#fff8fb;font-size:1.2rem}
       #projectLibrary .project-meta p{margin:6px 0 0;color:rgba(255,255,255,.7);line-height:1.5}
       #projectLibrary .project-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
@@ -508,7 +529,8 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
     }
     if (action === 'delete') {
       const card = grid.querySelector(`.project-card[data-id="${project.id}"]`);
-      showActionFeedback(trigger, 'CV eliminado', 'warn');
+      if (card) showCenteredCardFeedback(card, 'CV eliminado', 'warn');
+      else showActionFeedback(trigger, 'CV eliminado', 'warn');
       if (card) {
         card.classList.add('is-deleting');
         if (!card.querySelector('.trash-pop')) {
