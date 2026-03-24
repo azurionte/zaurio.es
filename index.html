@@ -65,9 +65,9 @@
     .hero{
       margin-top:18px;
       display:grid;
-      grid-template-columns:minmax(0, 1.1fr) minmax(360px, .9fr);
+      grid-template-columns:minmax(0, 1.24fr) minmax(300px, .76fr);
       gap:24px;
-      align-items:stretch;
+      align-items:start;
     }
 
     .hero-card,
@@ -83,7 +83,8 @@
     .hero-card{
       position:relative;
       overflow:hidden;
-      padding:34px;
+      padding:32px 34px 34px;
+      min-height:640px;
     }
 
     .hero-card::after{
@@ -121,18 +122,18 @@
 
     .hero h1{
       margin-top:18px;
-      font-size:clamp(2.8rem, 5.2vw, 4.9rem);
-      max-width:8.5ch;
+      font-size:clamp(2.15rem, 3.9vw, 4rem);
+      max-width:8.8ch;
       letter-spacing:-.05em;
       text-wrap:balance;
     }
 
     .lead{
-      margin:22px 0 0;
-      max-width:52ch;
+      margin:18px 0 0;
+      max-width:38ch;
       color:var(--muted);
-      font-size:1rem;
-      line-height:1.7;
+      font-size:.98rem;
+      line-height:1.72;
     }
 
     .hero-actions{
@@ -171,9 +172,10 @@
 
     .hero-notes{
       display:grid;
-      grid-template-columns:repeat(3, minmax(0, 1fr));
+      grid-template-columns:repeat(2, minmax(0, 1fr));
       gap:12px;
-      margin-top:28px;
+      margin-top:24px;
+      max-width:38rem;
     }
 
     .note{
@@ -199,6 +201,39 @@
     .hero-side{
       display:grid;
       gap:18px;
+      align-content:start;
+    }
+
+    .hero-portrait{
+      position:absolute;
+      right:18px;
+      bottom:12px;
+      width:min(34%, 320px);
+      display:flex;
+      align-items:flex-end;
+      justify-content:flex-end;
+      pointer-events:none;
+      z-index:2;
+    }
+
+    .hero-portrait::before{
+      content:"";
+      position:absolute;
+      inset:auto 8% 4% 8%;
+      height:24%;
+      border-radius:999px;
+      background:radial-gradient(circle at center, rgba(255,79,201,.22), transparent 68%);
+      filter:blur(18px);
+      z-index:1;
+    }
+
+    .hero-portrait img{
+      position:relative;
+      z-index:2;
+      width:100%;
+      height:auto;
+      object-fit:contain;
+      filter:drop-shadow(0 20px 32px rgba(0,0,0,.28));
     }
 
     .side-card{
@@ -714,23 +749,26 @@
         grid-template-columns:1fr;
       }
 
+      .hero-card{
+        min-height:auto;
+        padding-bottom:24px;
+      }
+
       .hero h1{
         max-width:11ch;
       }
 
-      .profile-frame{
-        min-height:220px;
-        justify-content:center;
-      }
-
-      .profile-frame::before{
-        left:10%;
-        width:80%;
-      }
-
-      .profile-copy h2,
-      .profile-copy p{
+      .lead,
+      .hero-notes{
         max-width:none;
+      }
+
+      .hero-portrait{
+        position:relative;
+        right:auto;
+        bottom:auto;
+        width:min(78vw, 360px);
+        margin:24px auto 0;
       }
     }
 
@@ -785,25 +823,20 @@
             <span>El lado serio del asunto: ideas pensadas para sobrevivir mejor la vida adulta sin perder personalidad.</span>
           </div>
           <div class="note">
-            <strong>Secretos y juegos</strong>
-            <span>Un espacio anónimo para confesar sin que nadie sepa quién eres y una zona gamer para unir gente con juegos rápidos de fiesta.</span>
+            <strong>Secretos</strong>
+            <span>Tu espacio anónimo para contar lo más heavy o lo más divertido sin que nadie sepa quién eres.</span>
           </div>
+          <div class="note">
+            <strong>Juegos</strong>
+            <span>La parte que intenta juntar gente con experiencias rápidas, sociales y con punto de fiesta.</span>
+          </div>
+        </div>
+        <div class="hero-portrait" aria-hidden="true">
+          <img src="/shared/assets/brand/zaurio-portrait.png" alt="Retrato de Zaurio">
         </div>
       </article>
 
       <div class="hero-side">
-        <aside class="side-card profile-card">
-          <div class="profile-frame" aria-hidden="true">
-            <img src="/shared/assets/brand/zaurio-portrait.png" alt="Retrato de Zaurio">
-          </div>
-          <div class="profile-copy">
-            <span class="eyebrow">Presentación</span>
-            <h2>Ideas geek con TDA, caos útil y rincones con personalidad.</h2>
-            <p>Miércoles es la puerta de entrada para mandar mensajes anónimos a los directos de dramas y chismes. Secretos es el confesionario donde contar lo más heavy o lo más divertido sin enseñar la cara.</p>
-            <p class="minor">Herramientas es el lado serio para sobrevivir mejor la vida adulta. Juegos es la parte que intenta juntar gente con experiencias rápidas, sociales y un punto de fiesta.</p>
-          </div>
-        </aside>
-
         <aside class="side-card recent-games">
           <span class="eyebrow">Juegos recientes</span>
           <div class="recent-track">
