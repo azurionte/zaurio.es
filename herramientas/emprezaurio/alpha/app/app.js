@@ -8,6 +8,25 @@ import { ensureCanvas } from '../layouts/layouts.js';
 import '../modules/modules.js'; // side-effect: registers custom styles for modules
 
 const PAGE_WIDTH = 860;
+const MOBILE_BREAKPOINT = 700;
+const MIN_USER_ZOOM = 0.72;
+const MAX_USER_ZOOM = 2.6;
+let mobileFitScale = 1;
+let mobileUserZoom = 1;
+let pinchState = null;
+
+function clamp(v, min, max){
+  return Math.min(max, Math.max(min, v));
+}
+
+function isMobileCanvasMode(){
+  return window.innerWidth <= MOBILE_BREAKPOINT;
+}
+
+function pinchDistance(touches){
+  const [a, b] = touches;
+  return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+}
 
 function syncCanvasScale(){
   const page = document.querySelector('.page');
@@ -15,8 +34,10 @@ function syncCanvasScale(){
   const root = document.getElementById('canvas-root');
   if (!page || !sheet) return;
 
-  if (window.innerWidth > 700){
+  if (window.innerWidth > MOBILE_BREAKPOINT){
     document.documentElement.style.setProperty('--mobile-canvas-scale', '1');
+    mobileFitScale = 1;
+    mobileUserZoom = 1;
     page.style.width = '';
     page.style.height = '';
     page.style.minHeight = '';
@@ -25,11 +46,12 @@ function syncCanvasScale(){
   }
 
   const availableWidth = Math.max(280, window.innerWidth - 8);
-  const scale = Math.min(1, availableWidth / PAGE_WIDTH);
-  const scaledHeight = Math.ceil(sheet.scrollHeight * scale);
-  const scaledWidth = Math.ceil(PAGE_WIDTH * scale);
+  mobileFitScale = Math.min(1, availableWidth / PAGE_WIDTH);
+  const effectiveScale = mobileFitScale * mobileUserZoom;
+  const scaledHeight = Math.ceil(sheet.scrollHeight * effectiveScale);
+  const scaledWidth = Math.ceil(PAGE_WIDTH * effectiveScale);
 
-  document.documentElement.style.setProperty('--mobile-canvas-scale', scale.toFixed(4));
+  document.documentElement.style.setProperty('--mobile-canvas-scale', effectiveScale.toFixed(4));
   page.style.width = `${scaledWidth}px`;
   page.style.height = `${scaledHeight}px`;
   page.style.minHeight = `${scaledHeight}px`;
@@ -38,6 +60,39 @@ function syncCanvasScale(){
     root.scrollLeft = 0;
     root.style.justifyContent = 'center';
   }
+}
+
+function setMobileUserZoom(nextZoom){
+  const clamped = clamp(nextZoom, MIN_USER_ZOOM, MAX_USER_ZOOM);
+  if (Math.abs(clamped - mobileUserZoom) < 0.001) return;
+  mobileUserZoom = clamped;
+  syncCanvasScale();
+}
+
+function mountMobileCanvasGestures(){
+  const root = document.getElementById('canvas-root');
+  if (!root) return;
+
+  root.addEventListener('touchstart', e => {
+    if (!isMobileCanvasMode() || e.touches.length !== 2) return;
+    pinchState = {
+      distance: pinchDistance(e.touches),
+      userZoom: mobileUserZoom
+    };
+  }, { passive: true });
+
+  root.addEventListener('touchmove', e => {
+    if (!isMobileCanvasMode() || e.touches.length !== 2 || !pinchState) return;
+    const distance = pinchDistance(e.touches);
+    if (!distance || !pinchState.distance) return;
+    e.preventDefault();
+    const ratio = distance / pinchState.distance;
+    setMobileUserZoom(pinchState.userZoom * ratio);
+  }, { passive: false });
+
+  const endPinch = () => { pinchState = null; };
+  root.addEventListener('touchend', endPinch, { passive: true });
+  root.addEventListener('touchcancel', endPinch, { passive: true });
 }
 
 function mountCanvasScaleSync(){
@@ -70,6 +125,7 @@ mountEditor({
 // Make sure a clean page exists
 ensureCanvas();
 mountCanvasScaleSync();
+mountMobileCanvasGestures();
 
 // Apply the full visual state through the real setters so dependent CSS vars stay in sync.
 setTheme(S.theme);
