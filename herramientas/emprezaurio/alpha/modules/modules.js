@@ -380,6 +380,8 @@ export function renderEdu(items){
     card.appendChild(controls);
     const dHandle = document.createElement('div'); dHandle.className = 'drag-handle'; dHandle.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>';
     card.insertBefore(dHandle, card.firstChild);
+    const dateSpan = card.querySelector('.year-chip span');
+    if (dateSpan) dateSpan.setAttribute('contenteditable','true');
     grid.appendChild(card);
   });
   attachDragSort(grid, '.card', '.drag-handle', ()=>{
@@ -420,6 +422,8 @@ export function renderEdu(items){
     const controls = document.createElement('div'); controls.className='card-controls'; controls.appendChild(removeBtn); card.appendChild(controls);
     const dHandle = document.createElement('div'); dHandle.className = 'drag-handle'; dHandle.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>';
     card.insertBefore(dHandle, card.firstChild);
+    const dateSpan = card.querySelector('.year-chip span');
+    if (dateSpan) dateSpan.setAttribute('contenteditable','true');
     grid.appendChild(card);
   });
   eAnchor.appendChild(eHat); body.appendChild(eAnchor);
@@ -445,6 +449,8 @@ export function renderExp(items){
     const removeX = document.createElement('button'); removeX.className='ctrl-circle'; removeX.title='Remove'; removeX.innerHTML='×'; removeX.addEventListener('click', ()=>{ card.remove(); S.exp=(S.exp||[]).filter(x=>x.role!==it.role); save(); });
     const controlsX = document.createElement('div'); controlsX.className='card-controls'; controlsX.appendChild(removeX); card.appendChild(controlsX);
     const dHandleX = document.createElement('div'); dHandleX.className = 'drag-handle'; dHandleX.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>'; card.insertBefore(dHandleX, card.firstChild);
+    const dateSpan = card.querySelector('.year-chip span');
+    if (dateSpan) dateSpan.setAttribute('contenteditable','true');
     list.appendChild(card);
   });
   xAnchor.appendChild(xBtn); body.appendChild(list); body.appendChild(xAnchor);
@@ -468,6 +474,8 @@ export function renderExp(items){
     card.appendChild(controlsX);
     const dHandleX = document.createElement('div'); dHandleX.className = 'drag-handle'; dHandleX.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>';
     card.insertBefore(dHandleX, card.firstChild);
+    const dateSpan = card.querySelector('.year-chip span');
+    if (dateSpan) dateSpan.setAttribute('contenteditable','true');
     list.appendChild(card);
   });
   attachDragSort(list, '.card', '.drag-handle', ()=>{

@@ -40,7 +40,11 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
     /* Header variants */
     .topbar{border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));padding:16px}
-    .fancy .hero{border-radius:14px;padding:18px 14px 26px;min-height:200px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center}
+    .fancy{position:relative;padding-bottom:74px}
+    .fancy .hero{position:relative;border-radius:14px;padding:18px 14px 82px;min-height:190px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+    .fancy .hero .avatar{position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);z-index:4;width:124px;height:124px;border-width:4px}
+    .fancy .hero .name{text-align:center;margin:0}
+    .fancy .chip-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin-top:12px}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px}

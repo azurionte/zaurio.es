@@ -13,13 +13,18 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
   const top = document.getElementById('topbar-root');
   top.innerHTML = `
     <div class="nav">
-      <a class="brand" href="/emprezaurio/" aria-label="Ir a Emprezaurio">
-        <img class="brand-mark" src="https://zaurio.es/shared/assets/brand/emprezaurio-icono.png" alt="Emprezaurio">
-        <span class="brand-copy">
-          <span class="brand-title">Emprezaurio</span>
-          <span class="brand-sub">alpha builder oficial</span>
-        </span>
-      </a>
+      <div class="brand-suite">
+        <a class="zaurio-link" href="/herramientas/" aria-label="Volver a Zaurio Herramientas">
+          <img src="https://zaurio.es/shared/assets/brand/logo-zaurio-square.png" alt="Zaurio">
+        </a>
+        <a class="brand" href="/emprezaurio/" aria-label="Ir a Emprezaurio">
+          <img class="brand-mark" src="https://zaurio.es/shared/assets/brand/emprezaurio-icono.png" alt="Emprezaurio">
+          <span class="brand-copy">
+            <span class="brand-title">Emprezaurio</span>
+            <span class="brand-sub">alpha builder oficial</span>
+          </span>
+        </a>
+      </div>
       <div class="menu">
         <div class="dropdown" id="ddFile">
           <button class="mbtn">Proyecto</button>
