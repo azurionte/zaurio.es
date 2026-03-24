@@ -71,7 +71,7 @@ a{color:inherit;text-decoration:none}
 .switch.on::after{left:23px}
 
 /* ======= canvas page ==================================================== */
-#canvas-root{display:flex;justify-content:center;overflow:auto;padding:28px 18px 24px}
+#canvas-root{display:flex;justify-content:center;overflow:auto;padding:28px 18px 24px;touch-action:pan-x pan-y pinch-zoom;overscroll-behavior:contain}
 .page{background:transparent;color:var(--ink);min-height:1200px;position:relative}
 #sheet{padding:24px;min-height:1120px;background:#fff;border-radius:22px;box-shadow:0 28px 80px rgba(8,5,16,.3);border:1px solid rgba(12,10,20,.08)}
 [data-dark="1"] #sheet{ background:#0d1220; color:var(--ink); }
@@ -199,7 +199,7 @@ a{color:inherit;text-decoration:none}
 @media (max-width: 700px){
   :root{
     --page-w:860px;
-    --mobile-canvas-scale:min(.58, calc((100vw - 24px) / 860));
+    --mobile-canvas-scale:1;
   }
   #canvas-root{
     overflow-x:hidden;
@@ -225,132 +225,6 @@ a{color:inherit;text-decoration:none}
   }
   .stack{
     gap:16px;
-  }
-
-  /* Keep the resume in desktop/page mode on mobile; only scale the sheet. */
-  #sheet .topbar > div{
-    grid-template-columns:1fr auto !important;
-    justify-items:stretch !important;
-    text-align:left !important;
-  }
-  #sheet .topbar .chips{
-    justify-content:flex-start !important;
-  }
-  #sheet .fancy{
-    padding-bottom:74px !important;
-  }
-  #sheet .fancy .hero{
-    min-height:190px !important;
-    padding:18px 14px 82px !important;
-  }
-  #sheet .fancy .hero .avatar{
-    width:124px !important;
-    height:124px !important;
-    bottom:-58px !important;
-  }
-  #sheet .fancy .hero .name{
-    font-size:56px !important;
-    line-height:.95 !important;
-    max-width:100% !important;
-  }
-  #sheet .fancy .chip-grid{
-    grid-template-columns:1fr 1fr !important;
-    gap:12px !important;
-    margin-top:12px !important;
-  }
-  #sheet .sidebar-layout{
-    grid-template-columns:var(--rail) minmax(0,1fr) !important;
-    gap:18px !important;
-  }
-  #sheet .sidebar-layout .rail{
-    min-height:920px !important;
-    padding:18px !important;
-  }
-  #sheet .sidebar-layout .rail .chips,
-  #sheet .chips{
-    max-width:calc(var(--rail,300px) - 36px) !important;
-    justify-content:flex-start !important;
-  }
-  #sheet .chip{
-    width:280px !important;
-    max-width:280px !important;
-    left:50% !important;
-    transform:translateX(-50%) !important;
-  }
-  #sheet .sidebar-layout .rail #chipAddBtn{
-    margin-top:8px !important;
-  }
-  #sheet .name{
-    text-align:inherit !important;
-  }
-  #sheet .avatar{
-    width:140px !important;
-    height:140px !important;
-  }
-  #sheet .skills-wrap{
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr)) !important;
-    gap:12px !important;
-  }
-  #sheet .edu-grid{
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr)) !important;
-    gap:12px !important;
-  }
-  #sheet .exp-list{
-    grid-template-columns:1fr !important;
-    gap:12px !important;
-  }
-  #sheet .skill-row{
-    grid-template-columns:auto minmax(0,1fr) auto auto !important;
-    gap:12px !important;
-    padding:12px 14px !important;
-  }
-  #sheet .skill-row .skill-handle{
-    display:grid !important;
-  }
-  #sheet .skill-row .name{
-    grid-column:auto !important;
-    white-space:nowrap !important;
-  }
-  #sheet .skill-row .val{
-    grid-column:auto !important;
-    justify-content:flex-end !important;
-    min-width:120px !important;
-  }
-  #sheet .skill-row .ctrl-circle{
-    grid-column:auto !important;
-    grid-row:auto !important;
-    align-self:auto !important;
-  }
-  #sheet .card{
-    padding:16px !important;
-    border-radius:16px !important;
-  }
-  #sheet .card .year-chip{
-    margin-right:52px !important;
-    max-width:none !important;
-    overflow:visible !important;
-  }
-  #sheet .card-title{
-    font-size:18px !important;
-    margin-top:12px !important;
-  }
-  #sheet .card-copy,
-  #sheet .profile-copy{
-    font-size:15px !important;
-    line-height:1.6 !important;
-  }
-  #sheet .drag-handle{
-    width:24px !important;
-    height:24px !important;
-    left:12px !important;
-    top:12px !important;
-  }
-  #sheet .ctrl-circle{
-    width:34px !important;
-    height:34px !important;
-  }
-  #sheet .sec-add-anchor{
-    padding:12px 0 !important;
   }
 }
 
