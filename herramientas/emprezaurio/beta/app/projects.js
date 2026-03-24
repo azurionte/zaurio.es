@@ -1,4 +1,4 @@
-import { S, save as saveLocal } from './state.js';
+﻿import { S, save as saveLocal } from './state.js';
 import { authState } from './auth.js';
 import { morphTo, applyContact } from '../layouts/layouts.js';
 import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/modules.js';
@@ -143,7 +143,7 @@ function projectSummary(project){
     Array.isArray(payload.skills) ? `${payload.skills.length} skills` : null,
     Array.isArray(payload.edu) ? `${payload.edu.length} educacion` : null,
     Array.isArray(payload.exp) ? `${payload.exp.length} experiencia` : null
-  ].filter(Boolean).join(' · ');
+  ].filter(Boolean).join(' Â· ');
   return counts || 'Sin bloques aun';
 }
 
@@ -286,7 +286,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
     <style>
       #projectLibrary{position:fixed;inset:0;display:none;place-items:center;background:rgba(6,3,10,.72);backdrop-filter:blur(14px);z-index:22000;padding:24px}
       #projectLibrary.open{display:grid}
-      #projectLibrary .lib-shell{width:min(1240px,96vw);max-height:min(90dvh,920px);display:grid;gap:18px;padding:24px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(31,10,42,.96),rgba(14,7,20,.96));box-shadow:0 34px 90px rgba(0,0,0,.42);overflow:hidden}
+      #projectLibrary .lib-shell{width:min(1240px,96vw);max-height:min(90dvh,920px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:18px;padding:24px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(31,10,42,.96),rgba(14,7,20,.96));box-shadow:0 34px 90px rgba(0,0,0,.42);overflow:hidden}
       .micro-feedback{position:fixed;z-index:23000;padding:10px 14px;border-radius:999px;background:rgba(28,11,40,.96);border:1px solid rgba(255,255,255,.12);color:#fff8fb;box-shadow:0 20px 40px rgba(0,0,0,.24);opacity:0;transform:translateY(8px) scale(.96);pointer-events:none;transition:opacity .18s ease, transform .18s ease}
       .micro-feedback.is-live{opacity:1;transform:translateY(-12px) scale(1)}
       .micro-feedback.success{background:linear-gradient(135deg,#ffd447,#ffb87c);color:#240b18}
@@ -304,7 +304,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .lib-btn:hover{transform:translateY(-2px);box-shadow:0 16px 30px rgba(0,0,0,.22);border-color:rgba(255,255,255,.24)}
       #projectLibrary .lib-btn:active{transform:translateY(0) scale(.98)}
       #projectLibrary .lib-close{width:46px;height:46px;border-radius:16px;padding:0;font-size:1.4rem;line-height:1}
-      #projectLibrary .lib-grid{display:grid;grid-template-columns:repeat(auto-fit,280px);justify-content:center;gap:18px;overflow:auto;padding-right:6px}
+      #projectLibrary .lib-grid{display:grid;grid-template-columns:repeat(auto-fit,280px);justify-content:center;gap:18px;overflow:auto;padding:4px 6px 8px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
       #projectLibrary .project-card{position:relative;display:grid;gap:14px;width:280px;min-height:410px;padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
       #projectLibrary .project-card:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.24);border-color:rgba(255,212,71,.24)}
       #projectLibrary .project-card.is-deleting{border:2px dashed rgba(239,68,68,.92);box-shadow:0 0 0 4px rgba(239,68,68,.08) inset, 0 22px 44px rgba(0,0,0,.22);background:linear-gradient(180deg,rgba(120,16,24,.16),rgba(255,255,255,.03));overflow:hidden}
@@ -312,7 +312,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .project-card.is-deleting .project-meta,
       #projectLibrary .project-card.is-deleting .project-open{opacity:.24;transition:opacity .42s ease, filter .42s ease;filter:saturate(.55)}
       #projectLibrary .project-card.is-deleting .project-preview{filter:saturate(.54) blur(.8px)}
-      #projectLibrary .project-card.is-deleting .trash-pop{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-68px 0 0 -42px;pointer-events:none;border-radius:999px;background:radial-gradient(circle,rgba(239,68,68,.24),rgba(239,68,68,0) 72%);box-shadow:0 0 48px rgba(239,68,68,.24);animation:trash-bye 1.15s ease forwards}
+      #projectLibrary .project-card.is-deleting .trash-pop{position:absolute;left:50%;top:50%;width:96px;height:96px;margin:-86px 0 0 -48px;pointer-events:none;border-radius:999px;background:radial-gradient(circle,rgba(239,68,68,.32),rgba(239,68,68,0) 72%);box-shadow:0 0 56px rgba(239,68,68,.32);animation:trash-bye 1.15s ease forwards}
       #projectLibrary .project-card.is-deleting .trash-pop::before{content:"";position:absolute;left:20px;right:20px;bottom:16px;height:34px;border:3px solid rgba(255,246,246,.98);border-top:0;border-radius:0 0 12px 12px;background:rgba(239,68,68,.24);box-shadow:0 12px 26px rgba(0,0,0,.18)}
       #projectLibrary .project-card.is-deleting .trash-pop::after{content:"";position:absolute;left:20px;right:20px;top:16px;height:10px;border-radius:10px;background:rgba(255,246,246,.98);transform-origin:10px 100%;animation:trash-lid 1.15s ease forwards}
       #projectLibrary .project-card.is-deleting .trash-pop .trash-handle{position:absolute;left:30px;right:30px;top:10px;height:7px;border:3px solid rgba(255,246,246,.98);border-bottom:0;border-radius:8px 8px 0 0}
@@ -330,7 +330,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}
       #projectLibrary .mini-grid span{display:block;height:34px;border-radius:12px;background:rgba(18,7,27,.08)}
       #projectLibrary .mini-avatar{width:34px;height:34px;min-width:34px;min-height:34px;aspect-ratio:1 / 1;border-radius:50%;background:#e0d7ec;border:3px solid #fff;box-shadow:0 8px 16px rgba(0,0,0,.14)}
-      #projectLibrary .mini-avatar.small{width:30px;height:30px}
+      #projectLibrary .mini-avatar.small{width:30px;height:30px;min-width:30px;min-height:30px}
       #projectLibrary .mini-avatar.floating{margin:-18px auto 0}
       #projectLibrary .mini-top .mini-hero{display:grid;grid-template-columns:minmax(0,1fr) 34px;align-items:start;gap:8px;padding:12px;min-height:60px}
       #projectLibrary .mini-top-copy{display:grid;gap:8px}
@@ -339,18 +339,18 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .mini-chip{display:block;width:100%;height:8px;border-radius:999px;background:rgba(255,255,255,.84)}
       #projectLibrary .mini-chip.short{width:72%}
       #projectLibrary .mini-main{display:grid;align-content:start;gap:10px;padding-top:4px}
-      #projectLibrary .mini-fancy{grid-template-rows:72px 18px 1fr auto}
-      #projectLibrary .mini-fancy .mini-hero{display:grid;place-items:center;padding:12px;min-height:72px;position:relative}
-      #projectLibrary .mini-fancy .mini-avatar.floating{margin:0 auto -20px;position:relative;z-index:2}
-      #projectLibrary .mini-fancy .mini-name{margin-top:0;text-align:center}
+      #projectLibrary .mini-fancy{grid-template-rows:60px 22px 1fr auto}
+      #projectLibrary .mini-fancy .mini-hero{display:grid;place-items:center;padding:10px 12px;min-height:60px;position:relative}
+      #projectLibrary .mini-fancy .mini-avatar.floating{margin:-17px auto 0;position:relative;z-index:2}
+      #projectLibrary .mini-fancy .mini-name{margin-top:0;text-align:center;max-width:100px}
       #projectLibrary .project-meta h3{margin:0;color:#fff8fb;font-size:1.2rem}
       #projectLibrary .project-meta p{margin:6px 0 0;color:rgba(255,255,255,.7);line-height:1.5}
-      #projectLibrary .project-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-      #projectLibrary .project-open{margin-top:auto}
+      #projectLibrary .project-row{display:block}
+      #projectLibrary .project-open{margin-top:auto;display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:10px;align-items:center}
       #projectLibrary .project-open button{width:100%}
       #projectLibrary .project-menu-wrap{position:relative}
       #projectLibrary .project-menu-btn{width:40px;height:40px;border-radius:14px;padding:0;font-size:1.3rem;line-height:1}
-      #projectLibrary .project-menu{position:absolute;top:46px;right:0;display:none;min-width:220px;padding:8px;border-radius:18px;background:#12071b;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 60px rgba(0,0,0,.35)}
+      #projectLibrary .project-menu{position:absolute;right:0;bottom:52px;display:none;min-width:220px;padding:8px;border-radius:18px;background:#12071b;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 60px rgba(0,0,0,.35)}
       #projectLibrary .project-menu.open{display:grid;gap:6px}
       #projectLibrary .project-menu button{appearance:none;border:0;background:rgba(255,255,255,.04);color:#fff8fb;padding:10px 12px;border-radius:12px;text-align:left;cursor:pointer;transition:background .16s ease, transform .16s ease}
       #projectLibrary .project-menu button:hover{background:rgba(255,255,255,.1);transform:translateX(2px)}
@@ -371,11 +371,11 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
         #projectLibrary .lib-head h2{font-size:1.5rem}
         #projectLibrary .lib-head p{font-size:.96rem;line-height:1.45}
         #projectLibrary .lib-actions{width:auto}
-        #projectLibrary .lib-grid{grid-template-columns:minmax(0,1fr);justify-content:stretch;gap:14px}
+        #projectLibrary .lib-grid{grid-template-columns:minmax(0,1fr);justify-content:stretch;gap:14px;padding-right:2px}
         #projectLibrary .project-card,
         #projectLibrary .project-add{width:100%;min-height:auto}
         #projectLibrary .project-preview{height:168px}
-        #projectLibrary .project-row{align-items:center}
+        #projectLibrary .project-open{grid-template-columns:minmax(0,1fr) 40px}
         #projectLibrary .project-meta h3{font-size:1.08rem}
         #projectLibrary .project-meta p{font-size:.96rem}
       }
@@ -408,12 +408,6 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
           <article class="project-card" data-id="${project.id}">
             <div class="project-row">
               <div class="project-preview">${renderProjectPreview(project)}</div>
-              <div class="project-menu-wrap">
-                <button class="lib-btn project-menu-btn" data-menu-btn="${project.id}" type="button" aria-label="Mas opciones">⋯</button>
-                <div class="project-menu" data-menu="${project.id}">
-                  ${projectMenuMarkup(project.id)}
-                </div>
-              </div>
             </div>
             <div class="project-meta">
               <h3><span class="project-title-text" data-title-text="${project.id}">${project.title}</span></h3>
@@ -422,7 +416,15 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
             </div>
             <div class="project-open">
               <button class="lib-btn primary" data-action="edit" data-id="${project.id}" type="button">Abrir CV</button>
+              <div class="project-menu-wrap">
+                <button class="lib-btn project-menu-btn" data-menu-btn="${project.id}" type="button" aria-label="Mas opciones">⋯</button>
+                <div class="project-menu" data-menu="${project.id}">
+                  ${projectMenuMarkup(project.id)}
+                </div>
+              </div>
             </div>
+          </article>
+        `);
           </article>
         `);
       });
@@ -572,3 +574,5 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
     refresh: async () => renderCards()
   };
 }
+
+
