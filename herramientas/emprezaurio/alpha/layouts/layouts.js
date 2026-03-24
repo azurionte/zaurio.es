@@ -298,6 +298,10 @@ function initAvatars(root){
     const input = w.querySelector('input[type=file]');
     const canvas = document.createElement('canvas');
     canvas.width = 140; canvas.height = 140;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.display = 'block';
+    canvas.style.borderRadius = '50%';
     w.appendChild(canvas);
     if (S.avatar) drawAvatarInto(canvas, S.avatar);
 
@@ -609,7 +613,9 @@ function buildHeader(kind){
   }
 
   const s=stackEl();
-  s.insertBefore(node, $('#canvasAdd'));
+  const firstSection = Array.from(s.children).find(ch => ch.classList?.contains('node') && !ch.hasAttribute('data-locked')) || null;
+  if (firstSection) s.insertBefore(node, firstSection);
+  else s.prepend(node);
   initAvatars(node);
   // wire chip add btn
   try{

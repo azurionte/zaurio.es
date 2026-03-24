@@ -8,6 +8,44 @@ import { ensureCanvas, isSidebarActive, getRailHolder, getSideMain } from '../la
 const $  = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
+function attachDragSort(container, itemSelector, handleSelector, onCommit){
+  if (!container || container._dragSort) return;
+  container._dragSort = true;
+  let dragEl = null;
+
+  container.addEventListener('dragstart', e => {
+    const handle = e.target.closest(handleSelector);
+    const item = e.target.closest(itemSelector);
+    if (!handle || !item) {
+      e.preventDefault();
+      return;
+    }
+    dragEl = item;
+    item.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', ''); } catch(_){}
+  });
+
+  container.addEventListener('dragend', () => {
+    if (dragEl) dragEl.classList.remove('dragging');
+    dragEl = null;
+    onCommit?.();
+  });
+
+  container.addEventListener('dragover', e => {
+    if (!dragEl) return;
+    e.preventDefault();
+    const siblings = Array.from(container.querySelectorAll(itemSelector)).filter(x => x !== dragEl);
+    const after = siblings.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = e.clientY - box.top - box.height / 2;
+      return offset < 0 && offset > closest.offset ? { offset, el: child } : closest;
+    }, { offset: Number.NEGATIVE_INFINITY, el: null }).el;
+    if (!after) container.appendChild(dragEl);
+    else container.insertBefore(dragEl, after);
+  });
+}
+
 /* -------------------------- styles (scoped) -------------------------- */
 (function ensureModuleStyles(){
   if (document.getElementById('modules-style')) return;
@@ -15,7 +53,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   st.id = 'modules-style';
   st.textContent = `
   /* sections */
-  .section{position:relative; border-radius:14px; padding:12px; background:var(--secBg); box-shadow:0 10px 28px rgba(0,0,0,.10); border:1px solid var(--cardBorder)}
+  .section{position:relative; border-radius:16px; padding:14px; background:var(--secBg); box-shadow:0 10px 26px rgba(15,23,42,.07); border:1px solid var(--cardBorder)}
   [data-dark="1"] .section{ --secBg:var(--card,#0f1420); border-color:var(--cardBorder,#1f2540); box-shadow:0 10px 28px rgba(0,0,0,.35) }
     .sec-head{display:grid;justify-items:center;margin-bottom:6px}
     .sec-title{font-weight:900}
@@ -32,7 +70,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     [data-dark="1"] .year-chip{background:rgba(255,255,255,.10); color:#e8edff; border-color:#ffffff28; backdrop-filter:blur(6px)}
 
     /* skills list (canvas + sidebar) */
-    .skills-wrap{display:grid;gap:10px}
+    .skills-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
   .skill-row{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--cardBorder);border-radius:14px;background:var(--cardBg)}
   .skill-row .name{display:block;min-width:0;line-height:1.35;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .skill-row .val{display:flex;align-items:center;justify-content:flex-end;min-width:120px}
@@ -73,14 +111,15 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   .skill-handle{width:22px;height:22px;border-radius:6px;background:#071827;color:#fff;display:grid;place-items:center;margin-right:8px;font-size:12px}
   .ctrl-circle.small{width:28px;height:28px}
   .sec-body{display:grid;gap:14px}
-  .edu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .edu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
   .exp-list{display:grid;gap:12px}
-  .card{position:relative;border-radius:16px;padding:16px;border:1px solid var(--cardBorder);background:var(--cardBg)}
+  .card{position:relative;border-radius:16px;padding:16px;border:1px solid var(--cardBorder);background:var(--cardBg);box-shadow:0 8px 24px rgba(15,23,42,.06)}
   .card .year-chip{margin-right:52px}
   .card-title{font-size:18px;font-weight:800;line-height:1.25;margin-top:12px}
   .card-subtitle{opacity:.78;margin-top:4px}
   .card-copy{margin-top:10px;line-height:1.6}
   .profile-copy{line-height:1.7;font-size:15px}
+  .sidebar-layout .skills-wrap{grid-template-columns:1fr}
   `;
   document.head.appendChild(st);
 })();
@@ -139,9 +178,11 @@ function putSection(node, { toRail=false } = {}){
     if (node.dataset && node.dataset.section) wrapper.dataset.section = node.dataset.section;
     wrapper.appendChild(node);
   }
+  wrapper.draggable = true;
 
   const plus = ensurePlusIn(host);
   if (plus) host.insertBefore(wrapper, plus); else host.appendChild(wrapper);
+  attachDragSort(host, '.node[data-section]', '.sec-head', ()=>{ try{ save(); }catch(_){ } });
   // Refresh the plus visibility after adding a section
   try{ refreshPlusVisibility(); }catch(e){}
 }
@@ -201,6 +242,7 @@ export function renderSkills(list, opts = {}){
   function makeRow(it){
     const row = document.createElement('div');
     row.className = 'skill-row';
+    row.draggable = true;
     // structure: handle | name | value | control
     const name = document.createElement('div'); name.className='name'; name.textContent = it.label || 'Skill'; name.setAttribute('contenteditable','true');
     const val = document.createElement('div'); val.className='val';
@@ -248,6 +290,18 @@ export function renderSkills(list, opts = {}){
     // ensure S.skills tracks initial list
     try{ S.skills = S.skills || []; if(!S.skills.includes(it)) S.skills.push(it); }catch(_){ }
     wrap.appendChild(makeRow(it));
+  });
+  attachDragSort(wrap, '.skill-row', '.skill-handle', ()=>{
+    try{
+      S.skills = Array.from(wrap.querySelectorAll('.skill-row')).map(row => {
+        const label = row.querySelector('.name')?.textContent?.trim() || 'Skill';
+        const meter = row.querySelector('.meter');
+        if (meter) return { type:'slider', label, value:Number(meter.value || 60) };
+        const stars = row.querySelectorAll('.star path[fill="currentColor"]').length;
+        return { type:'star', label, stars };
+      });
+      save();
+    }catch(_){}
   });
 
   // centered add anchor using control-circle + icons to match editor aesthetics
@@ -306,10 +360,12 @@ export function renderEdu(items){
   items.forEach(it => {
     const card = document.createElement('div');
     card.className = 'card';
+    card.draggable = true;
+    card.draggable = true;
     card.innerHTML = `
       <div class="year-chip">${icon('edu')}<span>${it.dates || '2018–2022'}</span></div>
-      <div class="card-title">${it.title || ''}</div>
-      <div class="card-subtitle">${it.academy || ''}</div>`;
+      <div class="card-title" contenteditable="true">${it.title || ''}</div>
+      <div class="card-subtitle" contenteditable="true">${it.academy || ''}</div>`;
     // add remove control
     // top-right control circle + optional drag handle
     const controls = document.createElement('div'); controls.className = 'card-controls';
@@ -326,6 +382,28 @@ export function renderEdu(items){
     card.insertBefore(dHandle, card.firstChild);
     grid.appendChild(card);
   });
+  attachDragSort(grid, '.card', '.drag-handle', ()=>{
+    try{
+      S.edu = Array.from(grid.querySelectorAll('.card')).map(card => ({
+        kind:'degree',
+        dates: card.querySelector('.year-chip span')?.textContent?.trim() || '',
+        title: card.querySelector('.card-title')?.textContent?.trim() || '',
+        academy: card.querySelector('.card-subtitle')?.textContent?.trim() || ''
+      }));
+      save();
+    }catch(_){}
+  });
+  grid.addEventListener('focusout', ()=>{
+    try{
+      S.edu = Array.from(grid.querySelectorAll('.card')).map(card => ({
+        kind:'degree',
+        dates: card.querySelector('.year-chip span')?.textContent?.trim() || '',
+        title: card.querySelector('.card-title')?.textContent?.trim() || '',
+        academy: card.querySelector('.card-subtitle')?.textContent?.trim() || ''
+      }));
+      save();
+    }catch(_){}
+  });
 
   body.appendChild(grid);
   // add controls: use ctrl-circle add button and position after grid (below latest card)
@@ -335,10 +413,13 @@ export function renderEdu(items){
     const it = {kind:'degree',title:'New degree',dates:'2020',academy:'School'};
     S.edu = (S.edu||[]); S.edu.push(it); save();
     // append card after grid
-    const card = document.createElement('div'); card.className='card';
+    const card = document.createElement('div'); card.className='card'; card.draggable = true;
+    card.draggable = true;
     card.innerHTML = `<div class="year-chip">${icon('edu')}<span>${it.dates}</span></div><div class="card-title">${it.title}</div><div class="card-subtitle">${it.academy}</div>`;
     const removeBtn = document.createElement('button'); removeBtn.className='ctrl-circle'; removeBtn.innerHTML='×'; removeBtn.title='Remove'; removeBtn.addEventListener('click', ()=>{ card.remove(); S.edu = (S.edu||[]).filter(x=> x.title!==it.title); save(); });
     const controls = document.createElement('div'); controls.className='card-controls'; controls.appendChild(removeBtn); card.appendChild(controls);
+    const dHandle = document.createElement('div'); dHandle.className = 'drag-handle'; dHandle.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>';
+    card.insertBefore(dHandle, card.firstChild);
     grid.appendChild(card);
   });
   eAnchor.appendChild(eHat); body.appendChild(eAnchor);
@@ -363,6 +444,7 @@ export function renderExp(items){
     card.innerHTML = `<div class="year-chip"><i class="fa-solid fa-bars"></i><span>${it.dates}</span></div><div class="card-title">${it.role}</div><div class="card-subtitle">@${it.org}</div><div class="card-copy">${it.desc}</div>`;
     const removeX = document.createElement('button'); removeX.className='ctrl-circle'; removeX.title='Remove'; removeX.innerHTML='×'; removeX.addEventListener('click', ()=>{ card.remove(); S.exp=(S.exp||[]).filter(x=>x.role!==it.role); save(); });
     const controlsX = document.createElement('div'); controlsX.className='card-controls'; controlsX.appendChild(removeX); card.appendChild(controlsX);
+    const dHandleX = document.createElement('div'); dHandleX.className = 'drag-handle'; dHandleX.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>'; card.insertBefore(dHandleX, card.firstChild);
     list.appendChild(card);
   });
   xAnchor.appendChild(xBtn); body.appendChild(list); body.appendChild(xAnchor);
@@ -372,9 +454,9 @@ export function renderExp(items){
     card.className = 'card';
     card.innerHTML = `
       <div class="year-chip"><i class="fa-solid fa-bars"></i><span>${it.dates || 'Jan 2024 – Present'}</span></div>
-      <div class="card-title">${it.role || 'Job title'}</div>
-      <div class="card-subtitle">@${(it.org||'Company').replace(/^@/, '')}</div>
-      <div class="card-copy">${it.desc || 'Describe impact, scale and results.'}</div>`;
+      <div class="card-title" contenteditable="true">${it.role || 'Job title'}</div>
+      <div class="card-subtitle" contenteditable="true">@${(it.org||'Company').replace(/^@/, '')}</div>
+      <div class="card-copy" contenteditable="true">${it.desc || 'Describe impact, scale and results.'}</div>`;
     const controlsX = document.createElement('div'); controlsX.className = 'card-controls';
     const removeX = document.createElement('button'); removeX.className = 'ctrl-circle'; removeX.title = 'Remove'; removeX.innerHTML = '×';
     removeX.addEventListener('click', ()=>{
@@ -386,9 +468,29 @@ export function renderExp(items){
     card.appendChild(controlsX);
     const dHandleX = document.createElement('div'); dHandleX.className = 'drag-handle'; dHandleX.innerHTML = '<i class="fa-solid fa-grip-vertical"></i>';
     card.insertBefore(dHandleX, card.firstChild);
-  // make displayed texts editable
-  Array.from(card.querySelectorAll('div')).forEach(d=> d.setAttribute('contenteditable','true'));
     list.appendChild(card);
+  });
+  attachDragSort(list, '.card', '.drag-handle', ()=>{
+    try{
+      S.exp = Array.from(list.querySelectorAll('.card')).map(card => ({
+        dates: card.querySelector('.year-chip span')?.textContent?.trim() || '',
+        role: card.querySelector('.card-title')?.textContent?.trim() || '',
+        org: (card.querySelector('.card-subtitle')?.textContent || '').replace(/^@/, '').trim(),
+        desc: card.querySelector('.card-copy')?.textContent?.trim() || ''
+      }));
+      save();
+    }catch(_){}
+  });
+  list.addEventListener('focusout', ()=>{
+    try{
+      S.exp = Array.from(list.querySelectorAll('.card')).map(card => ({
+        dates: card.querySelector('.year-chip span')?.textContent?.trim() || '',
+        role: card.querySelector('.card-title')?.textContent?.trim() || '',
+        org: (card.querySelector('.card-subtitle')?.textContent || '').replace(/^@/, '').trim(),
+        desc: card.querySelector('.card-copy')?.textContent?.trim() || ''
+      }));
+      save();
+    }catch(_){}
   });
 
   putSection(sec);
@@ -402,7 +504,9 @@ export function renderBio(text){
   const card = document.createElement('div');
   card.className = 'card';
   card.classList.add('profile-copy');
+  card.setAttribute('contenteditable','true');
   card.textContent = (text || '').trim() || 'Add a short summary of your profile, strengths and what you’re great at.';
+  card.addEventListener('blur', ()=>{ try{ S.bio = card.textContent.trim(); save(); }catch(_){ } });
   body.appendChild(card);
   putSection(sec);
 }
