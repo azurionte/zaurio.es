@@ -12,6 +12,32 @@
     "run_worker_first": true,
     "html_handling": "none"
   },
+  "routes": [
+    {
+      "pattern": "zaurio.es",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.zaurio.es",
+      "custom_domain": true
+    },
+    {
+      "pattern": "miercoles.zaurio.es",
+      "custom_domain": true
+    },
+    {
+      "pattern": "secretos.zaurio.es",
+      "custom_domain": true
+    },
+    {
+      "pattern": "herramientas.zaurio.es",
+      "custom_domain": true
+    },
+    {
+      "pattern": "juegos.zaurio.es",
+      "custom_domain": true
+    }
+  ],
   "compatibility_flags": [
     "nodejs_compat"
   ]
