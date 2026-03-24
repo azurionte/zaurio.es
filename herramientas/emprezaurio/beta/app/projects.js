@@ -264,8 +264,8 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       .micro-feedback.warn{background:linear-gradient(135deg,#f97316,#ef4444)}
       .micro-feedback.sparkle::after{content:"✦";margin-left:8px}
       .sparkle-burst{position:fixed;z-index:23001;pointer-events:none;transform:translate(-50%,-50%)}
-      .sparkle-burst span{position:absolute;width:8px;height:8px;border-radius:999px;background:linear-gradient(135deg,#ffd447,#fff3b0);box-shadow:0 0 14px rgba(255,212,71,.5);animation:sparkle-pop .65s ease forwards}
-      @keyframes sparkle-pop{0%{opacity:0;transform:translate(0,0) scale(.2)}25%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1)}}
+      .sparkle-burst span{position:absolute;width:8px;height:8px;border-radius:999px;background:linear-gradient(135deg,#ffd447,#fff3b0);box-shadow:0 0 14px rgba(255,212,71,.5);animation:sparkle-pop .95s ease forwards}
+      @keyframes sparkle-pop{0%{opacity:0;transform:translate(0,0) scale(.2)}20%{opacity:1}72%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.08)}}
       #projectLibrary .lib-head{display:flex;justify-content:space-between;gap:14px;align-items:end}
       #projectLibrary .lib-head h2{margin:0;font:800 2rem/1 "Bricolage Grotesque","Trebuchet MS",sans-serif;color:#fff8fb}
       #projectLibrary .lib-head p{margin:8px 0 0;color:rgba(255,255,255,.72)}
@@ -281,12 +281,12 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .project-card.is-deleting .project-preview,
       #projectLibrary .project-card.is-deleting .project-meta,
       #projectLibrary .project-card.is-deleting .project-open{opacity:.72}
-      #projectLibrary .project-card.is-deleting .trash-pop{position:absolute;right:18px;bottom:18px;width:34px;height:34px;pointer-events:none;animation:trash-bye .82s ease forwards}
+      #projectLibrary .project-card.is-deleting .trash-pop{position:absolute;right:18px;bottom:18px;width:34px;height:34px;pointer-events:none;animation:trash-bye 1.15s ease forwards}
       #projectLibrary .project-card.is-deleting .trash-pop::before{content:"";position:absolute;left:6px;right:6px;bottom:4px;height:20px;border:2px solid rgba(255,236,236,.95);border-top:0;border-radius:0 0 8px 8px;background:rgba(239,68,68,.14)}
-      #projectLibrary .project-card.is-deleting .trash-pop::after{content:"";position:absolute;left:7px;right:7px;top:3px;height:6px;border-radius:6px;background:rgba(255,236,236,.98);transform-origin:5px 100%;animation:trash-lid .82s ease forwards}
+      #projectLibrary .project-card.is-deleting .trash-pop::after{content:"";position:absolute;left:7px;right:7px;top:3px;height:6px;border-radius:6px;background:rgba(255,236,236,.98);transform-origin:5px 100%;animation:trash-lid 1.15s ease forwards}
       #projectLibrary .project-card.is-deleting .trash-pop .trash-handle{position:absolute;left:12px;right:12px;top:0;height:4px;border:2px solid rgba(255,236,236,.95);border-bottom:0;border-radius:6px 6px 0 0}
-      @keyframes trash-lid{0%,18%{transform:rotate(0deg)}34%{transform:rotate(-32deg)}56%{transform:rotate(4deg)}70%,100%{transform:rotate(0deg)}}
-      @keyframes trash-bye{0%{opacity:0;transform:translateY(10px) scale(.86)}18%{opacity:1;transform:translateY(0) scale(1)}70%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-22px) scale(.76)}}
+      @keyframes trash-lid{0%,16%{transform:rotate(0deg)}30%{transform:rotate(-32deg)}50%{transform:rotate(6deg)}68%,100%{transform:rotate(0deg)}}
+      @keyframes trash-bye{0%{opacity:0;transform:translateY(10px) scale(.86)}16%{opacity:1;transform:translateY(0) scale(1)}76%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-22px) scale(.76)}}
       #projectLibrary .project-preview{display:grid;gap:10px;padding:12px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
       #projectLibrary .mini-resume{display:grid;gap:10px;min-height:120px;padding:12px;border-radius:16px;background:#f7f4fb;color:#12071b;overflow:hidden}
       #projectLibrary .mini-hero{border-radius:12px;background:linear-gradient(135deg,#ffba4a,#ff6aa7);min-height:34px}
@@ -457,16 +457,16 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
           titleNode.animate(
             [
               { transform:'scale(1)', filter:'drop-shadow(0 0 0 rgba(255,212,71,0))' },
-              { transform:'scale(1.06)', filter:'drop-shadow(0 0 18px rgba(255,212,71,.52))' },
+              { transform:'scale(1.045)', filter:'drop-shadow(0 0 18px rgba(255,212,71,.52))', offset:.45 },
               { transform:'scale(1)', filter:'drop-shadow(0 0 0 rgba(255,212,71,0))' }
             ],
-            { duration: 650, easing:'ease-out' }
+            { duration: 980, easing:'ease-out' }
           );
           sparkleNode(titleNode);
         }
         showActionFeedback(trigger, 'Renombrado', 'success sparkle');
         sparkleNode(trigger);
-        window.setTimeout(() => renderCards(), 700);
+        window.setTimeout(() => renderCards(), 1050);
         return;
       }
       return;
@@ -496,13 +496,14 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
           await deleteProject(project.id);
           card.animate(
             [
-              { opacity:1, transform:'scale(1)' },
-              { opacity:0, transform:'scale(.92)' }
+              { opacity:1, transform:'scale(1)', filter:'blur(0px)' },
+              { opacity:.72, transform:'scale(.985)', filter:'blur(.2px)', offset:.45 },
+              { opacity:0, transform:'scale(.94)', filter:'blur(1.4px)' }
             ],
-            { duration:220, easing:'ease-in', fill:'forwards' }
+            { duration:480, easing:'ease-in', fill:'forwards' }
           );
-          window.setTimeout(() => renderCards(), 220);
-        }, 760);
+          window.setTimeout(() => renderCards(), 500);
+        }, 1080);
         return;
       }
       await deleteProject(project.id);
