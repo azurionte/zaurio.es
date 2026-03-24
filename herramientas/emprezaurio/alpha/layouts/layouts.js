@@ -274,31 +274,43 @@ function startLayoutObserver(){
 
 /* Avatar */
 function initAvatars(root){
+  function drawAvatarInto(canvas, src){
+    if (!canvas || !src) return;
+    const ctx = canvas.getContext('2d', { willReadFrequently:true });
+    const img = new Image();
+    img.onload = ()=>{
+      const s = Math.max(canvas.width/img.width, canvas.height/img.height);
+      const dw=img.width*s, dh=img.height*s;
+      const dx=(canvas.width-dw)/2, dy=(canvas.height-dh)/2;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.save(); ctx.beginPath();
+      ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2, 0, Math.PI*2);
+      ctx.clip(); ctx.imageSmoothingQuality='high';
+      ctx.drawImage(img,dx,dy,dw,dh);
+      ctx.restore();
+      canvas.parentElement?.setAttribute('data-empty','0');
+    };
+    img.src = src;
+  }
+
   $$('[data-avatar]', root).forEach(w=>{
     if (w._inited) return; w._inited = true;
     const input = w.querySelector('input[type=file]');
     const canvas = document.createElement('canvas');
     canvas.width = 140; canvas.height = 140;
     w.appendChild(canvas);
-    const ctx = canvas.getContext('2d', { willReadFrequently:true });
+    if (S.avatar) drawAvatarInto(canvas, S.avatar);
 
     w.addEventListener('click', e=>{ if (e.target !== input) input.click(); });
     input.addEventListener('change', ()=>{
       const f = input.files?.[0]; if(!f) return;
-      const img = new Image();
-      img.onload = ()=>{
-        const s = Math.max(canvas.width/img.width, canvas.height/img.height);
-        const dw=img.width*s, dh=img.height*s;
-        const dx=(canvas.width-dw)/2, dy=(canvas.height-dh)/2;
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.save(); ctx.beginPath();
-        ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2, 0, Math.PI*2);
-        ctx.clip(); ctx.imageSmoothingQuality='high';
-        ctx.drawImage(img,dx,dy,dw,dh);
-        ctx.restore();
-        w.setAttribute('data-empty','0');
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        S.avatar = String(reader.result || '');
+        save();
+        drawAvatarInto(canvas, S.avatar);
       };
-      img.src = URL.createObjectURL(f);
+      reader.readAsDataURL(f);
     });
   });
 }
@@ -572,6 +584,9 @@ function buildHeader(kind){
     node.innerHTML=`
       <div class="fancy" data-header>
         <div class="hero">
+          <label class="avatar" data-avatar data-empty="1" style="width:120px;height:120px;border-width:4px">
+            <input type="file" accept="image/*">
+          </label>
           <h1 class="name" contenteditable>YOUR NAME</h1>
           <div class="chip-grid"><div class="chips" data-info-left></div><div class="chips" data-info-right></div></div>
         </div>

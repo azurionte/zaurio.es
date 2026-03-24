@@ -13,9 +13,6 @@ import '../modules/modules.js'; // side-effect: registers custom styles for modu
 const params = new URLSearchParams(window.location.search);
 const doRestore = params.get('resume_restore') === '1' || sessionStorage.getItem('resume:restore') === '1';
 if (doRestore) hydrateFromStorage();
-document.body.setAttribute('data-theme', S.theme);
-document.body.setAttribute('data-dark', S.dark ? '1' : '0');
-document.body.setAttribute('data-mat', S.material);
 
 // Mount the editor (top bar + empty page)
 mountEditor({
@@ -27,6 +24,11 @@ mountEditor({
 
 // Make sure a clean page exists
 ensureCanvas();
+
+// Apply the full visual state through the real setters so dependent CSS vars stay in sync.
+setTheme(S.theme);
+setDark(S.dark);
+setMaterial(S.material);
 
 // Show welcome/wizard
 mountWelcome();

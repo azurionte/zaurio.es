@@ -2,7 +2,7 @@
 // [wizard.js] v2.12.0 — wizard with reliable layout morph + inline editors
 console.log('[wizard.js] v2.12.0');
 
-import { S } from '../app/state.js';
+import { S, setTheme, setDark, setMaterial } from '../app/state.js';
 import { morphTo, getHeaderNode, applyContact } from '../layouts/layouts.js';
 import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/modules.js';
 
@@ -129,7 +129,11 @@ export function mountWelcome(){
     </div>`;
   document.body.appendChild(wrap);
   wrap.querySelector('#startWizard').addEventListener('click', ()=>{ wrap.style.display='none'; mountWizard(); openWizard(); });
-  wrap.querySelector('#startBlank').addEventListener('click', ()=>{ wrap.remove(); document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex'); });
+  wrap.querySelector('#startBlank').addEventListener('click', ()=>{
+    wrap.remove();
+    if (!getHeaderNode()) morphTo('header-side');
+    document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
+  });
 }
 
 export function mountWizard(){
@@ -244,15 +248,14 @@ function renderStep(){
       </div>`;
     body.querySelectorAll('.swatch').forEach(swatch=>{
       const k=swatch.dataset.k;
-      swatch.onclick = ()=>{ document.body.setAttribute('data-theme', k); S.theme = k; };
+      swatch.onclick = ()=> setTheme(k);
     });
     body.querySelector('#wizDark').onclick = e=>{
       e.currentTarget.classList.toggle('on');
-      S.dark = e.currentTarget.classList.contains('on');
-      document.body.setAttribute('data-dark', S.dark ? '1' : '0');
+      setDark(e.currentTarget.classList.contains('on'));
     };
-    body.querySelector('#wizPaper').onclick = ()=>{ S.mat='paper'; document.body.setAttribute('data-mat','paper'); };
-    body.querySelector('#wizGlass').onclick = ()=>{ S.mat='glass'; document.body.setAttribute('data-mat','glass'); };
+    body.querySelector('#wizPaper').onclick = ()=> setMaterial('paper');
+    body.querySelector('#wizGlass').onclick = ()=> setMaterial('glass');
   }
 
   /* ----- CONTACT ----- */
