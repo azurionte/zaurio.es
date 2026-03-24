@@ -289,6 +289,10 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .project-menu.open{display:grid;gap:6px}
       #projectLibrary .project-menu button{appearance:none;border:0;background:rgba(255,255,255,.04);color:#fff8fb;padding:10px 12px;border-radius:12px;text-align:left;cursor:pointer;transition:background .16s ease, transform .16s ease}
       #projectLibrary .project-menu button:hover{background:rgba(255,255,255,.1);transform:translateX(2px)}
+      #projectLibrary .rename-inline{display:grid;gap:8px;padding:10px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+      #projectLibrary .rename-inline input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff8fb}
+      #projectLibrary .rename-actions{display:flex;gap:8px}
+      #projectLibrary .rename-actions button{flex:1 1 auto}
       #projectLibrary .project-add{display:grid;place-items:center;text-align:center;gap:12px;border:2px dashed rgba(255,255,255,.16);cursor:pointer}
       #projectLibrary .project-add:hover{border-color:rgba(255,212,71,.34);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))}
       #projectLibrary .project-add .plus{width:72px;height:72px;border-radius:24px;display:grid;place-items:center;background:rgba(255,255,255,.06);font-size:2rem;font-weight:800;transition:transform .16s ease, background .16s ease}
@@ -389,11 +393,31 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
 
     if (action === 'edit') return onEditProject?.(project);
     if (action === 'rename') {
-      const nextTitle = window.prompt('Nuevo nombre del CV', project.title);
-      if (!nextTitle || !nextTitle.trim()) return;
+      const menu = grid.querySelector(`[data-menu="${project.id}"]`);
+      if (!menu) return;
+      menu.innerHTML = `
+        <div class="rename-inline">
+          <input type="text" value="${project.title.replace(/"/g, '&quot;')}" data-rename-input="${project.id}" />
+          <div class="rename-actions">
+            <button data-action="rename-save" data-id="${project.id}" type="button">Guardar</button>
+            <button data-action="rename-cancel" data-id="${project.id}" type="button">Cancelar</button>
+          </div>
+        </div>
+      `;
+      menu.classList.add('open');
+      menu.querySelector('input')?.focus();
+      return;
+    }
+    if (action === 'rename-cancel') {
+      return renderCards();
+    }
+    if (action === 'rename-save') {
+      const input = grid.querySelector(`[data-rename-input="${project.id}"]`);
+      const nextTitle = input?.value?.trim();
+      if (!nextTitle) return;
       const { error } = await authState.client
         .from(TABLE)
-        .update({ title: nextTitle.trim(), updated_at: new Date().toISOString() })
+        .update({ title: nextTitle, updated_at: new Date().toISOString() })
         .eq('id', project.id);
       if (!error) {
         showActionFeedback(trigger, 'Renombrado', 'success');
