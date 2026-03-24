@@ -28,13 +28,6 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .sidebar-layout .rail{
       background:linear-gradient(180deg,var(--accent2),var(--accent));border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;min-height:920px;position:relative
     }
-    .sidebar-layout .rail-hero{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:12px;
-      width:100%;
-    }
     .sidebar-layout [data-zone="main"]{
   display:grid;grid-template-columns: repeat(12,minmax(0,1fr));gap:16px;align-content:start;min-width:0;
   justify-items:stretch; align-items:start; /* ensure children stretch to full column width */
@@ -603,15 +596,13 @@ function buildHeader(kind){
     node.innerHTML=`
       <div class="sidebar-layout" data-header data-hero="side">
         <div class="rail">
-          <div class="rail-hero" data-hero-piece>
-            <label class="avatar" data-avatar data-empty="1"><input type="file" accept="image/*"></label>
-            <div class="name-block">
-              <h2 class="name" contenteditable>YOUR NAME</h2>
-            </div>
-            <div class="chip-wrap">
-              <div class="chips" data-info></div>
-              <button id="chipAddBtn" title="Add contact" class="add-dot">+</button>
-            </div>
+          <label class="avatar" data-avatar data-empty="1"><input type="file" accept="image/*"></label>
+          <div class="name-block">
+            <h2 class="name" contenteditable>YOUR NAME</h2>
+          </div>
+          <div class="chip-wrap">
+            <div class="chips" data-info></div>
+            <button id="chipAddBtn" title="Add contact" class="add-dot">+</button>
           </div>
           <div class="sec-holder" data-rail-sections></div>
         </div>
@@ -717,31 +708,69 @@ export function normalizeCanvasForCurrentLayout({ showAdd } = {}){
 
 function getHeroPiece(wrapper){
   if (!wrapper) return null;
-  return wrapper.querySelector('[data-hero-piece], .fancy .hero, .topbar');
+  return wrapper.querySelector('.sidebar-layout .rail, .fancy .hero, .topbar');
 }
 
 function getAvatarPiece(wrapper){
   return wrapper?.querySelector('.avatar') || null;
 }
 
-function makeHeroGhost(el){
-  if (!el) return null;
-  const rect = el.getBoundingClientRect();
-  const cs = getComputedStyle(el);
+function getHeroMorphData(wrapper){
+  if (!wrapper) return null;
+  const sidebar = wrapper.querySelector('.sidebar-layout .rail');
+  if (sidebar){
+    const railRect = sidebar.getBoundingClientRect();
+    const chipWrap = wrapper.querySelector('.sidebar-layout .chip-wrap');
+    const chipRect = chipWrap?.getBoundingClientRect();
+    const bottom = chipRect ? Math.min(railRect.bottom, chipRect.bottom + 10) : Math.min(railRect.bottom, railRect.top + 280);
+    const cs = getComputedStyle(sidebar);
+    return {
+      rect: {
+        left: railRect.left,
+        top: railRect.top,
+        width: railRect.width,
+        height: Math.max(180, bottom - railRect.top)
+      },
+      background: cs.background,
+      borderRadius: cs.borderRadius,
+      boxShadow: cs.boxShadow,
+      border: cs.border
+    };
+  }
+  const hero = getHeroPiece(wrapper);
+  if (!hero) return null;
+  const rect = hero.getBoundingClientRect();
+  const cs = getComputedStyle(hero);
+  return {
+    rect: {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height
+    },
+    background: cs.background,
+    borderRadius: cs.borderRadius,
+    boxShadow: cs.boxShadow,
+    border: cs.border
+  };
+}
+
+function makeHeroGhost(data){
+  if (!data) return null;
   const ghost = document.createElement('div');
   ghost.className = 'layout-morph-ghost layout-morph-hero';
-  ghost.style.width = `${rect.width}px`;
-  ghost.style.height = `${rect.height}px`;
-  ghost.style.left = `${rect.left}px`;
-  ghost.style.top = `${rect.top}px`;
+  ghost.style.width = `${data.rect.width}px`;
+  ghost.style.height = `${data.rect.height}px`;
+  ghost.style.left = `${data.rect.left}px`;
+  ghost.style.top = `${data.rect.top}px`;
   ghost.style.margin = '0';
-  ghost.style.background = cs.background;
-  ghost.style.borderRadius = cs.borderRadius;
-  ghost.style.boxShadow = cs.boxShadow;
-  ghost.style.border = cs.border;
+  ghost.style.background = data.background;
+  ghost.style.borderRadius = data.borderRadius;
+  ghost.style.boxShadow = data.boxShadow;
+  ghost.style.border = data.border;
   ghost.style.transform = 'translate(0,0) scale(1,1)';
   document.body.appendChild(ghost);
-  return { ghost, rect };
+  return { ghost, rect: data.rect, borderRadius: data.borderRadius };
 }
 
 function makeAvatarGhost(el){
@@ -813,6 +842,7 @@ export function morphTo(kind){
   const oldWrap=getHeaderNodeWrapper();
   const oldHeader = oldWrap?.querySelector('[data-header]');
   const oldHero = getHeroPiece(oldWrap);
+  const oldHeroData = getHeroMorphData(oldWrap);
   const oldAvatar = getAvatarPiece(oldWrap);
   const oldFadeTargets = collectFadeTargets(oldWrap);
   const sectionTargets = getSectionWrappers();
@@ -825,16 +855,17 @@ export function morphTo(kind){
   normalizeCanvasForCurrentLayout({ showAdd: true });
 
   const newHero = getHeroPiece(temp);
+  const newHeroData = getHeroMorphData(temp);
   const newAvatar = getAvatarPiece(temp);
   const newFadeTargets = collectFadeTargets(temp);
 
-  if (!oldWrap || !oldHero || !newHero){
+  if (!oldWrap || !oldHero || !newHero || !oldHeroData || !newHeroData){
     if (oldWrap) oldWrap.remove();
     normalizeCanvasForCurrentLayout({ showAdd: true });
     return;
   }
 
-  const heroGhostData = makeHeroGhost(oldHero);
+  const heroGhostData = makeHeroGhost(oldHeroData);
   const avatarGhostData = oldAvatar ? makeAvatarGhost(oldAvatar) : null;
 
   oldHero.classList.add('layout-morph-hide');
@@ -856,19 +887,20 @@ export function morphTo(kind){
     normalizeCanvasForCurrentLayout({ showAdd: true });
 
     const settledNewHero = getHeroPiece(temp);
+    const settledNewHeroData = getHeroMorphData(temp);
     const settledNewAvatar = getAvatarPiece(temp);
-    const newHeroRect = settledNewHero?.getBoundingClientRect();
+    const newHeroRect = settledNewHeroData?.rect;
     const newAvatarRect = settledNewAvatar?.getBoundingClientRect();
 
-    if (heroGhostData && newHeroRect && settledNewHero){
+    if (heroGhostData && newHeroRect && settledNewHero && settledNewHeroData){
       const dx = newHeroRect.left - heroGhostData.rect.left;
       const dy = newHeroRect.top - heroGhostData.rect.top;
       const sx = newHeroRect.width / heroGhostData.rect.width;
       const sy = newHeroRect.height / heroGhostData.rect.height;
       heroGhostData.ghost.animate(
         [
-          { transform:'translate(0,0) scale(1,1)', borderRadius:getComputedStyle(oldHero).borderRadius, opacity:1 },
-          { transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`, borderRadius:getComputedStyle(settledNewHero).borderRadius, opacity:1 }
+          { transform:'translate(0,0) scale(1,1)', borderRadius:heroGhostData.borderRadius, opacity:1 },
+          { transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`, borderRadius:settledNewHeroData.borderRadius, opacity:1 }
         ],
         { duration:560, easing:'cubic-bezier(.18,1,.24,1)', fill:'forwards' }
       );
