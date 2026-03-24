@@ -1,6 +1,7 @@
 (() => {
   const root = document.querySelector("div[data-zaurio-nav]");
   const legacyTopMenu = root ? null : document.querySelector(".topMenu");
+  const sharedBase = "https://zaurio.es/shared";
   const active =
     (root && root.dataset.active) ||
     document.body.dataset.zaurioNav ||
@@ -22,33 +23,33 @@
       key: "miercoles",
       href: "https://miercoles.zaurio.es",
       label: "Miercoles",
-      icon: "/shared/assets/brand/miercoles.png",
+      icon: `${sharedBase}/assets/brand/miercoles.png`,
     },
     {
       type: "link",
       key: "secretos",
       href: "https://secretos.zaurio.es",
       label: "Secretos",
-      icon: "/shared/assets/brand/confesion.png",
+      icon: `${sharedBase}/assets/brand/confesion.png`,
     },
     {
       type: "menu",
       key: "herramientas",
       href: "https://herramientas.zaurio.es",
       label: "Herramientas",
-      icon: "/shared/assets/apps/toolbox.png",
+      icon: `${sharedBase}/assets/apps/toolbox.png`,
       items: [
         {
           type: "link",
           href: "https://herramientas.zaurio.es/dinerozaurio/",
           label: "DineroZaurio",
-          icon: "/shared/assets/apps/piggy.png",
+          icon: `${sharedBase}/assets/apps/piggy.png`,
           tag: "beta",
         },
         {
           type: "static",
           label: "Emprezaurio",
-          icon: "/shared/assets/apps/toolbox.png",
+          icon: `${sharedBase}/assets/apps/toolbox.png`,
           tag: "soon",
         },
       ],
@@ -58,13 +59,13 @@
       key: "juegos",
       href: "https://juegos.zaurio.es",
       label: "Juegos",
-      icon: "/shared/assets/apps/piggy.png",
+      icon: `${sharedBase}/assets/apps/piggy.png`,
       items: [
         {
           type: "link",
           href: "https://juegos.zaurio.es/trivialodon/",
           label: "Trivialodon",
-          icon: "/shared/assets/apps/piggy.png",
+          icon: `${sharedBase}/assets/apps/piggy.png`,
           tag: "soon",
         },
       ],
@@ -140,7 +141,7 @@
   const navMarkup = `
     <nav class="zaurio-global-nav" aria-label="Navegacion global de Zaurio">
       <a class="zaurio-home-link ${active === "home" ? "is-active" : ""}" href="https://zaurio.es" aria-label="Ir a Zaurio">
-        <img class="zaurio-home-icon" src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
+        <img class="zaurio-home-icon" src="${sharedBase}/assets/brand/favicon-32x32.png" alt="Zaurio">
       </a>
       <div class="zaurio-nav-list">
         ${topLevelItems.map(renderTopItem).join("")}

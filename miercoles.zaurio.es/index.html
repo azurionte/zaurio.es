@@ -329,8 +329,8 @@
 </style>
 </head>
 
-<body data-zaurio-nav="miercoles" data-zaurio-cta-id="composeBtn" data-zaurio-cta-title="Escribir">
-  <div data-zaurio-nav data-active="miercoles" data-cta-id="composeBtn" data-cta-title="Escribir"></div>
+<body data-zaurio-nav="miercoles">
+  <div data-zaurio-nav data-active="miercoles"></div>
   <div class="wrap">
 <div class="card" id="composerCard">
       <div class="header">
@@ -365,14 +365,16 @@
     const composeBtn = document.getElementById("composeBtn");
     const composerCard = document.getElementById("composerCard");
 
-    composeBtn.addEventListener("click", ()=>{
-      composerCard.scrollIntoView({ behavior:"smooth", block:"start" });
-    });
+    if (composeBtn && composerCard){
+      composeBtn.addEventListener("click", ()=>{
+        composerCard.scrollIntoView({ behavior:"smooth", block:"start" });
+      });
 
-    window.addEventListener("scroll", ()=>{
-      if (window.scrollY > 180) composeBtn.classList.add("show");
-      else composeBtn.classList.remove("show");
-    });
+      window.addEventListener("scroll", ()=>{
+        if (window.scrollY > 180) composeBtn.classList.add("show");
+        else composeBtn.classList.remove("show");
+      });
+    }
   </script>
 </body>
 </html>
