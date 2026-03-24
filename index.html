@@ -1098,10 +1098,21 @@
           "portrait"
           "title"
           "copy";
+        gap:14px;
       }
 
       .hero-title h1{
-        max-width:12ch;
+        max-width:none;
+        font-size:clamp(1.95rem, 8vw, 3rem);
+      }
+
+      .hero-title{
+        width:100%;
+      }
+
+      .hero-copy,
+      .lead{
+        max-width:none;
       }
     }
 
