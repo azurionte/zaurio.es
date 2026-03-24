@@ -163,7 +163,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   .card-controls{position:absolute;right:8px;top:8px;display:flex;gap:6px}
   .card-controls .ctrl-circle{width:28px;height:28px;border-radius:999px;font-size:12px}
 
-  .layout-morph-hide{visibility:hidden !important}
+  .layout-morph-hide{opacity:0 !important}
   .layout-morph-ghost{
     position:fixed;left:0;top:0;z-index:25000;pointer-events:none;
     transform-origin:top left;
@@ -714,18 +714,54 @@ function getAvatarPiece(wrapper){
   return wrapper?.querySelector('.avatar') || null;
 }
 
-function makeGhostFromElement(el, className){
+function makeHeroGhost(el){
   if (!el) return null;
   const rect = el.getBoundingClientRect();
-  const ghost = el.cloneNode(true);
-  ghost.classList.add('layout-morph-ghost');
-  if (className) ghost.classList.add(className);
+  const cs = getComputedStyle(el);
+  const ghost = document.createElement('div');
+  ghost.className = 'layout-morph-ghost layout-morph-hero';
   ghost.style.width = `${rect.width}px`;
   ghost.style.height = `${rect.height}px`;
   ghost.style.left = `${rect.left}px`;
   ghost.style.top = `${rect.top}px`;
   ghost.style.margin = '0';
+  ghost.style.background = cs.background;
+  ghost.style.borderRadius = cs.borderRadius;
+  ghost.style.boxShadow = cs.boxShadow;
+  ghost.style.border = cs.border;
   ghost.style.transform = 'translate(0,0) scale(1,1)';
+  document.body.appendChild(ghost);
+  return { ghost, rect };
+}
+
+function makeAvatarGhost(el){
+  if (!el) return null;
+  const rect = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+  const ghost = document.createElement('div');
+  ghost.className = 'layout-morph-ghost layout-morph-avatar';
+  ghost.style.width = `${rect.width}px`;
+  ghost.style.height = `${rect.height}px`;
+  ghost.style.left = `${rect.left}px`;
+  ghost.style.top = `${rect.top}px`;
+  ghost.style.margin = '0';
+  ghost.style.borderRadius = '999px';
+  ghost.style.overflow = 'hidden';
+  ghost.style.background = cs.background;
+  ghost.style.border = cs.border;
+  ghost.style.boxShadow = cs.boxShadow;
+  const sourceCanvas = el.querySelector('canvas');
+  if (sourceCanvas) {
+    const canvas = document.createElement('canvas');
+    canvas.width = sourceCanvas.width || rect.width;
+    canvas.height = sourceCanvas.height || rect.height;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    try { ctx.drawImage(sourceCanvas, 0, 0); } catch(_){}
+    ghost.appendChild(canvas);
+  }
   document.body.appendChild(ghost);
   return { ghost, rect };
 }
@@ -788,8 +824,8 @@ export function morphTo(kind){
     return;
   }
 
-  const heroGhostData = makeGhostFromElement(oldHero, 'layout-morph-hero');
-  const avatarGhostData = oldAvatar ? makeGhostFromElement(oldAvatar, 'layout-morph-avatar') : null;
+  const heroGhostData = makeHeroGhost(oldHero);
+  const avatarGhostData = oldAvatar ? makeAvatarGhost(oldAvatar) : null;
   const newHeroRect = newHero.getBoundingClientRect();
   const newAvatarRect = newAvatar?.getBoundingClientRect();
 
