@@ -88,8 +88,32 @@
     const supabaseKey = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
     const appBaseUrl = window.location.origin + "/emprezaurio/beta/";
     const statusNode = document.getElementById("entryStatus");
+    const googleBtn = document.getElementById("googleEntryBtn");
     document.getElementById("guestEntryBtn")?.addEventListener("click", () => { try { sessionStorage.setItem("emprezaurio:entry", "guest"); } catch {} });
-    document.getElementById("googleEntryBtn")?.addEventListener("click", async () => {
+
+    async function syncExistingSession() {
+      if (!window.supabase || !googleBtn) return;
+      try {
+        const client = window.supabase.createClient(supabaseUrl, supabaseKey, {
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+        const { data: { session } } = await client.auth.getSession();
+        if (session?.user?.id) {
+          googleBtn.textContent = "Continuar con mi cuenta";
+          googleBtn.dataset.ready = "continue";
+          statusNode.textContent = "Sesion detectada. Puedes seguir con tus CVs guardados.";
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    googleBtn?.addEventListener("click", async () => {
+      if (googleBtn.dataset.ready === "continue") {
+        sessionStorage.setItem("emprezaurio:entry", "google");
+        window.location.href = appBaseUrl;
+        return;
+      }
       if (!window.supabase) { statusNode.textContent = "No se pudo iniciar la conexion con Google."; return; }
       try {
         sessionStorage.setItem("emprezaurio:entry", "google");
@@ -101,6 +125,8 @@
         console.error(error);
       }
     });
+
+    syncExistingSession();
   </script>
 </body>
 </html>
