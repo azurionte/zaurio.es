@@ -791,7 +791,7 @@
   <div class="wrap">
 <section class="pageIntro">
       <img class="logo" src="/shared/assets/brand/confesionario.png" alt="El Confesionario">
-      <p class="sub">EnvÃ­a tu confesiÃ³n y espera a que sea aprobada para aparecer publicada.</p>
+      <p class="sub">Envía tu confesión y espera a que sea aprobada para aparecer publicada.</p>
     </section>
 
     <section class="composer narrow" id="composer">
@@ -813,14 +813,14 @@
         </div>
 
         <div class="fieldGroup">
-          <div class="fieldLabel">Tu confesiÃ³n</div>
-          <textarea id="texto" maxlength="700" placeholder="Cuenta tu secreto aquÃ­..."></textarea>
+          <div class="fieldLabel">Tu confesión</div>
+          <textarea id="texto" maxlength="700" placeholder="Cuenta tu secreto aquí..."></textarea>
         </div>
 
         <div class="fieldGroup">
           <div class="actions">
             <div id="status" class="status"></div>
-            <button id="btnEnviar" class="btn btnPrimary">Enviar confesiÃ³n</button>
+            <button id="btnEnviar" class="btn btnPrimary">Enviar confesión</button>
           </div>
         </div>
       </div>
@@ -828,7 +828,7 @@
 
     <section class="feedWrap narrow">
       <section class="featured" id="featuredBox" style="display:none;">
-        <div class="featuredHead">ðŸ”¥ MÃ¡s reaccionado</div>
+        <div class="featuredHead">🔥 Más reaccionado</div>
         <div class="featuredBody" id="featuredBody"></div>
       </section>
 
@@ -836,8 +836,8 @@
         <h2 style="margin:0;font-size:26px;">Confesiones publicadas</h2>
         <div class="filters">
           <select id="sortSelect">
-            <option value="new" selected>MÃ¡s recientes primero</option>
-            <option value="old">MÃ¡s antiguos primero</option>
+            <option value="new" selected>Más recientes primero</option>
+            <option value="old">Más antiguos primero</option>
           </select>
 
           <div class="identityFilter" aria-label="Filtro de identidad">
@@ -849,10 +849,10 @@
 
           <select id="reactionFilter">
             <option value="all">Todas las reacciones</option>
-            <option value="fire">ðŸ”¥ Fire</option>
-            <option value="heart">ðŸ’– Heart</option>
-            <option value="fear">ðŸ˜± Fear</option>
-            <option value="sob">ðŸ˜­ Sob</option>
+            <option value="fire">🔥 Fire</option>
+            <option value="heart">💖 Heart</option>
+            <option value="fear">😱 Fear</option>
+            <option value="sob">😭 Sob</option>
           </select>
         </div>
       </div>
@@ -965,7 +965,7 @@
 
     function formatDate(iso){
       const d = new Date(iso);
-      return d.toLocaleDateString() + " Â· " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+      return d.toLocaleDateString() + " · " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
     }
 
     function votedMap(){
@@ -1015,9 +1015,9 @@
       return `
         <article class="secret ${tint}" id="secret-${s.numero_secreto}">
           <div class="secretMeta">
-            <span>#${s.numero_secreto ?? "â€”"}</span>
+            <span>#${s.numero_secreto ?? "—"}</span>
             <span class="identityChip ${chip}"></span>
-            <span>${s.edad} aÃ±os</span>
+            <span>${s.edad} años</span>
             <span>${formatDate(s.creado)}</span>
           </div>
 
@@ -1154,22 +1154,35 @@
     }
 
     async function cargarSecretos(){
-      const { data, error } = await supabaseClient
-        .from("secretos_con_reacciones")
-        .select("*")
-        .eq("estado","aprobado")
-        .limit(300);
-
-      if (error){
-        listH.innerHTML = `<div class="empty">Error cargando confesiones.</div>`;
+      if (typeof supabaseClient === "undefined"){
+        listH.innerHTML = `<div class="empty">No se pudo iniciar la conexión con Supabase.</div>`;
         listL.innerHTML = "";
         listM.innerHTML = "";
         return;
       }
 
-      secretos = data || [];
-      renderLists();
-      openPermalinkIfPresent();
+      try{
+        const { data, error } = await supabaseClient
+          .from("secretos_con_reacciones")
+          .select("*")
+          .eq("estado","aprobado")
+          .limit(300);
+
+        if (error){
+          listH.innerHTML = `<div class="empty">Error cargando confesiones.</div>`;
+          listL.innerHTML = "";
+          listM.innerHTML = "";
+          return;
+        }
+
+        secretos = data || [];
+        renderLists();
+        openPermalinkIfPresent();
+      }catch(_error){
+        listH.innerHTML = `<div class="empty">No se pudieron cargar las confesiones.</div>`;
+        listL.innerHTML = "";
+        listM.innerHTML = "";
+      }
     }
 
     async function votar(secretId, reaction, btn){
@@ -1185,7 +1198,7 @@
         .insert([{ secreto_id: secretId, reaccion: reaction }]);
 
       if (error){
-        setStatus("âŒ No se pudo registrar la reacciÃ³n.", false);
+        setStatus("❌ No se pudo registrar la reacción.", false);
         return;
       }
 
@@ -1240,14 +1253,16 @@
     reactionFilter.addEventListener("change", renderLists);
     window.addEventListener("resize", renderLists);
 
-    composeBtn.addEventListener("click", ()=>{
-      composer.scrollIntoView({ behavior:"smooth", block:"start" });
-    });
+    if (composeBtn){
+      composeBtn.addEventListener("click", ()=>{
+        composer.scrollIntoView({ behavior:"smooth", block:"start" });
+      });
 
-    window.addEventListener("scroll", ()=>{
-      if (window.scrollY > 180) composeBtn.classList.add("show");
-      else composeBtn.classList.remove("show");
-    });
+      window.addEventListener("scroll", ()=>{
+        if (window.scrollY > 180) composeBtn.classList.add("show");
+        else composeBtn.classList.remove("show");
+      });
+    }
 
     document.addEventListener("click", async (e)=>{
       const reactBtn = e.target.closest(".reactionBtn");
@@ -1271,17 +1286,17 @@
         return;
       }
       if (!Number.isFinite(eNum) || eNum < 18 || eNum > 99){
-        setStatus("Pon una edad vÃ¡lida entre 18 y 99.", false);
+        setStatus("Pon una edad válida entre 18 y 99.", false);
         return;
       }
       if (t.length < 15){
-        setStatus("La confesiÃ³n debe tener al menos 15 caracteres.", false);
+        setStatus("La confesión debe tener al menos 15 caracteres.", false);
         return;
       }
 
       btnEnviar.disabled = true;
       btnEnviar.style.opacity = ".65";
-      setStatus("Enviandoâ€¦", true);
+      setStatus("Enviando…", true);
 
       const { error } = await supabaseClient
         .from("secretos")
@@ -1293,7 +1308,7 @@
         }]);
 
       if (error){
-        setStatus("âŒ " + error.message, false);
+        setStatus("❌ " + error.message, false);
         btnEnviar.disabled = false;
         btnEnviar.style.opacity = "1";
         return;
@@ -1302,7 +1317,7 @@
       texto.value = "";
       edad.value = "";
       setGenero("hombre");
-      setStatus("âœ… ConfesiÃ³n enviada. Espera su aprobaciÃ³n.", true);
+      setStatus("✅ Confesión enviada. Espera su aprobación.", true);
 
       btnEnviar.disabled = false;
       btnEnviar.style.opacity = "1";
@@ -1312,4 +1327,6 @@
   </script>
 </body>
 </html>
+
+
 

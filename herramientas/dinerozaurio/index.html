@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DineroZaurio Â· Base estable</title>
+  <title>DineroZaurio · Base estable</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
   <link rel="stylesheet" href="/shared/css/zaurio-ui.css">
@@ -223,7 +223,7 @@
     <section id="authGate" class="centerGate">
       <img src="/shared/assets/apps/dinerozaurio.png" alt="DineroZaurio" class="logo-main" />
       <h1>DineroZaurio</h1>
-      <p class="muted">Accede con Google para continuar con tu planificaciÃ³n financiera.</p>
+      <p class="muted">Accede con Google para continuar con tu planificación financiera.</p>
       <div class="btnRow" style="margin-top:18px">
         <button id="googleLoginBtn" class="btn primary full">Entrar con Google</button>
       </div>
@@ -237,21 +237,21 @@
     </div>
 
     <section id="choiceGate" class="centerGate hidden">
-      <h2>Â¿Deseas usar tus datos guardados o empezar de cero?</h2>
+      <h2>¿Deseas usar tus datos guardados o empezar de cero?</h2>
       <p class="muted">Este es el primer paso importante: tener una entrada estable sin romper imports, estado ni pantallas.</p>
       <div class="btnRow" style="margin-top:18px">
         <button id="useSavedBtn" class="btn primary">Usar mis datos guardados</button>
-        <button id="startFreshBtn" class="btn danger">Empezar configuraciÃ³n desde cero</button>
+        <button id="startFreshBtn" class="btn danger">Empezar configuración desde cero</button>
       </div>
     </section>
 
     <section id="wizard" class="wizard hidden">
       <div class="wizardStep" data-step="0">
         <h2>Vamos a configurar tu perfil</h2>
-        <p class="muted">Paso 1 de 4 Â· ingresos</p>
+        <p class="muted">Paso 1 de 4 · ingresos</p>
         <div id="wizardIncomeList" class="listContainer"></div>
         <div class="btnRow" style="margin-top:14px">
-          <button id="addWizardIncome" class="btn good">+ AÃ±adir ingreso</button>
+          <button id="addWizardIncome" class="btn good">+ Añadir ingreso</button>
         </div>
         <div class="wizardNav">
           <button id="cancelWizard" class="btn ghost">Cancelar y configurar manualmente</button>
@@ -261,10 +261,10 @@
 
       <div class="wizardStep hidden" data-step="1">
         <h2>Gastos</h2>
-        <p class="muted">Paso 2 de 4 Â· gastos fijos y variables</p>
+        <p class="muted">Paso 2 de 4 · gastos fijos y variables</p>
         <div id="wizardExpenseList" class="listContainer"></div>
         <div class="btnRow" style="margin-top:14px">
-          <button id="addWizardExpense" class="btn good">+ AÃ±adir gasto</button>
+          <button id="addWizardExpense" class="btn good">+ Añadir gasto</button>
         </div>
         <div class="wizardNav">
           <button id="wizardPrev1" class="btn ghost">Anterior</button>
@@ -274,10 +274,10 @@
 
       <div class="wizardStep hidden" data-step="2">
         <h2>Deudas</h2>
-        <p class="muted">Paso 3 de 4 Â· prÃ©stamos y tarjetas</p>
+        <p class="muted">Paso 3 de 4 · préstamos y tarjetas</p>
         <div id="wizardDebtList" class="listContainer"></div>
         <div class="btnRow" style="margin-top:14px">
-          <button id="addWizardDebt" class="btn good">+ AÃ±adir deuda</button>
+          <button id="addWizardDebt" class="btn good">+ Añadir deuda</button>
         </div>
         <div class="wizardNav">
           <button id="wizardPrev2" class="btn ghost">Anterior</button>
@@ -287,10 +287,10 @@
 
       <div class="wizardStep hidden" data-step="3">
         <h2>Ahorros</h2>
-        <p class="muted">Paso 4 de 4 Â· objetivos de ahorro</p>
+        <p class="muted">Paso 4 de 4 · objetivos de ahorro</p>
         <div id="wizardGoalList" class="listContainer"></div>
         <div class="btnRow" style="margin-top:14px">
-          <button id="addWizardGoal" class="btn good">+ AÃ±adir objetivo</button>
+          <button id="addWizardGoal" class="btn good">+ Añadir objetivo</button>
         </div>
         <div class="wizardNav">
           <button id="wizardPrev3" class="btn ghost">Anterior</button>
@@ -303,7 +303,7 @@
       <div class="topbar">
         <div class="brand">
           <h1>DineroZaurio</h1>
-          <p id="lastUpdatedText">Ãšltima actualizaciÃ³n de datos â€”</p>
+          <p id="lastUpdatedText">Última actualización de datos —</p>
         </div>
         <div class="actions">
           <button id="resetToWizardBtn" class="btn ghost">Volver al wizard</button>
@@ -312,8 +312,8 @@
       </div>
 
       <div class="tabs">
-        <div class="tab active" data-tab="config">ConfiguraciÃ³n</div>
-        <div class="tab" data-tab="forecast">PrevisiÃ³n</div>
+        <div class="tab active" data-tab="config">Configuración</div>
+        <div class="tab" data-tab="forecast">Previsión</div>
       </div>
 
       <section id="tab-config" class="stack">
@@ -323,13 +323,13 @@
               <div class="section-title">
                 <div>
                   <div class="label">Ingresos mensuales base</div>
-                  <div class="value kpi-cyan" id="kpiIncome">0 â‚¬</div>
+                  <div class="value kpi-cyan" id="kpiIncome">0 €</div>
                 </div>
                 <button class="btn ghost toggleSectionBtn" data-target="incomeSectionBody">Editar</button>
               </div>
               <div id="incomeSectionBody" class="sectionBody hidden" style="display:none">
-                <div class="sub" style="margin-bottom:12px">AÃ±ade sueldo, bonus, alquiler cobrado o side income.</div>
-                <div class="btnRow" style="margin-bottom:12px"><button id="addIncomeBtn" class="btn good">+ AÃ±adir ingreso</button></div>
+                <div class="sub" style="margin-bottom:12px">Añade sueldo, bonus, alquiler cobrado o side income.</div>
+                <div class="btnRow" style="margin-bottom:12px"><button id="addIncomeBtn" class="btn good">+ Añadir ingreso</button></div>
                 <div id="incomeList" class="list"></div>
               </div>
             </div>
@@ -338,13 +338,13 @@
               <div class="section-title">
                 <div>
                   <div class="label">Gastos base mensuales</div>
-                  <div class="value kpi-red" id="kpiExpense">0 â‚¬</div>
+                  <div class="value kpi-red" id="kpiExpense">0 €</div>
                 </div>
                 <button class="btn ghost toggleSectionBtn" data-target="expenseSectionBody">Editar</button>
               </div>
               <div id="expenseSectionBody" class="sectionBody hidden" style="display:none">
                 <div class="sub" style="margin-bottom:12px">Cada gasto tiene nombre, importe y periodicidad.</div>
-                <div class="btnRow" style="margin-bottom:12px"><button id="addExpenseBtn" class="btn good">+ AÃ±adir gasto</button></div>
+                <div class="btnRow" style="margin-bottom:12px"><button id="addExpenseBtn" class="btn good">+ Añadir gasto</button></div>
                 <div id="expenseList" class="list"></div>
               </div>
             </div>
@@ -353,13 +353,13 @@
               <div class="section-title">
                 <div>
                   <div class="label">Ahorro conseguido</div>
-                  <div class="value kpi-green" id="kpiSavings">0 â‚¬</div>
+                  <div class="value kpi-green" id="kpiSavings">0 €</div>
                 </div>
                 <button class="btn ghost toggleSectionBtn" data-target="goalSectionBody">Editar</button>
               </div>
               <div id="goalSectionBody" class="sectionBody hidden" style="display:none">
                 <div class="sub" style="margin-bottom:12px">Ahorro fijo por mes o ahorro por objetivo.</div>
-                <div class="btnRow" style="margin-bottom:12px"><button id="addGoalBtn" class="btn good">+ AÃ±adir ahorro</button></div>
+                <div class="btnRow" style="margin-bottom:12px"><button id="addGoalBtn" class="btn good">+ Añadir ahorro</button></div>
                 <div id="goalList" class="list"></div>
               </div>
             </div>
@@ -370,13 +370,13 @@
               <div class="section-title">
                 <div>
                   <div class="label">Deuda base mensual</div>
-                  <div class="value kpi-yellow" id="kpiDebt">0 â‚¬</div>
+                  <div class="value kpi-yellow" id="kpiDebt">0 €</div>
                 </div>
                 <button class="btn ghost toggleSectionBtn" data-target="debtSectionBody">Editar</button>
               </div>
               <div id="debtSectionBody" class="sectionBody hidden" style="display:none">
-                <div class="sub" style="margin-bottom:12px">PrÃ©stamos, compras aplazadas y tarjetas.</div>
-                <div class="btnRow" style="margin-bottom:12px"><button id="addDebtBtn" class="btn good">+ AÃ±adir deuda</button></div>
+                <div class="sub" style="margin-bottom:12px">Préstamos, compras aplazadas y tarjetas.</div>
+                <div class="btnRow" style="margin-bottom:12px"><button id="addDebtBtn" class="btn good">+ Añadir deuda</button></div>
                 <div id="debtList" class="list"></div>
               </div>
             </div>
@@ -386,12 +386,12 @@
             <div class="panel">
               <div class="section-title">
                 <div>
-                  <h2>ColchÃ³n</h2>
-                  <div class="sub">Indica aquÃ­ si existen ahorros previos a este plan.</div>
+                  <h2>Colchón</h2>
+                  <div class="sub">Indica aquí si existen ahorros previos a este plan.</div>
                 </div>
               </div>
               <div class="field">
-                <label>ColchÃ³n inicial</label>
+                <label>Colchón inicial</label>
                 <input id="initialReserve" class="input" type="number" step="0.01" value="0" />
               </div>
             </div>
@@ -400,7 +400,7 @@
               <div class="section-title">
                 <div>
                   <h2>Mes por defecto</h2>
-                  <div class="sub">Indica desde quÃ© mes comienza este registro de deudas y gastos.</div>
+                  <div class="sub">Indica desde qué mes comienza este registro de deudas y gastos.</div>
                 </div>
               </div>
               <div class="field">
@@ -419,7 +419,7 @@
             <div class="field"><label>Hasta</label><input id="forecastTo" class="input" type="month" /></div>
             <div class="field"><label>Leyenda</label><div class="pill">Recuperado = cuota liberada al terminar una deuda</div></div>
             <div class="field"><label>Leyenda</label><div class="pill">Sobrante = ingreso - gastos - deuda - ahorro</div></div>
-            <div class="field"><label>Leyenda</label><div class="pill">ColchÃ³n = acumulado incluyendo meses anteriores</div></div>
+            <div class="field"><label>Leyenda</label><div class="pill">Colchón = acumulado incluyendo meses anteriores</div></div>
           </div>
           <div class="legend">
             <span class="pill">Primera parte: la base ya no se rompe al entrar.</span>
@@ -551,18 +551,18 @@
     function debtDescription(d){
       if((d.debtKind||'loan') === 'loan'){
         return d.lastMonth
-          ? `PrÃ©stamo Â· cuota ${euros(d.monthlyPayment||0)} Â· hasta ${d.lastMonth}`
-          : `PrÃ©stamo Â· cuota ${euros(d.monthlyPayment||0)} Â· ${Number(d.remainingInstallments||0)} cuotas restantes`;
+          ? `Préstamo · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
+          : `Préstamo · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
       }
       if((d.cardSubtype||'revolving') === 'revolving'){
-        return `Tarjeta revolving Â· deuda ${euros(d.currentDebt||0)} Â· cuota ${euros(d.currentPayment||0)} Â· TIN ${Number(d.tin||0)}% Â· TAE ${Number(d.tae||0)}%`;
+        return `Tarjeta revolving · deuda ${euros(d.currentDebt||0)} · cuota ${euros(d.currentPayment||0)} · TIN ${Number(d.tin||0)}% · TAE ${Number(d.tae||0)}%`;
       }
       if(d.cardSubtype === 'pay_end_month'){
-        return `Tarjeta fin de mes Â· ${euros(d.amount||0)} Â· ${d.periodicity==='one_time'?'puntual':'mensual'}`;
+        return `Tarjeta fin de mes · ${euros(d.amount||0)} · ${d.periodicity==='one_time'?'puntual':'mensual'}`;
       }
       return d.lastMonth
-        ? `Compra aplazada Â· cuota ${euros(d.monthlyPayment||0)} Â· hasta ${d.lastMonth}`
-        : `Compra aplazada Â· cuota ${euros(d.monthlyPayment||0)} Â· ${Number(d.remainingInstallments||0)} cuotas restantes`;
+        ? `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
+        : `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
     }
     function amountForSchedule(item, ym){
       const start = item.startMonth || state.defaultStartMonth;
@@ -1064,12 +1064,12 @@
           row.innerHTML = `
             <input class="input" placeholder="Entidad" value="${item.name||''}">
             <select class="select">
-              <option value="loan" ${(item.debtKind||'loan')==='loan'?'selected':''}>PrÃ©stamo</option>
+              <option value="loan" ${(item.debtKind||'loan')==='loan'?'selected':''}>Préstamo</option>
               <option value="card" ${(item.debtKind||'loan')==='card'?'selected':''}>Tarjeta</option>
             </select>
-            <input class="input" type="number" step="0.01" placeholder="${(item.debtKind||'loan')==='loan'?'Cuota â‚¬':'Pago / monto â‚¬'}" value="${(item.debtKind||'loan')==='loan'?(item.monthlyPayment||''):(item.currentPayment||item.amount||'')}">
+            <input class="input" type="number" step="0.01" placeholder="${(item.debtKind||'loan')==='loan'?'Cuota €':'Pago / monto €'}" value="${(item.debtKind||'loan')==='loan'?(item.monthlyPayment||''):(item.currentPayment||item.amount||'')}">
             <button class="btn ghost">Detalles</button>
-            <button class="btn danger">Ã—</button>`;
+            <button class="btn danger">×</button>`;
           const inputs = row.querySelectorAll('input,select');
           inputs[0].addEventListener('input', e => item.name = e.target.value);
           inputs[1].addEventListener('change', e => item.debtKind = e.target.value);
@@ -1087,9 +1087,9 @@
               <option value="fixed" ${(item.goalType||'fixed')==='fixed'?'selected':''}>Ahorro fijo por mes</option>
               <option value="target" ${(item.goalType||'fixed')==='target'?'selected':''}>Ahorro por objetivo</option>
             </select>
-            <input class="input" type="number" step="0.01" placeholder="${(item.goalType||'fixed')==='fixed'?'Monto por mes â‚¬':'Objetivo total â‚¬'}" value="${(item.goalType||'fixed')==='fixed'?(item.monthlyAmount||''):(item.targetTotal||'')}">
+            <input class="input" type="number" step="0.01" placeholder="${(item.goalType||'fixed')==='fixed'?'Monto por mes €':'Objetivo total €'}" value="${(item.goalType||'fixed')==='fixed'?(item.monthlyAmount||''):(item.targetTotal||'')}">
             <button class="btn ghost">Detalles</button>
-            <button class="btn danger">Ã—</button>`;
+            <button class="btn danger">×</button>`;
           const inputs = row.querySelectorAll('input,select');
           inputs[0].addEventListener('input', e => item.name = e.target.value);
           inputs[1].addEventListener('change', e => item.goalType = e.target.value);
@@ -1103,9 +1103,9 @@
           row.className = 'row';
           row.innerHTML = `
             <input class="input" placeholder="Nombre" value="${item.name||''}">
-            <input class="input" type="number" step="0.01" placeholder="Monto â‚¬" value="${item.amount||''}">
+            <input class="input" type="number" step="0.01" placeholder="Monto €" value="${item.amount||''}">
             <div></div>
-            <button class="btn danger">Ã—</button>`;
+            <button class="btn danger">×</button>`;
           const inputs = row.querySelectorAll('input');
           inputs[0].addEventListener('input', e => item.name = e.target.value);
           inputs[1].addEventListener('input', e => item.amount = Number(e.target.value||0));
@@ -1265,7 +1265,7 @@
           <div class="field"><label>Empieza en</label><input id="debtStart" class="input" type="month" value="${item.startMonth||state.defaultStartMonth}"></div>
           <div class="field"><label>Tipo</label>
             <select id="debtKind" class="select">
-              <option value="loan" ${(item.debtKind||'loan')==='loan'?'selected':''}>PrÃ©stamo</option>
+              <option value="loan" ${(item.debtKind||'loan')==='loan'?'selected':''}>Préstamo</option>
               <option value="card" ${(item.debtKind||'loan')==='card'?'selected':''}>Tarjeta</option>
             </select>
           </div>
@@ -1289,7 +1289,7 @@
           wrap.innerHTML = `<div class="modalGrid">
             <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${Number(item.monthlyPayment||0)}"></div>
             <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${Number(item.remainingInstallments||0)}"></div>
-            <div class="field"><label>Ãšltima cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${item.lastMonth||''}"></div>
+            <div class="field"><label>Última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${item.lastMonth||''}"></div>
           </div>`;
         } else if(subtype === 'revolving'){
           wrap.innerHTML = `<div class="modalGrid">
@@ -1312,7 +1312,7 @@
           wrap.innerHTML = `<div class="modalGrid">
             <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${Number(item.monthlyPayment||0)}"></div>
             <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${Number(item.remainingInstallments||0)}"></div>
-            <div class="field"><label>Ãšltima cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${item.lastMonth||''}"></div>
+            <div class="field"><label>Última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${item.lastMonth||''}"></div>
           </div>`;
         }
       }
@@ -1388,7 +1388,7 @@
           </div>`).join('') : '';
         const punctual = adj.extraIncomeAmount ? `
           <div class="miniItem">
-            <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraIncomeName||'Ingreso puntual')}</div><div class="miniSub">${euros(adj.extraIncomeAmount)} Â· puntual</div></div>
+            <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraIncomeName||'Ingreso puntual')}</div><div class="miniSub">${euros(adj.extraIncomeAmount)} · puntual</div></div>
             <div class="miniActions">
               <button class="btn ghost" id="editExtraIncomeBtn">Editar</button>
               <button class="btn danger" id="removeExtraIncomeBtn">Eliminar</button>
@@ -1404,7 +1404,7 @@
           </div>`).join('') : '';
         const punctual = adj.extraExpenseAmount ? `
           <div class="miniItem">
-            <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraExpenseName||'Gasto puntual')}</div><div class="miniSub">${euros(adj.extraExpenseAmount)} Â· puntual</div></div>
+            <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraExpenseName||'Gasto puntual')}</div><div class="miniSub">${euros(adj.extraExpenseAmount)} · puntual</div></div>
             <div class="miniActions">
               <button class="btn ghost" id="editExtraExpenseBtn">Editar</button>
               <button class="btn danger" id="removeExtraExpenseBtn">Eliminar</button>
@@ -1416,7 +1416,7 @@
         return current.debts.length ? current.debts.map(it => `
           <div class="miniItem ${it.settled ? 'settledDebt' : ''}">
             <div class="miniMeta">
-              <div class="miniName" style="${it.settled ? 'color:#4ade80' : ''}">${escapeHtml(it.name||'Deuda')}${it.settled ? ' Â· saldada' : ''}</div>
+              <div class="miniName" style="${it.settled ? 'color:#4ade80' : ''}">${escapeHtml(it.name||'Deuda')}${it.settled ? ' · saldada' : ''}</div>
               <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it))}</div>
             </div>
             <div class="miniActions">
@@ -1430,7 +1430,7 @@
       function goalListHtml(){
         const base = current.goals.length ? current.goals.map(it => `
           <div class="miniItem">
-            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Ahorro')}</div><div class="miniSub">${euros(it.monthAmount)} Â· ${(it.goalType||'fixed')==='fixed'?'fijo':'objetivo'}</div></div>
+            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Ahorro')}</div><div class="miniSub">${euros(it.monthAmount)} · ${(it.goalType||'fixed')==='fixed'?'fijo':'objetivo'}</div></div>
             <div class="miniActions">
               <button class="btn ghost" data-goal-edit="${it.id}">Modificar</button>
               <button class="btn ghost" data-goal-remove="${it.id}">Eliminar ahorro</button>
@@ -1438,7 +1438,7 @@
           </div>`).join('') : '';
         const punctual = adj.extraSavingAmount ? `
           <div class="miniItem">
-            <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraSavingName||'Ahorro puntual')}</div><div class="miniSub">${euros(adj.extraSavingAmount)} Â· puntual</div></div>
+            <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraSavingName||'Ahorro puntual')}</div><div class="miniSub">${euros(adj.extraSavingAmount)} · puntual</div></div>
             <div class="miniActions">
               <button class="btn ghost" id="editExtraSavingBtn">Editar</button>
               <button class="btn danger" id="removeExtraSavingBtn">Eliminar</button>
@@ -1453,28 +1453,28 @@
 
         <div class="monthSection">
           <h4>Ingresos</h4>
-          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthIncomeBtn" class="btn good">+ AÃ±adir ingreso puntual</button></div>
+          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthIncomeBtn" class="btn good">+ Añadir ingreso puntual</button></div>
           <div id="monthIncomeForm"></div>
           <div class="miniList">${incomeListHtml()}</div>
         </div>
 
         <div class="monthSection">
           <h4>Gastos</h4>
-          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthExpenseBtn" class="btn good">+ AÃ±adir gasto puntual</button></div>
+          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthExpenseBtn" class="btn good">+ Añadir gasto puntual</button></div>
           <div id="monthExpenseForm"></div>
           <div class="miniList">${expenseListHtml()}</div>
         </div>
 
         <div class="monthSection">
           <h4>Deudas</h4>
-          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthDebtBtn" class="btn good">+ AÃ±adir deuda</button></div>
+          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthDebtBtn" class="btn good">+ Añadir deuda</button></div>
           <div id="monthDebtForm"></div>
           <div class="miniList">${debtListHtml()}</div>
         </div>
 
         <div class="monthSection">
           <h4>Ahorros</h4>
-          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthSavingBtn" class="btn good">+ AÃ±adir ahorro puntual</button></div>
+          <div class="btnRow" style="margin-bottom:10px"><button id="addMonthSavingBtn" class="btn good">+ Añadir ahorro puntual</button></div>
           <div id="monthSavingForm"></div>
           <div class="miniList">${goalListHtml()}</div>
         </div>
@@ -1572,7 +1572,7 @@
       });
 
       document.getElementById('addMonthIncomeBtn').onclick = () => {
-        mountInlineForm('monthIncomeForm', 'AÃ±adir ingreso puntual', [
+        mountInlineForm('monthIncomeForm', 'Añadir ingreso puntual', [
           { id:'ami_name', label:'Nombre', type:'text', value:adj.extraIncomeName||'' },
           { id:'ami_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraIncomeAmount||0 }
         ], () => {
@@ -1582,7 +1582,7 @@
         });
       };
       document.getElementById('addMonthExpenseBtn').onclick = () => {
-        mountInlineForm('monthExpenseForm', 'AÃ±adir gasto puntual', [
+        mountInlineForm('monthExpenseForm', 'Añadir gasto puntual', [
           { id:'ame_name', label:'Nombre', type:'text', value:adj.extraExpenseName||'' },
           { id:'ame_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraExpenseAmount||0 }
         ], () => {
@@ -1592,7 +1592,7 @@
         });
       };
       document.getElementById('addMonthSavingBtn').onclick = () => {
-        mountInlineForm('monthSavingForm', 'AÃ±adir ahorro puntual', [
+        mountInlineForm('monthSavingForm', 'Añadir ahorro puntual', [
           { id:'ams_name', label:'Nombre', type:'text', value:adj.extraSavingName||'' },
           { id:'ams_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraSavingAmount||0 }
         ], () => {
@@ -1602,7 +1602,7 @@
         });
       };
       document.getElementById('addMonthDebtBtn').onclick = () => {
-        mountInlineForm('monthDebtForm', 'AÃ±adir deuda', [
+        mountInlineForm('monthDebtForm', 'Añadir deuda', [
           { id:'amd_name', label:'Nombre', type:'text', value:'' },
           { id:'amd_amount', label:'Monto mensual inicial', type:'number', step:'0.01', value:0 }
         ], () => {
@@ -1665,19 +1665,19 @@
       let desc = '';
       let money = Number(item.amount||0);
       if(type==='income'){
-        desc = `Ingreso Â· ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' â†’ ' + item.endMonth : ''}`;
+        desc = `Ingreso · ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' → ' + item.endMonth : ''}`;
         money = Number(item.amount||0);
       }
       if(type==='expense'){
-        desc = `Gasto ${item.periodicity||'monthly'} Â· ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' â†’ ' + item.endMonth : ''}`;
+        desc = `Gasto ${item.periodicity||'monthly'} · ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' → ' + item.endMonth : ''}`;
         money = Number(item.amount||0);
       }
       if(type==='goal'){
         if((item.goalType||'fixed') === 'fixed'){
-          desc = `Ahorro fijo Â· ${item.startMonth||state.defaultStartMonth} â†’ ${item.endMonth||'sin fin'}`;
+          desc = `Ahorro fijo · ${item.startMonth||state.defaultStartMonth} → ${item.endMonth||'sin fin'}`;
           money = Number(item.monthlyAmount||0);
         } else {
-          desc = `Objetivo total Â· ${item.startMonth||state.defaultStartMonth} â†’ ${item.endMonth||'sin fin'}`;
+          desc = `Objetivo total · ${item.startMonth||state.defaultStartMonth} → ${item.endMonth||'sin fin'}`;
           money = Number(item.targetTotal||0);
         }
       }
@@ -1705,7 +1705,7 @@
       maps.forEach(([id, arr, type]) => {
         const el = document.getElementById(id);
         if(!arr.length){
-          el.innerHTML = '<div class="empty">No hay elementos todavÃ­a.</div>';
+          el.innerHTML = '<div class="empty">No hay elementos todavía.</div>';
         }else{
           el.innerHTML = arr.map(x => itemCardHtml(x, type)).join('');
           el.querySelectorAll('[data-edit]').forEach(btn => {
@@ -1738,7 +1738,7 @@
       const now = new Date();
       const pad = (n) => String(n).padStart(2,'0');
       document.getElementById('lastUpdatedText').textContent =
-        `Ãšltima actualizaciÃ³n de datos ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        `Última actualización de datos ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
       const savingsBase = state.goals.reduce((a,g)=>a+Number((g.goalType||'fixed')==='fixed' ? (g.monthlyAmount||0) : 0),0);
       document.getElementById('kpiSavings').textContent = euros(savingsBase);
@@ -1812,11 +1812,11 @@
               <div class="lab">Ingreso</div><div>${euros(income)}</div>
               <div class="lab">Gastos</div><div>${euros(expense)}</div>
               <div class="lab">Deuda</div><div>${euros(debt)}</div>
-              <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : 'â€”'}</div>
+              <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
               <div class="lab">Ahorro</div><div>${euros(totalSaving)}</div>
               <div class="lab">Ahorro acumulado</div><div class="monthAcc">${euros(cumulativeSavings)}</div>
               <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
-              <div class="lab">ColchÃ³n</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
+              <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
             </div>
           </div>`);
         }
@@ -1828,10 +1828,10 @@
       if(warnings.length){
         warnEl.innerHTML = `<div class="warnBox">
           <h4>Hay objetivos de ahorro con meses conflictivos</h4>
-          <div class="muted">La previsiÃ³n los ha aplicado igualmente para que puedas ajustar manualmente.</div>
+          <div class="muted">La previsión los ha aplicado igualmente para que puedas ajustar manualmente.</div>
           <details style="margin-top:10px">
             <summary>Ver detalle</summary>
-            <ul class="warnDetails">${warnings.map(w => `<li><strong>${escapeHtml(w.goal)}</strong> Â· ${escapeHtml(w.month)} Â· ${escapeHtml(w.reason)}</li>`).join('')}</ul>
+            <ul class="warnDetails">${warnings.map(w => `<li><strong>${escapeHtml(w.goal)}</strong> · ${escapeHtml(w.month)} · ${escapeHtml(w.reason)}</li>`).join('')}</ul>
           </details>
         </div>`;
       } else {
@@ -2124,4 +2124,6 @@
   <script src="/shared/js/zaurio-nav.js"></script>
 </body>
 </html>
+
+
 
