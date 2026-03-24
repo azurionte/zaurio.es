@@ -47,10 +47,11 @@
           tag: "beta",
         },
         {
-          type: "static",
+          type: "link",
+          href: "https://herramientas.zaurio.es/emprezaurio/",
           label: "Emprezaurio",
           icon: `${sharedBase}/assets/brand/emprezaurio-icono.png`,
-          tag: "soon",
+          tag: "beta",
         },
       ],
     },

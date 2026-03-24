@@ -3,227 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Emprezaurio · Herramientas</title>
-  <meta name="description" content="Emprezaurio será la herramienta de Zaurio para ordenar ideas, proyectos y el lado negocio sin perder personalidad." />
+  <title>Emprezaurio Beta - Creador de CV</title>
+  <meta name="description" content="Emprezaurio Beta es la app de Zaurio para crear curriculums bonitos y faciles en minutos." />
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
   <link rel="stylesheet" href="/shared/css/zaurio-ui.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root{
-      --bg-1:#12031c;
-      --bg-2:#220635;
-      --bg-3:#06040b;
-      --stroke:rgba(255,255,255,.12);
-      --text:#fff8fb;
-      --muted:rgba(255,255,255,.7);
-      --gold:#ffd447;
-      --mint:#7affbe;
-      --cyan:#86efff;
-      --radius:32px;
-      --shadow:0 30px 80px rgba(0,0,0,.36);
-    }
-
-    *{ box-sizing:border-box; }
-
-    html,body{
-      margin:0;
-      min-height:100%;
-      background:
-        radial-gradient(circle at 16% 16%, rgba(122,255,190,.12), transparent 28%),
-        radial-gradient(circle at 82% 12%, rgba(255,212,71,.12), transparent 24%),
-        linear-gradient(180deg, var(--bg-1), var(--bg-2) 36%, var(--bg-3));
-      color:var(--text);
-      font-family:"Space Grotesk", "Segoe UI", sans-serif;
-    }
-
-    .page{
-      width:min(980px,94vw);
-      margin:0 auto 72px;
-    }
-
-    .hero{
-      border:1px solid var(--stroke);
-      border-radius:var(--radius);
-      background:linear-gradient(180deg, rgba(39,14,56,.94), rgba(18,8,27,.92));
-      box-shadow:var(--shadow);
-      padding:32px 34px;
-    }
-
-    .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:8px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.1);
-      color:var(--mint);
-      font-size:13px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      font-weight:800;
-    }
-
-    .hero-grid{
-      display:grid;
-      grid-template-columns:190px minmax(0, 1fr);
-      gap:22px 28px;
-      align-items:center;
-      margin-top:18px;
-    }
-
-    .hero-mark{
-      width:190px;
-      height:190px;
-      border-radius:32px;
-      border:1px solid rgba(255,255,255,.12);
-      background:linear-gradient(135deg, rgba(122,255,190,.12), rgba(134,239,255,.08));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-    }
-
-    .hero-mark img{
-      width:142px;
-      height:142px;
-      object-fit:contain;
-      filter:drop-shadow(0 14px 24px rgba(0,0,0,.24));
-    }
-
-    h1,h2{
-      margin:0;
-      font-family:"Bricolage Grotesque", "Trebuchet MS", sans-serif;
-      line-height:1;
-    }
-
-    h1{
-      font-size:clamp(2rem, 4.2vw, 4rem);
-      letter-spacing:-.05em;
-      max-width:10ch;
-    }
-
-    .lead{
-      margin:16px 0 0;
-      color:var(--muted);
-      line-height:1.72;
-      max-width:58ch;
-      font-size:1rem;
-    }
-
-    .hero-actions{
-      display:flex;
-      gap:14px;
-      flex-wrap:wrap;
-      margin-top:26px;
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      padding:14px 20px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:700;
-      text-decoration:none;
-      transition:transform .16s ease, background .16s ease, border-color .16s ease;
-    }
-
-    .btn:hover{ transform:translateY(-2px); }
-
-    .btn.primary{
-      background:linear-gradient(135deg, var(--gold), #ffb87c);
-      color:#240b18;
-    }
-
-    .btn.secondary{
-      background:rgba(255,255,255,.05);
-      color:var(--text);
-    }
-
-    .grid{
-      margin-top:26px;
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-      gap:16px;
-    }
-
-    .card{
-      padding:18px;
-      border-radius:24px;
-      border:1px solid rgba(255,255,255,.1);
-      background:rgba(255,255,255,.04);
-    }
-
-    .card h2{
-      font-size:1.3rem;
-    }
-
-    .card p{
-      margin:10px 0 0;
-      color:var(--muted);
-      line-height:1.55;
-    }
-
-    @media (max-width: 900px){
-      .hero-grid,
-      .grid{
-        grid-template-columns:1fr;
-      }
-
-      .hero-mark{
-        margin:0 auto;
-      }
-
-      h1{
-        max-width:none;
-      }
-    }
+    :root{--bg-1:#12031c;--bg-2:#220635;--bg-3:#06040b;--stroke:rgba(255,255,255,.12);--text:#fff8fb;--muted:rgba(255,255,255,.72);--gold:#ffd447;--mint:#7affbe;--radius:32px;--shadow:0 30px 80px rgba(0,0,0,.36);--surface:linear-gradient(180deg, rgba(39,14,56,.94), rgba(18,8,27,.92))}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:radial-gradient(circle at 16% 16%, rgba(122,255,190,.12), transparent 28%),radial-gradient(circle at 82% 12%, rgba(255,212,71,.12), transparent 24%),linear-gradient(180deg, var(--bg-1), var(--bg-2) 36%, var(--bg-3));color:var(--text);font-family:"Space Grotesk","Segoe UI",sans-serif}
+    .page{width:min(1120px,94vw);margin:0 auto 72px}
+    .hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:24px;align-items:stretch}
+    .panel{border:1px solid var(--stroke);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
+    .hero-copy{padding:32px 34px;position:relative;overflow:hidden}
+    .hero-copy::after{content:"";position:absolute;width:240px;height:240px;top:-54px;right:-46px;border-radius:50%;background:radial-gradient(circle, rgba(122,255,190,.16), transparent 68%);pointer-events:none}
+    .eyebrow{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--mint);font-size:13px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+    .hero-grid{display:grid;grid-template-columns:180px minmax(0,1fr);gap:18px 24px;align-items:center;margin-top:18px}
+    .hero-mark{width:180px;height:180px;border-radius:30px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(135deg, rgba(122,255,190,.12), rgba(134,239,255,.08));display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .hero-mark img{width:132px;height:132px;object-fit:contain;filter:drop-shadow(0 14px 24px rgba(0,0,0,.24))}
+    h1,h2,h3{margin:0;font-family:"Bricolage Grotesque","Trebuchet MS",sans-serif;line-height:1}
+    h1{font-size:clamp(2.2rem,4.6vw,4.4rem);letter-spacing:-.05em;max-width:11ch}
+    .lead{margin:16px 0 0;color:var(--muted);line-height:1.72;max-width:58ch;font-size:1rem}
+    .pitch{margin-top:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .pitch-card{padding:16px;border-radius:22px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+    .pitch-card p{margin:10px 0 0;color:var(--muted);line-height:1.55}
+    .entry{padding:28px;display:grid;gap:16px;align-content:start}
+    .entry h2{font-size:1.65rem}.entry p{margin:0;color:var(--muted);line-height:1.6}
+    .entry-grid{display:grid;gap:14px;margin-top:8px}
+    .entry-card{display:grid;gap:12px;padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+    .entry-head{display:flex;align-items:center;gap:14px}
+    .entry-icon{width:62px;height:62px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:1.3rem}
+    .entry-card ul{margin:0;padding-left:18px;color:var(--muted);line-height:1.55}
+    .actions{display:grid;gap:10px;margin-top:4px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-weight:700;text-decoration:none;transition:transform .16s ease, background .16s ease, border-color .16s ease;cursor:pointer}
+    .btn:hover{transform:translateY(-2px)} .btn.primary{background:linear-gradient(135deg,var(--gold),#ffb87c);color:#240b18}.btn.secondary{background:rgba(255,255,255,.05);color:var(--text)}
+    .note{margin-top:6px;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:var(--muted);line-height:1.55;font-size:.95rem}
+    .status{min-height:22px;color:#86efff;font-size:.92rem}
+    @media (max-width:980px){.hero,.hero-grid,.pitch{grid-template-columns:1fr}.hero-mark{margin:0 auto}h1{max-width:none}}
   </style>
 </head>
 <body data-zaurio-nav="herramientas">
   <div data-zaurio-nav data-active="herramientas"></div>
-
   <main class="page">
     <section class="hero">
-      <span class="eyebrow">Proximamente</span>
-      <div class="hero-grid">
-        <div class="hero-mark" aria-hidden="true">
-          <img src="/shared/assets/brand/emprezaurio.png" alt="Emprezaurio">
-        </div>
-        <div>
-          <h1>Emprezaurio será el cerebro práctico del proyecto.</h1>
-          <p class="lead">Esta landing ya deja reservado su sitio. La idea es que aquí viva una herramienta para bajar ideas a tierra, estructurar proyectos, organizar tareas y que el lado negocio no dependa solo de la memoria, el caos o una libreta perdida.</p>
-          <div class="hero-actions">
-            <a class="btn primary" href="/herramientas/">Volver a Herramientas</a>
-            <a class="btn secondary" href="/dinerozaurio/">Ir a DineroZaurio</a>
-            <a class="btn secondary" href="/emprezaurio/alpha/">Abrir alpha importada</a>
+      <article class="panel hero-copy">
+        <span class="eyebrow">Beta abierta</span>
+        <div class="hero-grid">
+          <div class="hero-mark" aria-hidden="true"><img src="/shared/assets/brand/emprezaurio.png" alt="Emprezaurio"></div>
+          <div>
+            <h1>Curriculums bonitos y faciles en minutos.</h1>
+            <p class="lead">Emprezaurio Beta es la app del universo Zaurio para crear CVs con buena pinta, sin pelearte con plantillas horribles ni con herramientas lentas. Entras, eliges un layout, ajustas el estilo y sales con algo presentable muy rapido.</p>
           </div>
         </div>
-      </div>
-
-      <div class="grid">
-        <article class="card">
-          <h2>Ideas</h2>
-          <p>Un sitio para capturar ideas antes de que se esfumen o se mezclen entre veinte pestañas abiertas.</p>
-        </article>
-        <article class="card">
-          <h2>Proyecto</h2>
-          <p>Espacio para convertir intuiciones en algo ordenado: pasos, tareas, prioridades y foco real.</p>
-        </article>
-        <article class="card">
-          <h2>Negocio</h2>
-          <p>La parte seria del reino: estructura, planificación y claridad para que las ideas también se sostengan.</p>
-        </article>
-        <article class="card">
-          <h2>Alpha rescatada</h2>
-          <p>La versión antigua del constructor ya está copiada dentro de Emprezaurio. Servirá como base para revisar qué rescatar, qué limpiar y qué merece una reescritura más seria.</p>
-        </article>
-      </div>
+        <div class="pitch">
+          <article class="pitch-card"><h3>Layouts vivos</h3><p>Cambia entre sidebar, top o fancy sin empezar desde cero cada vez.</p></article>
+          <article class="pitch-card"><h3>Edicion rapida</h3><p>Wizard guiado, demo resume y modo manual para ir al grano sin friccion.</p></article>
+          <article class="pitch-card"><h3>Control real</h3><p>El estado del CV se guarda como JSON y puedes exportarlo o seguir luego.</p></article>
+        </div>
+      </article>
+      <aside class="panel entry">
+        <span class="eyebrow">Entrar en beta</span>
+        <h2>Elige como quieres empezar</h2>
+        <p>La cuenta con Google deja preparada la base para guardar tus CVs por usuario. El modo invitado entra al momento y usa guardado local en este dispositivo.</p>
+        <div class="entry-grid">
+          <section class="entry-card">
+            <div class="entry-head"><div class="entry-icon">G</div><div><h3>Crear cuenta con Google</h3><p>Ideal si quieres una base de trabajo asociada a tu usuario.</p></div></div>
+            <ul><li>Preparado para separar tus CVs por cuenta.</li><li>Mismo acceso si luego amplias Emprezaurio.</li></ul>
+            <div class="actions"><button class="btn primary" id="googleEntryBtn" type="button">Entrar con Google</button></div>
+          </section>
+          <section class="entry-card">
+            <div class="entry-head"><div class="entry-icon">CV</div><div><h3>Crear CV como invitado</h3><p>Entras ya al editor y tu progreso se guarda localmente.</p></div></div>
+            <ul><li>Perfecto para probar la beta sin registro.</li><li>Exporta el JSON cuando quieras llevartelo.</li></ul>
+            <div class="actions"><a class="btn secondary" id="guestEntryBtn" href="/emprezaurio/beta/?mode=guest">Seguir como invitado</a></div>
+          </section>
+        </div>
+        <div class="status" id="entryStatus"></div>
+        <div class="note">Ahora mismo el builder ya guarda el CV completo como JSON en el navegador y permite exportarlo. La ruta con Google deja lista la base para ampliar guardado sincronizado por usuario sin mezclar proyectos.</div>
+      </aside>
     </section>
   </main>
-
   <script src="/shared/js/zaurio-nav.js"></script>
+  <script>
+    const supabaseUrl = "https://adpjitccwwvlydrtvvqk.supabase.co";
+    const supabaseKey = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
+    const appBaseUrl = window.location.origin + "/emprezaurio/beta/";
+    const statusNode = document.getElementById("entryStatus");
+    document.getElementById("guestEntryBtn")?.addEventListener("click", () => { try { sessionStorage.setItem("emprezaurio:entry", "guest"); } catch {} });
+    document.getElementById("googleEntryBtn")?.addEventListener("click", async () => {
+      if (!window.supabase) { statusNode.textContent = "No se pudo iniciar la conexion con Google."; return; }
+      try {
+        sessionStorage.setItem("emprezaurio:entry", "google");
+        statusNode.textContent = "Redirigiendo a Google...";
+        const client = window.supabase.createClient(supabaseUrl, supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+        await client.auth.signInWithOAuth({ provider: "google", options: { redirectTo: appBaseUrl, scopes: "email profile https://www.googleapis.com/auth/userinfo.email" } });
+      } catch (error) {
+        statusNode.textContent = "No se pudo iniciar el acceso con Google.";
+        console.error(error);
+      }
+    });
+  </script>
 </body>
 </html>

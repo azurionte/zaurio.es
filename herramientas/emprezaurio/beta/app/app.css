@@ -1,0 +1,293 @@
+/* ======= tokens (app-wide only) ======================================= */
+:root{
+  --accent:#ffba4a; --accent2:#ff6aa7;
+  --ink:#f7eff8; --ink-d:#17111d;
+  --bg:#16031f; --panel:#1d0829; --line:#3a1a4b; --card:#ffffff;
+  --shadow:0 18px 42px rgba(13,4,22,.28);
+  --rail:300px;
+  --page-w:860px;
+  --mobile-canvas-scale:1;
+  --chipBg: #fff; /* default chip background unless set by setYearChipTint */
+  /* section/card color tokens (will switch with dark mode) */
+  --secBg: #f5f7fb;
+  --cardBg: #ffffff;
+  --cardBorder: rgba(18,25,38,0.12);
+}
+body[data-theme="coral"]{ --accent:#ff7b54; --accent2:#ffd166 }
+body[data-theme="sea"]{ --accent:#4facfe; --accent2:#38d2ff }
+body[data-theme="city"]{ --accent:#34d399; --accent2:#9ca3af }
+body[data-theme="magentaPurple"]{ --accent:#c026d3; --accent2:#9333ea }
+body[data-theme="magentaPink"]{ --accent:#ec4899; --accent2:#f97316 }
+body[data-theme="blueGreen"]{ --accent:#22c1c3; --accent2:#2ecc71 }
+body[data-theme="grayBlack"]{ --accent:#8892a6; --accent2:#414b57 }
+
+/* ======= base ========================================================== */
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0;background:
+  radial-gradient(circle at 15% 12%, rgba(255,186,74,.15), transparent 24%),
+  radial-gradient(circle at 82% 10%, rgba(255,106,167,.14), transparent 22%),
+  linear-gradient(180deg,#15031f,#21062e 38%,#0d0716 100%);
+  color:var(--ink);
+  font-family:"Space Grotesk", Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+  display:grid;grid-template-rows:auto 1fr}
+a{color:inherit;text-decoration:none}
+
+/* ======= top bar ======================================================= */
+.nav{position:sticky;top:0;z-index:10000;display:flex;justify-content:center;gap:16px;align-items:center;
+  padding:14px 18px;background:linear-gradient(180deg,rgba(16,4,24,.94),rgba(16,4,24,.78));
+  border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(12px)}
+.brand-suite{display:flex;align-items:center;gap:10px}
+.zaurio-link{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);box-shadow:0 14px 34px rgba(0,0,0,.22)}
+.zaurio-link img{width:28px;height:28px;object-fit:contain;display:block}
+.brand{display:flex;align-items:center;gap:14px;padding:8px 12px 8px 8px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);box-shadow:0 14px 34px rgba(0,0,0,.22)}
+.brand-mark{width:48px;height:48px;display:block;object-fit:contain;filter:drop-shadow(0 10px 18px rgba(0,0,0,.2))}
+.brand-copy{display:grid;gap:2px}
+.brand-title{font-weight:900;font-size:16px;letter-spacing:.01em}
+.brand-sub{font-size:12px;color:rgba(255,255,255,.72)}
+.menu{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);box-shadow:0 14px 34px rgba(0,0,0,.22)}
+.menu-toggle{display:none;appearance:none;width:46px;height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;box-shadow:0 14px 34px rgba(0,0,0,.22)}
+.menu-toggle-arrow{display:block;width:0;height:0;margin:0 auto;border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:10px solid #fff7fb;transition:transform .18s ease}
+.nav.menu-open .menu-toggle-arrow{transform:rotate(90deg)}
+.mbtn{appearance:none;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#fff7fb;padding:9px 12px;border-radius:14px;cursor:pointer;font-weight:700}
+.mbtn:hover{box-shadow:0 0 0 3px rgba(255,186,74,.16) inset;border-color:rgba(255,186,74,.28)}
+.dropdown{position:relative}
+.dropdown-menu{position:absolute;top:120%;left:0;background:#1d0829;border:1px solid var(--line);border-radius:16px;min-width:260px;box-shadow:0 24px 70px rgba(0,0,0,.38);display:none;padding:12px;z-index:9999}
+.dropdown.open .dropdown-menu{display:block}
+
+/* theme pop */
+.theme-pop{min-width:340px}
+.theme-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.swatch{height:42px;border-radius:12px;border:1px solid #2b324b;cursor:pointer;background:linear-gradient(135deg,var(--a1),var(--a2));position:relative;overflow:hidden}
+.swatch:active::after{content:"";position:absolute;inset:-60px;pointer-events:none;background:radial-gradient(circle at center, #fff6 0 8px, #fff0 9px) no-repeat center/120px 120px;animation:spark .6s ease}
+@keyframes spark{from{opacity:1;transform:scale(.6)}to{opacity:0;transform:scale(1.6)}}
+.swatch[data-k="coral"]{--a1:#ff7b54;--a2:#ffd166}
+.swatch[data-k="sea"]{--a1:#4facfe;--a2:#38d2ff}
+.swatch[data-k="city"]{--a1:#34d399;--a2:#9ca3af}
+.swatch[data-k="magentaPurple"]{--a1:#c026d3;--a2:#9333ea}
+.swatch[data-k="magentaPink"]{--a1:#ec4899;--a2:#f97316}
+.swatch[data-k="blueGreen"]{--a1:#22c1c3;--a2:#2ecc71}
+.swatch[data-k="grayBlack"]{--a1:#8892a6;--a2:#414b57}
+.k-row{display:flex;align-items:center;gap:8px;margin-top:12px}
+.k-row input[type=color]{width:28px;height:28px;border:0;border-radius:8px;cursor:pointer}
+.switch{width:46px;height:26px;border-radius:999px;background:#2a314a;border:1px solid #3b4569;position:relative;cursor:pointer}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#cfd6ff;transition:left .18s ease}
+.switch.on{background:#3b82f6}
+.switch.on::after{left:23px}
+
+/* ======= canvas page ==================================================== */
+#canvas-root{display:flex;justify-content:center;overflow:auto;padding:28px 18px 24px;touch-action:pan-x pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.page{background:transparent;color:var(--ink);min-height:1200px;position:relative}
+#sheet{padding:24px;min-height:1120px;background:#fff;border-radius:22px;box-shadow:0 28px 80px rgba(8,5,16,.3);border:1px solid rgba(12,10,20,.08)}
+[data-dark="1"] #sheet{ background:#0d1220; color:var(--ink); }
+.stack{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-content:start}
+
+/* Sidebar rail tweaks: keep content top-aligned, center avatar only */
+.sidebar-layout .rail{ display:flex; flex-direction:column; align-items:flex-start }
+.sidebar-layout .rail .avatar{ margin:18px auto; display:block }
+
+/* Make main zone occupy full inner width and remove extra padding that could offset children */
+.sidebar-layout [data-zone="main"]{ padding:0 }
+
+/* Ensure any .node wrapper directly inside the page stack spans the full 12-column width.
+   This prevents header/node wrappers (like the sidebar header) from being placed into a
+   single grid column which constrains inner .sidebar-layout to a tiny width. */
+.stack > .node{
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Add button centering improvements */
+.add-squircle{grid-column:1/-1;display:flex;justify-content:center;align-items:center;padding:28px 0}
+.add-dot{display:flex;align-items:center;justify-content:center}
+/* plus button */
+.add-squircle{grid-column:1/-1;display:flex;justify-content:center;padding:28px 0}
+.add-dot{width:86px;height:86px;border-radius:22px;border:2px dashed #a3aed0;display:grid;place-items:center;color:#64748b;cursor:pointer;background:#fff;box-shadow:var(--shadow);font-size:28px;font-weight:900}
+.add-dot:hover{border-color:#7c99ff;color:#7c99ff}
+
+/* Force sections and cards to occupy the full canvas area inside sidebar main */
+.sidebar-layout [data-zone="main"] > .section,
+.sidebar-layout [data-zone="main"] > #canvasAdd{
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+.sidebar-layout [data-zone="main"] .card{ width:100%; box-sizing:border-box }
+
+/* Ensure the node wrapper spans the full grid and cannot be shrunk by children */
+.sidebar-layout [data-zone="main"] > .node{
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+/* floating add menu (shared) */
+.pop{position:fixed;background:#0f1420;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.35);padding:10px;display:none;z-index:18000}
+.pop.open{display:block}
+.pop .tray{display:flex;gap:10px}
+.pop .sq{width:48px;height:48px;border-radius:12px;border:1px solid #293255;background:#12182a;color:#e6e8ef;display:grid;place-items:center;cursor:pointer;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+.pop .sq:hover{box-shadow:0 0 0 3px rgba(124,153,255,.25) inset}
+
+@media (max-width: 980px){
+  .nav{flex-direction:column;align-items:stretch}
+  .menu{justify-content:center;flex-wrap:wrap}
+  .brand-suite{justify-content:center}
+  .brand{justify-content:center}
+}
+
+@media (max-width: 700px){
+  :root{ --page-w:100vw; }
+  html,body{
+    height:100dvh;
+    overflow:hidden;
+  }
+  body{
+    display:grid;
+    grid-template-rows:auto 1fr;
+  }
+  #canvas-root{display:block;padding:10px 0 18px}
+  .nav{
+    gap:10px;
+    padding:10px 10px 8px;
+  }
+  .brand-suite{
+    justify-content:flex-start;
+    width:100%;
+  }
+  .menu-toggle{
+    display:grid;
+    place-items:center;
+    margin-left:auto;
+    flex:0 0 auto;
+  }
+  .brand,
+  .zaurio-link{
+    border-radius:14px;
+  }
+  .brand{
+    gap:10px;
+    padding:8px 10px 8px 8px;
+    min-width:0;
+  }
+  .brand-mark{
+    width:40px;
+    height:40px;
+  }
+  .brand-title{font-size:14px}
+  .brand-sub{font-size:11px}
+  .menu{
+    width:100%;
+    gap:8px;
+    padding:8px;
+    justify-content:center;
+    flex-direction:column;
+    align-items:stretch;
+    margin-top:2px;
+  }
+  .dropdown{
+    flex:1 1 auto;
+    min-width:0;
+  }
+  .dropdown > .mbtn,
+  #btnPrint,
+  #btnPreview{
+    width:100%;
+    justify-content:center;
+  }
+  .mbtn{
+    min-height:42px;
+    padding:10px 12px;
+    font-size:14px;
+  }
+  .dropdown-menu,
+  .theme-pop{
+    left:0;
+    right:0;
+    min-width:auto;
+    width:min(100vw - 24px, 360px);
+  }
+  .theme-row{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+  .nav:not(.menu-open) .menu{
+    display:none;
+  }
+}
+
+@media (max-width: 700px){
+  :root{
+    --page-w:860px;
+    --mobile-canvas-scale:1;
+  }
+  #canvas-root{
+    overflow:auto;
+    justify-content:flex-start;
+    height:100%;
+    min-height:0;
+    padding:10px 0 18px;
+  }
+  .page{
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    width:calc(860px * var(--mobile-canvas-scale));
+    min-width:0;
+    height:calc(1120px * var(--mobile-canvas-scale));
+    min-height:calc(1120px * var(--mobile-canvas-scale));
+    margin:0 auto;
+    overflow:visible;
+  }
+  #sheet{
+    width:860px;
+    padding:24px;
+    min-height:1120px;
+    border-radius:22px;
+    transform:scale(var(--mobile-canvas-scale));
+    transform-origin:top center;
+    will-change:transform;
+  }
+  .stack{
+    gap:16px;
+  }
+}
+
+/* preview + print */
+.preview .add-dot,
+.preview #sheet .sec-add-anchor,
+.preview #sheet .card-controls,
+.preview #sheet .ctrl-circle,
+.preview #sheet .drag-handle,
+.preview #sheet .skill-handle,
+.preview #sheet .sec-remove,
+.preview #sheet #chipAddBtn,
+.preview #topbar-root .dropdown,
+.preview #topbar-root #btnPrint{display:none!important}
+.preview [contenteditable="true"]{pointer-events:none}
+.preview #topbar-root #btnPreview{background:#1f2937}
+@media print{ .nav,.pop,[data-overlay]{display:none!important} .page{box-shadow:none} }
+
+/* keep debug helpers removed in cleanup; the sanitization/observer code still runs in JS */
+
+/* Ensure node wrappers inside the sidebar main can't be shrunk by intrinsic child sizing. */
+.sidebar-layout [data-zone="main"] > .node{
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Ensure immediate children (cards/sections) adopt full width inside node */
+.sidebar-layout [data-zone="main"] .node > .section,
+.sidebar-layout [data-zone="main"] .node .card{
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
