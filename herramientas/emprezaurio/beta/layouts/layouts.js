@@ -163,6 +163,21 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   .card-controls{position:absolute;right:8px;top:8px;display:flex;gap:6px}
   .card-controls .ctrl-circle{width:28px;height:28px;border-radius:999px;font-size:12px}
 
+  .layout-morph-hide{visibility:hidden !important}
+  .layout-morph-ghost{
+    position:fixed;left:0;top:0;z-index:25000;pointer-events:none;
+    transform-origin:top left;
+    will-change:transform,opacity,border-radius;
+    box-shadow:0 18px 44px rgba(0,0,0,.18);
+  }
+  .layout-morph-ghost.layout-morph-avatar{
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .layout-morph-fade{
+    will-change:opacity,transform;
+  }
+
   `;
   document.head.appendChild(st);
 })();
@@ -690,38 +705,159 @@ export function normalizeCanvasForCurrentLayout({ showAdd } = {}){
   return { stack, main, rail, add };
 }
 
+function getHeroPiece(wrapper){
+  if (!wrapper) return null;
+  return wrapper.querySelector('.sidebar-layout .rail, .fancy .hero, .topbar');
+}
+
+function getAvatarPiece(wrapper){
+  return wrapper?.querySelector('.avatar') || null;
+}
+
+function makeGhostFromElement(el, className){
+  if (!el) return null;
+  const rect = el.getBoundingClientRect();
+  const ghost = el.cloneNode(true);
+  ghost.classList.add('layout-morph-ghost');
+  if (className) ghost.classList.add(className);
+  ghost.style.width = `${rect.width}px`;
+  ghost.style.height = `${rect.height}px`;
+  ghost.style.left = `${rect.left}px`;
+  ghost.style.top = `${rect.top}px`;
+  ghost.style.margin = '0';
+  ghost.style.transform = 'translate(0,0) scale(1,1)';
+  document.body.appendChild(ghost);
+  return { ghost, rect };
+}
+
+function collectFadeTargets(wrapper){
+  if (!wrapper) return [];
+  const set = new Set();
+  const header = wrapper.querySelector('[data-header]');
+  if (header){
+    Array.from(header.children).forEach(child => {
+      if (!child.closest('.hero, .topbar, .rail') || !getHeroPiece(wrapper)?.contains(child)) set.add(child);
+    });
+    const hero = getHeroPiece(wrapper);
+    if (hero){
+      Array.from(hero.children).forEach(child => {
+        if (!child.classList?.contains('avatar')) set.add(child);
+      });
+    }
+  }
+  const main = wrapper.querySelector('[data-zone="main"], .below');
+  if (main){
+    Array.from(main.children).forEach(child => set.add(child));
+  }
+  const railSections = wrapper.querySelector('[data-rail-sections]');
+  if (railSections){
+    Array.from(railSections.children).forEach(child => set.add(child));
+  }
+  return Array.from(set).filter(Boolean);
+}
+
+function animateFadeTargets(targets, keyframes, options){
+  targets.forEach(el => {
+    el.classList.add('layout-morph-fade');
+    el.animate(keyframes, options);
+  });
+}
+
 export function morphTo(kind){
   const oldWrap=getHeaderNodeWrapper();
-  const before=oldWrap?.getBoundingClientRect();
   const oldHeader = oldWrap?.querySelector('[data-header]');
+  const oldHero = getHeroPiece(oldWrap);
+  const oldAvatar = getAvatarPiece(oldWrap);
+  const oldFadeTargets = collectFadeTargets(oldWrap);
+  const sectionTargets = getSectionWrappers();
+  const add = $('#canvasAdd');
+
   if (oldHeader) oldHeader.removeAttribute('data-header');
   const temp=buildHeader(kind);
-  $$('.node[data-locked]').forEach(node => { if (node !== temp) node.remove(); });
+  $$('.node[data-locked]').forEach(node => { if (node !== temp && node !== oldWrap) node.remove(); });
 
   normalizeCanvasForCurrentLayout({ showAdd: true });
 
-  const after=temp.getBoundingClientRect();
+  const newHero = getHeroPiece(temp);
+  const newAvatar = getAvatarPiece(temp);
+  const newFadeTargets = collectFadeTargets(temp);
 
-  if(before){
-    const dx=before.left-after.left, dy=before.top-after.top;
-    const sx=before.width/after.width, sy=before.height/after.height;
-    temp.style.transformOrigin='top left';
-    temp.style.transform=`translate(${dx}px,${dy}px) scale(${sx},${sy})`;
-    temp.style.opacity='0.6';
-    oldWrap.remove();
-    requestAnimationFrame(()=>{
-      temp.style.transition='transform .35s ease, opacity .35s ease';
-      temp.style.transform='translate(0,0) scale(1,1)';
-      temp.style.opacity='1';
-      setTimeout(()=>{
-        temp.style.transition='';
-        temp.style.transform='';
-        normalizeCanvasForCurrentLayout();
-      },380);
-    });
-  }else{
+  if (!oldWrap || !oldHero || !newHero){
+    if (oldWrap) oldWrap.remove();
     normalizeCanvasForCurrentLayout({ showAdd: true });
+    return;
   }
+
+  const heroGhostData = makeGhostFromElement(oldHero, 'layout-morph-hero');
+  const avatarGhostData = oldAvatar ? makeGhostFromElement(oldAvatar, 'layout-morph-avatar') : null;
+  const newHeroRect = newHero.getBoundingClientRect();
+  const newAvatarRect = newAvatar?.getBoundingClientRect();
+
+  oldHero.classList.add('layout-morph-hide');
+  if (oldAvatar) oldAvatar.classList.add('layout-morph-hide');
+  newHero.classList.add('layout-morph-hide');
+  if (newAvatar) newAvatar.classList.add('layout-morph-hide');
+
+  animateFadeTargets(
+    [...oldFadeTargets, ...sectionTargets, ...(add ? [add] : [])],
+    [
+      { opacity:1, filter:'blur(0px)' },
+      { opacity:0, filter:'blur(3px)' }
+    ],
+    { duration:180, easing:'ease-in', fill:'forwards' }
+  );
+
+  window.setTimeout(() => {
+    oldWrap.remove();
+
+    if (heroGhostData){
+      const dx = newHeroRect.left - heroGhostData.rect.left;
+      const dy = newHeroRect.top - heroGhostData.rect.top;
+      const sx = newHeroRect.width / heroGhostData.rect.width;
+      const sy = newHeroRect.height / heroGhostData.rect.height;
+      heroGhostData.ghost.animate(
+        [
+          { transform:'translate(0,0) scale(1,1)', borderRadius:getComputedStyle(oldHero).borderRadius, opacity:1 },
+          { transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`, borderRadius:getComputedStyle(newHero).borderRadius, opacity:1 }
+        ],
+        { duration:540, easing:'cubic-bezier(.18,1,.24,1)', fill:'forwards' }
+      );
+    }
+
+    if (avatarGhostData && newAvatarRect){
+      const dx = newAvatarRect.left - avatarGhostData.rect.left;
+      const dy = newAvatarRect.top - avatarGhostData.rect.top;
+      const sx = newAvatarRect.width / avatarGhostData.rect.width;
+      const sy = newAvatarRect.height / avatarGhostData.rect.height;
+      avatarGhostData.ghost.animate(
+        [
+          { transform:'translate(0,0) scale(1,1)', opacity:1 },
+          { transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`, opacity:1 }
+        ],
+        { duration:540, easing:'cubic-bezier(.18,1,.24,1)', fill:'forwards' }
+      );
+    }
+
+    window.setTimeout(() => {
+      newHero.classList.remove('layout-morph-hide');
+      if (newAvatar) newAvatar.classList.remove('layout-morph-hide');
+
+      animateFadeTargets(
+        [...newFadeTargets, ...sectionTargets, ...(add ? [add] : [])],
+        [
+          { opacity:0, filter:'blur(3px)', transform:'translateY(8px)' },
+          { opacity:1, filter:'blur(0px)', transform:'translateY(0px)' }
+        ],
+        { duration:280, easing:'ease-out', fill:'forwards' }
+      );
+
+      window.setTimeout(() => {
+        heroGhostData?.ghost.remove();
+        avatarGhostData?.ghost.remove();
+        normalizeCanvasForCurrentLayout({ showAdd: true });
+      }, 300);
+    }, 340);
+  }, 190);
 }
 
 /* ---- Add anchor owner (SINGLE SOURCE) ---- */

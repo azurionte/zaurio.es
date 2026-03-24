@@ -190,6 +190,22 @@ export function showCenteredCardFeedback(card, message, tone = 'default'){
   }, 1600);
 }
 
+function animateOverlayIn(node){
+  if (!node) return;
+  node.classList.remove('is-leaving');
+  requestAnimationFrame(() => node.classList.add('is-open'));
+}
+
+function animateOverlayOut(node, done){
+  if (!node) { done?.(); return; }
+  node.classList.add('is-leaving');
+  node.classList.remove('is-open');
+  window.setTimeout(() => {
+    node.classList.remove('is-leaving');
+    done?.();
+  }, 300);
+}
+
 function sparkleNode(anchor){
   const target = anchor?.getBoundingClientRect?.();
   if (!target) return;
@@ -284,9 +300,11 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
   wrap.id = 'projectLibrary';
   wrap.innerHTML = `
     <style>
-      #projectLibrary{position:fixed;inset:0;display:none;place-items:center;background:rgba(6,3,10,.72);backdrop-filter:blur(14px);z-index:22000;padding:24px}
-      #projectLibrary.open{display:grid}
-      #projectLibrary .lib-shell{width:min(1240px,96vw);max-height:min(90dvh,920px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:18px;padding:24px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(31,10,42,.96),rgba(14,7,20,.96));box-shadow:0 34px 90px rgba(0,0,0,.42);overflow:hidden}
+      #projectLibrary{position:fixed;inset:0;display:grid;place-items:center;background:rgba(6,3,10,.72);backdrop-filter:blur(14px);z-index:22000;padding:24px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease, visibility .28s ease}
+      #projectLibrary.is-open{opacity:1;visibility:visible;pointer-events:auto}
+      #projectLibrary .lib-shell{width:min(1240px,96vw);max-height:min(90dvh,920px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:18px;padding:24px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(31,10,42,.96),rgba(14,7,20,.96));box-shadow:0 34px 90px rgba(0,0,0,.42);overflow:hidden;opacity:0;transform:translateY(24px) scale(.98);transition:opacity .32s ease, transform .32s cubic-bezier(.2,.75,.2,1)}
+      #projectLibrary.is-open .lib-shell{opacity:1;transform:translateY(0) scale(1)}
+      #projectLibrary.is-leaving .lib-shell{opacity:0;transform:translateY(16px) scale(.985)}
       .micro-feedback{position:fixed;z-index:23000;padding:10px 14px;border-radius:999px;background:rgba(28,11,40,.96);border:1px solid rgba(255,255,255,.12);color:#fff8fb;box-shadow:0 20px 40px rgba(0,0,0,.24);opacity:0;transform:translateY(8px) scale(.96);pointer-events:none;transition:opacity .18s ease, transform .18s ease}
       .micro-feedback.is-live{opacity:1;transform:translateY(-12px) scale(1)}
       .micro-feedback.success{background:linear-gradient(135deg,#ffd447,#ffb87c);color:#240b18}
@@ -437,7 +455,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
     grid.innerHTML = cards.join('');
   };
 
-  wrap.querySelector('#libCloseBtn').onclick = () => wrap.classList.remove('open');
+  wrap.querySelector('#libCloseBtn').onclick = () => animateOverlayOut(wrap);
 
   grid.addEventListener('click', async (event) => {
     const trigger = event.target.closest('[data-action], [data-menu-btn]');
@@ -559,7 +577,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
   });
 
   document.addEventListener('click', (event) => {
-    if (!wrap.classList.contains('open')) return;
+    if (!wrap.classList.contains('is-open')) return;
     if (!wrap.contains(event.target)) return;
     if (!event.target.closest('.project-menu-wrap')) {
       wrap.querySelectorAll('.project-menu').forEach(menu => menu.classList.remove('open'));
@@ -567,8 +585,8 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
   });
 
   return {
-    open: async () => { wrap.classList.add('open'); await renderCards(); },
-    close: () => wrap.classList.remove('open'),
+    open: async () => { await renderCards(); animateOverlayIn(wrap); },
+    close: () => animateOverlayOut(wrap),
     refresh: async () => renderCards()
   };
 }

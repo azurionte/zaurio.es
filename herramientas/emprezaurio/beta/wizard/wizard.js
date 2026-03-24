@@ -13,8 +13,11 @@ import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/module
   st.id = 'wizard-style';
   st.textContent = `
     /* overlay + frame */
-    #wizard[data-overlay]{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.55);z-index:21000}
-    #wizard .wiz{width:min(1040px,96vw);display:grid;grid-template-columns:260px 1fr;background:#0f1420;border:1px solid #1f2540;border-radius:18px;color:#e6e8ef;box-shadow:0 40px 140px rgba(0,0,0,.6);overflow:hidden}
+    #wizard[data-overlay]{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55);z-index:21000;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease, visibility .28s ease, background .28s ease}
+    #wizard[data-overlay].is-open{opacity:1;visibility:visible;pointer-events:auto}
+    #wizard .wiz{width:min(1040px,96vw);display:grid;grid-template-columns:260px 1fr;background:#0f1420;border:1px solid #1f2540;border-radius:18px;color:#e6e8ef;box-shadow:0 40px 140px rgba(0,0,0,.6);overflow:hidden;opacity:0;transform:translateY(24px) scale(.98);transition:opacity .32s ease, transform .32s cubic-bezier(.2,.75,.2,1)}
+    #wizard[data-overlay].is-open .wiz{opacity:1;transform:translateY(0) scale(1)}
+    #wizard[data-overlay].is-leaving .wiz{opacity:0;transform:translateY(16px) scale(.985)}
     #wizard .wiz-left{background:#0c111f;border-right:1px solid #1b2340;padding:16px}
     #wizard .step-list{display:grid;gap:8px}
     #wizard .step{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;color:#c9d1ff80}
@@ -78,8 +81,11 @@ import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/module
     @keyframes wPop{0%{transform:scale(.9);opacity:.2}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
 
     /* welcome */
-    #welcome[data-overlay]{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.45);z-index:20000;padding:20px}
-    #welcome .wcard{width:min(880px,94vw);min-height:320px;background:#0f1420;border:1px solid #1f2540;border-radius:18px;padding:32px;color:#e6e8ef;box-shadow:0 40px 140px rgba(0,0,0,.6);display:grid;justify-items:center;gap:16px}
+    #welcome[data-overlay]{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.45);z-index:20000;padding:20px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease, visibility .28s ease}
+    #welcome[data-overlay].is-open{opacity:1;visibility:visible;pointer-events:auto}
+    #welcome .wcard{width:min(880px,94vw);min-height:320px;background:#0f1420;border:1px solid #1f2540;border-radius:18px;padding:32px;color:#e6e8ef;box-shadow:0 40px 140px rgba(0,0,0,.6);display:grid;justify-items:center;gap:16px;opacity:0;transform:translateY(24px) scale(.98);transition:opacity .32s ease, transform .32s cubic-bezier(.2,.75,.2,1)}
+    #welcome[data-overlay].is-open .wcard{opacity:1;transform:translateY(0) scale(1)}
+    #welcome[data-overlay].is-leaving .wcard{opacity:0;transform:translateY(16px) scale(.985)}
     #welcome .wgrid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:end;justify-items:center}
     #welcome .wcol{display:grid;justify-items:center;gap:8px;width:300px;height:70px}
     #welcome .wbtn{appearance:none;border:1px solid #2b324b;border-radius:12px;padding:12px 16px;background:#12182a;color:#e6e8ef;font-weight:700}
@@ -296,6 +302,19 @@ let W = {
   bio: ''
 };
 
+function animateOverlayIn(node){
+  if (!node) return;
+  node.classList.remove('is-leaving');
+  requestAnimationFrame(() => node.classList.add('is-open'));
+}
+
+function animateOverlayOut(node, done){
+  if (!node) { done?.(); return; }
+  node.classList.add('is-leaving');
+  node.classList.remove('is-open');
+  window.setTimeout(() => done?.(), 300);
+}
+
 /* ---------- Public API ---------- */
 export function mountWelcome(){
   if (document.getElementById('welcome')) return;
@@ -318,15 +337,26 @@ export function mountWelcome(){
       <button class="wbtn" id="startDemo" type="button">Demo resume</button>
     </div>`;
   document.body.appendChild(wrap);
-  wrap.querySelector('#startWizard').addEventListener('click', ()=>{ wrap.style.display='none'; mountWizard(); openWizard(); });
+  animateOverlayIn(wrap);
+  wrap.querySelector('#startWizard').addEventListener('click', ()=>{
+    animateOverlayOut(wrap, ()=>{
+      wrap.remove();
+      mountWizard();
+      openWizard();
+    });
+  });
   wrap.querySelector('#startBlank').addEventListener('click', ()=>{
-    wrap.remove();
-    if (!getHeaderNode()) morphTo('header-side');
-    document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
+    animateOverlayOut(wrap, ()=>{
+      wrap.remove();
+      if (!getHeaderNode()) morphTo('header-side');
+      document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
+    });
   });
   wrap.querySelector('#startDemo').addEventListener('click', ()=>{
-    wrap.remove();
-    loadDemoResume();
+    animateOverlayOut(wrap, ()=>{
+      wrap.remove();
+      loadDemoResume();
+    });
   });
 }
 
@@ -366,7 +396,10 @@ const STEPS = [
 let stepIdx = 0;
 let backCount = 0;
 
-function openWizard(){ renderStep(); document.getElementById('wizard').style.display='grid'; }
+function openWizard(){
+  renderStep();
+  animateOverlayIn(document.getElementById('wizard'));
+}
 
 function buildWizard(){
   const list = document.getElementById('stepList');
@@ -667,9 +700,10 @@ function advance(){
   }
 
   if (cur==='done'){
-    document.getElementById('wizard').style.display='none';
-    document.getElementById('welcome')?.remove();
-    document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
+    animateOverlayOut(document.getElementById('wizard'), () => {
+      document.getElementById('welcome')?.remove();
+      document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
+    });
     return;
   }
   if (stepIdx < STEPS.length-1){ stepIdx++; renderStep(); }
@@ -729,9 +763,10 @@ function loadDemoResume(){
   renderExp(S.exp);
   renderBio(S.bio);
 
-  document.getElementById('wizard')?.style && (document.getElementById('wizard').style.display='none');
-  document.getElementById('welcome')?.remove();
-  document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
+  animateOverlayOut(document.getElementById('wizard'), () => {
+    document.getElementById('welcome')?.remove();
+    document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
+  });
 }
 
 /* ---------- helpers ---------- */

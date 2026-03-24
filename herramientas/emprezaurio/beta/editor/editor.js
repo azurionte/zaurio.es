@@ -9,7 +9,48 @@ import { openAddMenu } from '../modules/modules.js';
 const A1 = { coral:'#ff7b54', sea:'#4facfe', city:'#34d399', magentaPurple:'#c026d3', magentaPink:'#ec4899', blueGreen:'#22c1c3', grayBlack:'#8892a6' };
 const A2 = { coral:'#ffd166', sea:'#38d2ff', city:'#9ca3af', magentaPurple:'#9333ea', magentaPink:'#f97316', blueGreen:'#2ecc71', grayBlack:'#414b57' };
 
+function ensureEditorMotionStyle(){
+  if (document.getElementById('emprezaurio-editor-motion')) return;
+  const st = document.createElement('style');
+  st.id = 'emprezaurio-editor-motion';
+  st.textContent = `
+    #betaNav .dropdown{position:relative}
+    #betaNav .dropdown-menu{
+      opacity:0;
+      transform:translateY(10px) scale(.98);
+      transform-origin:top right;
+      pointer-events:none;
+      transition:opacity .2s ease, transform .22s cubic-bezier(.2,.75,.2,1);
+    }
+    #betaNav .dropdown.open .dropdown-menu{
+      opacity:1;
+      transform:translateY(0) scale(1);
+      pointer-events:auto;
+    }
+    #betaNav .menu{
+      transition:opacity .22s ease, transform .24s cubic-bezier(.2,.75,.2,1), max-height .28s ease;
+    }
+    @media (max-width:700px){
+      #betaNav .menu{
+        overflow:hidden;
+        max-height:0;
+        opacity:0;
+        transform:translateY(-8px);
+        pointer-events:none;
+      }
+      #betaNav.menu-open .menu{
+        max-height:420px;
+        opacity:1;
+        transform:translateY(0);
+        pointer-events:auto;
+      }
+    }
+  `;
+  document.head.appendChild(st);
+}
+
 export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCustomGradient, onSaveProject, onOpenLibrary, canOpenLibrary }){
+  ensureEditorMotionStyle();
   const top = document.getElementById('topbar-root');
   top.innerHTML = `
     <div class="nav" id="betaNav">
@@ -93,17 +134,14 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
     const mobile = window.innerWidth <= 700;
     if (!mobile) {
       nav.classList.remove('menu-open');
-      menu.hidden = false;
       menuToggle.setAttribute('aria-expanded', 'false');
       return;
     }
     const open = nav.classList.contains('menu-open');
-    menu.hidden = !open;
     menuToggle.setAttribute('aria-expanded', String(open));
   };
   menuToggle.onclick = () => {
     const open = nav.classList.toggle('menu-open');
-    menu.hidden = !open && window.innerWidth <= 700;
     menuToggle.setAttribute('aria-expanded', String(open));
   };
   syncMobileMenu();
