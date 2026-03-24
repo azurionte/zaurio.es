@@ -50,6 +50,40 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
     .avatar input{display:none}
     .avatar[data-empty="1"]::after{content:'+';position:absolute;inset:0;display:grid;place-items:center;color:#111;font-weight:900;font-size:30px;background:rgba(255,255,255,.6)}
+    .avatar canvas{width:100%;height:100%;display:block;border-radius:50%;aspect-ratio:1 / 1}
+
+    #avatarEditor{position:fixed;inset:0;display:grid;place-items:center;background:rgba(5,3,10,.72);backdrop-filter:blur(12px);z-index:26000;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .26s ease,visibility .26s ease}
+    #avatarEditor.is-open{opacity:1;visibility:visible;pointer-events:auto}
+    #avatarEditor .ae-shell{width:min(780px,94vw);display:grid;grid-template-columns:minmax(320px,1fr) 250px;gap:22px;padding:24px;border-radius:26px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(23,10,33,.97),rgba(10,7,18,.97));box-shadow:0 34px 90px rgba(0,0,0,.42);transform:translateY(20px) scale(.98);opacity:0;transition:transform .3s cubic-bezier(.2,.75,.2,1), opacity .3s ease}
+    #avatarEditor.is-open .ae-shell{transform:translateY(0) scale(1);opacity:1}
+    #avatarEditor .ae-stage-wrap{display:grid;gap:14px}
+    #avatarEditor .ae-stage{position:relative;width:min(100%,380px);aspect-ratio:1 / 1;justify-self:center;border-radius:28px;background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);overflow:hidden;touch-action:none;cursor:grab}
+    #avatarEditor .ae-stage.is-dragging{cursor:grabbing}
+    #avatarEditor .ae-grid{position:absolute;inset:0;background:
+      linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 33.333% 33.333%,
+      linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 33.333% 33.333%;
+      opacity:.5;pointer-events:none}
+    #avatarEditor .ae-circle{position:absolute;inset:18px;border-radius:999px;border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 999px rgba(8,3,12,.44), inset 0 0 0 1px rgba(255,255,255,.18);pointer-events:none}
+    #avatarEditor .ae-image{position:absolute;left:50%;top:50%;transform-origin:center center;will-change:transform}
+    #avatarEditor .ae-side{display:grid;gap:14px;align-content:start}
+    #avatarEditor .ae-title{margin:0;color:#fff8fb;font:800 1.5rem/1.05 "Bricolage Grotesque","Trebuchet MS",sans-serif}
+    #avatarEditor .ae-copy{margin:0;color:rgba(255,255,255,.72);line-height:1.45}
+    #avatarEditor .ae-range-wrap{display:grid;gap:8px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+    #avatarEditor .ae-range-wrap label{font-weight:700;color:#fff8fb}
+    #avatarEditor .ae-range{width:100%}
+    #avatarEditor .ae-hint{font-size:.92rem;color:rgba(255,255,255,.64);line-height:1.45}
+    #avatarEditor .ae-actions{display:grid;gap:10px;margin-top:6px}
+    #avatarEditor .ae-btn{appearance:none;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff8fb;padding:12px 14px;border-radius:16px;font-weight:700;cursor:pointer;transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease}
+    #avatarEditor .ae-btn:hover{transform:translateY(-2px);box-shadow:0 16px 30px rgba(0,0,0,.22);border-color:rgba(255,255,255,.22)}
+    #avatarEditor .ae-btn.primary{background:linear-gradient(135deg,#ffd447,#ffb87c);color:#240b18}
+    #avatarEditor .ae-btn.ghost{background:rgba(255,255,255,.03)}
+    #avatarEditor .ae-top{display:flex;justify-content:space-between;gap:12px;align-items:start}
+    #avatarEditor .ae-close{width:42px;height:42px;padding:0;border-radius:14px}
+    @media (max-width:700px){
+      #avatarEditor{padding:12px}
+      #avatarEditor .ae-shell{width:min(100vw - 12px,560px);grid-template-columns:1fr;padding:18px;border-radius:24px}
+      #avatarEditor .ae-stage{width:min(100%,340px)}
+    }
 
   .chips{display:flex;flex-wrap:wrap;gap:12px}
   .chip{display:flex;align-items:center;gap:10px;border-radius:999px;padding:8px 12px;border:1px solid rgba(0,0,0,.08);margin-bottom:6px}
@@ -292,51 +326,248 @@ function startLayoutObserver(){
   __layoutObserver.observe(document.body, { subtree:true, childList:true, attributes:true, attributeFilter:['style'] });
 }
 
-/* Avatar */
-function initAvatars(root){
-  function drawAvatarInto(canvas, src){
-    if (!canvas || !src) return;
-    const ctx = canvas.getContext('2d', { willReadFrequently:true });
-    const img = new Image();
-    img.onload = ()=>{
-      const s = Math.max(canvas.width/img.width, canvas.height/img.height);
-      const dw=img.width*s, dh=img.height*s;
-      const dx=(canvas.width-dw)/2, dy=(canvas.height-dh)/2;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.save(); ctx.beginPath();
-      ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2, 0, Math.PI*2);
-      ctx.clip(); ctx.imageSmoothingQuality='high';
-      ctx.drawImage(img,dx,dy,dw,dh);
-      ctx.restore();
-      canvas.parentElement?.setAttribute('data-empty','0');
-    };
-    img.src = src;
+function normalizeAvatarState(value){
+  if (!value) return null;
+  if (typeof value === 'string') return { src:value, zoom:1, panX:0, panY:0 };
+  return {
+    src: value.src || '',
+    zoom: Number.isFinite(value.zoom) ? value.zoom : 1,
+    panX: Number.isFinite(value.panX) ? value.panX : 0,
+    panY: Number.isFinite(value.panY) ? value.panY : 0
+  };
+}
+
+function getAvatarSource(value){
+  return normalizeAvatarState(value)?.src || '';
+}
+
+function fitAvatarPlacement(img, size, avatarState){
+  const state = normalizeAvatarState(avatarState) || { zoom:1, panX:0, panY:0 };
+  const base = Math.max(size / img.width, size / img.height);
+  const scale = base * Math.max(.6, state.zoom || 1);
+  const dw = img.width * scale;
+  const dh = img.height * scale;
+  const maxOffsetX = Math.max(0, (dw - size) / 2);
+  const maxOffsetY = Math.max(0, (dh - size) / 2);
+  const centeredX = (size - dw) / 2;
+  const centeredY = (size - dh) / 2;
+  const dx = centeredX + Math.max(-maxOffsetX, Math.min(maxOffsetX, (state.panX || 0) * size));
+  const dy = centeredY + Math.max(-maxOffsetY, Math.min(maxOffsetY, (state.panY || 0) * size));
+  return { dx, dy, dw, dh };
+}
+
+function drawAvatarInto(canvas, src){
+  if (!canvas || !src) return;
+  const ctx = canvas.getContext('2d', { willReadFrequently:true });
+  const img = new Image();
+  img.onload = ()=>{
+    const size = Math.max(64, Math.round(Math.min(canvas.parentElement?.clientWidth || 140, canvas.parentElement?.clientHeight || 140)));
+    canvas.width = size;
+    canvas.height = size;
+    const fit = fitAvatarPlacement(img, size, src);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2, 0, Math.PI*2);
+    ctx.clip();
+    ctx.imageSmoothingQuality='high';
+    ctx.drawImage(img,fit.dx,fit.dy,fit.dw,fit.dh);
+    ctx.restore();
+    canvas.parentElement?.setAttribute('data-empty','0');
+  };
+  img.src = getAvatarSource(src);
+}
+
+function renderAllAvatars(){
+  $$('[data-avatar]').forEach(w => {
+    const canvas = w.querySelector('canvas');
+    if (!canvas) return;
+    drawAvatarInto(canvas, S.avatar);
+  });
+}
+
+let avatarEditor = null;
+let avatarEditorState = null;
+let avatarEditorImage = null;
+
+function closeAvatarEditor(){
+  const modal = document.getElementById('avatarEditor');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+}
+
+function ensureAvatarEditor(){
+  if (avatarEditor) return avatarEditor;
+  const modal = document.createElement('div');
+  modal.id = 'avatarEditor';
+  modal.innerHTML = `
+    <div class="ae-shell">
+      <div class="ae-stage-wrap">
+        <div class="ae-stage" id="aeStage">
+          <img class="ae-image" id="aeImage" alt="Preview avatar">
+          <div class="ae-grid"></div>
+          <div class="ae-circle"></div>
+        </div>
+      </div>
+      <div class="ae-side">
+        <div class="ae-top">
+          <div>
+            <h3 class="ae-title">Foto de perfil</h3>
+            <p class="ae-copy">Arrastra para recolocar. Usa zoom con la rueda, el deslizador o pellizco en movil.</p>
+          </div>
+          <button class="ae-btn ghost ae-close" id="aeClose" type="button" aria-label="Cerrar">×</button>
+        </div>
+        <div class="ae-range-wrap">
+          <label for="aeZoom">Zoom</label>
+          <input id="aeZoom" class="ae-range" type="range" min="1" max="3" step="0.01" value="1">
+        </div>
+        <div class="ae-hint">Consejo: deja los ojos cerca del tercio superior y usa dos dedos para pellizcar en movil.</div>
+        <div class="ae-actions">
+          <button class="ae-btn" id="aeChoose" type="button">Elegir foto</button>
+          <button class="ae-btn primary" id="aeAccept" type="button">Aceptar</button>
+        </div>
+        <input id="aeInput" type="file" accept="image/*" hidden>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const stage = modal.querySelector('#aeStage');
+  const image = modal.querySelector('#aeImage');
+  const zoom = modal.querySelector('#aeZoom');
+  const input = modal.querySelector('#aeInput');
+  let drag = null;
+  let pinch = null;
+
+  function updateImageTransform(){
+    if (!avatarEditorState || !avatarEditorImage) return;
+    const size = stage.clientWidth;
+    const fit = fitAvatarPlacement(avatarEditorImage, size, avatarEditorState);
+    image.style.width = `${fit.dw}px`;
+    image.style.height = `${fit.dh}px`;
+    image.style.transform = `translate(calc(-50% + ${fit.dx}px), calc(-50% + ${fit.dy}px))`;
+    zoom.value = String(avatarEditorState.zoom);
   }
 
+  function setFromFile(file){
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      avatarEditorState = { src:String(reader.result || ''), zoom:1, panX:0, panY:0 };
+      loadImage();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function loadImage(){
+    if (!avatarEditorState?.src) return;
+    const img = new Image();
+    img.onload = () => {
+      avatarEditorImage = img;
+      image.src = avatarEditorState.src;
+      updateImageTransform();
+    };
+    img.src = avatarEditorState.src;
+  }
+
+  function applyPan(deltaX, deltaY){
+    if (!avatarEditorState || !avatarEditorImage) return;
+    const size = stage.clientWidth || 1;
+    avatarEditorState.panX += deltaX / size;
+    avatarEditorState.panY += deltaY / size;
+    updateImageTransform();
+  }
+
+  stage.addEventListener('pointerdown', e => {
+    if (!avatarEditorState?.src) return;
+    drag = { x:e.clientX, y:e.clientY };
+    stage.classList.add('is-dragging');
+    stage.setPointerCapture?.(e.pointerId);
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!drag) return;
+    applyPan(e.clientX - drag.x, e.clientY - drag.y);
+    drag = { x:e.clientX, y:e.clientY };
+  });
+  const endDrag = () => {
+    drag = null;
+    stage.classList.remove('is-dragging');
+  };
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+  stage.addEventListener('wheel', e => {
+    if (!avatarEditorState?.src) return;
+    e.preventDefault();
+    avatarEditorState.zoom = Math.max(1, Math.min(3, avatarEditorState.zoom + (e.deltaY < 0 ? 0.08 : -0.08)));
+    updateImageTransform();
+  }, { passive:false });
+  stage.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      const [a,b] = e.touches;
+      pinch = {
+        distance: Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY),
+        zoom: avatarEditorState?.zoom || 1
+      };
+    }
+  }, { passive:true });
+  stage.addEventListener('touchmove', e => {
+    if (e.touches.length === 2 && pinch && avatarEditorState) {
+      e.preventDefault();
+      const [a,b] = e.touches;
+      const distance = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+      avatarEditorState.zoom = Math.max(1, Math.min(3, pinch.zoom * (distance / pinch.distance)));
+      updateImageTransform();
+    }
+  }, { passive:false });
+  stage.addEventListener('touchend', () => { pinch = null; }, { passive:true });
+
+  zoom.addEventListener('input', () => {
+    if (!avatarEditorState) return;
+    avatarEditorState.zoom = Number(zoom.value);
+    updateImageTransform();
+  });
+  modal.querySelector('#aeChoose').onclick = () => input.click();
+  input.addEventListener('change', () => setFromFile(input.files?.[0]));
+  modal.querySelector('#aeClose').onclick = () => closeAvatarEditor();
+  modal.addEventListener('click', e => { if (e.target === modal) closeAvatarEditor(); });
+  modal.querySelector('#aeAccept').onclick = () => {
+    if (!avatarEditorState?.src) return;
+    S.avatar = {
+      src: avatarEditorState.src,
+      zoom: avatarEditorState.zoom,
+      panX: avatarEditorState.panX,
+      panY: avatarEditorState.panY
+    };
+    save();
+    renderAllAvatars();
+    closeAvatarEditor();
+  };
+
+  avatarEditor = { modal, stage, image, zoom, input, loadImage };
+  return avatarEditor;
+}
+
+function openAvatarEditor(){
+  const editor = ensureAvatarEditor();
+  avatarEditorState = normalizeAvatarState(S.avatar) || { src:'', zoom:1, panX:0, panY:0 };
+  avatarEditorImage = null;
+  editor.image.removeAttribute('src');
+  editor.zoom.value = String(avatarEditorState.zoom || 1);
+  if (avatarEditorState.src) editor.loadImage();
+  editor.modal.classList.add('is-open');
+}
+
+/* Avatar */
+function initAvatars(root){
   $$('[data-avatar]', root).forEach(w=>{
     if (w._inited) return; w._inited = true;
     const input = w.querySelector('input[type=file]');
     const canvas = document.createElement('canvas');
-    canvas.width = 140; canvas.height = 140;
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.display = 'block';
-    canvas.style.borderRadius = '50%';
-    canvas.style.aspectRatio = '1 / 1';
     w.appendChild(canvas);
     if (S.avatar) drawAvatarInto(canvas, S.avatar);
 
-    w.addEventListener('click', e=>{ if (e.target !== input) input.click(); });
-    input.addEventListener('change', ()=>{
-      const f = input.files?.[0]; if(!f) return;
-      const reader = new FileReader();
-      reader.onload = ()=>{
-        S.avatar = String(reader.result || '');
-        save();
-        drawAvatarInto(canvas, S.avatar);
-      };
-      reader.readAsDataURL(f);
-    });
+    w.addEventListener('click', e=>{ if (e.target !== input) openAvatarEditor(); });
+    input?.remove();
   });
 }
 
