@@ -188,7 +188,7 @@ export function ensureCanvas(){
   return { stack: $('#stack'), addWrap: $('#canvasAdd'), add: $('#canvasAdd') };
 }
 
-export function getHeaderNode(){ return $$('[data-header]').at(-1) || null; }
+export function getHeaderNode(){ return $$('[data-header]')[0] || null; }
 function getHeaderNodeWrapper(){ return getHeaderNode()?.closest('.node') || null; }
 
 export function isSidebarActive(){
@@ -694,6 +694,7 @@ export function morphTo(kind){
   const oldHeader = oldWrap?.querySelector('[data-header]');
   if (oldHeader) oldHeader.removeAttribute('data-header');
   const temp=buildHeader(kind);
+  $$('.node[data-locked]').forEach(node => { if (node !== temp) node.remove(); });
 
   normalizeCanvasForCurrentLayout({ showAdd: true });
 
@@ -713,7 +714,6 @@ export function morphTo(kind){
       setTimeout(()=>{
         temp.style.transition='';
         temp.style.transform='';
-        $$('.node[data-locked]').forEach(node => { if (node !== temp) node.remove(); });
         normalizeCanvasForCurrentLayout();
       },380);
     });
