@@ -200,11 +200,15 @@
       border:1px solid rgba(255,255,255,.08);
       display:grid;
       grid-template-columns:56px 1fr;
-      gap:14px;
-      align-items:start;
+      grid-template-areas:
+        "icon title"
+        "desc desc";
+      gap:10px 14px;
+      align-items:center;
     }
 
     .note-icon{
+      grid-area:icon;
       width:56px;
       height:56px;
       border-radius:16px;
@@ -224,12 +228,22 @@
 
     .note-copy{
       min-width:0;
+      display:contents;
+    }
+
+    .note-title{
+      grid-area:title;
+      align-self:center;
     }
 
     .note strong{
       display:block;
       font-size:1.15rem;
-      margin-bottom:8px;
+      margin-bottom:0;
+    }
+
+    .note-description{
+      grid-area:desc;
     }
 
     .note span{
@@ -461,10 +475,17 @@
       width:108px;
       height:72px;
       border-radius:14px;
-      background-size:cover;
-      background-position:center;
       border:1px solid rgba(255,255,255,.1);
       background-color:rgba(255,255,255,.04);
+      overflow:hidden;
+      display:block;
+    }
+
+    .recent-media img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
     }
 
     .recent-copy strong{
@@ -822,8 +843,15 @@
       margin:18px 0 4px;
       border-radius:22px;
       border:1px solid rgba(255,255,255,.1);
-      background-size:cover;
-      background-position:center;
+      overflow:hidden;
+      background:rgba(255,255,255,.04);
+    }
+
+    .modal-hero img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
     }
 
     .modal-top{
@@ -1110,29 +1138,29 @@
           <div class="note">
             <span class="note-icon"><img src="/shared/assets/brand/miercoles.png" alt="Miercoles"></span>
             <span class="note-copy">
-              <strong>Miercoles de dramas y chismes</strong>
-              <span>La puerta de entrada para mandar mensajes an&oacute;nimos a los directos de dramas y chismes.</span>
+              <strong class="note-title">Miercoles de dramas y chismes</strong>
+              <span class="note-description">La puerta de entrada para mandar mensajes an&oacute;nimos a los directos de dramas y chismes.</span>
             </span>
           </div>
           <div class="note">
             <span class="note-icon"><img src="/shared/assets/apps/toolbox.png" alt="Herramientas"></span>
             <span class="note-copy">
-              <strong>Herramientas</strong>
-              <span>El lado serio del asunto: ideas &uacute;tiles para sobrevivir mejor la vida adulta con personalidad propia.</span>
+              <strong class="note-title">Herramientas</strong>
+              <span class="note-description">El lado serio del asunto: ideas &uacute;tiles para sobrevivir mejor la vida adulta con personalidad propia.</span>
             </span>
           </div>
           <div class="note">
             <span class="note-icon"><img src="/shared/assets/brand/confesion.png" alt="Secretos"></span>
             <span class="note-copy">
-              <strong>Secretos</strong>
-              <span>Un rinc&oacute;n an&oacute;nimo para contar lo m&aacute;s heavy o lo m&aacute;s divertido y votar lo de otras personas.</span>
+              <strong class="note-title">Secretos</strong>
+              <span class="note-description">Un rinc&oacute;n an&oacute;nimo para contar lo m&aacute;s heavy o lo m&aacute;s divertido y votar lo de otras personas.</span>
             </span>
           </div>
           <div class="note">
             <span class="note-icon"><img src="/shared/assets/brand/trivialodon-icono.png" alt="Juegos"></span>
             <span class="note-copy">
-              <strong>Juegos</strong>
-              <span>El espacio pensado para reunir gente con partidas r&aacute;pidas, juegos de fiesta y experimentos como Trivialodon.</span>
+              <strong class="note-title">Juegos</strong>
+              <span class="note-description">El espacio pensado para reunir gente con partidas r&aacute;pidas, juegos de fiesta y experimentos como Trivialodon.</span>
             </span>
           </div>
         </div>
@@ -1187,17 +1215,17 @@
 
     const recentThumbs = {
       "arc-raiders": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1808500/header.jpg",
-      "fortnite": "https://cdn2.unrealengine.com/fortnite-chapter-5-season-4-battle-pass-1920x1080-75d5fc8e8f04.jpg",
+      "fortnite": "https://image.api.playstation.com/vulcan/ap/rnd/202603/1715/a34caaac0a34f9342a7d2d27a64fa91873044271e66be67f.png",
       "split-fiction": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2001120/header.jpg",
       "repo": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/3241660/header.jpg",
       "dispatch": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2592160/header.jpg",
       "party-animals": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1260320/header.jpg",
-      "peak": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/3527290/header.jpg"
+      "peak": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/3527290/library_hero.jpg"
     };
 
     const gameHeroes = {
       "arc-raiders": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1808500/library_hero.jpg",
-      "fortnite": "https://cdn2.unrealengine.com/fortnite-chapter-5-season-4-battle-pass-1920x1080-75d5fc8e8f04.jpg",
+      "fortnite": "https://image.api.playstation.com/vulcan/ap/rnd/202603/1715/cae7ca34838522bf6aab0633b19bd409b4c4e43c768d312f.jpg",
       "split-fiction": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2001120/library_hero.jpg",
       "repo": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/3241660/library_hero.jpg",
       "dispatch": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2592160/library_hero.jpg",
@@ -1311,16 +1339,23 @@
       { day: "Domingo", title: "Gameplay", copy: "Cierre suave antes del siguiente mi&eacute;rcoles." }
     ];
 
-    const itemHeight = 84;
-    const cloneCount = 3;
-    let currentRecent = cloneCount;
+    const visibleRecentCount = 3;
+    let currentRecent = 0;
     let recentTimer;
+
+    function handleImageError(image, fallback) {
+      if (!fallback || image.dataset.fallbackApplied === "true") return;
+      image.dataset.fallbackApplied = "true";
+      image.src = fallback;
+    }
 
     function recentCard(key) {
       const title = gameData[key].title;
       return `
         <button class="recent-item" type="button" data-game="${key}">
-          <span class="recent-media" style="background-image:url('${recentThumbs[key]}')"></span>
+          <span class="recent-media">
+            <img src="${recentThumbs[key]}" alt="${title}" loading="lazy" onerror="this.closest('.recent-media').style.background='linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03))'; this.remove();">
+          </span>
           <span class="recent-copy">
             <strong>${title}</strong>
             <span>${recentSummaries[key]}</span>
@@ -1329,38 +1364,31 @@
       `;
     }
 
-    function renderRecentStructure() {
-      const head = recentGameOrder.slice(0, cloneCount);
-      const tail = recentGameOrder.slice(-cloneCount);
-      const loopItems = [...tail, ...recentGameOrder, ...head];
-      recentTrack.innerHTML = loopItems.map(recentCard).join("");
+    function renderRecentWindow() {
+      const visibleKeys = Array.from({ length: visibleRecentCount }, (_, offset) => {
+        return recentGameOrder[(currentRecent + offset) % recentGameOrder.length];
+      });
+
+      recentTrack.innerHTML = visibleKeys.map(recentCard).join("");
       recentDots.innerHTML = recentGameOrder.map((key, index) => `
-        <button class="recent-dot ${index === 0 ? "is-active" : ""}" type="button" data-recent-slide="${index}" aria-label="${gameData[key].title}"></button>
+        <button class="recent-dot ${index === currentRecent ? "is-active" : ""}" type="button" data-recent-slide="${index}" aria-label="${gameData[key].title}"></button>
       `).join("");
-      recentTrack.style.transition = "none";
-      recentTrack.style.transform = `translateY(-${cloneCount * itemHeight}px)`;
-      requestAnimationFrame(() => {
-        recentTrack.style.transition = "transform .35s ease";
-      });
     }
 
-    function syncRecentDots() {
-      const visibleIndex = ((currentRecent - cloneCount) % recentGameOrder.length + recentGameOrder.length) % recentGameOrder.length;
-      Array.from(recentDots.querySelectorAll(".recent-dot")).forEach((dot, dotIndex) => {
-        dot.classList.toggle("is-active", dotIndex === visibleIndex);
-      });
+    function moveRecent(step) {
+      currentRecent = (currentRecent + step + recentGameOrder.length) % recentGameOrder.length;
+      renderRecentWindow();
     }
 
-    function moveRecentTo(index) {
-      currentRecent = index;
-      recentTrack.style.transform = `translateY(-${currentRecent * itemHeight}px)`;
-      syncRecentDots();
+    function goToRecent(index) {
+      currentRecent = index % recentGameOrder.length;
+      renderRecentWindow();
     }
 
     function restartRecentTimer() {
       window.clearInterval(recentTimer);
       recentTimer = window.setInterval(() => {
-        moveRecentTo(currentRecent + 1);
+        moveRecent(1);
       }, 3400);
     }
 
@@ -1384,47 +1412,24 @@
       `).join("");
     }
 
-    renderRecentStructure();
-    syncRecentDots();
+    renderRecentWindow();
     restartRecentTimer();
     renderMiniSchedule();
-
-    recentTrack.addEventListener("transitionend", () => {
-      if (currentRecent === cloneCount + recentGameOrder.length) {
-        recentTrack.style.transition = "none";
-        currentRecent = cloneCount;
-        recentTrack.style.transform = `translateY(-${currentRecent * itemHeight}px)`;
-        requestAnimationFrame(() => {
-          recentTrack.style.transition = "transform .35s ease";
-        });
-      }
-
-      if (currentRecent === cloneCount - 1) {
-        recentTrack.style.transition = "none";
-        currentRecent = cloneCount + recentGameOrder.length - 1;
-        recentTrack.style.transform = `translateY(-${currentRecent * itemHeight}px)`;
-        requestAnimationFrame(() => {
-          recentTrack.style.transition = "transform .35s ease";
-        });
-      }
-
-      syncRecentDots();
-    });
 
     recentDots.addEventListener("click", (event) => {
       const dot = event.target.closest(".recent-dot");
       if (!dot) return;
-      moveRecentTo(cloneCount + Number(dot.dataset.recentSlide));
+      goToRecent(Number(dot.dataset.recentSlide));
       restartRecentTimer();
     });
 
     recentPrev.addEventListener("click", () => {
-      moveRecentTo(currentRecent - 1);
+      moveRecent(-1);
       restartRecentTimer();
     });
 
     recentNext.addEventListener("click", () => {
-      moveRecentTo(currentRecent + 1);
+      moveRecent(1);
       restartRecentTimer();
     });
 
@@ -1443,7 +1448,7 @@
       modalEyebrow.textContent = data.eyebrow;
       modalTitle.textContent = data.title;
       modalDescription.textContent = data.description;
-      modalHero.style.backgroundImage = `url('${gameHeroes[key]}')`;
+      modalHero.innerHTML = `<img src="${gameHeroes[key]}" alt="${data.title}" onerror="this.closest('#modalHero').innerHTML='<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.58);font-weight:700;&quot;>Imagen no disponible</div>';">`;
       modalFootnote.textContent = data.footnote;
       storeList.innerHTML = data.stores.map((store) => `
         <div class="store-item">
