@@ -215,7 +215,7 @@
 
     .profile-card{
       display:grid;
-      grid-template-columns:.9fr 1.1fr;
+      grid-template-columns:1fr 1fr;
       gap:18px;
       align-items:center;
       min-height:280px;
@@ -226,14 +226,11 @@
     }
 
     .profile-frame{
-      min-height:220px;
+      min-height:340px;
       border-radius:28px;
-      border:1px solid rgba(255,255,255,.12);
-      background:
-        radial-gradient(circle at center, rgba(255,255,255,.12), transparent 58%),
-        linear-gradient(180deg, rgba(73,28,103,.95), rgba(20,8,31,.96));
+      background:transparent;
       display:flex;
-      align-items:center;
+      align-items:flex-end;
       justify-content:center;
       position:relative;
       overflow:hidden;
@@ -241,49 +238,35 @@
 
     .profile-frame img{
       position:relative;
-      z-index:2;
-      width:min(100%, 360px);
+      z-index:3;
+      width:min(100%, 430px);
       height:auto;
       object-fit:contain;
-      filter:drop-shadow(0 16px 24px rgba(0,0,0,.28));
+      filter:drop-shadow(0 24px 32px rgba(0,0,0,.28));
     }
 
-    .profile-frame::before,
+    .profile-frame::before{
+      content:"";
+      position:absolute;
+      width:100%;
+      height:86%;
+      bottom:-10%;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,.1), transparent 56%),
+        radial-gradient(circle at top, rgba(255,79,201,.18), transparent 54%);
+      filter:blur(6px);
+    }
+
     .profile-frame::after{
       content:"";
       position:absolute;
-      inset:16px;
+      inset:auto 6% 0;
+      height:38%;
       border-radius:999px;
-      border:2px solid rgba(135,244,255,.3);
-    }
-
-    .profile-frame::after{
-      inset:28px;
-      border-color:rgba(255,79,201,.28);
-    }
-
-    .profile-mark{
-      position:relative;
-      width:120px;
-      height:120px;
-      border-radius:36px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.14);
-      font-family:"Bricolage Grotesque", "Trebuchet MS", sans-serif;
-      font-size:4rem;
-      color:var(--gold);
-      text-shadow:0 0 24px rgba(255,212,71,.14);
-      box-shadow:0 0 28px rgba(0,0,0,.24);
-    }
-
-    .profile-mark small{
-      position:absolute;
-      top:8px;
-      right:10px;
-      font-size:1.4rem;
+      background:linear-gradient(180deg, rgba(255,79,201,.12), rgba(135,244,255,.06));
+      border:1px solid rgba(255,255,255,.08);
+      filter:blur(0);
     }
 
     .profile-copy h2{
@@ -298,6 +281,57 @@
       margin-top:14px;
       font-size:.92rem;
       color:rgba(255,255,255,.58);
+    }
+
+    .recent-games{
+      display:grid;
+      gap:14px;
+    }
+
+    .recent-track{
+      display:grid;
+      gap:10px;
+    }
+
+    .recent-item{
+      display:grid;
+      grid-template-columns:92px 1fr;
+      gap:12px;
+      align-items:center;
+      padding:10px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.04);
+      cursor:pointer;
+      transition:transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    .recent-item:hover{
+      transform:translateY(-2px);
+      border-color:rgba(255,212,71,.24);
+      background:rgba(255,255,255,.06);
+    }
+
+    .recent-media{
+      width:92px;
+      height:64px;
+      border-radius:14px;
+      background-size:cover;
+      background-position:center;
+      border:1px solid rgba(255,255,255,.1);
+    }
+
+    .recent-copy strong{
+      display:block;
+      font-size:1rem;
+    }
+
+    .recent-copy span{
+      display:block;
+      margin-top:4px;
+      color:var(--muted);
+      font-size:.88rem;
+      line-height:1.35;
     }
 
     .schedule{
@@ -497,26 +531,14 @@
     }
 
     .game-icon{
-      width:76px;
-      height:76px;
+      width:100%;
+      height:116px;
       border-radius:24px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:"Bricolage Grotesque", "Trebuchet MS", sans-serif;
-      font-size:1.45rem;
-      font-weight:800;
-      letter-spacing:.02em;
-      color:#fff;
       border:1px solid rgba(255,255,255,.14);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+      background-size:cover;
+      background-position:center;
     }
-
-    .arc{ background:linear-gradient(135deg, #5978ff, #47d4ff); }
-    .fortnite{ background:linear-gradient(135deg, #16b7ff, #0047ff); }
-    .split{ background:linear-gradient(135deg, #ff6f8e, #ffb65f); }
-    .repo{ background:linear-gradient(135deg, #43f08a, #14634b); }
-    .dispatch{ background:linear-gradient(135deg, #c680ff, #6d38ff); }
 
     .game-tile h3{
       font-size:1.24rem;
@@ -578,6 +600,16 @@
       border:1px solid rgba(255,255,255,.12);
       background:linear-gradient(180deg, rgba(32,12,46,.98), rgba(16,8,24,.98));
       box-shadow:0 30px 80px rgba(0,0,0,.42);
+    }
+
+    .modal-hero{
+      width:100%;
+      height:220px;
+      margin:18px 0 4px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.1);
+      background-size:cover;
+      background-position:center;
     }
 
     .modal-top{
@@ -704,9 +736,9 @@
   <main class="page">
     <section class="hero">
       <article class="hero-card">
-        <span class="eyebrow">Bienvenido a la guarida oficial</span>
-        <h1>Zaurio no es un perfil. Es un ecosistema con colmillos.</h1>
-        <p class="lead">Streamer, agitador de dramas con horario fijo, anfitrión de chismes cada miércoles y creador de rincones donde caben secretos anónimos, herramientas útiles y juegos con personalidad. La vibra es divertida, un poco caótica y muy de comunidad.</p>
+        <span class="eyebrow">Bienvenido al Dominio Rex</span>
+        <h1>Zaurio no es solo un streamer. Es un laboratorio para divertirse y sobrevivir la vida adulta.</h1>
+        <p class="lead">Geek, creativo y con TDA, Zaurio siempre ha tenido esa necesidad de experimentar con ideas que sirvan para pasarlo bien, conectar gente y a la vez hacer más llevadero el lado serio de crecer. Por eso este dominio mezcla drama, anonimato, herramientas útiles y juegos sociales con una misma energía.</p>
         <div class="hero-actions">
           <a class="btn primary" href="https://www.tiktok.com/@zaurioking" target="_blank" rel="noopener noreferrer">Ir al TikTok</a>
           <a class="btn secondary" href="https://miercoles.zaurio.es">Entrar en Miércoles</a>
@@ -714,15 +746,15 @@
         <div class="hero-notes">
           <div class="note">
             <strong>Miércoles</strong>
-            <span>Dramas, chismes, buzón anónimo y energía de “esto se nos va de las manos”.</span>
+            <span>Tu puerta de entrada para enviar mensajes anónimos en los directos de dramas y chismes.</span>
           </div>
           <div class="note">
-            <strong>Resto de la semana</strong>
-            <span>Gameplays, comunidad y contenido para que el caos también tenga joystick.</span>
+            <strong>Herramientas</strong>
+            <span>El lado serio del asunto: ideas pensadas para sobrevivir mejor la vida adulta sin perder personalidad.</span>
           </div>
           <div class="note">
-            <strong>Universo Zaurio</strong>
-            <span>Herramientas con utilidad real, secretos anónimos y una landing que por fin une todo.</span>
+            <strong>Secretos y juegos</strong>
+            <span>Un espacio anónimo para confesar sin que nadie sepa quién eres y una zona gamer para unir gente con juegos rápidos de fiesta.</span>
           </div>
         </div>
       </article>
@@ -733,19 +765,38 @@
             <img src="/shared/assets/brand/zaurio-portrait.png" alt="Retrato de Zaurio">
           </div>
           <div class="profile-copy">
-            <span class="eyebrow">Presentación rápida</span>
-            <h2>Mitad anfitrión, mitad reptil del caos.</h2>
-            <p>La misión no es solo streamear: es montar una especie de parque temático donde caben el salseo, los gameplays, las herramientas y la parte más meme de la comunidad sin que nada se sienta desconectado.</p>
-            <p class="minor">Ahora sí: el retrato oficial ya vive dentro de la landing y ayuda a que la home se sienta más tuya desde el primer segundo.</p>
+            <span class="eyebrow">Presentación</span>
+            <h2>Un streamer que convierte ideas sueltas en rincones con vida propia.</h2>
+            <p>Miércoles es la entrada anónima al salseo del directo. Secretos es el confesionario para contar lo más heavy o lo más divertido sin enseñar la cara. Herramientas es el brazo práctico del proyecto. Juegos es la parte que quiere juntar gente con experiencias rápidas, sociales y con bastante caos.</p>
+            <p class="minor">Todo esto no va de parecer una empresa seria. Va de construir un dominio donde experimentar, jugar, ordenar ideas y seguir sobreviviendo la vida adulta con un poco más de gracia.</p>
           </div>
         </aside>
 
-        <aside class="side-card">
-          <span class="eyebrow">Mapa rápido</span>
-          <p><strong>Miércoles</strong> para mandar dramas y chismes.</p>
-          <p><strong>Secretos</strong> para confesiones anónimas con reacciones.</p>
-          <p><strong>Herramientas</strong> para utilidad real tipo DineroZaurio.</p>
-          <p><strong>Juegos</strong> para agrupar directos, fichas y futuros inventos como Trivialodon.</p>
+        <aside class="side-card recent-games">
+          <span class="eyebrow">Juegos recientes</span>
+          <div class="recent-track">
+            <button class="recent-item" type="button" data-game="arc-raiders">
+              <span class="recent-media" data-recent-image="arc-raiders"></span>
+              <span class="recent-copy">
+                <strong>ARC Raiders</strong>
+                <span>Extracción, robots y tensión de directo.</span>
+              </span>
+            </button>
+            <button class="recent-item" type="button" data-game="fortnite">
+              <span class="recent-media" data-recent-image="fortnite"></span>
+              <span class="recent-copy">
+                <strong>Fortnite</strong>
+                <span>El clásico caos multijugador que nunca falla.</span>
+              </span>
+            </button>
+            <button class="recent-item" type="button" data-game="split-fiction">
+              <span class="recent-media" data-recent-image="split-fiction"></span>
+              <span class="recent-copy">
+                <strong>Split Fiction</strong>
+                <span>Cooperativo de espectáculo y cambios locos.</span>
+              </span>
+            </button>
+          </div>
         </aside>
       </div>
     </section>
@@ -868,7 +919,7 @@
 
       <div class="games-grid">
         <button class="game-tile" type="button" data-game="arc-raiders">
-          <div class="game-icon arc">ARC</div>
+          <div class="game-icon" data-game-image="arc-raiders" aria-hidden="true"></div>
           <div>
             <h3>ARC Raiders</h3>
             <p>Extracción PvPvE, ciencia ficción y mucha tensión entre chatarra, robots y supervivencia.</p>
@@ -880,7 +931,7 @@
         </button>
 
         <button class="game-tile" type="button" data-game="fortnite">
-          <div class="game-icon fortnite">FN</div>
+          <div class="game-icon" data-game-image="fortnite" aria-hidden="true"></div>
           <div>
             <h3>Fortnite</h3>
             <p>Battle Royale, eventos, modos raros y ese caos bonito que el chat siempre reconoce al instante.</p>
@@ -892,7 +943,7 @@
         </button>
 
         <button class="game-tile" type="button" data-game="split-fiction">
-          <div class="game-icon split">SF</div>
+          <div class="game-icon" data-game-image="split-fiction" aria-hidden="true"></div>
           <div>
             <h3>Split Fiction</h3>
             <p>Cooperativo de Hazelight con cambios locos de escenario, ritmo alto y momentos muy de “esto hay que verlo”.</p>
@@ -904,7 +955,7 @@
         </button>
 
         <button class="game-tile" type="button" data-game="repo">
-          <div class="game-icon repo">R.E</div>
+          <div class="game-icon" data-game-image="repo" aria-hidden="true"></div>
           <div>
             <h3>R.E.P.O.</h3>
             <p>Horror cooperativo con física absurda, sustos y objetos valiosos que casi nunca sobreviven enteros.</p>
@@ -916,7 +967,7 @@
         </button>
 
         <button class="game-tile" type="button" data-game="dispatch">
-          <div class="game-icon dispatch">DS</div>
+          <div class="game-icon" data-game-image="dispatch" aria-hidden="true"></div>
           <div>
             <h3>Dispatch</h3>
             <p>Aventura narrativa con superhéroes, decisiones, humor y bastante desastre organizado.</p>
@@ -947,6 +998,7 @@
         </div>
         <button id="modalClose" class="modal-close" type="button" aria-label="Cerrar">×</button>
       </div>
+      <div id="modalHero" class="modal-hero" aria-hidden="true"></div>
       <div class="store-list" id="storeList"></div>
       <p id="modalFootnote" class="price-note"></p>
     </div>
@@ -958,6 +1010,13 @@
     const dots = Array.from(document.querySelectorAll(".dot"));
     const nextBtn = document.getElementById("carouselNext");
     let currentSlide = 0;
+    const gameImages = {
+      "arc-raiders": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1808500/header.jpg",
+      "fortnite": "https://cdn2.unrealengine.com/egs-fortnite-c5s3-keyart-2560x1440-2560x1440-9123a8e4f3d8.jpg",
+      "split-fiction": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2001120/header.jpg",
+      "repo": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/3241660/header.jpg",
+      "dispatch": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2592160/header.jpg"
+    };
 
     function renderSlide(index){
       currentSlide = index;
@@ -981,10 +1040,10 @@
         description: "ARC Raiders es un shooter de extracción PvPvE en tercera persona donde saqueas la superficie, sobrevives a máquinas brutales y vuelves a la colonia de Speranza con lo que hayas conseguido rescatar.",
         footnote: "Tiendas oficiales detectadas: Steam, Epic Games Store y Xbox. PlayStation aparece listado en el catálogo actual de la Store.",
         stores: [
-          { name: "Steam", price: "$39.99", note: "Edición estándar.", url: "https://store.steampowered.com/app/1808500/ARC_Raiders/" },
-          { name: "Epic Games Store", price: "Ver tienda", note: "Página oficial del juego en Epic.", url: "https://store.epicgames.com/en-US/p/arc-raiders" },
-          { name: "Xbox", price: "$39.99+", note: "Optimizado para Xbox Series X|S.", url: "https://www.xbox.com/en-US/games/store/arc-raiders/9NDF1F263RZ4/0010/9TKB89VJ3912" },
-          { name: "PlayStation", price: "€39.99", note: "Visible en el catálogo reciente de PlayStation Store.", url: "https://store.playstation.com/en-ie" }
+          { name: "Steam", price: "39,99 €", note: "Precio europeo visto en la ficha oficial de Steam.", url: "https://store.steampowered.com/app/1808500/ARC_Raiders/" },
+          { name: "Epic Games Store", price: "Consultar en tienda", note: "Disponible en Epic Games Store España.", url: "https://store.epicgames.com/es-ES/p/arc-raiders" },
+          { name: "Xbox", price: "39,99 €", note: "Optimizado para Xbox Series X|S.", url: "https://www.xbox.com/es-ES/games/store/arc-raiders/9NDF1F263RZ4/0010/9TKB89VJ3912" },
+          { name: "PlayStation", price: "39,99 €", note: "Visible en el catálogo reciente de PlayStation Store.", url: "https://store.playstation.com/en-ie" }
         ]
       },
       "fortnite": {
@@ -993,9 +1052,9 @@
         description: "Fortnite sigue siendo el gran parque de atracciones del multijugador: Battle Royale, modos creados por la comunidad, LEGO Fortnite, Festival y eventos que convierten cualquier directo en un imán de clips.",
         footnote: "Fortnite no está en Steam. Las compras extra y packs cambian, pero el acceso base del juego aparece como gratuito en las tiendas oficiales.",
         stores: [
-          { name: "Epic Games", price: "Gratis", note: "Descarga oficial en PC y móvil compatible.", url: "https://store.epicgames.com/en-US/p/fortnite" },
-          { name: "PlayStation", price: "Gratis", note: "Versión de PS5 visible en la Store.", url: "https://store.playstation.com/en-us/product/UP1477-PPSA01922_00-FNBNDL0000000000?lang=es-ES" },
-          { name: "Xbox", price: "Gratis", note: "Disponible en Xbox Store.", url: "https://www.xbox.com/en-US/games/store/fortnite/BT5P2X999VH2" }
+          { name: "Epic Games", price: "0,00 €", note: "Descarga oficial en PC y móvil compatible.", url: "https://store.epicgames.com/es-ES/p/fortnite" },
+          { name: "PlayStation", price: "0,00 €", note: "Versión de PS5 visible en la Store.", url: "https://store.playstation.com/es-es/product/EP1464-PPSA01923_00-FORTNITETESTING0" },
+          { name: "Xbox", price: "Gratis", note: "Disponible en Xbox Store.", url: "https://www.xbox.com/es-ES/games/store/fortnite/BT5P2X999VH2" }
         ]
       },
       "split-fiction": {
@@ -1004,10 +1063,10 @@
         description: "Split Fiction es una aventura cooperativa para dos personas donde todo cambia de forma constantemente: ciencia ficción, fantasía, set pieces muy bestias y ritmo de juego pensado para compartir directo y reacción.",
         footnote: "Split Fiction aparece con precio estándar en Steam y con edición completa también en consolas y Epic según disponibilidad regional.",
         stores: [
-          { name: "Steam", price: "$37.49", note: "Oferta rastreada; base habitual indicada en la ficha: $49.99.", url: "https://store.steampowered.com/app/2001120/Split_Fiction/" },
-          { name: "Epic Games Store", price: "Ver tienda", note: "Disponible en Epic Games Store.", url: "https://store.epicgames.com/es-ES/achievements/split-fiction" },
-          { name: "PlayStation", price: "$49.99", note: "Disponible en PlayStation Store.", url: "https://store.playstation.com" },
-          { name: "Xbox", price: "$49.99", note: "Disponible en Xbox Store.", url: "https://www.xbox.com" }
+          { name: "Steam", price: "34,99 €", note: "Oferta rastreada; base habitual en la ficha: 49,99 €.", url: "https://store.steampowered.com/app/2001120/Split_Fiction/?l=spanish" },
+          { name: "Epic Games Store", price: "Consultar en tienda", note: "Disponible en Epic Games Store España.", url: "https://store.epicgames.com/es-ES/p/split-fiction" },
+          { name: "PlayStation", price: "49,99 €", note: "Disponible en PlayStation Store España.", url: "https://store.playstation.com/es-es/product/EP0006-PPSA21113_00-SPLITFICTION0000" },
+          { name: "Xbox", price: "37,49 €", note: "Precio rastreado en Xbox Store España.", url: "https://www.xbox.com/es-ES/games/store/split-fiction/9p6rk94hjpzm" }
         ]
       },
       "repo": {
@@ -1016,7 +1075,7 @@
         description: "R.E.P.O. es un cooperativo de terror para hasta seis jugadores donde tienes que localizar objetos valiosos, moverlos con física real y salir vivo mientras todo a tu alrededor quiere arruinarte la extracción.",
         footnote: "Por ahora la tienda oficial claramente localizada es Steam. La ficha rastreada mostraba una oferta temporal activa.",
         stores: [
-          { name: "Steam", price: "£5.52", note: "Oferta rastreada del 35%; precio base visto: £8.50.", url: "https://store.steampowered.com/app/3241660/R_E_P_O/" }
+          { name: "Steam", price: "9,75 €", note: "Precio europeo visto en la ficha oficial de Steam.", url: "https://store.steampowered.com/app/3241660/R_E_P_O/" }
         ]
       },
       "dispatch": {
@@ -1025,8 +1084,8 @@
         description: "Dispatch mezcla aventura narrativa, humor y toma de decisiones en un mundo de superhéroes donde gestionar el caos importa tanto como lo que decides decir o esconder en cada escena.",
         footnote: "Dispatch aparece claramente localizado en PlayStation Store y también tiene página oficial en Steam.",
         stores: [
-          { name: "Steam", price: "Ver tienda", note: "Página oficial del juego en Steam.", url: "https://store.steampowered.com/app/2592160/Dispatch/" },
-          { name: "PlayStation", price: "€34.99", note: "Precio visible en el catálogo reciente de PlayStation Store.", url: "https://store.playstation.com/product/HP7386-PPSA27158_00-0022337374597692" }
+          { name: "Steam", price: "Consultar en tienda", note: "Página oficial del juego en Steam.", url: "https://store.steampowered.com/app/2592160/Dispatch/" },
+          { name: "PlayStation", price: "34,99 €", note: "Precio visible en PlayStation Store España.", url: "https://store.playstation.com/product/HP7386-PPSA27158_00-0022337374597692" }
         ]
       }
     };
@@ -1036,6 +1095,7 @@
     const modalEyebrow = document.getElementById("modalEyebrow");
     const modalTitle = document.getElementById("modalTitle");
     const modalDescription = document.getElementById("modalDescription");
+    const modalHero = document.getElementById("modalHero");
     const storeList = document.getElementById("storeList");
     const modalFootnote = document.getElementById("modalFootnote");
 
@@ -1045,6 +1105,7 @@
       modalEyebrow.textContent = data.eyebrow;
       modalTitle.textContent = data.title;
       modalDescription.textContent = data.description;
+      modalHero.style.backgroundImage = `url('${gameImages[key]}')`;
       modalFootnote.textContent = data.footnote;
       storeList.innerHTML = data.stores.map((store) => `
         <div class="store-item">
@@ -1071,6 +1132,16 @@
 
     document.querySelectorAll("[data-game]").forEach((button) => {
       button.addEventListener("click", () => openGameModal(button.dataset.game));
+    });
+
+    document.querySelectorAll("[data-game-image]").forEach((node) => {
+      const key = node.dataset.gameImage;
+      node.style.backgroundImage = `url('${gameImages[key]}')`;
+    });
+
+    document.querySelectorAll("[data-recent-image]").forEach((node) => {
+      const key = node.dataset.recentImage;
+      node.style.backgroundImage = `url('${gameImages[key]}')`;
     });
 
     modalClose.addEventListener("click", closeGameModal);
