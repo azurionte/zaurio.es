@@ -70,6 +70,16 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy .chip-grid [data-info-top] > .chip,
     .fancy .chip-grid [data-info-left] > .chip,
     .fancy .chip-grid [data-info-right] > .chip{width:min(100%,286px);max-width:286px;min-height:46px}
+    .fancy[data-chip-count="1"] .hero,
+    .fancy[data-chip-count="2"] .hero{min-height:244px}
+    .fancy[data-chip-count="1"] .chip-grid,
+    .fancy[data-chip-count="2"] .chip-grid{top:136px;bottom:26px}
+    .fancy[data-chip-count="3"] .hero,
+    .fancy[data-chip-count="4"] .hero,
+    .fancy[data-chip-count="5"] .hero{min-height:268px}
+    .fancy[data-chip-count="3"] .chip-grid,
+    .fancy[data-chip-count="4"] .chip-grid,
+    .fancy[data-chip-count="5"] .chip-grid{top:100px;bottom:24px}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
@@ -185,8 +195,8 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     align-items:center;
     margin:0 !important;
     left:auto !important;
-    right:-12px !important;
-    bottom:-10px !important;
+    right:-10px !important;
+    bottom:-6px !important;
     transform:none !important;
     position:absolute !important;
   }
@@ -888,7 +898,7 @@ export function applyContact(){
 
   const c=S.contact||{};
   const items=[];
-  ['phone', 'phone2', 'email', 'address', 'linkedin'].forEach(key => {
+  ['phone', 'phone2', 'email', 'idDoc', 'address', 'linkedin'].forEach(key => {
     const value = sanitizeContactValue(key, c[key]);
     if (!value) return;
     const field = CONTACT_FIELDS[key];
@@ -903,6 +913,7 @@ export function applyContact(){
                   head.querySelector('[data-info-left]'),
                   head.querySelector('[data-info-right]') ].filter(Boolean);
   setChips(holders, items);
+  head.setAttribute('data-chip-count', String(items.length));
   restyleContactChips();
   try{
     const availableActions = getAvailableContactActions(c);
@@ -918,11 +929,18 @@ export function applyContact(){
       try {
         const chipWrap = head.querySelector('.chip-wrap');
         const nameBlock = head.querySelector('.name-block');
+        const fancyHero = head.matches('.fancy') ? head.querySelector('.hero') : null;
+        const topbarInner = head.matches('.topbar') ? head.firstElementChild : null;
         const genericHolder = head.querySelector('[data-info]') || head.querySelector('[data-info-left]')?.parentElement;
-        if ((items||[]).length === 0 && nameBlock){
-          if (addBtn.parentElement !== nameBlock) nameBlock.appendChild(addBtn);
+        if (fancyHero) {
+          if (addBtn.parentElement !== fancyHero) fancyHero.appendChild(addBtn);
         } else if (chipWrap){
           if (addBtn.parentElement !== chipWrap) chipWrap.appendChild(addBtn);
+        } else if (topbarInner) {
+          const topInfoBlock = topbarInner.firstElementChild;
+          if (topInfoBlock && addBtn.parentElement !== topInfoBlock) topInfoBlock.appendChild(addBtn);
+        } else if ((items||[]).length === 0 && nameBlock){
+          if (addBtn.parentElement !== nameBlock) nameBlock.appendChild(addBtn);
         } else if (genericHolder){
           if (addBtn.parentElement !== genericHolder) genericHolder.appendChild(addBtn);
         }
