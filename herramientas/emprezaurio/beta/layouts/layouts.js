@@ -59,10 +59,16 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       justify-self:center;
     }
     .fancy{position:relative;padding-bottom:74px}
-    .fancy .hero{position:relative;border-radius:14px;padding:18px 14px 82px;min-height:190px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+    .fancy .hero{position:relative;border-radius:14px;padding:18px 18px 108px;min-height:250px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
     .fancy .hero .avatar{position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);z-index:4;width:124px;height:124px;border-width:4px}
-    .fancy .hero .name{text-align:center;margin:0}
-    .fancy .chip-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin-top:12px}
+    .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3}
+    .fancy .chip-grid{position:absolute;left:18px;right:18px;bottom:26px;display:grid;grid-template-columns:minmax(0,1fr) 132px minmax(0,1fr);gap:14px;align-items:end;pointer-events:none}
+    .fancy .chip-grid .chips{display:flex;flex-direction:column;gap:10px;min-width:0;pointer-events:auto}
+    .fancy .chip-grid [data-info-left]{grid-column:1;align-items:flex-start}
+    .fancy .chip-grid [data-info-right]{grid-column:3;align-items:flex-start}
+    .fancy .chip-grid .chip{width:100%;max-width:100%;min-height:42px}
+    .fancy .chip-grid .chip span,
+    .fancy .chip-grid .chip .chip-input{white-space:normal;overflow-wrap:anywhere}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
@@ -152,29 +158,31 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     display:flex;
     flex-wrap:wrap;
     gap:10px;
-    justify-content:center;
+    justify-content:flex-start;
     align-items:flex-start;
   }
   .sidebar-layout .rail .chip-wrap .chip{
-    flex:0 1 calc(50% - 5px);
-    max-width:calc(50% - 5px);
-    min-height:42px;
+    flex:1 1 100%;
+    width:100%;
+    max-width:100%;
+    min-height:44px;
     padding-right:28px;
     justify-content:flex-start;
     position:relative;
     left:auto;
     transform:none;
     margin:0;
-  }
-  .sidebar-layout .rail .chip-wrap .chip[data-wrap="1"]{
-    flex-basis:100%;
-    max-width:100%;
+    align-items:flex-start;
   }
   .sidebar-layout .rail .chip-wrap .chip span,
   .sidebar-layout .rail .chip-wrap .chip .chip-input{
     width:100%;
     max-width:100%;
     text-align:left;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+    line-height:1.25;
   }
   .sidebar-layout .rail .chip-wrap #chipAddBtn {
     display:flex !important;
@@ -757,7 +765,10 @@ function setChips(containers, items){
   if (containers.length === 1){
     items.forEach(it => containers[0].appendChild(it));
   } else {
-    items.forEach((it,i)=> containers[i%2].appendChild(it));
+    items.forEach((it,i)=> {
+      const target = i < 3 ? containers[0] : containers[1];
+      target.appendChild(it);
+    });
   }
 }
 
@@ -782,6 +793,7 @@ function openChipMenu(anchor){
       const slotKey = resolveContactSlot(k, S.contact);
       if (!slotKey) {
         pop.classList.remove('open');
+        pop._anchor = null;
         return;
       }
       S.contact[slotKey] = CONTACT_FIELDS[slotKey]?.placeholder || '';
@@ -805,6 +817,23 @@ function openChipMenu(anchor){
         }
       });
       pop.classList.remove('open');
+      pop._anchor = null;
+    });
+  }
+  if (pop.classList.contains('open') && pop._anchor === anchor) {
+    pop.classList.remove('open');
+    pop._anchor = null;
+    return;
+  }
+  if (!pop._outsideBound) {
+    pop._outsideBound = true;
+    document.addEventListener('pointerdown', e => {
+      if (!pop.classList.contains('open')) return;
+      const clickedAnchor = pop._anchor && (e.target === pop._anchor || pop._anchor.contains(e.target));
+      if (clickedAnchor) return;
+      if (pop.contains(e.target)) return;
+      pop.classList.remove('open');
+      pop._anchor = null;
     });
   }
   const available = new Set(getAvailableContactActions(S.contact || {}));
@@ -815,6 +844,7 @@ function openChipMenu(anchor){
   pop.style.left = `${Math.round(r.left + (r.width/2))}px`;
   pop.style.top  = `${Math.round(r.top  - 12)}px`;
   pop.style.transform = `translate(-50%,-100%)`;
+  pop._anchor = anchor;
   pop.classList.add('open');
 }
 export function applyContact(){
