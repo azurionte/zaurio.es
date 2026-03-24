@@ -45,7 +45,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     /* Header variants */
     .topbar{border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));padding:14px 16px}
     .topbar > div{position:relative;display:block !important;min-height:120px}
-    .topbar > div > div:first-child{padding-right:156px;min-height:120px;display:flex;flex-direction:column;justify-content:flex-start}
+    .topbar > div > div:first-child{position:relative;padding-right:156px;padding-bottom:56px;min-height:120px;display:flex;flex-direction:column;justify-content:flex-start}
     .topbar .name{margin:0 0 12px}
     .topbar .chips{gap:10px}
     .topbar .avatar{
@@ -59,9 +59,9 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     }
     .topbar #chipAddBtn{
       position:absolute !important;
-      right:138px;
-      top:50%;
-      transform:translateY(-50%);
+      left:0;
+      bottom:0;
+      transform:none;
       margin:0 !important;
       display:grid;
       place-items:center;
@@ -230,10 +230,10 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     justify-content:center;
     align-items:center;
     margin:0 !important;
-    left:auto !important;
-    right:-10px !important;
-    bottom:-6px !important;
-    transform:none !important;
+    left:50% !important;
+    right:auto !important;
+    bottom:-52px !important;
+    transform:translateX(-50%) !important;
     position:absolute !important;
   }
   /* place the add button in-flow after the chips so it naturally sits below the latest chip
@@ -1052,14 +1052,6 @@ function buildHeader(kind){
   if (firstSection) s.insertBefore(node, firstSection);
   else s.prepend(node);
   initAvatars(node);
-  // wire chip add btn
-  try{
-    const btn = node.querySelector('#chipAddBtn');
-    if (btn){
-      btn.addEventListener('click', ()=> openChipMenu(btn));
-    }
-  }catch(e){}
-
   S.layout=(kind==='header-side')?'side':(kind==='header-fancy')?'fancy':'top';
   // reflect current layout on body so global styles can react (e.g. sheet width)
   document.body.setAttribute('data-layout', S.layout);
