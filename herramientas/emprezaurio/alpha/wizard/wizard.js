@@ -1,6 +1,6 @@
 // /resume/wizard/wizard.js
-// [wizard.js] v2.12.0 — wizard with reliable layout morph + inline editors
-console.log('[wizard.js] v2.12.0');
+// [wizard.js] v2.13.0 — wizard with reliable layout morph + mobile overlay polish
+console.log('[wizard.js] v2.13.0');
 
 import { S, setTheme, setDark, setMaterial } from '../app/state.js';
 import { morphTo, getHeaderNode, applyContact } from '../layouts/layouts.js';
@@ -71,6 +71,101 @@ import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/module
     .wiz-added{display:grid;place-items:center;height:90px;border:1px dashed #2b3458;border-radius:12px;opacity:.85}
     .wiz-added .spark{animation:wPop .6s ease;display:inline-flex;gap:8px;align-items:center;font-weight:800}
     @keyframes wPop{0%{transform:scale(.9);opacity:.2}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+
+    /* welcome */
+    #welcome[data-overlay]{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.45);z-index:20000;padding:20px}
+    #welcome .wcard{width:min(880px,94vw);min-height:320px;background:#0f1420;border:1px solid #1f2540;border-radius:18px;padding:32px;color:#e6e8ef;box-shadow:0 40px 140px rgba(0,0,0,.6);display:grid;justify-items:center;gap:16px}
+    #welcome .wgrid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:end;justify-items:center}
+    #welcome .wcol{display:grid;justify-items:center;gap:8px;width:300px;height:70px}
+    #welcome .wbtn{appearance:none;border:1px solid #2b324b;border-radius:12px;padding:12px 16px;background:#12182a;color:#e6e8ef;font-weight:700}
+    #welcome .wbtn.primary{border:none;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#111}
+
+    @media (max-width: 700px){
+      #wizard[data-overlay]{
+        padding:12px;
+        place-items:end center;
+      }
+      #wizard .wiz{
+        width:min(100vw - 12px, 620px);
+        max-height:min(100dvh - 24px, 900px);
+        grid-template-columns:1fr;
+        border-radius:18px 18px 0 0;
+      }
+      #wizard .wiz-left{
+        border-right:0;
+        border-bottom:1px solid #1b2340;
+        padding:12px 14px;
+        overflow:auto hidden;
+      }
+      #wizard .step-list{
+        display:flex;
+        gap:8px;
+        overflow:auto hidden;
+        padding-bottom:4px;
+      }
+      #wizard .step{
+        flex:0 0 auto;
+        white-space:nowrap;
+      }
+      #wizard .wiz-right{
+        min-height:0;
+        padding:16px 14px;
+        overflow:auto;
+      }
+      #wizard .navline{
+        flex-wrap:wrap;
+        justify-content:stretch;
+      }
+      #wizard .navline .mbtn{
+        flex:1 1 calc(50% - 5px);
+        min-height:42px;
+      }
+      #wizard #wizDemo,
+      #wizard #wizStartOver{
+        margin-right:0 !important;
+        flex-basis:100%;
+      }
+      #wizard .theme-row{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+      #wizard .wz-mock{
+        width:100%;
+        max-width:420px;
+        height:144px;
+      }
+      #wizard .wiz-grid2{
+        grid-template-columns:1fr;
+      }
+      #wizard .k-row{
+        flex-wrap:wrap;
+      }
+      #wizard input.wipt,
+      #wizard .wiz-pill{
+        min-height:42px;
+      }
+
+      #welcome[data-overlay]{
+        padding:12px;
+      }
+      #welcome .wcard{
+        width:min(100vw - 24px, 560px);
+        min-height:auto;
+        padding:22px 18px;
+      }
+      #welcome .wgrid{
+        grid-template-columns:1fr;
+        gap:18px;
+        width:100%;
+      }
+      #welcome .wcol{
+        width:100%;
+        height:auto;
+      }
+      #welcome .wbtn{
+        width:100%;
+        min-height:46px;
+      }
+    }
   `;
   document.head.appendChild(st);
 })();
@@ -112,21 +207,21 @@ export function mountWelcome(){
   if (document.getElementById('welcome')) return;
   const wrap = document.createElement('div');
   wrap.id = 'welcome'; wrap.setAttribute('data-overlay','');
-  Object.assign(wrap.style, { position:'fixed', inset:'0', display:'grid', placeItems:'center', background:'rgba(0,0,0,.45)', zIndex:'20000' });
   wrap.innerHTML = `
-    <div class="wcard" style="width:min(880px,94vw);min-height:320px;background:#0f1420;border:1px solid #1f2540;border-radius:18px;padding:32px;color:#e6e8ef;box-shadow:0 40px 140px rgba(0,0,0,.6);display:grid;justify-items:center;gap:16px">
-      <div class="wtitle" style="font-weight:900;font-size:22px">Welcome to the Easy Resume Builder</div>
-      <div class="wgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:end;justify-items:center">
-        <div class="wcol" style="display:grid;justify-items:center;gap:8px;width:300px;height:70px">
-          <button class="wbtn primary" id="startWizard" type="button" style="appearance:none;border:none;border-radius:12px;padding:12px 16px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#111;font-weight:700">Wizard</button>
+    <div class="wcard">
+      <div class="wtitle" style="font-weight:900;font-size:22px">Emprezaurio Alpha</div>
+      <div style="opacity:.82;text-align:center">Empieza rápido con wizard, demo o modo manual y luego afina el CV en el canvas.</div>
+      <div class="wgrid">
+        <div class="wcol">
+          <button class="wbtn primary" id="startWizard" type="button">Wizard</button>
           <div style="opacity:.8">Guided step-by-step set-up.</div>
         </div>
-        <div class="wcol" style="display:grid;justify-items:center;gap:8px;width:300px;height:70px">
-          <button class="wbtn" id="startBlank" type="button" style="appearance:none;border:1px solid #2b324b;border-radius:12px;padding:12px 16px;background:#12182a;color:#e6e8ef;font-weight:700">Manual mode</button>
+        <div class="wcol">
+          <button class="wbtn" id="startBlank" type="button">Manual mode</button>
           <div style="opacity:.8">Start from scratch, arrange freely.</div>
         </div>
       </div>
-      <button class="wbtn" id="startDemo" type="button" style="appearance:none;border:1px solid #2b324b;border-radius:12px;padding:12px 16px;background:#12182a;color:#e6e8ef;font-weight:700">Demo resume</button>
+      <button class="wbtn" id="startDemo" type="button">Demo resume</button>
     </div>`;
   document.body.appendChild(wrap);
   wrap.querySelector('#startWizard').addEventListener('click', ()=>{ wrap.style.display='none'; mountWizard(); openWizard(); });
