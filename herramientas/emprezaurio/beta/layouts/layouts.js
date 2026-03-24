@@ -40,6 +40,20 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
     /* Header variants */
     .topbar{border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));padding:16px}
+    .topbar .avatar{
+      inline-size:120px;
+      block-size:120px;
+      min-inline-size:120px;
+      min-block-size:120px;
+      max-inline-size:120px;
+      max-block-size:120px;
+      width:120px;
+      height:120px;
+      aspect-ratio:1 / 1;
+      border-radius:999px;
+      align-self:center;
+      justify-self:center;
+    }
     .fancy{position:relative;padding-bottom:74px}
     .fancy .hero{position:relative;border-radius:14px;padding:18px 14px 82px;min-height:190px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
     .fancy .hero .avatar{position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);z-index:4;width:124px;height:124px;border-width:4px}
