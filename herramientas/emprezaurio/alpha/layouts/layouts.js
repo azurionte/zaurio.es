@@ -651,6 +651,7 @@ function buildHeader(kind){
 /* ---- Re-home existing sections when layout changes ---- */
 function adoptSectionsToCurrentLayout(main, rail, add){
   if (!main) return;
+  const mainAnchor = add && add.parentElement === main ? add : null;
 
   const wrappers = getSectionWrappers();
   const skillsWrapper = wrappers.find(w => w.dataset.section === 'skills')
@@ -659,13 +660,13 @@ function adoptSectionsToCurrentLayout(main, rail, add){
 
   wrappers.forEach(wrapper => {
     if (wrapper === skillsWrapper) return;
-    if (wrapper.parentElement !== main) main.insertBefore(wrapper, add || null);
+    if (wrapper.parentElement !== main) main.insertBefore(wrapper, mainAnchor);
   });
 
   if (skillsWrapper){
     const target = (rail && S?.skillsInSidebar) ? rail : main;
     if (skillsWrapper.parentElement !== target){
-      if (target === main) target.insertBefore(skillsWrapper, add || null);
+      if (target === main) target.insertBefore(skillsWrapper, mainAnchor);
       else target.appendChild(skillsWrapper);
     }
   }
