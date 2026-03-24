@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Juegos | Zaurio</title>
+  <link rel="icon" href="/shared/assets/brand/favicon.ico" />
+  <link rel="stylesheet" href="/shared/css/zaurio-ui.css" />
+  <style>
+    :root{
+      --bg-1:#160321;
+      --bg-2:#0a0610;
+      --card:rgba(31,12,45,.88);
+      --stroke:rgba(255,255,255,.12);
+      --text:#fff8fc;
+      --muted:rgba(255,255,255,.68);
+      --gold:#ffd36f;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      min-height:100%;
+      background:
+        radial-gradient(circle at 20% 18%, rgba(255,211,111,.16), transparent 24%),
+        radial-gradient(circle at 82% 16%, rgba(134,239,255,.14), transparent 22%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      color:var(--text);
+      font-family:Segoe UI, Arial, sans-serif;
+    }
+    .page{
+      width:min(1080px,94vw);
+      margin:0 auto 48px;
+    }
+    .hero{
+      border:1px solid var(--stroke);
+      border-radius:30px;
+      background:var(--card);
+      padding:34px;
+      box-shadow:0 24px 60px rgba(0,0,0,.3);
+    }
+    h1{
+      margin:0 0 12px;
+      font-size:clamp(2.6rem, 6vw, 4.6rem);
+      line-height:.98;
+    }
+    p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+      max-width:60ch;
+    }
+    .cards{
+      margin-top:20px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+    .card{
+      border:1px solid var(--stroke);
+      border-radius:24px;
+      background:rgba(255,255,255,.04);
+      padding:22px;
+    }
+    .tag{
+      display:inline-flex;
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(255,211,111,.14);
+      color:var(--gold);
+      font-size:11px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      margin-bottom:10px;
+    }
+    .btn{
+      display:inline-flex;
+      margin-top:18px;
+      padding:12px 18px;
+      border-radius:999px;
+      text-decoration:none;
+      color:#1c0a1f;
+      background:linear-gradient(135deg, #ffd36f, #ff9ec4);
+      font-weight:800;
+    }
+    @media (max-width: 800px){
+      .cards{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body data-zaurio-nav="juegos">
+  <div class="topMenu"></div>
+  <main class="page">
+    <section class="hero">
+      <span class="tag">Nuevo territorio</span>
+      <h1>Juegos Zaurio ya tiene guarida.</h1>
+      <p>Esta zona queda lista para crecer con cada juego nuevo. De momento, Trivialodon es el primer huevo en incubacion y el resto del bestiario vendra despues.</p>
+      <div class="cards">
+        <article class="card">
+          <span class="tag">Proximamente</span>
+          <h2>Trivialodon</h2>
+          <p>Juego de preguntas con colmillos. Aun no esta abierto al publico, pero ya tiene nido oficial dentro de `juegos.zaurio.es`.</p>
+          <a class="btn" href="https://juegos.zaurio.es/trivialodon/">Ver placeholder</a>
+        </article>
+        <article class="card">
+          <span class="tag">Vision</span>
+          <h2>Mas juegos despues</h2>
+          <p>La idea es que esta seccion crezca sin volver a romper la arquitectura. Cada juego podra vivir bajo su propia ruta manteniendo la misma identidad.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+  <script src="/shared/js/zaurio-nav.js"></script>
+</body>
+</html>

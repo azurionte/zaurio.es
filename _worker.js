@@ -21,6 +21,8 @@ export default {
       folder = "/secretos.zaurio.es";
     } else if (host === "herramientas.zaurio.es") {
       folder = "/herramientas";
+    } else if (host === "juegos.zaurio.es") {
+      folder = "/juegos.zaurio.es";
     } else if (host === "zaurio.es" || host === "www.zaurio.es") {
       folder = "";
     } else {

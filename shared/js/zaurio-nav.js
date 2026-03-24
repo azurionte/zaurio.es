@@ -9,52 +9,122 @@
     (root && root.dataset.ctaId) ||
     document.body.dataset.zaurioCtaId ||
     "";
-  const ctaLabel =
-    (root && root.dataset.ctaLabel) ||
-    document.body.dataset.zaurioCtaLabel ||
-    "";
   const ctaTitle =
     (root && root.dataset.ctaTitle) ||
     document.body.dataset.zaurioCtaTitle ||
-    ctaLabel ||
     "";
 
   if (!root && !legacyTopMenu) return;
 
-  const links = [
+  const topLevelItems = [
     {
-      key: "home",
-      href: "https://zaurio.es",
-      label: "Inicio",
-      icon: "/shared/assets/brand/favicon-32x32.png",
-    },
-    {
+      type: "link",
       key: "miercoles",
       href: "https://miercoles.zaurio.es",
       label: "Miercoles",
       icon: "/shared/assets/brand/miercoles.png",
     },
     {
+      type: "link",
       key: "secretos",
       href: "https://secretos.zaurio.es",
       label: "Secretos",
       icon: "/shared/assets/brand/confesion.png",
     },
     {
+      type: "menu",
       key: "herramientas",
       href: "https://herramientas.zaurio.es",
       label: "Herramientas",
       icon: "/shared/assets/apps/toolbox.png",
+      items: [
+        {
+          type: "link",
+          href: "https://herramientas.zaurio.es/dinerozaurio/",
+          label: "DineroZaurio",
+          icon: "/shared/assets/apps/piggy.png",
+          tag: "beta",
+        },
+        {
+          type: "static",
+          label: "Emprezaurio",
+          icon: "/shared/assets/apps/toolbox.png",
+          tag: "soon",
+        },
+      ],
     },
     {
+      type: "menu",
       key: "juegos",
-      href: "https://zaurio.es/#juegos",
+      href: "https://juegos.zaurio.es",
       label: "Juegos",
       icon: "/shared/assets/apps/piggy.png",
-      badge: "Soon",
-      soon: true,
+      items: [
+        {
+          type: "link",
+          href: "https://juegos.zaurio.es/trivialodon/",
+          label: "Trivialodon",
+          icon: "/shared/assets/apps/piggy.png",
+          tag: "soon",
+        },
+      ],
     },
   ];
+
+  function renderTag(tag) {
+    if (!tag) return "";
+    const map = {
+      beta: "Beta",
+      soon: "Proximamente",
+    };
+    return `<span class="zaurio-tag ${tag}">${map[tag] || tag}</span>`;
+  }
+
+  function renderDropdownItem(item) {
+    const copy = `
+      <span class="zaurio-dropdown-copy">
+        <img src="${item.icon}" alt="">
+        <span>${item.label}</span>
+      </span>
+      ${renderTag(item.tag)}
+    `;
+
+    if (item.type === "link") {
+      return `<a class="zaurio-dropdown-item" href="${item.href}">${copy}</a>`;
+    }
+
+    return `<div class="zaurio-dropdown-static">${copy}</div>`;
+  }
+
+  function renderTopItem(item) {
+    if (item.type === "link") {
+      return `
+        <a class="zaurio-nav-item ${active === item.key ? "is-active" : ""}" href="${item.href}" aria-label="${item.label}">
+          <img class="zaurio-nav-icon" src="${item.icon}" alt="">
+          <span class="zaurio-nav-label">${item.label}</span>
+        </a>
+      `;
+    }
+
+    return `
+      <div class="zaurio-nav-menu ${active === item.key ? "is-active" : ""}" data-zaurio-menu>
+        <button class="zaurio-nav-trigger" type="button" aria-label="${item.label}" aria-expanded="false">
+          <img class="zaurio-nav-icon" src="${item.icon}" alt="">
+          <span class="zaurio-nav-label">${item.label}</span>
+          <span class="zaurio-nav-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="zaurio-nav-dropdown" role="menu" aria-label="${item.label}">
+          <a class="zaurio-dropdown-item" href="${item.href}">
+            <span class="zaurio-dropdown-copy">
+              <img src="${item.icon}" alt="">
+              <span>Ir a ${item.label}</span>
+            </span>
+          </a>
+          ${item.items.map(renderDropdownItem).join("")}
+        </div>
+      </div>
+    `;
+  }
 
   const cta = ctaId
     ? `
@@ -67,75 +137,58 @@
     `
     : "";
 
-  const renderRootNav = () => `
-    <div class="zaurio-nav-shell">
-      <nav class="zaurio-nav" aria-label="Navegacion global de Zaurio">
-        <a class="zaurio-brand" href="https://zaurio.es" aria-label="Zaurio">
-          <img class="zaurio-brand-mark" src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
-          <span class="zaurio-brand-text">
-            <span class="zaurio-brand-title">Zaurio</span>
-            <span class="zaurio-brand-subtitle">dramas, gameplays y caos con calendario propio</span>
-          </span>
-        </a>
-        <div class="zaurio-nav-links">
-          ${links
-            .map((link) => {
-              const classes = [
-                "zaurio-nav-link",
-                link.key === active ? "is-active" : "",
-                link.soon ? "is-soon" : "",
-              ]
-                .filter(Boolean)
-                .join(" ");
-
-              const badge = link.badge
-                ? `<span class="zaurio-badge ${link.soon ? "soon" : ""}">${link.badge}</span>`
-                : "";
-
-              return `
-                <a class="${classes}" href="${link.href}" ${link.soon ? 'aria-disabled="true"' : ""}>
-                  <img class="zaurio-nav-icon" src="${link.icon}" alt="">
-                  <span class="zaurio-nav-meta">
-                    <span class="zaurio-nav-label">${link.label}</span>
-                    ${badge}
-                  </span>
-                </a>
-              `;
-            })
-            .join("")}
-        </div>
-        ${cta}
-      </nav>
-    </div>
-  `;
-
-  const renderLegacyNav = () => `
-    <div class="menuLeft">
-      <a class="menuLogoLink ${active === "home" ? "active" : ""}" href="https://zaurio.es" aria-label="Zaurio">
-        <img class="menuLogo zaurio" src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
+  const navMarkup = `
+    <nav class="zaurio-global-nav" aria-label="Navegacion global de Zaurio">
+      <a class="zaurio-home-link ${active === "home" ? "is-active" : ""}" href="https://zaurio.es" aria-label="Ir a Zaurio">
+        <img class="zaurio-home-icon" src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
       </a>
-    </div>
-    <div class="menuCenter">
-      <a class="menuLogoLink ${active === "miercoles" ? "active" : ""}" href="https://miercoles.zaurio.es" aria-label="Miercoles">
-        <img class="menuLogo miercoles" src="/shared/assets/brand/miercoles.png" alt="Miercoles">
-      </a>
-      <a class="menuLogoLink ${active === "secretos" ? "active" : ""}" href="https://secretos.zaurio.es" aria-label="Secretos">
-        <img class="menuLogo confesion" src="/shared/assets/brand/confesion.png" alt="Secretos">
-      </a>
-      <a class="menuLogoLink ${active === "herramientas" ? "active" : ""}" href="https://herramientas.zaurio.es" aria-label="Herramientas">
-        <img class="menuLogo herramientas" src="/shared/assets/apps/toolbox.png" alt="Herramientas">
-      </a>
-    </div>
-    <div class="menuRight">
+      <div class="zaurio-nav-list">
+        ${topLevelItems.map(renderTopItem).join("")}
+      </div>
       ${cta}
-    </div>
+    </nav>
   `;
 
   if (root) {
-    root.innerHTML = renderRootNav();
+    root.classList.add("zaurio-nav-host");
+    root.innerHTML = navMarkup;
   }
 
   if (legacyTopMenu) {
-    legacyTopMenu.innerHTML = renderLegacyNav();
+    legacyTopMenu.classList.add("zaurio-nav-host");
+    legacyTopMenu.innerHTML = navMarkup;
   }
+
+  const menuNodes = document.querySelectorAll("[data-zaurio-menu]");
+
+  menuNodes.forEach((menu) => {
+    const button = menu.querySelector(".zaurio-nav-trigger");
+    if (!button) return;
+
+    button.addEventListener("click", (event) => {
+      if (window.innerWidth > 720) return;
+      event.preventDefault();
+      const isOpen = menu.classList.contains("is-open");
+      menuNodes.forEach((node) => {
+        node.classList.remove("is-open");
+        const trigger = node.querySelector(".zaurio-nav-trigger");
+        if (trigger) trigger.setAttribute("aria-expanded", "false");
+      });
+      if (!isOpen) {
+        menu.classList.add("is-open");
+        button.setAttribute("aria-expanded", "true");
+      }
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    if (window.innerWidth > 720) return;
+    menuNodes.forEach((menu) => {
+      if (!menu.contains(event.target)) {
+        menu.classList.remove("is-open");
+        const trigger = menu.querySelector(".zaurio-nav-trigger");
+        if (trigger) trigger.setAttribute("aria-expanded", "false");
+      }
+    });
+  });
 })();
