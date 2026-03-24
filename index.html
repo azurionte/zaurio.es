@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Zaurio | Dramas, gameplays y herramientas</title>
-  <meta name="description" content="La guarida de Zaurio: miercoles de dramas y chismes, gameplays el resto de la semana, secretos anonimos y herramientas con personalidad." />
+  <meta name="description" content="La guarida de Zaurio: dramas y chismes los miércoles, gameplays el resto de la semana, secretos, herramientas y juegos con personalidad." />
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
   <link rel="apple-touch-icon" href="/shared/assets/brand/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,11 +16,11 @@
       --bg-1:#14031f;
       --bg-2:#25053a;
       --bg-3:#06040b;
-      --surface:rgba(33,12,45,.78);
-      --surface-strong:rgba(26,9,37,.92);
+      --surface:rgba(33,12,45,.8);
+      --surface-strong:rgba(24,8,34,.94);
       --stroke:rgba(255,255,255,.12);
       --text:#fff8fb;
-      --muted:rgba(255,255,255,.68);
+      --muted:rgba(255,255,255,.7);
       --gold:#ffd447;
       --pink:#ff4fc9;
       --cyan:#87f4ff;
@@ -29,7 +29,7 @@
       --shadow:0 30px 80px rgba(0,0,0,.38);
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
 
     html,body{
       margin:0;
@@ -47,50 +47,54 @@
       position:fixed;
       inset:0;
       pointer-events:none;
-      background-image:linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-image:
+        linear-gradient(rgba(255,255,255,.024) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.024) 1px, transparent 1px);
       background-size:36px 36px;
-      mask-image:linear-gradient(180deg, rgba(0,0,0,.75), transparent);
+      mask-image:linear-gradient(180deg, rgba(0,0,0,.78), transparent);
     }
 
-    a{color:inherit}
+    body.modal-open{ overflow:hidden; }
+    a{ color:inherit; }
 
     .page{
-      width:min(1180px, 94vw);
-      margin:0 auto 64px;
+      width:min(1180px,94vw);
+      margin:0 auto 70px;
     }
 
     .hero{
+      margin-top:18px;
       display:grid;
-      grid-template-columns:1.2fr .8fr;
+      grid-template-columns:1.15fr .85fr;
       gap:24px;
       align-items:stretch;
-      margin-top:18px;
     }
 
     .hero-card,
     .panel,
-    .carousel-card{
+    .carousel-card,
+    .games-card{
       border:1px solid var(--stroke);
       background:linear-gradient(180deg, rgba(39,15,55,.9), rgba(19,8,29,.88));
-      box-shadow:var(--shadow);
       border-radius:var(--radius);
+      box-shadow:var(--shadow);
     }
 
     .hero-card{
-      padding:34px;
       position:relative;
       overflow:hidden;
+      padding:34px;
     }
 
     .hero-card::after{
       content:"";
       position:absolute;
-      width:220px;
-      height:220px;
-      right:-40px;
-      top:-30px;
+      width:240px;
+      height:240px;
+      top:-46px;
+      right:-52px;
       border-radius:50%;
-      background:radial-gradient(circle, rgba(255,212,71,.22), transparent 68%);
+      background:radial-gradient(circle, rgba(255,212,71,.18), transparent 68%);
       pointer-events:none;
     }
 
@@ -106,7 +110,7 @@
       font-size:13px;
       text-transform:uppercase;
       letter-spacing:.08em;
-      font-weight:700;
+      font-weight:800;
     }
 
     h1,h2,h3{
@@ -117,7 +121,7 @@
 
     .hero h1{
       margin-top:18px;
-      font-size:clamp(3rem, 8vw, 5.4rem);
+      font-size:clamp(3rem, 8vw, 5.3rem);
       max-width:10ch;
     }
 
@@ -125,8 +129,8 @@
       margin:20px 0 0;
       max-width:60ch;
       color:var(--muted);
-      font-size:1.05rem;
-      line-height:1.6;
+      font-size:1.04rem;
+      line-height:1.62;
     }
 
     .hero-actions{
@@ -147,6 +151,7 @@
       font-weight:700;
       text-decoration:none;
       transition:transform .16s ease, box-shadow .16s ease, background .16s ease;
+      cursor:pointer;
     }
 
     .btn:hover{ transform:translateY(-2px); }
@@ -178,7 +183,7 @@
 
     .note strong{
       display:block;
-      font-size:1.2rem;
+      font-size:1.15rem;
       margin-bottom:8px;
     }
 
@@ -186,7 +191,7 @@
       display:block;
       color:var(--muted);
       font-size:.95rem;
-      line-height:1.45;
+      line-height:1.46;
     }
 
     .hero-side{
@@ -205,29 +210,115 @@
     .side-card p{
       margin:10px 0 0;
       color:var(--muted);
-      line-height:1.55;
+      line-height:1.58;
     }
 
-    .roar-card{
-      min-height:240px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
+    .profile-card{
+      display:grid;
+      grid-template-columns:.9fr 1.1fr;
+      gap:18px;
+      align-items:center;
+      min-height:280px;
       background:
-        radial-gradient(circle at top right, rgba(135,244,255,.18), transparent 30%),
+        radial-gradient(circle at 20% 10%, rgba(255,79,201,.18), transparent 32%),
+        radial-gradient(circle at 90% 10%, rgba(135,244,255,.15), transparent 28%),
         linear-gradient(180deg, rgba(33,15,47,.95), rgba(17,9,27,.92));
     }
 
-    .roar{
-      font-size:clamp(2.1rem, 5vw, 3.4rem);
-      letter-spacing:-.04em;
-      max-width:10ch;
+    .profile-frame{
+      min-height:220px;
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,.12), transparent 58%),
+        linear-gradient(180deg, rgba(73,28,103,.95), rgba(20,8,31,.96));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .profile-frame img{
+      position:relative;
+      z-index:2;
+      width:min(100%, 360px);
+      height:auto;
+      object-fit:contain;
+      filter:drop-shadow(0 16px 24px rgba(0,0,0,.28));
+    }
+
+    .profile-frame::before,
+    .profile-frame::after{
+      content:"";
+      position:absolute;
+      inset:16px;
+      border-radius:999px;
+      border:2px solid rgba(135,244,255,.3);
+    }
+
+    .profile-frame::after{
+      inset:28px;
+      border-color:rgba(255,79,201,.28);
+    }
+
+    .profile-mark{
+      position:relative;
+      width:120px;
+      height:120px;
+      border-radius:36px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.14);
+      font-family:"Bricolage Grotesque", "Trebuchet MS", sans-serif;
+      font-size:4rem;
+      color:var(--gold);
+      text-shadow:0 0 24px rgba(255,212,71,.14);
+      box-shadow:0 0 28px rgba(0,0,0,.24);
+    }
+
+    .profile-mark small{
+      position:absolute;
+      top:8px;
+      right:10px;
+      font-size:1.4rem;
+    }
+
+    .profile-copy h2{
+      font-size:clamp(2rem, 3vw, 2.8rem);
+    }
+
+    .profile-copy p{
+      margin-top:12px;
+    }
+
+    .profile-copy .minor{
+      margin-top:14px;
+      font-size:.92rem;
+      color:rgba(255,255,255,.58);
     }
 
     .schedule{
       margin-top:38px;
       display:grid;
       gap:16px;
+    }
+
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      gap:16px;
+      margin-bottom:8px;
+    }
+
+    .section-head p{
+      margin:0;
+      color:var(--muted);
+      max-width:54ch;
+      line-height:1.54;
     }
 
     .schedule-grid{
@@ -241,7 +332,7 @@
       border-radius:24px;
       border:1px solid var(--stroke);
       background:rgba(255,255,255,.04);
-      min-height:142px;
+      min-height:146px;
       display:flex;
       flex-direction:column;
       gap:12px;
@@ -269,23 +360,8 @@
 
     .day-copy{
       color:var(--muted);
-      line-height:1.45;
+      line-height:1.46;
       font-size:.92rem;
-    }
-
-    .section-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:end;
-      gap:16px;
-      margin-bottom:8px;
-    }
-
-    .section-head p{
-      margin:0;
-      color:var(--muted);
-      max-width:54ch;
-      line-height:1.5;
     }
 
     .carousel{
@@ -330,15 +406,15 @@
     .art-juegos{ background:linear-gradient(135deg, rgba(255,212,71,.2), rgba(135,244,255,.16)); }
 
     .carousel-art img{
-      width:92px;
-      height:92px;
+      width:98px;
+      height:98px;
       object-fit:contain;
       filter:drop-shadow(0 0 18px rgba(0,0,0,.18));
     }
 
     .carousel-copy p{
       color:var(--muted);
-      line-height:1.6;
+      line-height:1.62;
       font-size:1rem;
     }
 
@@ -374,6 +450,197 @@
       transform:scale(1.12);
     }
 
+    .ghost-button{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      color:var(--text);
+      border-radius:999px;
+      padding:12px 16px;
+      font:inherit;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .games{
+      margin-top:38px;
+      padding:24px;
+    }
+
+    .games-grid{
+      display:grid;
+      grid-template-columns:repeat(5, minmax(0, 1fr));
+      gap:14px;
+      margin-top:18px;
+    }
+
+    .game-tile{
+      border:none;
+      cursor:pointer;
+      text-align:left;
+      padding:18px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.1);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      color:var(--text);
+      transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+      min-height:196px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .game-tile:hover{
+      transform:translateY(-4px);
+      border-color:rgba(255,212,71,.24);
+      box-shadow:0 20px 38px rgba(0,0,0,.24);
+    }
+
+    .game-icon{
+      width:76px;
+      height:76px;
+      border-radius:24px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:"Bricolage Grotesque", "Trebuchet MS", sans-serif;
+      font-size:1.45rem;
+      font-weight:800;
+      letter-spacing:.02em;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .arc{ background:linear-gradient(135deg, #5978ff, #47d4ff); }
+    .fortnite{ background:linear-gradient(135deg, #16b7ff, #0047ff); }
+    .split{ background:linear-gradient(135deg, #ff6f8e, #ffb65f); }
+    .repo{ background:linear-gradient(135deg, #43f08a, #14634b); }
+    .dispatch{ background:linear-gradient(135deg, #c680ff, #6d38ff); }
+
+    .game-tile h3{
+      font-size:1.24rem;
+      line-height:1.05;
+    }
+
+    .game-tile p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.46;
+      font-size:.92rem;
+    }
+
+    .game-meta{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .game-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      color:rgba(255,255,255,.82);
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .price-note{
+      margin-top:10px;
+      color:rgba(255,255,255,.58);
+      font-size:.85rem;
+      line-height:1.45;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+      background:rgba(6,3,10,.72);
+      backdrop-filter:blur(18px);
+      z-index:200;
+    }
+
+    .modal.on{ display:flex; }
+
+    .modal-card{
+      width:min(760px, 100%);
+      max-height:min(88vh, 920px);
+      overflow:auto;
+      padding:24px;
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(32,12,46,.98), rgba(16,8,24,.98));
+      box-shadow:0 30px 80px rgba(0,0,0,.42);
+    }
+
+    .modal-top{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:flex-start;
+    }
+
+    .modal-close{
+      border:none;
+      cursor:pointer;
+      width:42px;
+      height:42px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      font-size:1.3rem;
+    }
+
+    .store-list{
+      display:grid;
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .store-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+      padding:14px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.04);
+    }
+
+    .store-copy strong{
+      display:block;
+      font-size:1rem;
+    }
+
+    .store-copy span{
+      display:block;
+      color:var(--muted);
+      font-size:.9rem;
+      margin-top:4px;
+      line-height:1.4;
+    }
+
+    .store-side{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .store-price{
+      font-weight:800;
+      white-space:nowrap;
+    }
+
     .footer{
       margin-top:42px;
       padding:24px 0 10px;
@@ -384,15 +651,49 @@
       flex-wrap:wrap;
     }
 
+    @media (max-width: 1080px){
+      .games-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+      }
+    }
+
     @media (max-width: 980px){
       .hero,
-      .carousel-card{
+      .carousel-card,
+      .profile-card{
         grid-template-columns:1fr;
       }
 
       .hero-notes,
       .schedule-grid{
         grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width: 720px){
+      .page{
+        width:min(96vw,1180px);
+      }
+
+      .hero-card,
+      .games,
+      .carousel{
+        padding:18px;
+      }
+
+      .games-grid{
+        grid-template-columns:1fr;
+      }
+
+      .store-item,
+      .modal-top,
+      .section-head{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+
+      .store-side{
+        justify-content:flex-start;
       }
     }
   </style>
@@ -405,89 +706,92 @@
       <article class="hero-card">
         <span class="eyebrow">Bienvenido a la guarida oficial</span>
         <h1>Zaurio no es un perfil. Es un ecosistema con colmillos.</h1>
-        <p class="lead">Streamer, agitador de dramas con horario fijo, anfitrion de chismes cada miercoles y creador de rincones donde caben secretos anonimos, herramientas utiles y, pronto, juegos con personalidad. La vibra es divertida, un poco caotica y muy de comunidad.</p>
+        <p class="lead">Streamer, agitador de dramas con horario fijo, anfitrión de chismes cada miércoles y creador de rincones donde caben secretos anónimos, herramientas útiles y juegos con personalidad. La vibra es divertida, un poco caótica y muy de comunidad.</p>
         <div class="hero-actions">
           <a class="btn primary" href="https://www.tiktok.com/@zaurioking" target="_blank" rel="noopener noreferrer">Ir al TikTok</a>
-          <a class="btn secondary" href="https://miercoles.zaurio.es">Entrar en Miercoles</a>
+          <a class="btn secondary" href="https://miercoles.zaurio.es">Entrar en Miércoles</a>
         </div>
         <div class="hero-notes">
           <div class="note">
             <strong>Miércoles</strong>
-            <span>Dramas, chismes, confession booth y energia de “esto se nos va de las manos”.</span>
+            <span>Dramas, chismes, buzón anónimo y energía de “esto se nos va de las manos”.</span>
           </div>
           <div class="note">
             <strong>Resto de la semana</strong>
-            <span>Gameplays, comunidad y contenido para que el caos tenga tambien joystick.</span>
+            <span>Gameplays, comunidad y contenido para que el caos también tenga joystick.</span>
           </div>
           <div class="note">
             <strong>Universo Zaurio</strong>
-            <span>Herramientas con utilidad real, secretos anonimos y una landing que por fin une todo.</span>
+            <span>Herramientas con utilidad real, secretos anónimos y una landing que por fin une todo.</span>
           </div>
         </div>
       </article>
 
       <div class="hero-side">
-        <aside class="side-card roar-card">
-          <div>
-            <span class="eyebrow">Lore express</span>
-            <h2 class="roar">Mitad anfitrion, mitad reptil del caos.</h2>
+        <aside class="side-card profile-card">
+          <div class="profile-frame" aria-hidden="true">
+            <img src="/shared/assets/brand/zaurio-portrait.png" alt="Retrato de Zaurio">
           </div>
-          <p>Si alguien entra buscando un link, deberia salir entendiendo el tono del proyecto: divertido, directo, comunitario y con secciones muy diferentes conviviendo bajo la misma marca.</p>
+          <div class="profile-copy">
+            <span class="eyebrow">Presentación rápida</span>
+            <h2>Mitad anfitrión, mitad reptil del caos.</h2>
+            <p>La misión no es solo streamear: es montar una especie de parque temático donde caben el salseo, los gameplays, las herramientas y la parte más meme de la comunidad sin que nada se sienta desconectado.</p>
+            <p class="minor">Ahora sí: el retrato oficial ya vive dentro de la landing y ayuda a que la home se sienta más tuya desde el primer segundo.</p>
+          </div>
         </aside>
 
         <aside class="side-card">
-          <span class="eyebrow">Mapa rapido</span>
-          <p><strong>Miercoles</strong> para mandar dramas y chismes.</p>
-          <p><strong>Secretos</strong> para confesiones anonimas con reacciones.</p>
+          <span class="eyebrow">Mapa rápido</span>
+          <p><strong>Miércoles</strong> para mandar dramas y chismes.</p>
+          <p><strong>Secretos</strong> para confesiones anónimas con reacciones.</p>
           <p><strong>Herramientas</strong> para utilidad real tipo DineroZaurio.</p>
-          <p><strong>Juegos</strong> llega despues, pero ya tiene asiento en la mesa.</p>
+          <p><strong>Juegos</strong> para agrupar directos, fichas y futuros inventos como Trivialodon.</p>
         </aside>
       </div>
     </section>
-
     <section class="schedule" aria-labelledby="schedule-title">
       <div class="section-head">
         <div>
           <span class="eyebrow">Calendario simple</span>
           <h2 id="schedule-title">La semana oficial de Zaurio</h2>
         </div>
-        <p>Sin calendarios gigantes ni filtros raros: solo el recordatorio rapido de que el gran ritual cae los miercoles y el resto de dias mandan los gameplays.</p>
+        <p>Sin calendarios gigantes ni filtros raros: solo el recordatorio rápido de que el gran ritual cae los miércoles y el resto de días mandan los gameplays.</p>
       </div>
       <div class="schedule-grid">
         <article class="day-card">
           <span class="day-name">Lunes</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Arranque de semana con mando, comunidad y energia de “a ver que pasa hoy”.</span>
+          <span class="day-copy">Arranque de semana con mando, comunidad y energía de “a ver qué pasa hoy”.</span>
         </article>
         <article class="day-card">
           <span class="day-name">Martes</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Mas partidas, mas clips y mas fauna del chat calentando motores.</span>
+          <span class="day-copy">Más partidas, más clips y más fauna del chat calentando motores.</span>
         </article>
         <article class="day-card highlight">
-          <span class="day-name">Miercoles</span>
+          <span class="day-name">Miércoles</span>
           <strong class="day-title">Dramas y chismes</strong>
-          <span class="day-copy">Dia grande. Se abre la catedral del salseo y el caos se vuelve programacion oficial.</span>
+          <span class="day-copy">Día grande. Se abre la catedral del salseo y el caos se vuelve programación oficial.</span>
         </article>
         <article class="day-card">
           <span class="day-name">Jueves</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Resaca emocional del miercoles, pero con partidas para seguir vivos.</span>
+          <span class="day-copy">Resaca emocional del miércoles, pero con partidas para seguir vivos.</span>
         </article>
         <article class="day-card">
           <span class="day-name">Viernes</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Final de semana con energia alta y espacio para que el chat se luzca.</span>
+          <span class="day-copy">Final de semana con energía alta y espacio para que el chat se luzca.</span>
         </article>
         <article class="day-card">
-          <span class="day-name">Sabado</span>
+          <span class="day-name">Sábado</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Fin de semana para experimentar, spamear y dejar que pase lo que tenga que pasar.</span>
+          <span class="day-copy">Territorio ideal para sesiones largas, risas raras y clip fácil.</span>
         </article>
         <article class="day-card">
           <span class="day-name">Domingo</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Modo chill, resumen emocional y ultimo rugido antes de empezar otra vuelta.</span>
+          <span class="day-copy">Cierre de semana suave antes de volver a invocar el siguiente miércoles.</span>
         </article>
       </div>
     </section>
@@ -495,110 +799,284 @@
     <section class="carousel panel" aria-labelledby="carousel-title">
       <div class="section-head">
         <div>
-          <span class="eyebrow">Que hay aqui dentro</span>
-          <h2 id="carousel-title">Un carrusel rapido del universo Zaurio</h2>
+          <span class="eyebrow">Carrusel de secciones</span>
+          <h2 id="carousel-title">Todo lo que vive dentro de Zaurio</h2>
         </div>
-        <p>Tres puertas, tres vibes: utilidad, caos anonimo y terreno preparado para juegos futuros.</p>
+        <p>Tres puertas de entrada para que el proyecto no se sienta como enlaces sueltos sino como un mundo con intención.</p>
       </div>
 
       <div class="carousel-window">
         <div class="carousel-track" id="carouselTrack">
           <article class="carousel-card">
             <div class="carousel-art art-tools">
-              <div>
-                <span class="eyebrow">Herramientas</span>
-                <h3>Utilidad con colmillos</h3>
-              </div>
-              <img src="/shared/assets/apps/dinerozaurio.png" alt="DineroZaurio" />
+              <img src="/shared/assets/apps/piggy.png" alt="DineroZaurio">
+              <img src="/shared/assets/brand/emprezaurio.png" alt="Emprezaurio">
             </div>
             <div class="carousel-copy">
-              <h3>DineroZaurio ya vive aqui</h3>
-              <p>La parte practica del ecosistema. Gestion de ingresos, gastos, deudas y prevision sin perder la personalidad de la marca. Herramientas no tienen por que verse como una hoja gris.</p>
+              <span class="eyebrow">Herramientas</span>
+              <h3>Utilidad con personalidad propia</h3>
+              <p>DineroZaurio es la primera prueba seria del lado práctico de la marca: herramientas que ayudan de verdad, pero sin perder el tono juguetón del proyecto. El siguiente asiento queda reservado para Emprezaurio.</p>
               <a class="btn secondary" href="https://herramientas.zaurio.es">Abrir herramientas</a>
             </div>
           </article>
 
           <article class="carousel-card">
             <div class="carousel-art art-secretos">
-              <div>
-                <span class="eyebrow">Secretos</span>
-                <h3>Confesiones con reacciones</h3>
-              </div>
-              <img src="/shared/assets/brand/confesionario.png" alt="Secretos" />
+              <img src="/shared/assets/brand/confesion.png" alt="Secretos">
+              <img src="/shared/assets/brand/confesionario.png" alt="Confesionario">
             </div>
             <div class="carousel-copy">
-              <h3>Anonimo, visual y con feed vivo</h3>
-              <p>El Confesionario recoge confesiones anonimas y las convierte en una experiencia publica, moderada y con reacciones. Es la parte mas salseante del ecosistema sin depender de que Miercoles cargue sus logos.</p>
-              <a class="btn secondary" href="https://secretos.zaurio.es">Entrar en secretos</a>
+              <span class="eyebrow">Secretos</span>
+              <h3>Confesiones anónimas para cuando el chat necesita desahogarse</h3>
+              <p>Un espacio pensado para que la comunidad mande confesiones, reciba reacciones y deje material para directos, clips y momentos de absoluto “¿pero esto cómo ha acabado aquí?”.</p>
+              <a class="btn secondary" href="https://secretos.zaurio.es">Abrir secretos</a>
             </div>
           </article>
 
-          <article class="carousel-card" id="juegos">
+          <article class="carousel-card">
             <div class="carousel-art art-juegos">
-              <div>
-                <span class="eyebrow">Juegos</span>
-                <h3>Proximamente</h3>
-              </div>
-              <img src="/shared/assets/apps/piggy.png" alt="Juegos Zaurio" />
+              <img src="/shared/assets/brand/trivialodon.png" alt="Trivialodon">
+              <img src="/shared/assets/brand/miercoles.png" alt="Miércoles">
             </div>
             <div class="carousel-copy">
-              <h3>Una seccion preparada para crecer</h3>
-              <p>La landing ya reserva sitio para juegos porque la estructura buena se diseña pensando en lo que viene. Cuando nazca `juegos.zaurio.es`, no hara falta volver a improvisar el mapa entero.</p>
-              <a class="btn secondary" href="https://miercoles.zaurio.es">Mientras tanto, vuelve al caos</a>
+              <span class="eyebrow">Juegos</span>
+              <h3>Directos ahora, fichas y proyectos propios enseguida</h3>
+              <p>La parte gamer ya no se queda en “se juega a lo que sea”. Aquí caben los juegos del momento, sus fichas, las tiendas donde comprarlos y, en el futuro, los juegos propios de Zaurio.</p>
+              <a class="btn secondary" href="https://juegos.zaurio.es">Abrir juegos</a>
             </div>
           </article>
         </div>
       </div>
 
       <div class="carousel-nav">
-        <div class="carousel-dots" id="carouselDots"></div>
-        <div>
-          <button class="btn secondary" id="prevSlide" type="button">Anterior</button>
-          <button class="btn primary" id="nextSlide" type="button">Siguiente</button>
+        <div class="carousel-dots" id="carouselDots">
+          <button class="dot is-active" type="button" data-slide="0" aria-label="Herramientas"></button>
+          <button class="dot" type="button" data-slide="1" aria-label="Secretos"></button>
+          <button class="dot" type="button" data-slide="2" aria-label="Juegos"></button>
         </div>
+        <button id="carouselNext" class="ghost-button" type="button">Siguiente</button>
       </div>
+    </section>
+    <section class="games games-card" aria-labelledby="games-title">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Mapa</span>
+          <h2 id="games-title">Últimos juegos en directo</h2>
+        </div>
+        <p>Toca cualquier juego para abrir una ficha rápida con descripción en español y enlaces a tiendas oficiales con el precio más reciente que he podido dejar preparado.</p>
+      </div>
+
+      <div class="games-grid">
+        <button class="game-tile" type="button" data-game="arc-raiders">
+          <div class="game-icon arc">ARC</div>
+          <div>
+            <h3>ARC Raiders</h3>
+            <p>Extracción PvPvE, ciencia ficción y mucha tensión entre chatarra, robots y supervivencia.</p>
+          </div>
+          <div class="game-meta">
+            <span class="game-pill">PvPvE</span>
+            <span class="game-pill">Shooter</span>
+          </div>
+        </button>
+
+        <button class="game-tile" type="button" data-game="fortnite">
+          <div class="game-icon fortnite">FN</div>
+          <div>
+            <h3>Fortnite</h3>
+            <p>Battle Royale, eventos, modos raros y ese caos bonito que el chat siempre reconoce al instante.</p>
+          </div>
+          <div class="game-meta">
+            <span class="game-pill">Gratis</span>
+            <span class="game-pill">Battle Royale</span>
+          </div>
+        </button>
+
+        <button class="game-tile" type="button" data-game="split-fiction">
+          <div class="game-icon split">SF</div>
+          <div>
+            <h3>Split Fiction</h3>
+            <p>Cooperativo de Hazelight con cambios locos de escenario, ritmo alto y momentos muy de “esto hay que verlo”.</p>
+          </div>
+          <div class="game-meta">
+            <span class="game-pill">Co-op</span>
+            <span class="game-pill">Aventura</span>
+          </div>
+        </button>
+
+        <button class="game-tile" type="button" data-game="repo">
+          <div class="game-icon repo">R.E</div>
+          <div>
+            <h3>R.E.P.O.</h3>
+            <p>Horror cooperativo con física absurda, sustos y objetos valiosos que casi nunca sobreviven enteros.</p>
+          </div>
+          <div class="game-meta">
+            <span class="game-pill">Horror co-op</span>
+            <span class="game-pill">Física</span>
+          </div>
+        </button>
+
+        <button class="game-tile" type="button" data-game="dispatch">
+          <div class="game-icon dispatch">DS</div>
+          <div>
+            <h3>Dispatch</h3>
+            <p>Aventura narrativa con superhéroes, decisiones, humor y bastante desastre organizado.</p>
+          </div>
+          <div class="game-meta">
+            <span class="game-pill">Narrativo</span>
+            <span class="game-pill">Aventura</span>
+          </div>
+        </button>
+      </div>
+
+      <p class="price-note">Precios visibles en las fichas según las últimas referencias de tiendas oficiales que he dejado preparadas. Pueden variar por rebajas, edición o región.</p>
     </section>
 
     <footer class="footer">
-      <span>Zaurio ya tiene casa central, assets compartidos y una narrativa que une subdominios.</span>
-      <span>Miércoles manda. El resto se juega.</span>
+      <span>Zaurio junta drama, gameplay y herramientas bajo una misma casa.</span>
+      <span>Miércoles manda, el resto se improvisa con estilo.</span>
     </footer>
   </main>
+
+  <div id="gameModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-top">
+        <div>
+          <span class="eyebrow" id="modalEyebrow">Juego destacado</span>
+          <h2 id="modalTitle" style="margin-top:12px;">Juego</h2>
+          <p id="modalDescription" style="margin-top:12px;color:var(--muted);line-height:1.62;"></p>
+        </div>
+        <button id="modalClose" class="modal-close" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <div class="store-list" id="storeList"></div>
+      <p id="modalFootnote" class="price-note"></p>
+    </div>
+  </div>
 
   <script src="/shared/js/zaurio-nav.js"></script>
   <script>
     const track = document.getElementById("carouselTrack");
-    const slides = Array.from(track.children);
-    const dotsRoot = document.getElementById("carouselDots");
-    const prev = document.getElementById("prevSlide");
-    const next = document.getElementById("nextSlide");
-    let current = 0;
-    let timer = null;
+    const dots = Array.from(document.querySelectorAll(".dot"));
+    const nextBtn = document.getElementById("carouselNext");
+    let currentSlide = 0;
 
-    function renderDots() {
-      dotsRoot.innerHTML = slides.map((_, index) => `<button class="dot ${index === current ? "is-active" : ""}" data-index="${index}" aria-label="Ir a la tarjeta ${index + 1}"></button>`).join("");
-      dotsRoot.querySelectorAll("[data-index]").forEach((dot) => {
-        dot.addEventListener("click", () => goTo(Number(dot.dataset.index)));
-      });
+    function renderSlide(index){
+      currentSlide = index;
+      track.style.transform = `translateX(-${index * 100}%)`;
+      dots.forEach((dot, dotIndex) => dot.classList.toggle("is-active", dotIndex === index));
     }
 
-    function goTo(index) {
-      current = (index + slides.length) % slides.length;
-      track.style.transform = `translateX(-${current * 100}%)`;
-      renderDots();
-      resetTimer();
+    dots.forEach((dot) => {
+      dot.addEventListener("click", () => renderSlide(Number(dot.dataset.slide)));
+    });
+
+    nextBtn.addEventListener("click", () => {
+      const next = (currentSlide + 1) % dots.length;
+      renderSlide(next);
+    });
+
+    const gameData = {
+      "arc-raiders": {
+        title: "ARC Raiders",
+        eyebrow: "Shooter de extracción",
+        description: "ARC Raiders es un shooter de extracción PvPvE en tercera persona donde saqueas la superficie, sobrevives a máquinas brutales y vuelves a la colonia de Speranza con lo que hayas conseguido rescatar.",
+        footnote: "Tiendas oficiales detectadas: Steam, Epic Games Store y Xbox. PlayStation aparece listado en el catálogo actual de la Store.",
+        stores: [
+          { name: "Steam", price: "$39.99", note: "Edición estándar.", url: "https://store.steampowered.com/app/1808500/ARC_Raiders/" },
+          { name: "Epic Games Store", price: "Ver tienda", note: "Página oficial del juego en Epic.", url: "https://store.epicgames.com/en-US/p/arc-raiders" },
+          { name: "Xbox", price: "$39.99+", note: "Optimizado para Xbox Series X|S.", url: "https://www.xbox.com/en-US/games/store/arc-raiders/9NDF1F263RZ4/0010/9TKB89VJ3912" },
+          { name: "PlayStation", price: "€39.99", note: "Visible en el catálogo reciente de PlayStation Store.", url: "https://store.playstation.com/en-ie" }
+        ]
+      },
+      "fortnite": {
+        title: "Fortnite",
+        eyebrow: "Battle Royale en estado puro",
+        description: "Fortnite sigue siendo el gran parque de atracciones del multijugador: Battle Royale, modos creados por la comunidad, LEGO Fortnite, Festival y eventos que convierten cualquier directo en un imán de clips.",
+        footnote: "Fortnite no está en Steam. Las compras extra y packs cambian, pero el acceso base del juego aparece como gratuito en las tiendas oficiales.",
+        stores: [
+          { name: "Epic Games", price: "Gratis", note: "Descarga oficial en PC y móvil compatible.", url: "https://store.epicgames.com/en-US/p/fortnite" },
+          { name: "PlayStation", price: "Gratis", note: "Versión de PS5 visible en la Store.", url: "https://store.playstation.com/en-us/product/UP1477-PPSA01922_00-FNBNDL0000000000?lang=es-ES" },
+          { name: "Xbox", price: "Gratis", note: "Disponible en Xbox Store.", url: "https://www.xbox.com/en-US/games/store/fortnite/BT5P2X999VH2" }
+        ]
+      },
+      "split-fiction": {
+        title: "Split Fiction",
+        eyebrow: "Cooperativo de Hazelight",
+        description: "Split Fiction es una aventura cooperativa para dos personas donde todo cambia de forma constantemente: ciencia ficción, fantasía, set pieces muy bestias y ritmo de juego pensado para compartir directo y reacción.",
+        footnote: "Split Fiction aparece con precio estándar en Steam y con edición completa también en consolas y Epic según disponibilidad regional.",
+        stores: [
+          { name: "Steam", price: "$37.49", note: "Oferta rastreada; base habitual indicada en la ficha: $49.99.", url: "https://store.steampowered.com/app/2001120/Split_Fiction/" },
+          { name: "Epic Games Store", price: "Ver tienda", note: "Disponible en Epic Games Store.", url: "https://store.epicgames.com/es-ES/achievements/split-fiction" },
+          { name: "PlayStation", price: "$49.99", note: "Disponible en PlayStation Store.", url: "https://store.playstation.com" },
+          { name: "Xbox", price: "$49.99", note: "Disponible en Xbox Store.", url: "https://www.xbox.com" }
+        ]
+      },
+      "repo": {
+        title: "R.E.P.O.",
+        eyebrow: "Horror cooperativo con física",
+        description: "R.E.P.O. es un cooperativo de terror para hasta seis jugadores donde tienes que localizar objetos valiosos, moverlos con física real y salir vivo mientras todo a tu alrededor quiere arruinarte la extracción.",
+        footnote: "Por ahora la tienda oficial claramente localizada es Steam. La ficha rastreada mostraba una oferta temporal activa.",
+        stores: [
+          { name: "Steam", price: "£5.52", note: "Oferta rastreada del 35%; precio base visto: £8.50.", url: "https://store.steampowered.com/app/3241660/R_E_P_O/" }
+        ]
+      },
+      "dispatch": {
+        title: "Dispatch",
+        eyebrow: "Aventura narrativa superheroica",
+        description: "Dispatch mezcla aventura narrativa, humor y toma de decisiones en un mundo de superhéroes donde gestionar el caos importa tanto como lo que decides decir o esconder en cada escena.",
+        footnote: "Dispatch aparece claramente localizado en PlayStation Store y también tiene página oficial en Steam.",
+        stores: [
+          { name: "Steam", price: "Ver tienda", note: "Página oficial del juego en Steam.", url: "https://store.steampowered.com/app/2592160/Dispatch/" },
+          { name: "PlayStation", price: "€34.99", note: "Precio visible en el catálogo reciente de PlayStation Store.", url: "https://store.playstation.com/product/HP7386-PPSA27158_00-0022337374597692" }
+        ]
+      }
+    };
+
+    const modal = document.getElementById("gameModal");
+    const modalClose = document.getElementById("modalClose");
+    const modalEyebrow = document.getElementById("modalEyebrow");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalDescription = document.getElementById("modalDescription");
+    const storeList = document.getElementById("storeList");
+    const modalFootnote = document.getElementById("modalFootnote");
+
+    function openGameModal(key){
+      const data = gameData[key];
+      if (!data) return;
+      modalEyebrow.textContent = data.eyebrow;
+      modalTitle.textContent = data.title;
+      modalDescription.textContent = data.description;
+      modalFootnote.textContent = data.footnote;
+      storeList.innerHTML = data.stores.map((store) => `
+        <div class="store-item">
+          <div class="store-copy">
+            <strong>${store.name}</strong>
+            <span>${store.note}</span>
+          </div>
+          <div class="store-side">
+            <span class="store-price">${store.price}</span>
+            <a class="btn secondary" href="${store.url}" target="_blank" rel="noopener noreferrer">Comprar</a>
+          </div>
+        </div>
+      `).join("");
+      modal.classList.add("on");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
     }
 
-    function resetTimer() {
-      clearInterval(timer);
-      timer = setInterval(() => goTo(current + 1), 5600);
+    function closeGameModal(){
+      modal.classList.remove("on");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
     }
 
-    prev.addEventListener("click", () => goTo(current - 1));
-    next.addEventListener("click", () => goTo(current + 1));
+    document.querySelectorAll("[data-game]").forEach((button) => {
+      button.addEventListener("click", () => openGameModal(button.dataset.game));
+    });
 
-    renderDots();
-    resetTimer();
+    modalClose.addEventListener("click", closeGameModal);
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) closeGameModal();
+    });
   </script>
 </body>
 </html>

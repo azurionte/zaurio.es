@@ -49,7 +49,7 @@
         {
           type: "static",
           label: "Emprezaurio",
-          icon: `${sharedBase}/assets/apps/toolbox.png`,
+          icon: `${sharedBase}/assets/brand/emprezaurio-icono.png`,
           tag: "soon",
         },
       ],
@@ -59,13 +59,13 @@
       key: "juegos",
       href: "https://juegos.zaurio.es",
       label: "Juegos",
-      icon: `${sharedBase}/assets/apps/piggy.png`,
+      icon: `${sharedBase}/assets/brand/trivialodon-icono.png`,
       items: [
         {
           type: "link",
           href: "https://juegos.zaurio.es/trivialodon/",
           label: "Trivialodon",
-          icon: `${sharedBase}/assets/apps/piggy.png`,
+          icon: `${sharedBase}/assets/brand/trivialodon-icono.png`,
           tag: "soon",
         },
       ],

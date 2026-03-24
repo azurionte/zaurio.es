@@ -4,6 +4,13 @@ export default {
     const host = url.hostname;
     let path = url.pathname;
 
+    if (path === "/admin" || path === "/admin/" || path === "/admin.html") {
+      if (host !== "zaurio.es") {
+        return Response.redirect(`https://zaurio.es/admin${url.search}`, 302);
+      }
+      path = "/admin.html";
+    }
+
     if (path === "/" || path.endsWith("/")) {
       path = `${path}index.html`;
     }

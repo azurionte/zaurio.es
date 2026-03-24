@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Admin · Zaurio</title>
+  <link rel="icon" href="https://zaurio.es/shared/assets/brand/favicon-32x32.png" />
+  <link rel="stylesheet" href="https://zaurio.es/shared/css/zaurio-ui.css" />
+  <style>
+    :root{
+      --bg-1:#160224;
+      --bg-2:#25053a;
+      --bg-3:#06040b;
+      --card:rgba(33,12,45,.82);
+      --card-strong:rgba(22,8,31,.94);
+      --stroke:rgba(255,255,255,.12);
+      --text:#fff8fb;
+      --muted:rgba(255,255,255,.7);
+      --yellow:#ffee00;
+      --pink:#ff00aa;
+      --cyan:#2fd3ff;
+      --green:#79d85d;
+      --shadow:0 24px 60px rgba(0,0,0,.34);
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      min-height:100%;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255,79,201,.16), transparent 30%),
+        radial-gradient(circle at 82% 12%, rgba(47,211,255,.12), transparent 26%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2) 34%, var(--bg-3));
+      color:var(--text);
+      font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    }
+
+    body.modal-open{ overflow:hidden; }
+
+    .page{
+      width:min(1180px,94vw);
+      margin:0 auto 42px;
+    }
+
+    .hero,
+    .login,
+    .section,
+    .card,
+    .subsection{
+      background:var(--card);
+      border:1px solid var(--stroke);
+      box-shadow:var(--shadow);
+      border-radius:24px;
+    }
+
+    .hero{
+      padding:24px;
+      margin-bottom:18px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.05);
+      color:#ffd9f0;
+      font-weight:900;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+      font-size:12px;
+    }
+
+    h1,h2,h3,p{margin:0}
+
+    .hero h1{
+      margin-top:14px;
+      font-size:clamp(2rem,4vw,3rem);
+      line-height:1.02;
+    }
+
+    .hero p{
+      margin-top:10px;
+      color:var(--muted);
+      max-width:68ch;
+      line-height:1.55;
+    }
+
+    .admin-tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:20px;
+    }
+
+    .admin-tab{
+      border:none;
+      cursor:pointer;
+      padding:12px 16px;
+      border-radius:999px;
+      font-weight:1000;
+      color:rgba(255,255,255,.7);
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.1);
+      transition:transform .12s ease, background .12s ease, color .12s ease;
+    }
+
+    .admin-tab:hover{
+      transform:translateY(-1px);
+      color:#fff;
+    }
+
+    .admin-tab.on{
+      background:rgba(255,238,0,.16);
+      color:#fff;
+      border-color:rgba(255,238,0,.28);
+      box-shadow:0 0 18px rgba(255,238,0,.1);
+    }
+
+    .login{
+      max-width:460px;
+      margin:48px auto;
+      padding:22px;
+    }
+
+    .field{
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.2);
+      color:#fff;
+      font-size:15px;
+      outline:none;
+      margin-top:10px;
+    }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:1000;
+      transition:transform .12s ease, opacity .12s ease;
+      white-space:nowrap;
+    }
+
+    .btn:active{ transform:scale(.96); }
+    .btnPrimary{ background:var(--yellow); color:#22061c; box-shadow:0 0 18px rgba(255,238,0,.22); }
+    .btnDanger{ background:var(--pink); color:#fff; box-shadow:0 0 18px rgba(255,0,170,.22); }
+    .btnGhost{ background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.14); }
+    .btnLive{ background:rgba(255,238,0,.12); color:#fff; border:1px solid rgba(255,238,0,.28); }
+    .btnOff{ background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.14); }
+
+    .panel{ display:none; }
+    .panel.on{ display:block; }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+
+    .stats{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      font-weight:1000;
+    }
+
+    .admin-section{ display:none; }
+    .admin-section.on{ display:block; }
+
+    .section{
+      padding:16px;
+      margin-bottom:16px;
+    }
+
+    .subsection{
+      padding:14px;
+      margin-top:14px;
+      background:var(--card-strong);
+    }
+
+    .subsection h3{
+      margin-bottom:10px;
+      font-size:18px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+      gap:14px;
+    }
+
+    .card{
+      padding:14px;
+      background:rgba(0,0,0,.18);
+    }
+
+    .card.male{
+      border-color:rgba(47,211,255,.28);
+      background:linear-gradient(180deg, rgba(47,211,255,.07), rgba(0,0,0,.18));
+    }
+
+    .card.female{
+      border-color:rgba(255,79,201,.3);
+      background:linear-gradient(180deg, rgba(255,79,201,.09), rgba(0,0,0,.18));
+    }
+
+    .card.free{
+      border-color:rgba(121,216,93,.28);
+      background:linear-gradient(180deg, rgba(121,216,93,.08), rgba(0,0,0,.18));
+    }
+
+    .card.liveNow{
+      box-shadow:0 0 28px rgba(255,238,0,.14);
+      border-color:rgba(255,238,0,.28);
+    }
+
+    .text{
+      white-space:pre-wrap;
+      word-break:break-word;
+      line-height:1.4;
+    }
+
+    .meta,
+    .minor{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      color:var(--muted);
+      font-size:12px;
+      margin-top:8px;
+    }
+
+    .actions,
+    .stack{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .status{
+      margin-top:10px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .chip{
+      width:12px;
+      height:12px;
+      border-radius:999px;
+      display:inline-block;
+      flex:0 0 12px;
+      box-shadow:0 0 0 2px rgba(255,255,255,.1);
+    }
+
+    .chip.male{ background:var(--cyan); }
+    .chip.female{ background:#ff4fc9; }
+    .chip.free{ background:var(--green); }
+
+    .livePill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,238,0,.12);
+      border:1px solid rgba(255,238,0,.22);
+      font-size:12px;
+      font-weight:1000;
+      color:#fff;
+    }
+
+    .pRow{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .pAvatar{
+      width:56px;
+      height:56px;
+      border-radius:999px;
+      overflow:hidden;
+      border:2px solid rgba(255,238,0,.18);
+      background:rgba(0,0,0,.2);
+      flex:0 0 auto;
+    }
+
+    .pAvatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .empty{
+      color:var(--muted);
+      padding:6px 2px;
+    }
+
+    @media (max-width: 720px){
+      .page{
+        width:min(96vw,1180px);
+      }
+      .hero,
+      .section{
+        padding:14px;
+      }
+    }
+  </style>
+</head>
+<body data-zaurio-nav="home">
+  <div data-zaurio-nav data-active="home"></div>
+
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">Panel unificado</span>
+      <h1>Admin de Zaurio</h1>
+      <p>Un único panel para moderar Miércoles, participantes y secretos. Entrando desde cualquier subdominio acabarás aquí en <strong>zaurio.es/admin</strong>, así el login siempre es el mismo y no depende del host.</p>
+      <div class="admin-tabs" id="adminTabs">
+        <button class="admin-tab on" data-admin-tab="miercoles" type="button">Miércoles</button>
+        <button class="admin-tab" data-admin-tab="participantes" type="button">Participantes</button>
+        <button class="admin-tab" data-admin-tab="secretos" type="button">Secretos</button>
+      </div>
+    </section>
+
+    <section id="login" class="login">
+      <h2 style="font-size:32px;">Entrar</h2>
+      <p style="margin-top:8px;color:var(--muted);">Usa tu usuario de siempre en Supabase Auth.</p>
+      <input id="email" class="field" placeholder="Email" value="dramasaurio@zaurio.es" />
+      <input id="pass" class="field" type="password" placeholder="Contraseña" />
+      <div class="stack">
+        <button id="btnLogin" class="btn btnPrimary" style="flex:1;">Entrar</button>
+      </div>
+      <div id="loginMsg" class="status"></div>
+    </section>
+
+    <section id="panel" class="panel">
+      <div class="topbar">
+        <div class="stats">
+          <div class="pill">Mensajes pendientes: <span id="countMsgs">0</span></div>
+          <div class="pill">Participantes pendientes: <span id="countParts">0</span></div>
+          <div class="pill">Secretos pendientes: <span id="countSecretPend">0</span></div>
+          <div class="pill">Secretos en live: <span id="countSecretLive">0</span></div>
+        </div>
+        <div class="stack">
+          <button id="btnRefresh" class="btn btnGhost" type="button">Actualizar</button>
+          <button id="btnLogout" class="btn btnGhost" type="button">Salir</button>
+        </div>
+      </div>
+
+      <section id="sectionMiercoles" class="admin-section on">
+        <div class="section">
+          <h2>Miércoles</h2>
+          <div class="subsection">
+            <h3>Consigna del live</h3>
+            <input id="consigna" class="field" maxlength="120" placeholder="Escribe la consigna…" />
+            <div class="actions">
+              <button id="btnSaveConsigna" class="btn btnPrimary" type="button">Guardar consigna</button>
+              <button id="btnClearLive" class="btn btnGhost" type="button">Limpiar live</button>
+            </div>
+            <div id="consignaMsg" class="status"></div>
+          </div>
+          <div class="subsection">
+            <h3>Mensajes pendientes</h3>
+            <div id="statusMsgs" class="status"></div>
+            <div id="gridMsgs" class="grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sectionParticipantes" class="admin-section">
+        <div class="section">
+          <h2>Participantes</h2>
+          <div class="subsection">
+            <h3>Pendientes</h3>
+            <div id="statusParts" class="status"></div>
+            <div id="gridPartsPend" class="grid"></div>
+          </div>
+          <div class="subsection">
+            <h3>Aprobados</h3>
+            <div id="gridPartsOk" class="grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sectionSecretos" class="admin-section">
+        <div class="section">
+          <h2>Secretos</h2>
+          <div class="subsection">
+            <h3>Pendientes</h3>
+            <div id="gridSecretPend" class="grid"></div>
+          </div>
+          <div class="subsection">
+            <h3>Aprobados recientes</h3>
+            <div id="gridSecretOk" class="grid"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://zaurio.es/shared/js/zaurio-nav.js"></script>
+  <script>
+    const supabaseUrl = "https://adpjitccwwvlydrtvvqk.supabase.co";
+    const supabaseKey = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    const login = document.getElementById("login");
+    const panel = document.getElementById("panel");
+    const loginMsg = document.getElementById("loginMsg");
+
+    const btnLogin = document.getElementById("btnLogin");
+    const btnRefresh = document.getElementById("btnRefresh");
+    const btnLogout = document.getElementById("btnLogout");
+
+    const adminTabs = document.querySelectorAll("[data-admin-tab]");
+    const sectionMiercoles = document.getElementById("sectionMiercoles");
+    const sectionParticipantes = document.getElementById("sectionParticipantes");
+    const sectionSecretos = document.getElementById("sectionSecretos");
+
+    const gridMsgs = document.getElementById("gridMsgs");
+    const countMsgs = document.getElementById("countMsgs");
+    const statusMsgs = document.getElementById("statusMsgs");
+    const consigna = document.getElementById("consigna");
+    const btnSaveConsigna = document.getElementById("btnSaveConsigna");
+    const btnClearLive = document.getElementById("btnClearLive");
+    const consignaMsg = document.getElementById("consignaMsg");
+
+    const countParts = document.getElementById("countParts");
+    const statusParts = document.getElementById("statusParts");
+    const gridPartsPend = document.getElementById("gridPartsPend");
+    const gridPartsOk = document.getElementById("gridPartsOk");
+
+    const gridSecretPend = document.getElementById("gridSecretPend");
+    const gridSecretOk = document.getElementById("gridSecretOk");
+    const countSecretPend = document.getElementById("countSecretPend");
+    const countSecretLive = document.getElementById("countSecretLive");
+
+    function esc(value){
+      return (value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function showPanel(){
+      login.style.display = "none";
+      panel.classList.add("on");
+    }
+
+    function showLogin(){
+      panel.classList.remove("on");
+      login.style.display = "block";
+    }
+
+    function setAdminTab(name){
+      adminTabs.forEach((tab) => tab.classList.toggle("on", tab.dataset.adminTab === name));
+      sectionMiercoles.classList.toggle("on", name === "miercoles");
+      sectionParticipantes.classList.toggle("on", name === "participantes");
+      sectionSecretos.classList.toggle("on", name === "secretos");
+    }
+
+    adminTabs.forEach((tab) => {
+      tab.addEventListener("click", () => setAdminTab(tab.dataset.adminTab));
+    });
+
+    function renderEmpty(message){
+      return `<div class="empty">${message}</div>`;
+    }
+
+    function tintClass(genero){
+      if (genero === "hombre") return "male";
+      if (genero === "mujer") return "female";
+      return "free";
+    }
+
+    function participantCard(participant, approved){
+      const pub = supabaseClient.storage.from("participantes").getPublicUrl(participant.foto_path);
+      const photo = `${pub.data?.publicUrl || ""}?v=${Date.now()}`;
+      const stamp = new Date(approved ? (participant.aprobado_at || participant.creado) : participant.creado);
+
+      return `
+        <article class="card">
+          <div class="pRow">
+            <div class="pAvatar"><img src="${photo}" alt=""></div>
+            <div style="flex:1;">
+              <div style="font-weight:1000;font-size:16px;">${esc(participant.nombre)}</div>
+              <div class="meta">
+                <span>${approved ? "Aprobado" : "Creado"}: ${stamp.toLocaleString()}</span>
+                <span>${participant.id.slice(0, 8)}…</span>
+              </div>
+            </div>
+          </div>
+          <div class="actions">
+            ${!approved ? `<button class="btn btnPrimary" data-pact="approve" data-pid="${participant.id}" type="button">Aprobar</button>` : ``}
+            <button class="btn btnDanger" data-pact="archive" data-pid="${participant.id}" type="button">Archivar</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function secretCard(secret, pending){
+      const tint = tintClass(secret.genero);
+      const stamp = new Date(secret.creado);
+
+      return `
+        <article class="card ${tint}${secret.show_live ? " liveNow" : ""}">
+          <div class="meta">
+            <span>#${secret.numero_secreto ?? "—"}</span>
+            <span class="chip ${tint}"></span>
+            <span>${secret.edad} años</span>
+            <span>${stamp.toLocaleDateString()} · ${stamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+            ${secret.show_live ? `<span class="livePill">● En live</span>` : ``}
+          </div>
+          <div class="text">${esc(secret.texto)}</div>
+          <div class="meta">
+            <span>🔥 ${secret.fire_count || 0}</span>
+            <span>💖 ${secret.heart_count || 0}</span>
+            <span>😱 ${secret.fear_count || 0}</span>
+            <span>😭 ${secret.sob_count || 0}</span>
+            <span>Σ ${secret.total_reacciones || 0}</span>
+          </div>
+          <div class="actions">
+            ${pending ? `<button class="btn btnPrimary" data-sact="approve" data-sid="${secret.id}" type="button">Aprobar</button>` : ``}
+            ${!pending ? `<button class="btn btnLive" data-sact="showlive" data-sid="${secret.id}" type="button">Mostrar en live</button>` : ``}
+            ${!pending && secret.show_live ? `<button class="btn btnOff" data-sact="hidelive" data-sid="${secret.id}" type="button">Quitar de live</button>` : ``}
+            <button class="btn btnDanger" data-sact="archive" data-sid="${secret.id}" type="button">Archivar</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function messageCard(message){
+      const stamp = new Date(message.creado);
+      return `
+        <article class="card">
+          <div class="text">${esc(message.texto)}</div>
+          <div class="meta">
+            <span>${stamp.toLocaleString()}</span>
+            <span>${message.id.slice(0, 8)}…</span>
+          </div>
+          <div class="actions">
+            <button class="btn btnPrimary" data-mact="show" data-mid="${message.id}" type="button">Mostrar</button>
+            <button class="btn btnDanger" data-mact="discard" data-mid="${message.id}" type="button">Descartar</button>
+          </div>
+        </article>
+      `;
+    }
+
+    async function cargarConsigna(){
+      const result = await supabaseClient
+        .from("config")
+        .select("consigna")
+        .eq("id", 1)
+        .maybeSingle();
+
+      if (result.error){
+        consignaMsg.textContent = `No se pudo cargar la consigna: ${result.error.message}`;
+        return;
+      }
+
+      consigna.value = result.data?.consigna || "";
+      consignaMsg.textContent = "";
+    }
+
+    async function guardarConsigna(){
+      const value = consigna.value.trim();
+      const result = await supabaseClient
+        .from("config")
+        .update({ consigna: value, actualizado: new Date().toISOString() })
+        .eq("id", 1);
+
+      consignaMsg.textContent = result.error ? result.error.message : "Consigna guardada";
+    }
+
+    async function limpiarLive(){
+      const result = await supabaseClient
+        .from("mensajes")
+        .update({ estado: "archivado" })
+        .eq("estado", "mostrado");
+
+      if (result.error){
+        alert(`Error limpiando live: ${result.error.message}`);
+        return;
+      }
+
+      alert("Live limpio.");
+    }
+
+    async function cargarMensajes(){
+      statusMsgs.textContent = "Cargando pendientes…";
+      const result = await supabaseClient
+        .from("mensajes")
+        .select("id,texto,creado,estado")
+        .eq("estado", "pendiente")
+        .order("creado", { ascending: false });
+
+      if (result.error){
+        statusMsgs.textContent = result.error.message;
+        return;
+      }
+
+      countMsgs.textContent = String(result.data.length);
+      statusMsgs.textContent = result.data.length ? "" : "No hay mensajes pendientes.";
+      gridMsgs.innerHTML = result.data.length
+        ? result.data.map(messageCard).join("")
+        : renderEmpty("No hay mensajes pendientes.");
+    }
+
+    async function mostrarSoloUno(id){
+      const archiveCurrent = await supabaseClient
+        .from("mensajes")
+        .update({ estado: "archivado" })
+        .eq("estado", "mostrado");
+
+      if (archiveCurrent.error){
+        alert(`Error archivando el actual: ${archiveCurrent.error.message}`);
+        return;
+      }
+
+      const result = await supabaseClient
+        .from("mensajes")
+        .update({ estado: "mostrado" })
+        .eq("id", id);
+
+      if (result.error){
+        alert(`Error mostrando mensaje: ${result.error.message}`);
+        return;
+      }
+
+      await cargarMensajes();
+    }
+
+    async function descartarMensaje(id){
+      const result = await supabaseClient
+        .from("mensajes")
+        .update({ estado: "descartado" })
+        .eq("id", id);
+
+      if (result.error){
+        alert(`Error descartando mensaje: ${result.error.message}`);
+        return;
+      }
+
+      await cargarMensajes();
+    }
+
+    async function cargarParticipantes(){
+      statusParts.textContent = "Cargando participantes…";
+
+      const pending = await supabaseClient
+        .from("participantes")
+        .select("id,nombre,foto_path,creado,estado")
+        .eq("estado", "pendiente")
+        .order("creado", { ascending: false });
+
+      const approved = await supabaseClient
+        .from("participantes")
+        .select("id,nombre,foto_path,creado,aprobado_at,estado")
+        .eq("estado", "aprobado")
+        .order("aprobado_at", { ascending: false, nullsFirst: false })
+        .order("creado", { ascending: false })
+        .limit(25);
+
+      if (pending.error || approved.error){
+        statusParts.textContent = pending.error?.message || approved.error?.message || "Error";
+        return;
+      }
+
+      countParts.textContent = String(pending.data.length);
+      statusParts.textContent = pending.data.length ? "" : "No hay participantes pendientes.";
+      gridPartsPend.innerHTML = pending.data.length
+        ? pending.data.map((participant) => participantCard(participant, false)).join("")
+        : renderEmpty("No hay participantes pendientes.");
+      gridPartsOk.innerHTML = approved.data.length
+        ? approved.data.map((participant) => participantCard(participant, true)).join("")
+        : renderEmpty("No hay participantes aprobados.");
+    }
+
+    async function aprobarParticipante(id){
+      const result = await supabaseClient
+        .from("participantes")
+        .update({ estado: "aprobado", aprobado_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (result.error){
+        alert(`Error aprobando participante: ${result.error.message}`);
+        return;
+      }
+
+      await cargarParticipantes();
+    }
+
+    async function archivarParticipante(id){
+      const result = await supabaseClient
+        .from("participantes")
+        .update({ estado: "archivado" })
+        .eq("id", id);
+
+      if (result.error){
+        alert(`Error archivando participante: ${result.error.message}`);
+        return;
+      }
+
+      await cargarParticipantes();
+    }
+
+    async function cargarSecretos(){
+      const pending = await supabaseClient
+        .from("secretos_con_reacciones")
+        .select("*")
+        .eq("estado", "pendiente")
+        .order("creado", { ascending: false });
+
+      const approved = await supabaseClient
+        .from("secretos_con_reacciones")
+        .select("*")
+        .eq("estado", "aprobado")
+        .order("creado", { ascending: false })
+        .limit(30);
+
+      const live = await supabaseClient
+        .from("secretos")
+        .select("id")
+        .eq("show_live", true);
+
+      if (pending.error || approved.error || live.error){
+        gridSecretPend.innerHTML = renderEmpty("Error cargando secretos.");
+        gridSecretOk.innerHTML = "";
+        return;
+      }
+
+      countSecretPend.textContent = String(pending.data.length);
+      countSecretLive.textContent = String(live.data.length);
+
+      gridSecretPend.innerHTML = pending.data.length
+        ? pending.data.map((secret) => secretCard(secret, true)).join("")
+        : renderEmpty("No hay secretos pendientes.");
+      gridSecretOk.innerHTML = approved.data.length
+        ? approved.data.map((secret) => secretCard(secret, false)).join("")
+        : renderEmpty("No hay secretos aprobados.");
+    }
+
+    async function aprobarSecreto(id){
+      const result = await supabaseClient
+        .from("secretos")
+        .update({ estado: "aprobado", aprobado_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (result.error){
+        alert(result.error.message);
+        return;
+      }
+
+      await cargarSecretos();
+    }
+
+    async function archivarSecreto(id){
+      const result = await supabaseClient
+        .from("secretos")
+        .update({ estado: "archivado", show_live: false })
+        .eq("id", id);
+
+      if (result.error){
+        alert(result.error.message);
+        return;
+      }
+
+      await cargarSecretos();
+    }
+
+    async function mostrarSecretoEnLive(id){
+      const clear = await supabaseClient
+        .from("secretos")
+        .update({ show_live: false })
+        .eq("show_live", true);
+
+      if (clear.error){
+        alert(clear.error.message);
+        return;
+      }
+
+      const result = await supabaseClient
+        .from("secretos")
+        .update({ show_live: true, live_updated_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (result.error){
+        alert(result.error.message);
+        return;
+      }
+
+      await cargarSecretos();
+    }
+
+    async function ocultarSecretoDeLive(id){
+      const result = await supabaseClient
+        .from("secretos")
+        .update({ show_live: false })
+        .eq("id", id);
+
+      if (result.error){
+        alert(result.error.message);
+        return;
+      }
+
+      await cargarSecretos();
+    }
+
+    async function refreshAll(){
+      await cargarConsigna();
+      await Promise.all([
+        cargarMensajes(),
+        cargarParticipantes(),
+        cargarSecretos()
+      ]);
+    }
+
+    gridMsgs.addEventListener("click", async (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      const id = button.dataset.mid;
+      if (button.dataset.mact === "show") await mostrarSoloUno(id);
+      if (button.dataset.mact === "discard") await descartarMensaje(id);
+    });
+
+    gridPartsPend.addEventListener("click", async (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      const id = button.dataset.pid;
+      if (button.dataset.pact === "approve") await aprobarParticipante(id);
+      if (button.dataset.pact === "archive") await archivarParticipante(id);
+    });
+
+    gridPartsOk.addEventListener("click", async (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      const id = button.dataset.pid;
+      if (button.dataset.pact === "archive") await archivarParticipante(id);
+    });
+
+    gridSecretPend.addEventListener("click", async (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      const id = button.dataset.sid;
+      if (button.dataset.sact === "approve") await aprobarSecreto(id);
+      if (button.dataset.sact === "archive") await archivarSecreto(id);
+    });
+
+    gridSecretOk.addEventListener("click", async (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      const id = button.dataset.sid;
+      if (button.dataset.sact === "archive") await archivarSecreto(id);
+      if (button.dataset.sact === "showlive") await mostrarSecretoEnLive(id);
+      if (button.dataset.sact === "hidelive") await ocultarSecretoDeLive(id);
+    });
+
+    btnLogin.addEventListener("click", async () => {
+      loginMsg.textContent = "Entrando…";
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("pass").value;
+      const result = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (result.error){
+        loginMsg.textContent = `❌ ${result.error.message}`;
+        return;
+      }
+
+      loginMsg.textContent = "✅ OK";
+      showPanel();
+      await refreshAll();
+    });
+
+    btnRefresh.addEventListener("click", refreshAll);
+    btnLogout.addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      showLogin();
+    });
+    btnSaveConsigna.addEventListener("click", guardarConsigna);
+    btnClearLive.addEventListener("click", limpiarLive);
+
+    (async () => {
+      const session = await supabaseClient.auth.getSession();
+      if (session.data.session){
+        showPanel();
+        await refreshAll();
+      } else {
+        showLogin();
+      }
+    })();
+  </script>
+</body>
+</html>

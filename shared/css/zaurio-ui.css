@@ -58,10 +58,10 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:52px;
-  height:52px;
-  flex:0 0 52px;
-  border-radius:16px;
+  width:60px;
+  height:60px;
+  flex:0 0 60px;
+  border-radius:18px;
   border:1px solid rgba(255,255,255,.16);
   background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
   transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease, filter .16s ease, opacity .16s ease;
@@ -79,8 +79,8 @@
 }
 
 .zaurio-home-icon{
-  width:30px;
-  height:30px;
+  width:38px;
+  height:38px;
   object-fit:contain;
 }
 
@@ -88,7 +88,7 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:18px;
+  gap:22px;
   flex:1 1 auto;
   min-width:0;
   flex-wrap:nowrap;
@@ -98,8 +98,9 @@
 .zaurio-nav-trigger{
   display:inline-flex;
   align-items:center;
+  justify-content:center;
   gap:10px;
-  min-height:44px;
+  min-height:52px;
   padding:0;
   border:none;
   background:transparent;
@@ -125,10 +126,10 @@
 }
 
 .zaurio-nav-icon{
-  width:28px;
-  height:28px;
+  width:36px;
+  height:36px;
   object-fit:contain;
-  flex:0 0 28px;
+  flex:0 0 36px;
 }
 
 .zaurio-nav-label{
@@ -149,6 +150,7 @@
   position:relative;
   display:flex;
   align-items:center;
+  justify-content:center;
   padding:8px 0;
   margin:-8px 0;
 }
@@ -287,14 +289,14 @@
   }
 
   .zaurio-home-link{
-    width:46px;
-    height:46px;
-    flex-basis:46px;
+    width:50px;
+    height:50px;
+    flex-basis:50px;
   }
 
   .zaurio-home-icon{
-    width:26px;
-    height:26px;
+    width:30px;
+    height:30px;
   }
 
   .zaurio-nav-list{
@@ -309,15 +311,15 @@
 
   .zaurio-nav-item,
   .zaurio-nav-trigger{
-    width:40px;
-    min-width:40px;
+    width:46px;
+    min-width:46px;
     justify-content:center;
   }
 
   .zaurio-nav-icon{
-    width:26px;
-    height:26px;
-    flex-basis:26px;
+    width:32px;
+    height:32px;
+    flex-basis:32px;
   }
 
   .zaurio-nav-dropdown{
