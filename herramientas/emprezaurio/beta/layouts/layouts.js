@@ -826,8 +826,6 @@ export function morphTo(kind){
 
   const heroGhostData = makeHeroGhost(oldHero);
   const avatarGhostData = oldAvatar ? makeAvatarGhost(oldAvatar) : null;
-  const newHeroRect = newHero.getBoundingClientRect();
-  const newAvatarRect = newAvatar?.getBoundingClientRect();
 
   oldHero.classList.add('layout-morph-hide');
   if (oldAvatar) oldAvatar.classList.add('layout-morph-hide');
@@ -845,8 +843,14 @@ export function morphTo(kind){
 
   window.setTimeout(() => {
     oldWrap.remove();
+    normalizeCanvasForCurrentLayout({ showAdd: true });
 
-    if (heroGhostData){
+    const settledNewHero = getHeroPiece(temp);
+    const settledNewAvatar = getAvatarPiece(temp);
+    const newHeroRect = settledNewHero?.getBoundingClientRect();
+    const newAvatarRect = settledNewAvatar?.getBoundingClientRect();
+
+    if (heroGhostData && newHeroRect && settledNewHero){
       const dx = newHeroRect.left - heroGhostData.rect.left;
       const dy = newHeroRect.top - heroGhostData.rect.top;
       const sx = newHeroRect.width / heroGhostData.rect.width;
@@ -854,7 +858,7 @@ export function morphTo(kind){
       heroGhostData.ghost.animate(
         [
           { transform:'translate(0,0) scale(1,1)', borderRadius:getComputedStyle(oldHero).borderRadius, opacity:1 },
-          { transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`, borderRadius:getComputedStyle(newHero).borderRadius, opacity:1 }
+          { transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`, borderRadius:getComputedStyle(settledNewHero).borderRadius, opacity:1 }
         ],
         { duration:560, easing:'cubic-bezier(.18,1,.24,1)', fill:'forwards' }
       );
@@ -875,8 +879,8 @@ export function morphTo(kind){
     }
 
     window.setTimeout(() => {
-      newHero.classList.remove('layout-morph-hide');
-      if (newAvatar) newAvatar.classList.remove('layout-morph-hide');
+      settledNewHero?.classList.remove('layout-morph-hide');
+      if (settledNewAvatar) settledNewAvatar.classList.remove('layout-morph-hide');
 
       animateFadeTargets(
         [...newFadeTargets, ...sectionTargets, ...(add ? [add] : [])],
