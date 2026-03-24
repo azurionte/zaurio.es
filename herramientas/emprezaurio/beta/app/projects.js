@@ -249,6 +249,16 @@ function renderProjectPreview(project){
   `;
 }
 
+function projectMenuMarkup(id){
+  return `
+    <button data-action="edit" data-id="${id}" type="button">Editar</button>
+    <button data-action="rename" data-id="${id}" type="button">Renombrar</button>
+    <button data-action="duplicate" data-id="${id}" type="button">Duplicar</button>
+    <button data-action="translate" data-id="${id}" type="button">Crear version traducida</button>
+    <button data-action="delete" data-id="${id}" type="button">Eliminar</button>
+  `;
+}
+
 export function mountProjectLibrary({ onNewProject, onEditProject }){
   if (document.getElementById('projectLibrary')) return;
   const wrap = document.createElement('div');
@@ -266,29 +276,31 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       .sparkle-burst{position:fixed;z-index:23001;pointer-events:none;transform:translate(-50%,-50%)}
       .sparkle-burst span{position:absolute;width:8px;height:8px;border-radius:999px;background:linear-gradient(135deg,#ffd447,#fff3b0);box-shadow:0 0 14px rgba(255,212,71,.5);animation:sparkle-pop .95s ease forwards}
       @keyframes sparkle-pop{0%{opacity:0;transform:translate(0,0) scale(.2)}20%{opacity:1}72%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.08)}}
-      #projectLibrary .lib-head{display:flex;justify-content:space-between;gap:14px;align-items:end}
+      #projectLibrary .lib-head{display:flex;justify-content:space-between;gap:14px;align-items:start}
       #projectLibrary .lib-head h2{margin:0;font:800 2rem/1 "Bricolage Grotesque","Trebuchet MS",sans-serif;color:#fff8fb}
       #projectLibrary .lib-head p{margin:8px 0 0;color:rgba(255,255,255,.72)}
-      #projectLibrary .lib-actions{display:flex;gap:10px;flex-wrap:wrap}
+      #projectLibrary .lib-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
       #projectLibrary .lib-btn{appearance:none;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff8fb;padding:12px 16px;border-radius:999px;font-weight:700;cursor:pointer;transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease}
       #projectLibrary .lib-btn.primary{background:linear-gradient(135deg,#ffd447,#ffb87c);color:#240b18}
       #projectLibrary .lib-btn:hover{transform:translateY(-2px);box-shadow:0 16px 30px rgba(0,0,0,.22);border-color:rgba(255,255,255,.24)}
       #projectLibrary .lib-btn:active{transform:translateY(0) scale(.98)}
+      #projectLibrary .lib-close{width:46px;height:46px;border-radius:16px;padding:0;font-size:1.4rem;line-height:1}
       #projectLibrary .lib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;overflow:auto;padding-right:6px}
       #projectLibrary .project-card{position:relative;display:grid;gap:14px;min-height:220px;padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
       #projectLibrary .project-card:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.24);border-color:rgba(255,212,71,.24)}
       #projectLibrary .project-card.is-deleting{border:2px dashed rgba(239,68,68,.92);box-shadow:0 0 0 4px rgba(239,68,68,.08) inset, 0 22px 44px rgba(0,0,0,.22);background:linear-gradient(180deg,rgba(120,16,24,.16),rgba(255,255,255,.03));overflow:hidden}
       #projectLibrary .project-card.is-deleting .project-preview,
       #projectLibrary .project-card.is-deleting .project-meta,
-      #projectLibrary .project-card.is-deleting .project-open{opacity:.72}
-      #projectLibrary .project-card.is-deleting .trash-pop{position:absolute;right:18px;bottom:18px;width:34px;height:34px;pointer-events:none;animation:trash-bye 1.15s ease forwards}
+      #projectLibrary .project-card.is-deleting .project-open{opacity:.42;transition:opacity .42s ease, filter .42s ease;filter:saturate(.7)}
+      #projectLibrary .project-card.is-deleting .project-preview{filter:saturate(.64) blur(.2px)}
+      #projectLibrary .project-card.is-deleting .trash-pop{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;pointer-events:none;animation:trash-bye 1.15s ease forwards}
       #projectLibrary .project-card.is-deleting .trash-pop::before{content:"";position:absolute;left:6px;right:6px;bottom:4px;height:20px;border:2px solid rgba(255,236,236,.95);border-top:0;border-radius:0 0 8px 8px;background:rgba(239,68,68,.14)}
       #projectLibrary .project-card.is-deleting .trash-pop::after{content:"";position:absolute;left:7px;right:7px;top:3px;height:6px;border-radius:6px;background:rgba(255,236,236,.98);transform-origin:5px 100%;animation:trash-lid 1.15s ease forwards}
       #projectLibrary .project-card.is-deleting .trash-pop .trash-handle{position:absolute;left:12px;right:12px;top:0;height:4px;border:2px solid rgba(255,236,236,.95);border-bottom:0;border-radius:6px 6px 0 0}
       @keyframes trash-lid{0%,16%{transform:rotate(0deg)}30%{transform:rotate(-32deg)}50%{transform:rotate(6deg)}68%,100%{transform:rotate(0deg)}}
-      @keyframes trash-bye{0%{opacity:0;transform:translateY(10px) scale(.86)}16%{opacity:1;transform:translateY(0) scale(1)}76%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-22px) scale(.76)}}
-      #projectLibrary .project-preview{display:grid;gap:10px;padding:12px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
-      #projectLibrary .mini-resume{display:grid;gap:10px;min-height:120px;padding:12px;border-radius:16px;background:#f7f4fb;color:#12071b;overflow:hidden}
+      @keyframes trash-bye{0%{opacity:0;transform:translateY(12px) scale(.82)}16%{opacity:1;transform:translateY(0) scale(1)}76%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-12px) scale(.76)}}
+      #projectLibrary .project-preview{display:grid;align-items:center;gap:10px;padding:12px;height:190px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+      #projectLibrary .mini-resume{display:grid;gap:10px;width:100%;height:100%;padding:12px;border-radius:16px;background:#f7f4fb;color:#12071b;overflow:hidden}
       #projectLibrary .mini-hero{border-radius:12px;background:linear-gradient(135deg,#ffba4a,#ff6aa7);min-height:34px}
       #projectLibrary .mini-name{font-weight:800;font-size:.92rem;line-height:1.1}
       #projectLibrary .mini-name.center{text-align:center}
@@ -324,10 +336,11 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .rename-inline input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff8fb}
       #projectLibrary .rename-actions{display:flex;gap:8px}
       #projectLibrary .rename-actions button{flex:1 1 auto}
-      #projectLibrary .project-add{display:grid;place-items:center;text-align:center;gap:12px;border:2px dashed rgba(255,255,255,.16);cursor:pointer}
+      #projectLibrary .project-add{display:grid;place-items:center;text-align:center;gap:12px;border:2px dashed rgba(255,255,255,.16);cursor:pointer;max-width:250px;justify-self:end}
       #projectLibrary .project-add:hover{border-color:rgba(255,212,71,.34);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04))}
       #projectLibrary .project-add .plus{width:72px;height:72px;border-radius:24px;display:grid;place-items:center;background:rgba(255,255,255,.06);font-size:2rem;font-weight:800;transition:transform .16s ease, background .16s ease}
       #projectLibrary .project-add:hover .plus{transform:scale(1.06);background:rgba(255,212,71,.14)}
+      #projectLibrary .project-add h3{color:#ffd447}
       #projectLibrary .empty{padding:28px;border-radius:22px;border:1px dashed rgba(255,255,255,.14);color:rgba(255,255,255,.72);text-align:center}
       @media (max-width:700px){
         #projectLibrary{padding:12px}
@@ -336,6 +349,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
         #projectLibrary .lib-head h2{font-size:1.5rem}
         #projectLibrary .lib-actions{width:100%}
         #projectLibrary .lib-actions .lib-btn{flex:1 1 100%}
+        #projectLibrary .project-add{max-width:none;justify-self:stretch}
       }
     </style>
     <div class="lib-shell">
@@ -345,8 +359,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
           <p>Entra a uno existente o crea otro desde cero sin perder tus proyectos guardados.</p>
         </div>
         <div class="lib-actions">
-          <button class="lib-btn" id="libRefreshBtn" type="button">Actualizar</button>
-          <button class="lib-btn primary" id="libNewBtn" type="button">Nuevo CV</button>
+          <button class="lib-btn lib-close" id="libCloseBtn" type="button" aria-label="Cerrar">×</button>
         </div>
       </div>
       <div class="lib-grid" id="libGrid"></div>
@@ -359,13 +372,6 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
     grid.innerHTML = '<div class="empty">Cargando tus CVs...</div>';
     const projects = await listProjects();
     const cards = [];
-    cards.push(`
-      <article class="project-card project-add" data-action="new">
-        <div class="plus">+</div>
-        <h3>Crear otro CV</h3>
-        <p>Arranca un curriculum nuevo con wizard, demo o modo manual.</p>
-      </article>
-    `);
     if (!projects.length) {
       cards.push(`<div class="empty">Todavia no tienes CVs guardados. Crea el primero desde esta biblioteca.</div>`);
     } else {
@@ -377,11 +383,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
               <div class="project-menu-wrap">
                 <button class="lib-btn project-menu-btn" data-menu-btn="${project.id}" type="button" aria-label="Mas opciones">⋯</button>
                 <div class="project-menu" data-menu="${project.id}">
-                  <button data-action="edit" data-id="${project.id}" type="button">Editar</button>
-                  <button data-action="rename" data-id="${project.id}" type="button">Renombrar</button>
-                  <button data-action="duplicate" data-id="${project.id}" type="button">Duplicar</button>
-                  <button data-action="translate" data-id="${project.id}" type="button">Crear version traducida</button>
-                  <button data-action="delete" data-id="${project.id}" type="button">Eliminar</button>
+                  ${projectMenuMarkup(project.id)}
                 </div>
               </div>
             </div>
@@ -397,11 +399,17 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
         `);
       });
     }
+    cards.push(`
+      <article class="project-card project-add" data-action="new">
+        <div class="plus">+</div>
+        <h3>Crear nuevo CV</h3>
+        <p>Arranca un curriculum nuevo con wizard, demo o modo manual.</p>
+      </article>
+    `);
     grid.innerHTML = cards.join('');
   };
 
-  wrap.querySelector('#libRefreshBtn').onclick = () => renderCards();
-  wrap.querySelector('#libNewBtn').onclick = () => onNewProject?.();
+  wrap.querySelector('#libCloseBtn').onclick = () => wrap.classList.remove('open');
 
   grid.addEventListener('click', async (event) => {
     const trigger = event.target.closest('[data-action], [data-menu-btn]');
@@ -440,7 +448,11 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       return;
     }
     if (action === 'rename-cancel') {
-      return renderCards();
+      const menu = grid.querySelector(`[data-menu="${project.id}"]`);
+      if (!menu) return;
+      menu.innerHTML = projectMenuMarkup(project.id);
+      menu.classList.remove('open');
+      return;
     }
     if (action === 'rename-save') {
       const input = grid.querySelector(`[data-rename-input="${project.id}"]`);
@@ -466,7 +478,13 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
         }
         showActionFeedback(trigger, 'Renombrado', 'success sparkle');
         sparkleNode(trigger);
-        window.setTimeout(() => renderCards(), 1050);
+        const menu = grid.querySelector(`[data-menu="${project.id}"]`);
+        if (menu) {
+          window.setTimeout(() => {
+            menu.innerHTML = projectMenuMarkup(project.id);
+            menu.classList.remove('open');
+          }, 180);
+        }
         return;
       }
       return;
