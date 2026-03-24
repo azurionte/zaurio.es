@@ -64,7 +64,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 33.333% 33.333%;
       opacity:.5;pointer-events:none}
     #avatarEditor .ae-circle{position:absolute;inset:18px;border-radius:999px;border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 999px rgba(8,3,12,.44), inset 0 0 0 1px rgba(255,255,255,.18);pointer-events:none}
-    #avatarEditor .ae-image{position:absolute;left:50%;top:50%;transform-origin:center center;will-change:transform;user-select:none;-webkit-user-drag:none;pointer-events:none}
+    #avatarEditor .ae-image{position:absolute;left:0;top:0;transform-origin:top left;will-change:transform;user-select:none;-webkit-user-drag:none;pointer-events:none}
     #avatarEditor .ae-side{display:grid;gap:14px;align-content:start}
     #avatarEditor .ae-title{margin:0;color:#fff8fb;font:800 1.5rem/1.05 "Bricolage Grotesque","Trebuchet MS",sans-serif}
     #avatarEditor .ae-copy{margin:0;color:rgba(255,255,255,.72);line-height:1.45}
@@ -344,7 +344,12 @@ function getAvatarSource(value){
 function fitAvatarPlacement(img, size, avatarState){
   const state = normalizeAvatarState(avatarState) || { zoom:1, panX:0, panY:0 };
   const base = Math.max(size / img.width, size / img.height);
-  const scale = base * Math.max(.6, state.zoom || 1);
+  const minBleed = size * 0.08;
+  const coverWithBleed = Math.max(
+    (size + minBleed * 2) / img.width,
+    (size + minBleed * 2) / img.height
+  );
+  const scale = Math.max(base, coverWithBleed) * Math.max(.6, state.zoom || 1);
   const dw = img.width * scale;
   const dh = img.height * scale;
   const maxOffsetX = Math.max(0, (dw - size) / 2);
@@ -389,6 +394,7 @@ function renderAllAvatars(){
 let avatarEditor = null;
 let avatarEditorState = null;
 let avatarEditorImage = null;
+const AVATAR_EDITOR_INSET = 18;
 
 function closeAvatarEditor(){
   const modal = document.getElementById('avatarEditor');
@@ -441,11 +447,11 @@ function ensureAvatarEditor(){
 
   function updateImageTransform(){
     if (!avatarEditorState || !avatarEditorImage) return;
-    const size = stage.clientWidth;
-    const fit = fitAvatarPlacement(avatarEditorImage, size, avatarEditorState);
+    const cropSize = Math.max(120, stage.clientWidth - AVATAR_EDITOR_INSET * 2);
+    const fit = fitAvatarPlacement(avatarEditorImage, cropSize, avatarEditorState);
     image.style.width = `${fit.dw}px`;
     image.style.height = `${fit.dh}px`;
-    image.style.transform = `translate(calc(-50% + ${fit.dx}px), calc(-50% + ${fit.dy}px))`;
+    image.style.transform = `translate(${AVATAR_EDITOR_INSET + fit.dx}px, ${AVATAR_EDITOR_INSET + fit.dy}px)`;
     zoom.value = String(avatarEditorState.zoom);
   }
 
@@ -473,9 +479,9 @@ function ensureAvatarEditor(){
 
   function applyPan(deltaX, deltaY){
     if (!avatarEditorState || !avatarEditorImage) return;
-    const size = stage.clientWidth || 1;
-    avatarEditorState.panX += deltaX / size;
-    avatarEditorState.panY += deltaY / size;
+    const cropSize = Math.max(120, stage.clientWidth - AVATAR_EDITOR_INSET * 2);
+    avatarEditorState.panX += deltaX / cropSize;
+    avatarEditorState.panY += deltaY / cropSize;
     updateImageTransform();
   }
 
