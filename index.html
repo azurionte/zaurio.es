@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Zaurio | Dramas, gameplays y herramientas</title>
-  <meta name="description" content="La guarida de Zaurio: dramas y chismes los miércoles, gameplays el resto de la semana, secretos, herramientas y juegos con personalidad." />
+  <meta name="description" content="La guarida de Zaurio: dramas y chismes los miÃ©rcoles, gameplays el resto de la semana, secretos, herramientas y juegos con personalidad." />
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
   <link rel="apple-touch-icon" href="/shared/assets/brand/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -121,26 +121,31 @@
 
     .hero-intro{
       display:grid;
-      grid-template-columns:minmax(0, 1.1fr) minmax(220px, .72fr);
-      gap:18px;
-      align-items:end;
+      grid-template-columns:260px minmax(0, 1fr);
+      grid-template-areas:
+        "portrait title"
+        "copy copy";
+      gap:18px 22px;
+      align-items:start;
     }
 
     .hero-copy{
       min-width:0;
+      grid-area:copy;
     }
 
     .hero h1{
-      margin-top:18px;
-      font-size:clamp(2rem, 3.5vw, 3.55rem);
-      max-width:9.2ch;
+      grid-area:title;
+      margin-top:8px;
+      font-size:clamp(1.9rem, 3.2vw, 3.2rem);
+      max-width:10ch;
       letter-spacing:-.05em;
       text-wrap:balance;
     }
 
     .lead{
       margin:18px 0 0;
-      max-width:34ch;
+      max-width:48ch;
       color:var(--muted);
       font-size:.96rem;
       line-height:1.68;
@@ -215,21 +220,22 @@
     }
 
     .hero-portrait{
+      grid-area:portrait;
       position:relative;
-      width:min(100%, 280px);
+      width:min(100%, 250px);
       display:flex;
-      align-items:flex-end;
+      align-items:flex-start;
       justify-content:center;
       pointer-events:none;
       z-index:2;
-      margin-inline:auto;
+      margin:0;
     }
 
     .hero-portrait::before{
       content:"";
       position:absolute;
-      inset:auto 10% 2% 10%;
-      height:22%;
+      inset:auto 10% 8% 10%;
+      height:20%;
       border-radius:999px;
       background:radial-gradient(circle at center, rgba(255,79,201,.22), transparent 68%);
       filter:blur(18px);
@@ -345,9 +351,64 @@
       align-content:start;
     }
 
-    .recent-track{
+    .recent-shell{
       display:grid;
+      grid-template-columns:28px 1fr;
+      gap:12px;
+      align-items:center;
+    }
+
+    .recent-rail{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
       gap:10px;
+    }
+
+    .recent-arrow{
+      width:28px;
+      height:28px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      cursor:pointer;
+      font-size:14px;
+      line-height:1;
+    }
+
+    .recent-dots{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:center;
+    }
+
+    .recent-dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      border:none;
+      background:rgba(255,255,255,.22);
+      cursor:pointer;
+      transition:transform .14s ease, background .14s ease;
+    }
+
+    .recent-dot.is-active{
+      transform:scale(1.3);
+      background:var(--cyan);
+    }
+
+    .recent-viewport{
+      overflow:hidden;
+      min-height:246px;
+    }
+
+    .recent-track{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      transition:transform .35s ease;
     }
 
     .recent-item{
@@ -361,6 +422,7 @@
       background:rgba(255,255,255,.04);
       cursor:pointer;
       transition:transform .16s ease, border-color .16s ease, background .16s ease;
+      min-height:74px;
     }
 
     .recent-item:hover{
@@ -376,6 +438,7 @@
       background-size:cover;
       background-position:center;
       border:1px solid rgba(255,255,255,.1);
+      background-color:rgba(255,255,255,.04);
     }
 
     .recent-copy strong{
@@ -760,10 +823,15 @@
 
       .hero-intro{
         grid-template-columns:1fr;
+        grid-template-areas:
+          "portrait"
+          "title"
+          "copy";
       }
 
       .hero h1{
         max-width:11ch;
+        margin-top:0;
       }
 
       .lead,
@@ -773,7 +841,7 @@
 
       .hero-portrait{
         width:min(68vw, 300px);
-        margin:8px auto 0;
+        margin:0 auto;
       }
     }
 
@@ -815,7 +883,7 @@
         <div class="hero-intro">
           <div class="hero-copy">
             <h1>Un streamer geek montando ideas para divertirse y sobrevivir la vida adulta.</h1>
-            <p class="lead">Geek, creativo y con TDA, Zaurio siempre ha tenido esa necesidad de experimentar con ideas que sirvan para pasarlo bien, conectar gente y a la vez hacer más llevadero el lado serio de crecer. Por eso este dominio mezcla drama, anonimato, herramientas útiles y juegos sociales con una misma energía.</p>
+            <p class="lead">Geek, creativo y con TDA, Zaurio siempre ha tenido esa necesidad de experimentar con ideas que sirvan para pasarlo bien, conectar gente y a la vez hacer mÃ¡s llevadero el lado serio de crecer. Por eso este dominio mezcla drama, anonimato, herramientas Ãºtiles y juegos sociales con una misma energÃ­a.</p>
           </div>
           <div class="hero-portrait" aria-hidden="true">
             <img src="/shared/assets/brand/zaurio-portrait.png" alt="Retrato de Zaurio">
@@ -823,12 +891,12 @@
         </div>
         <div class="hero-actions">
           <a class="btn primary" href="https://www.tiktok.com/@zaurioking" target="_blank" rel="noopener noreferrer">Ir al TikTok</a>
-          <a class="btn secondary" href="https://miercoles.zaurio.es">Entrar en Miércoles</a>
+          <a class="btn secondary" href="https://miercoles.zaurio.es">Entrar en MiÃ©rcoles</a>
         </div>
         <div class="hero-notes">
           <div class="note">
-            <strong>Miércoles</strong>
-            <span>Tu puerta de entrada para enviar mensajes anónimos en los directos de dramas y chismes.</span>
+            <strong>MiÃ©rcoles</strong>
+            <span>Tu puerta de entrada para enviar mensajes anÃ³nimos en los directos de dramas y chismes.</span>
           </div>
           <div class="note">
             <strong>Herramientas</strong>
@@ -836,11 +904,11 @@
           </div>
           <div class="note">
             <strong>Secretos</strong>
-            <span>Tu espacio anónimo para contar lo más heavy o lo más divertido sin que nadie sepa quién eres.</span>
+            <span>Tu espacio anÃ³nimo para contar lo mÃ¡s heavy o lo mÃ¡s divertido sin que nadie sepa quiÃ©n eres.</span>
           </div>
           <div class="note">
             <strong>Juegos</strong>
-            <span>La parte que intenta juntar gente con experiencias rápidas, sociales y con punto de fiesta.</span>
+            <span>La parte que intenta juntar gente con experiencias rÃ¡pidas, sociales y con punto de fiesta.</span>
           </div>
         </div>
       </article>
@@ -848,28 +916,57 @@
       <div class="hero-side">
         <aside class="side-card recent-games">
           <span class="eyebrow">Juegos recientes</span>
-          <div class="recent-track">
-            <button class="recent-item" type="button" data-game="arc-raiders">
-              <span class="recent-media" data-recent-image="arc-raiders"></span>
-              <span class="recent-copy">
-                <strong>ARC Raiders</strong>
-                <span>Extracción, robots y tensión de directo.</span>
-              </span>
-            </button>
-            <button class="recent-item" type="button" data-game="fortnite">
-              <span class="recent-media" data-recent-image="fortnite"></span>
-              <span class="recent-copy">
-                <strong>Fortnite</strong>
-                <span>El clásico caos multijugador que nunca falla.</span>
-              </span>
-            </button>
-            <button class="recent-item" type="button" data-game="split-fiction">
-              <span class="recent-media" data-recent-image="split-fiction"></span>
-              <span class="recent-copy">
-                <strong>Split Fiction</strong>
-                <span>Cooperativo de espectáculo y cambios locos.</span>
-              </span>
-            </button>
+          <div class="recent-shell">
+            <div class="recent-rail">
+              <button id="recentPrev" class="recent-arrow" type="button" aria-label="Juego anterior">â–²</button>
+              <div class="recent-dots" id="recentDots">
+                <button class="recent-dot is-active" type="button" data-recent-slide="0" aria-label="ARC Raiders"></button>
+                <button class="recent-dot" type="button" data-recent-slide="1" aria-label="Fortnite"></button>
+                <button class="recent-dot" type="button" data-recent-slide="2" aria-label="Split Fiction"></button>
+                <button class="recent-dot" type="button" data-recent-slide="3" aria-label="R.E.P.O."></button>
+                <button class="recent-dot" type="button" data-recent-slide="4" aria-label="Dispatch"></button>
+              </div>
+              <button id="recentNext" class="recent-arrow" type="button" aria-label="Juego siguiente">â–¼</button>
+            </div>
+            <div class="recent-viewport">
+              <div class="recent-track" id="recentTrack">
+                <button class="recent-item" type="button" data-game="arc-raiders">
+                  <span class="recent-media" data-recent-image="arc-raiders"></span>
+                  <span class="recent-copy">
+                    <strong>ARC Raiders</strong>
+                    <span>ExtracciÃ³n, robots y tensiÃ³n de directo.</span>
+                  </span>
+                </button>
+                <button class="recent-item" type="button" data-game="fortnite">
+                  <span class="recent-media" data-recent-image="fortnite"></span>
+                  <span class="recent-copy">
+                    <strong>Fortnite</strong>
+                    <span>El clÃ¡sico caos multijugador que nunca falla.</span>
+                  </span>
+                </button>
+                <button class="recent-item" type="button" data-game="split-fiction">
+                  <span class="recent-media" data-recent-image="split-fiction"></span>
+                  <span class="recent-copy">
+                    <strong>Split Fiction</strong>
+                    <span>Cooperativo de espectÃ¡culo y cambios locos.</span>
+                  </span>
+                </button>
+                <button class="recent-item" type="button" data-game="repo">
+                  <span class="recent-media" data-recent-image="repo"></span>
+                  <span class="recent-copy">
+                    <strong>R.E.P.O.</strong>
+                    <span>Horror cooperativo con fÃ­sica y bastante desastre.</span>
+                  </span>
+                </button>
+                <button class="recent-item" type="button" data-game="dispatch">
+                  <span class="recent-media" data-recent-image="dispatch"></span>
+                  <span class="recent-copy">
+                    <strong>Dispatch</strong>
+                    <span>Narrativa superheroica, humor y decisiones con caos.</span>
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
         </aside>
       </div>
@@ -880,43 +977,43 @@
           <span class="eyebrow">Calendario simple</span>
           <h2 id="schedule-title">La semana oficial de Zaurio</h2>
         </div>
-        <p>Sin calendarios gigantes ni filtros raros: solo el recordatorio rápido de que el gran ritual cae los miércoles y el resto de días mandan los gameplays.</p>
+        <p>Sin calendarios gigantes ni filtros raros: solo el recordatorio rÃ¡pido de que el gran ritual cae los miÃ©rcoles y el resto de dÃ­as mandan los gameplays.</p>
       </div>
       <div class="schedule-grid">
         <article class="day-card">
           <span class="day-name">Lunes</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Arranque de semana con mando, comunidad y energía de “a ver qué pasa hoy”.</span>
+          <span class="day-copy">Arranque de semana con mando, comunidad y energÃ­a de â€œa ver quÃ© pasa hoyâ€.</span>
         </article>
         <article class="day-card">
           <span class="day-name">Martes</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Más partidas, más clips y más fauna del chat calentando motores.</span>
+          <span class="day-copy">MÃ¡s partidas, mÃ¡s clips y mÃ¡s fauna del chat calentando motores.</span>
         </article>
         <article class="day-card highlight">
-          <span class="day-name">Miércoles</span>
+          <span class="day-name">MiÃ©rcoles</span>
           <strong class="day-title">Dramas y chismes</strong>
-          <span class="day-copy">Día grande. Se abre la catedral del salseo y el caos se vuelve programación oficial.</span>
+          <span class="day-copy">DÃ­a grande. Se abre la catedral del salseo y el caos se vuelve programaciÃ³n oficial.</span>
         </article>
         <article class="day-card">
           <span class="day-name">Jueves</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Resaca emocional del miércoles, pero con partidas para seguir vivos.</span>
+          <span class="day-copy">Resaca emocional del miÃ©rcoles, pero con partidas para seguir vivos.</span>
         </article>
         <article class="day-card">
           <span class="day-name">Viernes</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Final de semana con energía alta y espacio para que el chat se luzca.</span>
+          <span class="day-copy">Final de semana con energÃ­a alta y espacio para que el chat se luzca.</span>
         </article>
         <article class="day-card">
-          <span class="day-name">Sábado</span>
+          <span class="day-name">SÃ¡bado</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Territorio ideal para sesiones largas, risas raras y clip fácil.</span>
+          <span class="day-copy">Territorio ideal para sesiones largas, risas raras y clip fÃ¡cil.</span>
         </article>
         <article class="day-card">
           <span class="day-name">Domingo</span>
           <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Cierre de semana suave antes de volver a invocar el siguiente miércoles.</span>
+          <span class="day-copy">Cierre de semana suave antes de volver a invocar el siguiente miÃ©rcoles.</span>
         </article>
       </div>
     </section>
@@ -927,7 +1024,7 @@
           <span class="eyebrow">Carrusel de secciones</span>
           <h2 id="carousel-title">Todo lo que vive dentro de Zaurio</h2>
         </div>
-        <p>Tres puertas de entrada para que el proyecto no se sienta como enlaces sueltos sino como un mundo con intención.</p>
+        <p>Tres puertas de entrada para que el proyecto no se sienta como enlaces sueltos sino como un mundo con intenciÃ³n.</p>
       </div>
 
       <div class="carousel-window">
@@ -940,7 +1037,7 @@
             <div class="carousel-copy">
               <span class="eyebrow">Herramientas</span>
               <h3>Utilidad con personalidad propia</h3>
-              <p>DineroZaurio es la primera prueba seria del lado práctico de la marca: herramientas que ayudan de verdad, pero sin perder el tono juguetón del proyecto. El siguiente asiento queda reservado para Emprezaurio.</p>
+              <p>DineroZaurio es la primera prueba seria del lado prÃ¡ctico de la marca: herramientas que ayudan de verdad, pero sin perder el tono juguetÃ³n del proyecto. El siguiente asiento queda reservado para Emprezaurio.</p>
               <a class="btn secondary" href="https://herramientas.zaurio.es">Abrir herramientas</a>
             </div>
           </article>
@@ -952,8 +1049,8 @@
             </div>
             <div class="carousel-copy">
               <span class="eyebrow">Secretos</span>
-              <h3>Confesiones anónimas para cuando el chat necesita desahogarse</h3>
-              <p>Un espacio pensado para que la comunidad mande confesiones, reciba reacciones y deje material para directos, clips y momentos de absoluto “¿pero esto cómo ha acabado aquí?”.</p>
+              <h3>Confesiones anÃ³nimas para cuando el chat necesita desahogarse</h3>
+              <p>Un espacio pensado para que la comunidad mande confesiones, reciba reacciones y deje material para directos, clips y momentos de absoluto â€œÂ¿pero esto cÃ³mo ha acabado aquÃ­?â€.</p>
               <a class="btn secondary" href="https://secretos.zaurio.es">Abrir secretos</a>
             </div>
           </article>
@@ -961,12 +1058,12 @@
           <article class="carousel-card">
             <div class="carousel-art art-juegos">
               <img src="/shared/assets/brand/trivialodon.png" alt="Trivialodon">
-              <img src="/shared/assets/brand/miercoles.png" alt="Miércoles">
+              <img src="/shared/assets/brand/miercoles.png" alt="MiÃ©rcoles">
             </div>
             <div class="carousel-copy">
               <span class="eyebrow">Juegos</span>
               <h3>Directos ahora, fichas y proyectos propios enseguida</h3>
-              <p>La parte gamer ya no se queda en “se juega a lo que sea”. Aquí caben los juegos del momento, sus fichas, las tiendas donde comprarlos y, en el futuro, los juegos propios de Zaurio.</p>
+              <p>La parte gamer ya no se queda en â€œse juega a lo que seaâ€. AquÃ­ caben los juegos del momento, sus fichas, las tiendas donde comprarlos y, en el futuro, los juegos propios de Zaurio.</p>
               <a class="btn secondary" href="https://juegos.zaurio.es">Abrir juegos</a>
             </div>
           </article>
@@ -982,83 +1079,9 @@
         <button id="carouselNext" class="ghost-button" type="button">Siguiente</button>
       </div>
     </section>
-    <section class="games games-card" aria-labelledby="games-title">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">Mapa</span>
-          <h2 id="games-title">Últimos juegos en directo</h2>
-        </div>
-        <p>Toca cualquier juego para abrir una ficha rápida con descripción en español y enlaces a tiendas oficiales con el precio más reciente que he podido dejar preparado.</p>
-      </div>
-
-      <div class="games-grid">
-        <button class="game-tile" type="button" data-game="arc-raiders">
-          <div class="game-icon" data-game-image="arc-raiders" aria-hidden="true"></div>
-          <div>
-            <h3>ARC Raiders</h3>
-            <p>Extracción PvPvE, ciencia ficción y mucha tensión entre chatarra, robots y supervivencia.</p>
-          </div>
-          <div class="game-meta">
-            <span class="game-pill">PvPvE</span>
-            <span class="game-pill">Shooter</span>
-          </div>
-        </button>
-
-        <button class="game-tile" type="button" data-game="fortnite">
-          <div class="game-icon" data-game-image="fortnite" aria-hidden="true"></div>
-          <div>
-            <h3>Fortnite</h3>
-            <p>Battle Royale, eventos, modos raros y ese caos bonito que el chat siempre reconoce al instante.</p>
-          </div>
-          <div class="game-meta">
-            <span class="game-pill">Gratis</span>
-            <span class="game-pill">Battle Royale</span>
-          </div>
-        </button>
-
-        <button class="game-tile" type="button" data-game="split-fiction">
-          <div class="game-icon" data-game-image="split-fiction" aria-hidden="true"></div>
-          <div>
-            <h3>Split Fiction</h3>
-            <p>Cooperativo de Hazelight con cambios locos de escenario, ritmo alto y momentos muy de “esto hay que verlo”.</p>
-          </div>
-          <div class="game-meta">
-            <span class="game-pill">Co-op</span>
-            <span class="game-pill">Aventura</span>
-          </div>
-        </button>
-
-        <button class="game-tile" type="button" data-game="repo">
-          <div class="game-icon" data-game-image="repo" aria-hidden="true"></div>
-          <div>
-            <h3>R.E.P.O.</h3>
-            <p>Horror cooperativo con física absurda, sustos y objetos valiosos que casi nunca sobreviven enteros.</p>
-          </div>
-          <div class="game-meta">
-            <span class="game-pill">Horror co-op</span>
-            <span class="game-pill">Física</span>
-          </div>
-        </button>
-
-        <button class="game-tile" type="button" data-game="dispatch">
-          <div class="game-icon" data-game-image="dispatch" aria-hidden="true"></div>
-          <div>
-            <h3>Dispatch</h3>
-            <p>Aventura narrativa con superhéroes, decisiones, humor y bastante desastre organizado.</p>
-          </div>
-          <div class="game-meta">
-            <span class="game-pill">Narrativo</span>
-            <span class="game-pill">Aventura</span>
-          </div>
-        </button>
-      </div>
-
-      <p class="price-note">Precios visibles en las fichas según las últimas referencias de tiendas oficiales que he dejado preparadas. Pueden variar por rebajas, edición o región.</p>
-    </section>
-
     <footer class="footer">
       <span>Zaurio junta drama, gameplay y herramientas bajo una misma casa.</span>
-      <span>Miércoles manda, el resto se improvisa con estilo.</span>
+      <span>MiÃ©rcoles manda, el resto se improvisa con estilo.</span>
     </footer>
   </main>
 
@@ -1070,7 +1093,7 @@
           <h2 id="modalTitle" style="margin-top:12px;">Juego</h2>
           <p id="modalDescription" style="margin-top:12px;color:var(--muted);line-height:1.62;"></p>
         </div>
-        <button id="modalClose" class="modal-close" type="button" aria-label="Cerrar">×</button>
+        <button id="modalClose" class="modal-close" type="button" aria-label="Cerrar">Ã—</button>
       </div>
       <div id="modalHero" class="modal-hero" aria-hidden="true"></div>
       <div class="store-list" id="storeList"></div>
@@ -1083,13 +1106,28 @@
     const track = document.getElementById("carouselTrack");
     const dots = Array.from(document.querySelectorAll(".dot"));
     const nextBtn = document.getElementById("carouselNext");
+    const recentTrack = document.getElementById("recentTrack");
+    const recentDots = Array.from(document.querySelectorAll(".recent-dot"));
+    const recentPrev = document.getElementById("recentPrev");
+    const recentNext = document.getElementById("recentNext");
     let currentSlide = 0;
-    const gameImages = {
+    let currentRecent = 0;
+    let recentTimer;
+
+    const recentThumbs = {
       "arc-raiders": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1808500/header.jpg",
-      "fortnite": "https://cdn2.unrealengine.com/egs-fortnite-c5s3-keyart-2560x1440-2560x1440-9123a8e4f3d8.jpg",
+      "fortnite": "https://cdn2.unrealengine.com/fortnite-chapter-5-season-4-battle-pass-1920x1080-75d5fc8e8f04.jpg",
       "split-fiction": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2001120/header.jpg",
       "repo": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/3241660/header.jpg",
       "dispatch": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2592160/header.jpg"
+    };
+
+    const gameHeroes = {
+      "arc-raiders": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1808500/library_hero.jpg",
+      "fortnite": "https://cdn2.unrealengine.com/fortnite-chapter-5-season-4-battle-pass-1920x1080-75d5fc8e8f04.jpg",
+      "split-fiction": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2001120/library_hero.jpg",
+      "repo": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/3241660/library_hero.jpg",
+      "dispatch": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2592160/library_hero.jpg"
     };
 
     function renderSlide(index){
@@ -1098,8 +1136,30 @@
       dots.forEach((dot, dotIndex) => dot.classList.toggle("is-active", dotIndex === index));
     }
 
+    function renderRecent(index){
+      currentRecent = index;
+      if (recentTrack) {
+        recentTrack.style.transform = `translateY(-${index * 84}px)`;
+      }
+      recentDots.forEach((dot, dotIndex) => dot.classList.toggle("is-active", dotIndex === index));
+    }
+
+    function restartRecentTimer(){
+      window.clearInterval(recentTimer);
+      recentTimer = window.setInterval(() => {
+        renderRecent((currentRecent + 1) % recentDots.length);
+      }, 3400);
+    }
+
     dots.forEach((dot) => {
       dot.addEventListener("click", () => renderSlide(Number(dot.dataset.slide)));
+    });
+
+    recentDots.forEach((dot) => {
+      dot.addEventListener("click", () => {
+        renderRecent(Number(dot.dataset.recentSlide));
+        restartRecentTimer();
+      });
     });
 
     nextBtn.addEventListener("click", () => {
@@ -1107,24 +1167,38 @@
       renderSlide(next);
     });
 
+    if (recentPrev) {
+      recentPrev.addEventListener("click", () => {
+        renderRecent((currentRecent - 1 + recentDots.length) % recentDots.length);
+        restartRecentTimer();
+      });
+    }
+
+    if (recentNext) {
+      recentNext.addEventListener("click", () => {
+        renderRecent((currentRecent + 1) % recentDots.length);
+        restartRecentTimer();
+      });
+    }
+
     const gameData = {
       "arc-raiders": {
         title: "ARC Raiders",
         eyebrow: "Shooter de extracción",
-        description: "ARC Raiders es un shooter de extracción PvPvE en tercera persona donde saqueas la superficie, sobrevives a máquinas brutales y vuelves a la colonia de Speranza con lo que hayas conseguido rescatar.",
-        footnote: "Tiendas oficiales detectadas: Steam, Epic Games Store y Xbox. PlayStation aparece listado en el catálogo actual de la Store.",
+        description: "ARC Raiders es un shooter de extracción PvPvE en tercera persona donde saqueas la superficie, sobrevives a máquinas brutales y vuelves a la colonia de Speranza con botín suficiente para que el directo merezca la pena.",
+        footnote: "Tiendas oficiales detectadas en España: Steam, Epic Games Store y Xbox. PlayStation aparece listado dentro del ecosistema actual de la Store.",
         stores: [
           { name: "Steam", price: "39,99 €", note: "Precio europeo visto en la ficha oficial de Steam.", url: "https://store.steampowered.com/app/1808500/ARC_Raiders/" },
-          { name: "Epic Games Store", price: "Consultar en tienda", note: "Disponible en Epic Games Store España.", url: "https://store.epicgames.com/es-ES/p/arc-raiders" },
+          { name: "Epic Games", price: "Consultar en tienda", note: "Disponible en Epic Games Store España.", url: "https://store.epicgames.com/es-ES/p/arc-raiders" },
           { name: "Xbox", price: "39,99 €", note: "Optimizado para Xbox Series X|S.", url: "https://www.xbox.com/es-ES/games/store/arc-raiders/9NDF1F263RZ4/0010/9TKB89VJ3912" },
-          { name: "PlayStation", price: "39,99 €", note: "Visible en el catálogo reciente de PlayStation Store.", url: "https://store.playstation.com/en-ie" }
+          { name: "PlayStation", price: "39,99 €", note: "Visible en el catálogo reciente de PlayStation Store.", url: "https://store.playstation.com/es-es" }
         ]
       },
       "fortnite": {
         title: "Fortnite",
         eyebrow: "Battle Royale en estado puro",
         description: "Fortnite sigue siendo el gran parque de atracciones del multijugador: Battle Royale, modos creados por la comunidad, LEGO Fortnite, Festival y eventos que convierten cualquier directo en un imán de clips.",
-        footnote: "Fortnite no está en Steam. Las compras extra y packs cambian, pero el acceso base del juego aparece como gratuito en las tiendas oficiales.",
+        footnote: "Fortnite no está en Steam. Las compras extra y packs cambian, pero el acceso base del juego figura como gratuito en las tiendas oficiales disponibles en España.",
         stores: [
           { name: "Epic Games", price: "0,00 €", note: "Descarga oficial en PC y móvil compatible.", url: "https://store.epicgames.com/es-ES/p/fortnite" },
           { name: "PlayStation", price: "0,00 €", note: "Versión de PS5 visible en la Store.", url: "https://store.playstation.com/es-es/product/EP1464-PPSA01923_00-FORTNITETESTING0" },
@@ -1134,11 +1208,11 @@
       "split-fiction": {
         title: "Split Fiction",
         eyebrow: "Cooperativo de Hazelight",
-        description: "Split Fiction es una aventura cooperativa para dos personas donde todo cambia de forma constantemente: ciencia ficción, fantasía, set pieces muy bestias y ritmo de juego pensado para compartir directo y reacción.",
+        description: "Split Fiction es una aventura cooperativa para dos personas donde todo cambia de forma constantemente: ciencia ficción, fantasía, set pieces muy bestias y ritmo pensado para compartir directo y reacción.",
         footnote: "Split Fiction aparece con precio estándar en Steam y con edición completa también en consolas y Epic según disponibilidad regional.",
         stores: [
           { name: "Steam", price: "34,99 €", note: "Oferta rastreada; base habitual en la ficha: 49,99 €.", url: "https://store.steampowered.com/app/2001120/Split_Fiction/?l=spanish" },
-          { name: "Epic Games Store", price: "Consultar en tienda", note: "Disponible en Epic Games Store España.", url: "https://store.epicgames.com/es-ES/p/split-fiction" },
+          { name: "Epic Games", price: "Consultar en tienda", note: "Disponible en Epic Games Store España.", url: "https://store.epicgames.com/es-ES/p/split-fiction" },
           { name: "PlayStation", price: "49,99 €", note: "Disponible en PlayStation Store España.", url: "https://store.playstation.com/es-es/product/EP0006-PPSA21113_00-SPLITFICTION0000" },
           { name: "Xbox", price: "37,49 €", note: "Precio rastreado en Xbox Store España.", url: "https://www.xbox.com/es-ES/games/store/split-fiction/9p6rk94hjpzm" }
         ]
@@ -1147,7 +1221,7 @@
         title: "R.E.P.O.",
         eyebrow: "Horror cooperativo con física",
         description: "R.E.P.O. es un cooperativo de terror para hasta seis jugadores donde tienes que localizar objetos valiosos, moverlos con física real y salir vivo mientras todo a tu alrededor quiere arruinarte la extracción.",
-        footnote: "Por ahora la tienda oficial claramente localizada es Steam. La ficha rastreada mostraba una oferta temporal activa.",
+        footnote: "Por ahora la tienda oficial claramente localizada para esta ficha es Steam. La referencia usada mostraba una oferta temporal activa.",
         stores: [
           { name: "Steam", price: "9,75 €", note: "Precio europeo visto en la ficha oficial de Steam.", url: "https://store.steampowered.com/app/3241660/R_E_P_O/" }
         ]
@@ -1179,7 +1253,7 @@
       modalEyebrow.textContent = data.eyebrow;
       modalTitle.textContent = data.title;
       modalDescription.textContent = data.description;
-      modalHero.style.backgroundImage = `url('${gameImages[key]}')`;
+      modalHero.style.backgroundImage = `url('${gameHeroes[key]}')`;
       modalFootnote.textContent = data.footnote;
       storeList.innerHTML = data.stores.map((store) => `
         <div class="store-item">
@@ -1208,20 +1282,18 @@
       button.addEventListener("click", () => openGameModal(button.dataset.game));
     });
 
-    document.querySelectorAll("[data-game-image]").forEach((node) => {
-      const key = node.dataset.gameImage;
-      node.style.backgroundImage = `url('${gameImages[key]}')`;
-    });
-
     document.querySelectorAll("[data-recent-image]").forEach((node) => {
       const key = node.dataset.recentImage;
-      node.style.backgroundImage = `url('${gameImages[key]}')`;
+      node.style.backgroundImage = `url('${recentThumbs[key]}')`;
     });
+
+    renderSlide(0);
+    renderRecent(0);
+    restartRecentTimer();
 
     modalClose.addEventListener("click", closeGameModal);
     modal.addEventListener("click", (event) => {
       if (event.target === modal) closeGameModal();
     });
-  </script>
-</body>
+  </script></body>
 </html>
