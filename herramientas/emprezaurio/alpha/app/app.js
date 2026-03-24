@@ -14,6 +14,7 @@ const MAX_USER_ZOOM = 2.6;
 let mobileFitScale = 1;
 let mobileUserZoom = 1;
 let pinchState = null;
+let lastEffectiveScale = 1;
 
 function clamp(v, min, max){
   return Math.min(max, Math.max(min, v));
@@ -28,16 +29,19 @@ function pinchDistance(touches){
   return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
 }
 
-function syncCanvasScale(){
+function syncCanvasScale(options = {}){
   const page = document.querySelector('.page');
   const sheet = document.getElementById('sheet');
   const root = document.getElementById('canvas-root');
   if (!page || !sheet) return;
+  const { preserveFocus = null, resetScroll = false } = options;
+  const previousScale = lastEffectiveScale || 1;
 
   if (window.innerWidth > MOBILE_BREAKPOINT){
     document.documentElement.style.setProperty('--mobile-canvas-scale', '1');
     mobileFitScale = 1;
     mobileUserZoom = 1;
+    lastEffectiveScale = 1;
     page.style.width = '';
     page.style.height = '';
     page.style.minHeight = '';
@@ -56,9 +60,17 @@ function syncCanvasScale(){
   page.style.height = `${scaledHeight}px`;
   page.style.minHeight = `${scaledHeight}px`;
   page.style.margin = '0 auto';
+  lastEffectiveScale = effectiveScale;
   if (root) {
-    root.scrollLeft = 0;
-    root.style.justifyContent = 'center';
+    if (preserveFocus){
+      const contentX = (root.scrollLeft + preserveFocus.x) / previousScale;
+      const contentY = (root.scrollTop + preserveFocus.y) / previousScale;
+      root.scrollLeft = Math.max(0, contentX * effectiveScale - preserveFocus.x);
+      root.scrollTop = Math.max(0, contentY * effectiveScale - preserveFocus.y);
+    } else if (resetScroll) {
+      root.scrollLeft = Math.max(0, (scaledWidth - root.clientWidth) / 2);
+      root.scrollTop = 0;
+    }
   }
 }
 
@@ -66,7 +78,14 @@ function setMobileUserZoom(nextZoom){
   const clamped = clamp(nextZoom, MIN_USER_ZOOM, MAX_USER_ZOOM);
   if (Math.abs(clamped - mobileUserZoom) < 0.001) return;
   mobileUserZoom = clamped;
-  syncCanvasScale();
+}
+
+function touchCenter(touches){
+  const [a, b] = touches;
+  return {
+    x: (a.clientX + b.clientX) / 2,
+    y: (a.clientY + b.clientY) / 2
+  };
 }
 
 function mountMobileCanvasGestures(){
@@ -77,7 +96,8 @@ function mountMobileCanvasGestures(){
     if (!isMobileCanvasMode() || e.touches.length !== 2) return;
     pinchState = {
       distance: pinchDistance(e.touches),
-      userZoom: mobileUserZoom
+      userZoom: mobileUserZoom,
+      center: touchCenter(e.touches)
     };
   }, { passive: true });
 
@@ -87,7 +107,15 @@ function mountMobileCanvasGestures(){
     if (!distance || !pinchState.distance) return;
     e.preventDefault();
     const ratio = distance / pinchState.distance;
+    const center = touchCenter(e.touches);
     setMobileUserZoom(pinchState.userZoom * ratio);
+    const rect = root.getBoundingClientRect();
+    syncCanvasScale({
+      preserveFocus: {
+        x: center.x - rect.left,
+        y: center.y - rect.top
+      }
+    });
   }, { passive: false });
 
   const endPinch = () => { pinchState = null; };
@@ -96,9 +124,9 @@ function mountMobileCanvasGestures(){
 }
 
 function mountCanvasScaleSync(){
-  syncCanvasScale();
-  window.addEventListener('resize', syncCanvasScale, { passive: true });
-  window.addEventListener('orientationchange', syncCanvasScale, { passive: true });
+  syncCanvasScale({ resetScroll: true });
+  window.addEventListener('resize', () => syncCanvasScale({ resetScroll: true }), { passive: true });
+  window.addEventListener('orientationchange', () => syncCanvasScale({ resetScroll: true }), { passive: true });
 
   const sheet = document.getElementById('sheet');
   if (!sheet || typeof ResizeObserver === 'undefined') return;
