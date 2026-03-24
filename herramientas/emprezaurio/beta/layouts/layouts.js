@@ -59,14 +59,14 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       justify-self:center;
     }
     .fancy{position:relative;padding-bottom:74px}
-    .fancy .hero{position:relative;border-radius:14px;padding:18px 18px 108px;min-height:250px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+    .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 112px;min-height:276px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
     .fancy .hero .avatar{position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);z-index:4;width:124px;height:124px;border-width:4px}
-    .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3}
-    .fancy .chip-grid{position:absolute;left:18px;right:18px;bottom:22px;display:grid;grid-template-columns:minmax(0,1fr) 164px minmax(0,1fr);gap:10px;align-items:end;pointer-events:none}
+    .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3;width:min(100%,480px);padding:0 12px}
+    .fancy .chip-grid{position:absolute;left:26px;right:26px;bottom:28px;display:grid;grid-template-columns:minmax(0,1fr) 184px minmax(0,1fr);gap:8px;align-items:end;pointer-events:none}
     .fancy .chip-grid .chips{display:flex;flex-direction:column;gap:10px;min-width:0;pointer-events:auto}
-    .fancy .chip-grid [data-info-left]{grid-column:1;align-items:flex-end;justify-self:end}
-    .fancy .chip-grid [data-info-right]{grid-column:3;align-items:flex-start;justify-self:start}
-    .fancy .chip-grid .chip{width:min(100%,260px);max-width:260px;min-height:46px}
+    .fancy .chip-grid [data-info-left]{grid-column:1;align-items:flex-end;justify-self:end;padding-right:4px}
+    .fancy .chip-grid [data-info-right]{grid-column:3;align-items:flex-start;justify-self:start;padding-left:4px}
+    .fancy .chip-grid .chip{width:min(100%,286px);max-width:286px;min-height:46px}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
@@ -193,7 +193,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   .sidebar-layout .rail .chips{ width:100%; display:flex; flex-wrap:wrap; gap:10px }
   .sidebar-layout .rail #chipAddBtn{ display:grid; place-items:center; width:44px; height:44px; border-radius:12px; background:#0b1022 !important; color:#fff !important; border:0; box-shadow:0 8px 20px rgba(11,16,34,.28); font-weight:800; z-index:40 }
   .sidebar-layout .rail #chipAddBtn:hover{ filter:brightness(1.03) }
-  .fancy .hero #chipAddBtn{position:absolute !important;left:calc(50% + 86px);bottom:12px;margin:0 !important;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#0b1022 !important;color:#fff !important;border:0;box-shadow:0 8px 20px rgba(11,16,34,.28);font-weight:800;z-index:5}
+  .fancy .hero #chipAddBtn{position:absolute !important;right:20px;top:20px;margin:0 !important;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#0b1022 !important;color:#fff !important;border:0;box-shadow:0 8px 20px rgba(11,16,34,.28);font-weight:800;z-index:5}
   /* prevent the browser "editing" container from showing an ugly border/outline */
   .sidebar-layout .rail .name[contenteditable]{ caret-color: #fff; }
   .sidebar-layout .rail .name[contenteditable]:focus{ outline:none !important; box-shadow:none !important; border:none !important }
