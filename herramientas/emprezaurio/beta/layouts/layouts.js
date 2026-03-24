@@ -64,7 +64,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 33.333% 33.333%;
       opacity:.5;pointer-events:none}
     #avatarEditor .ae-circle{position:absolute;inset:18px;border-radius:999px;border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 999px rgba(8,3,12,.44), inset 0 0 0 1px rgba(255,255,255,.18);pointer-events:none}
-    #avatarEditor .ae-image{position:absolute;left:50%;top:50%;transform-origin:center center;will-change:transform}
+    #avatarEditor .ae-image{position:absolute;left:50%;top:50%;transform-origin:center center;will-change:transform;user-select:none;-webkit-user-drag:none;pointer-events:none}
     #avatarEditor .ae-side{display:grid;gap:14px;align-content:start}
     #avatarEditor .ae-title{margin:0;color:#fff8fb;font:800 1.5rem/1.05 "Bricolage Grotesque","Trebuchet MS",sans-serif}
     #avatarEditor .ae-copy{margin:0;color:rgba(255,255,255,.72);line-height:1.45}
@@ -465,6 +465,7 @@ function ensureAvatarEditor(){
     img.onload = () => {
       avatarEditorImage = img;
       image.src = avatarEditorState.src;
+      image.draggable = false;
       updateImageTransform();
     };
     img.src = avatarEditorState.src;
@@ -480,6 +481,7 @@ function ensureAvatarEditor(){
 
   stage.addEventListener('pointerdown', e => {
     if (!avatarEditorState?.src) return;
+    e.preventDefault();
     drag = { x:e.clientX, y:e.clientY };
     stage.classList.add('is-dragging');
     stage.setPointerCapture?.(e.pointerId);
@@ -495,6 +497,8 @@ function ensureAvatarEditor(){
   };
   stage.addEventListener('pointerup', endDrag);
   stage.addEventListener('pointercancel', endDrag);
+  stage.addEventListener('dragstart', e => e.preventDefault());
+  image.addEventListener('dragstart', e => e.preventDefault());
   stage.addEventListener('wheel', e => {
     if (!avatarEditorState?.src) return;
     e.preventDefault();
