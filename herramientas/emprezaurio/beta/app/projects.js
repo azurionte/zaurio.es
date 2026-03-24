@@ -425,8 +425,6 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
             </div>
           </article>
         `);
-          </article>
-        `);
       });
     }
     cards.push(`
