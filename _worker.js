@@ -10,6 +10,11 @@ export default {
 
     let folder = "";
 
+    if (path.startsWith("/shared/")) {
+      const assetUrl = new URL(path, url.origin);
+      return env.ASSETS.fetch(new Request(assetUrl, request));
+    }
+
     if (host === "miercoles.zaurio.es") {
       folder = "/miercoles.zaurio.es";
     } else if (host === "secretos.zaurio.es") {

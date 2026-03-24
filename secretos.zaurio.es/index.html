@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>El Confesionario</title>
-  <link rel="icon" href="https://miercoles.zaurio.es/assets/favicon-32x32.png">
+  <link rel="icon" href="/shared/assets/brand/favicon-32x32.png">
+  <link rel="stylesheet" href="/shared/css/zaurio-ui.css">
 
   <style>
     :root{
@@ -785,23 +786,23 @@
     }
   </style>
 </head>
-<body>
+<body data-zaurio-nav="secretos" data-zaurio-cta-id="composeBtn" data-zaurio-cta-title="Escribir confesion">
   <div class="wrap">
 
     <div class="topMenu">
       <div class="menuLeft">
         <a class="menuLogoLink" href="https://zaurio.es" aria-label="Zaurio">
-          <img class="menuLogo zaurio" src="https://miercoles.zaurio.es/assets/favicon-32x32.png" alt="Zaurio">
+          <img class="menuLogo zaurio" src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
         </a>
       </div>
 
       <div class="menuCenter">
         <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles">
-          <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/miercoles.png" alt="Miércoles">
+          <img class="menuLogo miercoles" src="/shared/assets/brand/miercoles.png" alt="Miércoles">
         </a>
 
         <a class="menuLogoLink active" href="https://secretos.zaurio.es" aria-label="El Confesionario">
-          <img class="menuLogo confesion" src="https://miercoles.zaurio.es/assets/confesion.png" alt="El Confesionario">
+          <img class="menuLogo confesion" src="/shared/assets/brand/confesion.png" alt="El Confesionario">
         </a>
       </div>
 
@@ -816,7 +817,7 @@
     </div>
 
     <section class="pageIntro">
-      <img class="logo" src="https://miercoles.zaurio.es/assets/confesionario.png" alt="El Confesionario">
+      <img class="logo" src="/shared/assets/brand/confesionario.png" alt="El Confesionario">
       <p class="sub">Envía tu confesión y espera a que sea aprobada para aparecer publicada.</p>
     </section>
 
@@ -910,13 +911,14 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/shared/js/zaurio-nav.js"></script>
   <script src="./supabase.js"></script>
   <script>
     const ASSET = {
-      fire: "https://miercoles.zaurio.es/assets/fire.png",
-      heart: "https://miercoles.zaurio.es/assets/heart.png",
-      fear: "https://miercoles.zaurio.es/assets/fear.png",
-      sob: "https://miercoles.zaurio.es/assets/sob.png"
+      fire: "/shared/assets/brand/fire.png",
+      heart: "/shared/assets/brand/heart.png",
+      fear: "/shared/assets/brand/fear.png",
+      sob: "/shared/assets/brand/sob.png"
     };
 
     const btnHombre = document.getElementById("btnHombre");

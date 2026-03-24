@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DineroZaurio · Base estable</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="icon" href="/shared/assets/brand/favicon.ico" />
+  <link rel="stylesheet" href="/shared/css/zaurio-ui.css">
   <style>
     :root{
       --bg1:#2a0046;
@@ -215,20 +217,20 @@
     @media (max-width:1100px){.grid-2,.summary,.forecast-toolbar,.modalGrid{grid-template-columns:1fr}}
   </style>
 </head>
-<body>
+<body data-zaurio-nav="herramientas">
   <div class="wrap">
     <div class="topMenu">
       <div class="menuLeft">
         <a class="menuLogoLink" href="https://zaurio.es" aria-label="Zaurio">
-          <img class="menuLogo zaurio" src="https://miercoles.zaurio.es/assets/favicon-32x32.png" alt="Zaurio">
+          <img class="menuLogo zaurio" src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
         </a>
       </div>
       <div class="menuCenter">
         <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles">
-          <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/miercoles.png" alt="Miércoles">
+          <img class="menuLogo miercoles" src="/shared/assets/brand/miercoles.png" alt="Miércoles">
         </a>
         <a class="menuLogoLink" href="https://secretos.zaurio.es" aria-label="Secretos">
-          <img class="menuLogo confesion" src="https://miercoles.zaurio.es/assets/confesion.png" alt="Secretos">
+          <img class="menuLogo confesion" src="/shared/assets/brand/confesion.png" alt="Secretos">
         </a>
         <div class="menuLogoLink herramientasWrap" aria-label="Herramientas">
           <a class="herramientasMainLink" id="herramientasMainLink" href="https://herramientas.zaurio.es/" aria-label="Herramientas">
@@ -248,7 +250,7 @@
 
   <div class="page">
     <section id="authGate" class="centerGate">
-      <img src="../assets/dinerozaurio.png" alt="DineroZaurio" class="logo-main" />
+      <img src="/shared/assets/apps/dinerozaurio.png" alt="DineroZaurio" class="logo-main" />
       <h1>DineroZaurio</h1>
       <p class="muted">Accede con Google para continuar con tu planificación financiera.</p>
       <div class="btnRow" style="margin-top:18px">
@@ -2148,5 +2150,6 @@
     window.state = state;
     start();
   </script>
+  <script src="/shared/js/zaurio-nav.js"></script>
 </body>
 </html>

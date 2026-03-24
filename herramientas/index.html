@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Herramientas · Zaurio</title>
+  <link rel="icon" href="/shared/assets/brand/favicon.ico" />
+  <link rel="stylesheet" href="/shared/css/zaurio-ui.css">
 
   <style>
     :root{
@@ -147,22 +149,22 @@
   </style>
 </head>
 
-<body>
+<body data-zaurio-nav="herramientas">
 
       <!-- Barra superior con iconos al estilo Miércoles/Secretos -->
       <div class="wrap">
         <div class="topMenu">
           <div class="menuLeft">
             <a class="menuLogoLink" href="https://zaurio.es" aria-label="Zaurio">
-              <img class="menuLogo zaurio" src="https://miercoles.zaurio.es/assets/favicon-32x32.png" alt="Zaurio">
+              <img class="menuLogo zaurio" src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
             </a>
           </div>
           <div class="menuCenter">
             <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles">
-              <img class="menuLogo miercoles" src="https://miercoles.zaurio.es/assets/miercoles.png" alt="Miércoles">
+              <img class="menuLogo miercoles" src="/shared/assets/brand/miercoles.png" alt="Miércoles">
             </a>
             <a class="menuLogoLink" href="https://secretos.zaurio.es" aria-label="Secretos">
-              <img class="menuLogo confesion" src="https://miercoles.zaurio.es/assets/confesion.png" alt="Secretos">
+              <img class="menuLogo confesion" src="/shared/assets/brand/confesion.png" alt="Secretos">
             </a>
             <a class="menuLogoLink active" href="https://herramientas.zaurio.es" aria-label="Herramientas">
               <!-- Usamos la versión local del icono de Herramientas -->
@@ -186,7 +188,7 @@
       <div class="tool">
 
         <!-- Usamos la imagen local de DineroZaurio -->
-        <img src="./assets/dinerozaurio.png" alt="DineroZaurio">
+        <img src="/shared/assets/apps/dinerozaurio.png" alt="DineroZaurio">
 
         <div class="tool-info">
           <h2>DineroZaurio</h2>
@@ -198,5 +200,6 @@
 
   </div>
 
+  <script src="/shared/js/zaurio-nav.js"></script>
 </body>
 </html>
