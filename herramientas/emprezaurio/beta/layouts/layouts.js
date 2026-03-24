@@ -76,10 +76,10 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="2"] .chip-grid{top:136px;bottom:26px}
     .fancy[data-chip-count="3"] .hero,
     .fancy[data-chip-count="4"] .hero,
-    .fancy[data-chip-count="5"] .hero{min-height:268px}
+    .fancy[data-chip-count="5"] .hero{min-height:248px}
     .fancy[data-chip-count="3"] .chip-grid,
     .fancy[data-chip-count="4"] .chip-grid,
-    .fancy[data-chip-count="5"] .chip-grid{top:100px;bottom:24px}
+    .fancy[data-chip-count="5"] .chip-grid{top:96px;bottom:18px}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
