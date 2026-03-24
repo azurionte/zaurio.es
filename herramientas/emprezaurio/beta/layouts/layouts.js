@@ -218,7 +218,9 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     will-change:transform,opacity,border-radius;
     box-shadow:0 18px 44px rgba(0,0,0,.18);
   }
+  .layout-morph-ghost.layout-morph-hero{z-index:25000}
   .layout-morph-ghost.layout-morph-avatar{
+    z-index:25020;
     border-radius:999px;
     overflow:hidden;
   }
