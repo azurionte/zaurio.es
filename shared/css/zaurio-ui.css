@@ -11,6 +11,11 @@
   --zaurio-nav-shadow: 0 24px 60px rgba(0,0,0,.32);
 }
 
+[hidden],
+.topMenu[hidden]{
+  display:none !important;
+}
+
 [data-zaurio-nav]{
   display:block;
 }

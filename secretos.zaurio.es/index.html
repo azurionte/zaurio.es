@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -789,37 +789,9 @@
 <body data-zaurio-nav="secretos" data-zaurio-cta-id="composeBtn" data-zaurio-cta-title="Escribir confesion">
   <div data-zaurio-nav data-active="secretos" data-cta-id="composeBtn" data-cta-title="Escribir confesion"></div>
   <div class="wrap">
-
-    <div class="topMenu" hidden>
-      <div class="menuLeft">
-        <a class="menuLogoLink" href="https://zaurio.es" aria-label="Zaurio">
-          <img class="menuLogo zaurio" src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
-        </a>
-      </div>
-
-      <div class="menuCenter">
-        <a class="menuLogoLink" href="https://miercoles.zaurio.es" aria-label="Miércoles">
-          <img class="menuLogo miercoles" src="/shared/assets/brand/miercoles.png" alt="Miércoles">
-        </a>
-
-        <a class="menuLogoLink active" href="https://secretos.zaurio.es" aria-label="El Confesionario">
-          <img class="menuLogo confesion" src="/shared/assets/brand/confesion.png" alt="El Confesionario">
-        </a>
-      </div>
-
-      <div class="menuRight">
-        <button id="composeBtn" class="composeBtn" aria-label="Escribir confesión" title="Escribir confesión">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 20h9"/>
-            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <section class="pageIntro">
+<section class="pageIntro">
       <img class="logo" src="/shared/assets/brand/confesionario.png" alt="El Confesionario">
-      <p class="sub">Envía tu confesión y espera a que sea aprobada para aparecer publicada.</p>
+      <p class="sub">EnvÃ­a tu confesiÃ³n y espera a que sea aprobada para aparecer publicada.</p>
     </section>
 
     <section class="composer narrow" id="composer">
@@ -841,14 +813,14 @@
         </div>
 
         <div class="fieldGroup">
-          <div class="fieldLabel">Tu confesión</div>
-          <textarea id="texto" maxlength="700" placeholder="Cuenta tu secreto aquí..."></textarea>
+          <div class="fieldLabel">Tu confesiÃ³n</div>
+          <textarea id="texto" maxlength="700" placeholder="Cuenta tu secreto aquÃ­..."></textarea>
         </div>
 
         <div class="fieldGroup">
           <div class="actions">
             <div id="status" class="status"></div>
-            <button id="btnEnviar" class="btn btnPrimary">Enviar confesión</button>
+            <button id="btnEnviar" class="btn btnPrimary">Enviar confesiÃ³n</button>
           </div>
         </div>
       </div>
@@ -856,7 +828,7 @@
 
     <section class="feedWrap narrow">
       <section class="featured" id="featuredBox" style="display:none;">
-        <div class="featuredHead">🔥 Más reaccionado</div>
+        <div class="featuredHead">ðŸ”¥ MÃ¡s reaccionado</div>
         <div class="featuredBody" id="featuredBody"></div>
       </section>
 
@@ -864,8 +836,8 @@
         <h2 style="margin:0;font-size:26px;">Confesiones publicadas</h2>
         <div class="filters">
           <select id="sortSelect">
-            <option value="new" selected>Más recientes primero</option>
-            <option value="old">Más antiguos primero</option>
+            <option value="new" selected>MÃ¡s recientes primero</option>
+            <option value="old">MÃ¡s antiguos primero</option>
           </select>
 
           <div class="identityFilter" aria-label="Filtro de identidad">
@@ -877,10 +849,10 @@
 
           <select id="reactionFilter">
             <option value="all">Todas las reacciones</option>
-            <option value="fire">🔥 Fire</option>
-            <option value="heart">💖 Heart</option>
-            <option value="fear">😱 Fear</option>
-            <option value="sob">😭 Sob</option>
+            <option value="fire">ðŸ”¥ Fire</option>
+            <option value="heart">ðŸ’– Heart</option>
+            <option value="fear">ðŸ˜± Fear</option>
+            <option value="sob">ðŸ˜­ Sob</option>
           </select>
         </div>
       </div>
@@ -993,7 +965,7 @@
 
     function formatDate(iso){
       const d = new Date(iso);
-      return d.toLocaleDateString() + " · " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+      return d.toLocaleDateString() + " Â· " + d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
     }
 
     function votedMap(){
@@ -1043,9 +1015,9 @@
       return `
         <article class="secret ${tint}" id="secret-${s.numero_secreto}">
           <div class="secretMeta">
-            <span>#${s.numero_secreto ?? "—"}</span>
+            <span>#${s.numero_secreto ?? "â€”"}</span>
             <span class="identityChip ${chip}"></span>
-            <span>${s.edad} años</span>
+            <span>${s.edad} aÃ±os</span>
             <span>${formatDate(s.creado)}</span>
           </div>
 
@@ -1213,7 +1185,7 @@
         .insert([{ secreto_id: secretId, reaccion: reaction }]);
 
       if (error){
-        setStatus("❌ No se pudo registrar la reacción.", false);
+        setStatus("âŒ No se pudo registrar la reacciÃ³n.", false);
         return;
       }
 
@@ -1299,17 +1271,17 @@
         return;
       }
       if (!Number.isFinite(eNum) || eNum < 18 || eNum > 99){
-        setStatus("Pon una edad válida entre 18 y 99.", false);
+        setStatus("Pon una edad vÃ¡lida entre 18 y 99.", false);
         return;
       }
       if (t.length < 15){
-        setStatus("La confesión debe tener al menos 15 caracteres.", false);
+        setStatus("La confesiÃ³n debe tener al menos 15 caracteres.", false);
         return;
       }
 
       btnEnviar.disabled = true;
       btnEnviar.style.opacity = ".65";
-      setStatus("Enviando…", true);
+      setStatus("Enviandoâ€¦", true);
 
       const { error } = await supabaseClient
         .from("secretos")
@@ -1321,7 +1293,7 @@
         }]);
 
       if (error){
-        setStatus("❌ " + error.message, false);
+        setStatus("âŒ " + error.message, false);
         btnEnviar.disabled = false;
         btnEnviar.style.opacity = "1";
         return;
@@ -1330,7 +1302,7 @@
       texto.value = "";
       edad.value = "";
       setGenero("hombre");
-      setStatus("✅ Confesión enviada. Espera su aprobación.", true);
+      setStatus("âœ… ConfesiÃ³n enviada. Espera su aprobaciÃ³n.", true);
 
       btnEnviar.disabled = false;
       btnEnviar.style.opacity = "1";
@@ -1340,3 +1312,4 @@
   </script>
 </body>
 </html>
+
