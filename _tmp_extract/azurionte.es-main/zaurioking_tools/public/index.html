@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zaurioking Tools Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <style>
+    @media (min-aspect-ratio: 13/10) {
+      .controllers-row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 2rem !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      .controllers-row > * {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 1rem 0 !important;
+      }
+      .squircle {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 2rem 1rem 1.5rem 1rem !important;
+        border-radius: 24px !important;
+      }
+    }
+    @media (min-aspect-ratio: 9/7) {
+      .controllers-row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 2rem !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      .controllers-row > * {
+        max-width: 90% !important;
+        width: 90% !important;
+        margin: 1rem 0 !important;
+      }
+      .squircle {
+        max-width: 90% !important;
+        width: 90% !important;
+        margin: 0 !important;
+        padding: 2rem 1rem 1.5rem 1rem !important;
+        border-radius: 24px !important;
+      }
+    }
+    @media (max-aspect-ratio: 1/1) {
+      .controllers-row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      .controllers-row > * {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0.8rem 0 !important;
+      }
+      .squircle {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 1.5rem 1rem 1.2rem 1rem !important;
+        border-radius: 24px !important;
+      }
+    }
+    @media (min-aspect-ratio: 1/1) {
+      .controllers-row {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      .controllers-row > * {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0 !important;
+      }
+      .squircle {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 1.5rem 1rem 1.2rem 1rem !important;
+        border-radius: 24px !important;
+      }
+    }
+    @media (min-height: 700px) and (max-width: 1200px), (orientation: portrait) {
+      .controllers-row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      .controllers-row > * {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0.8rem 0 !important;
+      }
+      .squircle {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 1.5rem 1rem 1.2rem 1rem !important;
+        border-radius: 24px !important;
+      }
+    }
+    .modal {
+      min-height: calc(100vh - 64px);
+      margin: 32px auto 32px auto;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    @media (max-width: 600px), (max-height: 900px) {
+      .modal {
+        min-height: calc(100vh - 64px);
+        max-width: 98vw !important;
+        width: 98vw !important;
+        margin: 8px auto 8px auto !important;
+        border-radius: 32px !important;
+        padding: 1.2rem 0.5rem 1.2rem 0.5rem !important;
+        box-sizing: border-box !important;
+      }
+      .controllers-row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      .controllers-row > * {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0.8rem 0 !important;
+      }
+      .squircle {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 1.5rem 1rem 1.2rem 1rem !important;
+        border-radius: 24px !important;
+      }
+    }
+    @media (min-width: 601px) and (min-height: 901px) {
+      .controllers-row {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      .controllers-row > * {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0 !important;
+      }
+      .squircle {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 1.5rem 1rem 1.2rem 1rem !important;
+        border-radius: 24px !important;
+      }
+    }
+    @media (max-width: 600px), (max-height: 900px) {
+      .modal {
+        max-width: 420px !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        overflow-x: hidden !important;
+        border-radius: 32px !important;
+      }
+    }
+    @media (max-width: 600px), (max-height: 900px) {
+      .modal {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        padding: 2rem 1.2rem 2rem 1.2rem !important;
+      }
+      .controllers-row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      .controllers-row > * {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0.8rem 0 !important;
+      }
+      .squircle {
+        max-width: 340px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 1.5rem 1rem 1.2rem 1rem !important;
+        border-radius: 24px !important;
+      }
+    }
+    @media (max-width: 600px), (max-height: 900px) {
+      .modal {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+      }
+      .controllers-row {
+        padding: 0 !important;
+      }
+      .controllers-row > * {
+        max-width: 400px !important;
+        width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        margin-bottom: 1.2rem !important;
+      }
+      .squircle {
+        max-width: 400px !important;
+        width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding: 2rem 1rem 1.5rem 1rem !important;
+      }
+    }
+    @media (max-width: 600px), (max-height: 900px) {
+      .modal {
+        padding-left: 1.2rem !important;
+        padding-right: 1.2rem !important;
+      }
+      .controllers-row {
+        padding: 0.5rem 0 !important;
+      }
+      .controllers-row > * {
+        width: 95% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      .squircle {
+        width: 95% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+    }
+    @media (max-width: 600px), (max-height: 900px) {
+      .controllers-row {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1.5rem !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        padding: 0.5rem 0.5rem 0.5rem 0.5rem !important;
+        box-sizing: border-box !important;
+        background: none !important;
+      }
+      .controllers-row > * {
+        width: 100% !important;
+        margin: 0.5rem 0 !important;
+        border-radius: 24px !important;
+      }
+      .squircle {
+        max-width: 100% !important;
+        min-width: 0 !important;
+        border-radius: 24px !important;
+        margin: 0 !important;
+      }
+    }
+    @media (min-height: 900px) {
+      .modal {
+        padding: 5rem 2.5rem 3.5rem 2.5rem;
+      }
+      .modal-title {
+        font-size: 3.5rem;
+      }
+      .modal button, .modal input[type="text"] {
+        font-size: 2rem !important;
+        padding: 1.5rem 2.5rem;
+      }
+      .status-box {
+        font-size: 1.5rem;
+        padding: 1.2rem 0;
+      }
+    }
+    @media (min-height: 800px) {
+      .modal {
+        padding: 3.5rem 2rem 2.5rem 2rem;
+      }
+      .modal-title {
+        font-size: 3rem;
+      }
+      .modal button, .modal input[type="text"] {
+        font-size: 1.5rem !important;
+        padding: 1rem 2rem;
+      }
+    }
+    body {
+      margin: 0;
+      font-family: 'Orbitron', Arial, sans-serif;
+      background: linear-gradient(135deg, #1a0033 60%, #3a0066 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+    .modal {
+      background: rgba(40, 0, 60, 0.95);
+      border-radius: 32px;
+      box-shadow: 0 0 32px #a020f0cc;
+      padding: 2.2rem 1.2rem 1.5rem 1.2rem;
+      max-width: calc(100vw - 6px);
+      width: calc(100vw - 6px);
+      text-align: center;
+      position: relative;
+      margin: 0 3px 2rem 3px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 600px) {
+      .modal {
+        max-width: calc(100vw - 6px);
+        width: calc(100vw - 6px);
+        padding: 1.2rem 6px 1rem 6px;
+        border-radius: 18px;
+        margin: 0 3px 1rem 3px;
+      }
+      .modal-title {
+        font-size: 1.3rem;
+        margin-bottom: 0.7rem;
+      }
+      .status-box {
+        font-size: 0.95rem;
+        padding: 0.4rem 0;
+      }
+      input[type="text"], button {
+        font-size: 1rem !important;
+      }
+    }
+    @media (max-width: 420px) {
+      .modal {
+        padding: 0.7rem 6px 0.7rem 6px;
+        border-radius: 12px;
+        margin: 0 3px 1rem 3px;
+      }
+      .modal-title {
+        font-size: 1rem;
+      }
+    }
+    @media (max-height: 700px) {
+      .modal {
+        padding: 1rem 0.5rem 0.7rem 0.5rem;
+      }
+      .modal-title {
+        font-size: 1.1rem;
+      }
+    }
+    .modal-title {
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin-bottom: 1.2rem;
+      color: #ff00cc;
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px #ff00cc88;
+    }
+    .modal input[type="text"] {
+      font-size: 1.2rem;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      border: none;
+      margin-right: 0.5rem;
+      background: #2a0040;
+      color: #fff;
+      box-shadow: 0 0 8px #a020f088;
+    }
+    .modal button {
+      font-size: 1.1rem;
+      padding: 0.5rem 1.2rem;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(90deg, #ff00cc 60%, #a020f0 100%);
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 8px #ff00cc88;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: background 0.2s;
+    }
+    .modal button:hover {
+      background: linear-gradient(90deg, #a020f0 60%, #ff00cc 100%);
+    }
+    .status-box {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      background: rgba(30, 0, 50, 0.85);
+      color: #fff;
+      font-size: 1.1rem;
+      padding: 0.7rem 0;
+      text-align: center;
+      border-top: 2px solid #a020f0;
+      box-shadow: 0 -2px 16px #a020f088;
+      z-index: 100;
+    }
+    .status-label {
+      font-weight: bold;
+      color: #ff00cc;
+      margin-right: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="modal" id="adminModal" style="max-width:600px;margin:0 auto;position:relative;left:20px;">
+    <div class="modal-title">Zaurioking tools</div>
+    <button id="startServerBtn">Start server</button>
+    <div style="margin: 1.2rem 0 0.7rem 0;">
+      <input type="text" id="codeInput" value="1234" maxlength="8" />
+      <button id="enterCodeBtn">Entrar</button>
+    </div>
+  </div>
+  <div class="status-box" id="statusBox">
+    <span class="status-label">Server status:</span> <span id="serverStatus">Desconectado</span>
+    <span class="status-label">Session status:</span> <span id="sessionStatus">Sin sesión</span>
+  </div>
+  <script>
+    // Server status polling
+    document.getElementById('startServerBtn').onclick = function() {
+      document.getElementById('serverStatus').textContent = 'Conectando...';
+  console.log('Admin modal style:', document.getElementById('adminModal').style.cssText);
+  console.log('Modal should now be shifted right by 20px.');
+      setTimeout(() => {
+        document.getElementById('serverStatus').textContent = 'Conectado';
+      }, 1200);
+    };
+
+    document.getElementById('enterCodeBtn').onclick = function() {
+      const codeValue = document.getElementById('codeInput').value;
+      document.getElementById('sessionStatus').textContent = 'Sesión iniciada: ' + codeValue;
+      const adminModal = document.getElementById('adminModal');
+      if (adminModal) {
+        adminModal.parentNode.removeChild(adminModal);
+      }
+      showControllersModal(codeValue);
+    };
+
+    function showControllersModal() {
+      // Create modal container
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'controllersModal';
+      modal.style.maxWidth = '600px';
+      modal.style.margin = '0 auto';
+      modal.style.position = 'relative';
+      modal.style.left = '20px';
+      modal.innerHTML = `
+        <div class="modal-title" style="margin-bottom: 0.7rem;">Zaurioking tools</div>
+        <div style="font-size:1.1rem;font-weight:bold;margin-bottom:1.1rem;">Panel de control</div>
+        <div class="controllers-row">
+          <div class="squircle" style="background:rgba(160,32,240,0.18);border-radius:32px;padding:1rem 0.7rem 0.7rem 0.7rem;box-shadow:0 0 16px #a020f088;border:3px solid #a020f0;min-width:140px;flex:1;max-width:220px;display:flex;flex-direction:column;align-items:center;">
+            <div style="font-size:1rem;font-weight:bold;margin-bottom:0.5rem;text-align:center;">Challenge controller</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;width:100%;">
+              <button style="font-size:1.1rem;width:100%;margin-bottom:0.2rem;" id="jugadasBtn">+Jugadas</button>
+              <button style="font-size:1.1rem;width:100%;margin-bottom:0.2rem;" id="ganadasBtn">+Ganadas</button>
+              <button style="font-size:1.1rem;width:100%;margin-bottom:0.2rem;background:linear-gradient(90deg,#00fff7 60%,#a020f0 100%);color:#1a0033;" id="girarBtn">Girar</button>
+              <button style="font-size:1rem;width:100%;margin-bottom:0.2rem;background:linear-gradient(90deg,#ff0055 60%,#a020f0 100%);" id="resetBtn">Reiniciar datos</button>
+              <div style="margin-top:0.5rem;font-size:0.95rem;display:flex;flex-wrap:wrap;justify-content:center;gap:0.7rem;">
+                <span style="color:#ff00cc;font-weight:bold;">Jugadas:</span> <span id="jugadasStatus">0</span>
+                <span style="color:#00fff7;font-weight:bold;">Ganadas:</span> <span id="ganadasStatus">0</span>
+              </div>
+              <button style="margin-top:0.7rem;font-size:1rem;background:linear-gradient(90deg,#a020f0 60%,#ff00cc 100%);" id="editChallengesBtn">Editar retos</button>
+            </div>
+          </div>
+          <div class="squircle" style="background:rgba(0,255,247,0.13);border-radius:32px;padding:1rem 0.7rem 0.7rem 0.7rem;box-shadow:0 0 16px #00fff788;border:3px solid #00fff7;min-width:140px;flex:1;max-width:220px;display:flex;flex-direction:column;align-items:center;">
+            <div style="font-size:1rem;font-weight:bold;margin-bottom:0.5rem;text-align:center;">Countdown controller</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;width:100%;">
+              <input type="text" id="countdownInput" value="00:10:00" style="font-size:1.3rem;text-align:center;border-radius:16px;border:none;background:#1a0033;color:#00fff7;font-family:'Orbitron',Arial,sans-serif;box-shadow:0 0 8px #00fff788;width:100px;margin-bottom:0.5rem;" maxlength="8" />
+              <div style="display:flex;gap:0.5rem;width:100%;justify-content:center;">
+                <button style="font-size:1rem;background:linear-gradient(90deg,#00fff7 60%,#a020f0 100%);color:#1a0033;" id="startCountdownBtn">Start</button>
+                <button style="font-size:1rem;background:linear-gradient(90deg,#ff00cc 60%,#a020f0 100%);" id="stopCountdownBtn">Stop</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+  document.body.appendChild(modal);
+  console.log('Controllers modal style:', modal.style.cssText);
+  console.log('Controllers modal should now be shifted right by 20px.');
+
+      // Load socket.io client and wire up all actions
+  const socketScript = document.createElement('script');
+  socketScript.src = 'https://azurionte-es-1.onrender.com/socket.io/socket.io.js';
+  document.body.appendChild(socketScript);
+      socketScript.onload = () => {
+        const sessionId = arguments[0] || '1234';
+        const socket = io('https://azurionte-es-1.onrender.com');
+        let jugadas = 0;
+        let ganadas = 0;
+        let challenges = [
+          "Matar a pico a 2 jugadores en la misma partida",
+          "Solo puedes usar armas doradas",
+          "Gana una partida sin construir",
+          "Haz una eliminación con explosivos",
+          "Sobrevive 5 minutos sin armas",
+          "Consigue una victoria magistral",
+          "No puedes usar escudos",
+          "Solo puedes usar armas verdes",
+          "Haz una eliminación con vehículo",
+          "No puedes usar curaciones",
+          "Elimina a un enemigo con trampa",
+          "Haz una eliminación a larga distancia"
+        ];
+        let selectedChallenge = null;
+        let countdown = '00:00:00';
+
+        socket.emit('admin-join', { sessionId });
+
+        socket.on('session-state', state => {
+          challenges = state.challenges || challenges;
+          jugadas = state.jugadas || 0;
+          ganadas = state.ganadas || 0;
+          selectedChallenge = state.selectedChallenge;
+          countdown = state.countdown || '00:00:00';
+          document.getElementById('jugadasStatus').textContent = jugadas;
+          document.getElementById('ganadasStatus').textContent = ganadas;
+        });
+
+        document.getElementById('jugadasBtn').onclick = function() {
+          jugadas++;
+          document.getElementById('jugadasStatus').textContent = jugadas;
+          socket.emit('update-status', { sessionId, jugadas, ganadas });
+        };
+        document.getElementById('ganadasBtn').onclick = function() {
+          ganadas++;
+          document.getElementById('ganadasStatus').textContent = ganadas;
+          socket.emit('update-status', { sessionId, jugadas, ganadas });
+        };
+        document.getElementById('resetBtn').onclick = function() {
+          jugadas = 0;
+          ganadas = 0;
+          document.getElementById('jugadasStatus').textContent = jugadas;
+          document.getElementById('ganadasStatus').textContent = ganadas;
+          socket.emit('reset-status', { sessionId });
+        };
+        document.getElementById('girarBtn').onclick = function() {
+          socket.emit('spin-wheel', { sessionId });
+        };
+        document.getElementById('editChallengesBtn').onclick = function() {
+          showEditChallengesModal();
+        };
+
+        function showEditChallengesModal() {
+          // Modal overlay
+          const overlay = document.createElement('div');
+          overlay.style.position = 'fixed';
+          overlay.style.top = '0';
+          overlay.style.left = '0';
+          overlay.style.width = '100vw';
+          overlay.style.height = '100vh';
+          overlay.style.background = 'rgba(30,0,50,0.85)';
+          overlay.style.zIndex = '9999';
+          overlay.id = 'editChallengesOverlay';
+
+          // Modal content
+          const modal = document.createElement('div');
+          modal.className = 'modal';
+          modal.style.maxWidth = '520px';
+          modal.style.margin = '4rem auto';
+          modal.innerHTML = `<div class=\"modal-title\">Editar retos</div>
+            <div id=\"challengesList\" style=\"margin-bottom:1.2rem;text-align:left;\"></div>
+            <input type=\"text\" id=\"newChallengeInput\" placeholder=\"Nuevo reto...\" style=\"width:80%;font-size:1rem;margin-bottom:0.7rem;\" />
+            <button id=\"addChallengeBtn\" style=\"font-size:1rem;\">Añadir reto</button>
+            <button id=\"closeEditChallengesBtn\" style=\"font-size:1rem;margin-left:1.2rem;background:linear-gradient(90deg,#ff00cc 60%,#a020f0 100%);\">Cerrar</button>`;
+
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+
+          function renderChallenges() {
+            const list = document.getElementById('challengesList');
+            list.innerHTML = '';
+            challenges.forEach((ch, i) => {
+              list.innerHTML += `<div style='margin-bottom:0.5rem;display:flex;align-items:center;'><input type='text' value=\"${ch}\" style='width:70%;font-size:1rem;margin-right:0.7rem;' onchange='window.updateChallenge(${i}, this.value)' /><button onclick='window.deleteChallenge(${i})' style='font-size:0.9rem;background:#ff0055;color:#fff;border-radius:8px;border:none;padding:0.2rem 0.7rem;margin-right:0.5rem;'>Eliminar</button></div>`;
+            });
+          }
+
+          window.updateChallenge = function(idx, val) {
+            challenges[idx] = val;
+            socket.emit('update-challenges', { sessionId, challenges });
+          };
+          window.deleteChallenge = function(idx) {
+            challenges.splice(idx, 1);
+            renderChallenges();
+            socket.emit('update-challenges', { sessionId, challenges });
+          };
+
+          document.getElementById('addChallengeBtn').onclick = function() {
+            const val = document.getElementById('newChallengeInput').value.trim();
+            if (val) {
+              challenges.push(val);
+              document.getElementById('newChallengeInput').value = '';
+              renderChallenges();
+              socket.emit('update-challenges', { sessionId, challenges });
+            }
+          };
+          document.getElementById('closeEditChallengesBtn').onclick = function() {
+            document.body.removeChild(overlay);
+          };
+
+          renderChallenges();
+        }
+
+        // Countdown controller logic
+        let countdownInterval = null;
+        let countdownValue = '00:00:00';
+        const countdownInput = document.getElementById('countdownInput');
+        const startBtn = document.getElementById('startCountdownBtn');
+        const stopBtn = document.getElementById('stopCountdownBtn');
+
+        function parseCountdown(str) {
+          const parts = str.split(':').map(Number);
+          if (parts.length !== 3 || parts.some(isNaN)) return 0;
+          return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        }
+        function formatCountdown(sec) {
+          const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+          const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+          const s = String(sec % 60).padStart(2, '0');
+          return `${h}:${m}:${s}`;
+        }
+
+        startBtn.onclick = function() {
+          let seconds = parseCountdown(countdownInput.value);
+          if (seconds <= 0) return;
+          countdownInput.disabled = true;
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+          countdownInterval = setInterval(() => {
+            seconds--;
+            countdownInput.value = formatCountdown(seconds);
+            socket.emit('update-countdown', { sessionId, countdown: countdownInput.value });
+            if (seconds <= 0) {
+              clearInterval(countdownInterval);
+              countdownInterval = null;
+              countdownInput.disabled = false;
+              startBtn.disabled = false;
+              stopBtn.disabled = true;
+              countdownInput.value = '00:00:00';
+              socket.emit('update-countdown', { sessionId, countdown: '00:00:00' });
+            }
+          }, 1000);
+        };
+        stopBtn.onclick = function() {
+          if (countdownInterval) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+          }
+          countdownInput.disabled = false;
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        };
+        stopBtn.disabled = true;
+      };
+    }
+  </script>
+</body>
+</html>
