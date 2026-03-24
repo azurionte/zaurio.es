@@ -3,6 +3,7 @@ export default {
     const url = new URL(request.url);
     const host = url.hostname;
     let path = url.pathname;
+    const search = url.search;
 
     if (path === "/admin" || path === "/admin/" || path === "/admin.html") {
       if (host !== "zaurio.es") {
@@ -36,7 +37,23 @@ export default {
       return new Response("Host no reconocido", { status: 404 });
     }
 
-    const assetUrl = new URL(folder + path, url.origin);
-    return env.ASSETS.fetch(new Request(assetUrl, request));
+    const candidates = [];
+    const hasExtension = /\.[a-z0-9]+$/i.test(path.split("/").pop() || "");
+
+    candidates.push(folder + path);
+    if (!hasExtension) {
+      candidates.push(`${folder + path}.html`);
+      candidates.push(`${folder + path}/index.html`);
+    }
+
+    for (const candidate of candidates) {
+      const assetUrl = new URL(candidate + search, url.origin);
+      const response = await env.ASSETS.fetch(new Request(assetUrl, request));
+      if (response.status !== 404) {
+        return response;
+      }
+    }
+
+    return new Response("No encontrado", { status: 404 });
   }
 };
