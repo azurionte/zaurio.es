@@ -1,6 +1,6 @@
 // /resume/editor/editor.js
-// [editor.js] v1.7.0 - emprezaurio branding + stable preview/layout actions
-console.log('[editor.js] v1.7.0');
+// [editor.js] v1.8.0 - emprezaurio branding + mobile menu toggle
+console.log('[editor.js] v1.8.0');
 
 import { S, save } from '../app/state.js';
 import { morphTo } from '../layouts/layouts.js';
@@ -12,7 +12,7 @@ const A2 = { coral:'#ffd166', sea:'#38d2ff', city:'#9ca3af', magentaPurple:'#933
 export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCustomGradient }){
   const top = document.getElementById('topbar-root');
   top.innerHTML = `
-    <div class="nav">
+    <div class="nav" id="alphaNav">
       <div class="brand-suite">
         <a class="zaurio-link" href="/herramientas/" aria-label="Volver a Zaurio Herramientas">
           <img src="https://zaurio.es/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
@@ -24,8 +24,11 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
             <span class="brand-sub">alpha builder oficial</span>
           </span>
         </a>
+        <button class="menu-toggle" id="btnMobileMenu" aria-expanded="false" aria-label="Mostrar opciones">
+          <span class="menu-toggle-arrow" aria-hidden="true"></span>
+        </button>
       </div>
-      <div class="menu">
+      <div class="menu" id="alphaMenu">
         <div class="dropdown" id="ddFile">
           <button class="mbtn">Proyecto</button>
           <div class="dropdown-menu">
@@ -81,6 +84,29 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
     if (trigger) trigger.onclick = () => dd.classList.toggle('open');
   });
   document.addEventListener('click', e => dds.forEach(dd => { if(!dd.contains(e.target)) dd.classList.remove('open'); }));
+
+  const nav = top.querySelector('#alphaNav');
+  const menu = top.querySelector('#alphaMenu');
+  const menuToggle = top.querySelector('#btnMobileMenu');
+  const syncMobileMenu = () => {
+    const mobile = window.innerWidth <= 700;
+    if (!mobile) {
+      nav.classList.remove('menu-open');
+      menu.hidden = false;
+      menuToggle.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    const open = nav.classList.contains('menu-open');
+    menu.hidden = !open;
+    menuToggle.setAttribute('aria-expanded', String(open));
+  };
+  menuToggle.onclick = () => {
+    const open = nav.classList.toggle('menu-open');
+    menu.hidden = !open && window.innerWidth <= 700;
+    menuToggle.setAttribute('aria-expanded', String(open));
+  };
+  syncMobileMenu();
+  window.addEventListener('resize', syncMobileMenu, { passive: true });
 
   top.querySelector('#btnSave').onclick = () => {
     save();

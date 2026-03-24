@@ -12,6 +12,7 @@ const PAGE_WIDTH = 860;
 function syncCanvasScale(){
   const page = document.querySelector('.page');
   const sheet = document.getElementById('sheet');
+  const root = document.getElementById('canvas-root');
   if (!page || !sheet) return;
 
   if (window.innerWidth > 700){
@@ -19,17 +20,21 @@ function syncCanvasScale(){
     page.style.width = '';
     page.style.height = '';
     page.style.minHeight = '';
+    if (root) root.scrollLeft = 0;
     return;
   }
 
-  const availableWidth = Math.max(280, window.innerWidth - 20);
+  const availableWidth = Math.max(280, window.innerWidth - 8);
   const scale = Math.min(1, availableWidth / PAGE_WIDTH);
   const scaledHeight = Math.ceil(sheet.scrollHeight * scale);
+  const scaledWidth = Math.ceil(PAGE_WIDTH * scale);
 
   document.documentElement.style.setProperty('--mobile-canvas-scale', scale.toFixed(4));
-  page.style.width = `${Math.ceil(PAGE_WIDTH * scale)}px`;
+  page.style.width = `${scaledWidth}px`;
   page.style.height = `${scaledHeight}px`;
   page.style.minHeight = `${scaledHeight}px`;
+  page.style.margin = '0 auto';
+  if (root) root.scrollLeft = 0;
 }
 
 function mountCanvasScaleSync(){
