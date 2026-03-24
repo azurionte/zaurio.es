@@ -59,14 +59,17 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       justify-self:center;
     }
     .fancy{position:relative;padding-bottom:74px}
-    .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 112px;min-height:276px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+    .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 116px;min-height:304px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
     .fancy .hero .avatar{position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);z-index:4;width:124px;height:124px;border-width:4px}
-    .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3;width:min(100%,480px);padding:0 12px}
-    .fancy .chip-grid{position:absolute;left:26px;right:26px;bottom:28px;display:grid;grid-template-columns:minmax(0,1fr) 184px minmax(0,1fr);gap:8px;align-items:end;pointer-events:none}
-    .fancy .chip-grid .chips{display:flex;flex-direction:column;gap:10px;min-width:0;pointer-events:auto}
-    .fancy .chip-grid [data-info-left]{grid-column:1;align-items:flex-end;justify-self:end;padding-right:4px}
-    .fancy .chip-grid [data-info-right]{grid-column:3;align-items:flex-start;justify-self:start;padding-left:4px}
-    .fancy .chip-grid .chip{width:min(100%,286px);max-width:286px;min-height:46px}
+    .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3;width:min(100%,520px);padding:0 12px}
+    .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:30px;display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:14px;align-items:start;pointer-events:none}
+    .fancy .chip-grid .chips{display:flex;min-width:0;pointer-events:auto}
+    .fancy .chip-grid [data-info-top]{grid-column:1 / 4;grid-row:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start;justify-items:center}
+    .fancy .chip-grid [data-info-left]{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-end;justify-self:end}
+    .fancy .chip-grid [data-info-right]{grid-column:3;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-start;justify-self:start}
+    .fancy .chip-grid [data-info-top] > .chip,
+    .fancy .chip-grid [data-info-left] > .chip,
+    .fancy .chip-grid [data-info-right] > .chip{width:min(100%,286px);max-width:286px;min-height:46px}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
@@ -368,8 +371,9 @@ const CONTACT_FIELDS = {
   phone: { icon:'fa-solid fa-phone', placeholder:'+34 600 123 456', wrap:false },
   phone2: { icon:'fa-solid fa-phone', placeholder:'+34 611 222 333', wrap:false },
   email: { icon:'fa-solid fa-envelope', placeholder:'tu@correo.com', wrap:false },
-  address: { icon:'fa-solid fa-location-dot', placeholder:'Madrid, Espana', wrap:true },
-  linkedin: { icon:'fa-brands fa-linkedin', placeholder:'tu-handle', wrap:true }
+  idDoc: { icon:'fa-regular fa-id-card', placeholder:'DNI 12345678Z', wrap:false },
+  address: { icon:'fa-solid fa-location-dot', placeholder:'Madrid, Espana', wrap:false },
+  linkedin: { icon:'fa-brands fa-linkedin', placeholder:'tu-handle', wrap:false }
 };
 
 function fitAvatarPlacement(img, size, avatarState){
@@ -652,7 +656,7 @@ function resolveContactSlot(requestedKey, contact = S.contact || {}){
 function getAvailableContactActions(contact = S.contact || {}){
   const actions = [];
   if (!contact.phone || !contact.phone2) actions.push('phone');
-  ['email', 'address', 'linkedin'].forEach(key => {
+  ['email', 'idDoc', 'address', 'linkedin'].forEach(key => {
     if (!contact[key]) actions.push(key);
   });
   return actions;
@@ -758,12 +762,48 @@ function setChips(containers, items){
   if (!items.length) return;
   if (containers.length === 1){
     items.forEach(it => containers[0].appendChild(it));
-  } else {
-    items.forEach((it,i)=> {
-      const target = i < 3 ? containers[0] : containers[1];
-      target.appendChild(it);
-    });
+    return;
   }
+  if (containers.length === 2){
+    const [left, right] = containers;
+    if (items.length <= 3){
+      items.forEach((it, i)=> (i % 2 === 0 ? left : right).appendChild(it));
+    } else {
+      items.forEach((it,i)=> {
+        const target = i < 3 ? left : right;
+        target.appendChild(it);
+      });
+    }
+    return;
+  }
+
+  const [top, left, right] = containers;
+  const total = items.length;
+  let topCount = 0;
+  if (total === 3) topCount = 1;
+  else if (total >= 4) topCount = 3;
+
+  const topItems = items.slice(0, topCount);
+  const lowerItems = items.slice(topCount);
+  topItems.forEach(it => top.appendChild(it));
+
+  if (lowerItems.length === 1){
+    left.appendChild(lowerItems[0]);
+    return;
+  }
+  if (lowerItems.length === 2){
+    left.appendChild(lowerItems[0]);
+    right.appendChild(lowerItems[1]);
+    return;
+  }
+  if (lowerItems.length === 3){
+    left.appendChild(lowerItems[0]);
+    left.appendChild(lowerItems[1]);
+    right.appendChild(lowerItems[2]);
+    return;
+  }
+
+  lowerItems.forEach((it, i)=> (i % 2 === 0 ? left : right).appendChild(it));
 }
 
 // chip add menu: opens a small pop with icons to add phone/email/address/linkedin
@@ -774,6 +814,7 @@ function openChipMenu(anchor){
     const html = `<div class="pill">`+
       `<button class="sq-btn" data-k="phone" title="Phone"><i class='fa-solid fa-phone' style='color:#fff'></i></button>`+
       `<button class="sq-btn" data-k="email" title="Email"><i class='fa-solid fa-envelope' style='color:#fff'></i></button>`+
+      `<button class="sq-btn" data-k="idDoc" title="Documento"><i class='fa-regular fa-id-card' style='color:#fff'></i></button>`+
       `<button class="sq-btn" data-k="address" title="Address"><i class='fa-solid fa-location-dot' style='color:#fff'></i></button>`+
       `<button class="sq-btn" data-k="linkedin" title="LinkedIn"><i class='fa-brands fa-linkedin' style='color:#fff'></i></button>`+
     `</div>`;
@@ -858,6 +899,7 @@ export function applyContact(){
   });
 
   const holders=[ head.querySelector('[data-info]'),
+                  head.querySelector('[data-info-top]'),
                   head.querySelector('[data-info-left]'),
                   head.querySelector('[data-info-right]') ].filter(Boolean);
   setChips(holders, items);
@@ -929,7 +971,7 @@ function buildHeader(kind){
             <input type="file" accept="image/*">
           </label>
           <h1 class="name" contenteditable>YOUR NAME</h1>
-          <div class="chip-grid"><div class="chips" data-info-left></div><div class="chips" data-info-right></div></div>
+          <div class="chip-grid"><div class="chips" data-info-top></div><div class="chips" data-info-left></div><div class="chips" data-info-right></div></div>
           <button id="chipAddBtn" title="Add contact" class="add-dot">+</button>
         </div>
         <div class="below"></div>
