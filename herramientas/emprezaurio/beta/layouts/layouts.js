@@ -1094,6 +1094,16 @@ function animateFadeTargets(targets, keyframes, options){
 }
 
 export function morphTo(kind){
+  const currentKind =
+    S.layout === 'side' ? 'header-side' :
+    S.layout === 'fancy' ? 'header-fancy' :
+    S.layout === 'top' ? 'header-top' :
+    null;
+  if (currentKind === kind && getHeaderNodeWrapper()){
+    normalizeCanvasForCurrentLayout({ showAdd: true });
+    return;
+  }
+
   const oldWrap=getHeaderNodeWrapper();
   const oldHeader = oldWrap?.querySelector('[data-header]');
   const oldHero = getHeroPiece(oldWrap);
