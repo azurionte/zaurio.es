@@ -28,6 +28,13 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .sidebar-layout .rail{
       background:linear-gradient(180deg,var(--accent2),var(--accent));border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;min-height:920px;position:relative
     }
+    .sidebar-layout .rail-hero{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+      width:100%;
+    }
     .sidebar-layout [data-zone="main"]{
   display:grid;grid-template-columns: repeat(12,minmax(0,1fr));gap:16px;align-content:start;min-width:0;
   justify-items:stretch; align-items:start; /* ensure children stretch to full column width */
@@ -47,7 +54,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy .chip-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin-top:12px}
 
     /* Avatar + chips */
-    .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px}
+    .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
     .avatar input{display:none}
     .avatar[data-empty="1"]::after{content:'+';position:absolute;inset:0;display:grid;place-items:center;color:#111;font-weight:900;font-size:30px;background:rgba(255,255,255,.6)}
 
@@ -322,6 +329,7 @@ function initAvatars(root){
     canvas.style.height = '100%';
     canvas.style.display = 'block';
     canvas.style.borderRadius = '50%';
+    canvas.style.aspectRatio = '1 / 1';
     w.appendChild(canvas);
     if (S.avatar) drawAvatarInto(canvas, S.avatar);
 
@@ -595,13 +603,15 @@ function buildHeader(kind){
     node.innerHTML=`
       <div class="sidebar-layout" data-header data-hero="side">
         <div class="rail">
-          <label class="avatar" data-avatar data-empty="1"><input type="file" accept="image/*"></label>
-          <div class="name-block">
-            <h2 class="name" contenteditable>YOUR NAME</h2>
-          </div>
-          <div class="chip-wrap">
-            <div class="chips" data-info></div>
-            <button id="chipAddBtn" title="Add contact" class="add-dot">+</button>
+          <div class="rail-hero" data-hero-piece>
+            <label class="avatar" data-avatar data-empty="1"><input type="file" accept="image/*"></label>
+            <div class="name-block">
+              <h2 class="name" contenteditable>YOUR NAME</h2>
+            </div>
+            <div class="chip-wrap">
+              <div class="chips" data-info></div>
+              <button id="chipAddBtn" title="Add contact" class="add-dot">+</button>
+            </div>
           </div>
           <div class="sec-holder" data-rail-sections></div>
         </div>
@@ -707,7 +717,7 @@ export function normalizeCanvasForCurrentLayout({ showAdd } = {}){
 
 function getHeroPiece(wrapper){
   if (!wrapper) return null;
-  return wrapper.querySelector('.sidebar-layout .rail, .fancy .hero, .topbar');
+  return wrapper.querySelector('[data-hero-piece], .fancy .hero, .topbar');
 }
 
 function getAvatarPiece(wrapper){
