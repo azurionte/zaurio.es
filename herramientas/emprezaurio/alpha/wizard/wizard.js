@@ -1,6 +1,6 @@
 // /resume/wizard/wizard.js
-// [wizard.js] v2.14.0 — wizard with reliable layout morph + mobile overlay polish
-console.log('[wizard.js] v2.14.0');
+// [wizard.js] v2.15.0 — wizard with reliable layout morph + stronger mobile polish
+console.log('[wizard.js] v2.15.0');
 
 import { S, setTheme, setDark, setMaterial } from '../app/state.js';
 import { morphTo, getHeaderNode, applyContact } from '../layouts/layouts.js';
@@ -21,12 +21,17 @@ import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/module
     #wizard .step.on{color:#e8ecff;background:#131a31}
     #wizard .step .dot{width:8px;height:8px;border-radius:50%;background:#2e3b66}
     #wizard .wiz-right{padding:20px 22px;display:flex;flex-direction:column;min-height:480px}
-    #wizard #wizBody{flex:1}
-    #wizard .navline{display:flex;gap:10px;justify-content:flex-end}
+    #wizard #wizBody{flex:1;min-height:0;overflow:auto;padding-right:2px}
+    #wizard .navline{display:flex;gap:10px;justify-content:flex-end;padding-top:14px;margin-top:14px;border-top:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(15,20,32,0),rgba(15,20,32,.96) 28%)}
     #wizard .mbtn{appearance:none;background:#0c1328;border:1px solid #243057;color:#e6e8ff;border-radius:10px;padding:8px 12px;cursor:pointer}
     #wizard .mbtn.primary{background:linear-gradient(135deg,var(--accent2,#c084fc),var(--accent,#f472b6));color:#111;border:none}
     #wizard .wtitle{font-weight:900;font-size:18px;margin-bottom:8px}
     #wizard .wsub{opacity:.8;margin-bottom:10px}
+    #wizard .wipt{background:#0c1328;color:#e7ebff;border:1px solid #243057;border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+    #wizard .wiz-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    #wizard .wiz-form-grid .full{grid-column:1/-1}
+    #wizard .wiz-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    #wizard .mock-row{display:grid;gap:22px;justify-items:start}
 
     /* header mocks (unchanged look) */
     #wizard .wz-mock{width:450px;height:158px;position:relative;cursor:pointer;margin:8px 0;border-radius:18px;transition:transform .15s ease, box-shadow .15s ease, outline .15s ease}
@@ -110,11 +115,18 @@ import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/module
       #wizard .wiz-right{
         min-height:0;
         padding:16px 14px;
-        overflow:auto;
+        overflow:hidden;
+      }
+      #wizard #wizBody{
+        padding-right:0;
       }
       #wizard .navline{
         flex-wrap:wrap;
         justify-content:stretch;
+        position:sticky;
+        bottom:0;
+        margin:12px -14px -16px;
+        padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
       }
       #wizard .navline .mbtn{
         flex:1 1 calc(50% - 5px);
@@ -127,6 +139,9 @@ import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/module
       }
       #wizard .theme-row{
         grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+      #wizard .mock-row{
+        justify-items:center;
       }
       #wizard .wz-mock{
         width:100%;
@@ -184,8 +199,39 @@ import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/module
       #wizard .wiz-grid2{
         grid-template-columns:1fr;
       }
+      #wizard .wiz-form-grid{
+        grid-template-columns:1fr;
+      }
       #wizard .k-row{
         flex-wrap:wrap;
+      }
+      #wizard .wiz-mini .row{
+        grid-template-columns:1fr;
+        gap:8px;
+        padding:10px 12px;
+        background:#0f162a;
+        border:1px solid #243057;
+        border-radius:12px;
+      }
+      #wizard .wiz-mini .row .handle{
+        display:none;
+      }
+      #wizard .wiz-mini .row .stars{
+        justify-content:flex-start;
+      }
+      #wizard .wiz-mini .btns,
+      #wizard .wiz-actions{
+        display:grid;
+        grid-template-columns:1fr;
+      }
+      #wizard .wiz-mini .btns .mbtn,
+      #wizard .wiz-actions .mbtn{
+        width:100%;
+        min-height:42px;
+      }
+      #wizard .wiz-switch{
+        justify-content:space-between;
+        width:100%;
       }
       #wizard input.wipt,
       #wizard .wiz-pill{
@@ -363,11 +409,10 @@ function renderStep(){
     body.innerHTML = `
       <div class="wtitle">Choose your layout</div>
       <div class="wsub">Pick a starting header style.</div>
-      <div id="mockRow" style="display:grid;gap:22px">
+      <div id="mockRow" class="mock-row">
         ${mock('header-side')}
         ${mock('header-fancy')}
         ${mock('header-top')}
-      </div>
       </div>`;
     const row = body.querySelector('#mockRow');
     const current = (S.layout==='side')?'header-side':(S.layout==='fancy')?'header-fancy':(S.layout==='top')?'header-top':null;
@@ -412,16 +457,16 @@ function renderStep(){
     body.innerHTML = `
       <div class="wtitle">Profile data</div>
       <div class="wsub">Only filled fields will appear.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="wiz-form-grid">
         <input class="wipt" id="nm" placeholder="Full name" value="${S.contact?.name||''}">
         <input class="wipt" id="ph" placeholder="Phone" value="${S.contact?.phone||''}">
         <input class="wipt" id="em" placeholder="Email" value="${S.contact?.email||''}">
         <input class="wipt" id="ad" placeholder="City, Country" value="${S.contact?.address||''}">
-        <div style="grid-column:1/-1;display:flex;gap:8px;align-items:center">
+        <div class="full" style="display:flex;gap:8px;align-items:center">
           <span style="opacity:.7">linkedin.com/in/</span>
           <input class="wipt" id="ln" placeholder="username" style="flex:1" value="${S.contact?.linkedin||''}">
         </div>
-        <div style="grid-column:1/-1;display:flex;justify-content:flex-start">
+        <div class="full wiz-actions" style="justify-content:flex-start">
           <button class="mbtn" id="wizAddPhoto" type="button"><i class="fa-solid fa-camera"></i> Upload photo</button>
         </div>
       </div>`;
