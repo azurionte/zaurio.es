@@ -1,4 +1,3 @@
-// /resume/layouts/layouts.js
 // [layouts.js] v2.5.0 — canvas hosts + contact chips + rehome on morph
 console.log('[layouts.js] v2.5.19');
 
@@ -26,7 +25,17 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       width:100%;
     }
     .sidebar-layout .rail{
-      background:linear-gradient(180deg,var(--accent2),var(--accent));border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;min-height:920px;position:relative
+      background:linear-gradient(180deg,var(--accent2),var(--accent));border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;min-height:920px;position:relative;overflow:hidden
+    }
+    .sidebar-layout .rail::after{
+      content:"";
+      position:absolute;
+      left:0;right:0;bottom:0;
+      height:22%;
+      background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.16) 35%,rgba(255,255,255,0));
+      mix-blend-mode:soft-light;
+      pointer-events:none;
+      opacity:.8;
     }
     .sidebar-layout [data-zone="main"]{
   display:grid;grid-template-columns: repeat(12,minmax(0,1fr));gap:16px;align-content:start;min-width:0;
@@ -99,40 +108,17 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       #avatarEditor .ae-stage{width:min(100%,340px)}
     }
 
-  .chips{display:flex;flex-wrap:wrap;gap:12px}
-  .chip{display:flex;align-items:center;gap:10px;border-radius:999px;padding:8px 12px;border:1px solid rgba(0,0,0,.08);margin-bottom:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{display:flex;align-items:center;gap:10px;border-radius:999px;padding:8px 12px;border:1px solid rgba(0,0,0,.08);margin-bottom:0;min-width:0}
     .chip i{width:16px;text-align:center}
     .chip[contenteditable="true"]{outline:none}
-    /* constrain chip widths inside sidebar rail and truncate if needed */
-    .chips{max-width:calc(var(--rail,300px) - 36px)}
-    .chip span{display:inline-block;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .chip {
-      width: 280px !important;
-      min-height: 40px !important;
-      border-radius: 24px;
-      background: transparent;
-      display: flex;
-      align-items: center;
-      box-sizing: border-box;
-      margin-left: 0;
-      margin-right: 0;
-      position: relative;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    .chip[data-wrap="1"] span {
-      white-space: normal;
-      width: 260px;
-      max-width: 260px;
-      overflow-wrap: break-word;
-      word-break: break-word;
-      line-height: 1.25;
-      min-height: 1.25em;
-      max-height: 2.5em;
-      background: transparent;
-      padding: 0 8px;
-      display: block;
-      text-align: left;
+    .chip span{display:block;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chip[data-wrap="1"] span,
+    .chip .chip-input{
+      white-space:normal;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+      line-height:1.25;
     }
   /* scope text color to the sheet (canvas) only */
   #sheet{ color: #111 }
@@ -154,37 +140,61 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   .sidebar-layout .rail .name-block{ position:relative; width:100%; display:block; text-align:center }
   /* explicit wrapper for chips + add button to ensure the add button is centered */
   .sidebar-layout .rail .chip-wrap {
-    display: flex !important;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    box-sizing: border-box;
-    position: relative;
-    padding: 0 0 6px;
-    text-align: center;
+    display:flex !important;
+    flex-direction:column;
+    gap:10px;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    width:100% !important;
+    box-sizing:border-box;
+    position:relative;
+    padding:0 0 6px;
+    text-align:center;
   }
   .sidebar-layout .rail .chip-wrap .chips {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    width:100%;
+    max-width:100%;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    align-items:flex-start;
+  }
+  .sidebar-layout .rail .chip-wrap .chip{
+    flex:0 1 calc(50% - 5px);
+    max-width:calc(50% - 5px);
+    min-height:42px;
+    padding-right:28px;
+    justify-content:flex-start;
+    position:relative;
+    left:auto;
+    transform:none;
+    margin:0;
+  }
+  .sidebar-layout .rail .chip-wrap .chip[data-wrap="1"]{
+    flex-basis:100%;
+    max-width:100%;
+  }
+  .sidebar-layout .rail .chip-wrap .chip span,
+  .sidebar-layout .rail .chip-wrap .chip .chip-input{
+    width:100%;
+    max-width:100%;
+    text-align:left;
   }
   .sidebar-layout .rail .chip-wrap #chipAddBtn {
-    display: flex !important;
-    justify-content: center;
-    align-items: center;
-    margin: 8px 0 6px 0 !important;
-    left: auto !important;
-    right: auto !important;
-    transform: none !important;
-    position: static !important;
+    display:flex !important;
+    justify-content:center;
+    align-items:center;
+    margin:4px 0 6px 0 !important;
+    left:auto !important;
+    right:auto !important;
+    transform:none !important;
+    position:static !important;
   }
   /* place the add button in-flow after the chips so it naturally sits below the latest chip
     while remaining centered across the full rail width */
   /* In sidebar layout, chips are single-column (one per row) */
-  .sidebar-layout .rail .chips{ width:100%; display:flex; flex-direction:column; gap:8px }
+  .sidebar-layout .rail .chips{ width:100%; display:flex; flex-wrap:wrap; gap:10px }
   .sidebar-layout .rail #chipAddBtn{ display:block; margin:8px auto 6px; width:44px; height:44px; border-radius:12px; background:#0b1022 !important; color:#fff !important; border:0; box-shadow:0 8px 20px rgba(11,16,34,.28); font-weight:800; z-index:40 }
   .sidebar-layout .rail #chipAddBtn:hover{ filter:brightness(1.03) }
   /* prevent the browser "editing" container from showing an ugly border/outline */
@@ -356,6 +366,14 @@ function normalizeAvatarState(value){
 function getAvatarSource(value){
   return normalizeAvatarState(value)?.src || '';
 }
+
+const CONTACT_FIELDS = {
+  phone: { icon:'fa-solid fa-phone', placeholder:'+34 600 123 456', wrap:false },
+  phone2: { icon:'fa-solid fa-phone', placeholder:'+34 611 222 333', wrap:false },
+  email: { icon:'fa-solid fa-envelope', placeholder:'tu@correo.com', wrap:false },
+  address: { icon:'fa-solid fa-location-dot', placeholder:'Madrid, Espana', wrap:true },
+  linkedin: { icon:'fa-brands fa-linkedin', placeholder:'tu-handle', wrap:true }
+};
 
 function fitAvatarPlacement(img, size, avatarState){
   const state = normalizeAvatarState(avatarState) || { zoom:1, panX:0, panY:0 };
@@ -598,116 +616,124 @@ function initAvatars(root){
 }
 
 /* Chips + contact */
-function chip(icon, text){
-  const isDark = !!(S && S.dark);
+/* Chips + contact */
+function normalizeLinkedinHandle(value){
+  return String(value || '')
+    .trim()
+    .replace(/^(https?:\/\/)?(www\.)?linkedin\.com\/in\//i, '')
+    .replace(/^\/?in\//i, '')
+    .replace(/^@/, '')
+    .replace(/\/+$/, '');
+}
+
+function sanitizeContactValue(key, value){
+  const text = String(value || '').trim();
+  if (!text) return '';
+  if (key === 'linkedin') return normalizeLinkedinHandle(text);
+  return text;
+}
+
+function getDisplayedContactValue(key, value){
+  if (!value) return '';
+  return key === 'linkedin' ? `/in/${normalizeLinkedinHandle(value)}` : String(value);
+}
+
+function removeContactKey(key){
+  if (!S.contact) return;
+  S.contact[key] = '';
+  save();
+  applyContact();
+}
+
+function resolveContactSlot(requestedKey, contact = S.contact || {}){
+  if (requestedKey !== 'phone') return requestedKey;
+  if (!contact.phone) return 'phone';
+  if (!contact.phone2) return 'phone2';
+  return null;
+}
+
+function getAvailableContactActions(contact = S.contact || {}){
+  const actions = [];
+  if (!contact.phone || !contact.phone2) actions.push('phone');
+  ['email', 'address', 'linkedin'].forEach(key => {
+    if (!contact[key]) actions.push(key);
+  });
+  return actions;
+}
+
+function findChipEditableByKey(head, key){
+  return head?.querySelector(`.chip[data-key="${key}"] .chip-input, .chip[data-key="${key}"] .chip-text`) || null;
+}
+
+function chip(icon, text, key, { wrap = false } = {}){
   const el = document.createElement('div');
   el.className = 'chip';
-  el.innerHTML = `<i class="${icon}"></i><span></span><button class="chip-rm" title="Remove" aria-label="Remove contact" tabindex="-1" aria-hidden="true" role="button" contenteditable="false" style="margin-left:8px;border-radius:8px;padding:2px 6px">×</button>`;
+  el.dataset.key = key;
+  if (wrap) el.dataset.wrap = '1';
+  el.innerHTML = `<i class="${icon}"></i><span></span><button class="chip-rm" title="Remove" aria-label="Remove contact" tabindex="-1" role="button" contenteditable="false" style="margin-left:8px;border-radius:8px;padding:2px 6px">&times;</button>`;
   const rm = el.querySelector('.chip-rm');
-  rm.addEventListener('click', ()=>{
-    try{
-      const txt = el.textContent.trim();
-      if (S && S.contact){
-        ['phone','email','address','linkedin'].forEach(k=>{ if (S.contact[k] && txt.includes(S.contact[k])) S.contact[k]=''; });
-        save();
-      }
-      el.remove();
-      restyleContactChips();
-      try{ applyContact(); }catch(e){}
-    }catch(e){}
-  });
-  try{ rm.setAttribute('contenteditable','false'); rm.setAttribute('aria-hidden','true'); rm.setAttribute('tabindex','-1'); }catch(e){}
-  rm.addEventListener('keydown', (e)=>{ e.preventDefault(); e.stopPropagation(); });
+  rm.addEventListener('click', ()=> removeContactKey(key));
+  rm.addEventListener('keydown', e => { e.preventDefault(); e.stopPropagation(); });
+
   const span = el.querySelector('span');
+  const maxLength = wrap ? 52 : 38;
   let editable;
-  // Set wrap and key for address/linkedin chips
-  if (icon === 'fa fa-map-marker' || icon === 'fa fa-linkedin') {
-    el.dataset.wrap = '1';
-    el.dataset.key = icon === 'fa fa-map-marker' ? 'address' : 'linkedin';
-  }
-  if (el.dataset.wrap === '1') {
+  const persist = () => {
+    if (!S.contact) S.contact = {};
+    const raw = editable.tagName === 'INPUT' ? editable.value : editable.textContent;
+    S.contact[key] = sanitizeContactValue(key, raw);
+    save();
+  };
+
+  if (wrap) {
     editable = document.createElement('input');
     editable.type = 'text';
     editable.value = text;
-    editable.maxLength = 43;
+    editable.maxLength = maxLength;
     editable.className = 'chip-text chip-input';
-    let editable;
-    // Always set wrap/key for address/linkedin chips
-    if (icon === 'fa fa-map-marker') {
-      el.dataset.wrap = '1';
-      el.dataset.key = 'address';
-    } else if (icon === 'fa fa-linkedin') {
-      el.dataset.wrap = '1';
-      el.dataset.key = 'linkedin';
-    }
-    if (el.dataset.wrap === '1') {
-      // Always use input for address/linkedin
-      editable = document.createElement('input');
-      editable.type = 'text';
-      editable.value = text;
-      editable.maxLength = 43;
-      editable.className = 'chip-text chip-input';
-      editable.spellcheck = false;
-      editable.setAttribute('autocomplete', 'off');
-      editable.setAttribute('aria-label', 'Contact info');
-      editable.style.width = '100%';
-      editable.style.border = 'none';
-      editable.style.background = 'transparent';
-      editable.style.font = 'inherit';
-      editable.style.outline = 'none';
-      editable.style.padding = '0 8px';
-      editable.style.textAlign = 'left';
-      editable.style.lineHeight = '1.25';
-      editable.style.height = '40px';
-      span.innerHTML = '';
-      span.appendChild(editable);
-      // persist edits when the chip's input loses focus
-      editable.addEventListener('focusout', ()=>{
-        try{
-          const k = el.dataset.key;
-          if (!k) return;
-          const text = editable?.value?.trim() || '';
-          if (!S.contact) S.contact = {};
-          if (k === 'linkedin'){
-            S.contact[k] = text.replace(/^(https?:\/\/)?(www\.)?linkedin\.com\/in\//,'').replace(/^\/in\//,'');
-          } else {
-            S.contact[k] = text;
-          }
-          save();
-        }catch(e){}
-      });
-    } else {
-      editable = document.createElement('span');
-      editable.textContent = text;
-      editable.contentEditable = true;
-      editable.spellcheck = false;
-      editable.className = 'chip-text';
-      span.innerHTML = '';
-      span.appendChild(editable);
-      // persist edits when the chip's editable span loses focus
-      editable.addEventListener('focusout', ()=>{
-        try{
-          const k = el.dataset.key;
-          if (!k) return;
-          const text = editable?.textContent?.trim() || '';
-          if (!S.contact) S.contact = {};
-          if (k === 'linkedin'){
-            S.contact[k] = text.replace(/^(https?:\/\/)?(www\.)?linkedin\.com\/in\//,'').replace(/^\/in\//,'');
-          } else {
-            S.contact[k] = text;
-          }
-          save();
-        }catch(e){}
-      });
-    }
-    el.style.background='rgba(255,255,255,.10)'; el.style.border='1px solid #ffffff28'; el.style.backdropFilter='blur(6px)';
-    el.style.color=(['grayBlack','magentaPurple'].includes(S.theme)?'#fff':'#111');
-  } else if (isDark){
-    el.style.background='#0c1324'; el.style.border='1px solid #1f2a44'; el.style.color='#e6ecff';
+    editable.spellcheck = false;
+    editable.setAttribute('autocomplete', 'off');
+    editable.setAttribute('aria-label', 'Contact info');
+    editable.style.width = '100%';
+    editable.style.border = 'none';
+    editable.style.background = 'transparent';
+    editable.style.font = 'inherit';
+    editable.style.outline = 'none';
+    editable.style.padding = '0 8px';
+    editable.style.textAlign = 'left';
+    editable.style.lineHeight = '1.25';
+    editable.style.minHeight = '40px';
+    editable.addEventListener('focusout', ()=>{
+      persist();
+      if (!sanitizeContactValue(key, editable.value)) applyContact();
+    });
+    editable.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        editable.blur();
+      }
+    });
   } else {
-    el.style.background='#fff'; el.style.border='1px solid rgba(0,0,0,.08)'; el.style.color='#111';
+    editable = document.createElement('span');
+    editable.textContent = text;
+    editable.contentEditable = true;
+    editable.spellcheck = false;
+    editable.className = 'chip-text';
+    editable.addEventListener('focusout', ()=>{
+      persist();
+      if (!sanitizeContactValue(key, editable.textContent)) applyContact();
+    });
+    editable.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        editable.blur();
+      }
+    });
   }
-  const ic = el.querySelector('i'); if (ic) ic.style.color='var(--accent)';
+
+  span.innerHTML = '';
+  span.appendChild(editable);
+  styleOneChip(el);
   return el;
 }
 export function restyleContactChips(scope=document){
@@ -754,31 +780,42 @@ function openChipMenu(anchor){
     pop.innerHTML = html;
     document.body.appendChild(pop);
     pop.addEventListener('click', e=>{
-      const btn = e.target.closest('button'); const k = btn?.dataset.k; if(!k) return;
+      const btn = e.target.closest('button');
+      const k = btn?.dataset.k;
+      if(!k) return;
       S.contact = S.contact || {};
-      // only add if not already present
-      if (S.contact[k] && S.contact[k].trim()) { pop.classList.remove('open'); return; }
-  // store only the linkedin handle and render as "/in/handle" when displayed
-  const placeholder = (k==='linkedin') ? 'your-handle' : (k==='phone'?'+1 555 555 5555': (k==='email'?'you@domain.com':'Your address'));
-      S.contact[k] = placeholder;
+      const slotKey = resolveContactSlot(k, S.contact);
+      if (!slotKey) {
+        pop.classList.remove('open');
+        return;
+      }
+      S.contact[slotKey] = CONTACT_FIELDS[slotKey]?.placeholder || '';
       save();
       applyContact();
-      // focus the new chip's editable span after a tick and place caret at end
       Promise.resolve().then(()=>{
         const head=getHeaderNode(); if(!head) return;
-        const chips = head.querySelectorAll('.chip');
-        const last = chips[chips.length-1];
-        if(last){
-          const sp = last.querySelector('span[contenteditable]');
-          if (sp){ sp.focus(); const range = document.createRange(); range.selectNodeContents(sp); range.collapse(false); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); }
+        const target = findChipEditableByKey(head, slotKey);
+        if(target){
+          target.focus();
+          if (target.tagName === 'INPUT') {
+            target.setSelectionRange?.(0, target.value.length);
+          } else {
+            const range = document.createRange();
+            range.selectNodeContents(target);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
         }
       });
       pop.classList.remove('open');
     });
   }
-  // hide used ones
-  const used = Object.keys(S.contact||{}).filter(k=> !!S.contact[k]);
-  pop.querySelectorAll('.sq-btn').forEach(b=>{ const k=b.dataset.k; if(used.indexOf(k)!==-1) b.classList.add('hidden'); else b.classList.remove('hidden'); });
+  const available = new Set(getAvailableContactActions(S.contact || {}));
+  pop.querySelectorAll('.sq-btn').forEach(btn => {
+    btn.classList.toggle('hidden', !available.has(btn.dataset.k));
+  });
   const r = anchor.getBoundingClientRect();
   pop.style.left = `${Math.round(r.left + (r.width/2))}px`;
   pop.style.top  = `${Math.round(r.top  - 12)}px`;
@@ -789,26 +826,27 @@ export function applyContact(){
   const head=getHeaderNode(); if(!head) return;
   const nm=head.querySelector('.name'); if(nm) nm.textContent=S?.contact?.name||'YOUR NAME';
 
-  const c=S.contact||{}; const items=[];
-  if(c.phone){ const el=chip('fa-solid fa-phone', c.phone); if (el) { el.dataset.key='phone'; el.title=c.phone; items.push(el); } }
-  if(c.email){ const el=chip('fa-solid fa-envelope', c.email); if (el) { el.dataset.key='email'; el.title=c.email; items.push(el); } }
-  if(c.address){ const el=chip('fa-solid fa-location-dot', c.address); if (el) { el.dataset.key='address'; el.dataset.wrap='1'; el.title=c.address; items.push(el); } }
-  if(c.linkedin){ const el=chip('fa-brands fa-linkedin','/in/'+c.linkedin); if (el) { el.dataset.key='linkedin'; el.dataset.wrap='1'; el.title='/in/'+c.linkedin; items.push(el); } }
+  const c=S.contact||{};
+  const items=[];
+  ['phone', 'phone2', 'email', 'address', 'linkedin'].forEach(key => {
+    const value = sanitizeContactValue(key, c[key]);
+    if (!value) return;
+    const field = CONTACT_FIELDS[key];
+    const display = getDisplayedContactValue(key, value);
+    const el = chip(field.icon, display, key, { wrap: !!field.wrap });
+    el.title = display;
+    items.push(el);
+  });
 
   const holders=[ head.querySelector('[data-info]'),
                   head.querySelector('[data-info-left]'),
                   head.querySelector('[data-info-right]') ].filter(Boolean);
   setChips(holders, items);
   restyleContactChips();
-  // show/hide the add button: hide when all supported contact slots are used
   try{
-    const allKeys = ['phone','email','address','linkedin'];
-    const used = allKeys.filter(k=> !!(S.contact && S.contact[k] && S.contact[k].trim()));
-  let btn = head.querySelector('#chipAddBtn');
-    const allUsed = (used.length === allKeys.length);
+    const availableActions = getAvailableContactActions(c);
     let addBtn = head.querySelector('#chipAddBtn');
-    // If not all chips are present, ensure button exists
-    if (!allUsed) {
+    if (availableActions.length) {
       if (!addBtn) {
         addBtn = document.createElement('button');
         addBtn.id = 'chipAddBtn';
@@ -833,16 +871,14 @@ export function applyContact(){
         addBtn.style.margin = '';
         addBtn.style.display = 'block';
       }catch(e){}
-      addBtn.onclick = function(e){
+      addBtn.onclick = function(){
         openChipMenu(addBtn);
       };
     } else if (addBtn && addBtn.parentElement) {
-      // Remove button from DOM if all chips are present
       addBtn.parentElement.removeChild(addBtn);
     }
   }catch(e){}
 }
-
 /* Build headers + morph */
 function buildHeader(kind){
   const node=document.createElement('div');
