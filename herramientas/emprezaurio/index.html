@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emprezaurio · Herramientas</title>
+  <meta name="description" content="Emprezaurio será la herramienta de Zaurio para ordenar ideas, proyectos y el lado negocio sin perder personalidad." />
+  <link rel="icon" href="/shared/assets/brand/favicon.ico" />
+  <link rel="stylesheet" href="/shared/css/zaurio-ui.css" />
+  <style>
+    :root{
+      --bg-1:#12031c;
+      --bg-2:#220635;
+      --bg-3:#06040b;
+      --stroke:rgba(255,255,255,.12);
+      --text:#fff8fb;
+      --muted:rgba(255,255,255,.7);
+      --gold:#ffd447;
+      --mint:#7affbe;
+      --cyan:#86efff;
+      --radius:32px;
+      --shadow:0 30px 80px rgba(0,0,0,.36);
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      min-height:100%;
+      background:
+        radial-gradient(circle at 16% 16%, rgba(122,255,190,.12), transparent 28%),
+        radial-gradient(circle at 82% 12%, rgba(255,212,71,.12), transparent 24%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2) 36%, var(--bg-3));
+      color:var(--text);
+      font-family:"Space Grotesk", "Segoe UI", sans-serif;
+    }
+
+    .page{
+      width:min(980px,94vw);
+      margin:0 auto 72px;
+    }
+
+    .hero{
+      border:1px solid var(--stroke);
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(39,14,56,.94), rgba(18,8,27,.92));
+      box-shadow:var(--shadow);
+      padding:32px 34px;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.1);
+      color:var(--mint);
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:800;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:190px minmax(0, 1fr);
+      gap:22px 28px;
+      align-items:center;
+      margin-top:18px;
+    }
+
+    .hero-mark{
+      width:190px;
+      height:190px;
+      border-radius:32px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(135deg, rgba(122,255,190,.12), rgba(134,239,255,.08));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+
+    .hero-mark img{
+      width:142px;
+      height:142px;
+      object-fit:contain;
+      filter:drop-shadow(0 14px 24px rgba(0,0,0,.24));
+    }
+
+    h1,h2{
+      margin:0;
+      font-family:"Bricolage Grotesque", "Trebuchet MS", sans-serif;
+      line-height:1;
+    }
+
+    h1{
+      font-size:clamp(2rem, 4.2vw, 4rem);
+      letter-spacing:-.05em;
+      max-width:10ch;
+    }
+
+    .lead{
+      margin:16px 0 0;
+      color:var(--muted);
+      line-height:1.72;
+      max-width:58ch;
+      font-size:1rem;
+    }
+
+    .hero-actions{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:26px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:14px 20px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      font-weight:700;
+      text-decoration:none;
+      transition:transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .btn:hover{ transform:translateY(-2px); }
+
+    .btn.primary{
+      background:linear-gradient(135deg, var(--gold), #ffb87c);
+      color:#240b18;
+    }
+
+    .btn.secondary{
+      background:rgba(255,255,255,.05);
+      color:var(--text);
+    }
+
+    .grid{
+      margin-top:26px;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:16px;
+    }
+
+    .card{
+      padding:18px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.04);
+    }
+
+    .card h2{
+      font-size:1.3rem;
+    }
+
+    .card p{
+      margin:10px 0 0;
+      color:var(--muted);
+      line-height:1.55;
+    }
+
+    @media (max-width: 900px){
+      .hero-grid,
+      .grid{
+        grid-template-columns:1fr;
+      }
+
+      .hero-mark{
+        margin:0 auto;
+      }
+
+      h1{
+        max-width:none;
+      }
+    }
+  </style>
+</head>
+<body data-zaurio-nav="herramientas">
+  <div data-zaurio-nav data-active="herramientas"></div>
+
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">Proximamente</span>
+      <div class="hero-grid">
+        <div class="hero-mark" aria-hidden="true">
+          <img src="/shared/assets/brand/emprezaurio.png" alt="Emprezaurio">
+        </div>
+        <div>
+          <h1>Emprezaurio será el cerebro práctico del proyecto.</h1>
+          <p class="lead">Esta landing ya deja reservado su sitio. La idea es que aquí viva una herramienta para bajar ideas a tierra, estructurar proyectos, organizar tareas y que el lado negocio no dependa solo de la memoria, el caos o una libreta perdida.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="/herramientas/">Volver a Herramientas</a>
+            <a class="btn secondary" href="/dinerozaurio/">Ir a DineroZaurio</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <article class="card">
+          <h2>Ideas</h2>
+          <p>Un sitio para capturar ideas antes de que se esfumen o se mezclen entre veinte pestañas abiertas.</p>
+        </article>
+        <article class="card">
+          <h2>Proyecto</h2>
+          <p>Espacio para convertir intuiciones en algo ordenado: pasos, tareas, prioridades y foco real.</p>
+        </article>
+        <article class="card">
+          <h2>Negocio</h2>
+          <p>La parte seria del reino: estructura, planificación y claridad para que las ideas también se sostengan.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="/shared/js/zaurio-nav.js"></script>
+</body>
+</html>
