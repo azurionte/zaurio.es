@@ -126,6 +126,7 @@ export function mountWelcome(){
           <div style="opacity:.8">Start from scratch, arrange freely.</div>
         </div>
       </div>
+      <button class="wbtn" id="startDemo" type="button" style="appearance:none;border:1px solid #2b324b;border-radius:12px;padding:12px 16px;background:#12182a;color:#e6e8ef;font-weight:700">Demo resume</button>
     </div>`;
   document.body.appendChild(wrap);
   wrap.querySelector('#startWizard').addEventListener('click', ()=>{ wrap.style.display='none'; mountWizard(); openWizard(); });
@@ -133,6 +134,10 @@ export function mountWelcome(){
     wrap.remove();
     if (!getHeaderNode()) morphTo('header-side');
     document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
+  });
+  wrap.querySelector('#startDemo').addEventListener('click', ()=>{
+    wrap.remove();
+    loadDemoResume();
   });
 }
 
@@ -146,6 +151,7 @@ export function mountWizard(){
       <div class="wiz-right">
         <div id="wizBody"></div>
         <div class="navline">
+          <button class="mbtn" id="wizDemo" style="margin-right:auto" type="button">Demo resume</button>
           <button class="mbtn" id="wizStartOver" style="margin-right:auto;display:none" type="button">Start over</button>
           <button class="mbtn" id="wizBack" type="button">Back</button>
           <button class="mbtn" id="wizNext" type="button" style="background:linear-gradient(135deg,var(--accent2),var(--accent));color:#111;border:none">Next</button>
@@ -183,6 +189,7 @@ function buildWizard(){
     list.appendChild(el);
   });
   document.getElementById('wizBack').onclick = ()=>{ if(stepIdx>0){ stepIdx--; backCount++; renderStep(); } };
+  document.getElementById('wizDemo').onclick = ()=> loadDemoResume();
   document.getElementById('wizStartOver').onclick = ()=>{
     Object.assign(S,{ contact:{name:'',phone:'',email:'',address:'',linkedin:''} });
     W={ skills:[], addSkillsToRail:true, edu:[], exp:[], expDraft:{dates:'',role:'',org:'',desc:''}, bio:'' };
@@ -475,6 +482,65 @@ function advance(){
     return;
   }
   if (stepIdx < STEPS.length-1){ stepIdx++; renderStep(); }
+}
+
+function clearCanvasSections(){
+  Array.from(document.querySelectorAll('.node'))
+    .filter(n => n.querySelector && n.querySelector('.section') && !n.hasAttribute('data-locked'))
+    .forEach(n => n.remove());
+}
+
+function loadDemoResume(){
+  clearCanvasSections();
+
+  setTheme('sea');
+  setDark(false);
+  setMaterial('paper');
+  morphTo('header-top');
+
+  S.contact = {
+    name: 'Maximiliano Robles',
+    phone: '+34 600 123 456',
+    email: 'maxi@emprezaurio.dev',
+    address: 'Madrid, España',
+    linkedin: 'maximilianorobles'
+  };
+  S.avatar = 'https://zaurio.es/shared/assets/brand/zaurio-portrait.png';
+  S.skillsInSidebar = false;
+  S.skills = [
+    { type:'star', label:'Product strategy', stars:4 },
+    { type:'slider', label:'UX writing', value:82 },
+    { type:'star', label:'Brand systems', stars:5 },
+    { type:'slider', label:'Operations', value:74 }
+  ];
+  S.edu = [
+    { kind:'degree', title:'Grado en Marketing Digital', dates:'2017-2021', academy:'Universidad Rey Juan Carlos' },
+    { kind:'course', title:'Curso intensivo de UX/UI', dates:'2022', academy:'Google Career Certificates' }
+  ];
+  S.exp = [
+    { dates:'2024 - Actualidad', role:'Product Designer', org:'Studio Norte', desc:'Diseño de flujos, identidad visual y mejoras continuas para herramientas internas y producto de cliente.' },
+    { dates:'2021 - 2024', role:'Growth & Content Lead', org:'Indie Launchpad', desc:'Campañas de captación, landings, automatizaciones y tono de marca para proyectos digitales.' }
+  ];
+  S.bio = 'Perfil híbrido entre producto, marca y ejecución. Me gusta convertir ideas sueltas en experiencias claras, útiles y con personalidad.';
+
+  W = {
+    skills: structuredClone(S.skills),
+    addSkillsToRail: false,
+    edu: structuredClone(S.edu),
+    exp: structuredClone(S.exp),
+    expDraft: { dates:'', role:'', org:'', desc:'' },
+    bio: S.bio
+  };
+
+  applyContact?.();
+  renderSkills(S.skills, { toRail: false });
+  renderEdu(S.edu);
+  renderExp(S.exp);
+  renderBio(S.bio);
+
+  document.getElementById('wizard')?.style && (document.getElementById('wizard').style.display='none');
+  document.getElementById('welcome')?.remove();
+  document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
 }
 
 /* ---------- helpers ---------- */

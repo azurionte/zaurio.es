@@ -32,16 +32,13 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     [data-dark="1"] .year-chip{background:rgba(255,255,255,.10); color:#e8edff; border-color:#ffffff28; backdrop-filter:blur(6px)}
 
     /* skills list (canvas + sidebar) */
-    .skills-wrap{display:grid;gap:8px}
-  /* layout: handle | name | value | control */
-  /* layout: name (140x21) | meter (95x4) with floating controls */
-  .skill-row{position:relative;display:block;padding:8px 12px 8px 12px}
-  .skill-row .name{display:inline-block;width:140px;height:21px;line-height:21px;vertical-align:middle;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-  .skill-row .val{display:inline-block;vertical-align:middle;margin-left:12px}
-  .skill-row .val .meter{width:95px;height:4px;border-radius:6px;vertical-align:middle}
-  /* floating controls: drag handle left, remove button right */
-  .skill-row .skill-handle{position:absolute;left:-12px;top:50%;transform:translateY(-50%);z-index:10}
-  .skill-row .ctrl-circle{position:absolute;right:-12px;top:50%;transform:translateY(-50%);z-index:10}
+    .skills-wrap{display:grid;gap:10px}
+  .skill-row{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--cardBorder);border-radius:14px;background:var(--cardBg)}
+  .skill-row .name{display:block;min-width:0;line-height:1.35;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .skill-row .val{display:flex;align-items:center;justify-content:flex-end;min-width:120px}
+  .skill-row .val .meter{width:110px;height:6px;border-radius:999px;vertical-align:middle}
+  .skill-row .skill-handle{position:static;transform:none;z-index:auto}
+  .skill-row .ctrl-circle{position:static;transform:none;z-index:auto}
     .stars{display:inline-grid;grid-auto-flow:column;gap:6px;justify-content:end}
   .stars{color:var(--accent)}
     .star{width:14px;height:14px;display:inline-block;transform:translateY(1px)}
@@ -69,12 +66,21 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   .pill-add:active{transform:translateY(0);box-shadow:0 6px 18px rgba(2,10,18,.5)}
   /* top-right control circles (handle + remove) */
   .card-controls{position:absolute;right:12px;top:12px;display:flex;gap:8px}
-  .ctrl-circle{width:36px;height:36px;border-radius:999px;background:#071827;color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px rgba(2,10,18,.6);cursor:pointer;border:1px solid rgba(255,255,255,.06)}
+  .ctrl-circle{width:34px;height:34px;border-radius:999px;background:#071827;color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px rgba(2,10,18,.3);cursor:pointer;border:1px solid rgba(255,255,255,.06)}
   .ctrl-circle:active{transform:translateY(1px)}
   /* drag handle (left vertical dots) */
-  .drag-handle{width:22px;height:22px;border-radius:6px;background:#071827;color:#fff;display:grid;place-items:center;cursor:grab;border:1px solid rgba(255,255,255,.06);font-size:12px}
+  .drag-handle{width:24px;height:24px;border-radius:8px;background:#071827;color:#fff;display:grid;place-items:center;cursor:grab;border:1px solid rgba(255,255,255,.06);font-size:12px;position:absolute;left:12px;top:12px}
   .skill-handle{width:22px;height:22px;border-radius:6px;background:#071827;color:#fff;display:grid;place-items:center;margin-right:8px;font-size:12px}
   .ctrl-circle.small{width:28px;height:28px}
+  .sec-body{display:grid;gap:14px}
+  .edu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .exp-list{display:grid;gap:12px}
+  .card{position:relative;border-radius:16px;padding:16px;border:1px solid var(--cardBorder);background:var(--cardBg)}
+  .card .year-chip{margin-right:52px}
+  .card-title{font-size:18px;font-weight:800;line-height:1.25;margin-top:12px}
+  .card-subtitle{opacity:.78;margin-top:4px}
+  .card-copy{margin-top:10px;line-height:1.6}
+  .profile-copy{line-height:1.7;font-size:15px}
   `;
   document.head.appendChild(st);
 })();
@@ -295,21 +301,17 @@ export function renderEdu(items){
   const sec = sectionEl('edu', 'Education');
   const body = $('.sec-body', sec);
   const grid = document.createElement('div');
-  grid.style.display = 'grid';
-  grid.style.gridTemplateColumns = '1fr 1fr';
-  grid.style.gap = '10px';
+  grid.className = 'edu-grid';
 
   items.forEach(it => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
       <div class="year-chip">${icon('edu')}<span>${it.dates || '2018–2022'}</span></div>
-      <div style="height:8px"></div>
-      <div style="font-weight:800">${it.title || ''}</div>
-      <div>${it.academy || ''}</div>`;
+      <div class="card-title">${it.title || ''}</div>
+      <div class="card-subtitle">${it.academy || ''}</div>`;
     // add remove control
     // top-right control circle + optional drag handle
-    card.style.position = 'relative';
     const controls = document.createElement('div'); controls.className = 'card-controls';
     const removeBtn = document.createElement('button'); removeBtn.className = 'ctrl-circle'; removeBtn.title = 'Remove'; removeBtn.innerHTML = '×';
     removeBtn.addEventListener('click', ()=>{
@@ -334,8 +336,7 @@ export function renderEdu(items){
     S.edu = (S.edu||[]); S.edu.push(it); save();
     // append card after grid
     const card = document.createElement('div'); card.className='card';
-    card.innerHTML = `<div class="year-chip">${icon('edu')}<span>${it.dates}</span></div><div style="height:8px"></div><div style="font-weight:800">${it.title}</div><div>${it.academy}</div>`;
-    card.style.position='relative';
+    card.innerHTML = `<div class="year-chip">${icon('edu')}<span>${it.dates}</span></div><div class="card-title">${it.title}</div><div class="card-subtitle">${it.academy}</div>`;
     const removeBtn = document.createElement('button'); removeBtn.className='ctrl-circle'; removeBtn.innerHTML='×'; removeBtn.title='Remove'; removeBtn.addEventListener('click', ()=>{ card.remove(); S.edu = (S.edu||[]).filter(x=> x.title!==it.title); save(); });
     const controls = document.createElement('div'); controls.className='card-controls'; controls.appendChild(removeBtn); card.appendChild(controls);
     grid.appendChild(card);
@@ -349,6 +350,8 @@ export function renderExp(items){
   if (document.querySelector('.section[data-section="exp"]')) return;
   const sec = sectionEl('exp', 'Work experience');
   const body = $('.sec-body', sec);
+  const list = document.createElement('div');
+  list.className = 'exp-list';
 
   // add control: add experience
   const xAnchor = document.createElement('div'); xAnchor.className='sec-add-anchor';
@@ -356,26 +359,22 @@ export function renderExp(items){
   xBtn.addEventListener('click', ()=>{
     const it = {dates:'Now',role:'New role',org:'Company',desc:'Describe.'};
     S.exp = (S.exp||[]); S.exp.push(it); save();
-    const card = document.createElement('div'); card.className='card'; card.style.marginBottom='10px';
-    card.innerHTML = `<div class="year-chip"><i class="fa-solid fa-bars"></i><span>${it.dates}</span></div><div style="height:8px"></div><div style="font-weight:800">${it.role}</div><div style="opacity:.9">@${it.org}</div><div style="height:8px"></div><div>${it.desc}</div>`;
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `<div class="year-chip"><i class="fa-solid fa-bars"></i><span>${it.dates}</span></div><div class="card-title">${it.role}</div><div class="card-subtitle">@${it.org}</div><div class="card-copy">${it.desc}</div>`;
     const removeX = document.createElement('button'); removeX.className='ctrl-circle'; removeX.title='Remove'; removeX.innerHTML='×'; removeX.addEventListener('click', ()=>{ card.remove(); S.exp=(S.exp||[]).filter(x=>x.role!==it.role); save(); });
     const controlsX = document.createElement('div'); controlsX.className='card-controls'; controlsX.appendChild(removeX); card.appendChild(controlsX);
-    grid.appendChild(card);
+    list.appendChild(card);
   });
-  xAnchor.appendChild(xBtn); body.appendChild(xAnchor);
+  xAnchor.appendChild(xBtn); body.appendChild(list); body.appendChild(xAnchor);
 
   items.forEach(it => {
     const card = document.createElement('div');
     card.className = 'card';
-    card.style.marginBottom = '10px';
     card.innerHTML = `
       <div class="year-chip"><i class="fa-solid fa-bars"></i><span>${it.dates || 'Jan 2024 – Present'}</span></div>
-      <div style="height:8px"></div>
-      <div style="font-weight:800">${it.role || 'Job title'}</div>
-      <div style="opacity:.9">@${(it.org||'Company').replace(/^@/, '')}</div>
-      <div style="height:8px"></div>
-      <div>${it.desc || 'Describe impact, scale and results.'}</div>`;
-    card.style.position = 'relative';
+      <div class="card-title">${it.role || 'Job title'}</div>
+      <div class="card-subtitle">@${(it.org||'Company').replace(/^@/, '')}</div>
+      <div class="card-copy">${it.desc || 'Describe impact, scale and results.'}</div>`;
     const controlsX = document.createElement('div'); controlsX.className = 'card-controls';
     const removeX = document.createElement('button'); removeX.className = 'ctrl-circle'; removeX.title = 'Remove'; removeX.innerHTML = '×';
     removeX.addEventListener('click', ()=>{
@@ -389,7 +388,7 @@ export function renderExp(items){
     card.insertBefore(dHandleX, card.firstChild);
   // make displayed texts editable
   Array.from(card.querySelectorAll('div')).forEach(d=> d.setAttribute('contenteditable','true'));
-  body.appendChild(card);
+    list.appendChild(card);
   });
 
   putSection(sec);
@@ -402,6 +401,7 @@ export function renderBio(text){
   const body = $('.sec-body', sec);
   const card = document.createElement('div');
   card.className = 'card';
+  card.classList.add('profile-copy');
   card.textContent = (text || '').trim() || 'Add a short summary of your profile, strengths and what you’re great at.';
   body.appendChild(card);
   putSection(sec);
@@ -433,10 +433,10 @@ export function openAddMenu(anchor){
     // actions
     pop.addEventListener('click', e=>{
       const k = e.target.closest('button')?.dataset.k; if(!k) return;
-      if (k === 'skills') renderSkills([{type:'star',label:'Skill',stars:3},{type:'slider',label:'Skill',value:60}]);
+      if (k === 'skills') renderSkills([{type:'star',label:'Communication',stars:4},{type:'slider',label:'Design systems',value:78}]);
       if (k === 'edu')    renderEdu([{kind:'course',title:'Title',dates:'2018–2022',academy:'Academy'}]);
       if (k === 'exp')    renderExp([{dates:'Jan 2024 – Present',role:'Job title',org:'Company',desc:'Describe impact, scale and results.'}]);
-      if (k === 'bio')    renderBio('');
+      if (k === 'bio')    renderBio('Perfil híbrido entre creatividad, producto y ejecución. Me gusta convertir ideas en experiencias claras y útiles.');
       pop.classList.remove('open');
       try{ refreshPlusVisibility(); }catch(e){}
     });
