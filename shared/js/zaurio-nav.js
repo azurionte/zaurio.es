@@ -1,5 +1,5 @@
 (() => {
-  const root = document.querySelector("[data-zaurio-nav]");
+  const root = document.querySelector("div[data-zaurio-nav]");
   const legacyTopMenu = root ? null : document.querySelector(".topMenu");
   const active =
     (root && root.dataset.active) ||
