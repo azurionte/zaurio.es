@@ -84,7 +84,6 @@
       position:relative;
       overflow:hidden;
       padding:32px 34px 34px;
-      min-height:640px;
     }
 
     .hero-card::after{
@@ -120,20 +119,31 @@
       line-height:.98;
     }
 
+    .hero-intro{
+      display:grid;
+      grid-template-columns:minmax(0, 1.1fr) minmax(220px, .72fr);
+      gap:18px;
+      align-items:end;
+    }
+
+    .hero-copy{
+      min-width:0;
+    }
+
     .hero h1{
       margin-top:18px;
-      font-size:clamp(2.15rem, 3.9vw, 4rem);
-      max-width:8.8ch;
+      font-size:clamp(2rem, 3.5vw, 3.55rem);
+      max-width:9.2ch;
       letter-spacing:-.05em;
       text-wrap:balance;
     }
 
     .lead{
       margin:18px 0 0;
-      max-width:38ch;
+      max-width:34ch;
       color:var(--muted);
-      font-size:.98rem;
-      line-height:1.72;
+      font-size:.96rem;
+      line-height:1.68;
     }
 
     .hero-actions{
@@ -175,7 +185,7 @@
       grid-template-columns:repeat(2, minmax(0, 1fr));
       gap:12px;
       margin-top:24px;
-      max-width:38rem;
+      max-width:44rem;
     }
 
     .note{
@@ -205,22 +215,21 @@
     }
 
     .hero-portrait{
-      position:absolute;
-      right:18px;
-      bottom:12px;
-      width:min(34%, 320px);
+      position:relative;
+      width:min(100%, 280px);
       display:flex;
       align-items:flex-end;
-      justify-content:flex-end;
+      justify-content:center;
       pointer-events:none;
       z-index:2;
+      margin-inline:auto;
     }
 
     .hero-portrait::before{
       content:"";
       position:absolute;
-      inset:auto 8% 4% 8%;
-      height:24%;
+      inset:auto 10% 2% 10%;
+      height:22%;
       border-radius:999px;
       background:radial-gradient(circle at center, rgba(255,79,201,.22), transparent 68%);
       filter:blur(18px);
@@ -233,7 +242,7 @@
       width:100%;
       height:auto;
       object-fit:contain;
-      filter:drop-shadow(0 20px 32px rgba(0,0,0,.28));
+      filter:drop-shadow(0 16px 28px rgba(0,0,0,.28));
     }
 
     .side-card{
@@ -749,9 +758,8 @@
         grid-template-columns:1fr;
       }
 
-      .hero-card{
-        min-height:auto;
-        padding-bottom:24px;
+      .hero-intro{
+        grid-template-columns:1fr;
       }
 
       .hero h1{
@@ -764,11 +772,8 @@
       }
 
       .hero-portrait{
-        position:relative;
-        right:auto;
-        bottom:auto;
-        width:min(78vw, 360px);
-        margin:24px auto 0;
+        width:min(68vw, 300px);
+        margin:8px auto 0;
       }
     }
 
@@ -807,8 +812,15 @@
     <section class="hero">
       <article class="hero-card">
         <span class="eyebrow">Bienvenido al Dominio Rex</span>
-        <h1>Un streamer geek montando ideas para divertirse y sobrevivir la vida adulta.</h1>
-        <p class="lead">Geek, creativo y con TDA, Zaurio siempre ha tenido esa necesidad de experimentar con ideas que sirvan para pasarlo bien, conectar gente y a la vez hacer más llevadero el lado serio de crecer. Por eso este dominio mezcla drama, anonimato, herramientas útiles y juegos sociales con una misma energía.</p>
+        <div class="hero-intro">
+          <div class="hero-copy">
+            <h1>Un streamer geek montando ideas para divertirse y sobrevivir la vida adulta.</h1>
+            <p class="lead">Geek, creativo y con TDA, Zaurio siempre ha tenido esa necesidad de experimentar con ideas que sirvan para pasarlo bien, conectar gente y a la vez hacer más llevadero el lado serio de crecer. Por eso este dominio mezcla drama, anonimato, herramientas útiles y juegos sociales con una misma energía.</p>
+          </div>
+          <div class="hero-portrait" aria-hidden="true">
+            <img src="/shared/assets/brand/zaurio-portrait.png" alt="Retrato de Zaurio">
+          </div>
+        </div>
         <div class="hero-actions">
           <a class="btn primary" href="https://www.tiktok.com/@zaurioking" target="_blank" rel="noopener noreferrer">Ir al TikTok</a>
           <a class="btn secondary" href="https://miercoles.zaurio.es">Entrar en Miércoles</a>
@@ -830,9 +842,6 @@
             <strong>Juegos</strong>
             <span>La parte que intenta juntar gente con experiencias rápidas, sociales y con punto de fiesta.</span>
           </div>
-        </div>
-        <div class="hero-portrait" aria-hidden="true">
-          <img src="/shared/assets/brand/zaurio-portrait.png" alt="Retrato de Zaurio">
         </div>
       </article>
 
