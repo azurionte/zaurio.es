@@ -163,7 +163,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   .card-controls{position:absolute;right:8px;top:8px;display:flex;gap:6px}
   .card-controls .ctrl-circle{width:28px;height:28px;border-radius:999px;font-size:12px}
 
-  .layout-morph-hide{opacity:0 !important}
+  .layout-morph-hide{opacity:0 !important; visibility:hidden !important}
   .layout-morph-ghost{
     position:fixed;left:0;top:0;z-index:25000;pointer-events:none;
     transform-origin:top left;
@@ -856,7 +856,7 @@ export function morphTo(kind){
           { transform:'translate(0,0) scale(1,1)', borderRadius:getComputedStyle(oldHero).borderRadius, opacity:1 },
           { transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`, borderRadius:getComputedStyle(newHero).borderRadius, opacity:1 }
         ],
-        { duration:540, easing:'cubic-bezier(.18,1,.24,1)', fill:'forwards' }
+        { duration:560, easing:'cubic-bezier(.18,1,.24,1)', fill:'forwards' }
       );
     }
 
@@ -870,7 +870,7 @@ export function morphTo(kind){
           { transform:'translate(0,0) scale(1,1)', opacity:1 },
           { transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`, opacity:1 }
         ],
-        { duration:540, easing:'cubic-bezier(.18,1,.24,1)', fill:'forwards' }
+        { duration:560, easing:'ease-in-out', fill:'forwards' }
       );
     }
 
@@ -884,15 +884,15 @@ export function morphTo(kind){
           { opacity:0, filter:'blur(3px)', transform:'translateY(8px)' },
           { opacity:1, filter:'blur(0px)', transform:'translateY(0px)' }
         ],
-        { duration:280, easing:'ease-out', fill:'forwards' }
+        { duration:240, easing:'ease-out', fill:'forwards' }
       );
 
       window.setTimeout(() => {
         heroGhostData?.ghost.remove();
         avatarGhostData?.ghost.remove();
         normalizeCanvasForCurrentLayout({ showAdd: true });
-      }, 300);
-    }, 340);
+      }, 250);
+    }, 565);
   }, 190);
 }
 
