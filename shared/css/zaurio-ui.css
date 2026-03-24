@@ -144,11 +144,13 @@
   position:relative;
   display:flex;
   align-items:center;
+  padding:8px 0;
+  margin:-8px 0;
 }
 
 .zaurio-nav-dropdown{
   position:absolute;
-  top:calc(100% + 14px);
+  top:calc(100% - 2px);
   left:50%;
   transform:translateX(-50%);
   min-width:240px;
