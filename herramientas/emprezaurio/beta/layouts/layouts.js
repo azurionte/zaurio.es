@@ -25,17 +25,12 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       width:100%;
     }
     .sidebar-layout .rail{
-      background:linear-gradient(180deg,var(--accent2),var(--accent));border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;min-height:920px;position:relative;overflow:hidden
+      background:linear-gradient(180deg,var(--accent2),var(--accent));border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;min-height:920px;position:relative;overflow:hidden;
+      -webkit-mask-image:linear-gradient(180deg,#000 0 78%, rgba(0,0,0,.96) 84%, rgba(0,0,0,.72) 90%, rgba(0,0,0,.36) 95%, transparent 100%);
+      mask-image:linear-gradient(180deg,#000 0 78%, rgba(0,0,0,.96) 84%, rgba(0,0,0,.72) 90%, rgba(0,0,0,.36) 95%, transparent 100%);
     }
     .sidebar-layout .rail::after{
-      content:"";
-      position:absolute;
-      left:0;right:0;bottom:0;
-      height:22%;
-      background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.16) 35%,rgba(255,255,255,0));
-      mix-blend-mode:soft-light;
-      pointer-events:none;
-      opacity:.8;
+      content:none;
     }
     .sidebar-layout [data-zone="main"]{
   display:grid;grid-template-columns: repeat(12,minmax(0,1fr));gap:16px;align-content:start;min-width:0;
