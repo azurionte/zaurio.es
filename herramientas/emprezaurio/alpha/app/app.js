@@ -24,6 +24,20 @@ function isMobileCanvasMode(){
   return window.innerWidth <= MOBILE_BREAKPOINT;
 }
 
+function syncMobileCanvasViewport(){
+  const root = document.getElementById('canvas-root');
+  const nav = document.getElementById('topbar-root');
+  if (!root) return;
+
+  if (!isMobileCanvasMode()){
+    root.style.height = '';
+    return;
+  }
+
+  const navHeight = nav?.getBoundingClientRect().height || 0;
+  root.style.height = `${Math.max(220, window.innerHeight - navHeight)}px`;
+}
+
 function pinchDistance(touches){
   const [a, b] = touches;
   return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
@@ -124,9 +138,16 @@ function mountMobileCanvasGestures(){
 }
 
 function mountCanvasScaleSync(){
+  syncMobileCanvasViewport();
   syncCanvasScale({ resetScroll: true });
-  window.addEventListener('resize', () => syncCanvasScale({ resetScroll: true }), { passive: true });
-  window.addEventListener('orientationchange', () => syncCanvasScale({ resetScroll: true }), { passive: true });
+  window.addEventListener('resize', () => {
+    syncMobileCanvasViewport();
+    syncCanvasScale({ resetScroll: true });
+  }, { passive: true });
+  window.addEventListener('orientationchange', () => {
+    syncMobileCanvasViewport();
+    syncCanvasScale({ resetScroll: true });
+  }, { passive: true });
 
   const sheet = document.getElementById('sheet');
   if (!sheet || typeof ResizeObserver === 'undefined') return;
