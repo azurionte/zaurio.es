@@ -120,6 +120,75 @@ function attachDragSort(container, itemSelector, handleSelector, onCommit){
   .card-copy{margin-top:10px;line-height:1.6}
   .profile-copy{line-height:1.7;font-size:15px}
   .sidebar-layout .skills-wrap{grid-template-columns:1fr}
+
+  @media (max-width: 700px){
+    .section{
+      padding:12px;
+      border-radius:14px;
+    }
+    .sec-title{
+      font-size:16px;
+    }
+    .skills-wrap,
+    .edu-grid,
+    .exp-list{
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+    .skill-row{
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:10px;
+      padding:12px;
+    }
+    .skill-row .skill-handle{
+      display:none;
+    }
+    .skill-row .name{
+      grid-column:1 / 2;
+      white-space:normal;
+    }
+    .skill-row .val{
+      grid-column:1 / 2;
+      justify-content:flex-start;
+      min-width:0;
+    }
+    .skill-row .ctrl-circle{
+      grid-column:2 / 3;
+      grid-row:1 / span 2;
+      align-self:center;
+    }
+    .card{
+      padding:14px;
+      border-radius:14px;
+    }
+    .card .year-chip{
+      margin-right:38px;
+      max-width:calc(100% - 42px);
+      overflow:hidden;
+    }
+    .card-title{
+      font-size:17px;
+      margin-top:10px;
+    }
+    .card-copy,
+    .profile-copy{
+      font-size:14px;
+      line-height:1.55;
+    }
+    .drag-handle{
+      width:22px;
+      height:22px;
+      left:10px;
+      top:10px;
+    }
+    .ctrl-circle{
+      width:30px;
+      height:30px;
+    }
+    .sec-add-anchor{
+      padding:8px 0 2px;
+    }
+  }
   `;
   document.head.appendChild(st);
 })();
