@@ -34,7 +34,10 @@ function syncCanvasScale(){
   page.style.height = `${scaledHeight}px`;
   page.style.minHeight = `${scaledHeight}px`;
   page.style.margin = '0 auto';
-  if (root) root.scrollLeft = 0;
+  if (root) {
+    root.scrollLeft = 0;
+    root.style.justifyContent = 'center';
+  }
 }
 
 function mountCanvasScaleSync(){
