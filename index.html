@@ -401,7 +401,7 @@
 
     .recent-viewport{
       overflow:hidden;
-      min-height:246px;
+      height:242px;
     }
 
     .recent-track{
@@ -452,6 +452,74 @@
       color:var(--muted);
       font-size:.88rem;
       line-height:1.35;
+    }
+
+    .mini-schedule{
+      display:grid;
+      gap:14px;
+    }
+
+    .mini-schedule-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .mini-day{
+      display:grid;
+      grid-template-columns:78px 1fr auto;
+      gap:12px;
+      align-items:center;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.04);
+    }
+
+    .mini-day.is-today{
+      border-color:rgba(255,212,71,.36);
+      background:linear-gradient(180deg, rgba(255,212,71,.14), rgba(255,79,201,.08));
+      box-shadow:0 0 24px rgba(255,212,71,.12);
+    }
+
+    .mini-day-name{
+      font-size:.82rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .mini-day-copy strong{
+      display:block;
+      font-size:1rem;
+      margin-bottom:4px;
+    }
+
+    .mini-day-copy span{
+      display:block;
+      color:var(--muted);
+      font-size:.88rem;
+      line-height:1.35;
+    }
+
+    .mini-day-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:44px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      color:rgba(255,255,255,.74);
+      font-size:.72rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .mini-day.is-today .mini-day-badge{
+      background:var(--gold);
+      color:#240b18;
     }
 
     .schedule{
@@ -1047,86 +1115,10 @@
           </div>
         </aside>
 
-        <aside class="side-card">
-          <span class="eyebrow">Secciones</span>
-          <div class="sections-stack">
-            <a class="section-tile" href="https://miercoles.zaurio.es">
-              <span class="section-tile-art"><img src="/shared/assets/brand/miercoles.png" alt="Miercoles"></span>
-              <span class="section-tile-copy">
-                <strong>Miercoles</strong>
-                <span>Directos de dramas y chismes con entrada an&oacute;nima para que el salseo llegue limpio.</span>
-              </span>
-            </a>
-            <a class="section-tile" href="https://secretos.zaurio.es">
-              <span class="section-tile-art"><img src="/shared/assets/brand/confesionario.png" alt="Secretos"></span>
-              <span class="section-tile-copy">
-                <strong>Secretos</strong>
-                <span>Confesiones an&oacute;nimas, reacciones y material perfecto para leer, votar y comentar.</span>
-              </span>
-            </a>
-            <a class="section-tile" href="https://herramientas.zaurio.es">
-              <span class="section-tile-art"><img src="/shared/assets/brand/emprezaurio.png" alt="Herramientas"></span>
-              <span class="section-tile-copy">
-                <strong>Herramientas</strong>
-                <span>La parte pr&aacute;ctica del reino: DineroZaurio ahora y Emprezaurio creciendo para despu&eacute;s.</span>
-              </span>
-            </a>
-            <a class="section-tile" href="https://juegos.zaurio.es">
-              <span class="section-tile-art"><img src="/shared/assets/brand/trivialodon.png" alt="Juegos"></span>
-              <span class="section-tile-copy">
-                <strong>Juegos</strong>
-                <span>Fichas de juego, compras por tienda y futuros inventos sociales con esp&iacute;ritu de fiesta.</span>
-              </span>
-            </a>
-          </div>
+        <aside class="side-card mini-schedule">
+          <span class="eyebrow">Calendario</span>
+          <div class="mini-schedule-list" id="miniSchedule"></div>
         </aside>
-      </div>
-    </section>
-
-    <section class="schedule" aria-labelledby="schedule-title">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow">Calendario simple</span>
-          <h2 id="schedule-title">La semana oficial de Zaurio</h2>
-        </div>
-        <p>Una regla f&aacute;cil de recordar: los mi&eacute;rcoles mandan los dramas y chismes; el resto de d&iacute;as, gameplays y caos del bueno.</p>
-      </div>
-      <div class="schedule-grid">
-        <article class="day-card">
-          <span class="day-name">Lunes</span>
-          <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Arranque de semana con mando, comunidad y energ&iacute;a de &ldquo;a ver qu&eacute; pasa hoy&rdquo;.</span>
-        </article>
-        <article class="day-card">
-          <span class="day-name">Martes</span>
-          <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">M&aacute;s partidas, m&aacute;s clips y m&aacute;s fauna del chat calentando motores.</span>
-        </article>
-        <article class="day-card highlight">
-          <span class="day-name">Mi&eacute;rcoles</span>
-          <strong class="day-title">Dramas y chismes</strong>
-          <span class="day-copy">El gran ritual semanal: confesiones, mensajes an&oacute;nimos y salseo en directo con todas las letras.</span>
-        </article>
-        <article class="day-card">
-          <span class="day-name">Jueves</span>
-          <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Resaca emocional del mi&eacute;rcoles, pero con partidas para seguir vivos.</span>
-        </article>
-        <article class="day-card">
-          <span class="day-name">Viernes</span>
-          <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Final de semana con energ&iacute;a alta y hueco para que el chat se luzca.</span>
-        </article>
-        <article class="day-card">
-          <span class="day-name">S&aacute;bado</span>
-          <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Territorio ideal para sesiones largas, risas raras y clip f&aacute;cil.</span>
-        </article>
-        <article class="day-card">
-          <span class="day-name">Domingo</span>
-          <strong class="day-title">Gameplay</strong>
-          <span class="day-copy">Cierre suave antes de volver a invocar el siguiente mi&eacute;rcoles.</span>
-        </article>
       </div>
     </section>
   </main>
@@ -1153,6 +1145,7 @@
     const recentDots = document.getElementById("recentDots");
     const recentPrev = document.getElementById("recentPrev");
     const recentNext = document.getElementById("recentNext");
+    const miniSchedule = document.getElementById("miniSchedule");
 
     const recentThumbs = {
       "arc-raiders": "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1808500/header.jpg",
@@ -1270,6 +1263,16 @@
       }
     };
 
+    const weeklySchedule = [
+      { day: "Lunes", title: "Gameplay", copy: "Arranque de semana con partidas y comunidad." },
+      { day: "Martes", title: "Gameplay", copy: "M&aacute;s clips, m&aacute;s risas y m&aacute;s chat." },
+      { day: "Mi&eacute;rcoles", title: "Dramas y chismes", copy: "El gran ritual semanal del salseo." },
+      { day: "Jueves", title: "Gameplay", copy: "Resaca emocional y partidas para seguir vivos." },
+      { day: "Viernes", title: "Gameplay", copy: "Energ&iacute;a alta y hueco para que el chat se luzca." },
+      { day: "S&aacute;bado", title: "Gameplay", copy: "Sesiones largas, caos raro y clip f&aacute;cil." },
+      { day: "Domingo", title: "Gameplay", copy: "Cierre suave antes del siguiente mi&eacute;rcoles." }
+    ];
+
     const itemHeight = 84;
     const cloneCount = 3;
     let currentRecent = cloneCount;
@@ -1323,9 +1326,30 @@
       }, 3400);
     }
 
+    function renderMiniSchedule() {
+      const today = new Date().getDay();
+      const mondayBased = (today + 6) % 7;
+      const visibleDays = Array.from({ length: 4 }, (_, offset) => {
+        const index = (mondayBased + offset) % weeklySchedule.length;
+        return { ...weeklySchedule[index], isToday: offset === 0 };
+      });
+
+      miniSchedule.innerHTML = visibleDays.map((item) => `
+        <article class="mini-day ${item.isToday ? "is-today" : ""}">
+          <span class="mini-day-name">${item.day}</span>
+          <span class="mini-day-copy">
+            <strong>${item.title}</strong>
+            <span>${item.copy}</span>
+          </span>
+          ${item.isToday ? '<span class="mini-day-badge">Hoy</span>' : ""}
+        </article>
+      `).join("");
+    }
+
     renderRecentStructure();
     syncRecentDots();
     restartRecentTimer();
+    renderMiniSchedule();
 
     recentTrack.addEventListener("transitionend", () => {
       if (currentRecent === cloneCount + recentGameOrder.length) {
