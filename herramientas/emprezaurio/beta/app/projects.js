@@ -242,8 +242,8 @@ function renderProjectPreview(project){
       <div class="mini-resume mini-fancy" style="background:${surface};color:${ink}">
         <div class="mini-hero" style="background:${accent}">
           <div class="mini-name center">${name}</div>
-          <div class="mini-avatar floating"></div>
         </div>
+        <div class="mini-avatar floating"></div>
         <div class="mini-line mid" style="background:${soft}"></div>
         <div class="mini-grid">
           <span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span>
@@ -339,9 +339,9 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .mini-chip{display:block;width:100%;height:8px;border-radius:999px;background:rgba(255,255,255,.84)}
       #projectLibrary .mini-chip.short{width:72%}
       #projectLibrary .mini-main{display:grid;align-content:start;gap:10px;padding-top:4px}
-      #projectLibrary .mini-fancy{grid-template-rows:74px 1fr auto}
-      #projectLibrary .mini-fancy .mini-hero{display:grid;grid-template-columns:minmax(0,1fr) 34px;align-items:center;gap:8px;padding:12px;min-height:74px}
-      #projectLibrary .mini-fancy .mini-avatar.floating{margin:0}
+      #projectLibrary .mini-fancy{grid-template-rows:72px 18px 1fr auto}
+      #projectLibrary .mini-fancy .mini-hero{display:grid;place-items:center;padding:12px;min-height:72px;position:relative}
+      #projectLibrary .mini-fancy .mini-avatar.floating{margin:0 auto -20px;position:relative;z-index:2}
       #projectLibrary .mini-fancy .mini-name{margin-top:0;text-align:center}
       #projectLibrary .project-meta h3{margin:0;color:#fff8fb;font-size:1.2rem}
       #projectLibrary .project-meta p{margin:6px 0 0;color:rgba(255,255,255,.7);line-height:1.5}
