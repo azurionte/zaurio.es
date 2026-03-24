@@ -109,9 +109,9 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
   syncMobileMenu();
   window.addEventListener('resize', syncMobileMenu, { passive: true });
 
-  top.querySelector('#btnSave').onclick = () => {
+  top.querySelector('#btnSave').onclick = (event) => {
     if (onSaveProject) {
-      onSaveProject();
+      onSaveProject(event.currentTarget);
       return;
     }
     save();

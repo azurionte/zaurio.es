@@ -6,7 +6,7 @@ console.log('[app.js] ' + APP_VERSION);
 import { mountEditor } from '../editor/editor.js';
 import { mountWelcome } from '../wizard/wizard.js';
 import { ensureCanvas } from '../layouts/layouts.js';
-import { mountProjectLibrary, applyStateToCanvas, saveCurrentProject } from './projects.js';
+import { mountProjectLibrary, applyStateToCanvas, saveCurrentProject, showActionFeedback } from './projects.js';
 import '../modules/modules.js'; // side-effect: registers custom styles for modules
 
 const PAGE_WIDTH = 860;
@@ -216,9 +216,10 @@ async function boot(){
     onDarkToggle: setDark,
     onMaterialPick: setMaterial,
     onCustomGradient: setCustomGradient,
-    onSaveProject: async () => {
+    onSaveProject: async (anchor) => {
       if (auth.mode === 'google' && auth.session?.user?.id) {
         await saveCurrentProject();
+        showActionFeedback(anchor, 'CV guardado', 'success');
         return;
       }
       sessionStorage.setItem('resume:restore', '1');
@@ -227,6 +228,7 @@ async function boot(){
       a.download = 'emprezaurio-project.json';
       a.href = URL.createObjectURL(blob);
       a.click();
+      showActionFeedback(anchor, 'JSON exportado', 'success');
     },
     onOpenLibrary: openProjectLibrary,
     canOpenLibrary: auth.mode === 'google' && !!auth.session?.user?.id

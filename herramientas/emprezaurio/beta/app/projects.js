@@ -4,6 +4,15 @@ import { morphTo, applyContact } from '../layouts/layouts.js';
 import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/modules.js';
 
 const TABLE = 'cv_projects';
+const THEME_TONES = {
+  coral: ['#ff7b54', '#ffd166'],
+  sea: ['#4facfe', '#38d2ff'],
+  city: ['#34d399', '#9ca3af'],
+  magentaPurple: ['#c026d3', '#9333ea'],
+  magentaPink: ['#ec4899', '#f97316'],
+  blueGreen: ['#22c1c3', '#2ecc71'],
+  grayBlack: ['#8892a6', '#414b57']
+};
 
 function cloneStatePayload(){
   return JSON.parse(JSON.stringify(S));
@@ -138,58 +147,86 @@ function projectSummary(project){
   return counts || 'Sin bloques aun';
 }
 
+function themeGradient(project){
+  const key = project.payload?.theme || 'magentaPurple';
+  const pair = THEME_TONES[key] || THEME_TONES.magentaPurple;
+  return `linear-gradient(135deg,${pair[0]},${pair[1]})`;
+}
+
+export function showActionFeedback(anchor, message, tone = 'default'){
+  const target = anchor?.getBoundingClientRect?.();
+  const node = document.createElement('div');
+  node.className = `micro-feedback ${tone}`;
+  node.textContent = message;
+  document.body.appendChild(node);
+
+  const left = target ? Math.min(window.innerWidth - 220, Math.max(16, target.left + target.width / 2 - 90)) : window.innerWidth / 2 - 90;
+  const top = target ? Math.max(16, target.top - 10) : 24;
+  node.style.left = `${left}px`;
+  node.style.top = `${top}px`;
+
+  requestAnimationFrame(() => node.classList.add('is-live'));
+  window.setTimeout(() => {
+    node.classList.remove('is-live');
+    window.setTimeout(() => node.remove(), 220);
+  }, 1400);
+}
+
 function renderProjectPreview(project){
   const payload = project.payload || {};
   const layout = project.layout || payload.layout || 'top';
   const name = project.preview_name || payload.contact?.name || project.title || 'Mi CV';
-  const accent = layout === 'side'
-    ? 'linear-gradient(160deg,#6c7fca,#3b4b93)'
-    : 'linear-gradient(135deg,#ffba4a,#ff6aa7)';
+  const accent = themeGradient(project);
+  const surface = payload.dark
+    ? 'linear-gradient(180deg,#121826,#090d16)'
+    : '#f7f4fb';
+  const ink = payload.dark ? '#f7eff8' : '#12071b';
+  const soft = payload.dark ? 'rgba(255,255,255,.14)' : 'rgba(18,7,27,.08)';
 
   if (layout === 'side') {
     return `
-      <div class="mini-resume mini-side">
-        <div class="mini-rail">
+      <div class="mini-resume mini-side" style="background:${surface};color:${ink}">
+        <div class="mini-rail" style="background:${accent}">
           <div class="mini-avatar"></div>
           <span class="mini-chip"></span>
           <span class="mini-chip short"></span>
         </div>
         <div class="mini-main">
           <div class="mini-name">${name}</div>
-          <div class="mini-line wide"></div>
+          <div class="mini-line wide" style="background:${soft}"></div>
           <div class="mini-grid">
-            <span></span><span></span><span></span><span></span>
+            <span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span>
           </div>
         </div>
       </div>
-    `.replace('linear-gradient(160deg,#6c7fca,#3b4b93)', accent);
+    `;
   }
 
   if (layout === 'fancy') {
     return `
-      <div class="mini-resume mini-fancy">
-        <div class="mini-hero"></div>
+      <div class="mini-resume mini-fancy" style="background:${surface};color:${ink}">
+        <div class="mini-hero" style="background:${accent}"></div>
         <div class="mini-avatar floating"></div>
         <div class="mini-name center">${name}</div>
-        <div class="mini-line mid"></div>
+        <div class="mini-line mid" style="background:${soft}"></div>
         <div class="mini-grid">
-          <span></span><span></span><span></span><span></span>
+          <span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span>
         </div>
       </div>
     `;
   }
 
   return `
-    <div class="mini-resume mini-top">
-      <div class="mini-hero">
+    <div class="mini-resume mini-top" style="background:${surface};color:${ink}">
+      <div class="mini-hero" style="background:${accent}">
         <div class="mini-top-copy">
           <div class="mini-name">${name}</div>
-          <div class="mini-line short"></div>
+          <div class="mini-line short" style="background:${payload.dark ? 'rgba(255,255,255,.28)' : 'rgba(255,255,255,.5)'}"></div>
         </div>
         <div class="mini-avatar small"></div>
       </div>
       <div class="mini-grid">
-        <span></span><span></span><span></span><span></span>
+        <span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span><span style="background:${soft}"></span>
       </div>
     </div>
   `;
@@ -204,6 +241,10 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary{position:fixed;inset:0;display:none;place-items:center;background:rgba(6,3,10,.72);backdrop-filter:blur(14px);z-index:22000;padding:24px}
       #projectLibrary.open{display:grid}
       #projectLibrary .lib-shell{width:min(1180px,96vw);max-height:min(90dvh,920px);display:grid;gap:18px;padding:24px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(31,10,42,.96),rgba(14,7,20,.96));box-shadow:0 34px 90px rgba(0,0,0,.42);overflow:hidden}
+      .micro-feedback{position:fixed;z-index:23000;padding:10px 14px;border-radius:999px;background:rgba(28,11,40,.96);border:1px solid rgba(255,255,255,.12);color:#fff8fb;box-shadow:0 20px 40px rgba(0,0,0,.24);opacity:0;transform:translateY(8px) scale(.96);pointer-events:none;transition:opacity .18s ease, transform .18s ease}
+      .micro-feedback.is-live{opacity:1;transform:translateY(-12px) scale(1)}
+      .micro-feedback.success{background:linear-gradient(135deg,#ffd447,#ffb87c);color:#240b18}
+      .micro-feedback.warn{background:linear-gradient(135deg,#f97316,#ef4444)}
       #projectLibrary .lib-head{display:flex;justify-content:space-between;gap:14px;align-items:end}
       #projectLibrary .lib-head h2{margin:0;font:800 2rem/1 "Bricolage Grotesque","Trebuchet MS",sans-serif;color:#fff8fb}
       #projectLibrary .lib-head p{margin:8px 0 0;color:rgba(255,255,255,.72)}
@@ -302,6 +343,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
                 <button class="lib-btn project-menu-btn" data-menu-btn="${project.id}" type="button">⋯</button>
                 <div class="project-menu" data-menu="${project.id}">
                   <button data-action="edit" data-id="${project.id}" type="button">Editar</button>
+                  <button data-action="rename" data-id="${project.id}" type="button">Renombrar</button>
                   <button data-action="duplicate" data-id="${project.id}" type="button">Duplicar</button>
                   <button data-action="translate" data-id="${project.id}" type="button">Crear version traducida</button>
                   <button data-action="delete" data-id="${project.id}" type="button">Eliminar</button>
@@ -346,16 +388,32 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
     if (!project) return;
 
     if (action === 'edit') return onEditProject?.(project);
+    if (action === 'rename') {
+      const nextTitle = window.prompt('Nuevo nombre del CV', project.title);
+      if (!nextTitle || !nextTitle.trim()) return;
+      const { error } = await authState.client
+        .from(TABLE)
+        .update({ title: nextTitle.trim(), updated_at: new Date().toISOString() })
+        .eq('id', project.id);
+      if (!error) {
+        showActionFeedback(trigger, 'Renombrado', 'success');
+        return renderCards();
+      }
+      return;
+    }
     if (action === 'duplicate') {
       await duplicateProject(project);
+      showActionFeedback(trigger, 'Duplicado', 'success');
       return renderCards();
     }
     if (action === 'translate') {
       await createTranslatedVersion(project);
+      showActionFeedback(trigger, 'Version traducida creada', 'success');
       return renderCards();
     }
     if (action === 'delete') {
       await deleteProject(project.id);
+      showActionFeedback(trigger, 'CV eliminado', 'warn');
       return renderCards();
     }
   });
