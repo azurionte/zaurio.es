@@ -434,6 +434,7 @@ function chip(icon, text){
     el.style.background='#fff'; el.style.border='1px solid rgba(0,0,0,.08)'; el.style.color='#111';
   }
   const ic = el.querySelector('i'); if (ic) ic.style.color='var(--accent)';
+  return el;
 }
 export function restyleContactChips(scope=document){
   const head=getHeaderNode(); if(!head) return;
@@ -544,10 +545,13 @@ export function applyContact(){
       try {
         const chipWrap = head.querySelector('.chip-wrap');
         const nameBlock = head.querySelector('.name-block');
+        const genericHolder = head.querySelector('[data-info]') || head.querySelector('[data-info-left]')?.parentElement;
         if ((items||[]).length === 0 && nameBlock){
           if (addBtn.parentElement !== nameBlock) nameBlock.appendChild(addBtn);
         } else if (chipWrap){
           if (addBtn.parentElement !== chipWrap) chipWrap.appendChild(addBtn);
+        } else if (genericHolder){
+          if (addBtn.parentElement !== genericHolder) genericHolder.appendChild(addBtn);
         }
         addBtn.style.position = '';
         addBtn.style.left = '';
@@ -597,6 +601,7 @@ function buildHeader(kind){
           </label>
           <h1 class="name" contenteditable>YOUR NAME</h1>
           <div class="chip-grid"><div class="chips" data-info-left></div><div class="chips" data-info-right></div></div>
+          <button id="chipAddBtn" title="Add contact" class="add-dot">+</button>
         </div>
         <div class="below"></div>
       </div>`;
@@ -608,6 +613,7 @@ function buildHeader(kind){
           <div>
             <h1 class="name" contenteditable>YOUR NAME</h1>
             <div class="chips" data-info></div>
+            <button id="chipAddBtn" title="Add contact" class="add-dot">+</button>
           </div>
           <label class="avatar" data-avatar data-empty="1" style="width:120px;height:120px;border-width:4px">
             <input type="file" accept="image/*">
@@ -707,6 +713,7 @@ export function morphTo(kind){
       setTimeout(()=>{
         temp.style.transition='';
         temp.style.transform='';
+        $$('.node[data-locked]').forEach(node => { if (node !== temp) node.remove(); });
         normalizeCanvasForCurrentLayout();
       },380);
     });

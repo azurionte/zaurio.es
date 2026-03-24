@@ -15,7 +15,7 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
     <div class="nav">
       <div class="brand-suite">
         <a class="zaurio-link" href="/herramientas/" aria-label="Volver a Zaurio Herramientas">
-          <img src="https://zaurio.es/shared/assets/brand/logo-zaurio-square.png" alt="Zaurio">
+          <img src="https://zaurio.es/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
         </a>
         <a class="brand" href="/emprezaurio/" aria-label="Ir a Emprezaurio">
           <img class="brand-mark" src="https://zaurio.es/shared/assets/brand/emprezaurio-icono.png" alt="Emprezaurio">
