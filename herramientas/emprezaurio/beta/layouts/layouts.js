@@ -972,26 +972,6 @@ function getAvatarPiece(wrapper){
 
 function getHeroMorphData(wrapper){
   if (!wrapper) return null;
-  const sidebar = wrapper.querySelector('.sidebar-layout .rail');
-  if (sidebar){
-    const railRect = sidebar.getBoundingClientRect();
-    const chipWrap = wrapper.querySelector('.sidebar-layout .chip-wrap');
-    const chipRect = chipWrap?.getBoundingClientRect();
-    const bottom = chipRect ? Math.min(railRect.bottom, chipRect.bottom + 10) : Math.min(railRect.bottom, railRect.top + 280);
-    const cs = getComputedStyle(sidebar);
-    return {
-      rect: {
-        left: railRect.left,
-        top: railRect.top,
-        width: railRect.width,
-        height: Math.max(180, bottom - railRect.top)
-      },
-      background: cs.background,
-      borderRadius: cs.borderRadius,
-      boxShadow: cs.boxShadow,
-      border: cs.border
-    };
-  }
   const hero = getHeroPiece(wrapper);
   if (!hero) return null;
   const rect = hero.getBoundingClientRect();
