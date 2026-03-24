@@ -172,6 +172,23 @@ export function showActionFeedback(anchor, message, tone = 'default'){
   }, 1400);
 }
 
+function sparkleNode(anchor){
+  const target = anchor?.getBoundingClientRect?.();
+  if (!target) return;
+  const node = document.createElement('div');
+  node.className = 'sparkle-burst';
+  node.style.left = `${target.left + target.width / 2}px`;
+  node.style.top = `${target.top + target.height / 2}px`;
+  document.body.appendChild(node);
+  for (let i = 0; i < 8; i++) {
+    const dot = document.createElement('span');
+    dot.style.setProperty('--dx', `${Math.cos((Math.PI * 2 * i) / 8) * 30}px`);
+    dot.style.setProperty('--dy', `${Math.sin((Math.PI * 2 * i) / 8) * 30}px`);
+    node.appendChild(dot);
+  }
+  window.setTimeout(() => node.remove(), 700);
+}
+
 function renderProjectPreview(project){
   const payload = project.payload || {};
   const layout = project.layout || payload.layout || 'top';
@@ -245,6 +262,10 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       .micro-feedback.is-live{opacity:1;transform:translateY(-12px) scale(1)}
       .micro-feedback.success{background:linear-gradient(135deg,#ffd447,#ffb87c);color:#240b18}
       .micro-feedback.warn{background:linear-gradient(135deg,#f97316,#ef4444)}
+      .micro-feedback.sparkle::after{content:"✦";margin-left:8px}
+      .sparkle-burst{position:fixed;z-index:23001;pointer-events:none;transform:translate(-50%,-50%)}
+      .sparkle-burst span{position:absolute;width:8px;height:8px;border-radius:999px;background:linear-gradient(135deg,#ffd447,#fff3b0);box-shadow:0 0 14px rgba(255,212,71,.5);animation:sparkle-pop .65s ease forwards}
+      @keyframes sparkle-pop{0%{opacity:0;transform:translate(0,0) scale(.2)}25%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1)}}
       #projectLibrary .lib-head{display:flex;justify-content:space-between;gap:14px;align-items:end}
       #projectLibrary .lib-head h2{margin:0;font:800 2rem/1 "Bricolage Grotesque","Trebuchet MS",sans-serif;color:#fff8fb}
       #projectLibrary .lib-head p{margin:8px 0 0;color:rgba(255,255,255,.72)}
@@ -256,6 +277,16 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .lib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;overflow:auto;padding-right:6px}
       #projectLibrary .project-card{position:relative;display:grid;gap:14px;min-height:220px;padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
       #projectLibrary .project-card:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.24);border-color:rgba(255,212,71,.24)}
+      #projectLibrary .project-card.is-deleting{border:2px dashed rgba(239,68,68,.92);box-shadow:0 0 0 4px rgba(239,68,68,.08) inset, 0 22px 44px rgba(0,0,0,.22);background:linear-gradient(180deg,rgba(120,16,24,.16),rgba(255,255,255,.03));overflow:hidden}
+      #projectLibrary .project-card.is-deleting .project-preview,
+      #projectLibrary .project-card.is-deleting .project-meta,
+      #projectLibrary .project-card.is-deleting .project-open{opacity:.72}
+      #projectLibrary .project-card.is-deleting .trash-pop{position:absolute;right:18px;bottom:18px;width:34px;height:34px;pointer-events:none;animation:trash-bye .82s ease forwards}
+      #projectLibrary .project-card.is-deleting .trash-pop::before{content:"";position:absolute;left:6px;right:6px;bottom:4px;height:20px;border:2px solid rgba(255,236,236,.95);border-top:0;border-radius:0 0 8px 8px;background:rgba(239,68,68,.14)}
+      #projectLibrary .project-card.is-deleting .trash-pop::after{content:"";position:absolute;left:7px;right:7px;top:3px;height:6px;border-radius:6px;background:rgba(255,236,236,.98);transform-origin:5px 100%;animation:trash-lid .82s ease forwards}
+      #projectLibrary .project-card.is-deleting .trash-pop .trash-handle{position:absolute;left:12px;right:12px;top:0;height:4px;border:2px solid rgba(255,236,236,.95);border-bottom:0;border-radius:6px 6px 0 0}
+      @keyframes trash-lid{0%,18%{transform:rotate(0deg)}34%{transform:rotate(-32deg)}56%{transform:rotate(4deg)}70%,100%{transform:rotate(0deg)}}
+      @keyframes trash-bye{0%{opacity:0;transform:translateY(10px) scale(.86)}18%{opacity:1;transform:translateY(0) scale(1)}70%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-22px) scale(.76)}}
       #projectLibrary .project-preview{display:grid;gap:10px;padding:12px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
       #projectLibrary .mini-resume{display:grid;gap:10px;min-height:120px;padding:12px;border-radius:16px;background:#f7f4fb;color:#12071b;overflow:hidden}
       #projectLibrary .mini-hero{border-radius:12px;background:linear-gradient(135deg,#ffba4a,#ff6aa7);min-height:34px}
@@ -284,7 +315,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       #projectLibrary .project-open{margin-top:auto}
       #projectLibrary .project-open button{width:100%}
       #projectLibrary .project-menu-wrap{position:relative}
-      #projectLibrary .project-menu-btn{width:40px;height:40px;border-radius:14px;padding:0}
+      #projectLibrary .project-menu-btn{width:40px;height:40px;border-radius:14px;padding:0;font-size:1.3rem;line-height:1}
       #projectLibrary .project-menu{position:absolute;top:46px;right:0;display:none;min-width:220px;padding:8px;border-radius:18px;background:#12071b;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 60px rgba(0,0,0,.35)}
       #projectLibrary .project-menu.open{display:grid;gap:6px}
       #projectLibrary .project-menu button{appearance:none;border:0;background:rgba(255,255,255,.04);color:#fff8fb;padding:10px 12px;border-radius:12px;text-align:left;cursor:pointer;transition:background .16s ease, transform .16s ease}
@@ -344,7 +375,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
             <div class="project-row">
               <div class="project-preview">${renderProjectPreview(project)}</div>
               <div class="project-menu-wrap">
-                <button class="lib-btn project-menu-btn" data-menu-btn="${project.id}" type="button">⋯</button>
+                <button class="lib-btn project-menu-btn" data-menu-btn="${project.id}" type="button" aria-label="Mas opciones">⋯</button>
                 <div class="project-menu" data-menu="${project.id}">
                   <button data-action="edit" data-id="${project.id}" type="button">Editar</button>
                   <button data-action="rename" data-id="${project.id}" type="button">Renombrar</button>
@@ -355,7 +386,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
               </div>
             </div>
             <div class="project-meta">
-              <h3>${project.title}</h3>
+              <h3><span class="project-title-text" data-title-text="${project.id}">${project.title}</span></h3>
               <p>${projectSummary(project)}</p>
               <p>${project.preview_name || 'Sin nombre visible'} · ${project.layout || 'top'} · ${(project.locale || 'es').toUpperCase()}</p>
             </div>
@@ -420,8 +451,23 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
         .update({ title: nextTitle, updated_at: new Date().toISOString() })
         .eq('id', project.id);
       if (!error) {
-        showActionFeedback(trigger, 'Renombrado', 'success');
-        return renderCards();
+        const titleNode = grid.querySelector(`[data-title-text="${project.id}"]`);
+        if (titleNode) {
+          titleNode.textContent = nextTitle;
+          titleNode.animate(
+            [
+              { transform:'scale(1)', filter:'drop-shadow(0 0 0 rgba(255,212,71,0))' },
+              { transform:'scale(1.06)', filter:'drop-shadow(0 0 18px rgba(255,212,71,.52))' },
+              { transform:'scale(1)', filter:'drop-shadow(0 0 0 rgba(255,212,71,0))' }
+            ],
+            { duration: 650, easing:'ease-out' }
+          );
+          sparkleNode(titleNode);
+        }
+        showActionFeedback(trigger, 'Renombrado', 'success sparkle');
+        sparkleNode(trigger);
+        window.setTimeout(() => renderCards(), 700);
+        return;
       }
       return;
     }
@@ -436,8 +482,30 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       return renderCards();
     }
     if (action === 'delete') {
-      await deleteProject(project.id);
+      const card = grid.querySelector(`.project-card[data-id="${project.id}"]`);
       showActionFeedback(trigger, 'CV eliminado', 'warn');
+      if (card) {
+        card.classList.add('is-deleting');
+        if (!card.querySelector('.trash-pop')) {
+          const trash = document.createElement('span');
+          trash.className = 'trash-pop';
+          trash.innerHTML = '<span class="trash-handle"></span>';
+          card.appendChild(trash);
+        }
+        window.setTimeout(async () => {
+          await deleteProject(project.id);
+          card.animate(
+            [
+              { opacity:1, transform:'scale(1)' },
+              { opacity:0, transform:'scale(.92)' }
+            ],
+            { duration:220, easing:'ease-in', fill:'forwards' }
+          );
+          window.setTimeout(() => renderCards(), 220);
+        }, 760);
+        return;
+      }
+      await deleteProject(project.id);
       return renderCards();
     }
   });
