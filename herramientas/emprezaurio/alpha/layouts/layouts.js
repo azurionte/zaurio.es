@@ -22,7 +22,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .add-dot{width:40px;height:40px;border-radius:12px;background:#0b1022;color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.35)}
     /* Sidebar layout */
     .sidebar-layout{
-      display:grid;grid-template-columns: var(--rail) minmax(0,1fr);gap:18px;align-items:start
+      display:grid;grid-template-columns: var(--rail) minmax(0,1fr);gap:18px;align-items:start;
       width:100%;
     }
     .sidebar-layout .rail{
@@ -36,7 +36,6 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .sidebar-layout [data-zone="main"] > #canvasAdd{ grid-column: 1 / -1; width:100%; max-width:none !important }
 
     /* Force section children to stretch across the main column and avoid intrinsic-width shrinking */
-+
     .sidebar-layout [data-zone="main"] > .section{ display:block; justify-self:stretch; min-width:0 }
 
     /* Header variants */
@@ -185,7 +184,7 @@ export function ensureCanvas(){
   return { stack: $('#stack'), addWrap: $('#canvasAdd'), add: $('#canvasAdd') };
 }
 
-export function getHeaderNode(){ return $('[data-header]'); }
+export function getHeaderNode(){ return $$('[data-header]').at(-1) || null; }
 function getHeaderNodeWrapper(){ return getHeaderNode()?.closest('.node') || null; }
 
 export function isSidebarActive(){
@@ -204,6 +203,12 @@ export function getSideMain(){
   const head = getHeaderNode();
   if (isSidebarActive() && head) return head.querySelector('[data-zone="main"]');
   return stackEl();
+}
+
+function getSectionWrappers(){
+  return Array.from(document.querySelectorAll('.node'))
+    .filter(w => w.querySelector && w.querySelector('.section'))
+    .filter(w => !w.hasAttribute('data-locked'));
 }
 
 // Sanitize .node wrappers inside the main zone by removing inline width styles
@@ -606,44 +611,60 @@ function buildHeader(kind){
   document.body.setAttribute('data-dark', S.dark?'1':'0');
   document.body.setAttribute('data-mat',  S.mat||'paper');
 
-  ensureAddAnchor(true);
+  normalizeCanvasForCurrentLayout({ showAdd: true });
   applyContact();
   queueMicrotask(()=> document.dispatchEvent(new CustomEvent('layout:changed', { detail:{ kind:S.layout } })));
   return node;
 }
 
 /* ---- Re-home existing sections when layout changes ---- */
-function adoptSectionsToCurrentLayout(){
-  const main = getSideMain();       // [data-zone="main"] when side; else #stack
-  const rail = getRailHolder();     // null unless side layout is active
-  const plus = $('#canvasAdd');
+function adoptSectionsToCurrentLayout(main, rail, add){
+  if (!main) return;
 
-  // Move any loose .node wrappers (which contain .section) into main first.
-  // This keeps the wrapper as the grid child so our CSS rules apply.
-  const looseWrappers = Array.from(document.querySelectorAll('.node'))
-    .filter(w => w.querySelector && w.querySelector('.section'))
-    .filter(w => !main.contains(w) && (!rail || !rail.contains(w)));
-  looseWrappers.forEach(w => main.insertBefore(w, plus || null));
+  const wrappers = getSectionWrappers();
+  const skillsWrapper = wrappers.find(w => w.dataset.section === 'skills')
+    || document.querySelector('.section[data-section="skills"]')?.closest('.node')
+    || null;
 
-  // Skills to rail if that choice was made
-  if (rail && (S?.skillsInSidebar)){
-    // Prefer the wrapper (node[data-section="skills"]) if present, otherwise fall back
-    const skillsWrapper = main.querySelector('.node[data-section="skills"]') || main.querySelector('.section[data-section="skills"]')?.closest('.node');
-    if (skillsWrapper) rail.appendChild(skillsWrapper);
+  wrappers.forEach(wrapper => {
+    if (wrapper === skillsWrapper) return;
+    if (wrapper.parentElement !== main) main.insertBefore(wrapper, add || null);
+  });
+
+  if (skillsWrapper){
+    const target = (rail && S?.skillsInSidebar) ? rail : main;
+    if (skillsWrapper.parentElement !== target){
+      if (target === main) target.insertBefore(skillsWrapper, add || null);
+      else target.appendChild(skillsWrapper);
+    }
   }
+}
 
-  ensureAddAnchor(true);
+export function normalizeCanvasForCurrentLayout({ showAdd } = {}){
+  const stack = stackEl();
+  const main = isSidebarActive() ? getSideMain() : stack;
+  const rail = getRailHolder();
+  const add = $('#canvasAdd');
+
+  if (!stack || !main || !add) return null;
+
+  adoptSectionsToCurrentLayout(main, rail, add);
+
+  if (add.parentElement !== main) main.appendChild(add);
+  if (typeof showAdd === 'boolean') add.style.display = showAdd ? 'flex' : 'none';
+
+  sanitizeMainNodes();
+  return { stack, main, rail, add };
 }
 
 export function morphTo(kind){
   const oldWrap=getHeaderNodeWrapper();
   const before=oldWrap?.getBoundingClientRect();
+  const oldHeader = oldWrap?.querySelector('[data-header]');
+  if (oldHeader) oldHeader.removeAttribute('data-header');
   const temp=buildHeader(kind);
 
-  // NEW: immediately re-home any existing sections for the new layout
-  adoptSectionsToCurrentLayout();
-  // sanitize wrappers after re-home
-  sanitizeMainNodes();
+  normalizeCanvasForCurrentLayout({ showAdd: true });
 
   const after=temp.getBoundingClientRect();
 
@@ -658,21 +679,18 @@ export function morphTo(kind){
       temp.style.transition='transform .35s ease, opacity .35s ease';
       temp.style.transform='translate(0,0) scale(1,1)';
       temp.style.opacity='1';
-      setTimeout(()=>{temp.style.transition=''; temp.style.transform='';},380);
+      setTimeout(()=>{
+        temp.style.transition='';
+        temp.style.transform='';
+        normalizeCanvasForCurrentLayout();
+      },380);
     });
   }else{
-    ensureAddAnchor(true);
+    normalizeCanvasForCurrentLayout({ showAdd: true });
   }
 }
 
 /* ---- Add anchor owner (SINGLE SOURCE) ---- */
 export function ensureAddAnchor(show){
-  const s = isSidebarActive() ? getSideMain() : stackEl();
-  const add = $('#canvasAdd');
-  if(!s || !add) return null;
-  if(add.parentElement!==s) s.appendChild(add);
-  if(typeof show==='boolean') add.style.display=show?'flex':'none';
-  // Re-home any existing section wrappers into the current main zone and sanitize
-  try{ adoptSectionsToCurrentLayout(); sanitizeMainNodes(); }catch(e){ /* best-effort */ }
-  return add;
+  return normalizeCanvasForCurrentLayout({ showAdd: show })?.add || null;
 }

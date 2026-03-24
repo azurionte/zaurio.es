@@ -469,10 +469,9 @@ export function openAddMenu(anchor){
 // Refresh plus visibility: hide the canvas add button if all sections exist, show otherwise
 function refreshPlusVisibility(){
   const all = ['skills','edu','exp','bio'];
-  const host = getSideMain() || ensureCanvas().stack;
   const plus = document.getElementById('canvasAdd') || ensureCanvas().add;
   if (!plus) return;
-  const missing = all.filter(k => !host.querySelector('.section[data-section="'+k+'"]'));
+  const missing = all.filter(k => !document.querySelector('.section[data-section="'+k+'"]'));
   plus.style.display = (missing.length===0) ? 'none' : 'flex';
 }
 

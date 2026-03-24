@@ -122,12 +122,6 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
   top.querySelector('#layoutQuick').addEventListener('click', e => {
     const k = e.target.closest('[data-layout]')?.dataset.layout; if(!k) return;
     morphTo(k);
-    setTimeout(() => {
-      const plus = document.getElementById('canvasAdd');
-      const main = document.querySelector('[data-header] [data-zone="main"]') || document.getElementById('stack');
-      if (plus && plus.parentElement !== main) main.appendChild(plus);
-      plus.style.display='flex';
-    }, 380);
     top.querySelector('#ddLayout').classList.remove('open');
   });
 }

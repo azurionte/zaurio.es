@@ -87,8 +87,6 @@ a{color:inherit;text-decoration:none}
 /* Add button centering improvements */
 .add-squircle{grid-column:1/-1;display:flex;justify-content:center;align-items:center;padding:28px 0}
 .add-dot{display:flex;align-items:center;justify-content:center}
-*** End Patch
-
 /* plus button */
 .add-squircle{grid-column:1/-1;display:flex;justify-content:center;padding:28px 0}
 .add-dot{width:86px;height:86px;border-radius:22px;border:2px dashed #a3aed0;display:grid;place-items:center;color:#64748b;cursor:pointer;background:#fff;box-shadow:var(--shadow);font-size:28px;font-weight:900}
