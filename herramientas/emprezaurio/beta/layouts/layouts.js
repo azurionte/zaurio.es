@@ -1089,6 +1089,7 @@ export function morphTo(kind){
   const oldHero = getHeroPiece(oldWrap);
   const oldHeroData = getHeroMorphData(oldWrap);
   const oldAvatar = getAvatarPiece(oldWrap);
+  const avatarGhostData = oldAvatar ? makeAvatarGhost(oldAvatar) : null;
   const oldFadeTargets = collectFadeTargets(oldWrap);
   const sectionTargets = getSectionWrappers();
   const add = $('#canvasAdd');
@@ -1111,7 +1112,6 @@ export function morphTo(kind){
   }
 
   const heroGhostData = makeHeroGhost(oldHeroData);
-  const avatarGhostData = oldAvatar ? makeAvatarGhost(oldAvatar) : null;
 
   oldHero.classList.add('layout-morph-hide');
   if (oldAvatar) oldAvatar.classList.add('layout-morph-hide');
