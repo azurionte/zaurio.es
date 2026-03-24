@@ -1,6 +1,6 @@
 // /resume/wizard/wizard.js
-// [wizard.js] v2.13.0 — wizard with reliable layout morph + mobile overlay polish
-console.log('[wizard.js] v2.13.0');
+// [wizard.js] v2.14.0 — wizard with reliable layout morph + mobile overlay polish
+console.log('[wizard.js] v2.14.0');
 
 import { S, setTheme, setDark, setMaterial } from '../app/state.js';
 import { morphTo, getHeaderNode, applyContact } from '../layouts/layouts.js';
@@ -130,9 +130,57 @@ import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/module
       }
       #wizard .wz-mock{
         width:100%;
-        max-width:420px;
-        height:144px;
+        max-width:300px;
+        height:110px;
+        margin:6px auto;
       }
+      #wizard .wz-card{
+        border-radius:14px;
+        padding:9px;
+      }
+      #wizard .wz-mock--side .wz-left{
+        width:118px;
+        left:9px;
+        top:9px;
+        bottom:9px;
+        gap:10px;
+      }
+      #wizard .wz-mock--side .wz-right{
+        left:142px;
+        right:14px;
+        top:18px;
+        row-gap:9px;
+      }
+      #wizard .wz-mock--fancy .wz-hero,
+      #wizard .wz-mock--top .wz-hero{
+        left:9px;
+        right:9px;
+        top:9px;
+        height:48px;
+      }
+      #wizard .wz-mock--fancy .wz-pp{
+        top:18px;
+        width:64px;
+        height:64px;
+      }
+      #wizard .wz-mock--fancy .wz-b1{width:104px;bottom:19px}
+      #wizard .wz-mock--fancy .wz-b2{width:70%;bottom:10px}
+      #wizard .wz-mock--fancy .wz-b3{width:118px;bottom:4px}
+      #wizard .wz-mock--top .wz-pp{
+        right:18px;
+        top:12px;
+        width:44px;
+        height:44px;
+      }
+      #wizard .wz-mock--top .wz-txt{
+        left:22px;
+        right:84px;
+        top:22px;
+        row-gap:9px;
+      }
+      #wizard .wz-mock--top .wz-b1{width:116px;bottom:28px}
+      #wizard .wz-mock--top .wz-b2{width:70%;bottom:16px}
+      #wizard .wz-mock--top .wz-b3{width:126px;bottom:6px}
       #wizard .wiz-grid2{
         grid-template-columns:1fr;
       }
@@ -320,7 +368,7 @@ function renderStep(){
         ${mock('header-fancy')}
         ${mock('header-top')}
       </div>
-      <div class="k-row" style="margin-top:12px"><button class="mbtn" id="wizAddPhoto"><i class="fa-solid fa-camera"></i> Upload photo</button></div>`;
+      </div>`;
     const row = body.querySelector('#mockRow');
     const current = (S.layout==='side')?'header-side':(S.layout==='fancy')?'header-fancy':(S.layout==='top')?'header-top':null;
     if (current) row.querySelector(`[data-layout="${current}"]`)?.classList.add('sel');
@@ -330,7 +378,6 @@ function renderStep(){
       m.classList.add('sel');
       morphTo(m.dataset.layout);          // morph FIRST to guarantee correct hosts
     });
-    body.querySelector('#wizAddPhoto').onclick = ()=> getHeaderNode()?.querySelector('[data-avatar] input')?.click();
   }
 
   /* ----- THEME ----- */
@@ -374,6 +421,9 @@ function renderStep(){
           <span style="opacity:.7">linkedin.com/in/</span>
           <input class="wipt" id="ln" placeholder="username" style="flex:1" value="${S.contact?.linkedin||''}">
         </div>
+        <div style="grid-column:1/-1;display:flex;justify-content:flex-start">
+          <button class="mbtn" id="wizAddPhoto" type="button"><i class="fa-solid fa-camera"></i> Upload photo</button>
+        </div>
       </div>`;
     ['nm','ph','em','ad','ln'].forEach(id=>{
       body.querySelector('#'+id).oninput = ()=>{
@@ -387,6 +437,7 @@ function renderStep(){
         applyContact?.();
       };
     });
+    body.querySelector('#wizAddPhoto').onclick = ()=> getHeaderNode()?.querySelector('[data-avatar] input')?.click();
   }
 
   /* ----- SKILLS ----- */
