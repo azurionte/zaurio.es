@@ -198,6 +198,32 @@
       border-radius:22px;
       background:rgba(255,255,255,.04);
       border:1px solid rgba(255,255,255,.08);
+      display:grid;
+      grid-template-columns:56px 1fr;
+      gap:14px;
+      align-items:start;
+    }
+
+    .note-icon{
+      width:56px;
+      height:56px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.1);
+      background:linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .note-icon img{
+      width:40px;
+      height:40px;
+      object-fit:contain;
+      filter:drop-shadow(0 6px 12px rgba(0,0,0,.22));
+    }
+
+    .note-copy{
+      min-width:0;
     }
 
     .note strong{
@@ -1082,20 +1108,32 @@
         </div>
         <div class="hero-notes">
           <div class="note">
-            <strong>Miercoles</strong>
-            <span>La puerta de entrada para mandar mensajes an&oacute;nimos a los directos de dramas y chismes.</span>
+            <span class="note-icon"><img src="/shared/assets/brand/miercoles.png" alt="Miercoles"></span>
+            <span class="note-copy">
+              <strong>Miercoles de dramas y chismes</strong>
+              <span>La puerta de entrada para mandar mensajes an&oacute;nimos a los directos de dramas y chismes.</span>
+            </span>
           </div>
           <div class="note">
-            <strong>Herramientas</strong>
-            <span>El lado serio del asunto: ideas &uacute;tiles para sobrevivir mejor la vida adulta con personalidad propia.</span>
+            <span class="note-icon"><img src="/shared/assets/apps/toolbox.png" alt="Herramientas"></span>
+            <span class="note-copy">
+              <strong>Herramientas</strong>
+              <span>El lado serio del asunto: ideas &uacute;tiles para sobrevivir mejor la vida adulta con personalidad propia.</span>
+            </span>
           </div>
           <div class="note">
-            <strong>Secretos</strong>
-            <span>Un rinc&oacute;n an&oacute;nimo para contar lo m&aacute;s heavy o lo m&aacute;s divertido y votar lo de otras personas.</span>
+            <span class="note-icon"><img src="/shared/assets/brand/confesion.png" alt="Secretos"></span>
+            <span class="note-copy">
+              <strong>Secretos</strong>
+              <span>Un rinc&oacute;n an&oacute;nimo para contar lo m&aacute;s heavy o lo m&aacute;s divertido y votar lo de otras personas.</span>
+            </span>
           </div>
           <div class="note">
-            <strong>Juegos</strong>
-            <span>El espacio pensado para reunir gente con partidas r&aacute;pidas, juegos de fiesta y experimentos como Trivialodon.</span>
+            <span class="note-icon"><img src="/shared/assets/brand/trivialodon-icono.png" alt="Juegos"></span>
+            <span class="note-copy">
+              <strong>Juegos</strong>
+              <span>El espacio pensado para reunir gente con partidas r&aacute;pidas, juegos de fiesta y experimentos como Trivialodon.</span>
+            </span>
           </div>
         </div>
       </article>
