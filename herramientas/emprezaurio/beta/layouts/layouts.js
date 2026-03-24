@@ -51,15 +51,17 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .topbar .avatar{
       position:absolute;
       right:0;
-      top:0;
+      top:50%;
+      transform:translateY(-50%);
       align-self:auto;
       justify-self:auto;
       margin:0;
     }
     .topbar #chipAddBtn{
       position:absolute !important;
-      right:0;
-      bottom:0;
+      right:138px;
+      top:50%;
+      transform:translateY(-50%);
       margin:0 !important;
       display:grid;
       place-items:center;
