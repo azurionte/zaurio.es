@@ -62,13 +62,11 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy .hero{position:relative;border-radius:14px;padding:18px 18px 108px;min-height:250px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
     .fancy .hero .avatar{position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);z-index:4;width:124px;height:124px;border-width:4px}
     .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3}
-    .fancy .chip-grid{position:absolute;left:18px;right:18px;bottom:26px;display:grid;grid-template-columns:minmax(0,1fr) 132px minmax(0,1fr);gap:14px;align-items:end;pointer-events:none}
+    .fancy .chip-grid{position:absolute;left:18px;right:18px;bottom:22px;display:grid;grid-template-columns:minmax(0,1fr) 164px minmax(0,1fr);gap:10px;align-items:end;pointer-events:none}
     .fancy .chip-grid .chips{display:flex;flex-direction:column;gap:10px;min-width:0;pointer-events:auto}
-    .fancy .chip-grid [data-info-left]{grid-column:1;align-items:flex-start}
-    .fancy .chip-grid [data-info-right]{grid-column:3;align-items:flex-start}
-    .fancy .chip-grid .chip{width:100%;max-width:100%;min-height:42px}
-    .fancy .chip-grid .chip span,
-    .fancy .chip-grid .chip .chip-input{white-space:normal;overflow-wrap:anywhere}
+    .fancy .chip-grid [data-info-left]{grid-column:1;align-items:flex-end;justify-self:end}
+    .fancy .chip-grid [data-info-right]{grid-column:3;align-items:flex-start;justify-self:start}
+    .fancy .chip-grid .chip{width:min(100%,260px);max-width:260px;min-height:46px}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
@@ -110,17 +108,11 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     }
 
   .chips{display:flex;flex-wrap:wrap;gap:10px}
-  .chip{display:flex;align-items:center;gap:10px;border-radius:999px;padding:8px 12px;border:1px solid rgba(0,0,0,.08);margin-bottom:0;min-width:0}
+  .chip{display:flex;align-items:center;gap:10px;border-radius:999px;padding:10px 14px;border:1px solid rgba(0,0,0,.08);margin-bottom:0;min-width:0;min-height:46px;box-sizing:border-box}
     .chip i{width:16px;text-align:center}
     .chip[contenteditable="true"]{outline:none}
     .chip span{display:block;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .chip[data-wrap="1"] span,
-    .chip .chip-input{
-      white-space:normal;
-      overflow-wrap:anywhere;
-      word-break:break-word;
-      line-height:1.25;
-    }
+    .chip .chip-input{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* scope text color to the sheet (canvas) only */
   #sheet{ color: #111 }
   body[data-dark="1"] #sheet{ color: #fff }
@@ -149,7 +141,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     width:100% !important;
     box-sizing:border-box;
     position:relative;
-    padding:0 0 6px;
+    padding:0;
     text-align:center;
   }
   .sidebar-layout .rail .chip-wrap .chips {
@@ -165,41 +157,43 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     flex:1 1 100%;
     width:100%;
     max-width:100%;
-    min-height:44px;
+    min-height:46px;
     padding-right:28px;
     justify-content:flex-start;
     position:relative;
     left:auto;
     transform:none;
     margin:0;
-    align-items:flex-start;
+    align-items:center;
   }
   .sidebar-layout .rail .chip-wrap .chip span,
   .sidebar-layout .rail .chip-wrap .chip .chip-input{
     width:100%;
     max-width:100%;
     text-align:left;
-    white-space:normal;
-    overflow-wrap:anywhere;
-    word-break:break-word;
-    line-height:1.25;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    line-height:1.2;
   }
   .sidebar-layout .rail .chip-wrap #chipAddBtn {
     display:flex !important;
     justify-content:center;
     align-items:center;
-    margin:4px 0 6px 0 !important;
+    margin:0 !important;
     left:auto !important;
-    right:auto !important;
+    right:-12px !important;
+    bottom:-10px !important;
     transform:none !important;
-    position:static !important;
+    position:absolute !important;
   }
   /* place the add button in-flow after the chips so it naturally sits below the latest chip
     while remaining centered across the full rail width */
   /* In sidebar layout, chips are single-column (one per row) */
   .sidebar-layout .rail .chips{ width:100%; display:flex; flex-wrap:wrap; gap:10px }
-  .sidebar-layout .rail #chipAddBtn{ display:block; margin:8px auto 6px; width:44px; height:44px; border-radius:12px; background:#0b1022 !important; color:#fff !important; border:0; box-shadow:0 8px 20px rgba(11,16,34,.28); font-weight:800; z-index:40 }
+  .sidebar-layout .rail #chipAddBtn{ display:grid; place-items:center; width:44px; height:44px; border-radius:12px; background:#0b1022 !important; color:#fff !important; border:0; box-shadow:0 8px 20px rgba(11,16,34,.28); font-weight:800; z-index:40 }
   .sidebar-layout .rail #chipAddBtn:hover{ filter:brightness(1.03) }
+  .fancy .hero #chipAddBtn{position:absolute !important;left:calc(50% + 86px);bottom:12px;margin:0 !important;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#0b1022 !important;color:#fff !important;border:0;box-shadow:0 8px 20px rgba(11,16,34,.28);font-weight:800;z-index:5}
   /* prevent the browser "editing" container from showing an ugly border/outline */
   .sidebar-layout .rail .name[contenteditable]{ caret-color: #fff; }
   .sidebar-layout .rail .name[contenteditable]:focus{ outline:none !important; box-shadow:none !important; border:none !important }
