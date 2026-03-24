@@ -55,6 +55,12 @@ export async function initAuth(){
     authState.session = null;
   }
 
+  if (requestedMode === 'guest'){
+    authState.mode = 'guest';
+    authState.scope = 'emprezaurio-beta:guest';
+    return authState;
+  }
+
   if (authState.session?.user?.id){
     authState.mode = 'google';
     authState.scope = `emprezaurio-beta:user:${authState.session.user.id}`;
