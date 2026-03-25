@@ -289,9 +289,12 @@ a{color:inherit;text-decoration:none}
 .preview #topbar-root #btnPreview{background:#1f2937}
 @page{
   size:A4;
-  margin:10mm;
+  margin:6mm;
 }
 @media print{
+  :root{
+    --page-w:198mm;
+  }
   html,body{
     background:#fff !important;
     color:#111 !important;
@@ -313,7 +316,7 @@ a{color:inherit;text-decoration:none}
   }
   .page{
     display:block !important;
-    width:auto !important;
+    width:198mm !important;
     height:auto !important;
     min-height:0 !important;
     margin:0 !important;
@@ -323,11 +326,11 @@ a{color:inherit;text-decoration:none}
     break-inside:auto;
   }
   #sheet{
-    width:100% !important;
+    width:198mm !important;
     max-width:none !important;
     min-height:0 !important;
     margin:0 !important;
-    padding:12mm !important;
+    padding:8mm !important;
     border-radius:0 !important;
     border:0 !important;
     box-shadow:none !important;
