@@ -220,6 +220,20 @@ function persistCanvasContent(node){
       canvas.replaceWith(img);
     } catch (_) {}
   });
+  node.querySelectorAll('.avatar').forEach(avatar => {
+    const hasVisual = avatar.querySelector('img,canvas');
+    if (!hasVisual && S.avatar?.src) {
+      const img = document.createElement('img');
+      img.src = S.avatar.src;
+      img.alt = '';
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.display = 'block';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '50%';
+      avatar.appendChild(img);
+    }
+  });
   return node;
 }
 
@@ -293,6 +307,8 @@ function getExportStyles(){
     .print-page .card-controls,
     .print-page #chipAddBtn,
     .print-page #chipAddPop{display:none !important}
+    .print-page .avatar img,
+    .print-page .avatar canvas{width:100% !important;height:100% !important;display:block !important;object-fit:cover !important;border-radius:50% !important}
     @page{size:A4;margin:0}
   `;
 }
@@ -404,7 +420,7 @@ function paginateExport(){
   sections.forEach(sectionNode => {
     const config = getSectionSplitConfig(sectionNode);
     if (!config) {
-      const clone = cloneClean(sectionNode);
+      const clone = cloneClean(sectionNode.querySelector('.section') || sectionNode);
       if (!measureFits(measureRoot, currentPage, currentBody, clone)) newPage();
       currentBody.appendChild(clone);
       return;
@@ -455,12 +471,6 @@ function paginateExport(){
 }
 
 function openPrintExportWindow(){
-  const win = window.open('', '_blank', 'width=980,height=1200');
-  if (!win) return;
-  win.document.open();
-  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Emprezaurio Export</title></head><body style="margin:0;font-family:system-ui;background:#fff;color:#111;display:grid;place-items:center;min-height:100vh">Preparando PDF...</body></html>`);
-  win.document.close();
-
   try {
     const exportRoot = paginateExport();
     const styleMarkup = Array.from(document.querySelectorAll('style,link[rel="stylesheet"]'))
@@ -480,23 +490,41 @@ function openPrintExportWindow(){
       </head>
       <body class="${bodyClass}" data-theme="${bodyTheme}" data-dark="${bodyDark}">
         ${exportRoot.outerHTML}
-        <script>
-          window.addEventListener('load', () => {
-            setTimeout(() => {
-              window.focus();
-              window.print();
-            }, 120);
-          });
-        <\/script>
       </body>
     </html>`;
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+
+    const existing = document.getElementById('printExportFrame');
+    if (existing) existing.remove();
+    const iframe = document.createElement('iframe');
+    iframe.id = 'printExportFrame';
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.opacity = '0';
+    iframe.style.pointerEvents = 'none';
+    document.body.appendChild(iframe);
+
+    iframe.onload = () => {
+      const cleanup = () => setTimeout(() => iframe.remove(), 300);
+      iframe.contentWindow?.addEventListener('afterprint', cleanup, { once:true });
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      }, 120);
+    };
+
+    const doc = iframe.contentDocument;
+    if (!doc) throw new Error('No se pudo preparar el documento de exportacion.');
+    doc.open();
+    doc.write(html);
+    doc.close();
   } catch (error) {
-    win.document.open();
-    win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Emprezaurio Export Error</title></head><body style="font-family:system-ui;margin:0;padding:24px;background:#fff;color:#111"><h1 style="margin-top:0">No se pudo preparar la exportación</h1><pre style="white-space:pre-wrap;border:1px solid #ddd;padding:16px;border-radius:12px;background:#f8f8f8">${String(error && (error.stack || error.message || error))}</pre></body></html>`);
-    win.document.close();
+    console.error('[Emprezaurio print export]', error);
+    alert('No se pudo preparar la descarga del CV.');
   }
 }
 
