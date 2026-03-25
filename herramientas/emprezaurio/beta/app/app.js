@@ -296,8 +296,57 @@ function getExportStyles(){
     .print-summary-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
     .print-summary-name{font-weight:900;font-size:28px;line-height:1.05}
     .print-summary-chips{display:flex;flex-wrap:wrap;gap:10px}
-    .print-summary-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:44px}
+    .print-summary-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:38px;font-size:13px;line-height:1.15}
     .print-summary-chip i{width:16px;text-align:center}
+    .print-page .sidebar-layout .rail{display:flex !important;flex-direction:column !important;align-items:flex-start !important}
+    .print-page .sidebar-layout .rail .avatar{
+      display:block !important;
+      margin:18px auto 14px !important;
+      align-self:center !important;
+      justify-self:center !important;
+      left:auto !important;
+      right:auto !important;
+      top:auto !important;
+      bottom:auto !important;
+      transform:none !important;
+      width:140px !important;
+      height:140px !important;
+      min-width:140px !important;
+      min-height:140px !important;
+      max-width:140px !important;
+      max-height:140px !important;
+      aspect-ratio:1 / 1 !important;
+      border-radius:50% !important;
+    }
+    .print-page .sidebar-layout .rail .chip-wrap{
+      width:100% !important;
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      gap:10px !important;
+    }
+    .print-page .sidebar-layout .rail .chip-wrap .chips{
+      width:100% !important;
+      display:flex !important;
+      flex-wrap:wrap !important;
+      gap:10px !important;
+    }
+    .print-page .sidebar-layout .rail .chip-wrap .chip,
+    .print-page .sidebar-layout .rail > .chips .chip{
+      flex:1 1 100% !important;
+      width:100% !important;
+      max-width:100% !important;
+      min-height:38px !important;
+      padding:8px 12px !important;
+      font-size:13px !important;
+      line-height:1.15 !important;
+      gap:8px !important;
+    }
+    .print-page .sidebar-layout .rail .chip span,
+    .print-page .sidebar-layout .rail .chip .chip-input{
+      font-size:13px !important;
+      line-height:1.15 !important;
+    }
     .print-page .add-squircle,
     .print-page .add-dot,
     .print-page .sec-remove,
