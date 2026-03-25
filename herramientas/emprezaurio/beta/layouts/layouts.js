@@ -467,8 +467,10 @@ const CONTACT_FIELDS = {
   email: { icon:'fa-solid fa-envelope', placeholder:'tu@correo.com', wrap:false },
   idDoc: { icon:'fa-regular fa-id-card', placeholder:'DNI 12345678Z', wrap:false },
   address: { icon:'fa-solid fa-location-dot', placeholder:'Madrid, Espana', wrap:false },
-  linkedin: { icon:'fa-brands fa-linkedin', placeholder:'tu-handle', wrap:false }
+  linkedin: { icon:'fa-brands fa-linkedin', placeholder:'tu-handle', wrap:false },
+  info: { icon:'fa-solid fa-circle-info', placeholder:'Informacion extra', wrap:false }
 };
+const INFO_SLOT_KEYS = ['info1','info2','info3','info4','info5','info6','info7'];
 
 function fitAvatarPlacement(img, size, avatarState){
   const state = normalizeAvatarState(avatarState) || { zoom:1, panX:0, panY:0 };
@@ -740,19 +742,44 @@ function removeContactKey(key){
   applyContact();
 }
 
-function resolveContactSlot(requestedKey, contact = S.contact || {}){
-  if (requestedKey !== 'phone') return requestedKey;
-  if (!contact.phone) return 'phone';
-  if (!contact.phone2) return 'phone2';
-  return null;
+function getContactLayoutMax(head = getHeaderNode()){
+  if (!head) return 7;
+  if (head.matches('.topbar')) return 6;
+  if (head.matches('.fancy')) return 7;
+  if (head.matches('.sidebar-layout')) return 7;
+  return 7;
 }
 
-function getAvailableContactActions(contact = S.contact || {}){
+function getCurrentContactCount(contact = S.contact || {}){
+  return ['phone','phone2','email','idDoc','address','linkedin', ...INFO_SLOT_KEYS]
+    .reduce((count, key) => count + (sanitizeContactValue(key, contact[key]) ? 1 : 0), 0);
+}
+
+function resolveContactSlot(requestedKey, contact = S.contact || {}, head = getHeaderNode()){
+  const maxCount = getContactLayoutMax(head);
+  const currentCount = getCurrentContactCount(contact);
+  if (requestedKey === 'phone') {
+    if (!contact.phone) return 'phone';
+    if (!contact.phone2 && currentCount < maxCount) return 'phone2';
+    return null;
+  }
+  if (requestedKey === 'info') {
+    if (currentCount >= maxCount) return null;
+    return INFO_SLOT_KEYS.find(key => !sanitizeContactValue(key, contact[key])) || null;
+  }
+  if (currentCount >= maxCount && !sanitizeContactValue(requestedKey, contact[requestedKey])) return null;
+  return requestedKey;
+}
+
+function getAvailableContactActions(contact = S.contact || {}, head = getHeaderNode()){
   const actions = [];
-  if (!contact.phone || !contact.phone2) actions.push('phone');
+  const maxCount = getContactLayoutMax(head);
+  const currentCount = getCurrentContactCount(contact);
+  if ((!contact.phone || !contact.phone2) && currentCount < maxCount) actions.push('phone');
   ['email', 'idDoc', 'address', 'linkedin'].forEach(key => {
-    if (!contact[key]) actions.push(key);
+    if (!contact[key] && currentCount < maxCount) actions.push(key);
   });
+  if (currentCount < maxCount && INFO_SLOT_KEYS.some(key => !sanitizeContactValue(key, contact[key]))) actions.push('info');
   return actions;
 }
 
@@ -949,6 +976,7 @@ function openChipMenu(anchor){
       `<button class="sq-btn" data-k="idDoc" title="Documento"><i class='fa-regular fa-id-card' style='color:#fff'></i></button>`+
       `<button class="sq-btn" data-k="address" title="Address"><i class='fa-solid fa-location-dot' style='color:#fff'></i></button>`+
       `<button class="sq-btn" data-k="linkedin" title="LinkedIn"><i class='fa-brands fa-linkedin' style='color:#fff'></i></button>`+
+      `<button class="sq-btn" data-k="info" title="Info"><i class='fa-solid fa-circle-info' style='color:#fff'></i></button>`+
     `</div>`;
     pop.innerHTML = html;
     document.body.appendChild(pop);
@@ -957,13 +985,14 @@ function openChipMenu(anchor){
       const k = btn?.dataset.k;
       if(!k) return;
       S.contact = S.contact || {};
-      const slotKey = resolveContactSlot(k, S.contact);
+      const slotKey = resolveContactSlot(k, S.contact, getHeaderNode());
       if (!slotKey) {
         pop.classList.remove('open');
         pop._anchor = null;
         return;
       }
-      S.contact[slotKey] = CONTACT_FIELDS[slotKey]?.placeholder || '';
+      const fieldKey = INFO_SLOT_KEYS.includes(slotKey) ? 'info' : slotKey;
+      S.contact[slotKey] = CONTACT_FIELDS[fieldKey]?.placeholder || '';
       save();
       applyContact();
       Promise.resolve().then(()=>{
@@ -1003,7 +1032,7 @@ function openChipMenu(anchor){
       pop._anchor = null;
     });
   }
-  const available = new Set(getAvailableContactActions(S.contact || {}));
+  const available = new Set(getAvailableContactActions(S.contact || {}, getHeaderNode()));
   pop.querySelectorAll('.sq-btn').forEach(btn => {
     btn.classList.toggle('hidden', !available.has(btn.dataset.k));
   });
@@ -1020,10 +1049,10 @@ export function applyContact(){
 
   const c=S.contact||{};
   const items=[];
-  ['phone', 'phone2', 'email', 'idDoc', 'address', 'linkedin'].forEach(key => {
+  ['phone', 'phone2', 'email', 'idDoc', 'address', 'linkedin', ...INFO_SLOT_KEYS].forEach(key => {
     const value = sanitizeContactValue(key, c[key]);
     if (!value) return;
-    const field = CONTACT_FIELDS[key];
+    const field = CONTACT_FIELDS[INFO_SLOT_KEYS.includes(key) ? 'info' : key];
     const display = getDisplayedContactValue(key, value);
     const el = chip(field.icon, display, key, { wrap: !!field.wrap });
     el.title = display;
@@ -1038,7 +1067,7 @@ export function applyContact(){
   head.setAttribute('data-chip-count', String(items.length));
   restyleContactChips();
   try{
-    const availableActions = getAvailableContactActions(c);
+    const availableActions = getAvailableContactActions(c, head);
     let addBtn = head.querySelector('#chipAddBtn');
     if (availableActions.length) {
       if (!addBtn) {
