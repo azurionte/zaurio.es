@@ -158,6 +158,29 @@ function mountCanvasScaleSync(){
   ro.observe(sheet);
 }
 
+function ensurePrintSidebarSummary(){
+  let node = document.getElementById('printSidebarSummary');
+  if (!node) {
+    node = document.createElement('div');
+    node.id = 'printSidebarSummary';
+    node.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(node);
+  }
+  const name = S.contact?.name || 'Mi CV';
+  const phone = S.contact?.phone || '';
+  const email = S.contact?.email || '';
+  node.innerHTML = `
+    <div class="pss-bar">
+      <div class="pss-name">${name}</div>
+      <div class="pss-chips">
+        ${phone ? `<span class="pss-chip"><i class="fa-solid fa-phone"></i><span>${phone}</span></span>` : ''}
+        ${email ? `<span class="pss-chip"><i class="fa-solid fa-envelope"></i><span>${email}</span></span>` : ''}
+      </div>
+    </div>
+  `;
+  document.body.classList.toggle('print-has-side-summary', S.layout === 'side');
+}
+
 async function boot(){
   const auth = await initAuth();
   setStorageScope(getStorageScope());
@@ -244,6 +267,8 @@ async function boot(){
   ensureCanvas();
   mountCanvasScaleSync();
   mountMobileCanvasGestures();
+  window.addEventListener('emprezaurio:before-print', ensurePrintSidebarSummary);
+  document.addEventListener('layout:changed', ensurePrintSidebarSummary);
 
   // Apply the full visual state through the real setters so dependent CSS vars stay in sync.
   setTheme(S.theme);
@@ -256,6 +281,8 @@ async function boot(){
   } else {
     mountWelcome();
   }
+
+  ensurePrintSidebarSummary();
 }
 
 boot();

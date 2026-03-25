@@ -207,6 +207,7 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
   top.querySelector('#btnPrint').onclick = () => {
     const was = document.body.classList.contains('preview');
     document.body.classList.add('preview');
+    window.dispatchEvent(new CustomEvent('emprezaurio:before-print'));
     setTimeout(() => {
       window.print();
       if(!was) document.body.classList.remove('preview');

@@ -366,31 +366,70 @@ a{color:inherit;text-decoration:none}
     box-shadow:none !important;
   }
   .sidebar-layout{
-    grid-template-columns:300px minmax(0,1fr) !important;
-    gap:18px !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:0 !important;
   }
-  .sidebar-layout .rail{
-    min-height:920px !important;
-    position:relative !important;
-    overflow:hidden !important;
-    mask-image:none !important;
-    -webkit-mask-image:none !important;
+  body.print-has-side-summary #sheet{
+    padding-top:34mm !important;
   }
-  .sidebar-layout .rail::after{
-    content:"" !important;
-    position:absolute !important;
-    left:0 !important;
-    right:0 !important;
-    bottom:0 !important;
-    height:22% !important;
-    pointer-events:none !important;
-    background:linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.14) 22%, rgba(255,255,255,.4) 48%, rgba(255,255,255,.72) 72%, #ffffff 100%) !important;
+  body.print-has-side-summary .sidebar-layout .rail{
+    display:none !important;
+  }
+  body.print-has-side-summary .sidebar-layout [data-zone="main"]{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
   }
   .fancy{
     padding-bottom:20mm !important;
   }
   .fancy .hero .avatar{
     box-shadow:none !important;
+  }
+  #printSidebarSummary{
+    display:none;
+  }
+  body.print-has-side-summary #printSidebarSummary{
+    display:block !important;
+    position:fixed !important;
+    top:0 !important;
+    left:0 !important;
+    right:0 !important;
+    z-index:99999 !important;
+    padding:6mm 10mm 0 !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+  body.print-has-side-summary #printSidebarSummary .pss-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10mm;
+    padding:8mm 10mm;
+    border-radius:16px;
+    background:linear-gradient(180deg,var(--accent2),var(--accent));
+    color:#111 !important;
+  }
+  body.print-has-side-summary #printSidebarSummary .pss-name{
+    font:900 22px/1 "Bricolage Grotesque","Trebuchet MS",sans-serif;
+    letter-spacing:-.02em;
+  }
+  body.print-has-side-summary #printSidebarSummary .pss-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:flex-end;
+  }
+  body.print-has-side-summary #printSidebarSummary .pss-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid rgba(0,0,0,.08);
+    color:#111 !important;
+    font-weight:600;
   }
 }
 
