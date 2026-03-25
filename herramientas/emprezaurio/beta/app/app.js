@@ -203,8 +203,29 @@ function stripInteractive(node){
   return node;
 }
 
+function persistCanvasContent(node){
+  if (!node) return node;
+  node.querySelectorAll('canvas').forEach(canvas => {
+    try {
+      const img = document.createElement('img');
+      img.src = canvas.toDataURL('image/png');
+      img.alt = '';
+      img.width = canvas.width || canvas.clientWidth || 0;
+      img.height = canvas.height || canvas.clientHeight || 0;
+      img.style.cssText = canvas.getAttribute('style') || '';
+      img.style.width = canvas.style.width || `${canvas.clientWidth || canvas.width}px`;
+      img.style.height = canvas.style.height || `${canvas.clientHeight || canvas.height}px`;
+      img.style.display = 'block';
+      img.style.borderRadius = canvas.style.borderRadius || '50%';
+      canvas.replaceWith(img);
+    } catch (_) {}
+  });
+  return node;
+}
+
 function cloneClean(node){
-  return stripInteractive(node.cloneNode(true));
+  if (!node) return null;
+  return persistCanvasContent(stripInteractive(node.cloneNode(true)));
 }
 
 function getSectionNodesForExport(){
@@ -434,39 +455,49 @@ function paginateExport(){
 }
 
 function openPrintExportWindow(){
-  const exportRoot = paginateExport();
-  const win = window.open('', '_blank', 'noopener,noreferrer,width=980,height=1200');
+  const win = window.open('', '_blank', 'width=980,height=1200');
   if (!win) return;
-  const styleMarkup = Array.from(document.querySelectorAll('style,link[rel="stylesheet"]'))
-    .map(node => node.outerHTML)
-    .join('\n');
-  const bodyClass = document.body.className || '';
-  const bodyTheme = document.body.getAttribute('data-theme') || '';
-  const bodyDark = document.body.getAttribute('data-dark') || '';
-  const html = `<!doctype html>
-  <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      <base href="${window.location.origin}/">
-      ${styleMarkup}
-      <style>${getExportStyles()}</style>
-    </head>
-    <body class="${bodyClass}" data-theme="${bodyTheme}" data-dark="${bodyDark}">
-      ${exportRoot.outerHTML}
-      <script>
-        window.addEventListener('load', () => {
-          setTimeout(() => {
-            window.focus();
-            window.print();
-          }, 80);
-        });
-      <\/script>
-    </body>
-  </html>`;
   win.document.open();
-  win.document.write(html);
+  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Emprezaurio Export</title></head><body style="margin:0;font-family:system-ui;background:#fff;color:#111;display:grid;place-items:center;min-height:100vh">Preparando PDF...</body></html>`);
   win.document.close();
+
+  try {
+    const exportRoot = paginateExport();
+    const styleMarkup = Array.from(document.querySelectorAll('style,link[rel="stylesheet"]'))
+      .map(node => node.outerHTML)
+      .join('\n');
+    const bodyClass = document.body.className || '';
+    const bodyTheme = document.body.getAttribute('data-theme') || '';
+    const bodyDark = document.body.getAttribute('data-dark') || '';
+    const html = `<!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <base href="${window.location.origin}/">
+        ${styleMarkup}
+        <style>${getExportStyles()}</style>
+      </head>
+      <body class="${bodyClass}" data-theme="${bodyTheme}" data-dark="${bodyDark}">
+        ${exportRoot.outerHTML}
+        <script>
+          window.addEventListener('load', () => {
+            setTimeout(() => {
+              window.focus();
+              window.print();
+            }, 120);
+          });
+        <\/script>
+      </body>
+    </html>`;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  } catch (error) {
+    win.document.open();
+    win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Emprezaurio Export Error</title></head><body style="font-family:system-ui;margin:0;padding:24px;background:#fff;color:#111"><h1 style="margin-top:0">No se pudo preparar la exportación</h1><pre style="white-space:pre-wrap;border:1px solid #ddd;padding:16px;border-radius:12px;background:#f8f8f8">${String(error && (error.stack || error.message || error))}</pre></body></html>`);
+    win.document.close();
+  }
 }
 
 async function boot(){
