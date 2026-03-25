@@ -45,7 +45,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     /* Header variants */
     .topbar{border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));padding:14px 16px}
     .topbar > div{position:relative;display:block !important;min-height:120px}
-    .topbar > div > div:first-child{position:relative;padding-right:156px;padding-bottom:56px;min-height:120px;display:flex;flex-direction:column;justify-content:flex-start}
+    .topbar > div > div:first-child{position:relative;padding-right:156px;padding-bottom:56px;min-height:120px;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start}
     .topbar .name{margin:0 0 12px}
     .topbar .chips{gap:10px}
     .topbar .avatar{
@@ -57,11 +57,11 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       justify-self:auto;
       margin:0;
     }
-    .topbar #chipAddBtn{
+    .topbar > div > div:first-child #chipAddBtn{
       position:absolute !important;
-      left:0;
+      left:50%;
       bottom:0;
-      transform:none;
+      transform:translateX(-50%);
       margin:0 !important;
       display:grid;
       place-items:center;
@@ -95,10 +95,10 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       justify-self:center;
     }
     .fancy{position:relative;padding-bottom:74px}
-    .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 88px;min-height:232px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+    .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 136px;min-height:232px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
     .fancy .hero .avatar{position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);z-index:4;width:124px;height:124px;border-width:4px}
     .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3;width:min(100%,520px);padding:0 12px}
-    .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:54px;display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:12px;align-items:start;pointer-events:none}
+    .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:92px;display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:12px;align-items:start;pointer-events:none}
     .fancy .chip-grid .chips{display:flex;min-width:0;pointer-events:auto}
     .fancy .chip-grid [data-info-top]{grid-column:1 / 4;grid-row:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start;justify-items:center}
     .fancy .chip-grid [data-info-left]{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-end;justify-self:end}
@@ -109,7 +109,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="1"] .hero,
     .fancy[data-chip-count="2"] .hero{min-height:170px}
     .fancy[data-chip-count="1"] .chip-grid,
-    .fancy[data-chip-count="2"] .chip-grid{top:110px;bottom:50px}
+    .fancy[data-chip-count="2"] .chip-grid{top:110px;bottom:88px}
     .fancy[data-chip-count="3"] .hero{min-height:184px}
     .fancy[data-chip-count="4"] .hero{min-height:196px}
     .fancy[data-chip-count="5"] .hero{min-height:208px}
@@ -117,7 +117,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="3"] .chip-grid,
     .fancy[data-chip-count="4"] .chip-grid,
     .fancy[data-chip-count="5"] .chip-grid,
-    .fancy[data-chip-count="6"] .chip-grid{top:94px;bottom:48px}
+    .fancy[data-chip-count="6"] .chip-grid{top:94px;bottom:86px}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
@@ -244,7 +244,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   .sidebar-layout .rail .chips{ width:100%; display:flex; flex-wrap:wrap; gap:10px }
   .sidebar-layout .rail #chipAddBtn{ display:grid; place-items:center; width:44px; height:44px; border-radius:12px; background:#0b1022 !important; color:#fff !important; border:0; box-shadow:0 8px 20px rgba(11,16,34,.28); font-weight:800; z-index:40 }
   .sidebar-layout .rail #chipAddBtn:hover{ filter:brightness(1.03) }
-  .fancy .hero #chipAddBtn{position:absolute !important;left:50%;bottom:10px;top:auto !important;right:auto !important;transform:translateX(-50%);margin:0 !important;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#0b1022 !important;color:#fff !important;border:0;box-shadow:0 8px 20px rgba(11,16,34,.28);font-weight:800;z-index:5}
+  .fancy .hero #chipAddBtn{position:absolute !important;left:50%;bottom:64px;top:auto !important;right:auto !important;transform:translateX(-50%);margin:0 !important;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#0b1022 !important;color:#fff !important;border:0;box-shadow:0 8px 20px rgba(11,16,34,.28);font-weight:800;z-index:5}
   /* prevent the browser "editing" container from showing an ugly border/outline */
   .sidebar-layout .rail .name[contenteditable]{ caret-color: #fff; }
   .sidebar-layout .rail .name[contenteditable]:focus{ outline:none !important; box-shadow:none !important; border:none !important }
