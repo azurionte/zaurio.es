@@ -17,7 +17,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   /* dark mode for the sheet */
   body[data-dark="1"] #sheet{ background:#0d1220; color:var(--ink); box-shadow:0 18px 60px rgba(0,0,0,.45) }
     .stack{display:grid;gap:16px;align-content:start}
-    .add-squircle{width:172px;height:108px;border:2px dashed #a6b0ff55;border-radius:16px;display:none;align-items:center;justify-content:center;position:relative}
+    .add-squircle{width:100%;min-height:128px;border:2px dashed #a6b0ff55;border-radius:20px;display:none;align-items:center;justify-content:center;position:relative}
     .add-dot{width:40px;height:40px;border-radius:12px;background:#0b1022;color:#fff;display:grid;place-items:center;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.35)}
     /* Sidebar layout */
     .sidebar-layout{
