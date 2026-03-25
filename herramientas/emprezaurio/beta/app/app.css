@@ -273,12 +273,15 @@ a{color:inherit;text-decoration:none}
 
 /* preview + print */
 .preview .add-dot,
+.preview #sheet #canvasAdd,
+.preview #sheet .add-squircle,
 .preview #sheet .sec-add-anchor,
 .preview #sheet .card-controls,
 .preview #sheet .ctrl-circle,
 .preview #sheet .drag-handle,
 .preview #sheet .skill-handle,
 .preview #sheet .sec-remove,
+.preview #sheet .chip-rm,
 .preview #sheet #chipAddBtn,
 .preview #topbar-root .dropdown,
 .preview #topbar-root #btnPrint{display:none!important}
