@@ -854,6 +854,16 @@ function styleOneChip(el){
 function setChips(containers, items){
   containers.forEach(c=>c.innerHTML='');
   items.forEach(it => it.removeAttribute('data-lane'));
+  containers.forEach(c => {
+    if (c?.dataset) c.dataset.count = '0';
+    if (c?.hasAttribute?.('data-info-top')) {
+      c.style.display = '';
+      c.style.justifyContent = '';
+      c.style.gridTemplateColumns = '';
+      c.style.width = '';
+      c.style.justifySelf = '';
+    }
+  });
   if (!items.length) return;
   if (containers.length === 1){
     items.forEach(it => containers[0].appendChild(it));
@@ -881,15 +891,26 @@ function setChips(containers, items){
   const topItems = items.slice(0, topCount);
   const lowerItems = items.slice(topCount);
   topItems.forEach(it => top.appendChild(it));
+  top.dataset.count = String(topItems.length);
+  left.dataset.count = '0';
+  right.dataset.count = '0';
+
+  if (topItems.length === 1) {
+    top.style.display = 'flex';
+    top.style.justifyContent = 'center';
+  }
 
   if (lowerItems.length === 1){
     lowerItems[0].dataset.lane = 'outer';
     left.appendChild(lowerItems[0]);
+    left.dataset.count = '1';
     return;
   }
   if (lowerItems.length === 2){
     left.appendChild(lowerItems[0]);
     right.appendChild(lowerItems[1]);
+    left.dataset.count = '1';
+    right.dataset.count = '1';
     return;
   }
   if (lowerItems.length === 3){
@@ -899,6 +920,8 @@ function setChips(containers, items){
     left.appendChild(lowerItems[0]);
     left.appendChild(lowerItems[1]);
     right.appendChild(lowerItems[2]);
+    left.dataset.count = '2';
+    right.dataset.count = '1';
     return;
   }
 
@@ -911,6 +934,8 @@ function setChips(containers, items){
       right.appendChild(it);
     }
   });
+  left.dataset.count = String(left.children.length);
+  right.dataset.count = String(right.children.length);
 }
 
 // chip add menu: opens a small pop with icons to add phone/email/address/linkedin
