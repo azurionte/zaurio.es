@@ -4,8 +4,31 @@ export const authState = {
   client: null,
   session: null,
   mode: 'guest',
-  scope: 'emprezaurio-beta:guest'
+  scope: 'emprezaurio-beta:guest',
+  isOwner: false
 };
+
+const OWNER_EMAILS = ['dmnrobles@gmail.com'];
+const OWNER_HANDLES = ['dramazaurio'];
+
+export function isOwnerUser(user){
+  if (!user) return false;
+  const email = String(user.email || '').trim().toLowerCase();
+  if (OWNER_EMAILS.includes(email)) return true;
+  const values = [
+    user.user_metadata?.preferred_username,
+    user.user_metadata?.user_name,
+    user.user_metadata?.username,
+    user.user_metadata?.nick,
+    user.user_metadata?.nickname,
+    user.user_metadata?.display_name,
+    user.user_metadata?.full_name,
+    user.app_metadata?.preferred_username
+  ]
+    .map(v => String(v || '').trim().toLowerCase())
+    .filter(Boolean);
+  return values.some(v => OWNER_HANDLES.includes(v));
+}
 
 export function setEntryMode(mode){
   try { sessionStorage.setItem(ENTRY_KEY, mode); } catch {}
@@ -51,8 +74,10 @@ export async function initAuth(){
   try {
     const { data: { session } } = await client.auth.getSession();
     authState.session = session || null;
+    authState.isOwner = isOwnerUser(authState.session?.user);
   } catch {
     authState.session = null;
+    authState.isOwner = false;
   }
 
   if (requestedMode === 'guest'){

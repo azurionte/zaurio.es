@@ -449,7 +449,7 @@ export function mountProjectLibrary({ onNewProject, onEditProject }){
       <article class="project-card project-add" data-action="new">
         <div class="plus">+</div>
         <h3>Crear nuevo CV</h3>
-        <p>Arranca un curriculum nuevo con wizard, demo o modo manual.</p>
+        <p>Arranca un curriculum nuevo con wizard o modo manual.</p>
       </article>
     `);
     grid.innerHTML = cards.join('');

@@ -1,10 +1,11 @@
 ﻿// /resume/wizard/wizard.js
-// [wizard.js] v2.16.0 â€” wizard with reliable layout morph + stronger mobile polish
-console.log('[wizard.js] v2.16.0');
+// [wizard.js] v2.16.1 â€” owner-only private demo
+console.log('[wizard.js] v2.16.1');
 
 import { S, setTheme, setDark, setMaterial } from '../app/state.js';
 import { morphTo, getHeaderNode, applyContact } from '../layouts/layouts.js';
 import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/modules.js';
+import { authState } from '../app/auth.js';
 
 /* ---------- styles (wizard UI + inline editors) ---------- */
 (function ensureWizardStyle(){
@@ -318,12 +319,13 @@ function animateOverlayOut(node, done){
 /* ---------- Public API ---------- */
 export function mountWelcome(){
   if (document.getElementById('welcome')) return;
+  const canDemo = !!authState.isOwner;
   const wrap = document.createElement('div');
   wrap.id = 'welcome'; wrap.setAttribute('data-overlay','');
   wrap.innerHTML = `
     <div class="wcard">
       <div class="wtitle" style="font-weight:900;font-size:22px">Emprezaurio Beta</div>
-      <div style="opacity:.82;text-align:center">Crea un curriculum bonito y facil en minutos, empezando con wizard, demo o modo manual.</div>
+      <div style="opacity:.82;text-align:center">Crea un curriculum bonito y facil en minutos, empezando con wizard o modo manual.</div>
       <div class="wgrid">
         <div class="wcol">
           <button class="wbtn primary" id="startWizard" type="button">Wizard</button>
@@ -334,7 +336,7 @@ export function mountWelcome(){
           <div style="opacity:.8">Start from scratch, arrange freely.</div>
         </div>
       </div>
-      <button class="wbtn" id="startDemo" type="button">Demo resume</button>
+      ${canDemo ? '<button class="wbtn" id="startDemo" type="button">Demo privado</button>' : ''}
     </div>`;
   document.body.appendChild(wrap);
   animateOverlayIn(wrap);
@@ -352,7 +354,7 @@ export function mountWelcome(){
       document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
     });
   });
-  wrap.querySelector('#startDemo').addEventListener('click', ()=>{
+  wrap.querySelector('#startDemo')?.addEventListener('click', ()=>{
     animateOverlayOut(wrap, ()=>{
       wrap.remove();
       loadDemoResume();
@@ -362,6 +364,7 @@ export function mountWelcome(){
 
 export function mountWizard(){
   if (document.getElementById('wizard')) return;
+  const canDemo = !!authState.isOwner;
   const modal = document.createElement('div');
   modal.id = 'wizard'; modal.className = 'modal'; modal.setAttribute('data-overlay','');
   modal.innerHTML = `
@@ -370,7 +373,7 @@ export function mountWizard(){
       <div class="wiz-right">
         <div id="wizBody"></div>
         <div class="navline">
-          <button class="mbtn" id="wizDemo" style="margin-right:auto" type="button">Demo resume</button>
+          ${canDemo ? '<button class="mbtn" id="wizDemo" style="margin-right:auto" type="button">Demo privado</button>' : ''}
           <button class="mbtn" id="wizStartOver" style="margin-right:auto;display:none" type="button">Start over</button>
           <button class="mbtn" id="wizBack" type="button">Back</button>
           <button class="mbtn" id="wizNext" type="button" style="background:linear-gradient(135deg,var(--accent2),var(--accent));color:#111;border:none">Next</button>
@@ -411,7 +414,7 @@ function buildWizard(){
     list.appendChild(el);
   });
   document.getElementById('wizBack').onclick = ()=>{ if(stepIdx>0){ stepIdx--; backCount++; renderStep(); } };
-  document.getElementById('wizDemo').onclick = ()=> loadDemoResume();
+  document.getElementById('wizDemo')?.addEventListener('click', ()=> loadDemoResume());
   document.getElementById('wizStartOver').onclick = ()=>{
     Object.assign(S,{ contact:{name:'',phone:'',email:'',address:'',linkedin:''} });
     W={ skills:[], addSkillsToRail:true, edu:[], exp:[], expDraft:{dates:'',role:'',org:'',desc:''}, bio:'' };
@@ -715,7 +718,8 @@ function clearCanvasSections(){
     .forEach(n => n.remove());
 }
 
-function loadDemoResume(){
+export function loadDemoResume(){
+  if (!authState.isOwner) return;
   clearCanvasSections();
 
   setTheme('sea');
@@ -724,11 +728,11 @@ function loadDemoResume(){
   morphTo('header-top');
 
   S.contact = {
-    name: 'Maximiliano Robles',
+    name: 'Alicia Vega',
     phone: '+34 600 123 456',
-    email: 'maxi@emprezaurio.dev',
-    address: 'Madrid, EspaÃ±a',
-    linkedin: 'maximilianorobles'
+    email: 'hola@demo-cv.dev',
+    address: 'Barcelona, Espana',
+    linkedin: 'aliciavega'
   };
   S.avatar = 'https://zaurio.es/shared/assets/brand/zaurio-portrait.png';
   S.skillsInSidebar = false;
@@ -743,10 +747,10 @@ function loadDemoResume(){
     { kind:'course', title:'Curso intensivo de UX/UI', dates:'2022', academy:'Google Career Certificates' }
   ];
   S.exp = [
-    { dates:'2024 - Actualidad', role:'Product Designer', org:'Studio Norte', desc:'DiseÃ±o de flujos, identidad visual y mejoras continuas para herramientas internas y producto de cliente.' },
-    { dates:'2021 - 2024', role:'Growth & Content Lead', org:'Indie Launchpad', desc:'CampaÃ±as de captaciÃ³n, landings, automatizaciones y tono de marca para proyectos digitales.' }
+    { dates:'2024 - Actualidad', role:'Product Designer', org:'Studio Norte', desc:'Diseno de flujos, identidad visual y mejoras continuas para herramientas internas y producto de cliente.' },
+    { dates:'2021 - 2024', role:'Growth & Content Lead', org:'Indie Launchpad', desc:'Campanas de captacion, landings, automatizaciones y tono de marca para proyectos digitales.' }
   ];
-  S.bio = 'Perfil hÃ­brido entre producto, marca y ejecuciÃ³n. Me gusta convertir ideas sueltas en experiencias claras, Ãºtiles y con personalidad.';
+  S.bio = 'Perfil hibrido entre producto, marca y ejecucion. Me gusta convertir ideas sueltas en experiencias claras, utiles y con personalidad.';
 
   W = {
     skills: structuredClone(S.skills),

@@ -1,10 +1,10 @@
 // App entry — wires everything together
 import { S, setTheme, setCustomGradient, setDark, setMaterial, hydrateFromStorage, setStorageScope } from './state.js';
-import { initAuth, getStorageScope } from './auth.js';
+import { initAuth, getStorageScope, authState } from './auth.js';
 const APP_VERSION = 'resume-app@2025.08.17-002';
 console.log('[app.js] ' + APP_VERSION);
 import { mountEditor } from '../editor/editor.js';
-import { mountWelcome } from '../wizard/wizard.js';
+import { mountWelcome, mountWizard, loadDemoResume } from '../wizard/wizard.js';
 import { ensureCanvas } from '../layouts/layouts.js';
 import { mountProjectLibrary, applyStateToCanvas, saveCurrentProject, showActionFeedback } from './projects.js';
 import '../modules/modules.js'; // side-effect: registers custom styles for modules
@@ -231,7 +231,13 @@ async function boot(){
       showActionFeedback(anchor, 'JSON exportado', 'success');
     },
     onOpenLibrary: openProjectLibrary,
-    canOpenLibrary: auth.mode === 'google' && !!auth.session?.user?.id
+    canOpenLibrary: auth.mode === 'google' && !!auth.session?.user?.id,
+    canAdmin: !!authState.isOwner,
+    onAdminDemo: () => loadDemoResume(),
+    onAdminWelcome: () => {
+      mountWelcome();
+      mountWizard();
+    }
   });
 
   // Make sure a clean page exists

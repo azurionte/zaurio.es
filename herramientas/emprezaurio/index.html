@@ -69,7 +69,10 @@
           <section class="entry-card">
             <div class="entry-head"><div class="entry-icon">G</div><div><h3>Crear cuenta con Google</h3><p>Ideal si quieres una base de trabajo asociada a tu usuario.</p></div></div>
             <ul><li>Preparado para separar tus CVs por cuenta.</li><li>Mismo acceso si luego amplias Emprezaurio.</li></ul>
-            <div class="actions"><button class="btn primary" id="googleEntryBtn" type="button">Entrar con Google</button></div>
+            <div class="actions">
+              <button class="btn primary" id="googleEntryBtn" type="button">Entrar con Google</button>
+              <button class="btn secondary" id="adminEntryBtn" type="button" hidden>Admin</button>
+            </div>
           </section>
           <section class="entry-card">
             <div class="entry-head"><div class="entry-icon">CV</div><div><h3>Crear CV como invitado</h3><p>Entras ya al editor y tu progreso se guarda localmente.</p></div></div>
@@ -89,7 +92,24 @@
     const appBaseUrl = window.location.origin + "/emprezaurio/beta/";
     const statusNode = document.getElementById("entryStatus");
     const googleBtn = document.getElementById("googleEntryBtn");
+    const adminBtn = document.getElementById("adminEntryBtn");
     document.getElementById("guestEntryBtn")?.addEventListener("click", () => { try { sessionStorage.setItem("emprezaurio:entry", "guest"); } catch {} });
+
+    function isOwnerUser(user) {
+      const email = String(user?.email || "").trim().toLowerCase();
+      if (email === "dmnrobles@gmail.com") return true;
+      const values = [
+        user?.user_metadata?.preferred_username,
+        user?.user_metadata?.user_name,
+        user?.user_metadata?.username,
+        user?.user_metadata?.nick,
+        user?.user_metadata?.nickname,
+        user?.user_metadata?.display_name,
+        user?.user_metadata?.full_name,
+        user?.app_metadata?.preferred_username
+      ].map(v => String(v || "").trim().toLowerCase()).filter(Boolean);
+      return values.includes("dramazaurio");
+    }
 
     async function syncExistingSession() {
       if (!window.supabase || !googleBtn) return;
@@ -102,11 +122,19 @@
           googleBtn.textContent = "Continuar con mi cuenta";
           googleBtn.dataset.ready = "continue";
           statusNode.textContent = "Sesion detectada. Puedes seguir con tus CVs guardados.";
+          if (isOwnerUser(session.user) && adminBtn) {
+            adminBtn.hidden = false;
+          }
         }
       } catch (error) {
         console.error(error);
       }
     }
+
+    adminBtn?.addEventListener("click", () => {
+      sessionStorage.setItem("emprezaurio:entry", "google");
+      window.location.href = appBaseUrl + "?admin=1";
+    });
 
     googleBtn?.addEventListener("click", async () => {
       if (googleBtn.dataset.ready === "continue") {

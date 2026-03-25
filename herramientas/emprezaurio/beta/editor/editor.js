@@ -1,6 +1,6 @@
 ﻿// /resume/editor/editor.js
-// [editor.js] v1.9.1 - unify layouts into style menu
-console.log('[editor.js] v1.9.1');
+// [editor.js] v1.9.2 - owner-only admin controls
+console.log('[editor.js] v1.9.2');
 
 import { S, save } from '../app/state.js';
 import { morphTo } from '../layouts/layouts.js';
@@ -50,7 +50,7 @@ function ensureEditorMotionStyle(){
   document.head.appendChild(st);
 }
 
-export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCustomGradient, onSaveProject, onOpenLibrary, canOpenLibrary }){
+export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCustomGradient, onSaveProject, onOpenLibrary, canOpenLibrary, canAdmin, onAdminDemo, onAdminWelcome }){
   ensureEditorMotionStyle();
   const top = document.getElementById('topbar-root');
   top.innerHTML = `
@@ -113,6 +113,15 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
           </div>
         </div>
 
+        ${canAdmin ? `
+        <div class="dropdown" id="ddAdmin">
+          <button class="mbtn">Admin</button>
+          <div class="dropdown-menu">
+            <button id="btnAdminDemo" class="mbtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Cargar demo privada</button>
+            <button id="btnAdminWelcome" class="mbtn"><i class="fa-solid fa-sliders"></i> Abrir panel privado</button>
+          </div>
+        </div>` : ''}
+
         <button id="btnPrint" class="mbtn"><i class="fa-solid fa-download"></i> Descargar</button>
         <button id="btnPreview" class="mbtn">Vista previa</button>
       </div>
@@ -155,6 +164,8 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
   };
 
   top.querySelector('#btnLibrary')?.addEventListener('click', () => onOpenLibrary?.());
+  top.querySelector('#btnAdminDemo')?.addEventListener('click', () => onAdminDemo?.());
+  top.querySelector('#btnAdminWelcome')?.addEventListener('click', () => onAdminWelcome?.());
 
   top.querySelector('#btnLoad').onclick = async () => {
     const ipt = document.createElement('input');
