@@ -240,7 +240,28 @@ function persistCanvasContent(node){
 
 function cloneClean(node){
   if (!node) return null;
-  return persistCanvasContent(stripInteractive(node.cloneNode(true)));
+  const clone = stripInteractive(node.cloneNode(true));
+  const sourceCanvases = Array.from(node.querySelectorAll('canvas'));
+  const cloneCanvases = Array.from(clone.querySelectorAll('canvas'));
+  sourceCanvases.forEach((sourceCanvas, index) => {
+    const targetCanvas = cloneCanvases[index];
+    if (!targetCanvas) return;
+    try {
+      const img = document.createElement('img');
+      img.src = sourceCanvas.toDataURL('image/png');
+      img.alt = '';
+      img.width = sourceCanvas.width || sourceCanvas.clientWidth || 0;
+      img.height = sourceCanvas.height || sourceCanvas.clientHeight || 0;
+      img.style.cssText = targetCanvas.getAttribute('style') || sourceCanvas.getAttribute('style') || '';
+      img.style.width = targetCanvas.style.width || sourceCanvas.style.width || `${sourceCanvas.clientWidth || sourceCanvas.width}px`;
+      img.style.height = targetCanvas.style.height || sourceCanvas.style.height || `${sourceCanvas.clientHeight || sourceCanvas.height}px`;
+      img.style.display = 'block';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = targetCanvas.style.borderRadius || sourceCanvas.style.borderRadius || '50%';
+      targetCanvas.replaceWith(img);
+    } catch (_) {}
+  });
+  return persistCanvasContent(clone);
 }
 
 function getSectionNodesForExport(){
@@ -296,7 +317,7 @@ function getExportStyles(){
     .print-summary-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
     .print-summary-name{font-weight:900;font-size:28px;line-height:1.05}
     .print-summary-chips{display:flex;flex-wrap:wrap;gap:10px}
-    .print-summary-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:38px;font-size:13px;line-height:1.15}
+    .print-summary-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:32px;font-size:11.5px;line-height:1.1}
     .print-summary-chip i{width:16px;text-align:center}
     .print-page .sidebar-layout .rail{display:flex !important;flex-direction:column !important;align-items:flex-start !important}
     .print-page .sidebar-layout .rail .avatar{
@@ -336,16 +357,16 @@ function getExportStyles(){
       flex:1 1 100% !important;
       width:100% !important;
       max-width:100% !important;
-      min-height:38px !important;
-      padding:8px 12px !important;
-      font-size:13px !important;
-      line-height:1.15 !important;
-      gap:8px !important;
+      min-height:32px !important;
+      padding:6px 10px !important;
+      font-size:11.5px !important;
+      line-height:1.1 !important;
+      gap:7px !important;
     }
     .print-page .sidebar-layout .rail .chip span,
     .print-page .sidebar-layout .rail .chip .chip-input{
-      font-size:13px !important;
-      line-height:1.15 !important;
+      font-size:11.5px !important;
+      line-height:1.1 !important;
     }
     .print-page .add-squircle,
     .print-page .add-dot,
