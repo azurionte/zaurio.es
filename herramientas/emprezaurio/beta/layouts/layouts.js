@@ -96,7 +96,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     }
     .fancy{position:relative;padding-bottom:74px}
     .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 88px;min-height:232px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
-    .fancy .hero .avatar{position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);z-index:4;width:124px;height:124px;border-width:4px}
+    .fancy .hero .avatar{position:absolute;left:50%;bottom:-64px;transform:translateX(-50%);z-index:4;width:138px;height:138px;border-width:4px}
     .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3;width:min(100%,520px);padding:0 12px}
     .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:18px;display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:12px;align-items:start;pointer-events:none}
     .fancy .chip-grid .chips{display:flex;min-width:0;pointer-events:auto}
@@ -113,8 +113,8 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="3"] .hero{min-height:184px}
     .fancy[data-chip-count="4"] .hero{min-height:196px}
     .fancy[data-chip-count="5"] .hero{min-height:208px}
-    .fancy[data-chip-count="6"] .hero{min-height:244px}
-    .fancy[data-chip-count="7"] .hero{min-height:260px}
+    .fancy[data-chip-count="6"] .hero{min-height:276px}
+    .fancy[data-chip-count="7"] .hero{min-height:302px}
     .fancy[data-chip-count="3"] .chip-grid,
     .fancy[data-chip-count="4"] .chip-grid,
     .fancy[data-chip-count="5"] .chip-grid,
