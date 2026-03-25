@@ -155,6 +155,8 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="6"] .hero .avatar,
     .fancy[data-chip-count="7"] .hero .avatar{bottom:-72px}
     .fancy[data-chip-count="5"] .chip-grid [data-info-left] > .chip:last-child{margin-right:72px}
+    .fancy[data-chip-count="6"] .chip-grid [data-info-left] > .chip:last-child,
+    .fancy[data-chip-count="7"] .chip-grid [data-info-left] > .chip:last-child{margin-right:96px}
     .fancy[data-chip-count="6"] .chip-grid,
     .fancy[data-chip-count="7"] .chip-grid{grid-template-columns:minmax(0,1fr) 118px minmax(0,1fr)}
 
