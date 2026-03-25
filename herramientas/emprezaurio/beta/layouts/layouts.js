@@ -136,6 +136,8 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy .chip-grid [data-info-top] > .chip,
     .fancy .chip-grid [data-info-left] > .chip,
     .fancy .chip-grid [data-info-right] > .chip{width:min(100%,286px);max-width:286px;min-height:46px}
+    .fancy .chip-grid [data-info-left] > .chip[data-lane="outer"]{align-self:flex-start}
+    .fancy .chip-grid [data-info-right] > .chip[data-lane="outer"]{align-self:flex-end}
     .fancy[data-chip-count="1"] .hero,
     .fancy[data-chip-count="2"] .hero{min-height:170px}
     .fancy[data-chip-count="1"] .chip-grid,
@@ -150,13 +152,9 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="5"] .chip-grid,
     .fancy[data-chip-count="6"] .chip-grid,
     .fancy[data-chip-count="7"] .chip-grid{top:94px;bottom:14px}
-    .fancy[data-chip-count="5"] .chip-grid{bottom:22px}
     .fancy[data-chip-count="5"] .hero .avatar,
     .fancy[data-chip-count="6"] .hero .avatar,
     .fancy[data-chip-count="7"] .hero .avatar{bottom:-72px}
-    .fancy[data-chip-count="5"] .chip-grid [data-info-left] > .chip:last-child{margin-right:72px}
-    .fancy[data-chip-count="6"] .chip-grid [data-info-left] > .chip:last-child,
-    .fancy[data-chip-count="7"] .chip-grid [data-info-left] > .chip:last-child{margin-right:96px}
     .fancy[data-chip-count="6"] .chip-grid,
     .fancy[data-chip-count="7"] .chip-grid{grid-template-columns:minmax(0,1fr) 118px minmax(0,1fr)}
 
@@ -848,6 +846,7 @@ function styleOneChip(el){
 }
 function setChips(containers, items){
   containers.forEach(c=>c.innerHTML='');
+  items.forEach(it => it.removeAttribute('data-lane'));
   if (!items.length) return;
   if (containers.length === 1){
     items.forEach(it => containers[0].appendChild(it));
@@ -886,13 +885,24 @@ function setChips(containers, items){
     return;
   }
   if (lowerItems.length === 3){
+    lowerItems[0].dataset.lane = 'inner';
+    lowerItems[1].dataset.lane = 'outer';
+    lowerItems[2].dataset.lane = 'inner';
     left.appendChild(lowerItems[0]);
     left.appendChild(lowerItems[1]);
     right.appendChild(lowerItems[2]);
     return;
   }
 
-  lowerItems.forEach((it, i)=> (i % 2 === 0 ? left : right).appendChild(it));
+  lowerItems.forEach((it, i)=> {
+    if (i % 2 === 0) {
+      if (i >= 2) it.dataset.lane = 'outer';
+      left.appendChild(it);
+    } else {
+      if (i >= 3) it.dataset.lane = 'outer';
+      right.appendChild(it);
+    }
+  });
 }
 
 // chip add menu: opens a small pop with icons to add phone/email/address/linkedin
