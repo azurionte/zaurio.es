@@ -145,8 +145,8 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="3"] .hero{min-height:180px}
     .fancy[data-chip-count="4"] .hero{min-height:190px}
     .fancy[data-chip-count="5"] .hero{min-height:238px}
-    .fancy[data-chip-count="6"] .hero{min-height:254px}
-    .fancy[data-chip-count="7"] .hero{min-height:280px}
+    .fancy[data-chip-count="6"] .hero{min-height:264px}
+    .fancy[data-chip-count="7"] .hero{min-height:290px}
     .fancy[data-chip-count="3"] .chip-grid,
     .fancy[data-chip-count="4"] .chip-grid,
     .fancy[data-chip-count="5"] .chip-grid,
