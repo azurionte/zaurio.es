@@ -131,13 +131,13 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:14px;display:grid;grid-template-columns:minmax(0,1fr) 146px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:10px;align-items:start;pointer-events:none}
     .fancy .chip-grid .chips{display:flex;min-width:0;pointer-events:auto}
     .fancy .chip-grid [data-info-top]{grid-column:1 / 4;grid-row:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start;justify-items:center}
-    .fancy .chip-grid [data-info-left]{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-end;justify-self:end}
-    .fancy .chip-grid [data-info-right]{grid-column:3;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-start;justify-self:start}
+    .fancy .chip-grid [data-info-left]{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-end;justify-self:stretch;width:100%;min-width:0}
+    .fancy .chip-grid [data-info-right]{grid-column:3;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-start;justify-self:stretch;width:100%;min-width:0}
     .fancy .chip-grid [data-info-top] > .chip,
     .fancy .chip-grid [data-info-left] > .chip,
     .fancy .chip-grid [data-info-right] > .chip{width:min(100%,286px);max-width:286px;min-height:46px}
-    .fancy .chip-grid [data-info-left] > .chip[data-lane="outer"]{align-self:flex-start}
-    .fancy .chip-grid [data-info-right] > .chip[data-lane="outer"]{align-self:flex-end}
+    .fancy .chip-grid [data-info-left] > .chip[data-lane="outer"]{align-self:flex-start;margin-right:auto}
+    .fancy .chip-grid [data-info-right] > .chip[data-lane="outer"]{align-self:flex-end;margin-left:auto}
     .fancy[data-chip-count="1"] .hero,
     .fancy[data-chip-count="2"] .hero{min-height:170px}
     .fancy[data-chip-count="1"] .chip-grid,
