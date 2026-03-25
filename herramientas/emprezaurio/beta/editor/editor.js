@@ -50,7 +50,7 @@ function ensureEditorMotionStyle(){
   document.head.appendChild(st);
 }
 
-export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCustomGradient, onSaveProject, onOpenLibrary, canOpenLibrary, canAdmin, onAdminDemo, onAdminWelcome }){
+export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCustomGradient, onSaveProject, onOpenLibrary, canOpenLibrary, canAdmin, onAdminDemo, onAdminWelcome, onPrintExport }){
   ensureEditorMotionStyle();
   const top = document.getElementById('topbar-root');
   top.innerHTML = `
@@ -204,15 +204,7 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
     top.querySelector('#btnPreview').textContent = on ? 'Salir de vista previa' : 'Vista previa';
   };
 
-  top.querySelector('#btnPrint').onclick = () => {
-    const was = document.body.classList.contains('preview');
-    document.body.classList.add('preview');
-    window.dispatchEvent(new CustomEvent('emprezaurio:before-print'));
-    setTimeout(() => {
-      window.print();
-      if(!was) document.body.classList.remove('preview');
-    }, 60);
-  };
+  top.querySelector('#btnPrint').onclick = () => onPrintExport?.();
 
   const root = document.getElementById('canvas-root');
   root.innerHTML = `

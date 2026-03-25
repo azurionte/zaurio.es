@@ -5,11 +5,12 @@ const APP_VERSION = 'resume-app@2025.08.17-002';
 console.log('[app.js] ' + APP_VERSION);
 import { mountEditor } from '../editor/editor.js';
 import { mountWelcome, mountWizard, loadDemoResume } from '../wizard/wizard.js';
-import { ensureCanvas } from '../layouts/layouts.js';
+import { ensureCanvas, getHeaderNode, getSideMain } from '../layouts/layouts.js';
 import { mountProjectLibrary, applyStateToCanvas, saveCurrentProject, showActionFeedback } from './projects.js';
 import '../modules/modules.js'; // side-effect: registers custom styles for modules
 
 const PAGE_WIDTH = 860;
+const PAGE_HEIGHT = 1120;
 const MOBILE_BREAKPOINT = 700;
 const MIN_USER_ZOOM = 0.72;
 const MAX_USER_ZOOM = 2.6;
@@ -181,6 +182,293 @@ function ensurePrintSidebarSummary(){
   document.body.classList.toggle('print-has-side-summary', S.layout === 'side');
 }
 
+function stripInteractive(node){
+  if (!node) return node;
+  node.querySelectorAll([
+    '#canvasAdd',
+    '.add-squircle',
+    '.add-dot',
+    '.sec-remove',
+    '.chip-rm',
+    '.ctrl-circle',
+    '.drag-handle',
+    '.skill-handle',
+    '.card-controls',
+    '#chipAddBtn',
+    '#chipAddPop',
+    '.pop',
+    '.add-pop'
+  ].join(',')).forEach(el => el.remove());
+  node.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  return node;
+}
+
+function cloneClean(node){
+  return stripInteractive(node.cloneNode(true));
+}
+
+function getSectionNodesForExport(){
+  if (S.layout === 'side') {
+    const main = getSideMain();
+    if (!main) return [];
+    return Array.from(main.children).filter(el => el.querySelector?.('.section'));
+  }
+  const stack = document.getElementById('stack');
+  if (!stack) return [];
+  return Array.from(stack.children).filter(el => el.querySelector?.('.section'));
+}
+
+function getSectionSplitConfig(sectionNode){
+  const section = sectionNode.querySelector('.section') || sectionNode;
+  const key = section?.dataset?.section;
+  if (key === 'skills') return { selector: '.skills-wrap > .skill-row', containerSelector: '.skills-wrap' };
+  if (key === 'edu') return { selector: '.edu-grid > .card', containerSelector: '.edu-grid' };
+  if (key === 'exp') return { selector: '.exp-list > .card', containerSelector: '.exp-list' };
+  return null;
+}
+
+function createPrintMeasureRoot(){
+  let root = document.getElementById('printMeasureRoot');
+  if (root) return root;
+  root = document.createElement('div');
+  root.id = 'printMeasureRoot';
+  root.style.cssText = [
+    'position:fixed',
+    'left:-20000px',
+    'top:0',
+    'width:900px',
+    'padding:0',
+    'margin:0',
+    'visibility:hidden',
+    'pointer-events:none',
+    'z-index:-1',
+    'background:#fff'
+  ].join(';');
+  document.body.appendChild(root);
+  return root;
+}
+
+function getExportStyles(){
+  return `
+    body{margin:0;background:#fff;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .print-export-root{display:grid;gap:0}
+    .print-page{width:${PAGE_WIDTH}px;min-height:${PAGE_HEIGHT}px;padding:24px;box-sizing:border-box;background:#fff;color:#111;page-break-after:always;break-after:page;overflow:hidden}
+    .print-page:last-child{page-break-after:auto;break-after:auto}
+    .print-sidebar-page{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
+    .print-main,.print-flow{display:grid;gap:16px;align-content:start;min-width:0}
+    .print-summary{display:grid;gap:10px;border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#111}
+    .print-summary-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .print-summary-name{font-weight:900;font-size:28px;line-height:1.05}
+    .print-summary-chips{display:flex;flex-wrap:wrap;gap:10px}
+    .print-summary-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:44px}
+    .print-summary-chip i{width:16px;text-align:center}
+    .print-page .add-squircle,
+    .print-page .add-dot,
+    .print-page .sec-remove,
+    .print-page .chip-rm,
+    .print-page .ctrl-circle,
+    .print-page .drag-handle,
+    .print-page .skill-handle,
+    .print-page .card-controls,
+    .print-page #chipAddBtn,
+    .print-page #chipAddPop{display:none !important}
+    @page{size:A4;margin:0}
+  `;
+}
+
+function createSummaryHeader(){
+  const chips = [];
+  if (S.contact?.phone) chips.push(`<span class="print-summary-chip"><i class="fa-solid fa-phone"></i><span>${S.contact.phone}</span></span>`);
+  if (S.contact?.email) chips.push(`<span class="print-summary-chip"><i class="fa-solid fa-envelope"></i><span>${S.contact.email}</span></span>`);
+  return `
+    <div class="print-summary">
+      <div class="print-summary-head">
+        <div class="print-summary-name">${S.contact?.name || 'Mi CV'}</div>
+        <div class="print-summary-chips">${chips.join('')}</div>
+      </div>
+    </div>
+  `;
+}
+
+function createMeasurePage({ sidebar = false, includeSummary = false, rail = null, header = null } = {}){
+  const page = document.createElement('div');
+  page.className = 'print-page';
+  if (sidebar) {
+    const layout = document.createElement('div');
+    layout.className = 'print-sidebar-page sidebar-layout';
+    if (rail) layout.appendChild(cloneClean(rail));
+    const main = document.createElement('div');
+    main.className = 'print-main';
+    main.setAttribute('data-zone', 'main');
+    main.setAttribute('data-print-body', '');
+    if (header) main.appendChild(cloneClean(header));
+    layout.appendChild(main);
+    page.appendChild(layout);
+  } else {
+    const flow = document.createElement('div');
+    flow.className = 'print-flow';
+    flow.setAttribute('data-print-body', '');
+    if (includeSummary) flow.insertAdjacentHTML('beforeend', createSummaryHeader());
+    if (header) flow.appendChild(cloneClean(header));
+    page.appendChild(flow);
+  }
+  return page;
+}
+
+function makeSectionShell(sectionNode){
+  const full = cloneClean(sectionNode.querySelector('.section') || sectionNode);
+  const body = full.querySelector('.sec-body');
+  if (body) body.innerHTML = '';
+  return full;
+}
+
+function createSectionContainer(sectionNode, shell){
+  const config = getSectionSplitConfig(sectionNode);
+  if (!config) return { config: null, container: null };
+  const body = shell.querySelector('.sec-body');
+  if (!body) return { config: null, container: null };
+  const source = sectionNode.querySelector(config.containerSelector);
+  const container = source ? source.cloneNode(false) : document.createElement('div');
+  if (!source) container.className = config.containerSelector.replace('.', '');
+  body.appendChild(container);
+  return { config, container };
+}
+
+function measureFits(root, page, body, node){
+  body.appendChild(node);
+  const fits = page.scrollHeight <= PAGE_HEIGHT;
+  body.removeChild(node);
+  return fits;
+}
+
+function paginateExport(){
+  const measureRoot = createPrintMeasureRoot();
+  measureRoot.innerHTML = '';
+  const exportRoot = document.createElement('div');
+  exportRoot.className = 'print-export-root';
+  exportRoot.innerHTML = `<style>${getExportStyles()}</style>`;
+  measureRoot.appendChild(exportRoot);
+
+  const headerNode = getHeaderNode()?.closest('.node') || getHeaderNode();
+  const railNode = S.layout === 'side' ? getHeaderNode()?.closest('.sidebar-layout')?.querySelector('.rail') : null;
+  const sections = getSectionNodesForExport();
+
+  let isFirstPage = true;
+  let currentPage = createMeasurePage({
+    sidebar: S.layout === 'side',
+    includeSummary: false,
+    rail: railNode,
+    header: S.layout === 'side' ? null : headerNode
+  });
+  exportRoot.appendChild(currentPage);
+  let currentBody = currentPage.querySelector('[data-print-body]');
+
+  if (S.layout === 'side' && currentBody && headerNode) {
+    currentBody.style.minHeight = '0';
+  }
+
+  const newPage = () => {
+    const page = createMeasurePage({
+      sidebar: false,
+      includeSummary: true,
+      rail: null,
+      header: null
+    });
+    exportRoot.appendChild(page);
+    currentPage = page;
+    currentBody = page.querySelector('[data-print-body]');
+    isFirstPage = false;
+  };
+
+  sections.forEach(sectionNode => {
+    const config = getSectionSplitConfig(sectionNode);
+    if (!config) {
+      const clone = cloneClean(sectionNode);
+      if (!measureFits(measureRoot, currentPage, currentBody, clone)) newPage();
+      currentBody.appendChild(clone);
+      return;
+    }
+
+    const sourceItems = Array.from(sectionNode.querySelectorAll(config.selector)).map(item => cloneClean(item));
+    let itemIndex = 0;
+    while (itemIndex < sourceItems.length) {
+      const shell = makeSectionShell(sectionNode);
+      const { container } = createSectionContainer(sectionNode, shell);
+      if (!container) {
+        if (!measureFits(measureRoot, currentPage, currentBody, shell)) newPage();
+        currentBody.appendChild(shell);
+        break;
+      }
+
+      currentBody.appendChild(shell);
+      let added = 0;
+      while (itemIndex < sourceItems.length) {
+        const next = sourceItems[itemIndex].cloneNode(true);
+        container.appendChild(next);
+        if (currentPage.scrollHeight > PAGE_HEIGHT) {
+          container.removeChild(next);
+          if (added === 0) {
+            container.appendChild(next);
+            itemIndex += 1;
+            added += 1;
+          }
+          break;
+        }
+        itemIndex += 1;
+        added += 1;
+      }
+
+      if (added === 0) {
+        currentBody.removeChild(shell);
+        newPage();
+        continue;
+      }
+
+      if (itemIndex < sourceItems.length) {
+        newPage();
+      }
+    }
+  });
+
+  return exportRoot;
+}
+
+function openPrintExportWindow(){
+  const exportRoot = paginateExport();
+  const win = window.open('', '_blank', 'noopener,noreferrer,width=980,height=1200');
+  if (!win) return;
+  const styleMarkup = Array.from(document.querySelectorAll('style,link[rel="stylesheet"]'))
+    .map(node => node.outerHTML)
+    .join('\n');
+  const bodyClass = document.body.className || '';
+  const bodyTheme = document.body.getAttribute('data-theme') || '';
+  const bodyDark = document.body.getAttribute('data-dark') || '';
+  const html = `<!doctype html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <base href="${window.location.origin}/">
+      ${styleMarkup}
+      <style>${getExportStyles()}</style>
+    </head>
+    <body class="${bodyClass}" data-theme="${bodyTheme}" data-dark="${bodyDark}">
+      ${exportRoot.outerHTML}
+      <script>
+        window.addEventListener('load', () => {
+          setTimeout(() => {
+            window.focus();
+            window.print();
+          }, 80);
+        });
+      <\/script>
+    </body>
+  </html>`;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
 async function boot(){
   const auth = await initAuth();
   setStorageScope(getStorageScope());
@@ -260,7 +548,8 @@ async function boot(){
     onAdminWelcome: () => {
       mountWelcome();
       mountWizard();
-    }
+    },
+    onPrintExport: openPrintExportWindow
   });
 
   // Make sure a clean page exists
