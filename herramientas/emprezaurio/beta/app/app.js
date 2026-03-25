@@ -614,6 +614,8 @@ function openPrintExportWindow(){
     doc.open();
     doc.write(html);
     doc.close();
+    doc.documentElement.style.cssText = exportVars;
+    doc.body.style.cssText = `${doc.body.style.cssText};${exportVars}`;
   } catch (error) {
     console.error('[Emprezaurio print export]', error);
     alert('No se pudo preparar la descarga del CV.');
