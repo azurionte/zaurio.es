@@ -1,6 +1,6 @@
 ﻿// /resume/editor/editor.js
-// [editor.js] v1.9.0 - emprezaurio beta branding + mobile menu toggle
-console.log('[editor.js] v1.9.0');
+// [editor.js] v1.9.1 - unify layouts into style menu
+console.log('[editor.js] v1.9.1');
 
 import { S, save } from '../app/state.js';
 import { morphTo } from '../layouts/layouts.js';
@@ -80,20 +80,18 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
           </div>
         </div>
 
-        <div class="dropdown" id="ddLayout">
-          <button class="mbtn">Layouts</button>
-          <div class="dropdown-menu" style="width:340px">
-            <div id="layoutQuick" style="display:grid;gap:10px">
-              ${mock('header-side')}
-              ${mock('header-fancy')}
-              ${mock('header-top')}
-            </div>
-          </div>
-        </div>
-
         <div class="dropdown" id="ddTheme">
           <button class="mbtn">Estilo</button>
           <div class="dropdown-menu theme-pop">
+            <div class="k-row" style="align-items:start">
+              <span>Layout</span>
+              <div id="layoutQuick" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;flex:1">
+                ${layoutButton('header-side','Side')}
+                ${layoutButton('header-fancy','Fancy')}
+                ${layoutButton('header-top','Top')}
+              </div>
+            </div>
+            <div style="border-top:1px solid #23283b;margin:10px 0"></div>
             <div class="theme-row" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px">
               ${['coral','sea','city','magentaPurple','magentaPink','blueGreen','grayBlack']
                 .map(k => `<div class="swatch" data-k="${k}" title="${k}"
@@ -219,8 +217,12 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
     const k = e.target.closest('[data-layout]')?.dataset.layout;
     if(!k) return;
     morphTo(k);
-    top.querySelector('#ddLayout').classList.remove('open');
+    top.querySelector('#ddTheme').classList.remove('open');
   });
+}
+
+function layoutButton(layoutKey, label){
+  return `<button class="mbtn" type="button" data-layout="${layoutKey}" style="padding:9px 10px;min-width:0;justify-content:center;text-align:center">${label}</button>`;
 }
 
 function mock(layoutKey){
