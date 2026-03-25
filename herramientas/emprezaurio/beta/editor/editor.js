@@ -39,7 +39,8 @@ function ensureEditorMotionStyle(){
         pointer-events:none;
       }
       #betaNav.menu-open .menu{
-        max-height:420px;
+        overflow:visible;
+        max-height:85vh;
         opacity:1;
         transform:translateY(0);
         pointer-events:auto;
