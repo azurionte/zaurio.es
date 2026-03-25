@@ -221,10 +221,11 @@ function persistCanvasContent(node){
     } catch (_) {}
   });
   node.querySelectorAll('.avatar').forEach(avatar => {
-    const hasVisual = avatar.querySelector('img,canvas');
-    if (!hasVisual && S.avatar?.src) {
+    const src = S.avatar?.src || '';
+    if (src) {
+      avatar.querySelectorAll('img,canvas').forEach(el => el.remove());
       const img = document.createElement('img');
-      img.src = S.avatar.src;
+      img.src = src;
       img.alt = '';
       img.style.width = '100%';
       img.style.height = '100%';
@@ -479,6 +480,27 @@ function openPrintExportWindow(){
     const bodyClass = document.body.className || '';
     const bodyTheme = document.body.getAttribute('data-theme') || '';
     const bodyDark = document.body.getAttribute('data-dark') || '';
+    const rootStyles = getComputedStyle(document.documentElement);
+    const bodyStyles = getComputedStyle(document.body);
+    const exportVars = [
+      '--accent',
+      '--accent2',
+      '--chipBg',
+      '--secBg',
+      '--cardBg',
+      '--cardBorder',
+      '--ink',
+      '--ink-d',
+      '--bg',
+      '--panel',
+      '--line',
+      '--shadow',
+      '--rail',
+      '--page-w',
+      '--mobile-canvas-scale'
+    ]
+      .map(name => `${name}:${rootStyles.getPropertyValue(name) || bodyStyles.getPropertyValue(name) || ''}`)
+      .join(';');
     const html = `<!doctype html>
     <html>
       <head>
@@ -488,7 +510,7 @@ function openPrintExportWindow(){
         ${styleMarkup}
         <style>${getExportStyles()}</style>
       </head>
-      <body class="${bodyClass}" data-theme="${bodyTheme}" data-dark="${bodyDark}">
+      <body class="${bodyClass}" data-theme="${bodyTheme}" data-dark="${bodyDark}" style="${exportVars}">
         ${exportRoot.outerHTML}
       </body>
     </html>`;
