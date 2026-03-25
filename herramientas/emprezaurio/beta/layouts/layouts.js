@@ -143,7 +143,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="1"] .chip-grid,
     .fancy[data-chip-count="2"] .chip-grid{top:110px;bottom:18px}
     .fancy[data-chip-count="3"] .hero{min-height:180px}
-    .fancy[data-chip-count="4"] .hero{min-height:190px}
+    .fancy[data-chip-count="4"] .hero{min-height:202px}
     .fancy[data-chip-count="5"] .hero{min-height:238px}
     .fancy[data-chip-count="6"] .hero{min-height:264px}
     .fancy[data-chip-count="7"] .hero{min-height:290px}
@@ -876,6 +876,7 @@ function setChips(containers, items){
   topItems.forEach(it => top.appendChild(it));
 
   if (lowerItems.length === 1){
+    lowerItems[0].dataset.lane = 'outer';
     left.appendChild(lowerItems[0]);
     return;
   }
