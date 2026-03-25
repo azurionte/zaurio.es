@@ -222,7 +222,30 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
 }
 
 function layoutButton(layoutKey, label){
-  return `<button class="mbtn" type="button" data-layout="${layoutKey}" style="padding:9px 10px;min-width:0;justify-content:center;text-align:center">${label}</button>`;
+  const preview = layoutKey === 'header-side'
+    ? `
+      <span style="position:absolute;left:8px;top:8px;bottom:8px;width:28%;border-radius:8px;background:linear-gradient(135deg,#ffba4a,#ff6aa7)"></span>
+      <span style="position:absolute;left:14px;top:14px;width:16px;height:16px;border-radius:50%;background:#fff7fb;border:2px solid #fff"></span>
+      <span style="position:absolute;left:42%;right:10px;top:14px;height:6px;border-radius:999px;background:#fff7fb;opacity:.95"></span>
+      <span style="position:absolute;left:42%;right:20px;top:26px;height:5px;border-radius:999px;background:#fff7fb;opacity:.65"></span>
+    `
+    : layoutKey === 'header-fancy'
+    ? `
+      <span style="position:absolute;left:8px;right:8px;top:8px;height:24px;border-radius:8px;background:linear-gradient(135deg,#ffba4a,#ff6aa7)"></span>
+      <span style="position:absolute;left:50%;top:22px;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:#fff7fb;border:2px solid #fff"></span>
+      <span style="position:absolute;left:14px;right:14px;top:48px;height:6px;border-radius:999px;background:#fff7fb;opacity:.9"></span>
+    `
+    : `
+      <span style="position:absolute;left:8px;right:8px;top:8px;height:24px;border-radius:8px;background:linear-gradient(135deg,#ffba4a,#ff6aa7)"></span>
+      <span style="position:absolute;right:12px;top:12px;width:18px;height:18px;border-radius:50%;background:#fff7fb;border:2px solid #fff"></span>
+      <span style="position:absolute;left:14px;right:38px;top:14px;height:6px;border-radius:999px;background:#fff7fb;opacity:.95"></span>
+      <span style="position:absolute;left:14px;right:54px;top:26px;height:5px;border-radius:999px;background:#fff7fb;opacity:.65"></span>
+    `;
+  return `<button class="mbtn" type="button" data-layout="${layoutKey}" aria-label="${label}" title="${label}" style="padding:8px;min-width:0;display:grid;place-items:center">
+    <span style="position:relative;display:block;width:72px;height:58px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);overflow:hidden">
+      ${preview}
+    </span>
+  </button>`;
 }
 
 function mock(layoutKey){
