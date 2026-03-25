@@ -47,7 +47,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .topbar > div{position:relative;display:block !important;min-height:120px}
     .topbar > div > div:first-child{position:relative;padding-right:156px;min-height:120px;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start}
     .topbar .name{margin:0 0 12px}
-    .topbar .chips{gap:10px}
+    .topbar .chips{gap:10px;position:relative;align-items:center}
     .topbar .avatar{
       position:absolute;
       right:0;
@@ -75,11 +75,24 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       font-weight:800;
       z-index:5;
     }
+    .topbar .chips > #chipAddBtn{
+      position:static !important;
+      right:auto !important;
+      bottom:auto !important;
+      top:auto !important;
+      left:auto !important;
+      transform:none !important;
+      margin:0 0 0 2px !important;
+      flex:0 0 44px;
+      align-self:center;
+      z-index:2;
+    }
     .topbar[data-chip-count="1"],
     .topbar[data-chip-count="2"],
     .topbar[data-chip-count="3"],
     .topbar[data-chip-count="4"],
     .topbar[data-chip-count="5"]{padding-bottom:12px}
+    .topbar[data-chip-count="5"] #chipAddBtn{right:156px;bottom:8px}
     .topbar .avatar{
       inline-size:120px;
       block-size:120px;
@@ -94,28 +107,28 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       align-self:center;
       justify-self:center;
     }
-    .fancy{position:relative;padding-bottom:74px}
-    .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 88px;min-height:232px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+    .fancy{position:relative;padding-bottom:86px}
+    .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 100px;min-height:232px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
     .fancy .hero .avatar{
       position:absolute;
       left:50%;
-      bottom:-74px;
+      bottom:-94px;
       transform:translateX(-50%);
       z-index:4;
-      width:154px;
-      height:154px;
-      min-width:154px;
-      min-height:154px;
-      max-width:154px;
-      max-height:154px;
-      inline-size:154px;
-      block-size:154px;
+      width:172px;
+      height:172px;
+      min-width:172px;
+      min-height:172px;
+      max-width:172px;
+      max-height:172px;
+      inline-size:172px;
+      block-size:172px;
       aspect-ratio:1 / 1;
       border-width:4px;
       border-radius:999px;
     }
     .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3;width:min(100%,520px);padding:0 12px}
-    .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:18px;display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:12px;align-items:start;pointer-events:none}
+    .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:26px;display:grid;grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:12px;align-items:start;pointer-events:none}
     .fancy .chip-grid .chips{display:flex;min-width:0;pointer-events:auto}
     .fancy .chip-grid [data-info-top]{grid-column:1 / 4;grid-row:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start;justify-items:center}
     .fancy .chip-grid [data-info-left]{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-end;justify-self:end}
@@ -129,14 +142,19 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="2"] .chip-grid{top:110px;bottom:18px}
     .fancy[data-chip-count="3"] .hero{min-height:184px}
     .fancy[data-chip-count="4"] .hero{min-height:196px}
-    .fancy[data-chip-count="5"] .hero{min-height:208px}
-    .fancy[data-chip-count="6"] .hero{min-height:276px}
-    .fancy[data-chip-count="7"] .hero{min-height:302px}
+    .fancy[data-chip-count="5"] .hero{min-height:246px}
+    .fancy[data-chip-count="6"] .hero{min-height:336px}
+    .fancy[data-chip-count="7"] .hero{min-height:364px}
     .fancy[data-chip-count="3"] .chip-grid,
     .fancy[data-chip-count="4"] .chip-grid,
     .fancy[data-chip-count="5"] .chip-grid,
     .fancy[data-chip-count="6"] .chip-grid,
-    .fancy[data-chip-count="7"] .chip-grid{top:94px;bottom:18px}
+    .fancy[data-chip-count="7"] .chip-grid{top:94px;bottom:26px}
+    .fancy[data-chip-count="5"] .hero .avatar,
+    .fancy[data-chip-count="6"] .hero .avatar,
+    .fancy[data-chip-count="7"] .hero .avatar{bottom:-94px}
+    .fancy[data-chip-count="6"] .chip-grid,
+    .fancy[data-chip-count="7"] .chip-grid{grid-template-columns:minmax(0,1fr) 122px minmax(0,1fr)}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
@@ -995,7 +1013,12 @@ export function applyContact(){
           if (addBtn.parentElement !== chipWrap) chipWrap.appendChild(addBtn);
         } else if (topbarInner) {
           const topInfoBlock = topbarInner.firstElementChild;
-          if (topInfoBlock && addBtn.parentElement !== topInfoBlock) topInfoBlock.appendChild(addBtn);
+          const topChipHolder = head.querySelector('[data-info]');
+          if ((items||[]).length === 5 && topChipHolder) {
+            if (addBtn.parentElement !== topChipHolder) topChipHolder.appendChild(addBtn);
+          } else if (topInfoBlock && addBtn.parentElement !== topInfoBlock) {
+            topInfoBlock.appendChild(addBtn);
+          }
         } else if ((items||[]).length === 0 && nameBlock){
           if (addBtn.parentElement !== nameBlock) nameBlock.appendChild(addBtn);
         } else if (genericHolder){
