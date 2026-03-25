@@ -130,7 +130,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3;width:min(100%,520px);padding:0 12px}
     .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:14px;display:grid;grid-template-columns:minmax(0,1fr) 146px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:10px;align-items:start;pointer-events:none}
     .fancy .chip-grid .chips{display:flex;min-width:0;pointer-events:auto}
-    .fancy .chip-grid [data-info-top]{grid-column:1 / 4;grid-row:1;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;justify-content:center}
+    .fancy .chip-grid [data-info-top]{grid-column:1 / 4;grid-row:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start;justify-items:center}
     .fancy .chip-grid [data-info-left]{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-end;justify-self:stretch;width:100%;min-width:0}
     .fancy .chip-grid [data-info-right]{grid-column:3;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-start;justify-self:stretch;width:100%;min-width:0}
     .fancy .chip-grid [data-info-top] > .chip,
@@ -142,16 +142,16 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="2"] .hero{min-height:170px}
     .fancy[data-chip-count="1"] .chip-grid,
     .fancy[data-chip-count="2"] .chip-grid{top:110px;bottom:18px}
-    .fancy[data-chip-count="3"] .hero{min-height:188px}
-    .fancy[data-chip-count="3"] .chip-grid{grid-template-columns:minmax(0,1fr) 146px minmax(0,1fr);bottom:18px}
-    .fancy[data-chip-count="4"] .hero{min-height:216px}
-    .fancy[data-chip-count="4"] .chip-grid{grid-template-columns:minmax(0,1fr) 146px minmax(0,1fr);bottom:18px}
+    .fancy[data-chip-count="3"] .hero{min-height:198px}
+    .fancy[data-chip-count="3"] .chip-grid{grid-template-columns:minmax(0,1fr) 176px minmax(0,1fr);bottom:18px}
+    .fancy[data-chip-count="4"] .hero{min-height:226px}
+    .fancy[data-chip-count="4"] .chip-grid{grid-template-columns:minmax(0,1fr) 132px minmax(0,1fr);bottom:18px}
     .fancy[data-chip-count="4"] .chip-grid [data-info-left] > .chip[data-lane="outer"]{
       width:min(100%,228px);
       max-width:228px;
     }
-    .fancy[data-chip-count="5"] .hero{min-height:236px}
-    .fancy[data-chip-count="5"] .chip-grid{grid-template-columns:minmax(0,1fr) 146px minmax(0,1fr);bottom:18px}
+    .fancy[data-chip-count="5"] .hero{min-height:248px}
+    .fancy[data-chip-count="5"] .chip-grid{grid-template-columns:minmax(0,1fr) 132px minmax(0,1fr);bottom:18px}
     .fancy[data-chip-count="6"] .hero{min-height:264px}
     .fancy[data-chip-count="7"] .hero{min-height:290px}
     .fancy[data-chip-count="3"] .chip-grid,
@@ -875,9 +875,8 @@ function setChips(containers, items){
   const [top, left, right] = containers;
   const total = items.length;
   let topCount = 0;
-  if (total <= 3) topCount = total;
-  else if (total === 4) topCount = 2;
-  else topCount = 3;
+  if (total === 3) topCount = 1;
+  else if (total >= 4) topCount = 3;
 
   const topItems = items.slice(0, topCount);
   const lowerItems = items.slice(topCount);
