@@ -107,28 +107,28 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
       align-self:center;
       justify-self:center;
     }
-    .fancy{position:relative;padding-bottom:76px}
-    .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 92px;min-height:220px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+    .fancy{position:relative;padding-bottom:72px}
+    .fancy .hero{position:relative;border-radius:14px;padding:20px 18px 86px;min-height:214px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
     .fancy .hero .avatar{
       position:absolute;
       left:50%;
-      bottom:-78px;
+      bottom:-70px;
       transform:translateX(-50%);
       z-index:4;
-      width:156px;
-      height:156px;
-      min-width:156px;
-      min-height:156px;
-      max-width:156px;
-      max-height:156px;
-      inline-size:156px;
-      block-size:156px;
+      width:146px;
+      height:146px;
+      min-width:146px;
+      min-height:146px;
+      max-width:146px;
+      max-height:146px;
+      inline-size:146px;
+      block-size:146px;
       aspect-ratio:1 / 1;
       border-width:4px;
       border-radius:999px;
     }
     .fancy .hero .name{text-align:center;margin:8px 0 0;position:relative;z-index:3;width:min(100%,520px);padding:0 12px}
-    .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:18px;display:grid;grid-template-columns:minmax(0,1fr) 156px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:12px;align-items:start;pointer-events:none}
+    .fancy .chip-grid{position:absolute;left:22px;right:22px;top:94px;bottom:14px;display:grid;grid-template-columns:minmax(0,1fr) 146px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:10px;row-gap:10px;align-items:start;pointer-events:none}
     .fancy .chip-grid .chips{display:flex;min-width:0;pointer-events:auto}
     .fancy .chip-grid [data-info-top]{grid-column:1 / 4;grid-row:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start;justify-items:center}
     .fancy .chip-grid [data-info-left]{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;align-items:flex-end;justify-self:end}
@@ -140,21 +140,21 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     .fancy[data-chip-count="2"] .hero{min-height:170px}
     .fancy[data-chip-count="1"] .chip-grid,
     .fancy[data-chip-count="2"] .chip-grid{top:110px;bottom:18px}
-    .fancy[data-chip-count="3"] .hero{min-height:184px}
-    .fancy[data-chip-count="4"] .hero{min-height:196px}
-    .fancy[data-chip-count="5"] .hero{min-height:214px}
-    .fancy[data-chip-count="6"] .hero{min-height:286px}
-    .fancy[data-chip-count="7"] .hero{min-height:314px}
+    .fancy[data-chip-count="3"] .hero{min-height:180px}
+    .fancy[data-chip-count="4"] .hero{min-height:190px}
+    .fancy[data-chip-count="5"] .hero{min-height:204px}
+    .fancy[data-chip-count="6"] .hero{min-height:254px}
+    .fancy[data-chip-count="7"] .hero{min-height:280px}
     .fancy[data-chip-count="3"] .chip-grid,
     .fancy[data-chip-count="4"] .chip-grid,
     .fancy[data-chip-count="5"] .chip-grid,
     .fancy[data-chip-count="6"] .chip-grid,
-    .fancy[data-chip-count="7"] .chip-grid{top:94px;bottom:18px}
+    .fancy[data-chip-count="7"] .chip-grid{top:94px;bottom:14px}
     .fancy[data-chip-count="5"] .hero .avatar,
     .fancy[data-chip-count="6"] .hero .avatar,
-    .fancy[data-chip-count="7"] .hero .avatar{bottom:-78px}
+    .fancy[data-chip-count="7"] .hero .avatar{bottom:-72px}
     .fancy[data-chip-count="6"] .chip-grid,
-    .fancy[data-chip-count="7"] .chip-grid{grid-template-columns:minmax(0,1fr) 134px minmax(0,1fr)}
+    .fancy[data-chip-count="7"] .chip-grid{grid-template-columns:minmax(0,1fr) 118px minmax(0,1fr)}
 
     /* Avatar + chips */
     .avatar{border-radius:999px;overflow:hidden;background:#d1d5db;position:relative;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);border:5px solid #fff;width:140px;height:140px;aspect-ratio:1 / 1;display:grid;place-items:center;flex:0 0 auto}
