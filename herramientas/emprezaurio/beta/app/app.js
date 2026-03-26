@@ -460,8 +460,27 @@ function cloneHeaderForExport(node){
 function getSectionNodesForExport(){
   if (S.layout === 'side') {
     const main = getSideMain();
-    if (!main) return [];
-    return Array.from(main.children).filter(el => el.querySelector?.('.section'));
+    const rail = getRailHolder();
+    const all = [];
+    if (main) {
+      Array.from(main.children).forEach(el => {
+        if (el?.querySelector?.('.section')) all.push(el);
+      });
+    }
+    if (rail) {
+      Array.from(rail.children).forEach(el => {
+        if (el?.querySelector?.('.section')) all.push(el);
+      });
+    }
+    const orderedKeys = Array.isArray(S.sectionOrder) ? S.sectionOrder : [];
+    const keyed = new Map();
+    all.forEach(el => {
+      const key = el.querySelector('.section')?.dataset?.section || el.dataset?.section;
+      if (key && !keyed.has(key)) keyed.set(key, el);
+    });
+    const ordered = orderedKeys.map(key => keyed.get(key)).filter(Boolean);
+    const leftovers = all.filter(el => !ordered.includes(el));
+    return [...ordered, ...leftovers];
   }
   const stack = document.getElementById('stack');
   if (!stack) return [];
@@ -765,7 +784,12 @@ function createMeasurePage({ sidebar = false, includeSummary = false, rail = nul
   if (sidebar) {
     const layout = document.createElement('div');
     layout.className = 'print-sidebar-page sidebar-layout';
-    if (rail) layout.appendChild(cloneClean(rail));
+    if (rail) {
+      const railClone = cloneClean(rail);
+      const railSections = railClone.querySelector('[data-rail-sections]');
+      if (railSections) railSections.replaceChildren();
+      layout.appendChild(railClone);
+    }
     const main = document.createElement('div');
     main.className = 'print-main';
     main.setAttribute('data-zone', 'main');
