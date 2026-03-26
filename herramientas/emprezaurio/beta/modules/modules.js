@@ -532,7 +532,7 @@ export function renderBio(text){
   card.className = 'card';
   card.classList.add('profile-copy');
   card.setAttribute('contenteditable','true');
-  card.textContent = (text || '').trim() || 'Add a short summary of your profile, strengths and what you’re great at.';
+  card.textContent = (text || '').trim() || 'Add a short summary of your profile, strengths and what you are great at.';
   card.addEventListener('blur', ()=>{ try{ S.bio = card.textContent.trim(); save(); }catch(_){ } });
   body.appendChild(card);
   putSection(sec);
@@ -600,11 +600,13 @@ export function openAddMenu(anchor){
 // Refresh plus visibility: hide the canvas add button if all sections exist, show otherwise
 export function refreshPlusVisibility(){
   const all = ['skills','edu','exp','bio'];
-  const host = getSideMain() || ensureCanvas().stack;
-  const plus = ensurePlusIn(host) || document.getElementById('canvasAdd') || ensureCanvas().add;
+  const canvas = ensureCanvas();
+  const host = isSidebarActive() ? (getSideMain() || canvas.stack) : canvas.stack;
+  const plus = ensurePlusIn(host) || document.getElementById('canvasAdd') || canvas.add;
   if (!plus) return;
   const missing = all.filter(k => !document.querySelector('.section[data-section="'+k+'"]'));
   plus.style.display = (missing.length===0) ? 'none' : 'flex';
+  if (plus.parentElement !== host) host.appendChild(plus);
 }
 
 // initial visibility update

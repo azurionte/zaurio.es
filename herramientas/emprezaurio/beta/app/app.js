@@ -299,7 +299,7 @@ function createPrintMeasureRoot(){
     'visibility:hidden',
     'pointer-events:none',
     'z-index:-1',
-    'background:#fff'
+    'background:transparent'
   ].join(';');
   document.body.appendChild(root);
   return root;
@@ -307,7 +307,7 @@ function createPrintMeasureRoot(){
 
 function getExportStyles(){
   return `
-    body{margin:0;background:#fff;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    html,body{margin:0;background:transparent !important;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .print-export-root{display:grid;gap:0}
     .print-page{width:${PAGE_WIDTH}px;min-height:${PAGE_HEIGHT}px;padding:24px;box-sizing:border-box;background:#fff;color:#111;page-break-after:always;break-after:page;overflow:hidden}
     .print-page:last-child{page-break-after:auto;break-after:auto}
@@ -317,8 +317,8 @@ function getExportStyles(){
     .print-summary-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
     .print-summary-name{font-weight:900;font-size:28px;line-height:1.05}
     .print-summary-chips{display:flex;flex-wrap:wrap;gap:10px}
-    .print-summary-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:28px;font-size:10.5px;line-height:1.05}
-    .print-summary-chip i{width:14px;text-align:center;font-size:11px}
+    .print-summary-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:24px;font-size:9px;line-height:1.05}
+    .print-summary-chip i{width:12px;text-align:center;font-size:10px}
     .print-page .sidebar-layout .rail{display:flex !important;flex-direction:column !important;align-items:flex-start !important}
     .print-page .sidebar-layout .rail .avatar{
       display:block !important;
@@ -357,18 +357,18 @@ function getExportStyles(){
       flex:1 1 100% !important;
       width:100% !important;
       max-width:100% !important;
-      min-height:28px !important;
-      padding:4px 8px !important;
-      font-size:10.5px !important;
+      min-height:24px !important;
+      padding:3px 7px !important;
+      font-size:9px !important;
       line-height:1.05 !important;
       gap:6px !important;
     }
     .print-page .sidebar-layout .rail .chip span,
     .print-page .sidebar-layout .rail .chip .chip-input{
-      font-size:10.5px !important;
+      font-size:9px !important;
       line-height:1.05 !important;
     }
-    .print-page .sidebar-layout .rail .chip i{width:14px !important;font-size:11px !important}
+    .print-page .sidebar-layout .rail .chip i{width:12px !important;font-size:10px !important}
     .print-page .add-squircle,
     .print-page .add-dot,
     .print-page .sec-remove,
@@ -548,12 +548,17 @@ function openPrintExportWindow(){
     const styleMarkup = Array.from(document.querySelectorAll('style,link[rel="stylesheet"]'))
       .map(node => node.outerHTML)
       .join('\n');
+    const htmlClass = document.documentElement.className || '';
+    const htmlTheme = document.documentElement.getAttribute('data-theme') || '';
+    const htmlDark = document.documentElement.getAttribute('data-dark') || '';
+    const htmlMaterial = document.documentElement.getAttribute('data-mat') || '';
     const bodyClass = document.body.className || '';
     const bodyTheme = document.body.getAttribute('data-theme') || '';
     const bodyDark = document.body.getAttribute('data-dark') || '';
     const bodyMaterial = document.body.getAttribute('data-mat') || '';
     const rootStyles = getComputedStyle(document.documentElement);
     const bodyStyles = getComputedStyle(document.body);
+    const sheetStyles = getComputedStyle(document.getElementById('sheet') || document.body);
     const exportVars = [
       '--accent',
       '--accent2',
@@ -572,10 +577,10 @@ function openPrintExportWindow(){
       '--page-w',
       '--mobile-canvas-scale'
     ]
-      .map(name => `${name}:${rootStyles.getPropertyValue(name) || bodyStyles.getPropertyValue(name) || ''}`)
+      .map(name => `${name}:${rootStyles.getPropertyValue(name) || bodyStyles.getPropertyValue(name) || sheetStyles.getPropertyValue(name) || ''}`)
       .join(';');
     const html = `<!doctype html>
-    <html>
+    <html class="${htmlClass}" data-theme="${htmlTheme}" data-dark="${htmlDark}" data-mat="${htmlMaterial}" style="${exportVars}">
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -593,16 +598,18 @@ function openPrintExportWindow(){
     const iframe = document.createElement('iframe');
     iframe.id = 'printExportFrame';
     iframe.setAttribute('aria-hidden', 'true');
-    iframe.style.position = 'absolute';
-    iframe.style.left = '-100000px';
-    iframe.style.top = '-100000px';
-    iframe.style.width = '1px';
-    iframe.style.height = '1px';
+    iframe.style.position = 'fixed';
+    iframe.style.left = '0';
+    iframe.style.top = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
     iframe.style.border = '0';
     iframe.style.opacity = '0';
     iframe.style.visibility = 'hidden';
     iframe.style.background = 'transparent';
     iframe.style.pointerEvents = 'none';
+    iframe.style.clipPath = 'inset(100%)';
+    iframe.style.contain = 'strict';
     document.body.appendChild(iframe);
 
     iframe.onload = () => {
@@ -620,6 +627,9 @@ function openPrintExportWindow(){
     doc.write(html);
     doc.close();
     doc.documentElement.style.cssText = exportVars;
+    doc.documentElement.setAttribute('data-theme', htmlTheme || bodyTheme);
+    doc.documentElement.setAttribute('data-dark', htmlDark || bodyDark);
+    doc.documentElement.setAttribute('data-mat', htmlMaterial || bodyMaterial);
     doc.body.style.cssText = `${doc.body.style.cssText};${exportVars}`;
   } catch (error) {
     console.error('[Emprezaurio print export]', error);

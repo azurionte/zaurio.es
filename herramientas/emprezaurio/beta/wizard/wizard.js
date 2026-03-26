@@ -1,9 +1,9 @@
 ﻿// /resume/wizard/wizard.js
-// [wizard.js] v2.16.1 â€” owner-only private demo
-console.log('[wizard.js] v2.16.1');
+// [wizard.js] v2.16.2 - owner-only private demo
+console.log('[wizard.js] v2.16.2');
 
 import { S, setTheme, setDark, setMaterial } from '../app/state.js';
-import { morphTo, getHeaderNode, applyContact } from '../layouts/layouts.js';
+import { morphTo, applyContact, renderAllAvatars } from '../layouts/layouts.js';
 import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/modules.js';
 import { authState } from '../app/auth.js';
 
@@ -296,7 +296,7 @@ function wizAttachDnd(container, itemSel){
 /* ---------- wizard state ---------- */
 let W = {
   skills: [],
-  addSkillsToRail: true,
+  addSkillsToRail: false,
   edu: [],
   exp: [],
   expDraft: { dates:'', role:'', org:'', desc:'' },
@@ -417,7 +417,7 @@ function buildWizard(){
   document.getElementById('wizDemo')?.addEventListener('click', ()=> loadDemoResume());
   document.getElementById('wizStartOver').onclick = ()=>{
     Object.assign(S,{ contact:{name:'',phone:'',email:'',address:'',linkedin:''} });
-    W={ skills:[], addSkillsToRail:true, edu:[], exp:[], expDraft:{dates:'',role:'',org:'',desc:''}, bio:'' };
+    W={ skills:[], addSkillsToRail:false, edu:[], exp:[], expDraft:{dates:'',role:'',org:'',desc:''}, bio:'' };
     stepIdx=0; backCount=0; renderStep();
   };
   document.getElementById('wizNext').onclick = advance;
@@ -503,6 +503,7 @@ function renderStep(){
           <input class="wipt" id="ln" placeholder="username" style="flex:1" value="${S.contact?.linkedin||''}">
         </div>
         <div class="full wiz-actions" style="justify-content:flex-start">
+          <input type="file" id="wizPhotoInput" accept="image/*" style="display:none">
           <button class="mbtn" id="wizAddPhoto" type="button"><i class="fa-solid fa-camera"></i> Upload photo</button>
         </div>
       </div>`;
@@ -518,7 +519,24 @@ function renderStep(){
         applyContact?.();
       };
     });
-    body.querySelector('#wizAddPhoto').onclick = ()=> getHeaderNode()?.querySelector('[data-avatar] input')?.click();
+    const wizPhotoInput = body.querySelector('#wizPhotoInput');
+    body.querySelector('#wizAddPhoto').onclick = ()=> wizPhotoInput?.click();
+    wizPhotoInput?.addEventListener('change', e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        S.avatar = {
+          src: String(reader.result || ''),
+          zoom: 1,
+          panX: 0,
+          panY: 0
+        };
+        renderAllAvatars?.();
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
   }
 
   /* ----- SKILLS ----- */
@@ -529,10 +547,10 @@ function renderStep(){
       <div class="wiz-mini">
         <div id="wizSkills" class="list"></div>
         <div class="btns">
-          <button class="mbtn" id="addStar">+ Estrellas</button>
+          <button class="mbtn" id="addStar"><i class="fa-solid fa-star"></i> Estrellas</button>
           <button class="mbtn" id="addSlider">+ <i class="fa-solid fa-sliders"></i></button>
         </div>
-        <div class="wiz-switch">
+        <div class="wiz-switch" style="${S.layout==='side' ? '' : 'display:none'}">
           <span>Add to sidebar</span>
           <div id="toRail" class="switch ${W.addSkillsToRail?'on':''}"></div>
         </div>

@@ -514,7 +514,7 @@ function drawAvatarInto(canvas, src){
   img.src = getAvatarSource(src);
 }
 
-function renderAllAvatars(){
+export function renderAllAvatars(){
   $$('[data-avatar]').forEach(w => {
     const canvas = w.querySelector('canvas');
     if (!canvas) return;
