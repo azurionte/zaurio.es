@@ -546,7 +546,15 @@ function openPrintExportWindow(){
   try {
     const exportRoot = paginateExport();
     const styleMarkup = Array.from(document.querySelectorAll('style,link[rel="stylesheet"]'))
-      .map(node => node.outerHTML)
+      .map(node => {
+        if (node.tagName === 'LINK') {
+          const href = node.href || node.getAttribute('href') || '';
+          if (!href) return '';
+          return `<link rel="stylesheet" href="${href}">`;
+        }
+        return node.outerHTML;
+      })
+      .filter(Boolean)
       .join('\n');
     const htmlClass = document.documentElement.className || '';
     const htmlTheme = document.documentElement.getAttribute('data-theme') || '';
@@ -584,7 +592,6 @@ function openPrintExportWindow(){
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
-        <base href="${window.location.origin}/">
         ${styleMarkup}
         <style>${getExportStyles()}</style>
       </head>
@@ -615,10 +622,23 @@ function openPrintExportWindow(){
     iframe.onload = () => {
       const cleanup = () => setTimeout(() => iframe.remove(), 300);
       iframe.contentWindow?.addEventListener('afterprint', cleanup, { once:true });
-      setTimeout(() => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-      }, 120);
+      const frameDoc = iframe.contentDocument;
+      const linkPromises = Array.from(frameDoc?.querySelectorAll('link[rel="stylesheet"]') || []).map(link => {
+        if (link.sheet) return Promise.resolve();
+        return new Promise(resolve => {
+          const done = () => resolve();
+          link.addEventListener('load', done, { once:true });
+          link.addEventListener('error', done, { once:true });
+          setTimeout(done, 2500);
+        });
+      });
+      const fontsReady = frameDoc?.fonts?.ready || Promise.resolve();
+      Promise.all([...linkPromises, fontsReady]).then(() => {
+        setTimeout(() => {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        }, 120);
+      });
     };
 
     const doc = iframe.contentDocument;
