@@ -1,7 +1,7 @@
 ﻿import { S, save as saveLocal } from './state.js';
 import { authState } from './auth.js';
 import { morphTo, applyContact } from '../layouts/layouts.js';
-import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/modules.js';
+import { renderSkills, renderEdu, renderExp, renderBio, refreshPlusVisibility } from '../modules/modules.js';
 
 const TABLE = 'cv_projects';
 const THEME_TONES = {
@@ -24,9 +24,11 @@ function resetState(){
   S.material = 'paper';
   S.layout = null;
   S.project = { id:null, title:'Mi CV', locale:'es', updated_at:null };
-  S.contact = { name:'', phone:'', email:'', address:'', linkedin:'' };
+  S.contact = { name:'', phone:'', phone2:'', email:'', idDoc:'', address:'', linkedin:'', info1:'', info2:'', info3:'', info4:'', info5:'', info6:'', info7:'' };
+  S.contactOrder = [];
   S.avatar = null;
   S.skillsInSidebar = false;
+  S.sectionOrder = [];
   S.skills = [];
   S.edu = [];
   S.exp = [];
@@ -45,15 +47,32 @@ export function applyStateToCanvas(payload){
   resetState();
   Object.assign(S, payload || {});
   if (!S.project) S.project = { id:null, title:'Mi CV', locale:'es', updated_at:null };
+  if (!Array.isArray(S.contactOrder)) S.contactOrder = [];
+  if (!Array.isArray(S.sectionOrder)) S.sectionOrder = [];
 
   clearCanvas();
   morphTo(`header-${S.layout || 'top'}`);
   applyContact();
-  if (Array.isArray(S.skills) && S.skills.length) renderSkills(S.skills, { toRail: !!S.skillsInSidebar });
-  if (Array.isArray(S.edu) && S.edu.length) renderEdu(S.edu);
-  if (Array.isArray(S.exp) && S.exp.length) renderExp(S.exp);
-  if (S.bio) renderBio(S.bio);
+  const renderers = {
+    skills: () => Array.isArray(S.skills) && S.skills.length && renderSkills(S.skills, { toRail: !!S.skillsInSidebar }),
+    edu: () => Array.isArray(S.edu) && S.edu.length && renderEdu(S.edu),
+    exp: () => Array.isArray(S.exp) && S.exp.length && renderExp(S.exp),
+    bio: () => S.bio && renderBio(S.bio)
+  };
+  const available = ['skills', 'edu', 'exp', 'bio'].filter(key => {
+    if (key === 'skills') return Array.isArray(S.skills) && S.skills.length;
+    if (key === 'edu') return Array.isArray(S.edu) && S.edu.length;
+    if (key === 'exp') return Array.isArray(S.exp) && S.exp.length;
+    return !!S.bio;
+  });
+  const ordered = [...S.sectionOrder.filter(key => available.includes(key))];
+  available.forEach(key => {
+    if (!ordered.includes(key)) ordered.push(key);
+  });
+  S.sectionOrder = ordered;
+  ordered.forEach(key => renderers[key]?.());
   document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display = 'flex');
+  try { refreshPlusVisibility(); } catch (_) {}
   saveLocal();
 }
 

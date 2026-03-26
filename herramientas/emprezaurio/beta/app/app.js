@@ -317,8 +317,8 @@ function getExportStyles(){
     .print-summary-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
     .print-summary-name{font-weight:900;font-size:28px;line-height:1.05}
     .print-summary-chips{display:flex;flex-wrap:wrap;gap:10px}
-    .print-summary-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:32px;font-size:11.5px;line-height:1.1}
-    .print-summary-chip i{width:16px;text-align:center}
+    .print-summary-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:28px;font-size:10.5px;line-height:1.05}
+    .print-summary-chip i{width:14px;text-align:center;font-size:11px}
     .print-page .sidebar-layout .rail{display:flex !important;flex-direction:column !important;align-items:flex-start !important}
     .print-page .sidebar-layout .rail .avatar{
       display:block !important;
@@ -330,12 +330,12 @@ function getExportStyles(){
       top:auto !important;
       bottom:auto !important;
       transform:none !important;
-      width:140px !important;
-      height:140px !important;
-      min-width:140px !important;
-      min-height:140px !important;
-      max-width:140px !important;
-      max-height:140px !important;
+      width:132px !important;
+      height:132px !important;
+      min-width:132px !important;
+      min-height:132px !important;
+      max-width:132px !important;
+      max-height:132px !important;
       aspect-ratio:1 / 1 !important;
       border-radius:50% !important;
     }
@@ -344,30 +344,31 @@ function getExportStyles(){
       display:flex !important;
       flex-direction:column !important;
       align-items:center !important;
-      gap:10px !important;
+      gap:8px !important;
     }
     .print-page .sidebar-layout .rail .chip-wrap .chips{
       width:100% !important;
       display:flex !important;
       flex-wrap:wrap !important;
-      gap:10px !important;
+      gap:8px !important;
     }
     .print-page .sidebar-layout .rail .chip-wrap .chip,
     .print-page .sidebar-layout .rail > .chips .chip{
       flex:1 1 100% !important;
       width:100% !important;
       max-width:100% !important;
-      min-height:32px !important;
-      padding:6px 10px !important;
-      font-size:11.5px !important;
-      line-height:1.1 !important;
-      gap:7px !important;
+      min-height:28px !important;
+      padding:4px 8px !important;
+      font-size:10.5px !important;
+      line-height:1.05 !important;
+      gap:6px !important;
     }
     .print-page .sidebar-layout .rail .chip span,
     .print-page .sidebar-layout .rail .chip .chip-input{
-      font-size:11.5px !important;
-      line-height:1.1 !important;
+      font-size:10.5px !important;
+      line-height:1.05 !important;
     }
+    .print-page .sidebar-layout .rail .chip i{width:14px !important;font-size:11px !important}
     .print-page .add-squircle,
     .print-page .add-dot,
     .print-page .sec-remove,
@@ -550,6 +551,7 @@ function openPrintExportWindow(){
     const bodyClass = document.body.className || '';
     const bodyTheme = document.body.getAttribute('data-theme') || '';
     const bodyDark = document.body.getAttribute('data-dark') || '';
+    const bodyMaterial = document.body.getAttribute('data-mat') || '';
     const rootStyles = getComputedStyle(document.documentElement);
     const bodyStyles = getComputedStyle(document.body);
     const exportVars = [
@@ -558,6 +560,7 @@ function openPrintExportWindow(){
       '--chipBg',
       '--secBg',
       '--cardBg',
+      '--card',
       '--cardBorder',
       '--ink',
       '--ink-d',
@@ -580,7 +583,7 @@ function openPrintExportWindow(){
         ${styleMarkup}
         <style>${getExportStyles()}</style>
       </head>
-      <body class="${bodyClass}" data-theme="${bodyTheme}" data-dark="${bodyDark}" style="${exportVars}">
+      <body class="${bodyClass}" data-theme="${bodyTheme}" data-dark="${bodyDark}" data-mat="${bodyMaterial}" style="${exportVars}">
         ${exportRoot.outerHTML}
       </body>
     </html>`;

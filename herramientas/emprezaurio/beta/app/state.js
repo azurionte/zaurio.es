@@ -6,9 +6,11 @@ export const S = {
   material: 'paper', // 'glass' | 'paper'
   layout: null,      // 'side' | 'fancy' | 'top'
   project: { id:null, title:'Mi CV', locale:'es', updated_at:null },
-  contact: { name:'', phone:'', email:'', address:'', linkedin:'' },
+  contact: { name:'', phone:'', phone2:'', email:'', idDoc:'', address:'', linkedin:'', info1:'', info2:'', info3:'', info4:'', info5:'', info6:'', info7:'' },
+  contactOrder: [],
   avatar: null,      // dataURL (so it survives morph)
   skillsInSidebar: false,
+  sectionOrder: [],
   skills: [],        // {type:'star'|'slider', label, value}
   edu: [],           // {kind:'course'|'degree', title, year, academy}
   exp: [],           // {dates, role, org, desc}

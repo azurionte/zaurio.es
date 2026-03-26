@@ -154,6 +154,15 @@ function hostRail(){
   return getRailHolder();
 }
 
+function syncSectionOrder(){
+  try{
+    S.sectionOrder = Array.from(document.querySelectorAll('.node[data-section]'))
+      .map(node => node.dataset.section)
+      .filter(Boolean);
+    save();
+  }catch(_){}
+}
+
 function putSection(node, { toRail=false } = {}){
   // Prevent inserting duplicate sections (one of each type only)
   try{
@@ -180,10 +189,17 @@ function putSection(node, { toRail=false } = {}){
     wrapper.appendChild(node);
   }
   wrapper.draggable = true;
+  if (wrapper.dataset.section && !Array.isArray(S.sectionOrder)) S.sectionOrder = [];
 
   const plus = ensurePlusIn(host);
   if (plus) host.insertBefore(wrapper, plus); else host.appendChild(wrapper);
-  attachDragSort(host, '.node[data-section]', '.sec-head', ()=>{ try{ save(); }catch(_){ } });
+  attachDragSort(host, '.node[data-section]', '.sec-head', ()=>{ syncSectionOrder(); });
+  if (wrapper.dataset.section && !S.sectionOrder.includes(wrapper.dataset.section)) {
+    S.sectionOrder.push(wrapper.dataset.section);
+    save();
+  } else {
+    syncSectionOrder();
+  }
   // Refresh the plus visibility after adding a section
   try{ refreshPlusVisibility(); }catch(e){}
 }
@@ -211,6 +227,7 @@ function sectionEl(key, title){
       if (s === 'edu') S.edu = [];
       if (s === 'exp') S.exp = [];
       if (s === 'bio') S.bio = '';
+      if (Array.isArray(S.sectionOrder)) S.sectionOrder = S.sectionOrder.filter(key => key !== s);
       save();
     }catch(_){}
     try{ refreshPlusVisibility(); }catch(_){}
@@ -340,6 +357,7 @@ export function renderSkills(list, opts = {}){
           rail.appendChild(wrapper);
           S.skillsInSidebar = true;
         }
+        syncSectionOrder();
         save();
         try{ refreshPlusVisibility(); }catch(_){ }
       }catch(_){ }
@@ -580,9 +598,10 @@ export function openAddMenu(anchor){
 }
 
 // Refresh plus visibility: hide the canvas add button if all sections exist, show otherwise
-function refreshPlusVisibility(){
+export function refreshPlusVisibility(){
   const all = ['skills','edu','exp','bio'];
-  const plus = document.getElementById('canvasAdd') || ensureCanvas().add;
+  const host = getSideMain() || ensureCanvas().stack;
+  const plus = ensurePlusIn(host) || document.getElementById('canvasAdd') || ensureCanvas().add;
   if (!plus) return;
   const missing = all.filter(k => !document.querySelector('.section[data-section="'+k+'"]'));
   plus.style.display = (missing.length===0) ? 'none' : 'flex';

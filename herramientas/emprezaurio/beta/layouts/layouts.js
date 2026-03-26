@@ -738,8 +738,28 @@ function getDisplayedContactValue(key, value){
 function removeContactKey(key){
   if (!S.contact) return;
   S.contact[key] = '';
+  if (Array.isArray(S.contactOrder)) {
+    S.contactOrder = S.contactOrder.filter(item => item !== key);
+  }
   save();
   applyContact();
+}
+
+function getContactOrder(contact = S.contact || {}){
+  const fallback = ['phone', 'phone2', 'email', 'idDoc', 'address', 'linkedin', ...INFO_SLOT_KEYS];
+  const active = fallback.filter(key => sanitizeContactValue(key, contact[key]));
+  const current = Array.isArray(S.contactOrder) ? S.contactOrder : [];
+  const ordered = [];
+  current.forEach(key => {
+    if (active.includes(key) && !ordered.includes(key)) ordered.push(key);
+  });
+  active.forEach(key => {
+    if (!ordered.includes(key)) ordered.push(key);
+  });
+  if (!Array.isArray(S.contactOrder) || current.length !== ordered.length || current.some((key, idx) => key !== ordered[idx])) {
+    S.contactOrder = ordered;
+  }
+  return ordered;
 }
 
 function getContactLayoutMax(head = getHeaderNode()){
@@ -993,6 +1013,8 @@ function openChipMenu(anchor){
       }
       const fieldKey = INFO_SLOT_KEYS.includes(slotKey) ? 'info' : slotKey;
       S.contact[slotKey] = CONTACT_FIELDS[fieldKey]?.placeholder || '';
+      S.contactOrder = Array.isArray(S.contactOrder) ? S.contactOrder.filter(key => key !== slotKey) : [];
+      S.contactOrder.push(slotKey);
       save();
       applyContact();
       Promise.resolve().then(()=>{
@@ -1049,7 +1071,7 @@ export function applyContact(){
 
   const c=S.contact||{};
   const items=[];
-  ['phone', 'phone2', 'email', 'idDoc', 'address', 'linkedin', ...INFO_SLOT_KEYS].forEach(key => {
+  getContactOrder(c).forEach(key => {
     const value = sanitizeContactValue(key, c[key]);
     if (!value) return;
     const field = CONTACT_FIELDS[INFO_SLOT_KEYS.includes(key) ? 'info' : key];
@@ -1190,7 +1212,15 @@ function adoptSectionsToCurrentLayout(main, rail, add){
   if (!main) return;
   const mainAnchor = add && add.parentElement === main ? add : null;
 
-  const wrappers = getSectionWrappers();
+  let wrappers = getSectionWrappers();
+  if (Array.isArray(S.sectionOrder) && S.sectionOrder.length) {
+    const orderMap = new Map(S.sectionOrder.map((key, index) => [key, index]));
+    wrappers = wrappers.slice().sort((a, b) => {
+      const ai = orderMap.has(a.dataset.section) ? orderMap.get(a.dataset.section) : Number.MAX_SAFE_INTEGER;
+      const bi = orderMap.has(b.dataset.section) ? orderMap.get(b.dataset.section) : Number.MAX_SAFE_INTEGER;
+      return ai - bi;
+    });
+  }
   const skillsWrapper = wrappers.find(w => w.dataset.section === 'skills')
     || document.querySelector('.section[data-section="skills"]')?.closest('.node')
     || null;
