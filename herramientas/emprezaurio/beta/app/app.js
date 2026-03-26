@@ -501,7 +501,8 @@ function createPrintMeasureRoot(){
 function getExportStyles(){
   return `
     html,body{margin:0;background:transparent !important;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .print-export-root{display:grid;gap:0}
+    .print-export-root,
+    .print-export-runtime{display:grid;gap:0;background:#fff}
     .print-page{width:${PAGE_WIDTH}px;height:${PAGE_HEIGHT}px;min-height:${PAGE_HEIGHT}px;padding:24px;box-sizing:border-box;background:#fff;color:#111;page-break-after:always;break-after:page;overflow:hidden}
     .print-page:last-child{page-break-after:auto;break-after:auto}
     .print-sidebar-page{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
@@ -514,7 +515,20 @@ function getExportStyles(){
     .print-summary-chips{display:flex;flex-wrap:wrap;gap:10px}
     .print-summary-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:34px;font-size:11px;line-height:1.1}
     .print-summary-chip i{width:14px;text-align:center;font-size:12px}
-    .print-page .sidebar-layout .rail{display:flex !important;flex-direction:column !important;align-items:flex-start !important}
+    .print-page .sidebar-layout .rail{
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:flex-start !important;
+      background:linear-gradient(180deg,var(--accent2),var(--accent)) !important;
+      -webkit-mask-image:none !important;
+      mask-image:none !important;
+      min-height:920px !important;
+      overflow:hidden !important;
+    }
+    .print-page .fancy .hero,
+    .print-page .topbar{
+      background:linear-gradient(135deg,var(--accent2),var(--accent)) !important;
+    }
     .print-page .sidebar-layout .rail .avatar{
       display:block !important;
       margin:18px auto 14px !important;
