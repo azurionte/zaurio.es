@@ -6,6 +6,7 @@ import { S, setTheme, setDark, setMaterial } from '../app/state.js';
 import { morphTo, applyContact, renderAllAvatars } from '../layouts/layouts.js';
 import { renderSkills, renderEdu, renderExp, renderBio } from '../modules/modules.js';
 import { authState } from '../app/auth.js';
+import { applyStateToCanvas } from '../app/projects.js';
 
 /* ---------- styles (wizard UI + inline editors) ---------- */
 (function ensureWizardStyle(){
@@ -350,7 +351,37 @@ export function mountWelcome(){
   wrap.querySelector('#startBlank').addEventListener('click', ()=>{
     animateOverlayOut(wrap, ()=>{
       wrap.remove();
-      if (!getHeaderNode()) morphTo('header-side');
+      applyStateToCanvas({
+        theme: S.theme || 'magentaPurple',
+        dark: !!S.dark,
+        material: S.material || 'paper',
+        layout: 'side',
+        project: { id:null, title:'Mi CV', locale:'es', updated_at:null },
+        contact: {
+          name:'',
+          phone:'',
+          phone2:'',
+          email:'',
+          idDoc:'',
+          address:'',
+          linkedin:'',
+          info1:'',
+          info2:'',
+          info3:'',
+          info4:'',
+          info5:'',
+          info6:'',
+          info7:''
+        },
+        contactOrder: [],
+        avatar: null,
+        skillsInSidebar: false,
+        sectionOrder: [],
+        skills: [],
+        edu: [],
+        exp: [],
+        bio: ''
+      });
       document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
     });
   });
