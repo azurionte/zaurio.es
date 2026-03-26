@@ -637,6 +637,19 @@ function getExportStyles(){
       border-radius:999px !important;
       background:linear-gradient(90deg,var(--accent2),var(--accent)) !important;
     }
+    .print-page .print-compact-section{
+      padding:10px !important;
+    }
+    .print-page .print-compact-section .sec-head{
+      margin-bottom:4px !important;
+    }
+    .print-page .print-compact-section .sec-underline{
+      width:104px !important;
+      margin-top:4px !important;
+    }
+    .print-page .print-compact-section .sec-body{
+      gap:10px !important;
+    }
     .print-page .skill-row .stars{display:inline-grid !important;grid-auto-flow:column !important;gap:4px !important;justify-content:end !important}
     .print-page .skill-row .print-meter{width:110px !important}
     .print-page .chip{margin:0 !important}
@@ -709,6 +722,12 @@ function makeSectionShell(sectionNode){
     body.style.maxHeight = 'none';
   }
   return full;
+}
+
+function makeCompactSectionShell(sectionNode){
+  const shell = makeSectionShell(sectionNode);
+  shell.classList.add('print-compact-section');
+  return shell;
 }
 
 function createSectionContainer(sectionNode, shell){
@@ -864,6 +883,18 @@ function paginateExport(){
 
       if (added === 0) {
         if (firstShellForSection) {
+          const compactShell = makeCompactSectionShell(sectionNode);
+          const compactContainer = createSectionContainer(sectionNode, compactShell)?.container;
+          if (compactContainer) {
+            result = fillContainerUntilFull(sourceItems, itemIndex, compactContainer, measureRoot, currentPage, currentBody, compactShell);
+            if (result.added > 0) {
+              currentBody.appendChild(compactShell);
+              itemIndex = result.itemIndex;
+              firstShellForSection = false;
+              if (itemIndex < sourceItems.length) newPage();
+              continue;
+            }
+          }
           const titledFallback = createTitledContinuation(sectionNode);
           if (titledFallback) {
             result = fillContainerUntilFull(sourceItems, itemIndex, titledFallback.container, measureRoot, currentPage, currentBody, titledFallback.shell);
