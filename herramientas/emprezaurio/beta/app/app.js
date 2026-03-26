@@ -487,6 +487,17 @@ function getSectionNodesForExport(){
   return Array.from(stack.children).filter(el => el.querySelector?.('.section'));
 }
 
+function getRailSectionKeysForExport(){
+  if (S.layout !== 'side') return new Set();
+  const rail = getRailHolder();
+  if (!rail) return new Set();
+  return new Set(
+    Array.from(rail.children)
+      .map(el => el.querySelector('.section')?.dataset?.section || el.dataset?.section)
+      .filter(Boolean)
+  );
+}
+
 function getSectionSplitConfig(sectionNode){
   const section = sectionNode.querySelector('.section') || sectionNode;
   const key = section?.dataset?.section;
@@ -923,6 +934,7 @@ function paginateExport(){
   const headerNode = getHeaderNode()?.closest('.node') || getHeaderNode();
   const railNode = S.layout === 'side' ? getHeaderNode()?.closest('.sidebar-layout')?.querySelector('.rail') : null;
   const sections = getSectionNodesForExport();
+  const railSectionKeys = getRailSectionKeysForExport();
 
   let isFirstPage = true;
   let currentPage = createMeasurePage({
@@ -953,9 +965,18 @@ function paginateExport(){
 
   const CONTENT_LIMIT = PAGE_HEIGHT - 48;
   sections.forEach(sectionNode => {
+    const sectionKey = sectionNode.querySelector('.section')?.dataset?.section || sectionNode.dataset?.section || '';
+    const renderInsideRailOnFirstPage = isFirstPage && S.layout === 'side' && railSectionKeys.has(sectionKey);
     const config = getSectionSplitConfig(sectionNode);
     if (!config) {
       const clone = cloneClean(sectionNode.querySelector('.section') || sectionNode);
+      if (renderInsideRailOnFirstPage) {
+        const railTarget = currentPage.querySelector('[data-rail-sections]');
+        if (railTarget) {
+          railTarget.appendChild(clone);
+          return;
+        }
+      }
       if (!measureFits(measureRoot, currentPage, currentBody, clone)) newPage();
       currentBody.appendChild(clone);
       return;
@@ -987,7 +1008,13 @@ function paginateExport(){
           if (compactContainer) {
             result = fillContainerUntilFull(sourceItems, itemIndex, compactContainer, measureRoot, currentPage, currentBody, compactShell);
             if (result.added > 0) {
-              currentBody.appendChild(compactShell);
+              if (renderInsideRailOnFirstPage && firstShellForSection) {
+                const railTarget = currentPage.querySelector('[data-rail-sections]');
+                if (railTarget) railTarget.appendChild(compactShell);
+                else currentBody.appendChild(compactShell);
+              } else {
+                currentBody.appendChild(compactShell);
+              }
               itemIndex = result.itemIndex;
               firstShellForSection = false;
               if (itemIndex < sourceItems.length) newPage();
@@ -998,7 +1025,13 @@ function paginateExport(){
           if (titledFallback) {
             result = fillContainerUntilFull(sourceItems, itemIndex, titledFallback.container, measureRoot, currentPage, currentBody, titledFallback.shell);
             if (result.added > 0) {
-              currentBody.appendChild(titledFallback.shell);
+              if (renderInsideRailOnFirstPage && firstShellForSection) {
+                const railTarget = currentPage.querySelector('[data-rail-sections]');
+                if (railTarget) railTarget.appendChild(titledFallback.shell);
+                else currentBody.appendChild(titledFallback.shell);
+              } else {
+                currentBody.appendChild(titledFallback.shell);
+              }
               itemIndex = result.itemIndex;
               firstShellForSection = false;
               if (itemIndex < sourceItems.length) newPage();
@@ -1009,7 +1042,13 @@ function paginateExport(){
           if (fallback) {
             result = fillContainerUntilFull(sourceItems, itemIndex, fallback, measureRoot, currentPage, currentBody, fallback);
             if (result.added > 0) {
-              currentBody.appendChild(fallback);
+              if (renderInsideRailOnFirstPage && firstShellForSection) {
+                const railTarget = currentPage.querySelector('[data-rail-sections]');
+                if (railTarget) railTarget.appendChild(fallback);
+                else currentBody.appendChild(fallback);
+              } else {
+                currentBody.appendChild(fallback);
+              }
               itemIndex = result.itemIndex;
               firstShellForSection = false;
               if (itemIndex < sourceItems.length) newPage();
@@ -1021,7 +1060,13 @@ function paginateExport(){
         continue;
       }
 
-      currentBody.appendChild(shell);
+      if (renderInsideRailOnFirstPage && firstShellForSection) {
+        const railTarget = currentPage.querySelector('[data-rail-sections]');
+        if (railTarget) railTarget.appendChild(shell);
+        else currentBody.appendChild(shell);
+      } else {
+        currentBody.appendChild(shell);
+      }
       firstShellForSection = false;
 
       if (itemIndex < sourceItems.length) {
