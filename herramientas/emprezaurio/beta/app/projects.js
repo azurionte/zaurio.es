@@ -86,7 +86,8 @@ function clearCanvas(){
 }
 
 function projectTitleFromState(){
-  return S.project?.title || S.contact?.name || 'Mi CV';
+  const liveName = document.querySelector('[data-header] .name')?.textContent?.trim();
+  return S.project?.title || liveName || S.contact?.name || 'Mi CV';
 }
 
 export function applyStateToCanvas(payload){
@@ -141,6 +142,11 @@ export async function listProjects(){
 
 export async function saveCurrentProject(){
   if (!authState.client || !authState.session?.user?.id) return null;
+  const liveName = document.querySelector('[data-header] .name')?.textContent?.trim();
+  if (liveName) {
+    S.contact = S.contact || {};
+    S.contact.name = liveName;
+  }
   const payload = cloneStatePayload();
   const title = projectTitleFromState();
   const row = {

@@ -1067,7 +1067,20 @@ function openChipMenu(anchor){
 }
 export function applyContact(){
   const head=getHeaderNode(); if(!head) return;
-  const nm=head.querySelector('.name'); if(nm) nm.textContent=S?.contact?.name||'YOUR NAME';
+  const nm=head.querySelector('.name');
+  if(nm){
+    const stateName = String(S?.contact?.name || '').trim();
+    const liveName = String(nm.textContent || '').trim();
+    if (!stateName && liveName && liveName !== 'YOUR NAME') {
+      S.contact = S.contact || {};
+      S.contact.name = liveName;
+      save();
+    } else if (stateName && document.activeElement !== nm && liveName !== stateName) {
+      nm.textContent = stateName;
+    } else if (!stateName && !liveName) {
+      nm.textContent = 'YOUR NAME';
+    }
+  }
 
   const c=S.contact||{};
   const items=[];
@@ -1189,10 +1202,35 @@ function buildHeader(kind){
       </div>`;
   }
 
+  const bindNameField = () => {
+    const nameNode = node.querySelector('.name');
+    if (!nameNode || nameNode.dataset.boundName === '1') return;
+    nameNode.dataset.boundName = '1';
+    const commitName = () => {
+      const value = String(nameNode.textContent || '').trim();
+      S.contact = S.contact || {};
+      S.contact.name = value;
+      if (!value) nameNode.textContent = 'YOUR NAME';
+      save();
+    };
+    nameNode.addEventListener('focus', () => {
+      if (String(nameNode.textContent || '').trim() === 'YOUR NAME') {
+        nameNode.textContent = '';
+      }
+    });
+    nameNode.addEventListener('input', () => {
+      S.contact = S.contact || {};
+      S.contact.name = String(nameNode.textContent || '').trim();
+      save();
+    });
+    nameNode.addEventListener('blur', commitName);
+  };
+
   const s=stackEl();
   const firstSection = Array.from(s.children).find(ch => ch.classList?.contains('node') && !ch.hasAttribute('data-locked')) || null;
   if (firstSection) s.insertBefore(node, firstSection);
   else s.prepend(node);
+  bindNameField();
   initAvatars(node);
   S.layout=(kind==='header-side')?'side':(kind==='header-fancy')?'fancy':'top';
   // reflect current layout on body so global styles can react (e.g. sheet width)

@@ -324,6 +324,30 @@ function cloneClean(node){
       targetCanvas.replaceWith(img);
     } catch (_) {}
   });
+  clone.querySelectorAll('.skill-row').forEach(row => {
+    row.style.display = 'grid';
+    row.style.gridTemplateColumns = 'minmax(0,1fr) 118px';
+    row.style.gap = '10px';
+    row.style.alignItems = 'center';
+    row.querySelectorAll('.skill-handle,.ctrl-circle,.drag-handle').forEach(el => el.remove());
+    const name = row.querySelector('.name');
+    if (name) {
+      name.style.minWidth = '0';
+      name.style.overflow = 'hidden';
+      name.style.whiteSpace = 'nowrap';
+      name.style.textOverflow = 'ellipsis';
+      name.style.display = 'block';
+    }
+    const val = row.querySelector('.val');
+    if (val) {
+      val.style.minWidth = '118px';
+      val.style.width = '118px';
+      val.style.justifyContent = 'flex-end';
+    }
+  });
+  clone.querySelectorAll('.chip').forEach(chip => {
+    chip.style.margin = '0';
+  });
   return persistCanvasContent(clone);
 }
 
@@ -444,6 +468,13 @@ function getExportStyles(){
     .print-page #chipAddPop{display:none !important}
     .print-page .avatar img,
     .print-page .avatar canvas{width:100% !important;height:100% !important;display:block !important;object-fit:cover !important;border-radius:50% !important}
+    .print-page .skills-wrap{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:12px !important}
+    .print-page .skill-row{display:grid !important;grid-template-columns:minmax(0,1fr) 118px !important;gap:10px !important;align-items:center !important}
+    .print-page .skill-row .name{display:block !important;min-width:0 !important;overflow:hidden !important;white-space:nowrap !important;text-overflow:ellipsis !important}
+    .print-page .skill-row .val{display:flex !important;align-items:center !important;justify-content:flex-end !important;min-width:118px !important;width:118px !important}
+    .print-page .skill-row .stars{display:inline-grid !important;grid-auto-flow:column !important;gap:4px !important;justify-content:end !important}
+    .print-page .skill-row .print-meter{width:110px !important}
+    .print-page .chip{margin:0 !important}
     @page{size:A4;margin:0}
   `;
 }
@@ -516,8 +547,9 @@ function createSectionContainer(sectionNode, shell){
 }
 
 function measureFits(root, page, body, node){
+  const CONTENT_LIMIT = PAGE_HEIGHT - 48;
   body.appendChild(node);
-  const fits = page.scrollHeight <= PAGE_HEIGHT;
+  const fits = body.scrollHeight <= CONTENT_LIMIT;
   body.removeChild(node);
   return fits;
 }
@@ -561,6 +593,7 @@ function paginateExport(){
     isFirstPage = false;
   };
 
+  const CONTENT_LIMIT = PAGE_HEIGHT - 48;
   sections.forEach(sectionNode => {
     const config = getSectionSplitConfig(sectionNode);
     if (!config) {
@@ -586,7 +619,7 @@ function paginateExport(){
       while (itemIndex < sourceItems.length) {
         const next = sourceItems[itemIndex].cloneNode(true);
         container.appendChild(next);
-        if (currentPage.scrollHeight > PAGE_HEIGHT) {
+        if (currentBody.scrollHeight > CONTENT_LIMIT) {
           container.removeChild(next);
           if (added === 0) {
             container.appendChild(next);
@@ -612,6 +645,11 @@ function paginateExport(){
   });
 
   Array.from(exportRoot.querySelectorAll('.print-page')).forEach(page => {
+    page.querySelectorAll('.section').forEach(section => {
+      const body = section.querySelector('.sec-body');
+      const hasRealContent = !!body?.querySelector('.skill-row, .card, .profile-copy, .year-chip, .card-title');
+      if (!hasRealContent) section.remove();
+    });
     const hasSection = !!page.querySelector('.section');
     const hasSectionContent = !!page.querySelector('.skill-row, .card, .profile-copy, .year-chip, .card-title');
     if (!hasSection || !hasSectionContent) page.remove();
@@ -681,16 +719,29 @@ function openPrintExportWindow(){
       </body>
     </html>`;
 
-    const existing = document.getElementById('printExportFrame');
+    const existing = document.getElementById('printExportHost');
     if (existing) existing.remove();
+    const host = document.createElement('div');
+    host.id = 'printExportHost';
+    host.style.position = 'fixed';
+    host.style.left = '-200vw';
+    host.style.top = '-200vh';
+    host.style.width = '1px';
+    host.style.height = '1px';
+    host.style.overflow = 'hidden';
+    host.style.opacity = '0';
+    host.style.pointerEvents = 'none';
+    host.style.background = 'transparent';
+    host.style.contain = 'strict';
+    document.body.appendChild(host);
     const iframe = document.createElement('iframe');
     iframe.id = 'printExportFrame';
     iframe.setAttribute('aria-hidden', 'true');
-    iframe.style.position = 'fixed';
+    iframe.style.position = 'absolute';
     iframe.style.left = '0';
     iframe.style.top = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
+    iframe.style.width = '1px';
+    iframe.style.height = '1px';
     iframe.style.border = '0';
     iframe.style.opacity = '0';
     iframe.style.visibility = 'hidden';
@@ -698,10 +749,10 @@ function openPrintExportWindow(){
     iframe.style.pointerEvents = 'none';
     iframe.style.clipPath = 'inset(100%)';
     iframe.style.contain = 'strict';
-    document.body.appendChild(iframe);
+    host.appendChild(iframe);
 
     iframe.onload = () => {
-      const cleanup = () => setTimeout(() => iframe.remove(), 300);
+      const cleanup = () => setTimeout(() => host.remove(), 300);
       iframe.contentWindow?.addEventListener('afterprint', cleanup, { once:true });
       const frameDoc = iframe.contentDocument;
       const linkPromises = Array.from(frameDoc?.querySelectorAll('link[rel="stylesheet"]') || []).map(link => {
@@ -722,16 +773,7 @@ function openPrintExportWindow(){
       });
     };
 
-    const doc = iframe.contentDocument;
-    if (!doc) throw new Error('No se pudo preparar el documento de exportacion.');
-    doc.open();
-    doc.write(html);
-    doc.close();
-    doc.documentElement.style.cssText = exportVars;
-    doc.documentElement.setAttribute('data-theme', htmlTheme || bodyTheme);
-    doc.documentElement.setAttribute('data-dark', htmlDark || bodyDark);
-    doc.documentElement.setAttribute('data-mat', htmlMaterial || bodyMaterial);
-    doc.body.style.cssText = `${doc.body.style.cssText};${exportVars}`;
+    iframe.srcdoc = html;
   } catch (error) {
     console.error('[Emprezaurio print export]', error);
     alert('No se pudo preparar la descarga del CV.');
