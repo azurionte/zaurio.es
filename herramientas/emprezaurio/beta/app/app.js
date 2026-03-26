@@ -533,8 +533,16 @@ function createMeasurePage({ sidebar = false, includeSummary = false, rail = nul
 
 function makeSectionShell(sectionNode){
   const full = cloneClean(sectionNode.querySelector('.section') || sectionNode);
+  full.style.height = 'auto';
+  full.style.minHeight = '0';
+  full.style.maxHeight = 'none';
   const body = full.querySelector('.sec-body');
-  if (body) body.innerHTML = '';
+  if (body) {
+    body.innerHTML = '';
+    body.style.height = 'auto';
+    body.style.minHeight = '0';
+    body.style.maxHeight = 'none';
+  }
   return full;
 }
 
@@ -546,6 +554,9 @@ function createSectionContainer(sectionNode, shell){
   const source = sectionNode.querySelector(config.containerSelector);
   const container = source ? source.cloneNode(false) : document.createElement('div');
   if (!source) container.className = config.containerSelector.replace('.', '');
+  container.style.height = 'auto';
+  container.style.minHeight = '0';
+  container.style.maxHeight = 'none';
   body.appendChild(container);
   return { config, container };
 }
@@ -557,6 +568,9 @@ function createContinuationContainer(sectionNode){
   const container = source ? source.cloneNode(false) : document.createElement('div');
   if (!source) container.className = config.containerSelector.replace('.', '');
   container.classList.add('print-continuation');
+  container.style.height = 'auto';
+  container.style.minHeight = '0';
+  container.style.maxHeight = 'none';
   return container;
 }
 
