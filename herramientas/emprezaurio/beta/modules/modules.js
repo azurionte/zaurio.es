@@ -128,6 +128,9 @@ function attachDragSort(container, itemSelector, handleSelector, onCommit){
     box-shadow:0 16px 30px rgba(8,12,24,.12);
     backdrop-filter:blur(10px);
     color:#1a2030;
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
   }
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-head{
     margin-bottom:4px;
@@ -168,6 +171,7 @@ function attachDragSort(container, itemSelector, handleSelector, onCommit){
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skills-wrap{
     grid-template-columns:1fr;
     gap:10px;
+    width:100%;
   }
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row{
     grid-template-columns:20px minmax(0,1fr) 24px;
@@ -179,6 +183,8 @@ function attachDragSort(container, itemSelector, handleSelector, onCommit){
     padding:11px 12px;
     border-radius:16px;
     min-height:0;
+    width:100%;
+    box-sizing:border-box;
   }
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-handle{
     grid-area:handle;

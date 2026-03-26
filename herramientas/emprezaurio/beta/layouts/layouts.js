@@ -241,7 +241,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     width:100% !important;
     box-sizing:border-box;
     position:relative;
-    padding:0;
+    padding:0 0 58px;
     text-align:center;
   }
   .sidebar-layout .rail .chip-wrap .chips {
@@ -283,7 +283,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     margin:0 !important;
     left:50% !important;
     right:auto !important;
-    bottom:-52px !important;
+    bottom:6px !important;
     transform:translateX(-50%) !important;
     position:absolute !important;
   }
@@ -291,6 +291,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     while remaining centered across the full rail width */
   /* In sidebar layout, chips are single-column (one per row) */
   .sidebar-layout .rail .chips{ width:100%; display:flex; flex-wrap:wrap; gap:10px }
+  .sidebar-layout .rail .sec-holder{width:100%;display:grid;gap:16px;align-content:start}
   .sidebar-layout .rail #chipAddBtn{ display:grid; place-items:center; width:44px; height:44px; border-radius:12px; background:#0b1022 !important; color:#fff !important; border:0; box-shadow:0 8px 20px rgba(11,16,34,.28); font-weight:800; z-index:40 }
   .sidebar-layout .rail #chipAddBtn:hover{ filter:brightness(1.03) }
   .fancy .hero #chipAddBtn{position:absolute !important;right:20px;top:20px;left:auto !important;bottom:auto !important;transform:none !important;margin:0 !important;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#0b1022 !important;color:#fff !important;border:0;box-shadow:0 8px 20px rgba(11,16,34,.28);font-weight:800;z-index:5}

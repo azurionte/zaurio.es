@@ -5,7 +5,7 @@ const APP_VERSION = 'resume-app@2026.03.26-2119';
 console.log('[app.js] ' + APP_VERSION);
 import { mountEditor } from '../editor/editor.js';
 import { mountWelcome, mountWizard, loadDemoResume } from '../wizard/wizard.js';
-import { ensureCanvas, getHeaderNode, getSideMain, stabilizeLayoutNow } from '../layouts/layouts.js';
+import { ensureCanvas, getHeaderNode, getSideMain, getRailHolder, stabilizeLayoutNow } from '../layouts/layouts.js';
 import { mountProjectLibrary, applyStateToCanvas, saveCurrentProject, showActionFeedback } from './projects.js';
 import '../modules/modules.js'; // side-effect: registers custom styles for modules
 
