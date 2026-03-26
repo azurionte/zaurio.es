@@ -162,7 +162,7 @@ function projectSummary(project){
     Array.isArray(payload.skills) ? `${payload.skills.length} skills` : null,
     Array.isArray(payload.edu) ? `${payload.edu.length} educacion` : null,
     Array.isArray(payload.exp) ? `${payload.exp.length} experiencia` : null
-  ].filter(Boolean).join(' Â· ');
+  ].filter(Boolean).join(' · ');
   return counts || 'Sin bloques aun';
 }
 

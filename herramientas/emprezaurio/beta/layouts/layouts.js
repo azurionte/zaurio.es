@@ -466,9 +466,9 @@ const CONTACT_FIELDS = {
   phone2: { icon:'fa-solid fa-phone', placeholder:'+34 611 222 333', wrap:false },
   email: { icon:'fa-solid fa-envelope', placeholder:'tu@correo.com', wrap:false },
   idDoc: { icon:'fa-regular fa-id-card', placeholder:'DNI 12345678Z', wrap:false },
-  address: { icon:'fa-solid fa-location-dot', placeholder:'Madrid, Espana', wrap:false },
+  address: { icon:'fa-solid fa-location-dot', placeholder:'Madrid, España', wrap:false },
   linkedin: { icon:'fa-brands fa-linkedin', placeholder:'tu-handle', wrap:false },
-  info: { icon:'fa-solid fa-circle-info', placeholder:'Informacion extra', wrap:false }
+  info: { icon:'fa-solid fa-circle-info', placeholder:'Información extra', wrap:false }
 };
 const INFO_SLOT_KEYS = ['info1','info2','info3','info4','info5','info6','info7'];
 

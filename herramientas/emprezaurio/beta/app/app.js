@@ -593,13 +593,15 @@ function openPrintExportWindow(){
     const iframe = document.createElement('iframe');
     iframe.id = 'printExportFrame';
     iframe.setAttribute('aria-hidden', 'true');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
+    iframe.style.position = 'absolute';
+    iframe.style.left = '-100000px';
+    iframe.style.top = '-100000px';
+    iframe.style.width = '1px';
+    iframe.style.height = '1px';
     iframe.style.border = '0';
     iframe.style.opacity = '0';
+    iframe.style.visibility = 'hidden';
+    iframe.style.background = 'transparent';
     iframe.style.pointerEvents = 'none';
     document.body.appendChild(iframe);
 

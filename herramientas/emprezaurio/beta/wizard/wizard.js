@@ -14,7 +14,7 @@ import { authState } from '../app/auth.js';
   st.id = 'wizard-style';
   st.textContent = `
     /* overlay + frame */
-    #wizard[data-overlay]{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55);z-index:21000;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease, visibility .28s ease, background .28s ease}
+    #wizard[data-overlay]{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55);z-index:30000;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease, visibility .28s ease, background .28s ease}
     #wizard[data-overlay].is-open{opacity:1;visibility:visible;pointer-events:auto}
     #wizard .wiz{width:min(1040px,96vw);display:grid;grid-template-columns:260px 1fr;background:#0f1420;border:1px solid #1f2540;border-radius:18px;color:#e6e8ef;box-shadow:0 40px 140px rgba(0,0,0,.6);overflow:hidden;opacity:0;transform:translateY(24px) scale(.98);transition:opacity .32s ease, transform .32s cubic-bezier(.2,.75,.2,1)}
     #wizard[data-overlay].is-open .wiz{opacity:1;transform:translateY(0) scale(1)}
@@ -82,7 +82,7 @@ import { authState } from '../app/auth.js';
     @keyframes wPop{0%{transform:scale(.9);opacity:.2}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
 
     /* welcome */
-    #welcome[data-overlay]{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.45);z-index:20000;padding:20px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease, visibility .28s ease}
+    #welcome[data-overlay]{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.45);z-index:29900;padding:20px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease, visibility .28s ease}
     #welcome[data-overlay].is-open{opacity:1;visibility:visible;pointer-events:auto}
     #welcome .wcard{width:min(880px,94vw);min-height:320px;background:#0f1420;border:1px solid #1f2540;border-radius:18px;padding:32px;color:#e6e8ef;box-shadow:0 40px 140px rgba(0,0,0,.6);display:grid;justify-items:center;gap:16px;opacity:0;transform:translateY(24px) scale(.98);transition:opacity .32s ease, transform .32s cubic-bezier(.2,.75,.2,1)}
     #welcome[data-overlay].is-open .wcard{opacity:1;transform:translateY(0) scale(1)}
@@ -525,11 +525,11 @@ function renderStep(){
   if (s==='skills'){
     body.innerHTML = `
       <div class="wtitle">Add your skills</div>
-      <div class="wsub">Use â˜… or a slider; you can fine-tune on the canvas later.</div>
+      <div class="wsub">Usa estrellas o un deslizador; luego podras afinarlo en el canvas.</div>
       <div class="wiz-mini">
         <div id="wizSkills" class="list"></div>
         <div class="btns">
-          <button class="mbtn" id="addStar">+ â˜…</button>
+          <button class="mbtn" id="addStar">+ Estrellas</button>
           <button class="mbtn" id="addSlider">+ <i class="fa-solid fa-sliders"></i></button>
         </div>
         <div class="wiz-switch">
@@ -541,14 +541,14 @@ function renderStep(){
 
     const rowStar = (label='Skill', active=0)=>{
       const r = document.createElement('div'); r.className='row'; r.setAttribute('draggable','true'); r.dataset.t='star';
-      r.innerHTML = `<span class="handle">â‹®â‹®</span><input type="text" value="${label}">
+      r.innerHTML = `<span class="handle">⋮⋮</span><input type="text" value="${label}">
         <span class="stars">${[1,2,3,4,5].map(i=>`<svg class="star" data-i="${i}" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`).join('')}</span>`;
       r.querySelectorAll('.star').forEach((s,ix)=>{ if(ix<active) s.classList.add('active'); s.onclick = e=>{ const n=+e.currentTarget.dataset.i; r.querySelectorAll('.star').forEach((el,i)=> el.classList.toggle('active', i<n)); }; });
       return r;
     };
     const rowSlider = (label='Skill', val=60)=>{
       const r = document.createElement('div'); r.className='row'; r.setAttribute('draggable','true'); r.dataset.t='slider';
-      r.innerHTML = `<span class="handle">â‹®â‹®</span><input type="text" value="${label}">
+      r.innerHTML = `<span class="handle">⋮⋮</span><input type="text" value="${label}">
         <input type="range" min="0" max="100" value="${val}">`;
       return r;
     };
@@ -574,8 +574,8 @@ function renderStep(){
       card.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px">
           <i class="fa-solid ${icon}"></i>
-          <span class="wiz-badge" contenteditable>${data.dates||'2018â€“2022'}</span>
-          <button class="mbtn" title="Remove" style="margin-left:auto">Ã—</button>
+          <span class="wiz-badge" contenteditable>${data.dates||'2018-2022'}</span>
+          <button class="mbtn" title="Remove" style="margin-left:auto">×</button>
         </div>
         <input type="text" placeholder="Title" class="wiz-pill" value="${data.title||''}">
         <input type="text" placeholder="Academy" class="wiz-pill" value="${data.academy||''}">`;
@@ -600,7 +600,7 @@ function renderStep(){
     const mkEditor = (d={})=>{
       const c = document.createElement('div'); c.className='wiz-card';
       c.innerHTML = `
-        <input type="text" placeholder="Dates (e.g. Jan 2024 â€“ Present)" class="wiz-pill" id="eDates" value="${d.dates||''}">
+        <input type="text" placeholder="Fechas (ej. ene 2024 - actual)" class="wiz-pill" id="eDates" value="${d.dates||''}">
         <input type="text" placeholder="Role (e.g. Front-end Engineer)" class="wiz-pill" id="eRole" value="${d.role||''}">
         <input type="text" placeholder="Organization (e.g. @Company)" class="wiz-pill" id="eOrg" value="${d.org||''}">
         <input type="text" placeholder="Short description of impact/results" class="wiz-pill" id="eDesc" value="${d.desc||''}">`;
@@ -608,7 +608,7 @@ function renderStep(){
     };
 
     const showAdded = ()=>{
-      wrap.innerHTML = `<div class="wiz-added"><div class="spark">âœ¨ <span>Added</span> <span style="color:#26d07c">+ +</span> âœ¨</div></div>`;
+      wrap.innerHTML = `<div class="wiz-added"><div class="spark">✨ <span>Añadido</span> <span style="color:#26d07c">+ +</span> ✨</div></div>`;
       setTimeout(()=>{ wrap.innerHTML=''; wrap.appendChild(mkEditor({})); }, 520);
     };
 
@@ -624,7 +624,6 @@ function renderStep(){
       if(!edited) return;
       W.exp.push(d);
       W.expDraft = {};
-      renderExp([d]);    // append to canvas immediately
       showAdded();
     };
   }
@@ -633,13 +632,13 @@ function renderStep(){
   if (s==='bio'){
     body.innerHTML = `
       <div class="wtitle">Bio</div>
-      <textarea id="bioText" class="wipt" rows="6" placeholder="Short profileâ€¦" style="width:100%;min-height:120px;background:#0c1328;color:#e7ebff;border:1px solid #243057;border-radius:10px;padding:10px"></textarea>`;
+      <textarea id="bioText" class="wipt" rows="6" placeholder="Perfil breve..." style="width:100%;min-height:120px;background:#0c1328;color:#e7ebff;border:1px solid #243057;border-radius:10px;padding:10px"></textarea>`;
     const t = body.querySelector('#bioText'); t.value = W.bio || '';
     t.oninput = ()=>{ W.bio = t.value; };
   }
 
   if (s==='done'){
-    body.innerHTML = `<div class="wtitle" style="text-align:center">All set âœ¨</div><div class="wsub" style="opacity:.85;text-align:center">Continue on the canvas.</div>`;
+    body.innerHTML = `<div class="wtitle" style="text-align:center">Todo listo ✨</div><div class="wsub" style="opacity:.85;text-align:center">Continua en el canvas.</div>`;
     document.getElementById('wizNext').textContent = 'Finish';
   } else {
     document.getElementById('wizNext').textContent = 'Next';
@@ -664,7 +663,8 @@ function advance(){
           return { type:'slider', label, value };
         }
       });
-      if (W.skills.length) renderSkills(W.skills, { toRail: W.addSkillsToRail });
+      S.skills = structuredClone(W.skills);
+      S.skillsInSidebar = !!W.addSkillsToRail;
     }
   }
 
@@ -680,7 +680,7 @@ function advance(){
           academy: c.querySelectorAll('input')[1].value.trim()
         };
       }).filter(x=> x.title||x.dates||x.academy);
-      if (W.edu.length) renderEdu(W.edu);
+      S.edu = structuredClone(W.edu);
     }
   }
 
@@ -694,15 +694,29 @@ function advance(){
         desc:  wrap.querySelector('#eDesc').value.trim()
       };
       const edited = d.dates || d.role || d.org || d.desc;
-      if (edited){ W.exp.push(d); renderExp([d]); }
+      if (edited){
+        W.exp.push(d);
+        S.exp = structuredClone(W.exp);
+      }
     }
   }
 
   if (cur==='bio'){
-    if (W.bio && W.bio.trim()) renderBio(W.bio);
+    S.bio = W.bio || '';
   }
 
   if (cur==='done'){
+    clearCanvasSections();
+    S.sectionOrder = [];
+    S.skills = structuredClone(W.skills || []);
+    S.skillsInSidebar = !!W.addSkillsToRail;
+    S.edu = structuredClone(W.edu || []);
+    S.exp = structuredClone(W.exp || []);
+    S.bio = W.bio || '';
+    if (S.skills.length) renderSkills(S.skills, { toRail: !!S.skillsInSidebar });
+    if (S.edu.length) renderEdu(S.edu);
+    if (S.exp.length) renderExp(S.exp);
+    if (S.bio && S.bio.trim()) renderBio(S.bio);
     animateOverlayOut(document.getElementById('wizard'), () => {
       document.getElementById('welcome')?.remove();
       document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display='flex');
@@ -731,7 +745,7 @@ export function loadDemoResume(){
     name: 'Alicia Vega',
     phone: '+34 600 123 456',
     email: 'hola@demo-cv.dev',
-    address: 'Barcelona, Espana',
+    address: 'Barcelona, España',
     linkedin: 'aliciavega'
   };
   S.avatar = 'https://zaurio.es/shared/assets/brand/zaurio-portrait.png';
@@ -748,9 +762,9 @@ export function loadDemoResume(){
   ];
   S.exp = [
     { dates:'2024 - Actualidad', role:'Product Designer', org:'Studio Norte', desc:'Diseno de flujos, identidad visual y mejoras continuas para herramientas internas y producto de cliente.' },
-    { dates:'2021 - 2024', role:'Growth & Content Lead', org:'Indie Launchpad', desc:'Campanas de captacion, landings, automatizaciones y tono de marca para proyectos digitales.' }
+    { dates:'2021 - 2024', role:'Growth & Content Lead', org:'Indie Launchpad', desc:'Campañas de captación, landings, automatizaciones y tono de marca para proyectos digitales.' }
   ];
-  S.bio = 'Perfil hibrido entre producto, marca y ejecucion. Me gusta convertir ideas sueltas en experiencias claras, utiles y con personalidad.';
+  S.bio = 'Perfil híbrido entre producto, marca y ejecución. Me gusta convertir ideas sueltas en experiencias claras, útiles y con personalidad.';
 
   W = {
     skills: structuredClone(S.skills),
