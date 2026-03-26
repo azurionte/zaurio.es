@@ -317,6 +317,30 @@ function cloneClean(node){
   clone.querySelectorAll('.chip').forEach(chip => {
     chip.style.margin = '0';
   });
+  const sourceSkillWraps = Array.from(node.querySelectorAll('.skills-wrap'));
+  const cloneSkillWraps = Array.from(clone.querySelectorAll('.skills-wrap'));
+  sourceSkillWraps.forEach((sourceWrap, index) => {
+    const targetWrap = cloneSkillWraps[index];
+    if (!targetWrap) return;
+    const styles = getComputedStyle(sourceWrap);
+    targetWrap.style.display = styles.display;
+    targetWrap.style.gridTemplateColumns = styles.gridTemplateColumns;
+    targetWrap.style.gap = styles.gap;
+    targetWrap.style.rowGap = styles.rowGap;
+    targetWrap.style.columnGap = styles.columnGap;
+  });
+  const sourceEduGrids = Array.from(node.querySelectorAll('.edu-grid'));
+  const cloneEduGrids = Array.from(clone.querySelectorAll('.edu-grid'));
+  sourceEduGrids.forEach((sourceGrid, index) => {
+    const targetGrid = cloneEduGrids[index];
+    if (!targetGrid) return;
+    const styles = getComputedStyle(sourceGrid);
+    targetGrid.style.display = styles.display;
+    targetGrid.style.gridTemplateColumns = styles.gridTemplateColumns;
+    targetGrid.style.gap = styles.gap;
+    targetGrid.style.rowGap = styles.rowGap;
+    targetGrid.style.columnGap = styles.columnGap;
+  });
   clone.querySelectorAll('[style]').forEach(el => {
     if (el.matches('.avatar, .avatar *, img, .print-meter, .print-meter *, .topbar, .fancy .hero, .sidebar-layout .rail')) return;
     el.style.removeProperty('height');
@@ -403,6 +427,30 @@ function cloneHeaderForExport(node){
       targetGrid.style.right = gridStyles.right;
       targetGrid.style.columnGap = gridStyles.columnGap;
       targetGrid.style.rowGap = gridStyles.rowGap;
+      ['[data-info-top]','[data-info-left]','[data-info-right]'].forEach(selector => {
+        const sourceGroup = sourceGrid.querySelector(selector);
+        const targetGroup = targetGrid.querySelector(selector);
+        if (!sourceGroup || !targetGroup) return;
+        const groupStyles = getComputedStyle(sourceGroup);
+        targetGroup.style.display = groupStyles.display;
+        targetGroup.style.gridTemplateColumns = groupStyles.gridTemplateColumns;
+        targetGroup.style.justifyContent = groupStyles.justifyContent;
+        targetGroup.style.justifyItems = groupStyles.justifyItems;
+        targetGroup.style.alignItems = groupStyles.alignItems;
+        targetGroup.style.justifySelf = groupStyles.justifySelf;
+        targetGroup.style.alignSelf = groupStyles.alignSelf;
+        targetGroup.style.width = groupStyles.width;
+        targetGroup.style.gap = groupStyles.gap;
+        const sourceChips = Array.from(sourceGroup.querySelectorAll('.chip'));
+        const targetChips = Array.from(targetGroup.querySelectorAll('.chip'));
+        sourceChips.forEach((sourceChip, idx) => {
+          const targetChip = targetChips[idx];
+          if (!targetChip) return;
+          const chipRect = sourceChip.getBoundingClientRect();
+          targetChip.style.width = `${Math.round(chipRect.width)}px`;
+          targetChip.style.maxWidth = `${Math.round(chipRect.width)}px`;
+        });
+      });
     }
   }
 
@@ -541,7 +589,7 @@ function getExportStyles(){
     .print-page .exp-list,
     .print-page .card,
     .print-page .profile-copy{height:auto !important;min-height:0 !important;max-height:none !important}
-    .print-page .skills-wrap{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:12px !important}
+    .print-page .skills-wrap{display:grid !important;gap:12px !important}
     .print-page .skill-row{display:grid !important;grid-template-columns:minmax(0,1fr) 118px !important;gap:10px !important;align-items:center !important}
     .print-page .skill-row .name{display:block !important;min-width:0 !important;overflow:hidden !important;white-space:nowrap !important;text-overflow:ellipsis !important}
     .print-page .skill-row .val{display:flex !important;align-items:center !important;justify-content:flex-end !important;min-width:118px !important;width:118px !important}
