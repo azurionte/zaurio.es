@@ -56,13 +56,14 @@ export function hydrateFromStorage() {
 export function setTheme(k){
   S.theme = k; save();
   document.body.setAttribute('data-theme', k);
-  // update chip tint from theme defaults (modules expect --chipBg)
   const themes = {
     coral:['#ff7b54','#ffd166'], sea:['#4facfe','#38d2ff'], city:['#34d399','#9ca3af'],
     magentaPurple:['#c026d3','#9333ea'], magentaPink:['#ec4899','#f97316'], blueGreen:['#22c1c3','#2ecc71'], grayBlack:['#8892a6','#414b57']
   };
-  const c = themes[k] ? themes[k][0] : '#8b5cf6';
-  document.documentElement.style.setProperty('--chipBg', c);
+  const pair = themes[k] || ['#8b5cf6', '#d946ef'];
+  document.documentElement.style.setProperty('--accent', pair[0]);
+  document.documentElement.style.setProperty('--accent2', pair[1]);
+  document.documentElement.style.setProperty('--chipBg', pair[0]);
 }
 export function setCustomGradient(a,b){
   document.documentElement.style.setProperty('--accent', a);

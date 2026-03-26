@@ -602,6 +602,10 @@ function paginateExport(){
     }
   });
 
+  Array.from(exportRoot.querySelectorAll('.print-page')).forEach(page => {
+    if (!page.querySelector('.section')) page.remove();
+  });
+
   const html = exportRoot.outerHTML;
   measureRoot.innerHTML = '';
   return html;

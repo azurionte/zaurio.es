@@ -1,5 +1,6 @@
 ﻿import { S, save as saveLocal } from './state.js';
 import { authState } from './auth.js';
+import { setTheme, setDark, setMaterial } from './state.js';
 import { morphTo, applyContact } from '../layouts/layouts.js';
 import { renderSkills, renderEdu, renderExp, renderBio, refreshPlusVisibility } from '../modules/modules.js';
 
@@ -94,6 +95,10 @@ export function applyStateToCanvas(payload){
   if (!S.project) S.project = { id:null, title:'Mi CV', locale:'es', updated_at:null };
   if (!Array.isArray(S.contactOrder)) S.contactOrder = [];
   if (!Array.isArray(S.sectionOrder)) S.sectionOrder = [];
+
+  setTheme(S.theme || 'magentaPurple');
+  setDark(!!S.dark);
+  setMaterial(S.material || 'paper');
 
   clearCanvas();
   morphTo(`header-${S.layout || 'top'}`);
