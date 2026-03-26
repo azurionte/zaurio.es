@@ -346,6 +346,69 @@ function cloneClean(node){
   return persistCanvasContent(clone);
 }
 
+function cloneHeaderForExport(node){
+  const clone = cloneClean(node);
+  const sourceHeader = node?.matches?.('[data-header]') ? node : node?.querySelector?.('[data-header]');
+  const targetHeader = clone?.matches?.('[data-header]') ? clone : clone?.querySelector?.('[data-header]');
+  if (!sourceHeader || !targetHeader) return clone;
+
+  const sourceName = sourceHeader.querySelector('.name');
+  const targetName = targetHeader.querySelector('.name');
+  if (sourceName && targetName) targetName.textContent = sourceName.textContent;
+
+  const sourceAvatar = sourceHeader.querySelector('.avatar');
+  const targetAvatar = targetHeader.querySelector('.avatar');
+  if (sourceAvatar && targetAvatar) {
+    const avatarRect = sourceAvatar.getBoundingClientRect();
+    const size = Math.round(avatarRect.width);
+    targetAvatar.style.width = `${size}px`;
+    targetAvatar.style.height = `${size}px`;
+    targetAvatar.style.minWidth = `${size}px`;
+    targetAvatar.style.minHeight = `${size}px`;
+    targetAvatar.style.maxWidth = `${size}px`;
+    targetAvatar.style.maxHeight = `${size}px`;
+  }
+
+  if (sourceHeader.classList.contains('fancy')) {
+    const sourceHero = sourceHeader.querySelector('.hero');
+    const targetHero = targetHeader.querySelector('.hero');
+    const sourceGrid = sourceHeader.querySelector('.chip-grid');
+    const targetGrid = targetHeader.querySelector('.chip-grid');
+    if (sourceHero && targetHero) {
+      const heroRect = sourceHero.getBoundingClientRect();
+      const heroStyles = getComputedStyle(sourceHero);
+      targetHeader.setAttribute('data-chip-count', sourceHeader.getAttribute('data-chip-count') || '0');
+      targetHero.style.height = `${Math.round(heroRect.height)}px`;
+      targetHero.style.minHeight = `${Math.round(heroRect.height)}px`;
+      targetHero.style.paddingTop = heroStyles.paddingTop;
+      targetHero.style.paddingRight = heroStyles.paddingRight;
+      targetHero.style.paddingBottom = heroStyles.paddingBottom;
+      targetHero.style.paddingLeft = heroStyles.paddingLeft;
+      targetHero.style.background = heroStyles.background;
+    }
+    if (sourceAvatar && targetAvatar && sourceHero && targetHero) {
+      const heroRect = sourceHero.getBoundingClientRect();
+      const avatarRect = sourceAvatar.getBoundingClientRect();
+      const bottom = heroRect.bottom - avatarRect.bottom;
+      targetAvatar.style.left = '50%';
+      targetAvatar.style.transform = 'translateX(-50%)';
+      targetAvatar.style.bottom = `${Math.round(bottom)}px`;
+    }
+    if (sourceGrid && targetGrid) {
+      const gridStyles = getComputedStyle(sourceGrid);
+      targetGrid.style.gridTemplateColumns = gridStyles.gridTemplateColumns;
+      targetGrid.style.top = gridStyles.top;
+      targetGrid.style.bottom = gridStyles.bottom;
+      targetGrid.style.left = gridStyles.left;
+      targetGrid.style.right = gridStyles.right;
+      targetGrid.style.columnGap = gridStyles.columnGap;
+      targetGrid.style.rowGap = gridStyles.rowGap;
+    }
+  }
+
+  return clone;
+}
+
 function getSectionNodesForExport(){
   if (S.layout === 'side') {
     const main = getSideMain();
@@ -527,7 +590,7 @@ function createMeasurePage({ sidebar = false, includeSummary = false, rail = nul
     main.className = 'print-main';
     main.setAttribute('data-zone', 'main');
     main.setAttribute('data-print-body', '');
-    if (header) main.appendChild(cloneClean(header));
+    if (header) main.appendChild(cloneHeaderForExport(header));
     layout.appendChild(main);
     page.appendChild(layout);
   } else {
@@ -535,7 +598,7 @@ function createMeasurePage({ sidebar = false, includeSummary = false, rail = nul
     flow.className = 'print-flow';
     flow.setAttribute('data-print-body', '');
     if (includeSummary) flow.insertAdjacentHTML('beforeend', createSummaryHeader());
-    if (header) flow.appendChild(cloneClean(header));
+    if (header) flow.appendChild(cloneHeaderForExport(header));
     page.appendChild(flow);
   }
   return page;
