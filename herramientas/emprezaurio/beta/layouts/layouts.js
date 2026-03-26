@@ -360,7 +360,11 @@ export function ensureCanvas(){
   return { stack: $('#stack'), addWrap: $('#canvasAdd'), add: $('#canvasAdd') };
 }
 
-export function getHeaderNode(){ return $$('[data-header]')[0] || null; }
+export function getHeaderNode(){
+  const headers = $$('[data-header]').filter(node => node?.isConnected);
+  const visible = headers.filter(node => !node.classList.contains('layout-morph-hide'));
+  return visible[visible.length - 1] || headers[headers.length - 1] || null;
+}
 function getHeaderNodeWrapper(){ return getHeaderNode()?.closest('.node') || null; }
 
 export function isSidebarActive(){
