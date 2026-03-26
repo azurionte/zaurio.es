@@ -449,11 +449,20 @@ function getExportStyles(){
 }
 
 function createSummaryHeader(){
+  const headerBase = getHeaderNode()?.closest('.sidebar-layout')?.querySelector('.rail') || getHeaderNode();
+  const baseStyles = headerBase ? getComputedStyle(headerBase) : null;
+  const chipBase = headerBase?.querySelector('.chip');
+  const chipStyles = chipBase ? getComputedStyle(chipBase) : null;
+  const summaryBg = baseStyles?.backgroundImage || 'linear-gradient(135deg,var(--accent2),var(--accent))';
+  const summaryInk = baseStyles?.color || '#111';
+  const chipBg = chipStyles?.backgroundColor || '#fff';
+  const chipBorder = chipStyles?.border || '1px solid rgba(0,0,0,.08)';
+  const chipColor = chipStyles?.color || '#111';
   const chips = [];
-  if (S.contact?.phone) chips.push(`<span class="print-summary-chip"><i class="fa-solid fa-phone"></i><span>${S.contact.phone}</span></span>`);
-  if (S.contact?.email) chips.push(`<span class="print-summary-chip"><i class="fa-solid fa-envelope"></i><span>${S.contact.email}</span></span>`);
+  if (S.contact?.phone) chips.push(`<span class="print-summary-chip" style="background:${chipBg};border:${chipBorder};color:${chipColor}"><i class="fa-solid fa-phone"></i><span>${S.contact.phone}</span></span>`);
+  if (S.contact?.email) chips.push(`<span class="print-summary-chip" style="background:${chipBg};border:${chipBorder};color:${chipColor}"><i class="fa-solid fa-envelope"></i><span>${S.contact.email}</span></span>`);
   return `
-    <div class="print-summary">
+    <div class="print-summary" style="background:${summaryBg};color:${summaryInk}">
       <div class="print-summary-head">
         <div class="print-summary-name">${S.contact?.name || 'Mi CV'}</div>
         <div class="print-summary-chips">${chips.join('')}</div>
@@ -603,11 +612,14 @@ function paginateExport(){
   });
 
   Array.from(exportRoot.querySelectorAll('.print-page')).forEach(page => {
-    if (!page.querySelector('.section')) page.remove();
+    const hasSection = !!page.querySelector('.section');
+    const hasSectionContent = !!page.querySelector('.skill-row, .card, .profile-copy, .year-chip, .card-title');
+    if (!hasSection || !hasSectionContent) page.remove();
   });
 
   const html = exportRoot.outerHTML;
   measureRoot.innerHTML = '';
+  measureRoot.remove();
   return html;
 }
 
