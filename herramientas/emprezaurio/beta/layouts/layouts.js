@@ -1552,8 +1552,7 @@ export function ensureAddAnchor(show){
 }
 
 export function stabilizeLayoutNow(){
+  syncLiveHeaderState();
   $$('.layout-morph-ghost').forEach(el => el.remove());
   $$('.layout-morph-hide').forEach(el => el.classList.remove('layout-morph-hide'));
-  normalizeCanvasForCurrentLayout({ showAdd: true });
-  applyContact();
 }
