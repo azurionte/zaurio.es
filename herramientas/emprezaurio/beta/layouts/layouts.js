@@ -1405,7 +1405,27 @@ function animateFadeTargets(targets, keyframes, options){
   });
 }
 
+function syncLiveHeaderState(){
+  const head = getHeaderNode();
+  if (!head) return;
+  const nameNode = head.querySelector('.name');
+  if (nameNode) {
+    const liveName = String(nameNode.textContent || '').trim();
+    if (liveName && liveName !== 'YOUR NAME') {
+      S.contact = S.contact || {};
+      S.contact.name = liveName;
+    }
+  }
+  const avatar = head.querySelector('.avatar img');
+  if (avatar?.src) {
+    S.avatar = S.avatar || {};
+    S.avatar.src = avatar.src;
+  }
+  save();
+}
+
 export function morphTo(kind){
+  syncLiveHeaderState();
   const currentKind =
     S.layout === 'side' ? 'header-side' :
     S.layout === 'fancy' ? 'header-fancy' :
