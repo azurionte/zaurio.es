@@ -179,7 +179,6 @@ function ensurePrintSidebarSummary(){
       </div>
     </div>
   `;
-  document.body.classList.toggle('print-has-side-summary', S.layout === 'side');
 }
 
 function stripInteractive(node){
@@ -205,6 +204,38 @@ function stripInteractive(node){
 
 function persistCanvasContent(node){
   if (!node) return node;
+  node.querySelectorAll('input[type="range"]').forEach(range => {
+    const value = Number(range.value || 0);
+    const wrap = document.createElement('div');
+    wrap.className = 'print-meter';
+    wrap.style.width = range.style.width || '120px';
+    wrap.style.height = '6px';
+    wrap.style.borderRadius = '999px';
+    wrap.style.background = '#2f3440';
+    wrap.style.position = 'relative';
+    wrap.style.alignSelf = 'center';
+    const fill = document.createElement('span');
+    fill.style.position = 'absolute';
+    fill.style.left = '0';
+    fill.style.top = '0';
+    fill.style.bottom = '0';
+    fill.style.width = `${Math.max(0, Math.min(100, value))}%`;
+    fill.style.borderRadius = '999px';
+    fill.style.background = 'var(--accent)';
+    const knob = document.createElement('span');
+    knob.style.position = 'absolute';
+    knob.style.left = `calc(${Math.max(0, Math.min(100, value))}% - 6px)`;
+    knob.style.top = '50%';
+    knob.style.width = '12px';
+    knob.style.height = '12px';
+    knob.style.borderRadius = '50%';
+    knob.style.transform = 'translateY(-50%)';
+    knob.style.background = 'var(--accent)';
+    knob.style.boxShadow = '0 0 0 2px rgba(255,255,255,.92)';
+    wrap.appendChild(fill);
+    wrap.appendChild(knob);
+    range.replaceWith(wrap);
+  });
   node.querySelectorAll('canvas').forEach(canvas => {
     try {
       const img = document.createElement('img');
@@ -571,12 +602,14 @@ function paginateExport(){
     }
   });
 
-  return exportRoot;
+  const html = exportRoot.outerHTML;
+  measureRoot.innerHTML = '';
+  return html;
 }
 
 function openPrintExportWindow(){
   try {
-    const exportRoot = paginateExport();
+    const exportMarkup = paginateExport();
     const styleMarkup = Array.from(document.querySelectorAll('style,link[rel="stylesheet"]'))
       .map(node => {
         if (node.tagName === 'LINK') {
@@ -628,7 +661,7 @@ function openPrintExportWindow(){
         <style>${getExportStyles()}</style>
       </head>
       <body class="${bodyClass}" data-theme="${bodyTheme}" data-dark="${bodyDark}" data-mat="${bodyMaterial}" style="${exportVars}">
-        ${exportRoot.outerHTML}
+        ${exportMarkup}
       </body>
     </html>`;
 
@@ -776,9 +809,6 @@ async function boot(){
   ensureCanvas();
   mountCanvasScaleSync();
   mountMobileCanvasGestures();
-  window.addEventListener('emprezaurio:before-print', ensurePrintSidebarSummary);
-  document.addEventListener('layout:changed', ensurePrintSidebarSummary);
-
   // Apply the full visual state through the real setters so dependent CSS vars stay in sync.
   setTheme(S.theme);
   setDark(S.dark);
@@ -791,7 +821,6 @@ async function boot(){
     mountWelcome();
   }
 
-  ensurePrintSidebarSummary();
 }
 
 boot();
