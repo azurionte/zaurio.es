@@ -552,6 +552,22 @@ function getExportStyles(){
       min-height:920px !important;
       overflow:hidden !important;
     }
+    .print-page .sidebar-layout .rail{
+      position:relative !important;
+    }
+    .print-page .sidebar-layout .rail .chip-wrap{
+      flex:0 0 auto !important;
+    }
+    .print-page .sidebar-layout .rail [data-rail-sections]{
+      flex:0 0 auto !important;
+      width:100% !important;
+      display:grid !important;
+      gap:16px !important;
+      align-content:start !important;
+      margin-top:12px !important;
+      position:relative !important;
+      z-index:2 !important;
+    }
     .print-export-mobile .print-page .sidebar-layout .rail{
       background:linear-gradient(180deg,var(--accent2),var(--accent)) !important;
       -webkit-mask-image:none !important;
