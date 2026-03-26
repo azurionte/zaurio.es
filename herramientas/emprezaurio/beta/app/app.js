@@ -468,6 +468,10 @@ function getExportStyles(){
     .print-page #chipAddPop{display:none !important}
     .print-page .avatar img,
     .print-page .avatar canvas{width:100% !important;height:100% !important;display:block !important;object-fit:cover !important;border-radius:50% !important}
+    .print-page .section{break-inside:auto !important;page-break-inside:auto !important}
+    .print-page .card,
+    .print-page .skill-row,
+    .print-page .profile-copy{break-inside:avoid !important;page-break-inside:avoid !important}
     .print-page .skills-wrap{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:12px !important}
     .print-page .skill-row{display:grid !important;grid-template-columns:minmax(0,1fr) 118px !important;gap:10px !important;align-items:center !important}
     .print-page .skill-row .name{display:block !important;min-width:0 !important;overflow:hidden !important;white-space:nowrap !important;text-overflow:ellipsis !important}
@@ -605,8 +609,12 @@ function paginateExport(){
 
     const sourceItems = Array.from(sectionNode.querySelectorAll(config.selector)).map(item => cloneClean(item));
     let itemIndex = 0;
+    let firstShellForSection = true;
     while (itemIndex < sourceItems.length) {
       const shell = makeSectionShell(sectionNode);
+      if (!firstShellForSection) {
+        shell.querySelector('.sec-head')?.remove();
+      }
       const { container } = createSectionContainer(sectionNode, shell);
       if (!container) {
         if (!measureFits(measureRoot, currentPage, currentBody, shell)) newPage();
@@ -632,6 +640,7 @@ function paginateExport(){
       }
 
       currentBody.appendChild(shell);
+      firstShellForSection = false;
 
       if (itemIndex < sourceItems.length) {
         newPage();
