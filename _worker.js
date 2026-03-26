@@ -1,3 +1,12 @@
+function rewriteEmprezaurioHtml(html) {
+  const version = Date.now().toString();
+  return html
+    .replace(/(\.\/app\/app\.css)\?v=[^"' >]+/g, `$1?v=${version}`)
+    .replace(/(\.\/app\/app\.js)\?v=[^"' >]+/g, `$1?v=${version}`)
+    .replace(/(\.\/app\/app\.css)(?!\?)/g, `$1?v=${version}`)
+    .replace(/(\.\/app\/app\.js)(?!\?)/g, `$1?v=${version}`);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -50,6 +59,21 @@ export default {
       const assetUrl = new URL(candidate + search, url.origin);
       const response = await env.ASSETS.fetch(new Request(assetUrl, request));
       if (response.status !== 404) {
+        const isEmprezaurioBetaHtml =
+          candidate === "/herramientas/emprezaurio/beta/index.html" &&
+          (response.headers.get("content-type") || "").includes("text/html");
+
+        if (isEmprezaurioBetaHtml) {
+          const html = await response.text();
+          const rewritten = rewriteEmprezaurioHtml(html);
+          const headers = new Headers(response.headers);
+          headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+          return new Response(rewritten, {
+            status: response.status,
+            statusText: response.statusText,
+            headers
+          });
+        }
         return response;
       }
     }
