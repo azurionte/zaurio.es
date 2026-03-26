@@ -136,8 +136,8 @@ function attachDragSort(container, itemSelector, handleSelector, onCommit){
     margin-bottom:4px;
   }
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-title{
-    font-size:13px;
-    font-weight:700;
+    font-size:14px;
+    font-weight:800;
     letter-spacing:.01em;
   }
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-underline{

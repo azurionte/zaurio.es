@@ -617,6 +617,20 @@ function getExportStyles(){
       text-overflow:ellipsis !important;
     }
     .print-page .sidebar-layout .rail .chip i{width:16px !important;font-size:14px !important}
+    .print-page .sidebar-layout [data-rail-sections]{
+      display:grid !important;
+      gap:16px !important;
+      width:100% !important;
+      align-content:start !important;
+      min-width:0 !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] > .section{
+      width:100% !important;
+      max-width:100% !important;
+      min-width:0 !important;
+      justify-self:stretch !important;
+      box-sizing:border-box !important;
+    }
     .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"]{
       padding:12px 12px 14px !important;
       border-radius:18px !important;
@@ -629,8 +643,8 @@ function getExportStyles(){
       margin-bottom:4px !important;
     }
     .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-title{
-      font-size:13px !important;
-      font-weight:700 !important;
+      font-size:14px !important;
+      font-weight:800 !important;
       color:#1a2030 !important;
     }
     .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-underline{
@@ -691,6 +705,16 @@ function getExportStyles(){
       gap:5px !important;
       width:100% !important;
       color:var(--accent) !important;
+    }
+    .print-page .sec-underline{
+      display:block !important;
+      opacity:1 !important;
+      visibility:visible !important;
+      height:4px !important;
+      width:120px !important;
+      border-radius:999px !important;
+      background:linear-gradient(135deg,var(--accent2),var(--accent)) !important;
+      margin-top:6px !important;
     }
     .print-page .add-squircle,
     .print-page .add-dot,
