@@ -550,6 +550,16 @@ function createSectionContainer(sectionNode, shell){
   return { config, container };
 }
 
+function createContinuationContainer(sectionNode){
+  const config = getSectionSplitConfig(sectionNode);
+  if (!config) return null;
+  const source = sectionNode.querySelector(config.containerSelector);
+  const container = source ? source.cloneNode(false) : document.createElement('div');
+  if (!source) container.className = config.containerSelector.replace('.', '');
+  container.classList.add('print-continuation');
+  return container;
+}
+
 function measureFits(root, page, body, node){
   const CONTENT_LIMIT = PAGE_HEIGHT - 48;
   body.appendChild(node);
@@ -611,14 +621,14 @@ function paginateExport(){
     let itemIndex = 0;
     let firstShellForSection = true;
     while (itemIndex < sourceItems.length) {
-      const shell = makeSectionShell(sectionNode);
-      if (!firstShellForSection) {
-        shell.querySelector('.sec-head')?.remove();
-      }
-      const { container } = createSectionContainer(sectionNode, shell);
-      if (!container) {
-        if (!measureFits(measureRoot, currentPage, currentBody, shell)) newPage();
-        currentBody.appendChild(shell);
+      const isContinuation = !firstShellForSection;
+      const shell = isContinuation ? createContinuationContainer(sectionNode) : makeSectionShell(sectionNode);
+      const { container } = isContinuation
+        ? { container: shell }
+        : createSectionContainer(sectionNode, shell);
+      if (!container || !shell) {
+        if (!measureFits(measureRoot, currentPage, currentBody, sectionNode)) newPage();
+        currentBody.appendChild(cloneClean(sectionNode.querySelector('.section') || sectionNode));
         break;
       }
 
@@ -655,8 +665,8 @@ function paginateExport(){
       const hasRealContent = !!body?.querySelector('.skill-row, .card, .profile-copy, .year-chip, .card-title');
       if (!hasRealContent) section.remove();
     });
-    const directSections = body ? Array.from(body.children).filter(el => el.classList?.contains('section')) : [];
-    const hasSection = directSections.length > 0;
+    const directBlocks = body ? Array.from(body.children).filter(el => el.classList?.contains('section') || el.classList?.contains('print-continuation')) : [];
+    const hasSection = directBlocks.length > 0;
     const hasSectionContent = !!page.querySelector('.skill-row, .card, .profile-copy, .year-chip, .card-title');
     if (!hasSection || !hasSectionContent) page.remove();
   });
