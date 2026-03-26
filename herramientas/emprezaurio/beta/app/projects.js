@@ -5,6 +5,7 @@ import { morphTo, applyContact } from '../layouts/layouts.js';
 import { renderSkills, renderEdu, renderExp, renderBio, refreshPlusVisibility } from '../modules/modules.js';
 
 const TABLE = 'cv_projects';
+const CURRENT_PAYLOAD_VERSION = 2;
 const THEME_TONES = {
   coral: ['#ff7b54', '#ffd166'],
   sea: ['#4facfe', '#38d2ff'],
@@ -46,18 +47,52 @@ function normalizeSectionOrder(payload){
 
 function normalizePayload(payload){
   const next = JSON.parse(JSON.stringify(payload || {}));
+  if (next.mat && !next.material) next.material = next.mat;
   next.contact = Object.assign({
     name:'', phone:'', phone2:'', email:'', idDoc:'', address:'', linkedin:'',
     info1:'', info2:'', info3:'', info4:'', info5:'', info6:'', info7:''
   }, next.contact || {});
+  next.contact.name = String(next.contact.name || '').trim();
   next.contactOrder = normalizeContactOrder(next.contact, next.contactOrder);
   next.skills = Array.isArray(next.skills) ? next.skills : [];
   next.edu = Array.isArray(next.edu) ? next.edu : [];
   next.exp = Array.isArray(next.exp) ? next.exp : [];
   next.bio = next.bio || '';
   next.skillsInSidebar = !!next.skillsInSidebar;
+  next.theme = next.theme || 'magentaPurple';
+  next.dark = !!next.dark;
+  next.material = next.material || 'paper';
+  next.layout = next.layout || 'top';
   next.sectionOrder = normalizeSectionOrder(next);
+  next.payloadVersion = CURRENT_PAYLOAD_VERSION;
   return next;
+}
+
+function projectNeedsMigration(project, normalizedPayload){
+  const original = JSON.stringify(project?.payload || {});
+  const normalized = JSON.stringify(normalizedPayload || {});
+  return original !== normalized
+    || (project?.layout || '') !== (normalizedPayload?.layout || 'top')
+    || (project?.preview_name || '') !== (normalizedPayload?.contact?.name || '')
+    || (project?.locale || '') !== (normalizedPayload?.project?.locale || project?.locale || 'es');
+}
+
+async function migrateProjectsIfNeeded(projects){
+  if (!authState.client || !Array.isArray(projects) || !projects.length) return;
+  const updates = projects
+    .filter(project => project._needsMigration)
+    .map(project => authState.client
+      .from(TABLE)
+      .update({
+        payload: project.payload,
+        layout: project.layout || 'top',
+        preview_name: project.preview_name || '',
+        locale: project.locale || 'es',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', project.id));
+  if (!updates.length) return;
+  try { await Promise.allSettled(updates); } catch (_) {}
 }
 
 function cloneStatePayload(){
@@ -137,7 +172,20 @@ export async function listProjects(){
     .select('*')
     .order('updated_at', { ascending:false });
   if (error) throw error;
-  return data || [];
+  const normalized = (data || []).map(project => {
+    const payload = normalizePayload(project.payload || {});
+    const migrated = {
+      ...project,
+      payload,
+      layout: project.layout || payload.layout || 'top',
+      preview_name: project.preview_name || payload.contact?.name || '',
+      locale: project.locale || payload.project?.locale || 'es'
+    };
+    migrated._needsMigration = projectNeedsMigration(project, payload);
+    return migrated;
+  });
+  migrateProjectsIfNeeded(normalized);
+  return normalized;
 }
 
 export async function saveCurrentProject(){
