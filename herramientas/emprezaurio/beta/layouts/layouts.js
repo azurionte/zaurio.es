@@ -1559,4 +1559,5 @@ export function stabilizeLayoutNow(){
   syncLiveHeaderState();
   $$('.layout-morph-ghost').forEach(el => el.remove());
   $$('.layout-morph-hide').forEach(el => el.classList.remove('layout-morph-hide'));
+  applyContact();
 }
