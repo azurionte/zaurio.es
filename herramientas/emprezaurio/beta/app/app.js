@@ -5,7 +5,7 @@ const APP_VERSION = 'resume-app@2025.08.17-002';
 console.log('[app.js] ' + APP_VERSION);
 import { mountEditor } from '../editor/editor.js';
 import { mountWelcome, mountWizard, loadDemoResume } from '../wizard/wizard.js';
-import { ensureCanvas, getHeaderNode, getSideMain } from '../layouts/layouts.js';
+import { ensureCanvas, getHeaderNode, getSideMain, stabilizeLayoutNow } from '../layouts/layouts.js';
 import { mountProjectLibrary, applyStateToCanvas, saveCurrentProject, showActionFeedback } from './projects.js';
 import '../modules/modules.js'; // side-effect: registers custom styles for modules
 
@@ -701,8 +701,10 @@ function paginateExport(){
   return html;
 }
 
-function openPrintExportWindow(){
+async function openPrintExportWindow(){
   try {
+    stabilizeLayoutNow();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const exportMarkup = paginateExport();
     const styleMarkup = Array.from(document.querySelectorAll('style,link[rel="stylesheet"]'))
       .map(node => {

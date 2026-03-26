@@ -1548,3 +1548,10 @@ export function morphTo(kind){
 export function ensureAddAnchor(show){
   return normalizeCanvasForCurrentLayout({ showAdd: show })?.add || null;
 }
+
+export function stabilizeLayoutNow(){
+  $$('.layout-morph-ghost').forEach(el => el.remove());
+  $$('.layout-morph-hide').forEach(el => el.classList.remove('layout-morph-hide'));
+  normalizeCanvasForCurrentLayout({ showAdd: true });
+  applyContact();
+}
