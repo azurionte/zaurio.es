@@ -529,6 +529,29 @@ function createSidebarRailSkillsSection(){
   return section;
 }
 
+function createSidebarPrintRail(rail){
+  const railPrint = document.createElement('div');
+  railPrint.className = 'rail';
+
+  const avatar = rail?.querySelector?.('.avatar');
+  const nameBlock = rail?.querySelector?.('.name-block');
+  const chipWrap = rail?.querySelector?.('.chip-wrap');
+
+  if (avatar) railPrint.appendChild(cloneClean(avatar));
+  if (nameBlock) railPrint.appendChild(cloneClean(nameBlock));
+  if (chipWrap) {
+    const chipWrapClone = cloneClean(chipWrap);
+    chipWrapClone.querySelectorAll('#chipAddBtn,#chipAddPop,.add-dot,.chip-rm').forEach(el => el.remove());
+    railPrint.appendChild(chipWrapClone);
+  }
+
+  const secHolder = document.createElement('div');
+  secHolder.className = 'sec-holder';
+  secHolder.setAttribute('data-rail-sections', '');
+  railPrint.appendChild(secHolder);
+  return railPrint;
+}
+
 function getSectionSplitConfig(sectionNode){
   const section = sectionNode.querySelector('.section') || sectionNode;
   const key = section?.dataset?.section;
@@ -588,6 +611,9 @@ function getExportStyles(){
     }
     .print-page .sidebar-layout .rail .chip-wrap{
       flex:0 0 auto !important;
+      width:100% !important;
+      align-self:stretch !important;
+      padding:0 !important;
     }
     .print-page .sidebar-layout .rail [data-rail-sections]{
       flex:0 0 auto !important;
@@ -633,6 +659,19 @@ function getExportStyles(){
       flex-direction:column !important;
       align-items:center !important;
       gap:8px !important;
+    }
+    .print-page .sidebar-layout .rail .name-block{
+      width:100% !important;
+      text-align:center !important;
+      margin:0 0 6px !important;
+      align-self:stretch !important;
+    }
+    .print-page .sidebar-layout .rail .name{
+      color:#fff !important;
+      font-size:22px !important;
+      font-weight:900 !important;
+      line-height:1.08 !important;
+      text-align:center !important;
     }
     .print-page .sidebar-layout .rail .chip-wrap .chips{
       width:100% !important;
@@ -867,7 +906,7 @@ function createMeasurePage({ sidebar = false, includeSummary = false, rail = nul
     const layout = document.createElement('div');
     layout.className = 'print-sidebar-page sidebar-layout';
     if (rail) {
-      const railClone = cloneClean(rail);
+      const railClone = createSidebarPrintRail(rail);
       const railSections = railClone.querySelector('[data-rail-sections]');
       if (railSections) railSections.replaceChildren();
       layout.appendChild(railClone);
