@@ -1,7 +1,7 @@
 // App entry — wires everything together
 import { S, setTheme, setCustomGradient, setDark, setMaterial, hydrateFromStorage, setStorageScope } from './state.js';
 import { initAuth, getStorageScope, authState } from './auth.js';
-const APP_VERSION = 'resume-app@2025.08.17-002';
+const APP_VERSION = 'resume-app@2026.03.26-2119';
 console.log('[app.js] ' + APP_VERSION);
 import { mountEditor } from '../editor/editor.js';
 import { mountWelcome, mountWizard, loadDemoResume } from '../wizard/wizard.js';
@@ -619,6 +619,24 @@ function getExportStyles(){
     .print-page .print-titled-continuation .sec-head{margin-bottom:10px !important}
     .print-page .print-titled-continuation .sec-remove,
     .print-page .print-titled-continuation .ctrl-circle{display:none !important}
+    .print-page .print-mini-sec-head{
+      display:grid !important;
+      justify-items:center !important;
+      gap:6px !important;
+      margin:0 0 10px !important;
+    }
+    .print-page .print-mini-sec-title{
+      font-weight:900 !important;
+      font-size:15px !important;
+      line-height:1.1 !important;
+      color:#111 !important;
+    }
+    .print-page .print-mini-sec-line{
+      width:112px !important;
+      height:4px !important;
+      border-radius:999px !important;
+      background:linear-gradient(90deg,var(--accent2),var(--accent)) !important;
+    }
     .print-page .skill-row .stars{display:inline-grid !important;grid-auto-flow:column !important;gap:4px !important;justify-content:end !important}
     .print-page .skill-row .print-meter{width:110px !important}
     .print-page .chip{margin:0 !important}
@@ -729,8 +747,19 @@ function createTitledContinuation(sectionNode){
   shell.style.height = 'auto';
   shell.style.minHeight = '0';
   shell.style.maxHeight = 'none';
-  const head = cloneClean(sectionNode.querySelector('.sec-head'));
-  if (head) shell.appendChild(head);
+  const titleText =
+    sectionNode.querySelector('.sec-title')?.textContent?.trim() ||
+    sectionNode.querySelector('.sec-head h3, .sec-head h2, .sec-head h4')?.textContent?.trim() ||
+    '';
+  if (titleText) {
+    const head = document.createElement('div');
+    head.className = 'print-mini-sec-head';
+    head.innerHTML = `
+      <div class="print-mini-sec-title">${titleText}</div>
+      <div class="print-mini-sec-line" aria-hidden="true"></div>
+    `;
+    shell.appendChild(head);
+  }
   const source = sectionNode.querySelector(config.containerSelector);
   const container = source ? source.cloneNode(false) : document.createElement('div');
   if (!source) container.className = config.containerSelector.replace('.', '');
