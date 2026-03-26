@@ -726,6 +726,22 @@ function measureFits(root, page, body, node){
   return fits;
 }
 
+function fillContainerUntilFull(sourceItems, startIndex, container, measureRoot, currentPage, currentBody, shell){
+  let itemIndex = startIndex;
+  let added = 0;
+  while (itemIndex < sourceItems.length) {
+    const next = sourceItems[itemIndex].cloneNode(true);
+    container.appendChild(next);
+    if (!measureFits(measureRoot, currentPage, currentBody, shell)) {
+      container.removeChild(next);
+      break;
+    }
+    itemIndex += 1;
+    added += 1;
+  }
+  return { itemIndex, added };
+}
+
 function paginateExport(){
   const measureRoot = createPrintMeasureRoot();
   measureRoot.innerHTML = '';
@@ -790,19 +806,24 @@ function paginateExport(){
         break;
       }
 
-      let added = 0;
-      while (itemIndex < sourceItems.length) {
-        const next = sourceItems[itemIndex].cloneNode(true);
-        container.appendChild(next);
-        if (!measureFits(measureRoot, currentPage, currentBody, shell)) {
-          container.removeChild(next);
-          break;
-        }
-        itemIndex += 1;
-        added += 1;
-      }
+      let result = fillContainerUntilFull(sourceItems, itemIndex, container, measureRoot, currentPage, currentBody, shell);
+      let added = result.added;
+      itemIndex = result.itemIndex;
 
       if (added === 0) {
+        if (firstShellForSection) {
+          const fallback = createContinuationContainer(sectionNode);
+          if (fallback) {
+            result = fillContainerUntilFull(sourceItems, itemIndex, fallback, measureRoot, currentPage, currentBody, fallback);
+            if (result.added > 0) {
+              currentBody.appendChild(fallback);
+              itemIndex = result.itemIndex;
+              firstShellForSection = false;
+              if (itemIndex < sourceItems.length) newPage();
+              continue;
+            }
+          }
+        }
         newPage();
         continue;
       }
