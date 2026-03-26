@@ -348,6 +348,18 @@ function cloneClean(node){
   clone.querySelectorAll('.chip').forEach(chip => {
     chip.style.margin = '0';
   });
+  clone.querySelectorAll('.section,.sec-body,.skills-wrap,.edu-grid,.exp-list,.card,.profile-copy,.print-continuation').forEach(el => {
+    el.style.height = 'auto';
+    el.style.minHeight = '0';
+    el.style.maxHeight = 'none';
+  });
+  clone.querySelectorAll('.section,.card,.skill-row,.profile-copy').forEach(el => {
+    el.style.width = '100%';
+    el.style.maxWidth = 'none';
+  });
+  clone.querySelectorAll('.topbar,.fancy .hero,.sidebar-layout .rail').forEach(el => {
+    el.style.maxHeight = 'none';
+  });
   return persistCanvasContent(clone);
 }
 
@@ -472,6 +484,13 @@ function getExportStyles(){
     .print-page .card,
     .print-page .skill-row,
     .print-page .profile-copy{break-inside:avoid !important;page-break-inside:avoid !important}
+    .print-page .section,
+    .print-page .sec-body,
+    .print-page .skills-wrap,
+    .print-page .edu-grid,
+    .print-page .exp-list,
+    .print-page .card,
+    .print-page .profile-copy{height:auto !important;min-height:0 !important;max-height:none !important}
     .print-page .skills-wrap{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:12px !important}
     .print-page .skill-row{display:grid !important;grid-template-columns:minmax(0,1fr) 118px !important;gap:10px !important;align-items:center !important}
     .print-page .skill-row .name{display:block !important;min-width:0 !important;overflow:hidden !important;white-space:nowrap !important;text-overflow:ellipsis !important}
