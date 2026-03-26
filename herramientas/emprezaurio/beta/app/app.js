@@ -498,6 +498,37 @@ function getRailSectionKeysForExport(){
   );
 }
 
+function svgStarPrint(on){
+  return `
+    <svg class="star" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="${on ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.6"
+            d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+    </svg>`;
+}
+
+function createSidebarRailSkillsSection(){
+  const section = document.createElement('div');
+  section.className = 'section';
+  section.dataset.section = 'skills';
+  const list = Array.isArray(S.skills) ? S.skills : [];
+  const rows = list.map(skill => {
+    const label = skill?.label || 'Skill';
+    const valueMarkup = skill?.type === 'slider'
+      ? `<div class="val"><div class="print-meter" style="--val:${Math.max(0, Math.min(100, Number(skill?.value ?? 60)))}%"><span></span></div></div>`
+      : `<div class="val"><div class="stars">${[1,2,3,4,5].map(i => svgStarPrint((skill?.stars || 0) >= i)).join('')}</div></div>`;
+    return `<div class="skill-row"><div class="name">${label}</div>${valueMarkup}</div>`;
+  }).join('');
+  section.innerHTML = `
+    <div class="sec-head">
+      <div class="sec-title">Skills</div>
+      <div class="sec-underline"></div>
+    </div>
+    <div class="sec-body">
+      <div class="skills-wrap">${rows}</div>
+    </div>`;
+  return section;
+}
+
 function getSectionSplitConfig(sectionNode){
   const section = sectionNode.querySelector('.section') || sectionNode;
   const key = section?.dataset?.section;
@@ -994,7 +1025,10 @@ function paginateExport(){
         return railSectionKeys.has(key);
       })
       .forEach(sectionNode => {
-        const clone = cloneClean(sectionNode.querySelector('.section') || sectionNode);
+        const key = sectionNode.querySelector('.section')?.dataset?.section || sectionNode.dataset?.section || '';
+        const clone = key === 'skills'
+          ? createSidebarRailSkillsSection()
+          : cloneClean(sectionNode.querySelector('.section') || sectionNode);
         firstPageRailTarget.appendChild(clone);
       });
   }
