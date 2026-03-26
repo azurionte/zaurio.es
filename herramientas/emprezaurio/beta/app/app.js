@@ -396,7 +396,7 @@ function getExportStyles(){
   return `
     html,body{margin:0;background:transparent !important;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .print-export-root{display:grid;gap:0}
-    .print-page{width:${PAGE_WIDTH}px;min-height:${PAGE_HEIGHT}px;padding:24px;box-sizing:border-box;background:#fff;color:#111;page-break-after:always;break-after:page;overflow:hidden}
+    .print-page{width:${PAGE_WIDTH}px;height:${PAGE_HEIGHT}px;min-height:${PAGE_HEIGHT}px;padding:24px;box-sizing:border-box;background:#fff;color:#111;page-break-after:always;break-after:page;overflow:hidden}
     .print-page:last-child{page-break-after:auto;break-after:auto}
     .print-sidebar-page{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
     .print-main,.print-flow{display:grid;gap:16px;align-content:start;min-width:0}
@@ -614,18 +614,12 @@ function paginateExport(){
         break;
       }
 
-      currentBody.appendChild(shell);
       let added = 0;
       while (itemIndex < sourceItems.length) {
         const next = sourceItems[itemIndex].cloneNode(true);
         container.appendChild(next);
-        if (currentBody.scrollHeight > CONTENT_LIMIT) {
+        if (!measureFits(measureRoot, currentPage, currentBody, shell)) {
           container.removeChild(next);
-          if (added === 0) {
-            container.appendChild(next);
-            itemIndex += 1;
-            added += 1;
-          }
           break;
         }
         itemIndex += 1;
@@ -633,10 +627,11 @@ function paginateExport(){
       }
 
       if (added === 0) {
-        currentBody.removeChild(shell);
         newPage();
         continue;
       }
+
+      currentBody.appendChild(shell);
 
       if (itemIndex < sourceItems.length) {
         newPage();
@@ -645,12 +640,14 @@ function paginateExport(){
   });
 
   Array.from(exportRoot.querySelectorAll('.print-page')).forEach(page => {
+    const body = page.querySelector('[data-print-body]');
     page.querySelectorAll('.section').forEach(section => {
       const body = section.querySelector('.sec-body');
       const hasRealContent = !!body?.querySelector('.skill-row, .card, .profile-copy, .year-chip, .card-title');
       if (!hasRealContent) section.remove();
     });
-    const hasSection = !!page.querySelector('.section');
+    const directSections = body ? Array.from(body.children).filter(el => el.classList?.contains('section')) : [];
+    const hasSection = directSections.length > 0;
     const hasSectionContent = !!page.querySelector('.skill-row, .card, .profile-copy, .year-chip, .card-title');
     if (!hasSection || !hasSectionContent) page.remove();
   });
