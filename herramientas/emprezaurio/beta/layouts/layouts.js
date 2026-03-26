@@ -1069,7 +1069,7 @@ export function applyContact(){
   const head=getHeaderNode(); if(!head) return;
   const nm=head.querySelector('.name');
   if(nm){
-    const stateName = String(S?.contact?.name || '').trim();
+    const stateName = resolveDisplayName();
     const liveName = String(nm.textContent || '').trim();
     if (!stateName && liveName && liveName !== 'YOUR NAME') {
       S.contact = S.contact || {};
@@ -1154,6 +1154,7 @@ function buildHeader(kind){
   const node=document.createElement('div');
   node.className='node';
   node.setAttribute('data-locked','1');
+  const initialName = resolveDisplayName() || 'YOUR NAME';
 
   if(kind==='header-side'){
     node.innerHTML=`
@@ -1161,7 +1162,7 @@ function buildHeader(kind){
         <div class="rail">
           <label class="avatar" data-avatar data-empty="1"><input type="file" accept="image/*"></label>
           <div class="name-block">
-            <h2 class="name" contenteditable>YOUR NAME</h2>
+            <h2 class="name" contenteditable>${initialName}</h2>
           </div>
           <div class="chip-wrap">
             <div class="chips" data-info></div>
@@ -1179,7 +1180,7 @@ function buildHeader(kind){
           <label class="avatar" data-avatar data-empty="1" style="width:120px;height:120px;border-width:4px">
             <input type="file" accept="image/*">
           </label>
-          <h1 class="name" contenteditable>YOUR NAME</h1>
+          <h1 class="name" contenteditable>${initialName}</h1>
           <div class="chip-grid"><div class="chips" data-info-top></div><div class="chips" data-info-left></div><div class="chips" data-info-right></div></div>
           <button id="chipAddBtn" title="Add contact" class="add-dot">+</button>
         </div>
@@ -1191,7 +1192,7 @@ function buildHeader(kind){
       <div class="topbar" data-header>
         <div style="display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center">
           <div>
-            <h1 class="name" contenteditable>YOUR NAME</h1>
+            <h1 class="name" contenteditable>${initialName}</h1>
             <div class="chips" data-info></div>
             <button id="chipAddBtn" title="Add contact" class="add-dot">+</button>
           </div>
@@ -1403,6 +1404,10 @@ function animateFadeTargets(targets, keyframes, options){
     el.classList.add('layout-morph-fade');
     el.animate(keyframes, options);
   });
+}
+
+function resolveDisplayName(){
+  return String(S?.contact?.name || S?.project?.title || '').trim();
 }
 
 function syncLiveHeaderState(){
