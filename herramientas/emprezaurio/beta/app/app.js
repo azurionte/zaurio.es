@@ -519,14 +519,16 @@ function getExportStyles(){
       display:flex !important;
       flex-direction:column !important;
       align-items:flex-start !important;
-      background:linear-gradient(180deg,var(--accent2),var(--accent)) !important;
-      -webkit-mask-image:none !important;
-      mask-image:none !important;
       min-height:920px !important;
       overflow:hidden !important;
     }
-    .print-page .fancy .hero,
-    .print-page .topbar{
+    .print-export-mobile .print-page .sidebar-layout .rail{
+      background:linear-gradient(180deg,var(--accent2),var(--accent)) !important;
+      -webkit-mask-image:none !important;
+      mask-image:none !important;
+    }
+    .print-export-mobile .print-page .fancy .hero,
+    .print-export-mobile .print-page .topbar{
       background:linear-gradient(135deg,var(--accent2),var(--accent)) !important;
     }
     .print-page .sidebar-layout .rail .avatar{
@@ -881,7 +883,7 @@ async function openPrintExportWindow(){
       overlay.setAttribute('aria-hidden', 'true');
       overlay.innerHTML = `
         <style>${getExportStyles()}</style>
-        <div class="print-export-runtime" style="${exportVars}">
+        <div class="print-export-runtime print-export-mobile" style="${exportVars}">
           ${exportMarkup}
         </div>
       `;
