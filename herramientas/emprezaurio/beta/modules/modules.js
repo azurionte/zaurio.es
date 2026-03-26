@@ -127,6 +127,7 @@ function attachDragSort(container, itemSelector, handleSelector, onCommit){
     border-color:rgba(255,255,255,.24);
     box-shadow:0 16px 30px rgba(8,12,24,.12);
     backdrop-filter:blur(10px);
+    color:#1a2030;
   }
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-head{
     margin-bottom:4px;
@@ -192,6 +193,7 @@ function attachDragSort(container, itemSelector, handleSelector, onCommit){
     grid-area:name;
     font-size:14px;
     font-weight:600;
+    color:#243041;
     line-height:1.28;
     white-space:normal;
     overflow:visible;
@@ -201,16 +203,20 @@ function attachDragSort(container, itemSelector, handleSelector, onCommit){
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row .val{
     grid-area:val;
     min-width:0;
-    justify-content:flex-start;
-    padding-top:2px;
+    justify-content:center;
+    align-items:center;
+    padding-top:0;
+    width:100%;
   }
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row .val .meter{
     width:100%;
-    max-width:132px;
+    max-width:126px;
+    margin:0 auto;
   }
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .stars{
-    justify-content:flex-start;
+    justify-content:center;
     gap:5px;
+    width:100%;
   }
   .sidebar-layout [data-rail-sections] .section[data-section="skills"] .star{
     width:13px;

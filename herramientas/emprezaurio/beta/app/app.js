@@ -587,6 +587,81 @@ function getExportStyles(){
       text-overflow:ellipsis !important;
     }
     .print-page .sidebar-layout .rail .chip i{width:16px !important;font-size:14px !important}
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"]{
+      padding:12px 12px 14px !important;
+      border-radius:18px !important;
+      background:rgba(255,255,255,.92) !important;
+      border:1px solid rgba(0,0,0,.08) !important;
+      color:#1a2030 !important;
+      overflow:visible !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-head{
+      margin-bottom:4px !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-title{
+      font-size:13px !important;
+      font-weight:700 !important;
+      color:#1a2030 !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-underline{
+      width:94px !important;
+      height:3px !important;
+      margin-top:5px !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-add-anchor{
+      display:none !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skills-wrap{
+      display:grid !important;
+      grid-template-columns:1fr !important;
+      gap:10px !important;
+      width:100% !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row{
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) !important;
+      grid-template-areas:
+        "name"
+        "val" !important;
+      gap:6px !important;
+      align-items:start !important;
+      padding:11px 12px !important;
+      border-radius:16px !important;
+      min-height:0 !important;
+      width:100% !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row .name{
+      grid-area:name !important;
+      font-size:14px !important;
+      font-weight:600 !important;
+      color:#243041 !important;
+      line-height:1.28 !important;
+      white-space:normal !important;
+      overflow:visible !important;
+      text-overflow:clip !important;
+      word-break:break-word !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row .val{
+      grid-area:val !important;
+      display:flex !important;
+      justify-content:center !important;
+      align-items:center !important;
+      min-width:0 !important;
+      width:100% !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row .meter{
+      width:100% !important;
+      max-width:126px !important;
+      margin:0 auto !important;
+    }
+    .print-page .sidebar-layout [data-rail-sections] .section[data-section="skills"] .stars{
+      display:inline-grid !important;
+      grid-auto-flow:column !important;
+      justify-content:center !important;
+      gap:5px !important;
+      width:100% !important;
+      color:var(--accent) !important;
+    }
     .print-page .add-squircle,
     .print-page .add-dot,
     .print-page .sec-remove,
