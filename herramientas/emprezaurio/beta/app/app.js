@@ -568,18 +568,25 @@ function getExportStyles(){
       flex:1 1 100% !important;
       width:100% !important;
       max-width:100% !important;
-      min-height:24px !important;
-      padding:3px 7px !important;
-      font-size:9px !important;
-      line-height:1.05 !important;
-      gap:6px !important;
+      min-height:46px !important;
+      padding:10px 14px !important;
+      padding-right:28px !important;
+      font-size:14px !important;
+      line-height:1.2 !important;
+      gap:10px !important;
     }
     .print-page .sidebar-layout .rail .chip span,
     .print-page .sidebar-layout .rail .chip .chip-input{
-      font-size:9px !important;
-      line-height:1.05 !important;
+      font-size:14px !important;
+      line-height:1.2 !important;
+      width:100% !important;
+      max-width:100% !important;
+      text-align:left !important;
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
     }
-    .print-page .sidebar-layout .rail .chip i{width:12px !important;font-size:10px !important}
+    .print-page .sidebar-layout .rail .chip i{width:16px !important;font-size:14px !important}
     .print-page .add-squircle,
     .print-page .add-dot,
     .print-page .sec-remove,
