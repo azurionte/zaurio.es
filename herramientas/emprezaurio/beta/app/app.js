@@ -269,40 +269,9 @@ function persistCanvasContent(node){
   return node;
 }
 
-const INLINE_EXPORT_PROPS = [
-  'display','position','left','right','top','bottom','z-index',
-  'width','height','min-width','min-height','max-width','max-height',
-  'margin','margin-top','margin-right','margin-bottom','margin-left',
-  'padding','padding-top','padding-right','padding-bottom','padding-left',
-  'grid-template-columns','grid-template-rows','grid-column','grid-row',
-  'gap','row-gap','column-gap','align-items','justify-items','justify-content','align-self','justify-self',
-  'flex','flex-basis','flex-direction','flex-wrap','order',
-  'background','background-color','background-image','background-size','background-position','background-repeat',
-  'color','border','border-top','border-right','border-bottom','border-left','border-radius',
-  'box-shadow','opacity','overflow','overflow-x','overflow-y',
-  'font','font-family','font-size','font-weight','line-height','letter-spacing','text-align','text-transform',
-  'white-space','text-overflow','object-fit','object-position','transform','transform-origin'
-];
-
-function inlineComputedStyles(source, target){
-  if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
-  const computed = getComputedStyle(source);
-  INLINE_EXPORT_PROPS.forEach(prop => {
-    const value = computed.getPropertyValue(prop);
-    if (value) target.style.setProperty(prop, value);
-  });
-  const sourceChildren = Array.from(source.children || []);
-  const targetChildren = Array.from(target.children || []);
-  const count = Math.min(sourceChildren.length, targetChildren.length);
-  for (let i = 0; i < count; i++) {
-    inlineComputedStyles(sourceChildren[i], targetChildren[i]);
-  }
-}
-
 function cloneClean(node){
   if (!node) return null;
   const clone = node.cloneNode(true);
-  inlineComputedStyles(node, clone);
   stripInteractive(clone);
   const sourceCanvases = Array.from(node.querySelectorAll('canvas'));
   const cloneCanvases = Array.from(clone.querySelectorAll('canvas'));
@@ -348,14 +317,28 @@ function cloneClean(node){
   clone.querySelectorAll('.chip').forEach(chip => {
     chip.style.margin = '0';
   });
+  clone.querySelectorAll('[style]').forEach(el => {
+    if (el.matches('.avatar, .avatar *, img, .print-meter, .print-meter *, .topbar, .fancy .hero, .sidebar-layout .rail')) return;
+    el.style.removeProperty('height');
+    el.style.removeProperty('min-height');
+    el.style.removeProperty('max-height');
+  });
+  clone.querySelectorAll('*').forEach(el => {
+    if (!el.matches('.avatar, .avatar *, img, canvas, .print-meter, .print-meter *')) {
+      el.style.height = 'auto';
+      el.style.minHeight = '0';
+      el.style.maxHeight = 'none';
+    }
+  });
   clone.querySelectorAll('.section,.sec-body,.skills-wrap,.edu-grid,.exp-list,.card,.profile-copy,.print-continuation').forEach(el => {
     el.style.height = 'auto';
     el.style.minHeight = '0';
     el.style.maxHeight = 'none';
   });
-  clone.querySelectorAll('.section,.card,.skill-row,.profile-copy').forEach(el => {
+  clone.querySelectorAll('.section,.sec-body,.skills-wrap,.edu-grid,.exp-list,.card,.skill-row,.profile-copy,.print-continuation').forEach(el => {
     el.style.width = '100%';
     el.style.maxWidth = 'none';
+    el.style.minWidth = '0';
   });
   clone.querySelectorAll('.topbar,.fancy .hero,.sidebar-layout .rail').forEach(el => {
     el.style.maxHeight = 'none';
@@ -411,7 +394,9 @@ function getExportStyles(){
     .print-page{width:${PAGE_WIDTH}px;height:${PAGE_HEIGHT}px;min-height:${PAGE_HEIGHT}px;padding:24px;box-sizing:border-box;background:#fff;color:#111;page-break-after:always;break-after:page;overflow:hidden}
     .print-page:last-child{page-break-after:auto;break-after:auto}
     .print-sidebar-page{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
-    .print-main,.print-flow{display:grid;gap:16px;align-content:start;min-width:0}
+    .print-main,.print-flow{display:grid;gap:16px;align-content:start;align-items:start;justify-items:stretch;min-width:0}
+    .print-main > *,
+    .print-flow > *{width:100% !important;max-width:none !important;justify-self:stretch !important}
     .print-summary{display:grid;gap:10px;border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#111}
     .print-summary-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
     .print-summary-name{font-weight:900;font-size:28px;line-height:1.05}
@@ -480,6 +465,8 @@ function getExportStyles(){
     .print-page #chipAddPop{display:none !important}
     .print-page .avatar img,
     .print-page .avatar canvas{width:100% !important;height:100% !important;display:block !important;object-fit:cover !important;border-radius:50% !important}
+    .print-page .section,
+    .print-page .print-continuation{width:100% !important;max-width:none !important;justify-self:stretch !important}
     .print-page .section{break-inside:auto !important;page-break-inside:auto !important}
     .print-page .card,
     .print-page .skill-row,
