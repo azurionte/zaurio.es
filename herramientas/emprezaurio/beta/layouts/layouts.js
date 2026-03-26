@@ -225,11 +225,12 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
   /* style the header name and place the add button statically below the name */
   .sidebar-layout .rail{ position:relative }
-  .sidebar-layout .rail .name{ text-align:center; font-weight:800; font-size:18px; margin:8px 0; padding:2px 6px; color:inherit }
+  .sidebar-layout .rail .avatar{ margin-bottom:2px }
+  .sidebar-layout .rail .name{ text-align:center; font-weight:900; font-size:22px; line-height:1.08; margin:0; padding:0 6px; color:#fff; letter-spacing:.01em }
   .sidebar-layout .rail .name[contenteditable]{ outline:none; border:none; background:transparent }
   .sidebar-layout .rail .name:focus{ outline:none; box-shadow:none }
   /* name block anchors the add button so it's always centered under the name */
-  .sidebar-layout .rail .name-block{ position:relative; width:100%; display:block; text-align:center }
+  .sidebar-layout .rail .name-block{ position:relative; width:100%; display:block; text-align:center; margin-top:-4px; margin-bottom:2px }
   /* explicit wrapper for chips + add button to ensure the add button is centered */
   .sidebar-layout .rail .chip-wrap {
     display:flex !important;

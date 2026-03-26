@@ -120,6 +120,109 @@ function attachDragSort(container, itemSelector, handleSelector, onCommit){
   .card-copy{margin-top:10px;line-height:1.6}
   .profile-copy{line-height:1.7;font-size:15px}
   .sidebar-layout .skills-wrap{grid-template-columns:1fr}
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"]{
+    padding:12px 12px 14px;
+    border-radius:18px;
+    background:rgba(255,255,255,.9);
+    border-color:rgba(255,255,255,.24);
+    box-shadow:0 16px 30px rgba(8,12,24,.12);
+    backdrop-filter:blur(10px);
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-head{
+    margin-bottom:4px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-title{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.01em;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-underline{
+    width:94px;
+    height:3px;
+    margin-top:5px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-head .ctrl-circle.move-rail{
+    right:42px;
+    top:8px;
+    width:24px;
+    height:24px;
+    font-size:11px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-remove{
+    right:8px;
+    top:8px;
+    width:24px;
+    height:24px;
+    font-size:11px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-add-anchor{
+    padding:8px 0 4px;
+    gap:6px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .sec-add-anchor .ctrl-circle{
+    width:28px;
+    height:28px;
+    font-size:11px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skills-wrap{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row{
+    grid-template-columns:20px minmax(0,1fr) 24px;
+    grid-template-areas:
+      "handle name remove"
+      "handle val remove";
+    align-items:start;
+    gap:6px 10px;
+    padding:11px 12px;
+    border-radius:16px;
+    min-height:0;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-handle{
+    grid-area:handle;
+    width:20px;
+    height:20px;
+    margin:1px 0 0;
+    border-radius:6px;
+    font-size:10px;
+    align-self:start;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row .name{
+    grid-area:name;
+    font-size:14px;
+    font-weight:600;
+    line-height:1.28;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+    word-break:break-word;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row .val{
+    grid-area:val;
+    min-width:0;
+    justify-content:flex-start;
+    padding-top:2px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row .val .meter{
+    width:100%;
+    max-width:132px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .stars{
+    justify-content:flex-start;
+    gap:5px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .star{
+    width:13px;
+    height:13px;
+  }
+  .sidebar-layout [data-rail-sections] .section[data-section="skills"] .skill-row .ctrl-circle{
+    grid-area:remove;
+    width:24px;
+    height:24px;
+    font-size:11px;
+    align-self:start;
+  }
 
   `;
   document.head.appendChild(st);
