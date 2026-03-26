@@ -238,9 +238,41 @@ function persistCanvasContent(node){
   return node;
 }
 
+const INLINE_EXPORT_PROPS = [
+  'display','position','left','right','top','bottom','z-index',
+  'width','height','min-width','min-height','max-width','max-height',
+  'margin','margin-top','margin-right','margin-bottom','margin-left',
+  'padding','padding-top','padding-right','padding-bottom','padding-left',
+  'grid-template-columns','grid-template-rows','grid-column','grid-row',
+  'gap','row-gap','column-gap','align-items','justify-items','justify-content','align-self','justify-self',
+  'flex','flex-basis','flex-direction','flex-wrap','order',
+  'background','background-color','background-image','background-size','background-position','background-repeat',
+  'color','border','border-top','border-right','border-bottom','border-left','border-radius',
+  'box-shadow','opacity','overflow','overflow-x','overflow-y',
+  'font','font-family','font-size','font-weight','line-height','letter-spacing','text-align','text-transform',
+  'white-space','text-overflow','object-fit','object-position','transform','transform-origin'
+];
+
+function inlineComputedStyles(source, target){
+  if (!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
+  const computed = getComputedStyle(source);
+  INLINE_EXPORT_PROPS.forEach(prop => {
+    const value = computed.getPropertyValue(prop);
+    if (value) target.style.setProperty(prop, value);
+  });
+  const sourceChildren = Array.from(source.children || []);
+  const targetChildren = Array.from(target.children || []);
+  const count = Math.min(sourceChildren.length, targetChildren.length);
+  for (let i = 0; i < count; i++) {
+    inlineComputedStyles(sourceChildren[i], targetChildren[i]);
+  }
+}
+
 function cloneClean(node){
   if (!node) return null;
-  const clone = stripInteractive(node.cloneNode(true));
+  const clone = node.cloneNode(true);
+  inlineComputedStyles(node, clone);
+  stripInteractive(clone);
   const sourceCanvases = Array.from(node.querySelectorAll('canvas'));
   const cloneCanvases = Array.from(clone.querySelectorAll('canvas'));
   sourceCanvases.forEach((sourceCanvas, index) => {

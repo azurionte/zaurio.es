@@ -14,8 +14,53 @@ const THEME_TONES = {
   grayBlack: ['#8892a6', '#414b57']
 };
 
+function normalizeContactOrder(contact = {}, current = []){
+  const fallback = ['phone','phone2','email','idDoc','address','linkedin','info1','info2','info3','info4','info5','info6','info7'];
+  const active = fallback.filter(key => String(contact[key] || '').trim());
+  const ordered = [];
+  (Array.isArray(current) ? current : []).forEach(key => {
+    if (active.includes(key) && !ordered.includes(key)) ordered.push(key);
+  });
+  active.forEach(key => {
+    if (!ordered.includes(key)) ordered.push(key);
+  });
+  return ordered;
+}
+
+function normalizeSectionOrder(payload){
+  const available = [];
+  if (Array.isArray(payload.skills) && payload.skills.length) available.push('skills');
+  if (Array.isArray(payload.edu) && payload.edu.length) available.push('edu');
+  if (Array.isArray(payload.exp) && payload.exp.length) available.push('exp');
+  if (payload.bio) available.push('bio');
+  const ordered = [];
+  (Array.isArray(payload.sectionOrder) ? payload.sectionOrder : []).forEach(key => {
+    if (available.includes(key) && !ordered.includes(key)) ordered.push(key);
+  });
+  available.forEach(key => {
+    if (!ordered.includes(key)) ordered.push(key);
+  });
+  return ordered;
+}
+
+function normalizePayload(payload){
+  const next = JSON.parse(JSON.stringify(payload || {}));
+  next.contact = Object.assign({
+    name:'', phone:'', phone2:'', email:'', idDoc:'', address:'', linkedin:'',
+    info1:'', info2:'', info3:'', info4:'', info5:'', info6:'', info7:''
+  }, next.contact || {});
+  next.contactOrder = normalizeContactOrder(next.contact, next.contactOrder);
+  next.skills = Array.isArray(next.skills) ? next.skills : [];
+  next.edu = Array.isArray(next.edu) ? next.edu : [];
+  next.exp = Array.isArray(next.exp) ? next.exp : [];
+  next.bio = next.bio || '';
+  next.skillsInSidebar = !!next.skillsInSidebar;
+  next.sectionOrder = normalizeSectionOrder(next);
+  return next;
+}
+
 function cloneStatePayload(){
-  return JSON.parse(JSON.stringify(S));
+  return normalizePayload(JSON.parse(JSON.stringify(S)));
 }
 
 function resetState(){
@@ -45,7 +90,7 @@ function projectTitleFromState(){
 
 export function applyStateToCanvas(payload){
   resetState();
-  Object.assign(S, payload || {});
+  Object.assign(S, normalizePayload(payload || {}));
   if (!S.project) S.project = { id:null, title:'Mi CV', locale:'es', updated_at:null };
   if (!Array.isArray(S.contactOrder)) S.contactOrder = [];
   if (!Array.isArray(S.sectionOrder)) S.sectionOrder = [];
@@ -73,6 +118,9 @@ export function applyStateToCanvas(payload){
   ordered.forEach(key => renderers[key]?.());
   document.getElementById('canvasAdd')?.style && (document.getElementById('canvasAdd').style.display = 'flex');
   try { refreshPlusVisibility(); } catch (_) {}
+  requestAnimationFrame(() => {
+    try { refreshPlusVisibility(); } catch (_) {}
+  });
   saveLocal();
 }
 
