@@ -616,6 +616,9 @@ function getExportStyles(){
     .print-page .skill-row{display:grid !important;grid-template-columns:minmax(0,1fr) 118px !important;gap:10px !important;align-items:center !important}
     .print-page .skill-row .name{display:block !important;min-width:0 !important;overflow:hidden !important;white-space:nowrap !important;text-overflow:ellipsis !important}
     .print-page .skill-row .val{display:flex !important;align-items:center !important;justify-content:flex-end !important;min-width:118px !important;width:118px !important}
+    .print-page .print-titled-continuation .sec-head{margin-bottom:10px !important}
+    .print-page .print-titled-continuation .sec-remove,
+    .print-page .print-titled-continuation .ctrl-circle{display:none !important}
     .print-page .skill-row .stars{display:inline-grid !important;grid-auto-flow:column !important;gap:4px !important;justify-content:end !important}
     .print-page .skill-row .print-meter{width:110px !important}
     .print-page .chip{margin:0 !important}
@@ -718,6 +721,26 @@ function createContinuationContainer(sectionNode){
   return container;
 }
 
+function createTitledContinuation(sectionNode){
+  const config = getSectionSplitConfig(sectionNode);
+  if (!config) return null;
+  const shell = document.createElement('div');
+  shell.className = 'print-continuation print-titled-continuation';
+  shell.style.height = 'auto';
+  shell.style.minHeight = '0';
+  shell.style.maxHeight = 'none';
+  const head = cloneClean(sectionNode.querySelector('.sec-head'));
+  if (head) shell.appendChild(head);
+  const source = sectionNode.querySelector(config.containerSelector);
+  const container = source ? source.cloneNode(false) : document.createElement('div');
+  if (!source) container.className = config.containerSelector.replace('.', '');
+  container.style.height = 'auto';
+  container.style.minHeight = '0';
+  container.style.maxHeight = 'none';
+  shell.appendChild(container);
+  return { shell, container };
+}
+
 function measureFits(root, page, body, node){
   const CONTENT_LIMIT = PAGE_HEIGHT - 48;
   body.appendChild(node);
@@ -812,6 +835,17 @@ function paginateExport(){
 
       if (added === 0) {
         if (firstShellForSection) {
+          const titledFallback = createTitledContinuation(sectionNode);
+          if (titledFallback) {
+            result = fillContainerUntilFull(sourceItems, itemIndex, titledFallback.container, measureRoot, currentPage, currentBody, titledFallback.shell);
+            if (result.added > 0) {
+              currentBody.appendChild(titledFallback.shell);
+              itemIndex = result.itemIndex;
+              firstShellForSection = false;
+              if (itemIndex < sourceItems.length) newPage();
+              continue;
+            }
+          }
           const fallback = createContinuationContainer(sectionNode);
           if (fallback) {
             result = fillContainerUntilFull(sourceItems, itemIndex, fallback, measureRoot, currentPage, currentBody, fallback);
