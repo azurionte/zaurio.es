@@ -288,6 +288,48 @@ a{color:inherit;text-decoration:none}
 .preview [contenteditable="true"]{pointer-events:none}
 .preview #topbar-root #btnPreview{background:#1f2937}
 
+#mobilePrintExportOverlay{display:none}
+body.mobile-print-export-active{
+  overflow:hidden!important;
+}
+body.mobile-print-export-active #mobilePrintExportOverlay{
+  display:block;
+  position:fixed;
+  inset:0;
+  z-index:50000;
+  overflow:auto;
+  background:#ffffff;
+  -webkit-overflow-scrolling:touch;
+}
+body.mobile-print-export-active > *:not(#mobilePrintExportOverlay){
+  visibility:hidden!important;
+}
+body.mobile-print-export-active #mobilePrintExportOverlay,
+body.mobile-print-export-active #mobilePrintExportOverlay *{
+  visibility:visible!important;
+}
+body.mobile-print-export-active #mobilePrintExportOverlay .print-export-root{
+  min-height:100%;
+  padding:0;
+}
+
+@media print{
+  body.mobile-print-export-active{
+    background:#ffffff!important;
+    overflow:visible!important;
+  }
+  body.mobile-print-export-active > *:not(#mobilePrintExportOverlay){
+    display:none!important;
+  }
+  body.mobile-print-export-active #mobilePrintExportOverlay{
+    display:block!important;
+    position:static!important;
+    inset:auto!important;
+    overflow:visible!important;
+    background:#ffffff!important;
+  }
+}
+
 /* keep debug helpers removed in cleanup; the sanitization/observer code still runs in JS */
 
 /* Ensure node wrappers inside the sidebar main can't be shrunk by intrinsic child sizing. */

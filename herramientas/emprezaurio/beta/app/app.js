@@ -859,6 +859,37 @@ async function openPrintExportWindow(){
     ]
       .map(name => `${name}:${rootStyles.getPropertyValue(name) || bodyStyles.getPropertyValue(name) || sheetStyles.getPropertyValue(name) || ''}`)
       .join(';');
+    if (isMobileCanvasMode()) {
+      const existingMobile = document.getElementById('mobilePrintExportOverlay');
+      if (existingMobile) existingMobile.remove();
+      const overlay = document.createElement('div');
+      overlay.id = 'mobilePrintExportOverlay';
+      overlay.setAttribute('aria-hidden', 'true');
+      overlay.innerHTML = `
+        <style>${getExportStyles()}</style>
+        <div class="print-export-runtime" style="${exportVars}">
+          ${exportMarkup}
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      document.body.classList.add('mobile-print-export-active');
+      let cleaned = false;
+      const cleanup = () => {
+        if (cleaned) return;
+        cleaned = true;
+        document.body.classList.remove('mobile-print-export-active');
+        overlay.remove();
+      };
+      window.addEventListener('afterprint', cleanup, { once:true });
+      window.addEventListener('focus', () => setTimeout(cleanup, 120), { once:true });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') setTimeout(cleanup, 120);
+      }, { once:true });
+      setTimeout(() => {
+        window.print();
+      }, 80);
+      return;
+    }
     const html = `<!doctype html>
     <html class="${htmlClass}" data-theme="${htmlTheme}" data-dark="${htmlDark}" data-mat="${htmlMaterial}" style="${exportVars}">
       <head>
