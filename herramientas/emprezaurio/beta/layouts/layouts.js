@@ -1259,22 +1259,21 @@ function adoptSectionsToCurrentLayout(main, rail, add){
       return ai - bi;
     });
   }
-  const skillsWrapper = wrappers.find(w => w.dataset.section === 'skills')
-    || document.querySelector('.section[data-section="skills"]')?.closest('.node')
-    || null;
-
+  const mainWrappers = [];
+  const railWrappers = [];
   wrappers.forEach(wrapper => {
-    if (wrapper === skillsWrapper) return;
-    if (wrapper.parentElement !== main) main.insertBefore(wrapper, mainAnchor);
+    const isSkills = wrapper.dataset.section === 'skills';
+    if (isSkills && rail && S?.skillsInSidebar) railWrappers.push(wrapper);
+    else mainWrappers.push(wrapper);
   });
 
-  if (skillsWrapper){
-    const target = (rail && S?.skillsInSidebar) ? rail : main;
-    if (skillsWrapper.parentElement !== target){
-      if (target === main) target.insertBefore(skillsWrapper, mainAnchor);
-      else target.appendChild(skillsWrapper);
-    }
-  }
+  mainWrappers.forEach(wrapper => {
+    main.insertBefore(wrapper, mainAnchor);
+  });
+
+  railWrappers.forEach(wrapper => {
+    if (wrapper.parentElement !== rail) rail.appendChild(wrapper);
+  });
 }
 
 export function normalizeCanvasForCurrentLayout({ showAdd } = {}){
