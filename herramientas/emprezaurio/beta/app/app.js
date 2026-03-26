@@ -401,8 +401,8 @@ function getExportStyles(){
     .print-summary-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
     .print-summary-name{font-weight:900;font-size:28px;line-height:1.05}
     .print-summary-chips{display:flex;flex-wrap:wrap;gap:10px}
-    .print-summary-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:24px;font-size:9px;line-height:1.05}
-    .print-summary-chip i{width:12px;text-align:center;font-size:10px}
+    .print-summary-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid rgba(0,0,0,.08);min-height:34px;font-size:11px;line-height:1.1}
+    .print-summary-chip i{width:14px;text-align:center;font-size:12px}
     .print-page .sidebar-layout .rail{display:flex !important;flex-direction:column !important;align-items:flex-start !important}
     .print-page .sidebar-layout .rail .avatar{
       display:block !important;
@@ -490,7 +490,11 @@ function getExportStyles(){
 }
 
 function createSummaryHeader(){
-  const headerBase = getHeaderNode()?.closest('.sidebar-layout')?.querySelector('.rail') || getHeaderNode();
+  const headerRoot = getHeaderNode();
+  const headerBase =
+    headerRoot?.querySelector('.hero') ||
+    headerRoot?.querySelector('.rail') ||
+    headerRoot;
   const baseStyles = headerBase ? getComputedStyle(headerBase) : null;
   const chipBase = headerBase?.querySelector('.chip');
   const chipStyles = chipBase ? getComputedStyle(chipBase) : null;

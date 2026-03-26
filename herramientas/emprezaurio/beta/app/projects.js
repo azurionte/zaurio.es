@@ -45,14 +45,20 @@ function normalizeSectionOrder(payload){
   return ordered;
 }
 
-function normalizePayload(payload){
+function normalizePayload(payload, projectMeta = {}){
   const next = JSON.parse(JSON.stringify(payload || {}));
   if (next.mat && !next.material) next.material = next.mat;
   next.contact = Object.assign({
     name:'', phone:'', phone2:'', email:'', idDoc:'', address:'', linkedin:'',
     info1:'', info2:'', info3:'', info4:'', info5:'', info6:'', info7:''
   }, next.contact || {});
-  next.contact.name = String(next.contact.name || '').trim();
+  next.contact.name = String(
+    next.contact.name ||
+    projectMeta.preview_name ||
+    next.project?.title ||
+    projectMeta.title ||
+    ''
+  ).trim();
   next.contactOrder = normalizeContactOrder(next.contact, next.contactOrder);
   next.skills = Array.isArray(next.skills) ? next.skills : [];
   next.edu = Array.isArray(next.edu) ? next.edu : [];
@@ -96,7 +102,7 @@ async function migrateProjectsIfNeeded(projects){
 }
 
 function cloneStatePayload(){
-  return normalizePayload(JSON.parse(JSON.stringify(S)));
+  return normalizePayload(JSON.parse(JSON.stringify(S)), S.project || {});
 }
 
 function resetState(){
@@ -127,8 +133,11 @@ function projectTitleFromState(){
 
 export function applyStateToCanvas(payload){
   resetState();
-  Object.assign(S, normalizePayload(payload || {}));
+  Object.assign(S, normalizePayload(payload || {}, payload?.project || {}));
   if (!S.project) S.project = { id:null, title:'Mi CV', locale:'es', updated_at:null };
+  if (!String(S.contact?.name || '').trim()) {
+    S.contact.name = String(S.project?.title || '').trim() || 'Mi CV';
+  }
   if (!Array.isArray(S.contactOrder)) S.contactOrder = [];
   if (!Array.isArray(S.sectionOrder)) S.sectionOrder = [];
 
@@ -173,7 +182,7 @@ export async function listProjects(){
     .order('updated_at', { ascending:false });
   if (error) throw error;
   const normalized = (data || []).map(project => {
-    const payload = normalizePayload(project.payload || {});
+    const payload = normalizePayload(project.payload || {}, project);
     const migrated = {
       ...project,
       payload,
