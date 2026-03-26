@@ -548,6 +548,9 @@ function createSidebarPrintRail(rail){
   const secHolder = document.createElement('div');
   secHolder.className = 'sec-holder';
   secHolder.setAttribute('data-rail-sections', '');
+  if (rail?.querySelector?.('.section[data-section="skills"]')) {
+    secHolder.appendChild(createSidebarRailSkillsSection());
+  }
   railPrint.appendChild(secHolder);
   return railPrint;
 }
@@ -1065,6 +1068,7 @@ function paginateExport(){
       })
       .forEach(sectionNode => {
         const key = sectionNode.querySelector('.section')?.dataset?.section || sectionNode.dataset?.section || '';
+        if (key === 'skills' && firstPageRailTarget.querySelector('.section[data-section="skills"]')) return;
         const clone = key === 'skills'
           ? createSidebarRailSkillsSection()
           : cloneClean(sectionNode.querySelector('.section') || sectionNode);

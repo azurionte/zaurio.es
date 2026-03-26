@@ -225,12 +225,12 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
   /* style the header name and place the add button statically below the name */
   .sidebar-layout .rail{ position:relative }
-  .sidebar-layout .rail [data-header] .avatar{ margin-bottom:2px }
-  .sidebar-layout .rail [data-header] .name{ text-align:center; font-weight:900; font-size:22px; line-height:1.08; margin:0; padding:0 6px; color:#fff; letter-spacing:.01em }
-  .sidebar-layout .rail [data-header] .name[contenteditable]{ outline:none; border:none; background:transparent }
-  .sidebar-layout .rail [data-header] .name:focus{ outline:none; box-shadow:none }
+  .sidebar-layout[data-header] .rail .avatar{ margin-bottom:2px }
+  .sidebar-layout[data-header] .rail .name{ text-align:center; font-weight:900; font-size:22px; line-height:1.08; margin:0; padding:0 6px; color:#fff; letter-spacing:.01em }
+  .sidebar-layout[data-header] .rail .name[contenteditable]{ outline:none; border:none; background:transparent }
+  .sidebar-layout[data-header] .rail .name:focus{ outline:none; box-shadow:none }
   /* name block anchors the add button so it's always centered under the name */
-  .sidebar-layout .rail [data-header] .name-block{ position:relative; width:100%; display:block; text-align:center; margin-top:-4px; margin-bottom:2px }
+  .sidebar-layout[data-header] .rail .name-block{ position:relative; width:100%; display:block; text-align:center; margin-top:-4px; margin-bottom:2px }
   /* explicit wrapper for chips + add button to ensure the add button is centered */
   .sidebar-layout .rail .chip-wrap {
     display:flex !important;
@@ -241,7 +241,7 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     width:100% !important;
     box-sizing:border-box;
     position:relative;
-    padding:0 54px 10px 0;
+    padding:0 0 58px;
     text-align:center;
   }
   .sidebar-layout .rail .chip-wrap .chips {
@@ -281,10 +281,10 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     justify-content:center;
     align-items:center;
     margin:0 !important;
-    left:auto !important;
-    right:6px !important;
-    bottom:2px !important;
-    transform:none !important;
+    left:50% !important;
+    right:auto !important;
+    bottom:6px !important;
+    transform:translateX(-50%) !important;
     position:absolute !important;
   }
   /* place the add button in-flow after the chips so it naturally sits below the latest chip
@@ -296,9 +296,9 @@ const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
   .sidebar-layout .rail #chipAddBtn:hover{ filter:brightness(1.03) }
   .fancy .hero #chipAddBtn{position:absolute !important;right:20px;top:20px;left:auto !important;bottom:auto !important;transform:none !important;margin:0 !important;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#0b1022 !important;color:#fff !important;border:0;box-shadow:0 8px 20px rgba(11,16,34,.28);font-weight:800;z-index:5}
   /* prevent the browser "editing" container from showing an ugly border/outline */
-  .sidebar-layout .rail [data-header] .name[contenteditable]{ caret-color: #fff; }
-  .sidebar-layout .rail [data-header] .name[contenteditable]:focus{ outline:none !important; box-shadow:none !important; border:none !important }
-  .sidebar-layout .rail [data-header] .name::selection{ background: rgba(255,255,255,0.12); color: #fff }
+  .sidebar-layout[data-header] .rail .name[contenteditable]{ caret-color: #fff; }
+  .sidebar-layout[data-header] .rail .name[contenteditable]:focus{ outline:none !important; box-shadow:none !important; border:none !important }
+  .sidebar-layout[data-header] .rail .name::selection{ background: rgba(255,255,255,0.12); color: #fff }
   /* Removed duplicated/conflicting rule that used #0b7285 */
 
   /* small floating chip remove */
