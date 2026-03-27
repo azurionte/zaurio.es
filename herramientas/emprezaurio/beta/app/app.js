@@ -541,6 +541,8 @@ function createSidebarRailSkillsSection(){
   const section = document.createElement('div');
   section.className = 'section';
   section.dataset.section = 'skills';
+  section.style.width = '100%';
+  section.style.boxSizing = 'border-box';
   const list = Array.isArray(S.skills) ? S.skills : [];
   const rows = list.map(skill => {
     const label = skill?.label || 'Skill';
@@ -589,6 +591,17 @@ function createSidebarPrintRail(rail){
     if (!value) return;
     const chip = document.createElement('div');
     chip.className = 'chip';
+    chip.style.minHeight = '46px';
+    chip.style.padding = '10px 14px';
+    chip.style.borderRadius = '999px';
+    chip.style.background = '#fff';
+    chip.style.border = '1px solid rgba(0,0,0,.08)';
+    chip.style.color = '#1a2030';
+    chip.style.display = 'flex';
+    chip.style.alignItems = 'center';
+    chip.style.gap = '10px';
+    chip.style.width = '100%';
+    chip.style.boxSizing = 'border-box';
     chip.innerHTML = `<i class="fa-solid ${PRINT_CONTACT_FIELDS[key]?.icon || 'fa-circle-info'}"></i><span>${value}</span>`;
     chips.appendChild(chip);
   });
@@ -598,7 +611,11 @@ function createSidebarPrintRail(rail){
   const secHolder = document.createElement('div');
   secHolder.className = 'sec-holder';
   secHolder.setAttribute('data-rail-sections', '');
-  if ((Array.isArray(S.skills) && S.skills.length) && S.skillsInSidebar) {
+  secHolder.style.width = '100%';
+  secHolder.style.display = 'grid';
+  secHolder.style.gap = '16px';
+  secHolder.style.alignContent = 'start';
+  if ((Array.isArray(S.skills) && S.skills.length) && (S.skillsInSidebar || rail?.querySelector?.('.section[data-section="skills"]'))) {
     secHolder.appendChild(createSidebarRailSkillsSection());
   }
   railPrint.appendChild(secHolder);
