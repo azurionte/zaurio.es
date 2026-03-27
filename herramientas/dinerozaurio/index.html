@@ -644,7 +644,7 @@
       });
 
       Object.keys(state.monthAdjustments || {}).forEach(monthKey => {
-        const adj = state.monthAdjustments[monthKey] || {};
+        const adj = normalizeMonthAdjustmentShape(state.monthAdjustments[monthKey] || {}, monthKey);
 
         const remapKeys = (obj, map) => {
           const out = {};
@@ -662,6 +662,10 @@
         adj.expenseOverrides = remapKeys(adj.expenseOverrides, expenseMap);
         adj.goalOverrides = remapKeys(adj.goalOverrides, goalMap);
         adj.debtOverrides = remapKeys(adj.debtOverrides, debtMap);
+        adj.oneOffExpenses = (adj.oneOffExpenses || []).map(entry => ({
+          ...entry,
+          cardDebtId: debtMap[entry.cardDebtId] || entry.cardDebtId || ''
+        }));
 
         state.monthAdjustments[monthKey] = adj;
       });
@@ -689,6 +693,73 @@
       const normalized = value || 'monthly';
       if(['monthly','bimonthly','quarterly','four_monthly','yearly','one_time','custom_months'].includes(normalized)) return normalized;
       return 'monthly';
+    }
+    function normalizeOneOffExpenseEntry(entry = {}, monthKey = ''){
+      return {
+        id: entry.id || uid(),
+        monthKey: entry.monthKey || monthKey || '',
+        name: String(entry.name || '').trim(),
+        amount: Number(entry.amount || 0),
+        paymentSource: entry.paymentSource === 'card' ? 'card' : 'salary',
+        cardDebtId: String(entry.cardDebtId || '').trim(),
+        cardUseMode: entry.cardUseMode || '',
+        installmentMonthlyPayment: Number(entry.installmentMonthlyPayment || 0),
+        installmentRemainingInstallments: Math.max(0, Number(entry.installmentRemainingInstallments || 0)),
+        installmentLastMonth: entry.installmentLastMonth || ''
+      };
+    }
+    function packExpenseOverridesForSave(adj){
+      const overrides = cloneData(adj.expenseOverrides || {});
+      if(Array.isArray(adj.oneOffExpenses) && adj.oneOffExpenses.length){
+        overrides.__oneOffExpenses = adj.oneOffExpenses.map(entry => normalizeOneOffExpenseEntry(entry, entry.monthKey || ''));
+      } else {
+        delete overrides.__oneOffExpenses;
+      }
+      return overrides;
+    }
+    function normalizeMonthAdjustmentShape(adj = {}, monthKey = ''){
+      const expenseOverrides = cloneData(adj.expenseOverrides || {});
+      const embeddedOneOffExpenses = Array.isArray(expenseOverrides.__oneOffExpenses) ? expenseOverrides.__oneOffExpenses : [];
+      delete expenseOverrides.__oneOffExpenses;
+      return {
+        extraIncomeName: String(adj.extraIncomeName || '').trim(),
+        extraIncomeAmount: Number(adj.extraIncomeAmount || 0),
+        extraExpenseName: String(adj.extraExpenseName || '').trim(),
+        extraExpenseAmount: Number(adj.extraExpenseAmount || 0),
+        extraSavingName: String(adj.extraSavingName || '').trim(),
+        extraSavingAmount: Number(adj.extraSavingAmount || 0),
+        debtActionType: String(adj.debtActionType || '').trim(),
+        debtActionDebtId: String(adj.debtActionDebtId || '').trim(),
+        debtActionAmount: Number(adj.debtActionAmount || 0),
+        incomeOverrides: cloneData(adj.incomeOverrides || {}),
+        expenseOverrides,
+        goalOverrides: cloneData(adj.goalOverrides || {}),
+        debtOverrides: cloneData(adj.debtOverrides || {}),
+        oneOffExpenses: (Array.isArray(adj.oneOffExpenses) ? adj.oneOffExpenses : embeddedOneOffExpenses)
+          .map(entry => normalizeOneOffExpenseEntry(entry, monthKey))
+      };
+    }
+    function monthOneOffExpenses(ym){
+      return normalizeMonthAdjustmentShape(state.monthAdjustments?.[ym] || {}, ym).oneOffExpenses || [];
+    }
+    function salaryOneOffExpensesTotal(ym){
+      return monthOneOffExpenses(ym)
+        .filter(entry => entry.paymentSource !== 'card')
+        .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+    }
+    function debtCardEntriesForMonth(debtId, ym){
+      return monthOneOffExpenses(ym).filter(entry => entry.paymentSource === 'card' && entry.cardDebtId === debtId);
+    }
+    function installmentEntryMonthlyCharge(entry, ym){
+      if(!entry) return 0;
+      const start = entry.monthKey || ym;
+      if(ym < start) return 0;
+      if(entry.installmentLastMonth && ym > entry.installmentLastMonth) return 0;
+      if(!entry.installmentLastMonth){
+        const remaining = Math.max(0, Number(entry.installmentRemainingInstallments || 0));
+        if(remaining && monthDiff(start, ym) >= remaining) return 0;
+      }
+      return Number(entry.installmentMonthlyPayment || 0);
     }
     function periodIntervalMonths(item){
       const periodicity = normalizeExpensePeriodicity(item.periodicity);
@@ -1104,10 +1175,67 @@
         ));
       });
     }
+    function pushOneOffExpenseChanges(changes, monthKey, before, after, current){
+      const beforeEntries = Array.isArray(before?.oneOffExpenses) ? before.oneOffExpenses : [];
+      const afterEntries = Array.isArray(after?.oneOffExpenses) ? after.oneOffExpenses : [];
+      const beforeMap = new Map(beforeEntries.map(entry => [entry.id, entry]));
+      const afterMap = new Map(afterEntries.map(entry => [entry.id, entry]));
+      const ids = new Set([...beforeMap.keys(), ...afterMap.keys()]);
+      const prettyMonth = prettyMonthLabel(monthKey);
+      ids.forEach(id => {
+        const beforeEntry = beforeMap.get(id);
+        const afterEntry = afterMap.get(id);
+        if(stableStringify(beforeEntry) === stableStringify(afterEntry)) return;
+        const entry = afterEntry || beforeEntry || {};
+        const paymentDesc = (target) => {
+          if(!target) return 'sin definir';
+          if(target.paymentSource !== 'card') return 'pagado con sueldo';
+          const debt = (current.debts || []).find(item => item.id === target.cardDebtId);
+          const debtName = debt ? debtDisplayName(debt) : 'tarjeta';
+          const useMode = target.cardUseMode || debt?.paymentMode || debt?.cardSubtype || 'tarjeta';
+          return `pagado con ${debtName} (${debtPaymentModeLabel(useMode)})`;
+        };
+        const ops = [{ path:['oneOffExpenses'], value: cloneData(afterEntries) }];
+        if(!beforeEntry && afterEntry){
+          changes.push(createMonthOpsChange(
+            `monthAdjustments:${monthKey}:oneOffExpense:create:${id}`,
+            `Gasto puntual añadido en ${prettyMonth}`,
+            `"${afterEntry.name || 'Gasto puntual'}" con monto de ${euros(afterEntry.amount || 0)} · ${paymentDesc(afterEntry)}`,
+            monthKey,
+            ops,
+            `month:${monthKey}:expense:${id}`,
+            `${afterEntry.name || 'Gasto puntual'} · ${prettyMonth}`
+          ));
+          return;
+        }
+        if(beforeEntry && !afterEntry){
+          changes.push(createMonthOpsChange(
+            `monthAdjustments:${monthKey}:oneOffExpense:delete:${id}`,
+            `Gasto puntual eliminado en ${prettyMonth}`,
+            `"${beforeEntry.name || 'Gasto puntual'}" con monto de ${euros(beforeEntry.amount || 0)} · ${paymentDesc(beforeEntry)}`,
+            monthKey,
+            ops,
+            `month:${monthKey}:expense:${id}`,
+            `${beforeEntry.name || 'Gasto puntual'} · ${prettyMonth}`
+          ));
+          return;
+        }
+        changes.push(createMonthOpsChange(
+          `monthAdjustments:${monthKey}:oneOffExpense:update:${id}`,
+          `Gasto puntual cambiado en ${prettyMonth}`,
+          `De "${beforeEntry.name || 'Gasto puntual'}" ${euros(beforeEntry.amount || 0)} a "${afterEntry.name || 'Gasto puntual'}" ${euros(afterEntry.amount || 0)} · ${paymentDesc(afterEntry)}`,
+          monthKey,
+          ops,
+          `month:${monthKey}:expense:${id}`,
+          `${afterEntry.name || beforeEntry.name || 'Gasto puntual'} · ${prettyMonth}`
+        ));
+      });
+    }
     function pushMonthAdjustmentChanges(changes, monthKey, before, after, current){
       pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraIncome', 'Ingreso');
       pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraExpense', 'Gasto');
       pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraSaving', 'Ahorro');
+      pushOneOffExpenseChanges(changes, monthKey, before, after, current);
       pushOverrideChanges(changes, monthKey, before, after, 'incomeOverrides', current);
       pushOverrideChanges(changes, monthKey, before, after, 'expenseOverrides', current);
       pushOverrideChanges(changes, monthKey, before, after, 'goalOverrides', current);
@@ -1372,6 +1500,7 @@
     function getDebtMonthlyCharge(d, ym){
       const start = d.startMonth || state.defaultStartMonth;
       if(ym < start) return 0;
+      const cardEntries = debtCardEntriesForMonth(d.id, ym);
 
       if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype) === 'revolving'){
         const debt = Number(d.currentDebt || 0);
@@ -1381,21 +1510,46 @@
         let balance = debt;
         let cur = start;
         let safe = 0;
-        while(cur < ym && balance > 0.01 && safe < 240){
+        while(cur <= ym && safe < 240){
+          const entriesThisMonth = debtCardEntriesForMonth(d.id, cur)
+            .filter(entry => {
+              const useMode = entry.cardUseMode || d.paymentMode || d.cardSubtype || 'revolving';
+              return useMode === 'revolving';
+            });
+          balance += entriesThisMonth.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+          if(balance <= 0.01){
+            if(cur === ym) return 0;
+            cur = addMonthsStr(cur, 1);
+            safe++;
+            continue;
+          }
+          const charge = Math.min(payment, balance + (balance * monthlyRate));
+          if(cur === ym) return charge > 0.01 ? charge : 0;
           const interest = balance * monthlyRate;
-          balance = balance + interest - payment;
+          balance = Math.max(0, balance + interest - charge);
           cur = addMonthsStr(cur, 1);
           safe++;
         }
-        return balance > 0.01 ? payment : 0;
+        return 0;
       }
 
       const end = debtEndMonth(d);
       if(end && ym > end) return 0;
 
       if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype) === 'pay_end_month'){
-        if(d.periodicity === 'one_time') return ym === start ? Number(d.amount || 0) : 0;
-        return Number(d.amount || 0);
+        const scheduled = d.periodicity === 'one_time' ? (ym === start ? Number(d.amount || 0) : 0) : amountForSchedule(d, ym);
+        const endMonthEntries = cardEntries
+          .filter(entry => (entry.cardUseMode || d.paymentMode || d.cardSubtype || 'pay_end_month') === 'pay_end_month')
+          .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+        return scheduled + endMonthEntries;
+      }
+
+      if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype) === 'installment'){
+        const base = Number(d.monthlyPayment || 0);
+        const extra = cardEntries
+          .filter(entry => (entry.cardUseMode || d.paymentMode || d.cardSubtype || 'installment') === 'installment')
+          .reduce((sum, entry) => sum + installmentEntryMonthlyCharge(entry, ym), 0);
+        return base + extra;
       }
 
       return Number(d.monthlyPayment || 0);
@@ -1404,6 +1558,7 @@
     function getDebtMonthState(d, ym){
       const start = d.startMonth || state.defaultStartMonth;
       if(ym < start) return { visible:false, active:false, settled:false, recoveredAmount:0, monthAmount:0 };
+      const monthCardEntries = debtCardEntriesForMonth(d.id, ym);
 
       if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype) === 'revolving'){
         const monthAmount = getDebtMonthlyCharge(d, ym);
@@ -1414,11 +1569,11 @@
       const recoveryMonth = end ? addMonthsStr(end, 1) : null;
       const active = end ? (ym >= start && ym <= end) : false;
       const settled = recoveryMonth ? ym === recoveryMonth : false;
-      const monthAmount = active ? getDebtMonthlyCharge(d, ym) : 0;
+      const monthAmount = active || monthCardEntries.length ? getDebtMonthlyCharge(d, ym) : 0;
       const recoveredAmount = settled
         ? Number(((d.instrumentType || d.debtKind) === 'loan' || (d.paymentMode || d.cardSubtype) === 'installment') ? (d.monthlyPayment || 0) : (d.amount || 0))
         : 0;
-      return { visible: active || settled, active, settled, recoveredAmount, monthAmount };
+      return { visible: active || settled || monthCardEntries.length > 0, active: active || monthCardEntries.length > 0, settled, recoveredAmount, monthAmount };
     }
 
     function debtMonthlyAmount(d, ym){
@@ -1465,16 +1620,9 @@
 
     function adjustmentForMonth(ym){
       if(!state.monthAdjustments[ym]){
-        state.monthAdjustments[ym] = {
-          extraIncomeName:'', extraIncomeAmount:0,
-          extraExpenseName:'', extraExpenseAmount:0,
-          extraSavingName:'', extraSavingAmount:0,
-          debtActionType:'', debtActionDebtId:'', debtActionAmount:0,
-          incomeOverrides:{},
-          expenseOverrides:{},
-          goalOverrides:{},
-          debtOverrides:{}
-        };
+        state.monthAdjustments[ym] = normalizeMonthAdjustmentShape({}, ym);
+      } else {
+        state.monthAdjustments[ym] = normalizeMonthAdjustmentShape(state.monthAdjustments[ym], ym);
       }
       return state.monthAdjustments[ym];
     }
@@ -1657,7 +1805,7 @@
             extra_saving_name: v.extraSavingName || '',
             extra_saving_amount: Number(v.extraSavingAmount || 0),
             income_overrides: v.incomeOverrides || {},
-            expense_overrides: v.expenseOverrides || {},
+            expense_overrides: packExpenseOverridesForSave(v),
             goal_overrides: v.goalOverrides || {},
             debt_overrides: v.debtOverrides || {}
           }));
@@ -1735,7 +1883,7 @@
       }));
       state.monthAdjustments = {};
       (adjRes.data || []).forEach(it => {
-        state.monthAdjustments[it.month_key] = {
+        state.monthAdjustments[it.month_key] = normalizeMonthAdjustmentShape({
           extraIncomeName: it.extra_income_name || '',
           extraIncomeAmount: Number(it.extra_income_amount || 0),
           extraExpenseName: it.extra_expense_name || '',
@@ -1749,7 +1897,7 @@
           expenseOverrides: it.expense_overrides || {},
           goalOverrides: it.goal_overrides || {},
           debtOverrides: it.debt_overrides || {}
-        };
+        }, it.month_key);
       });
 
       cacheLocal();
@@ -1983,17 +2131,15 @@
                 <div class="changeGroupMeta">${group.changes.length} cambio${group.changes.length === 1 ? '' : 's'}</div>
               </div>
               <div class="changeGroupList">
-                ${group.changes.map(change => `
-                  <label class="changeRow">
-                    <input type="checkbox" data-change-id="${change.id}" ${saveModalSelection.has(change.id) ? 'checked' : ''}>
-                    <div>
-                      <div class="changeTitle">${escapeHtml(change.title)}</div>
-                      <ul class="changeBulletList">
-                        <li>${escapeHtml(change.desc)}</li>
-                      </ul>
-                    </div>
-                  </label>
-                `).join('')}
+                <label class="changeRow">
+                  <input type="checkbox" data-change-group="${escapeHtml(group.key)}" ${group.changes.every(change => saveModalSelection.has(change.id)) ? 'checked' : ''}>
+                  <div>
+                    <div class="changeTitle">${escapeHtml(group.title)}</div>
+                    <ul class="changeBulletList">
+                      ${group.changes.map(change => `<li>${escapeHtml(change.desc)}</li>`).join('')}
+                    </ul>
+                  </div>
+                </label>
               </div>
             </div>
           `).join('')}
@@ -2016,10 +2162,13 @@
         saveModalSelection = e.target.checked ? new Set(changes.map(change => change.id)) : new Set();
         renderSaveModal();
       };
-      root.querySelectorAll('[data-change-id]').forEach((checkbox) => {
+      root.querySelectorAll('[data-change-group]').forEach((checkbox) => {
         checkbox.onchange = () => {
-          if(checkbox.checked) saveModalSelection.add(checkbox.dataset.changeId);
-          else saveModalSelection.delete(checkbox.dataset.changeId);
+          const group = groupedChanges.find(item => item.key === checkbox.dataset.changeGroup);
+          (group?.changes || []).forEach(change => {
+            if(checkbox.checked) saveModalSelection.add(change.id);
+            else saveModalSelection.delete(change.id);
+          });
         };
       });
       document.getElementById('revertAllChangesBtn').onclick = () => {
@@ -2361,8 +2510,9 @@
         <div class="modalHead"><h3>Nueva deuda</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
         <div class="field">
           <label>Entidad</label>
-          <input id="newDebtEntity" class="input" list="debtEntitySuggestions" placeholder="Ej. BBVA, Cetelem, Hacienda" value="${escapeHtml(defaultEntity)}">
+          <input id="newDebtEntity" class="input" list="debtEntitySuggestions" placeholder="Escribe una entidad nueva o reutiliza una existente" value="${escapeHtml(defaultEntity)}">
           <datalist id="debtEntitySuggestions">${existing.map(name => `<option value="${escapeHtml(name)}"></option>`).join('')}</datalist>
+          <div class="sub" style="margin-top:8px">Puedes escribir una entidad nueva libremente. Las sugerencias son opcionales y no voy a reagrupar automaticamente tus deudas antiguas.</div>
         </div>
         <div class="btnRow" style="margin-top:18px">
           <button id="createDebtCardBtn" class="btn primary">Añadir tarjeta</button>
@@ -2398,6 +2548,17 @@
       const adj = adjustmentForMonth(ym);
       const current = monthlyActiveItems(ym);
       const root = document.getElementById('modalRoot');
+      const availableCards = (state.debts || []).filter(item => (item.instrumentType || item.debtKind) === 'card');
+      const cardOptions = availableCards.map(item => `<option value="${item.id}">${escapeHtml(debtDisplayName(item))}</option>`).join('');
+      const monthOneOffs = monthOneOffExpenses(ym);
+
+      function oneOffExpenseLabel(entry){
+        if(entry.paymentSource !== 'card') return 'Pagado con sueldo';
+        const debt = availableCards.find(item => item.id === entry.cardDebtId);
+        const debtName = debt ? debtDisplayName(debt) : 'Tarjeta';
+        const useMode = entry.cardUseMode || debt?.paymentMode || debt?.cardSubtype || 'tarjeta';
+        return `Pagado con ${debtName} · ${debtPaymentModeLabel(useMode)}`;
+      }
 
       function incomeListHtml(){
         const base = current.incomes.length ? current.incomes.map(it => `
@@ -2421,6 +2582,18 @@
             <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Gasto')}</div><div class="miniSub">${euros(it.monthAmount)}</div></div>
             <div class="miniActions"><button class="btn ghost" data-expense-edit="${it.id}">Editar</button></div>
           </div>`).join('') : '';
+        const oneOffs = monthOneOffs.length ? monthOneOffs.map(entry => `
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(entry.name || 'Gasto puntual')}</div>
+              <div class="miniSub">${euros(entry.amount || 0)} · ${escapeHtml(oneOffExpenseLabel(entry))}</div>
+            </div>
+            <div class="miniActions">
+              <button class="btn ghost" data-extra-expense-edit="${entry.id}">Editar</button>
+              <button class="btn danger" data-extra-expense-remove="${entry.id}">Eliminar</button>
+            </div>
+          </div>
+        `).join('') : '';
         const punctual = adj.extraExpenseAmount ? `
           <div class="miniItem">
             <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraExpenseName||'Gasto puntual')}</div><div class="miniSub">${euros(adj.extraExpenseAmount)} · puntual</div></div>
@@ -2429,7 +2602,7 @@
               <button class="btn danger" id="removeExtraExpenseBtn">Eliminar</button>
             </div>
           </div>` : '';
-        return (base + punctual) || '<div class="empty">No hay gastos activos este mes.</div>';
+        return (base + oneOffs + punctual) || '<div class="empty">No hay gastos activos este mes.</div>';
       }
       function debtListHtml(){
         return current.debts.length ? current.debts.map(it => `
@@ -2522,6 +2695,80 @@
         document.getElementById(`${containerId}_cancel`).onclick = () => { box.innerHTML = ''; };
         document.getElementById(`${containerId}_save`).onclick = onSave;
       }
+      function openOneOffExpenseForm(entry = null){
+        const currentEntry = entry ? normalizeOneOffExpenseEntry(entry, ym) : normalizeOneOffExpenseEntry({ monthKey: ym }, ym);
+        mountInlineForm('monthExpenseForm', entry ? 'Editar gasto puntual' : 'Añadir gasto puntual', [
+          { id:'ame_name', label:'Nombre', type:'text', value:currentEntry.name || '' },
+          { id:'ame_amount', label:'Monto', type:'number', step:'0.01', value:currentEntry.amount || 0 },
+          { id:'ame_source', label:'Como lo has pagado', type:'select', options:`
+            <option value="salary" ${currentEntry.paymentSource === 'salary' ? 'selected' : ''}>Con sueldo</option>
+            <option value="card" ${currentEntry.paymentSource === 'card' ? 'selected' : ''}>Con tarjeta de credito</option>
+          `},
+          { id:'ame_card', label:'Tarjeta', type:'select', options: cardOptions || '<option value="">No hay tarjetas disponibles</option>' },
+          { id:'ame_card_mode', label:'Como entra en la tarjeta', type:'select', options:`
+            <option value="">Segun esta tarjeta</option>
+            <option value="pay_end_month" ${(currentEntry.cardUseMode || '') === 'pay_end_month' ? 'selected' : ''}>A fin de mes</option>
+            <option value="installment" ${(currentEntry.cardUseMode || '') === 'installment' ? 'selected' : ''}>Compra aplazada</option>
+            <option value="revolving" ${(currentEntry.cardUseMode || '') === 'revolving' ? 'selected' : ''}>Revolving</option>
+          `},
+          { id:'ame_installment_payment', label:'Pago mensual de la compra aplazada', type:'number', step:'0.01', value:currentEntry.installmentMonthlyPayment || 0 },
+          { id:'ame_installment_remaining', label:'Cuotas restantes', type:'number', step:'1', value:currentEntry.installmentRemainingInstallments || 0 },
+          { id:'ame_installment_last_month', label:'Ultima cuota (opcional)', type:'month', value:currentEntry.installmentLastMonth || '' }
+        ], () => {
+          const name = document.getElementById('ame_name').value.trim();
+          const amount = Number(document.getElementById('ame_amount').value || 0);
+          const paymentSource = document.getElementById('ame_source').value;
+          if(!name || amount <= 0){
+            alert('Necesito nombre y monto para el gasto puntual.');
+            return;
+          }
+          const nextEntry = normalizeOneOffExpenseEntry({
+            ...currentEntry,
+            monthKey: ym,
+            name,
+            amount,
+            paymentSource,
+            cardDebtId: paymentSource === 'card' ? document.getElementById('ame_card').value : '',
+            cardUseMode: paymentSource === 'card' ? document.getElementById('ame_card_mode').value : '',
+            installmentMonthlyPayment: Number(document.getElementById('ame_installment_payment').value || 0),
+            installmentRemainingInstallments: Number(document.getElementById('ame_installment_remaining').value || 0),
+            installmentLastMonth: document.getElementById('ame_installment_last_month').value || ''
+          }, ym);
+          if(paymentSource === 'card' && !nextEntry.cardDebtId){
+            alert('Necesito saber en qué tarjeta cae ese gasto puntual.');
+            return;
+          }
+          if(paymentSource === 'card' && nextEntry.cardUseMode === 'installment' && !nextEntry.installmentLastMonth && !nextEntry.installmentRemainingInstallments){
+            alert('Si la compra va aplazada, necesito ultima cuota o cuotas restantes.');
+            return;
+          }
+          const nextEntries = monthOneOffExpenses(ym).filter(item => item.id !== nextEntry.id);
+          nextEntries.push(nextEntry);
+          adj.oneOffExpenses = nextEntries;
+          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+        });
+        const sourceEl = document.getElementById('ame_source');
+        const cardEl = document.getElementById('ame_card');
+        const modeEl = document.getElementById('ame_card_mode');
+        const installmentIds = ['ame_installment_payment','ame_installment_remaining','ame_installment_last_month'];
+        if(cardEl && currentEntry.cardDebtId) cardEl.value = currentEntry.cardDebtId;
+        function syncOneOffExpenseFields(){
+          const isCard = sourceEl.value === 'card';
+          const cardField = cardEl?.closest('.field');
+          const modeField = modeEl?.closest('.field');
+          if(cardField) cardField.style.display = isCard ? '' : 'none';
+          if(modeField) modeField.style.display = isCard ? '' : 'none';
+          const useMode = modeEl?.value || '';
+          const showInstallment = isCard && useMode === 'installment';
+          installmentIds.forEach(id => {
+            const field = document.getElementById(id)?.closest('.field');
+            if(field) field.style.display = showInstallment ? '' : 'none';
+          });
+        }
+        sourceEl.onchange = syncOneOffExpenseFields;
+        if(modeEl) modeEl.onchange = syncOneOffExpenseFields;
+        syncOneOffExpenseFields();
+      }
 
       root.querySelectorAll('[data-income-edit]').forEach(btn => btn.onclick = () => {
         const item = current.incomes.find(x=>x.id===btn.dataset.incomeEdit);
@@ -2601,14 +2848,7 @@
         });
       };
       document.getElementById('addMonthExpenseBtn').onclick = () => {
-        mountInlineForm('monthExpenseForm', 'Añadir gasto puntual', [
-          { id:'ame_name', label:'Nombre', type:'text', value:adj.extraExpenseName||'' },
-          { id:'ame_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraExpenseAmount||0 }
-        ], () => {
-          adj.extraExpenseName = document.getElementById('ame_name').value.trim();
-          adj.extraExpenseAmount = Number(document.getElementById('ame_amount').value||0);
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
-        });
+        openOneOffExpenseForm();
       };
       document.getElementById('addMonthSavingBtn').onclick = () => {
         mountInlineForm('monthSavingForm', 'Añadir ahorro puntual', [
@@ -2663,6 +2903,14 @@
 
       const editExtraExpenseBtn = document.getElementById('editExtraExpenseBtn');
       if(editExtraExpenseBtn) editExtraExpenseBtn.onclick = () => document.getElementById('addMonthExpenseBtn').click();
+      root.querySelectorAll('[data-extra-expense-edit]').forEach(btn => btn.onclick = () => {
+        const entry = monthOneOffExpenses(ym).find(item => item.id === btn.dataset.extraExpenseEdit);
+        if(entry) openOneOffExpenseForm(entry);
+      });
+      root.querySelectorAll('[data-extra-expense-remove]').forEach(btn => btn.onclick = () => {
+        adj.oneOffExpenses = monthOneOffExpenses(ym).filter(item => item.id !== btn.dataset.extraExpenseRemove);
+        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+      });
       const removeExtraExpenseBtn = document.getElementById('removeExtraExpenseBtn');
       if(removeExtraExpenseBtn) removeExtraExpenseBtn.onclick = () => {
         adj.extraExpenseName = '';
@@ -2850,7 +3098,7 @@
         const expense = state.expenses.reduce((a,b)=>{
           const ov = adj.expenseOverrides[b.id];
           return a + (ov !== undefined ? Number(ov) : getExpenseMonthlyCharge(b, m));
-        },0) + Number(adj.extraExpenseAmount || 0);
+        },0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(m);
 
         const debt = state.debts.reduce((a,b)=>{
           let amount = getDebtMonthState(b, m).monthAmount;
