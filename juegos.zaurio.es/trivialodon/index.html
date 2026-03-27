@@ -71,7 +71,7 @@
     .avatarStageWrap{width:190px;height:190px;padding:12px;border-radius:36px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));border:1px solid rgba(255,255,255,.18);display:grid;place-items:center}
     .avatarStage{position:relative;width:var(--avatarSize);height:var(--avatarSize);border-radius:999px;overflow:hidden;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);cursor:grab}
     .avatarStage.dragging{cursor:grabbing}
-    .avatarImg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}
+    .avatarImg{position:absolute;left:50%;top:50%;width:auto;height:auto;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}
     .avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.74);font-weight:900;text-align:center;padding:12px;font-size:.95rem}
     .editorControls{display:grid;gap:14px;align-content:start}
     .uploadCard{display:grid;gap:12px;padding:16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
@@ -417,14 +417,7 @@
       ctx.translate(size/2,size/2);
       ctx.translate(state.avatar.x,state.avatar.y);
       ctx.scale(state.avatar.s,state.avatar.s);
-      const drawW=size;
-      const drawH=size*(img.height/img.width);
-      if(img.height>img.width){
-        const fitW=size*(img.width/img.height);
-        ctx.drawImage(img,-fitW/2,-size/2,fitW,size);
-      }else{
-        ctx.drawImage(img,-size/2,-drawH/2,size,drawH);
-      }
+      ctx.drawImage(img,-img.width/2,-img.height/2,img.width,img.height);
       ctx.restore();
       return canvas.toDataURL("image/png");
     }
