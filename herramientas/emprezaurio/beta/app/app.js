@@ -537,7 +537,21 @@ function getPrintContactOrder(){
   return ordered;
 }
 
-function createSidebarRailSkillsSection(){
+function createSidebarRailSkillsSection(rail){
+  const liveSection =
+    rail?.querySelector?.('[data-rail-sections] .section[data-section="skills"]') ||
+    rail?.querySelector?.('.section[data-section="skills"]') ||
+    document.querySelector('.sidebar-layout [data-rail-sections] .section[data-section="skills"]');
+  if (liveSection) {
+    const clone = cloneClean(liveSection);
+    clone.style.width = '100%';
+    clone.style.boxSizing = 'border-box';
+    clone.style.display = 'block';
+    clone.style.visibility = 'visible';
+    clone.style.opacity = '1';
+    return clone;
+  }
+
   const section = document.createElement('div');
   section.className = 'section';
   section.dataset.section = 'skills';
@@ -619,8 +633,9 @@ function createSidebarPrintRail(rail){
     !!rail?.querySelector?.('[data-rail-sections] .section[data-section="skills"]') ||
     !!rail?.querySelector?.('.section[data-section="skills"]') ||
     !!document.querySelector('.sidebar-layout [data-rail-sections] .section[data-section="skills"]');
-  if (Array.isArray(S.skills) && S.skills.length && (S.skillsInSidebar || liveRailHasSkills)) {
-    const railSkillsSection = createSidebarRailSkillsSection();
+  const stateHasSkills = Array.isArray(S.skills) && S.skills.length;
+  if ((stateHasSkills || liveRailHasSkills) && (S.skillsInSidebar || liveRailHasSkills)) {
+    const railSkillsSection = createSidebarRailSkillsSection(rail);
     railSkillsSection.style.display = 'block';
     railSkillsSection.style.visibility = 'visible';
     railSkillsSection.style.opacity = '1';

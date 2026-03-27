@@ -2586,6 +2586,33 @@
       const cardOptions = availableCards.map(item => `<option value="${item.id}">${escapeHtml(debtDisplayName(item))}</option>`).join('');
       const monthOneOffs = monthOneOffExpenses(ym);
 
+      function monthAdjustmentHasData(target){
+        if(!target) return false;
+        if(String(target.extraIncomeName || '').trim()) return true;
+        if(Number(target.extraIncomeAmount || 0) !== 0) return true;
+        if(String(target.extraExpenseName || '').trim()) return true;
+        if(Number(target.extraExpenseAmount || 0) !== 0) return true;
+        if(String(target.extraSavingName || '').trim()) return true;
+        if(Number(target.extraSavingAmount || 0) !== 0) return true;
+        if(Object.keys(target.incomeOverrides || {}).length) return true;
+        if(Object.keys(target.expenseOverrides || {}).length) return true;
+        if(Object.keys(target.goalOverrides || {}).length) return true;
+        if(Object.keys(target.debtOverrides || {}).length) return true;
+        if(Array.isArray(target.oneOffExpenses) && target.oneOffExpenses.length) return true;
+        return false;
+      }
+
+      function commitMonthAdjustment(mutator){
+        const nextAdj = normalizeMonthAdjustmentShape(state.monthAdjustments?.[ym] || {}, ym);
+        mutator(nextAdj);
+        if(monthAdjustmentHasData(nextAdj)){
+          state.monthAdjustments[ym] = nextAdj;
+        } else {
+          delete state.monthAdjustments[ym];
+        }
+        touchState({ reopenMonth: ym });
+      }
+
       function oneOffExpenseLabel(entry){
         if(entry.paymentSource !== 'card') return 'Pagado con sueldo';
         const debt = availableCards.find(item => item.id === entry.cardDebtId);
@@ -2876,9 +2903,10 @@
           { id:'ami_name', label:'Nombre', type:'text', value:adj.extraIncomeName||'' },
           { id:'ami_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraIncomeAmount||0 }
         ], () => {
-          adj.extraIncomeName = document.getElementById('ami_name').value.trim();
-          adj.extraIncomeAmount = Number(document.getElementById('ami_amount').value||0);
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+          commitMonthAdjustment(nextAdj => {
+            nextAdj.extraIncomeName = document.getElementById('ami_name').value.trim();
+            nextAdj.extraIncomeAmount = Number(document.getElementById('ami_amount').value||0);
+          });
         });
       };
       document.getElementById('addMonthExpenseBtn').onclick = () => {
@@ -2930,9 +2958,10 @@
       if(editExtraIncomeBtn) editExtraIncomeBtn.onclick = () => document.getElementById('addMonthIncomeBtn').click();
       const removeExtraIncomeBtn = document.getElementById('removeExtraIncomeBtn');
       if(removeExtraIncomeBtn) removeExtraIncomeBtn.onclick = () => {
-        adj.extraIncomeName = '';
-        adj.extraIncomeAmount = 0;
-        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+        commitMonthAdjustment(nextAdj => {
+          nextAdj.extraIncomeName = '';
+          nextAdj.extraIncomeAmount = 0;
+        });
       };
 
       const editExtraExpenseBtn = document.getElementById('editExtraExpenseBtn');
