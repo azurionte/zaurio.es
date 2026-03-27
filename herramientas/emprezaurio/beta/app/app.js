@@ -615,7 +615,15 @@ function createSidebarPrintRail(rail){
   secHolder.style.display = 'grid';
   secHolder.style.gap = '16px';
   secHolder.style.alignContent = 'start';
-  if ((Array.isArray(S.skills) && S.skills.length) && (S.skillsInSidebar || rail?.querySelector?.('.section[data-section="skills"]'))) {
+  const liveRailSkills =
+    rail?.querySelector?.('[data-rail-sections] .section[data-section="skills"]') ||
+    rail?.querySelector?.('.section[data-section="skills"]') ||
+    document.querySelector('.sidebar-layout [data-rail-sections] .section[data-section="skills"]');
+  if (liveRailSkills) {
+    const liveClone = cloneClean(liveRailSkills);
+    liveClone.querySelectorAll('.sec-remove,.ctrl-circle,.skill-handle,.sec-add-anchor,.move-rail').forEach(node => node.remove());
+    secHolder.appendChild(liveClone);
+  } else if ((Array.isArray(S.skills) && S.skills.length) && S.skillsInSidebar) {
     secHolder.appendChild(createSidebarRailSkillsSection());
   }
   railPrint.appendChild(secHolder);
@@ -1123,24 +1131,6 @@ function paginateExport(){
   });
   exportRoot.appendChild(currentPage);
   let currentBody = currentPage.querySelector('[data-print-body]');
-  const firstPageRailTarget = currentPage.querySelector('[data-rail-sections]');
-
-  if (S.layout === 'side' && firstPageRailTarget && railSectionKeys.size) {
-    sections
-      .filter(sectionNode => {
-        const key = sectionNode.querySelector('.section')?.dataset?.section || sectionNode.dataset?.section || '';
-        return railSectionKeys.has(key);
-      })
-      .forEach(sectionNode => {
-        const key = sectionNode.querySelector('.section')?.dataset?.section || sectionNode.dataset?.section || '';
-        if (key === 'skills' && firstPageRailTarget.querySelector('.section[data-section="skills"]')) return;
-        const clone = key === 'skills'
-          ? createSidebarRailSkillsSection()
-          : cloneClean(sectionNode.querySelector('.section') || sectionNode);
-        firstPageRailTarget.appendChild(clone);
-      });
-  }
-
   if (S.layout === 'side' && currentBody && headerNode) {
     currentBody.style.minHeight = '0';
   }
@@ -1252,7 +1242,8 @@ function paginateExport(){
     const directBlocks = body ? Array.from(body.children).filter(el => el.classList?.contains('section') || el.classList?.contains('print-continuation')) : [];
     const hasSection = directBlocks.length > 0;
     const hasSectionContent = !!page.querySelector('.skill-row, .card, .profile-copy, .year-chip, .card-title');
-    if (!hasSection || !hasSectionContent) page.remove();
+    const hasRailContent = !!page.querySelector('.sidebar-layout [data-rail-sections] .section, .sidebar-layout .rail .chip, .sidebar-layout .rail .name');
+    if ((!hasSection && !hasRailContent) || (!hasSectionContent && !hasRailContent)) page.remove();
   });
 
   const html = exportRoot.outerHTML;
