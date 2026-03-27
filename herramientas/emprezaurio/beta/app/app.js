@@ -506,6 +506,37 @@ function svgStarPrint(on){
     </svg>`;
 }
 
+const PRINT_CONTACT_FIELDS = {
+  phone: { icon: 'fa-phone' },
+  phone2: { icon: 'fa-phone' },
+  email: { icon: 'fa-envelope' },
+  idDoc: { icon: 'fa-id-card' },
+  address: { icon: 'fa-location-dot' },
+  linkedin: { icon: 'fa-linkedin' },
+  info1: { icon: 'fa-circle-info' },
+  info2: { icon: 'fa-circle-info' },
+  info3: { icon: 'fa-circle-info' },
+  info4: { icon: 'fa-circle-info' },
+  info5: { icon: 'fa-circle-info' },
+  info6: { icon: 'fa-circle-info' },
+  info7: { icon: 'fa-circle-info' }
+};
+
+function getPrintContactOrder(){
+  const contact = S.contact || {};
+  const fallback = ['phone', 'phone2', 'email', 'idDoc', 'address', 'linkedin', 'info1', 'info2', 'info3', 'info4', 'info5', 'info6', 'info7'];
+  const active = fallback.filter(key => String(contact[key] || '').trim());
+  const current = Array.isArray(S.contactOrder) ? S.contactOrder : [];
+  const ordered = [];
+  current.forEach(key => {
+    if (active.includes(key) && !ordered.includes(key)) ordered.push(key);
+  });
+  active.forEach(key => {
+    if (!ordered.includes(key)) ordered.push(key);
+  });
+  return ordered;
+}
+
 function createSidebarRailSkillsSection(){
   const section = document.createElement('div');
   section.className = 'section';
@@ -532,23 +563,42 @@ function createSidebarRailSkillsSection(){
 function createSidebarPrintRail(rail){
   const railPrint = document.createElement('div');
   railPrint.className = 'rail';
-
-  const avatar = rail?.querySelector?.('.avatar');
-  const nameBlock = rail?.querySelector?.('.name-block');
-  const chipWrap = rail?.querySelector?.('.chip-wrap');
-
-  if (avatar) railPrint.appendChild(cloneClean(avatar));
-  if (nameBlock) railPrint.appendChild(cloneClean(nameBlock));
-  if (chipWrap) {
-    const chipWrapClone = cloneClean(chipWrap);
-    chipWrapClone.querySelectorAll('#chipAddBtn,#chipAddPop,.add-dot,.chip-rm').forEach(el => el.remove());
-    railPrint.appendChild(chipWrapClone);
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  if (S.avatar?.src) {
+    const img = document.createElement('img');
+    img.src = S.avatar.src;
+    img.alt = '';
+    avatar.appendChild(img);
+  } else {
+    avatar.setAttribute('data-empty', '1');
   }
+  railPrint.appendChild(avatar);
+
+  const nameBlock = document.createElement('div');
+  nameBlock.className = 'name-block';
+  nameBlock.innerHTML = `<h2 class="name">${S.contact?.name || S.project?.title || 'Mi CV'}</h2>`;
+  railPrint.appendChild(nameBlock);
+
+  const chipWrap = document.createElement('div');
+  chipWrap.className = 'chip-wrap';
+  const chips = document.createElement('div');
+  chips.className = 'chips';
+  getPrintContactOrder().forEach(key => {
+    const value = String(S.contact?.[key] || '').trim();
+    if (!value) return;
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `<i class="fa-solid ${PRINT_CONTACT_FIELDS[key]?.icon || 'fa-circle-info'}"></i><span>${value}</span>`;
+    chips.appendChild(chip);
+  });
+  chipWrap.appendChild(chips);
+  railPrint.appendChild(chipWrap);
 
   const secHolder = document.createElement('div');
   secHolder.className = 'sec-holder';
   secHolder.setAttribute('data-rail-sections', '');
-  if (rail?.querySelector?.('.section[data-section="skills"]')) {
+  if ((Array.isArray(S.skills) && S.skills.length) && S.skillsInSidebar) {
     secHolder.appendChild(createSidebarRailSkillsSection());
   }
   railPrint.appendChild(secHolder);
