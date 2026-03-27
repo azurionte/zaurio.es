@@ -1,7 +1,7 @@
 // App entry — wires everything together
 import { S, setTheme, setCustomGradient, setDark, setMaterial, hydrateFromStorage, setStorageScope } from './state.js';
 import { initAuth, getStorageScope, authState } from './auth.js';
-const APP_VERSION = 'resume-app@2026.03.26-2119';
+const APP_VERSION = 'resume-app@2026.03.27-1905';
 console.log('[app.js] ' + APP_VERSION);
 import { mountEditor } from '../editor/editor.js';
 import { mountWelcome, mountWizard, loadDemoResume } from '../wizard/wizard.js';
@@ -910,8 +910,6 @@ function createMeasurePage({ sidebar = false, includeSummary = false, rail = nul
     layout.className = 'print-sidebar-page sidebar-layout';
     if (rail) {
       const railClone = createSidebarPrintRail(rail);
-      const railSections = railClone.querySelector('[data-rail-sections]');
-      if (railSections) railSections.replaceChildren();
       layout.appendChild(railClone);
     }
     const main = document.createElement('div');
