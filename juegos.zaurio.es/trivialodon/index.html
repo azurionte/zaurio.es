@@ -226,7 +226,7 @@
     const $=id=>document.getElementById(id);
     const ui={introView:$("introView"),appView:$("appView"),btnPickHost:$("btnPickHost"),btnPickGuest:$("btnPickGuest"),menuWrap:$("menuWrap"),menuBtn:$("menuBtn"),identityChip:$("identityChip"),miniAvatar:$("miniAvatar"),identityName:$("identityName"),identityRole:$("identityRole"),guestCodeScreen:$("guestCodeScreen"),profileScreen:$("profileScreen"),guestWaiting:$("guestWaiting"),guestCodeInput:$("guestCodeInput"),btnGuestNext:$("btnGuestNext"),btnRestartGuest:$("btnRestartGuest"),btnRestartProfile:$("btnRestartProfile"),profileTitle:$("profileTitle"),roomCodeBadge:$("roomCodeBadge"),nameInput:$("nameInput"),photoInput:$("photoInput"),btnPickPhoto:$("btnPickPhoto"),btnCenterPhoto:$("btnCenterPhoto"),zoomInput:$("zoomInput"),zoomValue:$("zoomValue"),avatarStage:$("avatarStage"),avatarImg:$("avatarImg"),avatarPlaceholder:$("avatarPlaceholder"),btnReady:$("btnReady"),status:$("status"),playerGrid:$("playerGrid"),btnHostNext:$("btnHostNext")};
     const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
-    const state={playerId:crypto.randomUUID(),role:"",roomCode:"",name:"",ready:false,waitingLine:"",avatar:{src:"",x:0,y:0,s:1},channel:null,players:[]};
+    const state={playerId:crypto.randomUUID(),role:"",roomCode:"",name:"",ready:false,waitingLine:"",avatar:{src:"",rendered:"",x:0,y:0,s:1},channel:null,players:[]};
 
     const esc=v=>String(v||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     const code=()=>{const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let out="";for(let i=0;i<6;i++) out+=chars[Math.floor(Math.random()*chars.length)];return out;};
@@ -255,7 +255,7 @@
       if(!state.role) return;
       ui.identityName.textContent=state.name||"Sin nombre";
       ui.identityRole.textContent=state.role==="host"?"anfitrion":"invitado";
-      ui.miniAvatar.innerHTML=state.avatar.src?`<img src="${state.avatar.src}" alt="">`:"&#129430;";
+      ui.miniAvatar.innerHTML=(state.avatar.rendered||state.avatar.src)?`<img src="${state.avatar.rendered||state.avatar.src}" alt="">`:"&#129430;";
       ui.roomCodeBadge.textContent=state.roomCode||"------";
       ui.btnHostNext.style.display=state.role==="host"?"inline-flex":"none";
       ui.btnHostNext.disabled=!hostCanContinue();
@@ -271,7 +271,7 @@
         const label=player.ready?esc(player.name||"Jugador listo"):esc(player.waitingLine||lineFor(player.playerId));
         const sub=player.ready?(player.role==="host"?"Anfitrion listo":"Invitado listo"):"Aun no ha pulsado listo";
         const avatar=player.ready&&player.avatarSrc
-          ? `<div class="avatarHole"><img src="${player.avatarSrc}" alt="" style="--img-x:${Number(player.avatarX)||0}px;--img-y:${Number(player.avatarY)||0}px;--img-s:${Number(player.avatarScale)||1}"></div>`
+          ? `<div class="avatarHole"><img src="${player.avatarSrc}" alt=""></div>`
           : `<div class="dinoHole">&#129430;</div>`;
         return `<article class="playerCard"><div class="avatarStack">${avatar}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="playerMeta"><div class="playerName">${label}</div><div class="playerSub">${esc(sub)}</div></div></article>`;
       }).join("");
@@ -300,7 +300,7 @@
         ready:state.ready,
         name:state.name,
         waitingLine:state.waitingLine,
-        avatarSrc:state.ready?state.avatar.src:"",
+        avatarSrc:state.ready?(state.avatar.rendered||state.avatar.src):"",
         avatarX:state.ready?state.avatar.x:0,
         avatarY:state.ready?state.avatar.y:0,
         avatarScale:state.ready?state.avatar.s:1
@@ -340,7 +340,7 @@
       state.ready=false;
       state.name="";
       state.waitingLine=lineFor(state.playerId);
-      state.avatar={src:"",x:0,y:0,s:1};
+      state.avatar={src:"",rendered:"",x:0,y:0,s:1};
       ui.nameInput.value="";
       applyAvatar();
       refreshIdentity();
@@ -402,6 +402,43 @@
       return canvas.toDataURL("image/jpeg",.9);
     }
 
+    async function renderAvatarExport(){
+      if(!state.avatar.src) return "";
+      const img=await readFileAsImage(dataUrlToFile(state.avatar.src));
+      const size=220;
+      const canvas=document.createElement("canvas");
+      canvas.width=size;
+      canvas.height=size;
+      const ctx=canvas.getContext("2d");
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(size/2,size/2,size/2,0,Math.PI*2);
+      ctx.clip();
+      ctx.translate(size/2,size/2);
+      ctx.translate(state.avatar.x,state.avatar.y);
+      ctx.scale(state.avatar.s,state.avatar.s);
+      const drawW=size;
+      const drawH=size*(img.height/img.width);
+      if(img.height>img.width){
+        const fitW=size*(img.width/img.height);
+        ctx.drawImage(img,-fitW/2,-size/2,fitW,size);
+      }else{
+        ctx.drawImage(img,-size/2,-drawH/2,size,drawH);
+      }
+      ctx.restore();
+      return canvas.toDataURL("image/png");
+    }
+
+    function dataUrlToFile(dataUrl){
+      const [head, body]=dataUrl.split(",");
+      const mime=(head.match(/data:(.*?);base64/)||[])[1]||"image/png";
+      const bin=atob(body);
+      const len=bin.length;
+      const bytes=new Uint8Array(len);
+      for(let i=0;i<len;i++) bytes[i]=bin.charCodeAt(i);
+      return new File([bytes],"avatar",{type:mime});
+    }
+
     let drag=null;
     let pinch=null;
     function startDrag(ev){
@@ -442,9 +479,9 @@
     ui.btnRestartGuest.onclick=()=>location.reload();
     ui.btnRestartProfile.onclick=()=>location.reload();
     ui.btnPickPhoto.onclick=()=>ui.photoInput.click();
-    ui.photoInput.onchange=async()=>{const file=ui.photoInput.files?.[0];if(!file) return;state.avatar.src=await compressImage(file);state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();setStatus("Foto cargada. Ahora recolocala a tu gusto.","ok");};
+    ui.photoInput.onchange=async()=>{const file=ui.photoInput.files?.[0];if(!file) return;state.avatar.src=await compressImage(file);state.avatar.rendered="";state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();setStatus("Foto cargada. Ahora recolocala a tu gusto.","ok");};
     ui.zoomInput.oninput=()=>{state.avatar.s=Number(ui.zoomInput.value);clampAvatar();};
-    ui.btnCenterPhoto.onclick=()=>{state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();};
+    ui.btnCenterPhoto.onclick=()=>{state.avatar.rendered="";state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();};
     ui.avatarStage.addEventListener("mousedown",startDrag);
     ui.avatarStage.addEventListener("touchstart",ev=>{
       if(ev.touches.length===2){
@@ -473,6 +510,7 @@
       if(!name){setStatus("Necesito tu nombre antes de continuar.","danger");return;}
       if(!state.avatar.src){setStatus("Escoge una foto antes de marcar listo.","danger");return;}
       state.name=name;
+      state.avatar.rendered=await renderAvatarExport();
       state.ready=true;
       await updatePresence();
       syncPlayers();
