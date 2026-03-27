@@ -173,16 +173,46 @@
     .saveState.good{color:#4ade80}
     .saveState.warn{color:#fbbf24}
     .saveState.bad{color:#fb7185}
-    .changesList{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .changesList{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+    .changeGroup{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#0c1330;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .changeGroupHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .changeGroupTitle{
+      font-weight:900;
+      font-size:15px;
+    }
+    .changeGroupMeta{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+    }
+    .changeGroupList{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
     .changeRow{
       display:grid;
       grid-template-columns:auto 1fr;
       gap:12px;
       align-items:flex-start;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:#0c1330;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.06);
+      background:#10193a;
     }
     .changeRow input[type="checkbox"]{
       margin-top:3px;
@@ -190,6 +220,15 @@
     }
     .changeTitle{font-weight:800}
     .changeDesc{font-size:13px;color:var(--muted);margin-top:4px}
+    .changeBulletList{
+      margin:6px 0 0 18px;
+      padding:0;
+      color:var(--muted);
+      font-size:13px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
     .saveModalFooter{
       display:flex;
       justify-content:space-between;
@@ -781,6 +820,8 @@
         collection,
         changeType:'create',
         itemId:item.id,
+        groupKey:`${collection}:${item.id}`,
+        groupTitle:`${getItemDisplayName(item, collection)} · ${collectionAreaLabel(collection)}`,
         title:`${collectionLabel(collection)} añadid${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
         desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, 'amount').toLowerCase()} de ${formatFieldValue(collection, 'amount', item.amount)}`,
         ops:[]
@@ -793,6 +834,8 @@
         collection,
         changeType:'delete',
         itemId:item.id,
+        groupKey:`${collection}:${item.id}`,
+        groupTitle:`${getItemDisplayName(item, collection)} · ${collectionAreaLabel(collection)}`,
         title:`${collectionLabel(collection)} eliminad${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
         desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, 'amount').toLowerCase()} de ${formatFieldValue(collection, 'amount', item.amount)}`,
         ops:[]
@@ -805,6 +848,8 @@
         kind:'collectionField',
         collection,
         itemId:after?.id || before?.id,
+        groupKey:`${collection}:${after?.id || before?.id}`,
+        groupTitle:`${itemName} · ${collectionAreaLabel(collection)}`,
         changeType:'field',
         field,
         title:`${fieldLabel(collection, field)} cambiado en ${itemName} (${collectionAreaLabel(collection)})`,
@@ -812,12 +857,14 @@
         ops:[{ path:[field], value: cloneData(after?.[field]) }]
       };
     }
-    function createMonthOpsChange(id, title, desc, monthKey, ops){
+    function createMonthOpsChange(id, title, desc, monthKey, ops, groupKey = `month:${monthKey}`, groupTitle = prettyMonthLabel(monthKey)){
       return {
         id,
         kind:'monthAdjustmentField',
         changeType:'field',
         monthKey,
+        groupKey,
+        groupTitle,
         title,
         desc,
         ops
@@ -840,7 +887,9 @@
           `${label} puntual añadid${label === 'Deuda' ? 'a' : 'o'} en ${prettyMonth}`,
           `"${afterName || label}" con monto de ${euros(afterAmount)}`,
           monthKey,
-          ops
+          ops,
+          `month:${monthKey}:${prefix}`,
+          `${prettyMonth} · Ajustes puntuales`
         ));
         return;
       }
@@ -850,7 +899,9 @@
           `${label} puntual eliminad${label === 'Deuda' ? 'a' : 'o'} en ${prettyMonth}`,
           `"${beforeName || label}" con monto de ${euros(beforeAmount)}`,
           monthKey,
-          ops
+          ops,
+          `month:${monthKey}:${prefix}`,
+          `${prettyMonth} · Ajustes puntuales`
         ));
         return;
       }
@@ -859,7 +910,9 @@
         `${label} puntual cambiado en ${prettyMonth}`,
         `De "${beforeName || label}" ${euros(beforeAmount)} a "${afterName || label}" ${euros(afterAmount)}`,
         monthKey,
-        ops
+        ops,
+        `month:${monthKey}:${prefix}`,
+        `${prettyMonth} · Ajustes puntuales`
       ));
     }
     function resolveCollectionByOverrideKey(key){
@@ -900,7 +953,9 @@
           title,
           `${desc} desde Configuracion mensual`,
           monthKey,
-          [{ path:[overrideKey, id], value: cloneData(afterMap[id]) }]
+          [{ path:[overrideKey, id], value: cloneData(afterMap[id]) }],
+          `month:${monthKey}:${collection}:${id}`,
+          `${itemName} · ${prettyMonth}`
         ));
       });
     }
@@ -922,6 +977,8 @@
         changes.push({
           id:'plan:reserveInitial',
           kind:'plan',
+          groupKey:'plan:general',
+          groupTitle:'Configuracion general',
           field:'reserveInitial',
           title:'Colchón inicial actualizado',
           desc:`${euros(base.reserveInitial || 0)} → ${euros(current.reserveInitial || 0)}`
@@ -931,6 +988,8 @@
         changes.push({
           id:'plan:defaultStartMonth',
           kind:'plan',
+          groupKey:'plan:general',
+          groupTitle:'Configuracion general',
           field:'defaultStartMonth',
           title:'Mes por defecto actualizado',
           desc:`${base.defaultStartMonth || '—'} → ${current.defaultStartMonth || '—'}`
@@ -1738,12 +1797,31 @@
       saveModalSelection = new Set();
       closeModal();
     }
+    function groupChangesByAffected(changes){
+      const groups = [];
+      const seen = new Map();
+      changes.forEach(change => {
+        const groupKey = change.groupKey || change.id;
+        if(!seen.has(groupKey)){
+          const group = {
+            key: groupKey,
+            title: change.groupTitle || 'Cambio',
+            changes: []
+          };
+          seen.set(groupKey, group);
+          groups.push(group);
+        }
+        seen.get(groupKey).changes.push(change);
+      });
+      return groups;
+    }
     function renderSaveModal(){
       const changes = buildStateChanges();
       if(!changes.length){
         closeSaveModal();
         return;
       }
+      const groupedChanges = groupChangesByAffected(changes);
       const root = document.getElementById('modalRoot');
       const allChecked = changes.every(change => saveModalSelection.has(change.id));
       root.className = 'modalRoot';
@@ -1760,14 +1838,26 @@
           Seleccionar todo
         </label>
         <div class="changesList">
-          ${changes.map(change => `
-            <label class="changeRow">
-              <input type="checkbox" data-change-id="${change.id}" ${saveModalSelection.has(change.id) ? 'checked' : ''}>
-              <div>
-                <div class="changeTitle">${escapeHtml(change.title)}</div>
-                <div class="changeDesc">${escapeHtml(change.desc)}</div>
+          ${groupedChanges.map(group => `
+            <div class="changeGroup">
+              <div class="changeGroupHead">
+                <div class="changeGroupTitle">${escapeHtml(group.title)}</div>
+                <div class="changeGroupMeta">${group.changes.length} cambio${group.changes.length === 1 ? '' : 's'}</div>
               </div>
-            </label>
+              <div class="changeGroupList">
+                ${group.changes.map(change => `
+                  <label class="changeRow">
+                    <input type="checkbox" data-change-id="${change.id}" ${saveModalSelection.has(change.id) ? 'checked' : ''}>
+                    <div>
+                      <div class="changeTitle">${escapeHtml(change.title)}</div>
+                      <ul class="changeBulletList">
+                        <li>${escapeHtml(change.desc)}</li>
+                      </ul>
+                    </div>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
           `).join('')}
         </div>
         <div id="saveModalFeedback" class="savingInline hidden" style="margin-top:14px">
