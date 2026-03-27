@@ -69,10 +69,12 @@
     .codeBadge{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:18px;background:rgba(255,238,0,.1);color:var(--yellow);font-weight:900;letter-spacing:.08em;width:max-content}
     .avatarEditor{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;align-items:start}
     .avatarStageWrap{width:190px;height:190px;padding:12px;border-radius:36px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));border:1px solid rgba(255,255,255,.18);display:grid;place-items:center}
-    .avatarStage{position:relative;width:var(--avatarSize);height:var(--avatarSize);border-radius:999px;overflow:hidden;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);cursor:grab}
+    .avatarStageStack{width:var(--frameSize);height:var(--frameSize);position:relative}
+    .avatarStage{position:absolute;left:50%;top:50%;width:var(--avatarSize);height:var(--avatarSize);border-radius:999px;overflow:hidden;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);cursor:grab;transform:translate(-50%,-50%) translate(0,-10px);z-index:1}
     .avatarStage.dragging{cursor:grabbing}
     .avatarImg{position:absolute;left:50%;top:50%;width:auto;height:auto;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}
     .avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.74);font-weight:900;text-align:center;padding:12px;font-size:.95rem}
+    .editorFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:2;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
     .editorControls{display:grid;gap:14px;align-content:start}
     .uploadCard{display:grid;gap:12px;padding:16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
     .uploadActions{display:flex;gap:10px;flex-wrap:wrap}
@@ -167,9 +169,12 @@
               </div>
               <div class="avatarEditor">
                 <div class="avatarStageWrap">
-                  <div class="avatarStage" id="avatarStage">
-                    <img class="avatarImg" id="avatarImg" alt="" hidden />
-                    <div class="avatarPlaceholder" id="avatarPlaceholder">Sube tu foto y recolocala aqui</div>
+                  <div class="avatarStageStack">
+                    <div class="avatarStage" id="avatarStage">
+                      <img class="avatarImg" id="avatarImg" alt="" hidden />
+                      <div class="avatarPlaceholder" id="avatarPlaceholder">Sube tu foto y recolocala aqui</div>
+                    </div>
+                    <img class="editorFrame" src="/shared/assets/brand/participantes-frame.png" alt="">
                   </div>
                 </div>
                 <div class="editorControls">
