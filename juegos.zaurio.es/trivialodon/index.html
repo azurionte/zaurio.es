@@ -58,7 +58,7 @@
     .miniAvatar img{width:100%;height:100%;object-fit:cover}
     .identityName{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .identityRole{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-    .content{display:grid;grid-template-columns:430px 1fr;gap:18px}
+    .content{display:grid;grid-template-columns:minmax(360px,430px) minmax(0,1fr);gap:18px;align-items:start}
     .panel,.board,.waitCard{padding:26px}
     .panel h2,.board h2{margin:0 0 10px}.panel p,.board p,.waitCard p{margin:0;color:var(--muted);line-height:1.55}
     .field{display:grid;gap:8px}.field label{font-size:.9rem;font-weight:700}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;font:inherit;outline:none}
@@ -66,26 +66,32 @@
     .kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;width:max-content}
     .status{min-height:22px;color:var(--cyan);font-size:.94rem}.status[data-tone="danger"]{color:#ff9ec6}.status[data-tone="ok"]{color:#b5ff99}
     .codeBadge{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:18px;background:rgba(255,238,0,.1);color:var(--yellow);font-weight:900;letter-spacing:.08em;width:max-content}
-    .avatarEditor{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:start}
+    .avatarEditor{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;align-items:start}
     .avatarStageWrap{width:190px;height:190px;padding:12px;border-radius:36px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));border:1px solid rgba(255,255,255,.18)}
     .avatarStage{position:relative;width:100%;height:100%;border-radius:999px;overflow:hidden;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);cursor:grab}
     .avatarStage.dragging{cursor:grabbing}
     .avatarImg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}
     .avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.74);font-weight:900;text-align:center;padding:20px}
-    .rangeRow{display:flex;align-items:center;gap:12px}.rangeRow input{flex:1}
+    .editorControls{display:grid;gap:14px;align-content:start}
+    .uploadCard{display:grid;gap:12px;padding:16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+    .uploadActions{display:flex;gap:10px;flex-wrap:wrap}
+    .rangeRow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+    .rangeRow input{width:100%}
+    .rangeValue{font-weight:900;color:var(--yellow);min-width:42px;text-align:right}
     .boardHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
-    .playerGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
-    .playerCard{background:var(--card-soft);border:1px solid var(--stroke);border-radius:28px;padding:16px 12px 14px;text-align:center}
+    .playerGrid{display:grid;gap:14px}
+    .playerCard{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:14px;background:var(--card-soft);border:1px solid var(--stroke);border-radius:28px;padding:14px 18px}
     .avatarStack{width:var(--frameSize);height:var(--frameSize);position:relative;margin:0 auto}
     .avatarHole,.dinoHole{width:var(--avatarSize);height:var(--avatarSize);border-radius:999px;overflow:hidden;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translate(0,-10px) scale(1);z-index:1}
     .avatarHole img{width:100%;height:100%;object-fit:cover}
     .avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:2;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
     .dinoHole{display:grid;place-items:center;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,0,170,.16));font-size:3rem}
-    .playerName{margin-top:-34px;font-weight:1000;line-height:1.05;text-shadow:0 4px 0 rgba(0,0,0,.85),0 0 18px rgba(0,0,0,.55),0 0 18px rgba(255,0,170,.18);min-height:2.4em;display:grid;place-items:center}
-    .playerSub{font-size:.84rem;color:var(--muted);margin-top:6px;min-height:2.6em}
+    .playerMeta{display:grid;gap:6px;min-width:0}
+    .playerName{margin:0;font-weight:1000;line-height:1.05;text-shadow:0 4px 0 rgba(0,0,0,.85),0 0 18px rgba(0,0,0,.55),0 0 18px rgba(255,0,170,.18);font-size:clamp(1rem,2vw,1.45rem);text-align:left;word-break:break-word}
+    .playerSub{font-size:.92rem;color:var(--muted);text-align:left}
     .waitCard{display:none}.waitCard.on{display:grid;gap:8px}
     @media (max-width:980px){
-      body{padding:16px}.content,.avatarEditor{grid-template-columns:1fr}.topbar{grid-template-columns:auto 1fr auto}.topCenter{justify-content:center}.logoMark{width:min(170px,38vw)}
+      body{padding:16px}.content,.avatarEditor,.playerCard{grid-template-columns:1fr}.topbar{grid-template-columns:auto 1fr auto}.topCenter{justify-content:center}.logoMark{width:min(170px,38vw)}.playerName,.playerSub{text-align:center}
     }
   </style>
 </head>
@@ -165,14 +171,16 @@
                     <div class="avatarPlaceholder" id="avatarPlaceholder">Sube tu foto y recolocala aqui</div>
                   </div>
                 </div>
-                <div style="display:grid;gap:12px">
-                  <p>Escoge tu foto y reposicionala dentro del circulo antes de marcar listo.</p>
-                  <input type="file" id="photoInput" accept="image/*" hidden />
-                  <div class="actions">
-                    <button class="btn btnGhost" id="btnPickPhoto">Escoger foto</button>
-                    <button class="btn btnGhost" id="btnCenterPhoto">Centrar foto</button>
+                <div class="editorControls">
+                  <div class="uploadCard">
+                    <p>Escoge tu foto y recolocala dentro del circulo antes de marcar listo.</p>
+                    <div class="uploadActions">
+                      <button class="btn btnPrimary" id="btnPickPhoto">Subir foto</button>
+                      <button class="btn btnGhost" id="btnCenterPhoto">Recentrar</button>
+                    </div>
                   </div>
-                  <div class="rangeRow"><span>Zoom</span><input type="range" id="zoomInput" min="0.8" max="2.2" step="0.01" value="1" /></div>
+                  <input type="file" id="photoInput" accept="image/*" hidden />
+                  <div class="rangeRow"><span>Zoom</span><input type="range" id="zoomInput" min="0.8" max="2.2" step="0.01" value="1" /><span class="rangeValue" id="zoomValue">100%</span></div>
                   <div class="actions">
                     <button class="btn btnOk" id="btnReady">Listo</button>
                     <button class="btn btnGhost" id="btnRestartProfile">Volver</button>
@@ -212,10 +220,10 @@
   <script>
     const SUPABASE_URL="https://adpjitccwwvlydrtvvqk.supabase.co";
     const SUPABASE_KEY="sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
-    const FRAME_SRC="/miercoles.zaurio.es/assets/participantes-frame.png";
+    const FRAME_SRC="/shared/assets/brand/participantes-frame.png";
     const FUN_LINES=["espera espera, voy!","estoy buscando mi mejor foto","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"];
     const $=id=>document.getElementById(id);
-    const ui={introView:$("introView"),appView:$("appView"),btnPickHost:$("btnPickHost"),btnPickGuest:$("btnPickGuest"),menuWrap:$("menuWrap"),menuBtn:$("menuBtn"),identityChip:$("identityChip"),miniAvatar:$("miniAvatar"),identityName:$("identityName"),identityRole:$("identityRole"),guestCodeScreen:$("guestCodeScreen"),profileScreen:$("profileScreen"),guestWaiting:$("guestWaiting"),guestCodeInput:$("guestCodeInput"),btnGuestNext:$("btnGuestNext"),btnRestartGuest:$("btnRestartGuest"),btnRestartProfile:$("btnRestartProfile"),profileTitle:$("profileTitle"),roomCodeBadge:$("roomCodeBadge"),nameInput:$("nameInput"),photoInput:$("photoInput"),btnPickPhoto:$("btnPickPhoto"),btnCenterPhoto:$("btnCenterPhoto"),zoomInput:$("zoomInput"),avatarStage:$("avatarStage"),avatarImg:$("avatarImg"),avatarPlaceholder:$("avatarPlaceholder"),btnReady:$("btnReady"),status:$("status"),playerGrid:$("playerGrid"),btnHostNext:$("btnHostNext")};
+    const ui={introView:$("introView"),appView:$("appView"),btnPickHost:$("btnPickHost"),btnPickGuest:$("btnPickGuest"),menuWrap:$("menuWrap"),menuBtn:$("menuBtn"),identityChip:$("identityChip"),miniAvatar:$("miniAvatar"),identityName:$("identityName"),identityRole:$("identityRole"),guestCodeScreen:$("guestCodeScreen"),profileScreen:$("profileScreen"),guestWaiting:$("guestWaiting"),guestCodeInput:$("guestCodeInput"),btnGuestNext:$("btnGuestNext"),btnRestartGuest:$("btnRestartGuest"),btnRestartProfile:$("btnRestartProfile"),profileTitle:$("profileTitle"),roomCodeBadge:$("roomCodeBadge"),nameInput:$("nameInput"),photoInput:$("photoInput"),btnPickPhoto:$("btnPickPhoto"),btnCenterPhoto:$("btnCenterPhoto"),zoomInput:$("zoomInput"),zoomValue:$("zoomValue"),avatarStage:$("avatarStage"),avatarImg:$("avatarImg"),avatarPlaceholder:$("avatarPlaceholder"),btnReady:$("btnReady"),status:$("status"),playerGrid:$("playerGrid"),btnHostNext:$("btnHostNext")};
     const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
     const state={playerId:crypto.randomUUID(),role:"",roomCode:"",name:"",ready:false,waitingLine:"",avatar:{src:"",x:0,y:-10,s:1},channel:null,players:[]};
 
@@ -262,7 +270,7 @@
         const label=player.ready?esc(player.name||"Jugador listo"):esc(player.waitingLine||lineFor(player.playerId));
         const sub=player.ready?(player.role==="host"?"Anfitrion listo":"Invitado listo"):"Aun no ha pulsado listo";
         const avatar=player.ready&&player.avatarSrc?`<div class="avatarHole" style="transform:translate(-50%,-50%) translate(${Number(player.avatarX)||0}px, ${Number(player.avatarY)||-10}px) scale(${Number(player.avatarScale)||1})"><img src="${player.avatarSrc}" alt=""></div>`:`<div class="dinoHole">&#129430;</div>`;
-        return `<article class="playerCard"><div class="avatarStack">${avatar}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="playerName">${label}</div><div class="playerSub">${esc(sub)}</div></article>`;
+        return `<article class="playerCard"><div class="avatarStack">${avatar}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="playerMeta"><div class="playerName">${label}</div><div class="playerSub">${esc(sub)}</div></div></article>`;
       }).join("");
     }
 
@@ -276,6 +284,7 @@
         ui.avatarImg.style.setProperty("--s",state.avatar.s);
       }
       ui.zoomInput.value=String(state.avatar.s);
+      ui.zoomValue.textContent=Math.round(state.avatar.s*100)+"%";
       refreshIdentity();
     }
 
