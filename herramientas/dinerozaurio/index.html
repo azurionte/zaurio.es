@@ -135,6 +135,83 @@
     .brand h1{margin:0;font-size:24px}
     .brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
     .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .saveBtn{
+      position:relative;
+      padding-right:18px;
+    }
+    .saveBtn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none !important;
+    }
+    .saveBtn[disabled]:hover{transform:none}
+    .saveBadge{
+      position:absolute;
+      top:-6px;
+      right:-4px;
+      min-width:22px;
+      height:22px;
+      padding:0 6px;
+      border-radius:999px;
+      background:#ff335f;
+      color:#fff;
+      font-size:11px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:2px solid rgba(18,0,29,.9);
+      box-shadow:0 10px 24px rgba(255,51,95,.3);
+    }
+    .saveBadge.hidden{display:none !important}
+    .saveMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .saveState{
+      font-size:12px;
+      color:var(--muted);
+      min-height:18px;
+    }
+    .saveState.good{color:#4ade80}
+    .saveState.warn{color:#fbbf24}
+    .saveState.bad{color:#fb7185}
+    .changesList{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .changeRow{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      gap:12px;
+      align-items:flex-start;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#0c1330;
+    }
+    .changeRow input[type="checkbox"]{
+      margin-top:3px;
+      transform:scale(1.15);
+    }
+    .changeTitle{font-weight:800}
+    .changeDesc{font-size:13px;color:var(--muted);margin-top:4px}
+    .saveModalFooter{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+    .saveModalFooter .btnRow{margin-left:auto}
+    .savingInline{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:700;
+    }
+    .savingInline .spinner{
+      width:18px;
+      height:18px;
+      margin:0;
+      border-width:3px;
+    }
     .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
     .tab{
       padding:11px 16px;border-radius:999px;background:#111937;color:var(--muted);
@@ -306,6 +383,13 @@
           <p id="lastUpdatedText">Última actualización de datos —</p>
         </div>
         <div class="actions">
+          <div class="saveMeta">
+            <button id="saveChangesBtn" class="btn primary saveBtn" disabled>
+              Guardar
+              <span id="saveChangesBadge" class="saveBadge hidden">0</span>
+            </button>
+            <div id="saveStateText" class="saveState">Sin cambios pendientes</div>
+          </div>
           <button id="resetToWizardBtn" class="btn ghost">Volver al wizard</button>
           <button id="logoutBtn" class="btn danger">Salir</button>
         </div>
@@ -454,6 +538,9 @@
       monthAdjustments: {},
       forecast: { from: todayMonth(), to: addMonthsStr(todayMonth(), 12), goal1Id: '', goal2Id: '' }
     };
+    let savedBaseline = null;
+    let saveModalSelection = new Set();
+    let saveStatus = 'idle';
 
     function todayMonth(){
       const d = new Date();
@@ -538,6 +625,229 @@
     function flowStateGet(){ return sessionStorage.getItem('dz_flow_state') || ''; }
     function flowStateSet(v){ sessionStorage.setItem('dz_flow_state', v); }
     function flowStateClear(){ sessionStorage.removeItem('dz_flow_state'); }
+    function cloneData(v){ return JSON.parse(JSON.stringify(v)); }
+    function emptyPersistableState(){
+      return {
+        reserveInitial: 0,
+        defaultStartMonth: todayMonth(),
+        incomes: [],
+        expenses: [],
+        goals: [],
+        debts: [],
+        monthAdjustments: {}
+      };
+    }
+    function snapshotPersistableState(){
+      return {
+        reserveInitial: Number(state.reserveInitial || 0),
+        defaultStartMonth: state.defaultStartMonth || todayMonth(),
+        incomes: cloneData(state.incomes || []),
+        expenses: cloneData(state.expenses || []),
+        goals: cloneData(state.goals || []),
+        debts: cloneData(state.debts || []),
+        monthAdjustments: cloneData(state.monthAdjustments || {})
+      };
+    }
+    function assignPersistableState(next){
+      state.reserveInitial = Number(next.reserveInitial || 0);
+      state.defaultStartMonth = next.defaultStartMonth || todayMonth();
+      state.incomes = cloneData(next.incomes || []);
+      state.expenses = cloneData(next.expenses || []);
+      state.goals = cloneData(next.goals || []);
+      state.debts = cloneData(next.debts || []);
+      state.monthAdjustments = cloneData(next.monthAdjustments || {});
+      normalizeStateIds();
+    }
+    function stableStringify(value){ return JSON.stringify(value ?? null); }
+    function collectionLabel(key){
+      return ({
+        incomes: 'Ingreso',
+        expenses: 'Gasto',
+        goals: 'Ahorro',
+        debts: 'Deuda'
+      })[key] || key;
+    }
+    function buildStateChanges(baseInput = savedBaseline, currentInput = snapshotPersistableState()){
+      const base = baseInput ? cloneData(baseInput) : emptyPersistableState();
+      const current = cloneData(currentInput);
+      const changes = [];
+
+      if(Number(base.reserveInitial || 0) !== Number(current.reserveInitial || 0)){
+        changes.push({
+          id:'plan:reserveInitial',
+          kind:'plan',
+          field:'reserveInitial',
+          title:'Colchón inicial actualizado',
+          desc:`${euros(base.reserveInitial || 0)} → ${euros(current.reserveInitial || 0)}`
+        });
+      }
+      if((base.defaultStartMonth || '') !== (current.defaultStartMonth || '')){
+        changes.push({
+          id:'plan:defaultStartMonth',
+          kind:'plan',
+          field:'defaultStartMonth',
+          title:'Mes por defecto actualizado',
+          desc:`${base.defaultStartMonth || '—'} → ${current.defaultStartMonth || '—'}`
+        });
+      }
+
+      ['incomes','expenses','goals','debts'].forEach((collection) => {
+        const baseMap = new Map((base[collection] || []).map(item => [item.id, item]));
+        const currentMap = new Map((current[collection] || []).map(item => [item.id, item]));
+        const ids = new Set([...baseMap.keys(), ...currentMap.keys()]);
+        ids.forEach((id) => {
+          const before = baseMap.get(id);
+          const after = currentMap.get(id);
+          const label = collectionLabel(collection);
+          if(!before && after){
+            changes.push({
+              id:`${collection}:create:${id}`,
+              kind:'collection',
+              collection,
+              changeType:'create',
+              itemId:id,
+              title:`${label} añadido`,
+              desc:after.name || `${label} sin nombre`
+            });
+          } else if(before && !after){
+            changes.push({
+              id:`${collection}:delete:${id}`,
+              kind:'collection',
+              collection,
+              changeType:'delete',
+              itemId:id,
+              title:`${label} eliminado`,
+              desc:before.name || `${label} sin nombre`
+            });
+          } else if(before && after && stableStringify(before) !== stableStringify(after)){
+            changes.push({
+              id:`${collection}:update:${id}`,
+              kind:'collection',
+              collection,
+              changeType:'update',
+              itemId:id,
+              title:`${label} actualizado`,
+              desc:after.name || before.name || `${label} sin nombre`
+            });
+          }
+        });
+      });
+
+      const baseAdj = base.monthAdjustments || {};
+      const currentAdj = current.monthAdjustments || {};
+      const monthKeys = new Set([...Object.keys(baseAdj), ...Object.keys(currentAdj)]);
+      monthKeys.forEach((monthKey) => {
+        const before = baseAdj[monthKey];
+        const after = currentAdj[monthKey];
+        if(!before && after){
+          changes.push({
+            id:`monthAdjustments:create:${monthKey}`,
+            kind:'monthAdjustment',
+            changeType:'create',
+            monthKey,
+            title:`Ajustes añadidos en ${monthKey}`,
+            desc:'Cambios puntuales de ingresos, gastos, deuda o ahorro'
+          });
+        } else if(before && !after){
+          changes.push({
+            id:`monthAdjustments:delete:${monthKey}`,
+            kind:'monthAdjustment',
+            changeType:'delete',
+            monthKey,
+            title:`Ajustes eliminados en ${monthKey}`,
+            desc:'Se revierten los cambios de ese mes'
+          });
+        } else if(before && after && stableStringify(before) !== stableStringify(after)){
+          changes.push({
+            id:`monthAdjustments:update:${monthKey}`,
+            kind:'monthAdjustment',
+            changeType:'update',
+            monthKey,
+            title:`Ajustes actualizados en ${monthKey}`,
+            desc:'Ingresos, gastos, deuda o ahorro modificados'
+          });
+        }
+      });
+
+      return changes;
+    }
+    function reorderCollectionByCurrent(targetState, currentState, collection){
+      const order = new Map((currentState[collection] || []).map((item, index) => [item.id, index]));
+      targetState[collection] = [...(targetState[collection] || [])].sort((a, b) => {
+        const ai = order.has(a.id) ? order.get(a.id) : Number.MAX_SAFE_INTEGER;
+        const bi = order.has(b.id) ? order.get(b.id) : Number.MAX_SAFE_INTEGER;
+        return ai - bi;
+      });
+    }
+    function applyChangeToState(targetState, currentState, change){
+      if(change.kind === 'plan'){
+        targetState[change.field] = currentState[change.field];
+        return;
+      }
+      if(change.kind === 'collection'){
+        const currentItem = (currentState[change.collection] || []).find(item => item.id === change.itemId);
+        if(change.changeType === 'delete'){
+          targetState[change.collection] = (targetState[change.collection] || []).filter(item => item.id !== change.itemId);
+        } else {
+          const next = [...(targetState[change.collection] || []).filter(item => item.id !== change.itemId)];
+          if(currentItem) next.push(cloneData(currentItem));
+          targetState[change.collection] = next;
+        }
+        reorderCollectionByCurrent(targetState, currentState, change.collection);
+        return;
+      }
+      if(change.kind === 'monthAdjustment'){
+        targetState.monthAdjustments = targetState.monthAdjustments || {};
+        if(change.changeType === 'delete') delete targetState.monthAdjustments[change.monthKey];
+        else targetState.monthAdjustments[change.monthKey] = cloneData(currentState.monthAdjustments?.[change.monthKey] || {});
+      }
+    }
+    function buildStateFromSelection(selectChange){
+      const baseline = savedBaseline ? cloneData(savedBaseline) : emptyPersistableState();
+      const current = snapshotPersistableState();
+      buildStateChanges(savedBaseline, current).forEach((change) => {
+        if(selectChange(change)) applyChangeToState(baseline, current, change);
+      });
+      return baseline;
+    }
+    function setSaveStatus(next){
+      saveStatus = next;
+      updateSaveUi();
+    }
+    function updateSaveUi(){
+      const btn = document.getElementById('saveChangesBtn');
+      const badge = document.getElementById('saveChangesBadge');
+      const label = document.getElementById('saveStateText');
+      if(!btn || !badge || !label) return;
+      const changes = buildStateChanges();
+      const count = changes.length;
+      btn.disabled = count === 0 || saveStatus === 'saving';
+      badge.textContent = String(count);
+      badge.classList.toggle('hidden', count === 0);
+      label.className = 'saveState';
+      if(saveStatus === 'saving'){
+        label.textContent = 'Guardando cambios…';
+        label.classList.add('warn');
+      } else if(saveStatus === 'saved'){
+        label.textContent = 'Cambios guardados en tu cuenta';
+        label.classList.add('good');
+      } else if(count > 0){
+        label.textContent = `${count} cambio${count === 1 ? '' : 's'} pendiente${count === 1 ? '' : 's'}`;
+        label.classList.add('warn');
+      } else {
+        label.textContent = 'Sin cambios pendientes';
+      }
+    }
+    function touchState(options = {}){
+      const { reopenMonth = null, rerender = true } = options;
+      cacheLocal();
+      if(rerender){
+        renderManualLists();
+        renderForecast();
+      }
+      if(reopenMonth) openMonthModal(reopenMonth);
+      if(saveStatus !== 'saving') setSaveStatus('idle');
+    }
         function monthDiff(a,b){
       const [ay,am] = a.split('-').map(Number);
       const [by,bm] = b.split('-').map(Number);
@@ -731,7 +1041,7 @@
         forecast: state.forecast
       }));
     }
-    function saveLocal(){ cacheLocal(); }
+    function saveLocal(){ cacheLocal(); updateSaveUi(); }
 
     async function ensureProfile(){
       if(!window.dzSupabase || !state.session?.user) return;
@@ -786,110 +1096,116 @@
       ]);
     }
 
-    async function saveToSupabase(){
-      normalizeStateIds();
-      cacheLocal();
-      if(!window.dzSupabase || !state.session?.user) return;
-      await ensureProfile();
-      const plan = await loadOrCreatePlan();
-      const planId = plan.id;
+    async function saveToSupabase(dataOverride = null){
+      const previous = snapshotPersistableState();
+      if(dataOverride) assignPersistableState(dataOverride);
+      try{
+        normalizeStateIds();
+        cacheLocal();
+        if(!window.dzSupabase || !state.session?.user) return;
+        await ensureProfile();
+        const plan = await loadOrCreatePlan();
+        const planId = plan.id;
 
-      const planUpdate = await window.dzSupabase
-        .from('plans')
-        .update({
-          initial_reserve: Number(state.reserveInitial || 0),
-          default_start_month: state.defaultStartMonth || todayMonth()
-        })
-        .eq('id', planId);
-      if(planUpdate.error) throw planUpdate.error;
+        const planUpdate = await window.dzSupabase
+          .from('plans')
+          .update({
+            initial_reserve: Number(state.reserveInitial || 0),
+            default_start_month: state.defaultStartMonth || todayMonth()
+          })
+          .eq('id', planId);
+        if(planUpdate.error) throw planUpdate.error;
 
-      await clearPlanData(planId);
+        await clearPlanData(planId);
 
-      if(state.incomes.length){
-        const rows = state.incomes.map(it => ({
-          id: ensureUuid(it.id),
-          plan_id: planId,
-          name: it.name || 'Ingreso',
-          amount: Number(it.amount || 0),
-          periodicity: it.periodicity || 'monthly',
-          start_month: it.startMonth || state.defaultStartMonth,
-          end_month: it.endMonth || null
-        }));
-        const r = await window.dzSupabase.from('income_items').insert(rows);
-        if(r.error) throw r.error;
-      }
+        if(state.incomes.length){
+          const rows = state.incomes.map(it => ({
+            id: ensureUuid(it.id),
+            plan_id: planId,
+            name: it.name || 'Ingreso',
+            amount: Number(it.amount || 0),
+            periodicity: it.periodicity || 'monthly',
+            start_month: it.startMonth || state.defaultStartMonth,
+            end_month: it.endMonth || null
+          }));
+          const r = await window.dzSupabase.from('income_items').insert(rows);
+          if(r.error) throw r.error;
+        }
 
-      if(state.expenses.length){
-        const rows = state.expenses.map(it => ({
-          id: ensureUuid(it.id),
-          plan_id: planId,
-          name: it.name || 'Gasto',
-          amount: Number(it.amount || 0),
-          kind: it.kind || 'fixed',
-          periodicity: it.periodicity || 'monthly',
-          start_month: it.startMonth || state.defaultStartMonth,
-          end_month: it.endMonth || null
-        }));
-        const r = await window.dzSupabase.from('expense_items').insert(rows);
-        if(r.error) throw r.error;
-      }
+        if(state.expenses.length){
+          const rows = state.expenses.map(it => ({
+            id: ensureUuid(it.id),
+            plan_id: planId,
+            name: it.name || 'Gasto',
+            amount: Number(it.amount || 0),
+            kind: it.kind || 'fixed',
+            periodicity: it.periodicity || 'monthly',
+            start_month: it.startMonth || state.defaultStartMonth,
+            end_month: it.endMonth || null
+          }));
+          const r = await window.dzSupabase.from('expense_items').insert(rows);
+          if(r.error) throw r.error;
+        }
 
-      if(state.debts.length){
-        const rows = state.debts.map(it => ({
-          id: ensureUuid(it.id),
-          plan_id: planId,
-          name: it.name || 'Deuda',
-          debt_type: (it.debtKind || 'loan') === 'loan' ? 'loan' : 'card',
-          card_type: it.cardSubtype || null,
-          amount: Number(it.amount || 0),
-          monthly_payment: Number(it.monthlyPayment || 0),
-          remaining_installments: Number(it.remainingInstallments || 0),
-          end_mode: it.lastMonth ? 'date' : 'remaining',
-          start_month: it.startMonth || state.defaultStartMonth,
-          last_month: it.lastMonth || null,
-          current_debt: Number(it.currentDebt || 0),
-          current_payment: Number(it.currentPayment || 0),
-          tin: Number(it.tin || 0),
-          tae: Number(it.tae || 0),
-          periodicity: it.periodicity || 'monthly'
-        }));
-        const r = await window.dzSupabase.from('debt_items').insert(rows);
-        if(r.error) throw r.error;
-      }
+        if(state.debts.length){
+          const rows = state.debts.map(it => ({
+            id: ensureUuid(it.id),
+            plan_id: planId,
+            name: it.name || 'Deuda',
+            debt_type: (it.debtKind || 'loan') === 'loan' ? 'loan' : 'card',
+            card_type: it.cardSubtype || null,
+            amount: Number(it.amount || 0),
+            monthly_payment: Number(it.monthlyPayment || 0),
+            remaining_installments: Number(it.remainingInstallments || 0),
+            end_mode: it.lastMonth ? 'date' : 'remaining',
+            start_month: it.startMonth || state.defaultStartMonth,
+            last_month: it.lastMonth || null,
+            current_debt: Number(it.currentDebt || 0),
+            current_payment: Number(it.currentPayment || 0),
+            tin: Number(it.tin || 0),
+            tae: Number(it.tae || 0),
+            periodicity: it.periodicity || 'monthly'
+          }));
+          const r = await window.dzSupabase.from('debt_items').insert(rows);
+          if(r.error) throw r.error;
+        }
 
-      if(state.goals.length){
-        const rows = state.goals.map(it => ({
-          id: ensureUuid(it.id),
-          plan_id: planId,
-          name: it.name || 'Ahorro',
-          goal_type: it.goalType || 'fixed',
-          monthly_amount: Number(it.monthlyAmount || 0),
-          target_total: Number(it.targetTotal || 0),
-          start_month: it.startMonth || state.defaultStartMonth,
-          end_month: it.endMonth || null
-        }));
-        const r = await window.dzSupabase.from('savings_goals').insert(rows);
-        if(r.error) throw r.error;
-      }
+        if(state.goals.length){
+          const rows = state.goals.map(it => ({
+            id: ensureUuid(it.id),
+            plan_id: planId,
+            name: it.name || 'Ahorro',
+            goal_type: it.goalType || 'fixed',
+            monthly_amount: Number(it.monthlyAmount || 0),
+            target_total: Number(it.targetTotal || 0),
+            start_month: it.startMonth || state.defaultStartMonth,
+            end_month: it.endMonth || null
+          }));
+          const r = await window.dzSupabase.from('savings_goals').insert(rows);
+          if(r.error) throw r.error;
+        }
 
-      const adjEntries = Object.entries(state.monthAdjustments || {});
-      if(adjEntries.length){
-        const rows = adjEntries.map(([monthKey, v]) => ({
-          plan_id: planId,
-          month_key: monthKey,
-          extra_income_name: v.extraIncomeName || '',
-          extra_income_amount: Number(v.extraIncomeAmount || 0),
-          extra_expense_name: v.extraExpenseName || '',
-          extra_expense_amount: Number(v.extraExpenseAmount || 0),
-          extra_saving_name: v.extraSavingName || '',
-          extra_saving_amount: Number(v.extraSavingAmount || 0),
-          income_overrides: v.incomeOverrides || {},
-          expense_overrides: v.expenseOverrides || {},
-          goal_overrides: v.goalOverrides || {},
-          debt_overrides: v.debtOverrides || {}
-        }));
-        const r = await window.dzSupabase.from('month_adjustments').insert(rows);
-        if(r.error) throw r.error;
+        const adjEntries = Object.entries(state.monthAdjustments || {});
+        if(adjEntries.length){
+          const rows = adjEntries.map(([monthKey, v]) => ({
+            plan_id: planId,
+            month_key: monthKey,
+            extra_income_name: v.extraIncomeName || '',
+            extra_income_amount: Number(v.extraIncomeAmount || 0),
+            extra_expense_name: v.extraExpenseName || '',
+            extra_expense_amount: Number(v.extraExpenseAmount || 0),
+            extra_saving_name: v.extraSavingName || '',
+            extra_saving_amount: Number(v.extraSavingAmount || 0),
+            income_overrides: v.incomeOverrides || {},
+            expense_overrides: v.expenseOverrides || {},
+            goal_overrides: v.goalOverrides || {},
+            debt_overrides: v.debtOverrides || {}
+          }));
+          const r = await window.dzSupabase.from('month_adjustments').insert(rows);
+          if(r.error) throw r.error;
+        }
+      } finally {
+        if(dataOverride) assignPersistableState(previous);
       }
     }
 
@@ -975,6 +1291,8 @@
       });
 
       cacheLocal();
+      savedBaseline = snapshotPersistableState();
+      setSaveStatus('idle');
     }
 
     let syncQueue = Promise.resolve();
@@ -982,15 +1300,11 @@
     async function persistAndRefresh(options = {}){
       const { reopenMonth = null } = options;
       const run = async () => {
-        if(window.dzSupabase && state.session?.user){
-          await persistAndRefresh();
-          await loadFromSupabase();
-        } else {
-          cacheLocal();
-        }
+        cacheLocal();
         renderManualLists();
         renderForecast();
         if(reopenMonth) openMonthModal(reopenMonth);
+        if(saveStatus !== 'saving') setSaveStatus('idle');
       };
       syncQueue = syncQueue.then(run).catch(err => {
         console.error('Error sincronizando', err);
@@ -1171,6 +1485,114 @@
       const root = document.getElementById('modalRoot');
       root.className = 'hidden';
       root.innerHTML = '';
+    }
+    function closeSaveModal(){
+      saveModalSelection = new Set();
+      closeModal();
+    }
+    function renderSaveModal(){
+      const changes = buildStateChanges();
+      if(!changes.length){
+        closeSaveModal();
+        return;
+      }
+      const root = document.getElementById('modalRoot');
+      const allChecked = changes.every(change => saveModalSelection.has(change.id));
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead">
+          <div>
+            <h3>Revisar cambios pendientes</h3>
+            <div class="muted">Aprueba o revierte cambios individuales antes de guardarlos.</div>
+          </div>
+          <button id="closeModalBtn" class="btn danger">Cerrar</button>
+        </div>
+        <label class="pill" style="margin-bottom:8px;cursor:pointer">
+          <input id="toggleAllChanges" type="checkbox" ${allChecked ? 'checked' : ''} style="accent-color:#ff00aa">
+          Seleccionar todo
+        </label>
+        <div class="changesList">
+          ${changes.map(change => `
+            <label class="changeRow">
+              <input type="checkbox" data-change-id="${change.id}" ${saveModalSelection.has(change.id) ? 'checked' : ''}>
+              <div>
+                <div class="changeTitle">${escapeHtml(change.title)}</div>
+                <div class="changeDesc">${escapeHtml(change.desc)}</div>
+              </div>
+            </label>
+          `).join('')}
+        </div>
+        <div id="saveModalFeedback" class="savingInline hidden" style="margin-top:14px">
+          <div class="spinner"></div>
+          <span>Guardando cambios seleccionados…</span>
+        </div>
+        <div class="saveModalFooter">
+          <button id="revertAllChangesBtn" class="btn ghost">Cancelar todo</button>
+          <div class="btnRow">
+            <button id="revertSelectedChangesBtn" class="btn danger">Cancelar selección</button>
+            <button id="saveSelectedChangesBtn" class="btn primary">Guardar selección</button>
+          </div>
+        </div>
+      </div>`;
+      root.onclick = (e) => { if(e.target === root) closeSaveModal(); };
+      document.getElementById('closeModalBtn').onclick = closeSaveModal;
+      document.getElementById('toggleAllChanges').onchange = (e) => {
+        saveModalSelection = e.target.checked ? new Set(changes.map(change => change.id)) : new Set();
+        renderSaveModal();
+      };
+      root.querySelectorAll('[data-change-id]').forEach((checkbox) => {
+        checkbox.onchange = () => {
+          if(checkbox.checked) saveModalSelection.add(checkbox.dataset.changeId);
+          else saveModalSelection.delete(checkbox.dataset.changeId);
+        };
+      });
+      document.getElementById('revertAllChangesBtn').onclick = () => {
+        if(savedBaseline) assignPersistableState(savedBaseline);
+        cacheLocal();
+        closeSaveModal();
+        renderManualLists();
+        renderForecast();
+        setSaveStatus('idle');
+      };
+      document.getElementById('revertSelectedChangesBtn').onclick = () => {
+        const selected = new Set(saveModalSelection);
+        const nextState = buildStateFromSelection(change => !selected.has(change.id));
+        assignPersistableState(nextState);
+        cacheLocal();
+        closeSaveModal();
+        renderManualLists();
+        renderForecast();
+        setSaveStatus('idle');
+      };
+      document.getElementById('saveSelectedChangesBtn').onclick = async () => {
+        const selected = new Set(saveModalSelection);
+        if(!selected.size) return;
+        const snapshot = buildStateFromSelection(change => selected.has(change.id));
+        document.getElementById('saveModalFeedback').classList.remove('hidden');
+        setSaveStatus('saving');
+        try{
+          await saveToSupabase(snapshot);
+          savedBaseline = cloneData(snapshot);
+          cacheLocal();
+          closeSaveModal();
+          renderManualLists();
+          renderForecast();
+          setSaveStatus('saved');
+          setTimeout(() => {
+            if(saveStatus === 'saved') setSaveStatus('idle');
+          }, 2200);
+        }catch(err){
+          console.error('Error guardando cambios', err);
+          setSaveStatus('idle');
+          alert('No se pudieron guardar los cambios: ' + (err.message || 'error desconocido'));
+        }
+      };
+    }
+    function openSaveModal(){
+      const changes = buildStateChanges();
+      if(!changes.length) return;
+      saveModalSelection = new Set(changes.map(change => change.id));
+      renderSaveModal();
     }
 
     function openSimpleEditor(kind, item){
@@ -1743,6 +2165,7 @@
       const savingsBase = state.goals.reduce((a,g)=>a+Number((g.goalType||'fixed')==='fixed' ? (g.monthlyAmount||0) : 0),0);
       document.getElementById('kpiSavings').textContent = euros(savingsBase);
       kpis();
+      updateSaveUi();
     }
 
     function renderForecast(){
@@ -1969,12 +2392,7 @@
         if(!state.expenses.length) state.expenses.push(makeExpenseRow());
         if(!state.debts.length) state.debts.push(makeDebtRow());
         if(!state.goals.length) state.goals.push(makeGoalRow());
-        try{
-          if(state.planId) await clearPlanData(state.planId);
-        }catch(err){
-          console.error('Error limpiando plan', err);
-        }
-        await persistAndRefresh();
+        touchState({ rerender:false });
         renderWizardRows(state.incomes, 'wizardIncomeList', 'income');
         renderWizardRows(state.expenses, 'wizardExpenseList', 'expense');
         renderWizardRows(state.debts, 'wizardDebtList', 'debt');
@@ -1992,6 +2410,9 @@
       document.getElementById('resetToWizardBtn').addEventListener('click', () => {
         flowStateSet('wizard');
         hide('appShell'); show('wizard'); showWizardStep(0);
+      });
+      document.getElementById('saveChangesBtn').addEventListener('click', () => {
+        openSaveModal();
       });
 
       document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -2029,7 +2450,7 @@
       document.getElementById('wizardNext2').addEventListener('click', () => { saveLocal(); showWizardStep(3); });
       document.getElementById('wizardPrev3').addEventListener('click', () => showWizardStep(2));
       document.getElementById('finishWizard').addEventListener('click', async () => {
-        await persistAndRefresh();
+        touchState({ rerender:false });
         flowStateSet('app');
         hide('wizard');
         show('appShell');
@@ -2071,10 +2492,10 @@
       });
 
       document.getElementById('initialReserve').addEventListener('change', e => {
-        state.reserveInitial = Number(e.target.value||0); kpis(); persistAndRefresh().catch(err => console.error(err));
+        state.reserveInitial = Number(e.target.value||0); kpis(); touchState();
       });
       document.getElementById('defaultStart').addEventListener('change', e => {
-        state.defaultStartMonth = e.target.value || todayMonth(); persistAndRefresh().catch(err => console.error(err));
+        state.defaultStartMonth = e.target.value || todayMonth(); touchState();
       });
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
