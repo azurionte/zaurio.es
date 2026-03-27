@@ -68,11 +68,11 @@
     .status{min-height:22px;color:var(--cyan);font-size:.94rem}.status[data-tone="danger"]{color:#ff9ec6}.status[data-tone="ok"]{color:#b5ff99}
     .codeBadge{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:18px;background:rgba(255,238,0,.1);color:var(--yellow);font-weight:900;letter-spacing:.08em;width:max-content}
     .avatarEditor{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;align-items:start}
-    .avatarStageWrap{width:190px;height:190px;padding:12px;border-radius:36px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));border:1px solid rgba(255,255,255,.18)}
-    .avatarStage{position:relative;width:100%;height:100%;border-radius:999px;overflow:hidden;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);cursor:grab}
+    .avatarStageWrap{width:190px;height:190px;padding:12px;border-radius:36px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));border:1px solid rgba(255,255,255,.18);display:grid;place-items:center}
+    .avatarStage{position:relative;width:var(--avatarSize);height:var(--avatarSize);border-radius:999px;overflow:hidden;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);cursor:grab}
     .avatarStage.dragging{cursor:grabbing}
     .avatarImg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}
-    .avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.74);font-weight:900;text-align:center;padding:20px}
+    .avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.74);font-weight:900;text-align:center;padding:12px;font-size:.95rem}
     .editorControls{display:grid;gap:14px;align-content:start}
     .uploadCard{display:grid;gap:12px;padding:16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
     .uploadActions{display:flex;gap:10px;flex-wrap:wrap}
@@ -442,9 +442,9 @@
     ui.btnRestartGuest.onclick=()=>location.reload();
     ui.btnRestartProfile.onclick=()=>location.reload();
     ui.btnPickPhoto.onclick=()=>ui.photoInput.click();
-    ui.photoInput.onchange=async()=>{const file=ui.photoInput.files?.[0];if(!file) return;state.avatar.src=await compressImage(file);state.avatar.x=0;state.avatar.y=0;state.avatar.s=.55;clampAvatar();setStatus("Foto cargada. Ahora recolocala a tu gusto.","ok");};
+    ui.photoInput.onchange=async()=>{const file=ui.photoInput.files?.[0];if(!file) return;state.avatar.src=await compressImage(file);state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();setStatus("Foto cargada. Ahora recolocala a tu gusto.","ok");};
     ui.zoomInput.oninput=()=>{state.avatar.s=Number(ui.zoomInput.value);clampAvatar();};
-    ui.btnCenterPhoto.onclick=()=>{state.avatar.x=0;state.avatar.y=0;state.avatar.s=.55;clampAvatar();};
+    ui.btnCenterPhoto.onclick=()=>{state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();};
     ui.avatarStage.addEventListener("mousedown",startDrag);
     ui.avatarStage.addEventListener("touchstart",ev=>{
       if(ev.touches.length===2){
