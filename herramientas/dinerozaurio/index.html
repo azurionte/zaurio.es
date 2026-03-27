@@ -283,6 +283,12 @@
     .sub{color:var(--muted);font-size:13px}
     .list{display:flex;flex-direction:column;gap:10px}
     .item{background:#0c1330;border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}
+    .debtGroup{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:18px;background:#0c1330;border:1px solid var(--line)}
+    .debtGroupHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .debtGroupTitle{font-size:16px;font-weight:900}
+    .debtGroupMeta{font-size:12px;color:var(--muted);font-weight:700}
+    .debtGroupActions{display:flex;gap:8px;flex-wrap:wrap}
+    .debtGroupList{display:flex;flex-direction:column;gap:10px}
     .meta{display:flex;flex-direction:column;gap:4px}
     .name{font-weight:800}
     .desc{font-size:12px;color:var(--muted)}
@@ -620,14 +626,14 @@
         const oldId = item.id;
         const newId = ensureUuid(oldId);
         expenseMap[oldId] = newId;
-        return { ...item, id: newId };
+        return { ...item, id: newId, periodicity: normalizeExpensePeriodicity(item.periodicity), intervalMonths: Math.max(1, Number(item.intervalMonths || 1)) };
       });
 
       state.debts = (state.debts || []).map(item => {
         const oldId = item.id;
         const newId = ensureUuid(oldId);
         debtMap[oldId] = newId;
-        return { ...item, id: newId };
+        return { ...normalizeDebtItem(item), id: newId };
       });
 
       state.goals = (state.goals || []).map(item => {
@@ -665,6 +671,122 @@
     function flowStateSet(v){ sessionStorage.setItem('dz_flow_state', v); }
     function flowStateClear(){ sessionStorage.removeItem('dz_flow_state'); }
     function cloneData(v){ return JSON.parse(JSON.stringify(v)); }
+    const DEBT_META_PREFIX = '__DZMETA__';
+    function debtInstrumentTypeLabel(type){
+      return ({
+        card: 'Tarjeta',
+        loan: 'Prestamo'
+      })[type] || 'Deuda';
+    }
+    function debtPaymentModeLabel(mode){
+      return ({
+        revolving: 'Revolving',
+        pay_end_month: 'Fin de mes',
+        installment: 'Compra aplazada'
+      })[mode] || 'Instrumento';
+    }
+    function normalizeExpensePeriodicity(value){
+      const normalized = value || 'monthly';
+      if(['monthly','bimonthly','quarterly','four_monthly','yearly','one_time','custom_months'].includes(normalized)) return normalized;
+      return 'monthly';
+    }
+    function periodIntervalMonths(item){
+      const periodicity = normalizeExpensePeriodicity(item.periodicity);
+      if(periodicity === 'monthly') return 1;
+      if(periodicity === 'bimonthly') return 2;
+      if(periodicity === 'quarterly') return 3;
+      if(periodicity === 'four_monthly') return 4;
+      if(periodicity === 'yearly') return 12;
+      if(periodicity === 'custom_months') return Math.max(1, Number(item.intervalMonths || 1));
+      return 0;
+    }
+    function decodeDebtStorageName(rawName, fallbackType = 'loan'){
+      const text = String(rawName || '').trim();
+      if(!text) return { entityName:'', instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1 };
+      if(text.startsWith(DEBT_META_PREFIX)){
+        try{
+          const payload = JSON.parse(text.slice(DEBT_META_PREFIX.length));
+          return {
+            entityName: String(payload.entityName || '').trim(),
+            instrumentName: String(payload.instrumentName || '').trim(),
+            instrumentType: payload.instrumentType === 'card' ? 'card' : 'loan',
+            creditLimit: Number(payload.creditLimit || 0),
+            totalBorrowed: Number(payload.totalBorrowed || 0),
+            intervalMonths: Math.max(1, Number(payload.intervalMonths || 1))
+          };
+        }catch(err){
+          console.error('Error decodificando nombre de deuda', err);
+        }
+      }
+      return { entityName:text, instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1 };
+    }
+    function debtEntityName(item){
+      return String(item?.entityName || item?.name || '').trim();
+    }
+    function debtInstrumentName(item){
+      return String(item?.instrumentName || '').trim();
+    }
+    function debtDisplayName(item){
+      const entity = debtEntityName(item);
+      const instrument = debtInstrumentName(item);
+      if(entity && instrument) return `${entity} · ${instrument}`;
+      return entity || instrument || 'Deuda sin nombre';
+    }
+    function debtGroupTitle(item){
+      return debtEntityName(item) || 'Entidad sin nombre';
+    }
+    function debtInstrumentSubtitle(item){
+      const instrumentType = item?.instrumentType || item?.debtKind || 'loan';
+      if(instrumentType === 'card'){
+        const paymentMode = item?.paymentMode || item?.cardSubtype || 'revolving';
+        return `${debtInstrumentTypeLabel('card')} · ${debtPaymentModeLabel(paymentMode)}`;
+      }
+      return debtInstrumentTypeLabel('loan');
+    }
+    function serializeDebtStorageName(item){
+      return `${DEBT_META_PREFIX}${JSON.stringify({
+        entityName: debtEntityName(item),
+        instrumentName: debtInstrumentName(item),
+        instrumentType: item?.instrumentType || item?.debtKind || 'loan',
+        creditLimit: Number(item?.creditLimit || 0),
+        totalBorrowed: Number(item?.totalBorrowed || 0),
+        intervalMonths: Math.max(1, Number(item?.intervalMonths || 1))
+      })}`;
+    }
+    function normalizeDebtItem(item = {}){
+      const inferredType = item.instrumentType || item.debtKind || item.type || 'loan';
+      const decoded = decodeDebtStorageName(item.name, inferredType);
+      const entityName = String(item.entityName || decoded.entityName || item.name || '').trim();
+      const instrumentType = inferredType === 'card' ? 'card' : 'loan';
+      const instrumentName = String(item.instrumentName || decoded.instrumentName || '').trim();
+      const paymentMode = instrumentType === 'card'
+        ? (item.paymentMode || item.cardSubtype || 'revolving')
+        : 'loan';
+      return {
+        id: item.id || uid(),
+        entityName,
+        instrumentType,
+        instrumentName,
+        name: debtDisplayName({ entityName, instrumentName }),
+        debtKind: instrumentType,
+        cardSubtype: instrumentType === 'card' ? paymentMode : null,
+        paymentMode,
+        amount: Number(item.amount || 0),
+        monthlyPayment: Number(item.monthlyPayment || 0),
+        remainingInstallments: Number(item.remainingInstallments || 0),
+        endMode: item.lastMonth ? 'date' : (item.endMode || 'remaining'),
+        startMonth: item.startMonth || state.defaultStartMonth,
+        lastMonth: item.lastMonth || null,
+        currentDebt: Number(item.currentDebt || 0),
+        currentPayment: Number(item.currentPayment || 0),
+        creditLimit: Number(item.creditLimit || decoded.creditLimit || 0),
+        totalBorrowed: Number(item.totalBorrowed || decoded.totalBorrowed || 0),
+        tin: Number(item.tin || 0),
+        tae: Number(item.tae || 0),
+        periodicity: normalizeExpensePeriodicity(item.periodicity || (instrumentType === 'card' && paymentMode === 'pay_end_month' ? 'monthly' : 'monthly')),
+        intervalMonths: Math.max(1, Number(item.intervalMonths || decoded.intervalMonths || 1))
+      };
+    }
     function emptyPersistableState(){
       return {
         reserveInitial: 0,
@@ -721,6 +843,7 @@
       return `${months[(m || 1) - 1] || ym} ${y}`;
     }
     function getItemDisplayName(item, collection){
+      if(collection === 'debts') return debtDisplayName(item);
       return String(item?.name || `${collectionLabel(collection)} sin nombre`).trim();
     }
     function fieldLabel(collection, field){
@@ -738,14 +861,20 @@
           targetTotal: 'Objetivo total'
         },
         debts: {
+          entityName: 'Entidad',
+          instrumentName: 'Instrumento',
+          instrumentType: 'Tipo de instrumento',
           debtKind: 'Tipo de deuda',
           cardSubtype: 'Subtipo de tarjeta',
+          paymentMode: 'Forma de pago',
           monthlyPayment: 'Cuota mensual',
           remainingInstallments: 'Numero de cuotas',
           endMode: 'Modo de finalizacion',
           lastMonth: 'Ultimo mes',
           currentDebt: 'Deuda actual',
           currentPayment: 'Pago actual',
+          creditLimit: 'Limite de credito',
+          totalBorrowed: 'Total prestado',
           tin: 'TIN',
           tae: 'TAE'
         },
@@ -757,7 +886,7 @@
     }
     function formatFieldValue(collection, field, value){
       if(value === undefined || value === null || value === '') return 'vacio';
-      if(['amount','monthlyAmount','targetTotal','monthlyPayment','currentDebt','currentPayment','extraIncomeAmount','extraExpenseAmount','extraSavingAmount'].includes(field)){
+      if(['amount','monthlyAmount','targetTotal','monthlyPayment','currentDebt','currentPayment','extraIncomeAmount','extraExpenseAmount','extraSavingAmount','creditLimit','totalBorrowed'].includes(field)){
         return euros(value);
       }
       if(['remainingInstallments'].includes(field)){
@@ -769,6 +898,10 @@
       if(field === 'periodicity'){
         return ({
           monthly: 'Mensual',
+          bimonthly: 'Bimestral',
+          quarterly: 'Trimestral',
+          four_monthly: 'Cuatrimestral',
+          custom_months: 'Cada varios meses',
           one_time: 'Una vez',
           annual: 'Anual'
         })[value] || String(value);
@@ -791,12 +924,18 @@
           card: 'Tarjeta'
         })[value] || String(value);
       }
+      if(field === 'instrumentType'){
+        return debtInstrumentTypeLabel(value);
+      }
       if(field === 'cardSubtype'){
         return ({
           revolving: 'Revolving',
           pay_end_month: 'Paga fin de mes',
           installment: 'Compra aplazada'
         })[value] || String(value);
+      }
+      if(field === 'paymentMode'){
+        return debtPaymentModeLabel(value);
       }
       if(field === 'endMode'){
         return ({
@@ -814,6 +953,9 @@
         .filter(key => key !== 'id' && stableStringify(before?.[key]) !== stableStringify(after?.[key]));
     }
     function createCollectionCreateChange(collection, item){
+      const detailField = collection === 'debts'
+        ? ((item.instrumentType || item.debtKind) === 'loan' ? 'monthlyPayment' : ((item.paymentMode || item.cardSubtype) === 'revolving' ? 'currentPayment' : 'amount'))
+        : 'amount';
       return {
         id:`${collection}:create:${item.id}`,
         kind:'collection',
@@ -823,11 +965,14 @@
         groupKey:`${collection}:${item.id}`,
         groupTitle:`${getItemDisplayName(item, collection)} · ${collectionAreaLabel(collection)}`,
         title:`${collectionLabel(collection)} añadid${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
-        desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, 'amount').toLowerCase()} de ${formatFieldValue(collection, 'amount', item.amount)}`,
+        desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, detailField).toLowerCase()} de ${formatFieldValue(collection, detailField, item[detailField])}`,
         ops:[]
       };
     }
     function createCollectionDeleteChange(collection, item){
+      const detailField = collection === 'debts'
+        ? ((item.instrumentType || item.debtKind) === 'loan' ? 'monthlyPayment' : ((item.paymentMode || item.cardSubtype) === 'revolving' ? 'currentPayment' : 'amount'))
+        : 'amount';
       return {
         id:`${collection}:delete:${item.id}`,
         kind:'collection',
@@ -837,7 +982,7 @@
         groupKey:`${collection}:${item.id}`,
         groupTitle:`${getItemDisplayName(item, collection)} · ${collectionAreaLabel(collection)}`,
         title:`${collectionLabel(collection)} eliminad${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
-        desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, 'amount').toLowerCase()} de ${formatFieldValue(collection, 'amount', item.amount)}`,
+        desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, detailField).toLowerCase()} de ${formatFieldValue(collection, detailField, item[detailField])}`,
         ops:[]
       };
     }
@@ -1008,7 +1153,9 @@
           } else if(before && !after){
             changes.push(createCollectionDeleteChange(collection, before));
           } else if(before && after && stableStringify(before) !== stableStringify(after)){
-            getChangedFields(before, after).forEach(field => {
+            getChangedFields(before, after)
+              .filter(field => !(collection === 'debts' && field === 'name'))
+              .forEach(field => {
               changes.push(createCollectionFieldChange(collection, before, after, field));
             });
           }
@@ -1166,31 +1313,37 @@
       return out;
     }
     function debtDescription(d){
-      if((d.debtKind||'loan') === 'loan'){
+      const label = debtInstrumentName(d) || debtPaymentModeLabel(d.paymentMode || d.cardSubtype) || debtInstrumentTypeLabel(d.instrumentType || d.debtKind);
+      if((d.instrumentType || d.debtKind || 'loan') === 'loan'){
         return d.lastMonth
-          ? `Préstamo · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
-          : `Préstamo · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
+          ? `${label} · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
+          : `${label} · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
       }
-      if((d.cardSubtype||'revolving') === 'revolving'){
-        return `Tarjeta revolving · deuda ${euros(d.currentDebt||0)} · cuota ${euros(d.currentPayment||0)} · TIN ${Number(d.tin||0)}% · TAE ${Number(d.tae||0)}%`;
+      if((d.paymentMode || d.cardSubtype || 'revolving') === 'revolving'){
+        return `${label} · deuda ${euros(d.currentDebt||0)} · cuota ${euros(d.currentPayment||0)} · TIN ${Number(d.tin||0)}% · TAE ${Number(d.tae||0)}%`;
       }
-      if(d.cardSubtype === 'pay_end_month'){
-        return `Tarjeta fin de mes · ${euros(d.amount||0)} · ${d.periodicity==='one_time'?'puntual':'mensual'}`;
+      if((d.paymentMode || d.cardSubtype) === 'pay_end_month'){
+        return `${label} · ${euros(d.amount||0)} · ${d.periodicity==='one_time'?'puntual':'periodica'}`;
       }
       return d.lastMonth
-        ? `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
-        : `Compra aplazada · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
+        ? `${label} · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
+        : `${label} · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
     }
     function amountForSchedule(item, ym){
       const start = item.startMonth || state.defaultStartMonth;
       const end = item.endMonth || null;
       if(ym < start) return 0;
       if(end && ym > end) return 0;
-      const periodicity = item.periodicity || 'monthly';
+      const periodicity = normalizeExpensePeriodicity(item.periodicity);
       const diff = monthDiff(start, ym);
       if(periodicity === 'one_time') return ym === start ? Number(item.amount || 0) : 0;
       if(periodicity === 'bimonthly') return diff % 2 === 0 ? Number(item.amount || 0) : 0;
       if(periodicity === 'quarterly') return diff % 3 === 0 ? Number(item.amount || 0) : 0;
+      if(periodicity === 'four_monthly') return diff % 4 === 0 ? Number(item.amount || 0) : 0;
+      if(periodicity === 'custom_months'){
+        const every = Math.max(1, Number(item.intervalMonths || 1));
+        return diff % every === 0 ? Number(item.amount || 0) : 0;
+      }
       if(periodicity === 'yearly') return diff % 12 === 0 ? Number(item.amount || 0) : 0;
       return Number(item.amount || 0);
     }
@@ -1205,12 +1358,12 @@
 
     function debtEndMonth(d){
       const start = d.startMonth || state.defaultStartMonth;
-      if(d.debtKind === 'loan' || d.cardSubtype === 'installment'){
+      if((d.instrumentType || d.debtKind) === 'loan' || (d.paymentMode || d.cardSubtype) === 'installment'){
         if(d.lastMonth) return d.lastMonth;
         const count = Number(d.remainingInstallments || 0);
         return count > 0 ? addMonthsStr(start, count - 1) : start;
       }
-      if(d.cardSubtype === 'pay_end_month' && d.periodicity === 'one_time'){
+      if((d.paymentMode || d.cardSubtype) === 'pay_end_month' && d.periodicity === 'one_time'){
         return start;
       }
       return null;
@@ -1220,7 +1373,7 @@
       const start = d.startMonth || state.defaultStartMonth;
       if(ym < start) return 0;
 
-      if(d.debtKind === 'card' && d.cardSubtype === 'revolving'){
+      if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype) === 'revolving'){
         const debt = Number(d.currentDebt || 0);
         const payment = Number(d.currentPayment || 0);
         const annual = Number(d.tin || d.tae || 0) / 100;
@@ -1240,7 +1393,7 @@
       const end = debtEndMonth(d);
       if(end && ym > end) return 0;
 
-      if(d.debtKind === 'card' && d.cardSubtype === 'pay_end_month'){
+      if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype) === 'pay_end_month'){
         if(d.periodicity === 'one_time') return ym === start ? Number(d.amount || 0) : 0;
         return Number(d.amount || 0);
       }
@@ -1252,7 +1405,7 @@
       const start = d.startMonth || state.defaultStartMonth;
       if(ym < start) return { visible:false, active:false, settled:false, recoveredAmount:0, monthAmount:0 };
 
-      if(d.debtKind === 'card' && d.cardSubtype === 'revolving'){
+      if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype) === 'revolving'){
         const monthAmount = getDebtMonthlyCharge(d, ym);
         return { visible: monthAmount > 0, active: monthAmount > 0, settled:false, recoveredAmount:0, monthAmount };
       }
@@ -1263,7 +1416,7 @@
       const settled = recoveryMonth ? ym === recoveryMonth : false;
       const monthAmount = active ? getDebtMonthlyCharge(d, ym) : 0;
       const recoveredAmount = settled
-        ? Number((d.debtKind === 'loan' || d.cardSubtype === 'installment') ? (d.monthlyPayment || 0) : (d.amount || 0))
+        ? Number(((d.instrumentType || d.debtKind) === 'loan' || (d.paymentMode || d.cardSubtype) === 'installment') ? (d.monthlyPayment || 0) : (d.amount || 0))
         : 0;
       return { visible: active || settled, active, settled, recoveredAmount, monthAmount };
     }
@@ -1458,9 +1611,9 @@
           const rows = state.debts.map(it => ({
             id: ensureUuid(it.id),
             plan_id: planId,
-            name: it.name || 'Deuda',
-            debt_type: (it.debtKind || 'loan') === 'loan' ? 'loan' : 'card',
-            card_type: it.cardSubtype || null,
+            name: serializeDebtStorageName(it),
+            debt_type: (it.instrumentType || it.debtKind || 'loan') === 'loan' ? 'loan' : 'card',
+            card_type: (it.paymentMode || it.cardSubtype) || null,
             amount: Number(it.amount || 0),
             monthly_payment: Number(it.monthlyPayment || 0),
             remaining_installments: Number(it.remainingInstallments || 0),
@@ -1471,7 +1624,7 @@
             current_payment: Number(it.currentPayment || 0),
             tin: Number(it.tin || 0),
             tae: Number(it.tae || 0),
-            periodicity: it.periodicity || 'monthly'
+            periodicity: normalizeExpensePeriodicity(it.periodicity)
           }));
           const r = await window.dzSupabase.from('debt_items').insert(rows);
           if(r.error) throw r.error;
@@ -1554,9 +1707,11 @@
       }));
       state.debts = (debtRes.data || []).map(it => makeDebtRow({
         id: ensureUuid(it.id),
-        name: it.name,
+        ...decodeDebtStorageName(it.name, it.debt_type || 'loan'),
         debtKind: it.debt_type || 'loan',
+        instrumentType: it.debt_type || 'loan',
         cardSubtype: it.card_type || null,
+        paymentMode: it.card_type || null,
         amount: Number(it.amount || 0),
         monthlyPayment: Number(it.monthly_payment || 0),
         remainingInstallments: Number(it.remaining_installments || 0),
@@ -1638,7 +1793,8 @@
         name: item.name || '',
         amount: Number(item.amount || 0),
         kind: item.kind || 'fixed',
-        periodicity: item.periodicity || 'monthly',
+        periodicity: normalizeExpensePeriodicity(item.periodicity),
+        intervalMonths: Math.max(1, Number(item.intervalMonths || 1)),
         startMonth: item.startMonth || state.defaultStartMonth,
         endMonth: item.endMonth || null
       };
@@ -1655,24 +1811,7 @@
       };
     }
     function makeDebtRow(item={}){
-      const debtKind = item.debtKind || item.type || 'loan';
-      return {
-        id: item.id || uid(),
-        name: item.name || '',
-        debtKind,
-        cardSubtype: debtKind === 'card' ? (item.cardSubtype || null) : null,
-        amount: Number(item.amount || 0),
-        monthlyPayment: Number(item.monthlyPayment || 0),
-        remainingInstallments: Number(item.remainingInstallments || 0),
-        endMode: item.endMode || '',
-        startMonth: item.startMonth || state.defaultStartMonth,
-        lastMonth: item.lastMonth || null,
-        currentDebt: Number(item.currentDebt || 0),
-        currentPayment: Number(item.currentPayment || 0),
-        tin: Number(item.tin || 0),
-        tae: Number(item.tae || 0),
-        periodicity: item.periodicity || 'monthly'
-      };
+      return normalizeDebtItem({ ...item, id: item.id || uid() });
     }
 
     function renderWizardRows(list, mountId, kind){
@@ -1683,22 +1822,21 @@
         if(kind === 'debt'){
           row.className = 'row row-5';
           row.innerHTML = `
-            <input class="input" placeholder="Entidad" value="${item.name||''}">
+            <input class="input" placeholder="Entidad" value="${escapeHtml(item.entityName||'')}">
             <select class="select">
-              <option value="loan" ${(item.debtKind||'loan')==='loan'?'selected':''}>Préstamo</option>
-              <option value="card" ${(item.debtKind||'loan')==='card'?'selected':''}>Tarjeta</option>
+              <option value="loan" ${(item.instrumentType||'loan')==='loan'?'selected':''}>Prestamo</option>
+              <option value="card" ${(item.instrumentType||'loan')==='card'?'selected':''}>Tarjeta</option>
             </select>
-            <input class="input" type="number" step="0.01" placeholder="${(item.debtKind||'loan')==='loan'?'Cuota €':'Pago / monto €'}" value="${(item.debtKind||'loan')==='loan'?(item.monthlyPayment||''):(item.currentPayment||item.amount||'')}">
+            <input class="input" placeholder="Instrumento" value="${escapeHtml(item.instrumentName||'')}">
             <button class="btn ghost">Detalles</button>
             <button class="btn danger">×</button>`;
           const inputs = row.querySelectorAll('input,select');
-          inputs[0].addEventListener('input', e => item.name = e.target.value);
-          inputs[1].addEventListener('change', e => item.debtKind = e.target.value);
-          inputs[2].addEventListener('input', e => {
-            const v = Number(e.target.value||0);
-            if((item.debtKind||'loan') === 'loan') item.monthlyPayment = v;
-            else { item.currentPayment = v; item.amount = v; }
+          inputs[0].addEventListener('input', e => { item.entityName = e.target.value; item.name = debtDisplayName(item); });
+          inputs[1].addEventListener('change', e => {
+            item.instrumentType = e.target.value;
+            item.debtKind = e.target.value;
           });
+          inputs[2].addEventListener('input', e => { item.instrumentName = e.target.value; item.name = debtDisplayName(item); });
           row.querySelector('.btn.ghost').addEventListener('click', () => openDebtEditor(item, true));
         } else if(kind === 'goal'){
           row.className = 'row row-5';
@@ -1936,12 +2074,26 @@
     function openSimpleEditor(kind, item){
       const titleMap = { income:'Ingreso', expense:'Gasto' };
       const root = document.getElementById('modalRoot');
+      const isExpense = kind === 'expense';
       root.className = 'modalRoot';
       root.innerHTML = `<div class="modalCard">
         <div class="modalHead"><h3>${titleMap[kind] || 'Elemento'}</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
         <div class="modalGrid">
           <div class="field"><label>Nombre</label><input id="editName" class="input" value="${escapeHtml(item.name||'')}"></div>
           <div class="field"><label>Monto</label><input id="editAmount" class="input" type="number" step="0.01" value="${Number(item.amount||0)}"></div>
+          ${isExpense ? `<div class="field"><label>Frecuencia</label>
+            <select id="editPeriodicity" class="select">
+              <option value="monthly" ${normalizeExpensePeriodicity(item.periodicity)==='monthly'?'selected':''}>Mensual</option>
+              <option value="bimonthly" ${normalizeExpensePeriodicity(item.periodicity)==='bimonthly'?'selected':''}>Bimestral</option>
+              <option value="quarterly" ${normalizeExpensePeriodicity(item.periodicity)==='quarterly'?'selected':''}>Trimestral</option>
+              <option value="four_monthly" ${normalizeExpensePeriodicity(item.periodicity)==='four_monthly'?'selected':''}>Cuatrimestral</option>
+              <option value="yearly" ${normalizeExpensePeriodicity(item.periodicity)==='yearly'?'selected':''}>Anual</option>
+              <option value="one_time" ${normalizeExpensePeriodicity(item.periodicity)==='one_time'?'selected':''}>Puntual</option>
+              <option value="custom_months" ${normalizeExpensePeriodicity(item.periodicity)==='custom_months'?'selected':''}>Otros</option>
+            </select>
+          </div>
+          <div class="field"><label>Mes del proximo recibo</label><input id="editStartMonth" class="input" type="month" value="${item.startMonth||state.defaultStartMonth}"></div>
+          <div class="field" id="customIntervalWrap" style="${normalizeExpensePeriodicity(item.periodicity)==='custom_months'?'':'display:none'}"><label>Cada cuantos meses</label><input id="editIntervalMonths" class="input" type="number" min="1" step="1" value="${Math.max(1, Number(item.intervalMonths || 1))}"></div>` : ''}
         </div>
         <div class="btnRow" style="margin-top:16px"><button id="saveSimpleBtn" class="btn primary">Guardar</button></div>
       </div>`;
@@ -1956,9 +2108,21 @@
         }
         closeModal();
       };
+      if(isExpense){
+        const periodicitySelect = document.getElementById('editPeriodicity');
+        const customWrap = document.getElementById('customIntervalWrap');
+        periodicitySelect.onchange = () => {
+          customWrap.style.display = periodicitySelect.value === 'custom_months' ? '' : 'none';
+        };
+      }
       document.getElementById('saveSimpleBtn').onclick = () => {
         item.name = document.getElementById('editName').value.trim();
         item.amount = Number(document.getElementById('editAmount').value||0);
+        if(isExpense){
+          item.periodicity = normalizeExpensePeriodicity(document.getElementById('editPeriodicity').value);
+          item.startMonth = document.getElementById('editStartMonth').value || state.defaultStartMonth;
+          item.intervalMonths = Math.max(1, Number(document.getElementById('editIntervalMonths')?.value || item.intervalMonths || 1));
+        }
         closeModal(); persistAndRefresh().catch(err => console.error(err));
       };
     }
@@ -2017,23 +2181,25 @@
 
     function openDebtEditor(item, fromWizard){
       const root = document.getElementById('modalRoot');
+      const draft = makeDebtRow(item);
       root.className = 'modalRoot';
       root.innerHTML = `<div class="modalCard">
         <div class="modalHead"><h3>Configurar deuda</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
         <div class="modalGrid">
-          <div class="field"><label>Nombre / entidad</label><input id="debtName" class="input" value="${escapeHtml(item.name||'')}"></div>
-          <div class="field"><label>Empieza en</label><input id="debtStart" class="input" type="month" value="${item.startMonth||state.defaultStartMonth}"></div>
-          <div class="field"><label>Tipo</label>
+          <div class="field"><label>Entidad</label><input id="debtEntityName" class="input" value="${escapeHtml(draft.entityName||'')}"></div>
+          <div class="field"><label>Nombre visible</label><input id="debtInstrumentName" class="input" placeholder="Ej. Aqua, Prestamo coche, Hacienda 2026" value="${escapeHtml(draft.instrumentName||'')}"></div>
+          <div class="field"><label>Instrumento</label>
             <select id="debtKind" class="select">
-              <option value="loan" ${(item.debtKind||'loan')==='loan'?'selected':''}>Préstamo</option>
-              <option value="card" ${(item.debtKind||'loan')==='card'?'selected':''}>Tarjeta</option>
+              <option value="card" ${draft.instrumentType==='card'?'selected':''}>Tarjeta</option>
+              <option value="loan" ${draft.instrumentType==='loan'?'selected':''}>Prestamo</option>
             </select>
           </div>
-          <div class="field"><label>Subtipo de tarjeta</label>
+          <div class="field"><label>Empieza en</label><input id="debtStart" class="input" type="month" value="${draft.startMonth||state.defaultStartMonth}"></div>
+          <div class="field" id="debtPaymentModeWrap"><label>Forma de pago</label>
             <select id="debtSubtype" class="select">
-              <option value="revolving" ${(item.cardSubtype||'revolving')==='revolving'?'selected':''}>Revolving</option>
-              <option value="pay_end_month" ${(item.cardSubtype||'revolving')==='pay_end_month'?'selected':''}>Paga fin de mes</option>
-              <option value="installment" ${(item.cardSubtype||'revolving')==='installment'?'selected':''}>Compra aplazada</option>
+              <option value="revolving" ${draft.paymentMode==='revolving'?'selected':''}>Revolving</option>
+              <option value="pay_end_month" ${draft.paymentMode==='pay_end_month'?'selected':''}>Fin de mes</option>
+              <option value="installment" ${draft.paymentMode==='installment'?'selected':''}>Compra aplazada</option>
             </select>
           </div>
         </div>
@@ -2044,95 +2210,188 @@
       function renderDynamic(){
         const debtKind = document.getElementById('debtKind').value;
         const subtype = document.getElementById('debtSubtype').value;
+        const subtypeWrap = document.getElementById('debtPaymentModeWrap');
+        subtypeWrap.style.display = debtKind === 'card' ? '' : 'none';
         const wrap = document.getElementById('debtDynamicFields');
         if(debtKind === 'loan'){
           wrap.innerHTML = `<div class="modalGrid">
-            <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${Number(item.monthlyPayment||0)}"></div>
-            <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${Number(item.remainingInstallments||0)}"></div>
-            <div class="field"><label>Última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${item.lastMonth||''}"></div>
+            <div class="field"><label>Total prestado</label><input id="dTotalBorrowed" class="input" type="number" step="0.01" value="${Number(draft.totalBorrowed||0)}"></div>
+            <div class="field"><label>Cuota actual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${Number(draft.monthlyPayment||0)}"></div>
+            <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${Number(draft.remainingInstallments||0)}"></div>
+            <div class="field"><label>Ultima cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${draft.lastMonth||''}"></div>
           </div>`;
-        } else if(subtype === 'revolving'){
+          return;
+        }
+        if(subtype === 'revolving'){
           wrap.innerHTML = `<div class="modalGrid">
-            <div class="field"><label>Deuda actual</label><input id="dCurrentDebt" class="input" type="number" step="0.01" value="${Number(item.currentDebt||0)}"></div>
-            <div class="field"><label>Cuota actual</label><input id="dCurrentPayment" class="input" type="number" step="0.01" value="${Number(item.currentPayment||0)}"></div>
-            <div class="field"><label>TIN %</label><input id="dTin" class="input" type="number" step="0.01" value="${Number(item.tin||20)}"></div>
-            <div class="field"><label>TAE %</label><input id="dTae" class="input" type="number" step="0.01" value="${Number(item.tae||24)}"></div>
+            <div class="field"><label>Limite total</label><input id="dCreditLimit" class="input" type="number" step="0.01" value="${Number(draft.creditLimit||0)}"></div>
+            <div class="field"><label>Usado ahora</label><input id="dCurrentDebt" class="input" type="number" step="0.01" value="${Number(draft.currentDebt||0)}"></div>
+            <div class="field"><label>Cuota fija mensual</label><input id="dCurrentPayment" class="input" type="number" step="0.01" value="${Number(draft.currentPayment||0)}"></div>
+            <div class="field"><label>TIN %</label><input id="dTin" class="input" type="number" step="0.01" value="${Number(draft.tin||20)}"></div>
+            <div class="field"><label>TAE %</label><input id="dTae" class="input" type="number" step="0.01" value="${Number(draft.tae||24)}"></div>
           </div>`;
-        } else if(subtype === 'pay_end_month'){
+          return;
+        }
+        if(subtype === 'pay_end_month'){
           wrap.innerHTML = `<div class="modalGrid">
-            <div class="field"><label>Monto</label><input id="dAmount" class="input" type="number" step="0.01" value="${Number(item.amount||0)}"></div>
-            <div class="field"><label>Periodicidad</label>
+            <div class="field"><label>Importe esperado</label><input id="dAmount" class="input" type="number" step="0.01" value="${Number(draft.amount||0)}"></div>
+            <div class="field"><label>Frecuencia</label>
               <select id="dPeriodicity" class="select">
-                <option value="monthly" ${item.periodicity==='monthly'?'selected':''}>Mensual</option>
-                <option value="one_time" ${item.periodicity==='one_time'?'selected':''}>Puntual</option>
+                <option value="monthly" ${normalizeExpensePeriodicity(draft.periodicity)==='monthly'?'selected':''}>Mensual</option>
+                <option value="bimonthly" ${normalizeExpensePeriodicity(draft.periodicity)==='bimonthly'?'selected':''}>Bimestral</option>
+                <option value="quarterly" ${normalizeExpensePeriodicity(draft.periodicity)==='quarterly'?'selected':''}>Trimestral</option>
+                <option value="four_monthly" ${normalizeExpensePeriodicity(draft.periodicity)==='four_monthly'?'selected':''}>Cuatrimestral</option>
+                <option value="yearly" ${normalizeExpensePeriodicity(draft.periodicity)==='yearly'?'selected':''}>Anual</option>
+                <option value="one_time" ${normalizeExpensePeriodicity(draft.periodicity)==='one_time'?'selected':''}>Puntual</option>
+                <option value="custom_months" ${normalizeExpensePeriodicity(draft.periodicity)==='custom_months'?'selected':''}>Otros</option>
               </select>
             </div>
+            <div class="field"><label>Mes del proximo recibo</label><input id="dStartMonthInline" class="input" type="month" value="${draft.startMonth||state.defaultStartMonth}"></div>
+            <div class="field" id="dCustomIntervalWrap" style="${normalizeExpensePeriodicity(draft.periodicity)==='custom_months'?'':'display:none'}"><label>Cada cuantos meses</label><input id="dIntervalMonths" class="input" type="number" min="1" step="1" value="${Math.max(1, Number(draft.intervalMonths || 1))}"></div>
           </div>`;
-        } else {
-          wrap.innerHTML = `<div class="modalGrid">
-            <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${Number(item.monthlyPayment||0)}"></div>
-            <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${Number(item.remainingInstallments||0)}"></div>
-            <div class="field"><label>Última cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${item.lastMonth||''}"></div>
-          </div>`;
+          const periodicitySelect = document.getElementById('dPeriodicity');
+          const customWrap = document.getElementById('dCustomIntervalWrap');
+          periodicitySelect.onchange = () => {
+            customWrap.style.display = periodicitySelect.value === 'custom_months' ? '' : 'none';
+          };
+          return;
         }
+        wrap.innerHTML = `<div class="modalGrid">
+          <div class="field"><label>Importe total de la compra</label><input id="dAmount" class="input" type="number" step="0.01" value="${Number(draft.amount||0)}"></div>
+          <div class="field"><label>Cuota mensual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${Number(draft.monthlyPayment||0)}"></div>
+          <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${Number(draft.remainingInstallments||0)}"></div>
+          <div class="field"><label>Ultima cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${draft.lastMonth||''}"></div>
+        </div>`;
       }
 
-      document.getElementById('closeModalBtn').onclick = () => {
-        const isEmpty = (!item.name || item.name === '') &&
-          Number(item.monthlyPayment||0) === 0 &&
-          Number(item.amount||0) === 0 &&
-          Number(item.currentDebt||0) === 0 &&
-          Number(item.currentPayment||0) === 0;
+      function removeIfEmpty(){
+        const isEmpty = !debtEntityName(draft) &&
+          !debtInstrumentName(draft) &&
+          Number(draft.monthlyPayment||0) === 0 &&
+          Number(draft.amount||0) === 0 &&
+          Number(draft.currentDebt||0) === 0 &&
+          Number(draft.currentPayment||0) === 0 &&
+          Number(draft.totalBorrowed||0) === 0;
         if(isEmpty){
-          const idx = state.debts.findIndex(x => x.id === item.id);
+          const idx = state.debts.findIndex(x => x.id === draft.id);
           if(idx >= 0) state.debts.splice(idx,1);
           if(fromWizard) renderWizardRows(state.debts, 'wizardDebtList', 'debt');
           renderManualLists();
           persistAndRefresh().catch(err => console.error(err));
         }
-        closeModal();
-      };
+      }
+
+      document.getElementById('closeModalBtn').onclick = () => { removeIfEmpty(); closeModal(); };
       document.getElementById('debtKind').onchange = renderDynamic;
       document.getElementById('debtSubtype').onchange = renderDynamic;
       renderDynamic();
 
       document.getElementById('saveDebtBtn').onclick = () => {
-        item.name = document.getElementById('debtName').value.trim();
-        item.startMonth = document.getElementById('debtStart').value || state.defaultStartMonth;
-        item.debtKind = document.getElementById('debtKind').value;
-        item.cardSubtype = document.getElementById('debtSubtype').value;
-        item.monthlyPayment = 0;
-        item.remainingInstallments = 0;
-        item.lastMonth = '';
-        item.amount = 0;
-        item.currentDebt = 0;
-        item.currentPayment = 0;
-        item.tin = 20;
-        item.tae = 24;
-        item.periodicity = 'monthly';
-        if(item.debtKind === 'loan'){
-          item.monthlyPayment = Number(document.getElementById('dMonthly').value||0);
-          item.remainingInstallments = Number(document.getElementById('dRemaining').value||0);
-          item.lastMonth = document.getElementById('dLastMonth').value || '';
-        } else if(item.cardSubtype === 'revolving'){
-          item.currentDebt = Number(document.getElementById('dCurrentDebt').value||0);
-          item.currentPayment = Number(document.getElementById('dCurrentPayment').value||0);
-          item.tin = Number(document.getElementById('dTin').value||0);
-          item.tae = Number(document.getElementById('dTae').value||0);
-        } else if(item.cardSubtype === 'pay_end_month'){
-          item.amount = Number(document.getElementById('dAmount').value||0);
-          item.periodicity = document.getElementById('dPeriodicity').value;
+        const debtKind = document.getElementById('debtKind').value;
+        const subtype = debtKind === 'card' ? document.getElementById('debtSubtype').value : 'loan';
+        const next = makeDebtRow({
+          ...draft,
+          entityName: document.getElementById('debtEntityName').value.trim(),
+          instrumentName: document.getElementById('debtInstrumentName').value.trim(),
+          instrumentType: debtKind,
+          debtKind,
+          paymentMode: subtype,
+          cardSubtype: debtKind === 'card' ? subtype : null,
+          startMonth: (document.getElementById('dStartMonthInline')?.value || document.getElementById('debtStart').value || state.defaultStartMonth)
+        });
+        next.amount = 0;
+        next.monthlyPayment = 0;
+        next.remainingInstallments = 0;
+        next.lastMonth = '';
+        next.currentDebt = 0;
+        next.currentPayment = 0;
+        next.creditLimit = 0;
+        next.totalBorrowed = 0;
+        next.tin = 20;
+        next.tae = 24;
+        next.periodicity = 'monthly';
+        next.intervalMonths = 1;
+
+        if(debtKind === 'loan'){
+          next.totalBorrowed = Number(document.getElementById('dTotalBorrowed').value||0);
+          next.monthlyPayment = Number(document.getElementById('dMonthly').value||0);
+          next.remainingInstallments = Number(document.getElementById('dRemaining').value||0);
+          next.lastMonth = document.getElementById('dLastMonth').value || '';
+        } else if(subtype === 'revolving'){
+          next.creditLimit = Number(document.getElementById('dCreditLimit').value||0);
+          next.currentDebt = Number(document.getElementById('dCurrentDebt').value||0);
+          next.currentPayment = Number(document.getElementById('dCurrentPayment').value||0);
+          next.tin = Number(document.getElementById('dTin').value||0);
+          next.tae = Number(document.getElementById('dTae').value||0);
+        } else if(subtype === 'pay_end_month'){
+          next.amount = Number(document.getElementById('dAmount').value||0);
+          next.periodicity = normalizeExpensePeriodicity(document.getElementById('dPeriodicity').value);
+          next.intervalMonths = Math.max(1, Number(document.getElementById('dIntervalMonths')?.value || 1));
         } else {
-          item.monthlyPayment = Number(document.getElementById('dMonthly').value||0);
-          item.remainingInstallments = Number(document.getElementById('dRemaining').value||0);
-          item.lastMonth = document.getElementById('dLastMonth').value || '';
+          next.amount = Number(document.getElementById('dAmount').value||0);
+          next.monthlyPayment = Number(document.getElementById('dMonthly').value||0);
+          next.remainingInstallments = Number(document.getElementById('dRemaining').value||0);
+          next.lastMonth = document.getElementById('dLastMonth').value || '';
         }
+
+        Object.assign(item, next);
         closeModal();
         if(fromWizard) renderWizardRows(state.debts, 'wizardDebtList', 'debt');
         renderManualLists();
         renderForecast();
         saveLocal();
       };
+    }
+
+    function groupedDebtsByEntity(){
+      const groups = new Map();
+      (state.debts || []).forEach(item => {
+        const key = debtGroupTitle(item);
+        if(!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(item);
+      });
+      return Array.from(groups.entries()).map(([entityName, items]) => ({ entityName, items }));
+    }
+
+    function openDebtCreateFlow(defaultEntity = '', preferredCardMode = 'revolving', fromWizard = false){
+      const root = document.getElementById('modalRoot');
+      const existing = Array.from(new Set((state.debts || []).map(debt => debtEntityName(debt)).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'es'));
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead"><h3>Nueva deuda</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+        <div class="field">
+          <label>Entidad</label>
+          <input id="newDebtEntity" class="input" list="debtEntitySuggestions" placeholder="Ej. BBVA, Cetelem, Hacienda" value="${escapeHtml(defaultEntity)}">
+          <datalist id="debtEntitySuggestions">${existing.map(name => `<option value="${escapeHtml(name)}"></option>`).join('')}</datalist>
+        </div>
+        <div class="btnRow" style="margin-top:18px">
+          <button id="createDebtCardBtn" class="btn primary">Añadir tarjeta</button>
+          <button id="createDebtLoanBtn" class="btn ghost">Añadir prestamo</button>
+        </div>
+      </div>`;
+      document.getElementById('closeModalBtn').onclick = closeModal;
+      function createWith(type){
+        const entityName = document.getElementById('newDebtEntity').value.trim();
+        if(!entityName){
+          alert('Primero necesito el nombre de la entidad.');
+          return;
+        }
+        const item = makeDebtRow({
+          entityName,
+          instrumentType: type,
+          debtKind: type,
+          paymentMode: type === 'card' ? preferredCardMode : 'loan',
+          cardSubtype: type === 'card' ? preferredCardMode : null,
+          startMonth: state.defaultStartMonth
+        });
+        state.debts.push(item);
+        closeModal();
+        if(fromWizard) renderWizardRows(state.debts, 'wizardDebtList', 'debt');
+        renderManualLists();
+        openDebtEditor(item, fromWizard);
+      }
+      document.getElementById('createDebtCardBtn').onclick = () => createWith('card');
+      document.getElementById('createDebtLoanBtn').onclick = () => createWith('loan');
     }
 
     function openMonthModal(ym){
@@ -2176,7 +2435,7 @@
         return current.debts.length ? current.debts.map(it => `
           <div class="miniItem ${it.settled ? 'settledDebt' : ''}">
             <div class="miniMeta">
-              <div class="miniName" style="${it.settled ? 'color:#4ade80' : ''}">${escapeHtml(it.name||'Deuda')}${it.settled ? ' · saldada' : ''}</div>
+              <div class="miniName" style="${it.settled ? 'color:#4ade80' : ''}">${escapeHtml(debtDisplayName(it))}${it.settled ? ' · saldada' : ''}</div>
               <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it))}</div>
             </div>
             <div class="miniActions">
@@ -2363,13 +2622,32 @@
       };
       document.getElementById('addMonthDebtBtn').onclick = () => {
         mountInlineForm('monthDebtForm', 'Añadir deuda', [
-          { id:'amd_name', label:'Nombre', type:'text', value:'' },
-          { id:'amd_amount', label:'Monto mensual inicial', type:'number', step:'0.01', value:0 }
+          { id:'amd_entity', label:'Entidad', type:'text', value:'' },
+          { id:'amd_name', label:'Instrumento', type:'text', value:'' },
+          { id:'amd_type', label:'Tipo', type:'select', options:`
+            <option value="loan">Prestamo</option>
+            <option value="card">Tarjeta</option>
+          `},
+          { id:'amd_amount', label:'Cuota o monto inicial', type:'number', step:'0.01', value:0 }
         ], () => {
-          const name = document.getElementById('amd_name').value.trim();
+          const entityName = document.getElementById('amd_entity').value.trim();
+          const instrumentName = document.getElementById('amd_name').value.trim();
+          const type = document.getElementById('amd_type').value;
           const amount = Number(document.getElementById('amd_amount').value||0);
-          if(!name) return;
-          state.debts.push(makeDebtRow({ name, debtKind:'loan', monthlyPayment:amount, remainingInstallments:1, startMonth:ym }));
+          if(!entityName) return;
+          state.debts.push(makeDebtRow({
+            entityName,
+            instrumentName,
+            instrumentType:type,
+            debtKind:type,
+            paymentMode:type === 'card' ? 'revolving' : 'loan',
+            cardSubtype:type === 'card' ? 'revolving' : null,
+            monthlyPayment:type === 'loan' ? amount : 0,
+            currentPayment:type === 'card' ? amount : 0,
+            currentDebt:type === 'card' ? amount : 0,
+            remainingInstallments:type === 'loan' ? 1 : 0,
+            startMonth:ym
+          }));
           closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
         });
       };
@@ -2424,6 +2702,7 @@
     function itemCardHtml(item, type){
       let desc = '';
       let money = Number(item.amount||0);
+      let displayName = item.name || 'Sin nombre';
       if(type==='income'){
         desc = `Ingreso · ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' → ' + item.endMonth : ''}`;
         money = Number(item.amount||0);
@@ -2442,11 +2721,12 @@
         }
       }
       if(type==='debt'){
+        displayName = debtDisplayName(item);
         desc = debtDescription(item);
         money = debtBaseDisplayAmount(item);
       }
       return `<div class="item">
-        <div class="meta"><div class="name">${escapeHtml(item.name||'Sin nombre')}</div><div class="desc">${escapeHtml(desc)}</div></div>
+        <div class="meta"><div class="name">${escapeHtml(displayName)}</div><div class="desc">${escapeHtml(desc)}</div></div>
         <div class="money">${euros(money)}</div>
         <div class="inline-actions">
           <button class="btn ghost" data-edit="${type}" data-id="${item.id}">Editar</button>
@@ -2459,8 +2739,7 @@
       const maps = [
         ['incomeList', state.incomes, 'income'],
         ['expenseList', state.expenses, 'expense'],
-        ['goalList', state.goals, 'goal'],
-        ['debtList', state.debts, 'debt']
+        ['goalList', state.goals, 'goal']
       ];
       maps.forEach(([id, arr, type]) => {
         const el = document.getElementById(id);
@@ -2489,6 +2768,48 @@
           });
         }
       });
+      const debtListEl = document.getElementById('debtList');
+      if(!(state.debts || []).length){
+        debtListEl.innerHTML = '<div class="empty">No hay elementos todavía.</div>';
+      } else {
+        debtListEl.innerHTML = groupedDebtsByEntity().map(group => `
+          <div class="debtGroup">
+            <div class="debtGroupHead">
+              <div>
+                <div class="debtGroupTitle">${escapeHtml(group.entityName)}</div>
+                <div class="debtGroupMeta">${group.items.length} instrumento${group.items.length === 1 ? '' : 's'}</div>
+              </div>
+              <div class="debtGroupActions">
+                <button class="btn ghost" data-add-card="${escapeHtml(group.entityName)}">+ Tarjeta</button>
+                <button class="btn ghost" data-add-loan="${escapeHtml(group.entityName)}">+ Prestamo</button>
+              </div>
+            </div>
+            <div class="debtGroupList">${group.items.map(x => itemCardHtml(x, 'debt')).join('')}</div>
+          </div>
+        `).join('');
+        debtListEl.querySelectorAll('[data-edit]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const item = state.debts.find(x => x.id === btn.dataset.id);
+            if(item) openDebtEditor(item, false);
+          });
+        });
+        debtListEl.querySelectorAll('[data-del]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = state.debts.findIndex(x => x.id === btn.dataset.id);
+            if(idx >= 0) state.debts.splice(idx,1);
+            renderManualLists();
+            renderForecast();
+            kpis();
+            saveLocal();
+          });
+        });
+        debtListEl.querySelectorAll('[data-add-card]').forEach(btn => {
+          btn.addEventListener('click', () => openDebtCreateFlow(btn.dataset.addCard, 'revolving', false));
+        });
+        debtListEl.querySelectorAll('[data-add-loan]').forEach(btn => {
+          btn.addEventListener('click', () => openDebtCreateFlow(btn.dataset.addLoan, 'revolving', false));
+        });
+      }
 
       document.getElementById('forecastFrom').value = state.forecast.from;
       document.getElementById('forecastTo').value = state.forecast.to;
@@ -2769,10 +3090,7 @@
         renderWizardRows(state.expenses, 'wizardExpenseList', 'expense');
       });
       document.getElementById('addWizardDebt').addEventListener('click', () => {
-        const item = makeDebtRow();
-        state.debts.push(item);
-        renderWizardRows(state.debts, 'wizardDebtList', 'debt');
-        openDebtEditor(item, true);
+        openDebtCreateFlow('', 'revolving', true);
       });
       document.getElementById('addWizardGoal').addEventListener('click', () => {
         const item = makeGoalRow();
@@ -2823,10 +3141,7 @@
         openGoalEditor(item, false);
       });
       document.getElementById('addDebtBtn').addEventListener('click', () => {
-        const item = makeDebtRow({ name:'Nueva deuda' });
-        state.debts.push(item);
-        renderManualLists();
-        openDebtEditor(item, false);
+        openDebtCreateFlow('', 'revolving', false);
       });
 
       document.getElementById('initialReserve').addEventListener('change', e => {
