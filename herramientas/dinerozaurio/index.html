@@ -2641,7 +2641,10 @@
         const base = current.expenses.length ? current.expenses.map(it => `
           <div class="miniItem">
             <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Gasto')}</div><div class="miniSub">${euros(it.monthAmount)}</div></div>
-            <div class="miniActions"><button class="btn ghost" data-expense-edit="${it.id}">Editar</button></div>
+            <div class="miniActions">
+              <button class="btn ghost" data-expense-edit="${it.id}">Editar</button>
+              <button class="btn danger" data-expense-remove="${it.id}">Eliminar</button>
+            </div>
           </div>`).join('') : '';
         const oneOffs = monthOneOffs.length ? monthOneOffs.map(entry => `
           <div class="miniItem">
@@ -2803,10 +2806,11 @@
             alert('Si la compra va aplazada, necesito ultima cuota o cuotas restantes.');
             return;
           }
-          const nextEntries = monthOneOffExpenses(ym).filter(item => item.id !== nextEntry.id);
-          nextEntries.push(nextEntry);
-          adj.oneOffExpenses = nextEntries;
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+          commitMonthAdjustment(nextAdj => {
+            const nextEntries = (nextAdj.oneOffExpenses || []).filter(item => item.id !== nextEntry.id);
+            nextEntries.push(nextEntry);
+            nextAdj.oneOffExpenses = nextEntries;
+          });
         });
         const sourceEl = document.getElementById('ame_source');
         const cardEl = document.getElementById('ame_card');
@@ -2848,8 +2852,36 @@
           { id:'me_amount', label:'Monto', type:'number', step:'0.01', value:item.monthAmount }
         ], () => {
           const amount = Number(document.getElementById('me_amount').value||0);
-          adj.expenseOverrides[item.id] = amount;
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+          commitMonthAdjustment(nextAdj => {
+            nextAdj.expenseOverrides[item.id] = amount;
+          });
+        });
+      });
+      root.querySelectorAll('[data-expense-remove]').forEach(btn => btn.onclick = () => {
+        const item = current.expenses.find(x => x.id === btn.dataset.expenseRemove);
+        if(!item) return;
+        mountInlineForm('monthExpenseForm', 'Eliminar gasto', [
+          { id:'me_remove_mode', label:'Modo', type:'select', options:`
+            <option value="this_month">Quitar solo este mes</option>
+            <option value="remove_from_here">Eliminar desde este mes la secuencia</option>
+          `}
+        ], () => {
+          const mode = document.getElementById('me_remove_mode').value;
+          if(mode === 'remove_from_here'){
+            const sourceExpense = state.expenses.find(entry => entry.id === item.id);
+            if(sourceExpense){
+              if((sourceExpense.startMonth || state.defaultStartMonth) >= ym){
+                state.expenses = state.expenses.filter(entry => entry.id !== item.id);
+              } else {
+                sourceExpense.endMonth = addMonthsStr(ym, -1);
+              }
+            }
+            touchState({ reopenMonth: ym });
+            return;
+          }
+          commitMonthAdjustment(nextAdj => {
+            nextAdj.expenseOverrides[item.id] = 0;
+          });
         });
       });
 
@@ -2965,20 +2997,32 @@
       };
 
       const editExtraExpenseBtn = document.getElementById('editExtraExpenseBtn');
-      if(editExtraExpenseBtn) editExtraExpenseBtn.onclick = () => document.getElementById('addMonthExpenseBtn').click();
+      if(editExtraExpenseBtn) editExtraExpenseBtn.onclick = () => {
+        mountInlineForm('monthExpenseForm', 'Editar gasto puntual', [
+          { id:'ame_legacy_name', label:'Nombre', type:'text', value:adj.extraExpenseName||'' },
+          { id:'ame_legacy_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraExpenseAmount||0 }
+        ], () => {
+          commitMonthAdjustment(nextAdj => {
+            nextAdj.extraExpenseName = document.getElementById('ame_legacy_name').value.trim();
+            nextAdj.extraExpenseAmount = Number(document.getElementById('ame_legacy_amount').value||0);
+          });
+        });
+      };
       root.querySelectorAll('[data-extra-expense-edit]').forEach(btn => btn.onclick = () => {
         const entry = monthOneOffExpenses(ym).find(item => item.id === btn.dataset.extraExpenseEdit);
         if(entry) openOneOffExpenseForm(entry);
       });
       root.querySelectorAll('[data-extra-expense-remove]').forEach(btn => btn.onclick = () => {
-        adj.oneOffExpenses = monthOneOffExpenses(ym).filter(item => item.id !== btn.dataset.extraExpenseRemove);
-        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+        commitMonthAdjustment(nextAdj => {
+          nextAdj.oneOffExpenses = (nextAdj.oneOffExpenses || []).filter(item => item.id !== btn.dataset.extraExpenseRemove);
+        });
       });
       const removeExtraExpenseBtn = document.getElementById('removeExtraExpenseBtn');
       if(removeExtraExpenseBtn) removeExtraExpenseBtn.onclick = () => {
-        adj.extraExpenseName = '';
-        adj.extraExpenseAmount = 0;
-        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+        commitMonthAdjustment(nextAdj => {
+          nextAdj.extraExpenseName = '';
+          nextAdj.extraExpenseAmount = 0;
+        });
       };
 
       const editExtraSavingBtn = document.getElementById('editExtraSavingBtn');

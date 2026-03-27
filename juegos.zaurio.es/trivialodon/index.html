@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Trivialodon | Zaurio</title>
+  <link rel="icon" href="/shared/assets/brand/favicon.ico" />
+  <link rel="stylesheet" href="/shared/css/zaurio-ui.css" />
+  <style>
+    :root{--bg1:#190826;--bg2:#09040d;--panel:rgba(22,10,31,.9);--panel2:rgba(34,16,48,.96);--stroke:rgba(255,255,255,.12);--text:#fff8fc;--muted:rgba(255,255,255,.72);--gold:#ffd36f;--cyan:#86efff;--pink:#ff9ec4;--ok:#7ff2b8;--danger:#ff97ad}
+    *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:radial-gradient(circle at 15% 15%,rgba(255,211,111,.16),transparent 20%),radial-gradient(circle at 85% 12%,rgba(134,239,255,.14),transparent 18%),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--text);font-family:Segoe UI,Arial,sans-serif}
+    .page{width:min(1180px,94vw);margin:0 auto 48px}.hero,.shell,.cols{display:grid;gap:18px}.hero{grid-template-columns:1.2fr .9fr;margin-bottom:18px}.shell{grid-template-columns:360px 1fr}.cols{grid-template-columns:1fr 1fr}
+    .panel,.card,.live,.overlay-card{border:1px solid var(--stroke);border-radius:28px;background:var(--panel);box-shadow:0 24px 60px rgba(0,0,0,.34)} .panel,.card,.live,.overlay-card{padding:26px}
+    .hero-side{display:grid;gap:18px}.stat{padding:22px;border:1px solid var(--stroke);border-radius:24px;background:var(--panel2);box-shadow:0 24px 60px rgba(0,0,0,.24)} .stat strong{display:block;font-size:2rem;margin-top:6px}
+    .kicker,.badge,.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}.kicker{background:rgba(134,239,255,.14);color:var(--cyan);margin-bottom:12px}.badge,.pill{background:rgba(255,255,255,.08)}
+    h1{margin:0 0 12px;font-size:clamp(2.8rem,6vw,5rem);line-height:.95} h2,h3{margin:0 0 10px} p{margin:0;color:var(--muted);line-height:1.6}
+    .field{display:grid;gap:8px;margin-bottom:14px}.field label{font-size:.9rem;font-weight:700}.field input,.field textarea,.field select{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.05);color:var(--text);font:inherit;outline:none}.field textarea{min-height:92px;resize:vertical}
+    .actions,.meta{display:flex;gap:10px;flex-wrap:wrap}.meta{margin-bottom:16px} .status{min-height:22px;color:var(--cyan);font-size:.92rem}.status[data-tone="danger"]{color:var(--danger)}.status[data-tone="ok"]{color:var(--ok)}
+    button,a.btn{border:0;border-radius:999px;padding:12px 18px;font:inherit;font-weight:800;text-decoration:none;cursor:pointer;transition:transform .18s ease,opacity .18s ease}button:hover,a.btn:hover{transform:translateY(-1px)}button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+    .primary{background:linear-gradient(135deg,var(--gold),var(--pink));color:#220a20}.secondary{background:rgba(255,255,255,.08);color:var(--text)}.danger{background:rgba(255,151,173,.14);color:#ffdce4}
+    .live{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02)),var(--panel2)} .question{font-size:clamp(1.5rem,2.8vw,2.25rem);line-height:1.2;white-space:pre-wrap;margin-bottom:14px}.answer{display:none;margin-top:16px;padding:16px;border-radius:20px;background:rgba(127,242,184,.1);border:1px solid rgba(127,242,184,.24)}.answer.on{display:block}
+    .list{display:grid;gap:12px}.item{padding:16px;border-radius:20px;border:1px solid var(--stroke);background:rgba(255,255,255,.04)}.row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px}.empty{padding:16px;border-radius:18px;border:1px dashed rgba(255,255,255,.18);color:var(--muted);background:rgba(255,255,255,.02)}
+    details{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)} summary{cursor:pointer;font-weight:800} pre{margin:14px 0 0;padding:16px;border-radius:20px;overflow:auto;background:#120917;border:1px solid rgba(255,255,255,.08);color:#ffe7f0;font-size:.88rem;line-height:1.55}
+    .overlay{position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:rgba(7,4,11,.72);backdrop-filter:blur(10px);z-index:20}.overlay[hidden]{display:none}
+    @media (max-width:980px){.hero,.shell,.cols{grid-template-columns:1fr}}
+  </style>
+</head>
+<body data-zaurio-nav="juegos" data-ready="false">
+  <div data-zaurio-nav data-active="juegos"></div>
+  <div class="topMenu" hidden></div>
+  <div class="overlay" id="boot">
+    <div class="overlay-card">
+      <span class="kicker">Supabase realtime</span>
+      <h2>Sala de anfitrion e invitados</h2>
+      <p>Esta primera fase ya funciona por sesion: el anfitrion abre sala, los invitados entran por codigo y el estado viaja por un canal realtime de Supabase.</p>
+      <div class="actions" style="margin-top:18px">
+        <button class="primary" id="btnBoot">Entrar al nido</button>
+        <a class="btn secondary" href="https://juegos.zaurio.es">Volver a Juegos</a>
+      </div>
+    </div>
+  </div>
+  <main class="page">
+    <section class="hero">
+      <article class="panel">
+        <span class="kicker">Trivialodon ya despega</span>
+        <h1>Host e invitados en vivo.</h1>
+        <p>Sin meter otro servicio: Supabase se encarga del canal, la presencia y la sincronizacion de la sesion. El anfitrion publica preguntas y los invitados ven el estado comun al instante.</p>
+      </article>
+      <div class="hero-side">
+        <article class="stat"><span class="badge">Sala</span><strong id="heroRoom">sin sala</strong><p>Tambien puedes entrar por URL con <code>?sala=ABCDE</code>.</p></article>
+        <article class="stat"><span class="badge">Modo</span><strong>Host + Guests</strong><p>La presencia sale del propio canal y la cola de respuestas tambien.</p></article>
+      </div>
+    </section>
+    <section class="shell">
+      <aside style="display:grid;gap:18px;align-content:start">
+        <article class="card">
+          <h2>Entrar en sesion</h2>
+          <p style="margin-bottom:16px">Elige nombre, crea sala como anfitrion o entra como invitado.</p>
+          <div class="field"><label for="playerName">Tu nombre</label><input id="playerName" maxlength="28" placeholder="Ejemplo: Dino Marta" /></div>
+          <div class="field"><label for="roomInput">Codigo de sala</label><input id="roomInput" maxlength="5" placeholder="ABCDE" /></div>
+          <div class="actions" style="margin-bottom:12px"><button class="primary" id="btnHost">Crear como anfitrion</button><button class="secondary" id="btnGuest">Entrar como invitado</button></div>
+          <div class="actions" style="margin-bottom:14px"><button class="secondary" id="btnReconnect">Reconectar</button><button class="danger" id="btnLeave">Salir</button></div>
+          <div class="meta"><span class="pill">Rol <strong id="roleText">sin rol</strong></span><span class="pill">Sala <strong id="roomText">-----</strong></span><span class="pill">Estado <strong id="stageText">Lobby</strong></span></div>
+          <div class="status" id="status">Todavia no estas conectado.</div>
+        </article>
+        <article class="card" id="hostPanel" hidden>
+          <h2>Panel del anfitrion</h2>
+          <p style="margin-bottom:16px">Lo que cambies aqui se empuja al resto de la sala.</p>
+          <div class="field"><label for="titleInput">Nombre de la partida</label><input id="titleInput" maxlength="60" placeholder="Noche de trivia jurasica" /></div>
+          <div class="field"><label for="numberInput">Pregunta actual</label><input id="numberInput" type="number" min="1" value="1" /></div>
+          <div class="field"><label for="questionInput">Enunciado</label><textarea id="questionInput" placeholder="Escribe la pregunta actual"></textarea></div>
+          <div class="field"><label for="answerInput">Respuesta correcta</label><textarea id="answerInput" placeholder="Solo se muestra al revelar"></textarea></div>
+          <div class="field"><label for="stageInput">Momento</label><select id="stageInput"><option value="lobby">Lobby</option><option value="question">Pregunta en curso</option><option value="answer">Respuesta revelada</option><option value="closed">Sesion cerrada</option></select></div>
+          <div class="actions"><button class="primary" id="btnSync">Sincronizar</button><button class="secondary" id="btnReveal">Revelar respuesta</button><button class="secondary" id="btnNext">Siguiente pregunta</button><button class="danger" id="btnClear">Vaciar cola</button></div>
+        </article>
+        <article class="card" id="guestPanel" hidden>
+          <h2>Panel del invitado</h2>
+          <p style="margin-bottom:16px">Puedes mandar tu respuesta o simplemente hacer ping al anfitrion.</p>
+          <div class="field"><label for="guestInput">Respuesta o mensaje</label><textarea id="guestInput" placeholder="Ejemplo: mi respuesta es velociraptor"></textarea></div>
+          <div class="actions"><button class="primary" id="btnSend">Enviar al anfitrion</button><button class="secondary" id="btnBuzz">Hacer ping</button></div>
+        </article>
+      </aside>
+      <section style="display:grid;gap:18px;align-content:start">
+        <article class="live">
+          <div class="meta"><span class="badge" id="liveTitle">Trivialodon en espera</span><span class="badge" id="liveStage">Lobby</span><span class="badge">Pregunta <span id="liveNumber">1</span></span></div>
+          <div class="question" id="liveQuestion">El anfitrion todavia no ha publicado la primera pregunta.</div>
+          <p id="liveHint">En cuanto se sincronice una pregunta, toda la sala la vera aqui.</p>
+          <div class="answer" id="answerBox"><strong>Respuesta revelada</strong><div id="liveAnswer" style="margin-top:8px;white-space:pre-wrap"></div></div>
+        </article>
+        <section class="cols">
+          <article class="card"><div class="row"><div><h3>Jugadores conectados</h3><p>La lista sale de la presencia del canal.</p></div><span class="badge"><span id="playerCount">0</span> online</span></div><div class="list" id="players"></div></article>
+          <article class="card"><div class="row"><div><h3>Cola del anfitrion</h3><p>Respuestas y pings de invitados.</p></div><span class="badge"><span id="queueCount">0</span> items</span></div><div class="list" id="queue"></div></article>
+        </section>
+        <article class="card">
+          <h3>Notas tecnicas</h3>
+          <p>Esta fase ya va solo con Supabase Realtime. Si luego queremos persistencia entre reinicios o historico de sesiones, se puede ampliar en el mismo proyecto Supabase.</p>
+          <details><summary>Ver SQL sugerido para una fase 2</summary><pre id="sql"></pre></details>
+        </article>
+      </section>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/shared/js/zaurio-nav.js"></script>
+  <script>
+    const SUPABASE_URL="https://adpjitccwwvlydrtvvqk.supabase.co";
+    const SUPABASE_KEY="sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
+    const STORE_KEY="trivialodon-room-v1";
+    const SQL=`create extension if not exists pgcrypto;
+
+create table if not exists public.trivialodon_sessions (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  title text not null default 'Trivialodon',
+  host_name text not null,
+  status text not null default 'lobby',
+  current_question integer not null default 1,
+  question_text text not null default '',
+  answer_text text not null default '',
+  reveal_answer boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);`;
+    const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+    const $=id=>document.getElementById(id);
+    const ui={boot:$("boot"),btnBoot:$("btnBoot"),playerName:$("playerName"),roomInput:$("roomInput"),btnHost:$("btnHost"),btnGuest:$("btnGuest"),btnReconnect:$("btnReconnect"),btnLeave:$("btnLeave"),status:$("status"),roleText:$("roleText"),roomText:$("roomText"),stageText:$("stageText"),heroRoom:$("heroRoom"),hostPanel:$("hostPanel"),guestPanel:$("guestPanel"),titleInput:$("titleInput"),numberInput:$("numberInput"),questionInput:$("questionInput"),answerInput:$("answerInput"),stageInput:$("stageInput"),btnSync:$("btnSync"),btnReveal:$("btnReveal"),btnNext:$("btnNext"),btnClear:$("btnClear"),guestInput:$("guestInput"),btnSend:$("btnSend"),btnBuzz:$("btnBuzz"),liveTitle:$("liveTitle"),liveStage:$("liveStage"),liveNumber:$("liveNumber"),liveQuestion:$("liveQuestion"),liveHint:$("liveHint"),answerBox:$("answerBox"),liveAnswer:$("liveAnswer"),playerCount:$("playerCount"),players:$("players"),queueCount:$("queueCount"),queue:$("queue"),sql:$("sql")};
+    const state={profile:{playerId:crypto.randomUUID(),name:"",role:"",roomCode:""},session:{title:"Trivialodon en espera",status:"lobby",questionNumber:1,questionText:"",answerText:"",revealAnswer:false,hostName:""},players:[],queue:[],channel:null};
+    ui.sql.textContent=SQL;
+
+    const esc=v=>String(v||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const norm=v=>String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,5);
+    const label=s=>({lobby:"Lobby",question:"Pregunta en curso",answer:"Respuesta revelada",closed:"Sesion cerrada"}[s]||"Lobby");
+    const code=()=>{const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let out="";for(let i=0;i<5;i++) out+=c[Math.floor(Math.random()*c.length)];return out;};
+    const store=()=>localStorage.setItem(STORE_KEY,JSON.stringify({profile:state.profile,session:{title:state.session.title,hostName:state.session.hostName}}));
+    const setStatus=(m,t="")=>{ui.status.dataset.tone=t;ui.status.textContent=m;};
+    function renderPanels(){ui.roleText.textContent=state.profile.role||"sin rol";ui.hostPanel.hidden=state.profile.role!=="host";ui.guestPanel.hidden=state.profile.role!=="guest";}
+    function renderLive(){ui.roomText.textContent=state.profile.roomCode||"-----";ui.heroRoom.textContent=state.profile.roomCode||"sin sala";ui.stageText.textContent=label(state.session.status);ui.liveTitle.textContent=state.session.title||"Trivialodon en espera";ui.liveStage.textContent=label(state.session.status);ui.liveNumber.textContent=String(state.session.questionNumber||1);ui.liveQuestion.textContent=state.session.questionText||"El anfitrion todavia no ha publicado la primera pregunta.";ui.liveHint.textContent=state.session.hostName?("Anfitrion actual: "+state.session.hostName):"En cuanto se sincronice una pregunta, toda la sala la vera aqui.";ui.liveAnswer.textContent=state.session.answerText||"Sin respuesta cargada.";ui.answerBox.classList.toggle("on",Boolean(state.session.revealAnswer&&state.session.answerText));if(state.profile.role==="host"){ui.titleInput.value=state.session.title||"";ui.numberInput.value=String(state.session.questionNumber||1);ui.questionInput.value=state.session.questionText||"";ui.answerInput.value=state.session.answerText||"";ui.stageInput.value=state.session.status||"lobby";}}
+    function renderPlayers(){ui.playerCount.textContent=String(state.players.length);ui.players.innerHTML=state.players.length?state.players.map(p=>`<article class="item"><div class="row"><strong>${esc(p.name)}</strong><span class="badge">${p.role==="host"?"anfitrion":"invitado"}</span></div><p>Conectado en directo</p></article>`).join(""):'<div class="empty">Todavia no hay nadie dentro de la sala.</div>';}
+    function renderQueue(){ui.queueCount.textContent=String(state.queue.length);ui.queue.innerHTML=state.queue.length?state.queue.map(x=>`<article class="item"><div class="row"><strong>${esc(x.playerName)}</strong><span class="badge">${esc(x.kind)}</span></div><div style="white-space:pre-wrap;line-height:1.45">${esc(x.body)}</div><p>${new Date(x.createdAt).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</p></article>`).join(""):'<div class="empty">Todavia no hay respuestas enviadas.</div>';}
+    function syncPresence(){if(!state.channel)return;const all=[];const ps=state.channel.presenceState();Object.values(ps).forEach(entries=>(entries||[]).forEach(e=>all.push(e)));all.sort((a,b)=>a.role===b.role?a.name.localeCompare(b.name,"es"):a.role==="host"?-1:1);state.players=all;renderPlayers();}
+    function collect(overrides={}){return{title:(overrides.title??ui.titleInput.value.trim())||"Trivialodon en directo",status:(overrides.status??ui.stageInput.value)||"lobby",questionNumber:Math.max(1,Number((overrides.questionNumber??ui.numberInput.value)||1)),questionText:overrides.questionText??ui.questionInput.value.trim(),answerText:overrides.answerText??ui.answerInput.value.trim(),revealAnswer:Boolean(overrides.revealAnswer??(ui.stageInput.value==="answer")),hostName:state.profile.name};}
+    async function pushState(overrides){if(state.profile.role!=="host"||!state.channel)return;state.session={...state.session,...collect(overrides)};renderLive();store();await state.channel.send({type:"broadcast",event:"session_state",payload:{session:state.session,queue:state.queue}});setStatus("Estado sincronizado con la sala.","ok");}
+    async function sendGuest(kind,body){if(state.profile.role!=="guest"||!state.channel)return;body=String(body||"").trim();if(!body){setStatus("Escribe algo antes de enviar.","danger");return;}await state.channel.send({type:"broadcast",event:"guest_message",payload:{id:crypto.randomUUID(),playerName:state.profile.name,kind,body,createdAt:new Date().toISOString()}});ui.guestInput.value="";setStatus("Mensaje enviado al anfitrion.","ok");}
+    async function leave(silent=false){if(state.channel){try{await sb.removeChannel(state.channel);}catch(_){}}state.channel=null;state.players=[];state.queue=[];state.profile.role="";state.profile.roomCode="";state.session={title:"Trivialodon en espera",status:"lobby",questionNumber:1,questionText:"",answerText:"",revealAnswer:false,hostName:""};renderPanels();renderPlayers();renderQueue();renderLive();store();if(!silent)setStatus("Has salido de la sala.","ok");}
+    async function join(role,room){const name=ui.playerName.value.trim();room=norm(room);if(!name){setStatus("Necesito un nombre antes de conectarte.","danger");ui.playerName.focus();return false;}if(room.length!==5){setStatus("El codigo de sala debe tener 5 caracteres.","danger");ui.roomInput.focus();return false;}await leave(true);state.profile.name=name;state.profile.role=role;state.profile.roomCode=room;ui.roomInput.value=room;renderPanels();renderLive();store();setStatus("Conectando con Supabase Realtime...");const ch=sb.channel("trivialodon:"+room,{config:{broadcast:{self:true},presence:{key:state.profile.playerId}}});state.channel=ch;
+      ch.on("presence",{event:"sync"},syncPresence)
+        .on("broadcast",{event:"session_state"},({payload})=>{if(payload?.session) state.session={...state.session,...payload.session}; if(Array.isArray(payload?.queue)) state.queue=payload.queue; renderLive(); renderQueue(); store(); if(state.profile.role==="guest") setStatus("Sesion actualizada por el anfitrion.");})
+        .on("broadcast",{event:"request_state"},async()=>{if(state.profile.role==="host") await pushState();})
+        .on("broadcast",{event:"guest_message"},({payload})=>{if(!payload) return;state.queue=[payload,...state.queue].slice(0,50);renderQueue();if(state.profile.role==="host") pushState();});
+      ch.subscribe(async status=>{if(status==="SUBSCRIBED"){await ch.track({playerId:state.profile.playerId,name:state.profile.name,role:state.profile.role,joinedAt:new Date().toISOString()});setStatus("Conectado en tiempo real a la sala "+room+".","ok");if(state.profile.role==="host"){state.session.hostName=state.profile.name;if(!state.session.title||state.session.title==="Trivialodon en espera") state.session.title="Sala de "+state.profile.name;renderLive();await pushState();}else{await ch.send({type:"broadcast",event:"request_state",payload:{requestedBy:state.profile.playerId}});}}else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"){setStatus("No he podido abrir el canal realtime. Revisa la config de Supabase.","danger");}else if(status==="CLOSED"){setStatus("La conexion realtime se ha cerrado.","danger");}});
+      return true;
+    }
+    function hydrate(){const params=new URLSearchParams(window.location.search);const q=norm(params.get("sala")||params.get("room")||"");if(q) ui.roomInput.value=q;try{const saved=JSON.parse(localStorage.getItem(STORE_KEY)||"null");if(!saved?.profile) return;ui.playerName.value=saved.profile.name||"";ui.roomInput.value=saved.profile.roomCode||ui.roomInput.value;state.profile.playerId=saved.profile.playerId||state.profile.playerId;state.profile.name=saved.profile.name||"";if(saved.session?.title){state.session.title=saved.session.title;state.session.hostName=saved.session.hostName||"";}}catch(_){}
+      renderPanels();renderLive();renderPlayers();renderQueue();}
+    ui.btnBoot.onclick=()=>{ui.boot.hidden=true;document.body.dataset.ready="true";};
+    ui.btnHost.onclick=async()=>{const room=code();ui.roomInput.value=room;const ok=await join("host",room);if(ok) history.replaceState({},"","?sala="+room);};
+    ui.btnGuest.onclick=async()=>{const room=norm(ui.roomInput.value);const ok=await join("guest",room);if(ok) history.replaceState({},"","?sala="+room);};
+    ui.btnReconnect.onclick=async()=>{try{const saved=JSON.parse(localStorage.getItem(STORE_KEY)||"null");if(!saved?.profile?.roomCode||!saved?.profile?.role){setStatus("No hay una sesion previa completa para reconectar.","danger");return;}ui.playerName.value=saved.profile.name||"";ui.roomInput.value=saved.profile.roomCode||"";const ok=await join(saved.profile.role,saved.profile.roomCode);if(ok) history.replaceState({},"","?sala="+saved.profile.roomCode);}catch(_){setStatus("No he podido leer la sesion previa.","danger");}};
+    ui.btnLeave.onclick=async()=>{history.replaceState({}, "", window.location.pathname);await leave();};
+    ui.btnSync.onclick=async()=>{await pushState();};
+    ui.btnReveal.onclick=async()=>{ui.stageInput.value="answer";await pushState({status:"answer",revealAnswer:true});};
+    ui.btnNext.onclick=async()=>{const next=Math.max(1,Number(ui.numberInput.value||1)+1);ui.numberInput.value=String(next);ui.questionInput.value="";ui.answerInput.value="";ui.stageInput.value="question";state.queue=[];renderQueue();await pushState({questionNumber:next,questionText:"",answerText:"",status:"question",revealAnswer:false});};
+    ui.btnClear.onclick=async()=>{state.queue=[];renderQueue();await pushState();setStatus("La cola del anfitrion se ha vaciado.","ok");};
+    ui.btnSend.onclick=async()=>{await sendGuest("respuesta",ui.guestInput.value);};
+    ui.btnBuzz.onclick=async()=>{await sendGuest("ping",ui.guestInput.value.trim()||"Quiere responder ya.");};
+    hydrate();
+  </script>
+</body>
+</html>

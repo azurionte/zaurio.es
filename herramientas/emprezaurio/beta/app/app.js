@@ -537,27 +537,39 @@ function getPrintContactOrder(){
   return ordered;
 }
 
-function createSidebarRailSkillsSection(rail){
+function collectSidebarRailSkills(rail){
   const liveSection =
     rail?.querySelector?.('[data-rail-sections] .section[data-section="skills"]') ||
     rail?.querySelector?.('.section[data-section="skills"]') ||
     document.querySelector('.sidebar-layout [data-rail-sections] .section[data-section="skills"]');
   if (liveSection) {
-    const clone = cloneClean(liveSection);
-    clone.style.width = '100%';
-    clone.style.boxSizing = 'border-box';
-    clone.style.display = 'block';
-    clone.style.visibility = 'visible';
-    clone.style.opacity = '1';
-    return clone;
+    const parsed = Array.from(liveSection.querySelectorAll('.skill-row')).map(row => {
+      const label = String(row.querySelector('.name')?.textContent || '').trim() || 'Skill';
+      const range = row.querySelector('input[type="range"], .meter');
+      if (range) {
+        const rawValue =
+          typeof range.value !== 'undefined' ? range.value :
+          range.getAttribute?.('value') ||
+          range.style?.getPropertyValue?.('--val') ||
+          '60';
+        const value = Number.parseInt(String(rawValue).replace('%', ''), 10);
+        return { type:'slider', label, value: Number.isFinite(value) ? value : 60 };
+      }
+      const stars = row.querySelectorAll('.star path[fill="currentColor"]').length;
+      return { type:'star', label, stars };
+    }).filter(item => String(item.label || '').trim());
+    if (parsed.length) return parsed;
   }
+  return Array.isArray(S.skills) ? S.skills : [];
+}
 
+function createSidebarRailSkillsSection(rail){
+  const list = collectSidebarRailSkills(rail);
   const section = document.createElement('div');
   section.className = 'section';
   section.dataset.section = 'skills';
   section.style.width = '100%';
   section.style.boxSizing = 'border-box';
-  const list = Array.isArray(S.skills) ? S.skills : [];
   const rows = list.map(skill => {
     const label = skill?.label || 'Skill';
     const valueMarkup = skill?.type === 'slider'
