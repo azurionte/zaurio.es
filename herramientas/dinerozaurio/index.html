@@ -383,7 +383,7 @@
 
       <div class="wizardStep hidden" data-step="1">
         <h2>Gastos</h2>
-        <p class="muted">Paso 2 de 4 · gastos fijos y variables</p>
+        <p class="muted">Paso 2 de 4 · gastos fijos y variables con su periodicidad real</p>
         <div id="wizardExpenseList" class="listContainer"></div>
         <div class="btnRow" style="margin-top:14px">
           <button id="addWizardExpense" class="btn good">+ Añadir gasto</button>
@@ -396,7 +396,7 @@
 
       <div class="wizardStep hidden" data-step="2">
         <h2>Deudas</h2>
-        <p class="muted">Paso 3 de 4 · préstamos y tarjetas</p>
+        <p class="muted">Paso 3 de 4 · entidades bancarias, tarjetas, préstamos u otros acreedores</p>
         <div id="wizardDebtList" class="listContainer"></div>
         <div class="btnRow" style="margin-top:14px">
           <button id="addWizardDebt" class="btn good">+ Añadir deuda</button>
@@ -409,7 +409,11 @@
 
       <div class="wizardStep hidden" data-step="3">
         <h2>Ahorros</h2>
-        <p class="muted">Paso 4 de 4 · objetivos de ahorro</p>
+        <p class="muted">Paso 4 de 4 · tienes ahorros que quieras sumar en tus cuentas y objetivos de ahorro</p>
+        <div class="field" style="margin-bottom:14px">
+          <label>Ahorros ya acumulados</label>
+          <input id="wizardInitialReserve" class="input" type="number" step="0.01" value="0" placeholder="Ej. 3500">
+        </div>
         <div id="wizardGoalList" class="listContainer"></div>
         <div class="btnRow" style="margin-top:14px">
           <button id="addWizardGoal" class="btn good">+ Añadir objetivo</button>
@@ -1034,7 +1038,7 @@
         changeType:'create',
         itemId:item.id,
         groupKey:`${collection}:${item.id}`,
-        groupTitle:`${getItemDisplayName(item, collection)} · ${collectionAreaLabel(collection)}`,
+        groupTitle:`${getItemDisplayName(item, collection)} - total ${euros(itemGroupTotal(collection, item))}`,
         title:`${collectionLabel(collection)} añadid${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
         desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, detailField).toLowerCase()} de ${formatFieldValue(collection, detailField, item[detailField])}`,
         ops:[]
@@ -1051,7 +1055,7 @@
         changeType:'delete',
         itemId:item.id,
         groupKey:`${collection}:${item.id}`,
-        groupTitle:`${getItemDisplayName(item, collection)} · ${collectionAreaLabel(collection)}`,
+        groupTitle:`${getItemDisplayName(item, collection)} - total ${euros(itemGroupTotal(collection, item))}`,
         title:`${collectionLabel(collection)} eliminad${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
         desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, detailField).toLowerCase()} de ${formatFieldValue(collection, detailField, item[detailField])}`,
         ops:[]
@@ -1065,7 +1069,7 @@
         collection,
         itemId:after?.id || before?.id,
         groupKey:`${collection}:${after?.id || before?.id}`,
-        groupTitle:`${itemName} · ${collectionAreaLabel(collection)}`,
+        groupTitle:`${itemName} - total ${euros(itemGroupTotal(collection, after || before || {}))}`,
         changeType:'field',
         field,
         title:`${fieldLabel(collection, field)} cambiado en ${itemName} (${collectionAreaLabel(collection)})`,
@@ -1591,6 +1595,12 @@
     function debtBaseDisplayAmount(d){
       return getDebtMonthlyCharge(d, state.defaultStartMonth);
     }
+    function itemGroupTotal(collection, item){
+      if(collection === 'incomes' || collection === 'expenses') return Number(item.amount || 0);
+      if(collection === 'goals') return Number((item.goalType || 'fixed') === 'fixed' ? (item.monthlyAmount || 0) : (item.targetTotal || 0));
+      if(collection === 'debts') return Number(debtBaseDisplayAmount(item) || 0);
+      return 0;
+    }
 
     function getGoalMonthlyCharge(goal, ym, availableBeforeTarget){
       const start = goal.startMonth || state.defaultStartMonth;
@@ -1970,12 +1980,12 @@
         if(kind === 'debt'){
           row.className = 'row row-5';
           row.innerHTML = `
-            <input class="input" placeholder="Entidad" value="${escapeHtml(item.entityName||'')}">
+            <input class="input" placeholder="Entidad bancaria o acreedor" value="${escapeHtml(item.entityName||'')}">
             <select class="select">
               <option value="loan" ${(item.instrumentType||'loan')==='loan'?'selected':''}>Prestamo</option>
               <option value="card" ${(item.instrumentType||'loan')==='card'?'selected':''}>Tarjeta</option>
             </select>
-            <input class="input" placeholder="Instrumento" value="${escapeHtml(item.instrumentName||'')}">
+            <input class="input" placeholder="Producto o concepto visible" value="${escapeHtml(item.instrumentName||'')}">
             <button class="btn ghost">Detalles</button>
             <button class="btn danger">×</button>`;
           const inputs = row.querySelectorAll('input,select');
@@ -1989,7 +1999,7 @@
         } else if(kind === 'goal'){
           row.className = 'row row-5';
           row.innerHTML = `
-            <input class="input" placeholder="Nombre" value="${item.name||''}">
+            <input class="input" placeholder="Objetivo del ahorro" value="${item.name||''}">
             <select class="select">
               <option value="fixed" ${(item.goalType||'fixed')==='fixed'?'selected':''}>Ahorro fijo por mes</option>
               <option value="target" ${(item.goalType||'fixed')==='target'?'selected':''}>Ahorro por objetivo</option>
@@ -2007,15 +2017,17 @@
           });
           row.querySelector('.btn.ghost').addEventListener('click', () => openGoalEditor(item, true));
         } else {
-          row.className = 'row';
+          row.className = 'row row-5';
           row.innerHTML = `
             <input class="input" placeholder="Nombre" value="${item.name||''}">
             <input class="input" type="number" step="0.01" placeholder="Monto €" value="${item.amount||''}">
-            <div></div>
+            <div class="pill" style="justify-content:center">${kind === 'expense' ? formatFieldValue('expenses','periodicity', item.periodicity || 'monthly') : 'Mensual'}</div>
+            <button class="btn ghost">Detalles</button>
             <button class="btn danger">×</button>`;
           const inputs = row.querySelectorAll('input');
           inputs[0].addEventListener('input', e => item.name = e.target.value);
           inputs[1].addEventListener('input', e => item.amount = Number(e.target.value||0));
+          row.querySelector('.btn.ghost').addEventListener('click', () => openSimpleEditor(kind, item));
         }
         row.querySelector('.btn.danger').addEventListener('click', () => {
           const idx = list.findIndex(x => x.id === item.id);
@@ -2282,7 +2294,7 @@
       root.innerHTML = `<div class="modalCard">
         <div class="modalHead"><h3>Configurar ahorro</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
         <div class="modalGrid">
-          <div class="field"><label>Nombre</label><input id="goalName" class="input" value="${escapeHtml(item.name||'')}"></div>
+          <div class="field"><label>Objetivo del ahorro</label><input id="goalName" class="input" value="${escapeHtml(item.name||'')}"></div>
           <div class="field"><label>Tipo</label>
             <select id="goalType" class="select">
               <option value="fixed" ${(item.goalType||'fixed')==='fixed'?'selected':''}>Ahorro fijo por mes</option>
@@ -2291,7 +2303,7 @@
           </div>
           <div class="field"><label id="goalAmountLabel">${(item.goalType||'fixed')==='fixed'?'Monto por mes':'Objetivo total'}</label><input id="goalAmount" class="input" type="number" step="0.01" value="${(item.goalType||'fixed')==='fixed'?Number(item.monthlyAmount||0):Number(item.targetTotal||0)}"></div>
           <div class="field"><label>Desde</label><input id="goalStart" class="input" type="month" value="${item.startMonth||state.defaultStartMonth}"></div>
-          <div class="field"><label>Hasta</label><input id="goalEnd" class="input" type="month" value="${item.endMonth||addMonthsStr(state.defaultStartMonth,11)}"></div>
+          <div class="field"><label>Hasta (opcional)</label><input id="goalEnd" class="input" type="month" value="${item.endMonth||''}"></div>
         </div>
         <div class="btnRow" style="margin-top:16px"><button id="saveGoalBtn" class="btn primary">Guardar ahorro</button></div>
       </div>`;
@@ -2312,7 +2324,7 @@
         item.name = document.getElementById('goalName').value.trim();
         item.goalType = document.getElementById('goalType').value;
         item.startMonth = document.getElementById('goalStart').value || state.defaultStartMonth;
-        item.endMonth = document.getElementById('goalEnd').value || addMonthsStr(state.defaultStartMonth,11);
+        item.endMonth = document.getElementById('goalEnd').value || null;
         if(item.goalType === 'fixed'){
           item.monthlyAmount = Number(document.getElementById('goalAmount').value||0);
           item.targetTotal = 0;
@@ -2335,9 +2347,9 @@
       root.innerHTML = `<div class="modalCard">
         <div class="modalHead"><h3>Configurar deuda</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
         <div class="modalGrid">
-          <div class="field"><label>Entidad</label><input id="debtEntityName" class="input" value="${escapeHtml(draft.entityName||'')}"></div>
-          <div class="field"><label>Nombre visible</label><input id="debtInstrumentName" class="input" placeholder="Ej. Aqua, Prestamo coche, Hacienda 2026" value="${escapeHtml(draft.instrumentName||'')}"></div>
-          <div class="field"><label>Instrumento</label>
+          <div class="field"><label>Entidad bancaria u otro acreedor</label><input id="debtEntityName" class="input" value="${escapeHtml(draft.entityName||'')}"></div>
+          <div class="field"><label>Producto o concepto visible</label><input id="debtInstrumentName" class="input" placeholder="Ej. Aqua, Prestamo coche, Hacienda 2026" value="${escapeHtml(draft.instrumentName||'')}"></div>
+          <div class="field"><label>Tipo de deuda</label>
             <select id="debtKind" class="select">
               <option value="card" ${draft.instrumentType==='card'?'selected':''}>Tarjeta</option>
               <option value="loan" ${draft.instrumentType==='loan'?'selected':''}>Prestamo</option>
@@ -2509,7 +2521,7 @@
       root.innerHTML = `<div class="modalCard">
         <div class="modalHead"><h3>Nueva deuda</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
         <div class="field">
-          <label>Entidad</label>
+          <label>Entidad bancaria u otro acreedor</label>
           <input id="newDebtEntity" class="input" list="debtEntitySuggestions" placeholder="Escribe una entidad nueva o reutiliza una existente" value="${escapeHtml(defaultEntity)}">
           <datalist id="debtEntitySuggestions">${existing.map(name => `<option value="${escapeHtml(name)}"></option>`).join('')}</datalist>
           <div class="sub" style="margin-top:8px">Puedes escribir una entidad nueva libremente. Las sugerencias son opcionales y no voy a reagrupar automaticamente tus deudas antiguas.</div>
@@ -2517,6 +2529,7 @@
         <div class="btnRow" style="margin-top:18px">
           <button id="createDebtCardBtn" class="btn primary">Añadir tarjeta</button>
           <button id="createDebtLoanBtn" class="btn ghost">Añadir prestamo</button>
+          <button id="createDebtOtherBtn" class="btn ghost">Añadir otra deuda</button>
         </div>
       </div>`;
       document.getElementById('closeModalBtn').onclick = closeModal;
@@ -2542,6 +2555,27 @@
       }
       document.getElementById('createDebtCardBtn').onclick = () => createWith('card');
       document.getElementById('createDebtLoanBtn').onclick = () => createWith('loan');
+      document.getElementById('createDebtOtherBtn').onclick = () => {
+        const entityName = document.getElementById('newDebtEntity').value.trim();
+        if(!entityName){
+          alert('Primero necesito el nombre de la entidad o acreedor.');
+          return;
+        }
+        const item = makeDebtRow({
+          entityName,
+          instrumentName: 'Otra deuda',
+          instrumentType: 'loan',
+          debtKind: 'loan',
+          paymentMode: 'loan',
+          cardSubtype: null,
+          startMonth: state.defaultStartMonth
+        });
+        state.debts.push(item);
+        closeModal();
+        if(fromWizard) renderWizardRows(state.debts, 'wizardDebtList', 'debt');
+        renderManualLists();
+        openDebtEditor(item, fromWizard);
+      };
     }
 
     function openMonthModal(ym){
@@ -3295,15 +3329,13 @@
         state.goals = [];
         state.debts = [];
         state.monthAdjustments = {};
-        if(!state.incomes.length) state.incomes.push(makeIncomeRow());
-        if(!state.expenses.length) state.expenses.push(makeExpenseRow());
-        if(!state.debts.length) state.debts.push(makeDebtRow());
-        if(!state.goals.length) state.goals.push(makeGoalRow());
+        state.reserveInitial = 0;
         touchState({ rerender:false });
         renderWizardRows(state.incomes, 'wizardIncomeList', 'income');
         renderWizardRows(state.expenses, 'wizardExpenseList', 'expense');
         renderWizardRows(state.debts, 'wizardDebtList', 'debt');
         renderWizardRows(state.goals, 'wizardGoalList', 'goal');
+        document.getElementById('wizardInitialReserve').value = '0';
         flowStateSet('wizard');
         hide('choiceGate'); show('wizard'); hide('appShell');
         showWizardStep(0);
@@ -3330,12 +3362,16 @@
       });
 
       document.getElementById('addWizardIncome').addEventListener('click', () => {
-        state.incomes.push(makeIncomeRow());
+        const item = makeIncomeRow();
+        state.incomes.push(item);
         renderWizardRows(state.incomes, 'wizardIncomeList', 'income');
+        openSimpleEditor('income', item);
       });
       document.getElementById('addWizardExpense').addEventListener('click', () => {
-        state.expenses.push(makeExpenseRow());
+        const item = makeExpenseRow();
+        state.expenses.push(item);
         renderWizardRows(state.expenses, 'wizardExpenseList', 'expense');
+        openSimpleEditor('expense', item);
       });
       document.getElementById('addWizardDebt').addEventListener('click', () => {
         openDebtCreateFlow('', 'revolving', true);
@@ -3354,6 +3390,7 @@
       document.getElementById('wizardNext2').addEventListener('click', () => { saveLocal(); showWizardStep(3); });
       document.getElementById('wizardPrev3').addEventListener('click', () => showWizardStep(2));
       document.getElementById('finishWizard').addEventListener('click', async () => {
+        state.reserveInitial = Number(document.getElementById('wizardInitialReserve').value || 0);
         touchState({ rerender:false });
         flowStateSet('app');
         hide('wizard');
@@ -3362,11 +3399,6 @@
         renderForecast();
       });
 
-      // seed one empty row per wizard section
-      if(!state.incomes.length) state.incomes.push(makeIncomeRow());
-      if(!state.expenses.length) state.expenses.push(makeExpenseRow());
-      if(!state.debts.length) state.debts.push(makeDebtRow());
-      if(!state.goals.length) state.goals.push(makeGoalRow());
       renderWizardRows(state.incomes, 'wizardIncomeList', 'income');
       renderWizardRows(state.expenses, 'wizardExpenseList', 'expense');
       renderWizardRows(state.debts, 'wizardDebtList', 'debt');

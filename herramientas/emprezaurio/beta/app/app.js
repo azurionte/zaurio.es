@@ -1,7 +1,7 @@
 // App entry — wires everything together
 import { S, setTheme, setCustomGradient, setDark, setMaterial, hydrateFromStorage, setStorageScope } from './state.js';
 import { initAuth, getStorageScope, authState } from './auth.js';
-const APP_VERSION = 'resume-app@2026.03.27-1905';
+const APP_VERSION = 'resume-app@2026.03.27-1938';
 console.log('[app.js] ' + APP_VERSION);
 import { mountEditor } from '../editor/editor.js';
 import { mountWelcome, mountWizard, loadDemoResume } from '../wizard/wizard.js';
@@ -615,16 +615,16 @@ function createSidebarPrintRail(rail){
   secHolder.style.display = 'grid';
   secHolder.style.gap = '16px';
   secHolder.style.alignContent = 'start';
-  const liveRailSkills =
-    rail?.querySelector?.('[data-rail-sections] .section[data-section="skills"]') ||
-    rail?.querySelector?.('.section[data-section="skills"]') ||
-    document.querySelector('.sidebar-layout [data-rail-sections] .section[data-section="skills"]');
-  if (liveRailSkills) {
-    const liveClone = cloneClean(liveRailSkills);
-    liveClone.querySelectorAll('.sec-remove,.ctrl-circle,.skill-handle,.sec-add-anchor,.move-rail').forEach(node => node.remove());
-    secHolder.appendChild(liveClone);
-  } else if ((Array.isArray(S.skills) && S.skills.length) && S.skillsInSidebar) {
-    secHolder.appendChild(createSidebarRailSkillsSection());
+  const liveRailHasSkills =
+    !!rail?.querySelector?.('[data-rail-sections] .section[data-section="skills"]') ||
+    !!rail?.querySelector?.('.section[data-section="skills"]') ||
+    !!document.querySelector('.sidebar-layout [data-rail-sections] .section[data-section="skills"]');
+  if (Array.isArray(S.skills) && S.skills.length && (S.skillsInSidebar || liveRailHasSkills)) {
+    const railSkillsSection = createSidebarRailSkillsSection();
+    railSkillsSection.style.display = 'block';
+    railSkillsSection.style.visibility = 'visible';
+    railSkillsSection.style.opacity = '1';
+    secHolder.appendChild(railSkillsSection);
   }
   railPrint.appendChild(secHolder);
   return railPrint;

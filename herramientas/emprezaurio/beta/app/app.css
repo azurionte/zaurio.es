@@ -97,6 +97,10 @@ a{color:inherit;text-decoration:none}
   text-align:center !important;
   color:#fff !important;
 }
+.sidebar-layout[data-header] .rail .name-block .name{
+  color:#fff !important;
+  text-align:center !important;
+}
 .sidebar-layout[data-header] .rail .chip-wrap{
   width:100% !important;
   align-items:center !important;
@@ -104,6 +108,9 @@ a{color:inherit;text-decoration:none}
 .sidebar-layout[data-header] .rail .chip-wrap .chips{
   width:100% !important;
   justify-content:center !important;
+}
+.sidebar-layout[data-header] .rail .chip-wrap .chip{
+  min-height:46px !important;
 }
 
 /* Make main zone occupy full inner width and remove extra padding that could offset children */
