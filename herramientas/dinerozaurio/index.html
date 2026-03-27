@@ -667,6 +667,252 @@
         debts: 'Deuda'
       })[key] || key;
     }
+    function collectionAreaLabel(key){
+      return ({
+        incomes: 'Ingresos',
+        expenses: 'Gastos',
+        goals: 'Ahorros',
+        debts: 'Deudas'
+      })[key] || key;
+    }
+    function prettyMonthLabel(ym){
+      if(!ym || !/^\d{4}-\d{2}$/.test(String(ym))) return ym || 'sin mes';
+      const [y,m] = String(ym).split('-').map(Number);
+      const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      return `${months[(m || 1) - 1] || ym} ${y}`;
+    }
+    function getItemDisplayName(item, collection){
+      return String(item?.name || `${collectionLabel(collection)} sin nombre`).trim();
+    }
+    function fieldLabel(collection, field){
+      const common = {
+        name: 'Nombre',
+        amount: 'Monto',
+        startMonth: 'Mes de inicio',
+        endMonth: 'Mes de fin',
+        periodicity: 'Periodicidad'
+      };
+      const byCollection = {
+        goals: {
+          goalType: 'Tipo de ahorro',
+          monthlyAmount: 'Monto mensual',
+          targetTotal: 'Objetivo total'
+        },
+        debts: {
+          debtKind: 'Tipo de deuda',
+          cardSubtype: 'Subtipo de tarjeta',
+          monthlyPayment: 'Cuota mensual',
+          remainingInstallments: 'Numero de cuotas',
+          endMode: 'Modo de finalizacion',
+          lastMonth: 'Ultimo mes',
+          currentDebt: 'Deuda actual',
+          currentPayment: 'Pago actual',
+          tin: 'TIN',
+          tae: 'TAE'
+        },
+        expenses: {
+          kind: 'Tipo de gasto'
+        }
+      };
+      return byCollection[collection]?.[field] || common[field] || field;
+    }
+    function formatFieldValue(collection, field, value){
+      if(value === undefined || value === null || value === '') return 'vacio';
+      if(['amount','monthlyAmount','targetTotal','monthlyPayment','currentDebt','currentPayment','extraIncomeAmount','extraExpenseAmount','extraSavingAmount'].includes(field)){
+        return euros(value);
+      }
+      if(['remainingInstallments'].includes(field)){
+        return String(Number(value || 0));
+      }
+      if(['startMonth','endMonth','lastMonth'].includes(field)){
+        return prettyMonthLabel(value);
+      }
+      if(field === 'periodicity'){
+        return ({
+          monthly: 'Mensual',
+          one_time: 'Una vez',
+          annual: 'Anual'
+        })[value] || String(value);
+      }
+      if(field === 'kind'){
+        return ({
+          fixed: 'Fijo',
+          variable: 'Variable'
+        })[value] || String(value);
+      }
+      if(field === 'goalType'){
+        return ({
+          fixed: 'Ahorro fijo',
+          target: 'Ahorro por objetivo'
+        })[value] || String(value);
+      }
+      if(field === 'debtKind'){
+        return ({
+          loan: 'Prestamo',
+          card: 'Tarjeta'
+        })[value] || String(value);
+      }
+      if(field === 'cardSubtype'){
+        return ({
+          revolving: 'Revolving',
+          pay_end_month: 'Paga fin de mes',
+          installment: 'Compra aplazada'
+        })[value] || String(value);
+      }
+      if(field === 'endMode'){
+        return ({
+          date: 'Por fecha',
+          remaining: 'Por cuotas restantes'
+        })[value] || String(value);
+      }
+      if(['tin','tae'].includes(field)){
+        return `${Number(value || 0)}%`;
+      }
+      return String(value);
+    }
+    function getChangedFields(before, after){
+      return Array.from(new Set([...Object.keys(before || {}), ...Object.keys(after || {})]))
+        .filter(key => key !== 'id' && stableStringify(before?.[key]) !== stableStringify(after?.[key]));
+    }
+    function createCollectionCreateChange(collection, item){
+      return {
+        id:`${collection}:create:${item.id}`,
+        kind:'collection',
+        collection,
+        changeType:'create',
+        itemId:item.id,
+        title:`${collectionLabel(collection)} añadid${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
+        desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, 'amount').toLowerCase()} de ${formatFieldValue(collection, 'amount', item.amount)}`,
+        ops:[]
+      };
+    }
+    function createCollectionDeleteChange(collection, item){
+      return {
+        id:`${collection}:delete:${item.id}`,
+        kind:'collection',
+        collection,
+        changeType:'delete',
+        itemId:item.id,
+        title:`${collectionLabel(collection)} eliminad${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
+        desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, 'amount').toLowerCase()} de ${formatFieldValue(collection, 'amount', item.amount)}`,
+        ops:[]
+      };
+    }
+    function createCollectionFieldChange(collection, before, after, field){
+      const itemName = getItemDisplayName(after || before, collection);
+      return {
+        id:`${collection}:field:${after?.id || before?.id}:${field}`,
+        kind:'collectionField',
+        collection,
+        itemId:after?.id || before?.id,
+        changeType:'field',
+        field,
+        title:`${fieldLabel(collection, field)} cambiado en ${itemName} (${collectionAreaLabel(collection)})`,
+        desc:`De ${formatFieldValue(collection, field, before?.[field])} a ${formatFieldValue(collection, field, after?.[field])} desde Configuracion`,
+        ops:[{ path:[field], value: cloneData(after?.[field]) }]
+      };
+    }
+    function createMonthOpsChange(id, title, desc, monthKey, ops){
+      return {
+        id,
+        kind:'monthAdjustmentField',
+        changeType:'field',
+        monthKey,
+        title,
+        desc,
+        ops
+      };
+    }
+    function pushExtraAdjustmentChanges(changes, monthKey, before, after, prefix, label){
+      const beforeName = String(before?.[`${prefix}Name`] || '').trim();
+      const afterName = String(after?.[`${prefix}Name`] || '').trim();
+      const beforeAmount = Number(before?.[`${prefix}Amount`] || 0);
+      const afterAmount = Number(after?.[`${prefix}Amount`] || 0);
+      if(beforeName === afterName && beforeAmount === afterAmount) return;
+      const prettyMonth = prettyMonthLabel(monthKey);
+      const ops = [
+        { path:[`${prefix}Name`], value: after?.[`${prefix}Name`] || '' },
+        { path:[`${prefix}Amount`], value: Number(after?.[`${prefix}Amount`] || 0) }
+      ];
+      if(!beforeName && !beforeAmount && (afterName || afterAmount)){
+        changes.push(createMonthOpsChange(
+          `monthAdjustments:${monthKey}:${prefix}:create`,
+          `${label} puntual añadid${label === 'Deuda' ? 'a' : 'o'} en ${prettyMonth}`,
+          `"${afterName || label}" con monto de ${euros(afterAmount)}`,
+          monthKey,
+          ops
+        ));
+        return;
+      }
+      if((beforeName || beforeAmount) && !afterName && !afterAmount){
+        changes.push(createMonthOpsChange(
+          `monthAdjustments:${monthKey}:${prefix}:delete`,
+          `${label} puntual eliminad${label === 'Deuda' ? 'a' : 'o'} en ${prettyMonth}`,
+          `"${beforeName || label}" con monto de ${euros(beforeAmount)}`,
+          monthKey,
+          ops
+        ));
+        return;
+      }
+      changes.push(createMonthOpsChange(
+        `monthAdjustments:${monthKey}:${prefix}:update`,
+        `${label} puntual cambiado en ${prettyMonth}`,
+        `De "${beforeName || label}" ${euros(beforeAmount)} a "${afterName || label}" ${euros(afterAmount)}`,
+        monthKey,
+        ops
+      ));
+    }
+    function resolveCollectionByOverrideKey(key){
+      if(key === 'incomeOverrides') return 'incomes';
+      if(key === 'expenseOverrides') return 'expenses';
+      if(key === 'goalOverrides') return 'goals';
+      if(key === 'debtOverrides') return 'debts';
+      return '';
+    }
+    function pushOverrideChanges(changes, monthKey, before, after, overrideKey, stateForNames){
+      const collection = resolveCollectionByOverrideKey(overrideKey);
+      const beforeMap = before?.[overrideKey] || {};
+      const afterMap = after?.[overrideKey] || {};
+      const ids = new Set([...Object.keys(beforeMap), ...Object.keys(afterMap)]);
+      const prettyMonth = prettyMonthLabel(monthKey);
+      ids.forEach(id => {
+        if(stableStringify(beforeMap[id]) === stableStringify(afterMap[id])) return;
+        const sourceList = stateForNames?.[collection] || [];
+        const item = sourceList.find(entry => entry.id === id) || {};
+        const itemName = getItemDisplayName(item, collection);
+        let title = `Ajuste en ${itemName} (${collectionAreaLabel(collection)}) para ${prettyMonth}`;
+        let desc = `De ${formatFieldValue(collection, 'amount', beforeMap[id])} a ${formatFieldValue(collection, 'amount', afterMap[id])}`;
+        if(collection === 'debts'){
+          const beforeMode = beforeMap[id]?.mode || '';
+          const afterMode = afterMap[id]?.mode || '';
+          const beforeAmount = Number(beforeMap[id]?.amount || 0);
+          const afterAmount = Number(afterMap[id]?.amount || 0);
+          if(afterMode === 'custom' || beforeMode === 'custom'){
+            title = `Pago de deuda cambiado en ${itemName} (${collectionAreaLabel(collection)}) para ${prettyMonth}`;
+            desc = `De ${euros(beforeAmount)} a ${euros(afterAmount)}`;
+          } else if(afterMode || beforeMode){
+            title = `Estado de deuda cambiado en ${itemName} (${collectionAreaLabel(collection)}) para ${prettyMonth}`;
+            desc = `De ${beforeMode || 'sin ajuste'} a ${afterMode || 'sin ajuste'}`;
+          }
+        }
+        changes.push(createMonthOpsChange(
+          `monthAdjustments:${monthKey}:${overrideKey}:${id}`,
+          title,
+          `${desc} desde Configuracion mensual`,
+          monthKey,
+          [{ path:[overrideKey, id], value: cloneData(afterMap[id]) }]
+        ));
+      });
+    }
+    function pushMonthAdjustmentChanges(changes, monthKey, before, after, current){
+      pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraIncome', 'Ingreso');
+      pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraExpense', 'Gasto');
+      pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraSaving', 'Ahorro');
+      pushOverrideChanges(changes, monthKey, before, after, 'incomeOverrides', current);
+      pushOverrideChanges(changes, monthKey, before, after, 'expenseOverrides', current);
+      pushOverrideChanges(changes, monthKey, before, after, 'goalOverrides', current);
+      pushOverrideChanges(changes, monthKey, before, after, 'debtOverrides', current);
+    }
     function buildStateChanges(baseInput = savedBaseline, currentInput = snapshotPersistableState()){
       const base = baseInput ? cloneData(baseInput) : emptyPersistableState();
       const current = cloneData(currentInput);
@@ -698,36 +944,13 @@
         ids.forEach((id) => {
           const before = baseMap.get(id);
           const after = currentMap.get(id);
-          const label = collectionLabel(collection);
           if(!before && after){
-            changes.push({
-              id:`${collection}:create:${id}`,
-              kind:'collection',
-              collection,
-              changeType:'create',
-              itemId:id,
-              title:`${label} añadido`,
-              desc:after.name || `${label} sin nombre`
-            });
+            changes.push(createCollectionCreateChange(collection, after));
           } else if(before && !after){
-            changes.push({
-              id:`${collection}:delete:${id}`,
-              kind:'collection',
-              collection,
-              changeType:'delete',
-              itemId:id,
-              title:`${label} eliminado`,
-              desc:before.name || `${label} sin nombre`
-            });
+            changes.push(createCollectionDeleteChange(collection, before));
           } else if(before && after && stableStringify(before) !== stableStringify(after)){
-            changes.push({
-              id:`${collection}:update:${id}`,
-              kind:'collection',
-              collection,
-              changeType:'update',
-              itemId:id,
-              title:`${label} actualizado`,
-              desc:after.name || before.name || `${label} sin nombre`
+            getChangedFields(before, after).forEach(field => {
+              changes.push(createCollectionFieldChange(collection, before, after, field));
             });
           }
         });
@@ -740,32 +963,11 @@
         const before = baseAdj[monthKey];
         const after = currentAdj[monthKey];
         if(!before && after){
-          changes.push({
-            id:`monthAdjustments:create:${monthKey}`,
-            kind:'monthAdjustment',
-            changeType:'create',
-            monthKey,
-            title:`Ajustes añadidos en ${monthKey}`,
-            desc:'Cambios puntuales de ingresos, gastos, deuda o ahorro'
-          });
+          pushMonthAdjustmentChanges(changes, monthKey, {}, after, current);
         } else if(before && !after){
-          changes.push({
-            id:`monthAdjustments:delete:${monthKey}`,
-            kind:'monthAdjustment',
-            changeType:'delete',
-            monthKey,
-            title:`Ajustes eliminados en ${monthKey}`,
-            desc:'Se revierten los cambios de ese mes'
-          });
+          pushMonthAdjustmentChanges(changes, monthKey, before, {}, current);
         } else if(before && after && stableStringify(before) !== stableStringify(after)){
-          changes.push({
-            id:`monthAdjustments:update:${monthKey}`,
-            kind:'monthAdjustment',
-            changeType:'update',
-            monthKey,
-            title:`Ajustes actualizados en ${monthKey}`,
-            desc:'Ingresos, gastos, deuda o ahorro modificados'
-          });
+          pushMonthAdjustmentChanges(changes, monthKey, before, after, current);
         }
       });
 
@@ -796,10 +998,56 @@
         reorderCollectionByCurrent(targetState, currentState, change.collection);
         return;
       }
+      if(change.kind === 'collectionField'){
+        const currentItem = (currentState[change.collection] || []).find(item => item.id === change.itemId);
+        if(!currentItem) return;
+        const existing = (targetState[change.collection] || []).find(item => item.id === change.itemId);
+        if(!existing){
+          targetState[change.collection] = [...(targetState[change.collection] || []), cloneData(currentItem)];
+        }else{
+          (change.ops || []).forEach(op => {
+            if(op.path?.length === 1) existing[op.path[0]] = cloneData(op.value);
+          });
+        }
+        reorderCollectionByCurrent(targetState, currentState, change.collection);
+        return;
+      }
       if(change.kind === 'monthAdjustment'){
         targetState.monthAdjustments = targetState.monthAdjustments || {};
         if(change.changeType === 'delete') delete targetState.monthAdjustments[change.monthKey];
         else targetState.monthAdjustments[change.monthKey] = cloneData(currentState.monthAdjustments?.[change.monthKey] || {});
+        return;
+      }
+      if(change.kind === 'monthAdjustmentField'){
+        targetState.monthAdjustments = targetState.monthAdjustments || {};
+        const currentMonth = currentState.monthAdjustments?.[change.monthKey] || {};
+        const targetMonth = targetState.monthAdjustments[change.monthKey] ? cloneData(targetState.monthAdjustments[change.monthKey]) : {};
+        (change.ops || []).forEach(op => {
+          if(!Array.isArray(op.path) || !op.path.length) return;
+          if(op.path.length === 1){
+            const key = op.path[0];
+            if(op.value === undefined || op.value === null || op.value === '' || op.value === 0){
+              delete targetMonth[key];
+            } else {
+              targetMonth[key] = cloneData(op.value);
+            }
+            return;
+          }
+          const [groupKey, itemKey] = op.path;
+          targetMonth[groupKey] = targetMonth[groupKey] || {};
+          if(op.value === undefined || op.value === null || stableStringify(op.value) === stableStringify({})){
+            delete targetMonth[groupKey][itemKey];
+          } else {
+            targetMonth[groupKey][itemKey] = cloneData(op.value);
+          }
+          if(!Object.keys(targetMonth[groupKey]).length) delete targetMonth[groupKey];
+        });
+        const hasData = Object.values(targetMonth).some(value => {
+          if(value && typeof value === 'object') return Object.keys(value).length > 0;
+          return !!value;
+        });
+        if(!hasData) delete targetState.monthAdjustments[change.monthKey];
+        else targetState.monthAdjustments[change.monthKey] = targetMonth;
       }
     }
     function buildStateFromSelection(selectChange){
