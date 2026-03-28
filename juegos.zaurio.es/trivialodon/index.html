@@ -6,256 +6,326 @@
   <title>Trivialodon | Zaurio</title>
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
   <style>
-    :root{--bg:radial-gradient(circle at top,#2a0046 0%,#12001d 35%,#000 100%);--card:rgba(36,0,70,.82);--card-soft:rgba(31,5,54,.72);--stroke:rgba(255,255,255,.14);--yellow:#ffee00;--pink:#ff00aa;--cyan:#2fd3ff;--green:#79d85d;--text:#fff;--muted:rgba(255,255,255,.8);--frameSize:160px;--avatarSize:110px}
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}body{padding:22px}.page{width:min(1280px,100%);margin:0 auto}
-    .view{opacity:0;transform:translateY(18px) scale(.985);pointer-events:none;transition:opacity .45s ease,transform .45s ease}.view.on{opacity:1;transform:none;pointer-events:auto}.intro{min-height:calc(100vh - 44px);display:grid;place-items:center}
-    .card,.topbar,.modalCard,.screenCard,.playerRow,.modeCard,.answerBtn{background:var(--card);border:1px solid var(--stroke);border-radius:30px;box-shadow:0 0 40px rgba(255,0,170,.12);backdrop-filter:blur(12px)}
-    .introCard{padding:46px 38px;width:min(720px,100%);text-align:center}.introLogo{width:min(360px,80%);display:block;margin:0 auto 16px;filter:drop-shadow(0 0 18px rgba(255,0,170,.18))}.introCard p{margin:0 auto;max-width:32ch;color:var(--muted);font-size:1.12rem;line-height:1.55}
-    .actions{display:flex;gap:12px;flex-wrap:wrap}.actions.between{justify-content:space-between;align-items:center;flex-wrap:nowrap}.actions.center{justify-content:center}
-    .btn{border:0;border-radius:999px;padding:14px 20px;font:inherit;font-weight:900;cursor:pointer;transition:transform .16s ease,opacity .16s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.btnPrimary{background:linear-gradient(135deg,var(--yellow),#ff7ad9);color:#2a0035}.btnGhost{background:rgba(255,255,255,.08);color:#fff}.btnOk{background:rgba(121,216,93,.16);color:#eaffdf}
-    .app{display:grid;gap:18px}.topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:12px 16px;position:sticky;top:18px;z-index:20}.topLeft,.topCenter,.topRight{display:flex;align-items:center}.topLeft{justify-content:flex-start}.topCenter{justify-content:center}.topRight{justify-content:flex-end}
-    .logoMark{width:min(220px,42vw);display:block}.menuWrap{position:relative}.menuBtn{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;font:inherit;font-weight:900;cursor:pointer}.menuBtn img,.menuDrop img{width:22px;height:22px;object-fit:contain}.menuDrop{position:absolute;left:0;top:calc(100% + 10px);min-width:240px;padding:8px;background:rgba(19,5,30,.96);border:1px solid var(--stroke);border-radius:22px;display:none;box-shadow:0 18px 42px rgba(0,0,0,.34)}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}
-    .identityChip{display:inline-flex;align-items:center;gap:12px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);max-width:100%}.identityChip[hidden]{display:none}.miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));display:grid;place-items:center}.miniAvatar img{width:100%;height:100%;object-fit:cover}.identityName{font-weight:900}.identityRole{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-    .layout{display:grid;grid-template-columns:minmax(360px,430px) minmax(0,1fr);gap:18px;align-items:start}.screenCard{padding:26px;display:grid;gap:18px}.kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;width:max-content}
-    h1,h2,h3{margin:0}p{margin:0;color:var(--muted);line-height:1.55}.field{display:grid;gap:8px}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;font:inherit;outline:none}.codeBadge{display:inline-flex;padding:10px 14px;border-radius:18px;background:rgba(255,238,0,.1);color:var(--yellow);font-weight:900;letter-spacing:.08em;width:max-content}
-    .avatarBlock{display:grid;gap:14px;padding:18px;border-radius:28px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}.avatarStageWrap{width:100%;padding:16px;border-radius:26px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));border:1px solid rgba(255,255,255,.18);display:grid;place-items:center}.avatarStageStack,.avatarStack{width:var(--frameSize);height:var(--frameSize);position:relative}
-    .avatarStage,.avatarHole,.dinoHole{position:absolute;left:50%;top:50%;width:var(--avatarSize);height:var(--avatarSize);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translate(0,-10px);z-index:1}.avatarStage{background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);cursor:grab;touch-action:none}.avatarStage.dragging{cursor:grabbing}
-    .avatarImg{position:absolute;left:50%;top:50%;width:auto;height:auto;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}.avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.78);font-weight:900;text-align:center;padding:12px;font-size:1rem}.editorFrame,.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:2;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
-    .avatarHint{font-size:.93rem}.status{min-height:22px;color:#b8ff9f}.status[data-tone="danger"]{color:#ff9ec6}.status[data-tone="info"]{color:var(--cyan)}
-    .board{padding:26px;display:grid;gap:16px}.boardHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.playerList{display:grid;gap:14px}.playerRow{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:14px;padding:14px 18px;animation:fadeUp .35s ease both}.avatarHole img{position:absolute;left:50%;top:50%;width:100%;height:100%;object-fit:cover;transform:translate(-50%,-50%)}.dinoHole{display:grid;place-items:center;font-size:3rem;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,0,170,.16))}.playerMeta{display:grid;gap:6px}.playerName{font-weight:1000;font-size:clamp(1rem,2vw,1.5rem);text-shadow:0 4px 0 rgba(0,0,0,.85),0 0 18px rgba(0,0,0,.55)}.playerSub{font-size:.95rem;color:var(--muted)}
-    .toggleRow{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}.switch{width:64px;height:36px;border-radius:999px;background:rgba(255,255,255,.1);position:relative;cursor:pointer}.switch::after{content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:999px;background:#fff;transition:transform .22s ease}.switch.on{background:linear-gradient(135deg,var(--yellow),#ff7ad9)}.switch.on::after{transform:translateX(28px)}.countdownPill{display:inline-flex;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.08);font-weight:900}
-    .modeGrid,.answerGrid{display:grid;gap:14px}.modeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.modeCard{padding:18px;display:grid;gap:8px;cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease}.modeCard:hover{transform:translateY(-2px)}.modeCard.on{border-color:rgba(255,238,0,.42);background:linear-gradient(135deg,rgba(255,238,0,.12),rgba(255,122,217,.14))}.modeHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.modeIcon{font-size:1.6rem}.modeVotes{font-weight:900;color:var(--yellow)}
-    .questionHero{padding:24px;border-radius:30px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);display:grid;gap:16px;animation:zoomIn .35s ease both}.timerRing{width:84px;height:84px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--yellow) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:6px}.timerInner{width:100%;height:100%;border-radius:999px;background:#220338;display:grid;place-items:center;font-weight:1000}.answerBtn{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease}.answerBtn:hover{transform:translateX(4px)}.answerBtn.on{border-color:rgba(47,211,255,.42);background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,0,170,.12))}.answerBtn.correct{border-color:rgba(121,216,93,.42);background:rgba(121,216,93,.14)}.answerKey{font-weight:1000;color:var(--yellow)}
-    .scoreSplash{display:grid;gap:14px}.scoreHero{padding:18px;border-radius:26px;background:linear-gradient(135deg,rgba(255,238,0,.12),rgba(255,122,217,.12));border:1px solid rgba(255,255,255,.12);text-align:center}.scoreList{display:grid;gap:12px}.scoreRow{display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 14px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
-    .overlay{position:fixed;inset:0;background:rgba(5,3,10,.7);backdrop-filter:blur(10px);display:none;place-items:center;padding:20px;z-index:60}.overlay.on{display:grid}.modalCard{width:min(760px,100%);padding:28px;display:grid;gap:18px;animation:zoomIn .28s ease both}.emojiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.emojiChoice{padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;place-items:center;gap:8px;cursor:pointer;transition:transform .16s ease,border-color .16s ease}.emojiChoice:hover{transform:translateY(-2px)}.emojiChoice.on{border-color:rgba(255,238,0,.42)}.emojiBall{width:88px;height:88px;border-radius:999px;display:grid;place-items:center;font-size:2.5rem;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes zoomIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
-    @media (max-width:980px){body{padding:14px}.layout,.modeGrid,.playerRow{grid-template-columns:1fr}.topbar{grid-template-columns:auto 1fr auto}.logoMark{width:min(170px,38vw)}.playerName,.playerSub{text-align:center}.emojiGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    :root{--bg:radial-gradient(circle at top,#2f0049 0%,#180024 36%,#060009 100%);--panel:rgba(43,4,73,.9);--stroke:rgba(255,255,255,.12);--text:#fff;--muted:rgba(255,255,255,.74);--cyan:#2fd3ff;--yellow:#ffd83a;--pink:#ff77cb;--green:#88e16e;--danger:#ff84b8;--frame:168px;--avatar:114px}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,system-ui,sans-serif}body{padding:18px}button,input{font:inherit}button{cursor:pointer}
+    .app{width:min(1320px,100%);margin:0 auto;display:grid;gap:18px}.shell{display:none;gap:18px}.shell.on{display:grid}
+    .topbar,.panel,.playerCard,.answerCard,.scoreRow,.modeCard,.modalCard,.heroCard{border:1px solid var(--stroke);border-radius:30px;background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.24),0 0 32px rgba(255,0,170,.08);backdrop-filter:blur(14px)}
+    .topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 18px}.topLeft,.topCenter,.topRight{display:flex;align-items:center}.topLeft{justify-content:flex-start}.topCenter{justify-content:center}.topRight{justify-content:flex-end}.logoMark{width:min(230px,42vw);display:block}
+    .menuWrap{position:relative}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn img{width:20px;height:20px}
+    .menuDrop{position:absolute;left:0;top:calc(100% + 10px);display:none;min-width:240px;padding:8px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}.menuDrop img{width:22px;height:22px;object-fit:contain}
+    .identity{max-width:100%}.identity[hidden]{display:none}.miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18))}.miniAvatar img{width:100%;height:100%;object-fit:cover}.identityMeta{display:grid;gap:2px}.identityName{font-size:1rem;font-weight:900}.identityRole{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .intro{min-height:calc(100vh - 36px);display:grid;place-items:center}.intro.on{display:grid}.intro.off{display:none}.introCard{width:min(760px,100%);padding:48px 38px;text-align:center}.introLogo{width:min(360px,82%);display:block;margin:0 auto 18px;filter:drop-shadow(0 10px 24px rgba(255,0,170,.2))}.introLead{max-width:34ch;margin:0 auto;color:var(--muted);font-size:1.15rem;line-height:1.55}
+    .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.actions.center{justify-content:center}.actions.between{justify-content:space-between}.btn{padding:14px 20px;border-radius:999px;font-weight:900;color:#fff;background:rgba(255,255,255,.08);transition:transform .18s ease,opacity .18s ease,background .18s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.btnPrimary{background:linear-gradient(135deg,var(--yellow),var(--pink));color:#2c003d}.btnGhost{background:rgba(255,255,255,.08)}.btnOk{background:rgba(136,225,110,.16);color:#f2ffe8}
+    .scene{display:none;animation:sceneIn .42s ease both}.scene.on{display:grid}.sceneWrap{min-height:calc(100vh - 154px)}.sceneCenter{display:grid;place-items:center}.sceneSplit{display:grid;grid-template-columns:minmax(320px,440px) minmax(0,1fr);gap:18px;align-items:start}.sceneStack{display:grid;gap:18px}.panel{padding:28px}.kicker{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+    h1,h2,h3,p{margin:0}p{color:var(--muted);line-height:1.55}.title{font-size:clamp(2rem,5vw,3.3rem);line-height:1.02;font-weight:1000}.subtitle{font-size:clamp(1.2rem,2.5vw,1.9rem);font-weight:900}.field{display:grid;gap:8px}.field label{font-weight:800}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}
+    .codeBadge,.countPill{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:18px;background:rgba(255,216,58,.12);color:var(--yellow);font-weight:1000;letter-spacing:.08em}.status{min-height:20px;font-weight:700}.status.info{color:var(--cyan)}.status.ok{color:#c8ffab}.status.danger{color:var(--danger)}
+    .avatarEditor{display:grid;gap:14px;padding:18px;border-radius:28px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarStageWrap{display:grid;place-items:center;padding:16px;border-radius:26px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,119,203,.16));border:1px solid rgba(255,255,255,.14)}.avatarStack{width:var(--frame);height:var(--frame);position:relative}
+    .avatarHole,.avatarStage{position:absolute;left:50%;top:50%;width:var(--avatar);height:var(--avatar);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translateY(-10px)}.avatarStage{background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);touch-action:none}.avatarStage.dragging{cursor:grabbing}.avatarImg{position:absolute;left:50%;top:50%;width:auto;height:auto;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}.avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:14px;font-weight:1000;color:rgba(255,255,255,.78)}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{font-size:.92rem}
+    .playersGrid{display:grid;gap:14px}.playerCard{padding:16px 18px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}.playerName{font-size:clamp(1rem,2vw,1.45rem);font-weight:1000;text-shadow:0 4px 0 rgba(0,0,0,.72),0 0 16px rgba(0,0,0,.45)}.playerSub{font-size:.96rem;color:var(--muted)}
+    .dinoHole,.avatarShot{position:absolute;left:50%;top:50%;width:var(--avatar);height:var(--avatar);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translateY(-10px)}.dinoHole{display:grid;place-items:center;font-size:3rem;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,119,203,.16))}.avatarShot img{width:100%;height:100%;object-fit:cover}
+    .heroCard{padding:32px;display:grid;gap:20px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));text-align:center}.bigCount{font-size:clamp(5rem,18vw,11rem);font-weight:1000;line-height:1}
+    .questionBox{display:grid;gap:20px}.questionHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.timerRing{width:88px;height:88px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--yellow) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:6px}.timerInner{width:100%;height:100%;border-radius:999px;background:#240436;display:grid;place-items:center;font-weight:1000;font-size:1.4rem}
+    .answers{display:grid;gap:14px}.answerCard{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:14px;transition:transform .18s ease,background .18s ease,border-color .18s ease}.answerCard:hover{transform:translateX(4px)}.answerCard.active{border-color:rgba(47,211,255,.38);background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,119,203,.1))}.answerCard.correct{border-color:rgba(136,225,110,.44);background:rgba(136,225,110,.14)}.answerKey{font-weight:1000;color:var(--yellow)}.answerState{font-weight:900;color:var(--muted)}
+    .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.modeCard{padding:18px;display:grid;gap:8px;cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease}.modeCard:hover{transform:translateY(-2px)}.modeCard.active{border-color:rgba(255,216,58,.42);background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.12))}.modeCard:disabled{opacity:.42;cursor:not-allowed;transform:none}.modeHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.modeIcon{font-size:1.5rem}.modeVotes{font-weight:1000;color:var(--yellow)}
+    .switch{position:relative;width:66px;height:38px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1)}.switch::after{content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:999px;background:#fff;transition:transform .2s ease}.switch.on{background:linear-gradient(135deg,var(--yellow),var(--pink))}.switch.on::after{transform:translateX(28px)}.toggleBar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+    .scoreBoard{display:grid;gap:14px}.scoreHero{padding:22px;border-radius:28px;background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.14));border:1px solid rgba(255,255,255,.1);text-align:center}.scoreRow{padding:14px 16px;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center}.rankAvatar{width:58px;height:58px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,119,203,.14));display:grid;place-items:center}.rankAvatar img{width:100%;height:100%;object-fit:cover}
+    .overlay{position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(5,2,12,.76);backdrop-filter:blur(12px);z-index:80}.overlay.on{display:grid}.modalCard{width:min(760px,100%);padding:28px;display:grid;gap:18px}.emojiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.emojiChoice{padding:18px;border-radius:22px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);display:grid;gap:8px;place-items:center}.emojiChoice.active{border-color:rgba(255,216,58,.42)}.emojiBall{width:84px;height:84px;border-radius:999px;display:grid;place-items:center;font-size:2.35rem;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+    @keyframes sceneIn{from{opacity:0;transform:translateY(20px) scale(.985)}to{opacity:1;transform:none}}
+    @media (max-width:980px){body{padding:12px}.sceneSplit,.modes,.topbar{grid-template-columns:1fr}.topCenter{order:-1}.topLeft,.topRight,.topCenter{justify-content:center}.playerCard{grid-template-columns:1fr;justify-items:center;text-align:center}.questionHeader{display:grid}.emojiGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   </style>
 </head>
 <body>
-  <main class="page">
-    <section class="view intro on" id="introView">
-      <article class="card introCard">
+  <main class="app">
+    <section class="intro on" id="introScene">
+      <article class="panel introCard">
         <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
-        <p>El juego de trivia mas actualizado y divertido.</p>
-        <div class="actions center" style="margin-top:26px">
-          <button class="btn btnPrimary" id="btnPickHost">Soy el anfitrion</button>
-          <button class="btn btnGhost" id="btnPickGuest">Soy el invitado</button>
+        <p class="introLead">El juego de trivia mas actualizado y divertido.</p>
+        <div class="actions center" style="margin-top:28px">
+          <button class="btn btnPrimary" id="btnHost">Soy el anfitrion</button>
+          <button class="btn btnGhost" id="btnGuest">Soy el invitado</button>
         </div>
       </article>
     </section>
 
-    <section class="view app" id="appView">
+    <section class="shell" id="shell">
       <header class="topbar">
-        <div class="topLeft"><div class="menuWrap" id="menuWrap"><button class="menuBtn" id="menuBtn" type="button"><img src="/shared/assets/brand/favicon-32x32.png" alt="">Zaurio</button><nav class="menuDrop"><a href="https://zaurio.es"><img src="/shared/assets/brand/favicon-32x32.png" alt="">Inicio</a><a href="https://miercoles.zaurio.es"><img src="/shared/assets/brand/miercoles.png" alt="">Miercoles</a><a href="https://secretos.zaurio.es"><img src="/shared/assets/brand/confesion.png" alt="">Secretos</a><a href="https://herramientas.zaurio.es"><img src="/shared/assets/brand/emprezaurio-icono.png" alt="">Herramientas</a><a href="https://juegos.zaurio.es"><img src="/shared/assets/brand/trivialodon-icono.png" alt="">Juegos</a></nav></div></div>
+        <div class="topLeft">
+          <div class="menuWrap" id="menuWrap">
+            <button class="menuBtn" id="menuBtn" type="button"><img src="/shared/assets/brand/favicon-32x32.png" alt="">Zaurio</button>
+            <nav class="menuDrop">
+              <a href="https://zaurio.es"><img src="/shared/assets/brand/favicon-32x32.png" alt="">Inicio</a>
+              <a href="https://miercoles.zaurio.es"><img src="/shared/assets/brand/miercoles.png" alt="">Miercoles</a>
+              <a href="https://secretos.zaurio.es"><img src="/shared/assets/brand/confesion.png" alt="">Secretos</a>
+              <a href="https://herramientas.zaurio.es"><img src="/shared/assets/brand/emprezaurio-icono.png" alt="">Herramientas</a>
+              <a href="https://juegos.zaurio.es"><img src="/shared/assets/brand/trivialodon-icono.png" alt="">Juegos</a>
+            </nav>
+          </div>
+        </div>
         <div class="topCenter"><img class="logoMark" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon"></div>
-        <div class="topRight"><div class="identityChip" id="identityChip" hidden><div class="miniAvatar" id="miniAvatar"></div><div><div class="identityName" id="identityName">Jugador</div><div class="identityRole" id="identityRole">Invitado</div></div></div></div>
+        <div class="topRight">
+          <div class="identity" id="identity" hidden>
+            <div class="miniAvatar" id="identityAvatar"></div>
+            <div class="identityMeta">
+              <div class="identityName" id="identityName">Jugador</div>
+              <div class="identityRole" id="identityRole">Invitado</div>
+            </div>
+          </div>
+        </div>
       </header>
 
-      <section class="layout">
-        <aside style="display:grid;gap:18px">
-          <article class="screenCard">
-            <span class="kicker" id="leftKicker">Perfil</span>
-            <h2 id="leftTitle">Configura tu ficha</h2>
-            <div class="codeBadge" id="roomCodeBadge">------</div>
-            <div class="field" id="joinCodeField" hidden><label>Codigo de sala</label><input id="joinCodeInput" maxlength="6" placeholder="ABC123"></div>
-            <div class="field" id="nameField"><label>Tu nombre</label><input id="nameInput" maxlength="26" placeholder="Ejemplo: Marta Rex"></div>
-            <div class="avatarBlock" id="avatarBlock">
-              <div class="avatarStageWrap"><div class="avatarStageStack"><div class="avatarStage" id="avatarStage"><img class="avatarImg" id="avatarImg" alt="" hidden /><div class="avatarPlaceholder" id="avatarPlaceholder">+<br>Sube foto o elige avatar</div></div><img class="editorFrame" src="/shared/assets/brand/participantes-frame.png" alt=""></div></div>
-              <div class="actions center"><button class="btn btnPrimary" id="btnUpload">Subir foto</button><button class="btn btnGhost" id="btnEmoji">Avatar</button><button class="btn btnOk" id="btnUseAvatar">Usar avatar</button></div>
+      <section class="scene sceneCenter on" id="profileScene">
+        <div class="sceneSplit" style="width:min(1160px,100%)">
+          <article class="panel sceneStack">
+            <span class="kicker" id="profileKicker">Perfil</span>
+            <h2 class="subtitle" id="profileTitle">Configura tu ficha</h2>
+            <div class="codeBadge" id="roomBadge">------</div>
+            <div class="field" id="joinCodeField" hidden>
+              <label for="joinCodeInput">Codigo de sala</label>
+              <input id="joinCodeInput" maxlength="6" placeholder="ABC123" />
+            </div>
+            <div class="field">
+              <label for="nameInput">Tu nombre</label>
+              <input id="nameInput" maxlength="26" placeholder="Ejemplo: Marta Rex" />
+            </div>
+            <div class="avatarEditor">
+              <div class="avatarStageWrap">
+                <div class="avatarStack">
+                  <div class="avatarStage" id="avatarStage">
+                    <img class="avatarImg" id="avatarImg" alt="" hidden />
+                    <div class="avatarPlaceholder" id="avatarPlaceholder">+<br>Sube foto o elige avatar</div>
+                  </div>
+                  <img class="avatarFrame" src="/shared/assets/brand/participantes-frame.png" alt="">
+                </div>
+              </div>
+              <div class="actions center">
+                <button class="btn btnPrimary" id="btnUpload" type="button">Subir foto</button>
+                <button class="btn btnGhost" id="btnEmoji" type="button">Avatar</button>
+                <button class="btn btnOk" id="btnUseAvatar" type="button">Usar avatar</button>
+              </div>
               <p class="avatarHint">Arrastra con dedo o raton para mover. Usa la rueda o multitouch para hacer zoom.</p>
-              <input id="photoInput" type="file" accept="image/*" hidden>
+              <input id="photoInput" type="file" accept="image/*" hidden />
             </div>
-            <div class="status" id="leftStatus" data-tone="info">Todavia no has preparado tu avatar.</div>
-            <div class="actions between" id="leftFooter"><button class="btn btnGhost" id="btnBack">Volver</button><button class="btn btnOk" id="btnReady">Listo</button></div>
-            <div id="phaseInfo"></div>
-            <div id="guestVotePanel" hidden><div class="toggleRow" style="margin-top:6px"><div><strong>Tu voto</strong><p id="guestVoteText">Esperando opciones del anfitrion.</p></div><span class="countdownPill" id="guestCountdown">01:00</span></div></div>
-          </article>
-        </aside>
-        <section style="display:grid;gap:18px">
-          <article class="board" id="mainBoard">
-            <div class="boardHeader">
-              <div><span class="kicker" id="boardKicker">Lista de jugadores</span><h2 id="boardTitle">Preparando la sala</h2><p id="boardDesc">Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida.</p></div>
-              <div class="actions"><div class="toggleRow" id="voteToggleWrap" hidden style="padding:10px 12px;border-radius:999px"><div><strong style="display:block">Permitir a los invitados votar</strong><span class="countdownPill" id="hostCountdown">01:00</span></div><button class="switch" id="voteToggle" type="button"></button></div><button class="btn btnPrimary" id="btnHostNext" disabled>Siguiente</button></div>
+            <div class="status info" id="profileStatus">Todavia no has preparado tu avatar.</div>
+            <div class="actions between">
+              <button class="btn btnGhost" id="btnBack" type="button">Volver</button>
+              <button class="btn btnOk" id="btnReady" type="button">Listo</button>
             </div>
-            <div class="playerList" id="playerList"></div>
-            <div id="setupPanel" hidden></div>
-            <div id="questionPanel" hidden></div>
           </article>
-        </section>
+          <article class="panel sceneStack">
+            <span class="kicker">Sala</span>
+            <h2 class="subtitle" id="profileSideTitle">Entrando en Trivialodon</h2>
+            <p id="profileSideText">Prepara tu foto, elige tu nombre y entra listo a la sala.</p>
+            <div class="playersGrid" id="profilePlayers"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="scene sceneCenter" id="lobbyScene">
+        <div class="sceneSplit" style="width:min(1180px,100%)">
+          <article class="panel sceneStack" id="lobbySide"></article>
+          <article class="panel sceneStack">
+            <div class="actions between">
+              <div class="sceneStack" style="gap:10px">
+                <span class="kicker">Lista de jugadores</span>
+                <h2 class="subtitle" id="lobbyTitle">Preparando la sala</h2>
+                <p id="lobbyDesc">Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida.</p>
+              </div>
+              <button class="btn btnPrimary" id="btnToSetup" type="button" disabled>Siguiente</button>
+            </div>
+            <div class="playersGrid" id="lobbyPlayers"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="scene sceneCenter" id="setupScene">
+        <div class="sceneSplit" style="width:min(1200px,100%)">
+          <article class="panel sceneStack" id="setupSide"></article>
+          <article class="panel sceneStack">
+            <div class="actions between">
+              <div class="sceneStack" style="gap:10px">
+                <span class="kicker">Modos de juego</span>
+                <h2 class="subtitle">Esperando que comience el juego</h2>
+                <p id="setupDesc">El anfitrion esta configurando la partida.</p>
+              </div>
+              <div class="toggleBar" id="hostVoteWrap" hidden>
+                <div class="sceneStack" style="gap:6px">
+                  <strong>Permitir a los invitados votar</strong>
+                  <span class="countPill" id="hostVoteCountdown">01:00</span>
+                </div>
+                <button class="switch" id="voteToggle" type="button"></button>
+              </div>
+            </div>
+            <div class="modes" id="modeGrid"></div>
+            <div class="modes" id="durationGrid"></div>
+            <div class="actions between" id="setupActions"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="scene sceneCenter sceneWrap" id="countdownScene">
+        <article class="heroCard" style="width:min(860px,100%)">
+          <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" style="width:min(280px,70%);margin-bottom:0">
+          <span class="kicker" style="justify-self:center">Cuenta atras</span>
+          <div class="bigCount" id="countdownValue">4</div>
+          <p>Respira. Enseguida empieza la accion.</p>
+        </article>
+      </section>
+
+      <section class="scene sceneCenter sceneWrap" id="questionScene">
+        <article class="panel questionBox" style="width:min(980px,100%)">
+          <div class="questionHeader">
+            <div class="sceneStack" style="gap:10px">
+              <span class="kicker">Pregunta</span>
+              <h1 class="title" id="questionPrompt">Pregunta</h1>
+              <p id="questionCopy">Marca tu respuesta antes de que termine la cuenta atras.</p>
+            </div>
+            <div class="timerRing" id="questionTimerRing" style="--timer:1">
+              <div class="timerInner" id="questionTimer">20</div>
+            </div>
+          </div>
+          <div class="answers" id="questionAnswers"></div>
+        </article>
+      </section>
+
+      <section class="scene sceneCenter sceneWrap" id="answerScene">
+        <article class="heroCard" style="width:min(900px,100%)">
+          <span class="kicker" style="justify-self:center">Respuesta correcta</span>
+          <h1 class="title" id="answerCorrect">Marte</h1>
+          <p id="answerPrompt">El planeta rojo era Marte.</p>
+        </article>
+      </section>
+
+      <section class="scene sceneCenter sceneWrap" id="scoresScene">
+        <article class="panel scoreBoard" style="width:min(980px,100%)">
+          <div class="scoreHero">
+            <span class="kicker">Marcador</span>
+            <h2 class="subtitle" id="scoresTitle">Puntuacion del round</h2>
+            <p id="scoresLead">Un momento para leer el ranking.</p>
+          </div>
+          <div id="scoresRows"></div>
+        </article>
       </section>
     </section>
   </main>
-  <div class="overlay" id="emojiModal"><div class="modalCard"><span class="kicker">Avatar</span><h2>Elige tu dinosaurio</h2><div class="emojiGrid" id="emojiGrid"></div><div class="actions between"><button class="btn btnGhost" id="btnCloseEmoji">Cancelar</button><button class="btn btnPrimary" id="btnAcceptEmoji">Usar avatar</button></div></div></div>
+  <div class="overlay" id="emojiModal">
+    <div class="modalCard">
+      <span class="kicker">Avatar</span>
+      <h2 class="subtitle">Elige tu dinosaurio</h2>
+      <div class="emojiGrid" id="emojiGrid"></div>
+      <div class="actions between">
+        <button class="btn btnGhost" id="btnCloseEmoji" type="button">Cancelar</button>
+        <button class="btn btnPrimary" id="btnAcceptEmoji" type="button">Usar avatar</button>
+      </div>
+    </div>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL="https://adpjitccwwvlydrtvvqk.supabase.co",SUPABASE_KEY="sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk",FRAME_SRC="/shared/assets/brand/participantes-frame.png";
-    const EMOJIS=[["lava","#ff6b35"],["mint","#56d364"],["ocean","#38bdf8"],["sun","#facc15"],["orchid","#f472b6"],["jade","#22c55e"],["berry","#fb7185"],["sky","#60a5fa"]];
-    const MODES=[{id:"classic",icon:"🎩",title:"Trivialodon classic",desc:"Rondas elegantes con ritmo de concurso clasico."},{id:"custom",icon:"🛠",title:"Personalizado",desc:"Ajusta el tono del juego y juega a tu manera."},{id:"deathmatch",icon:"💥",title:"Deathmatch",desc:"Presion total, eliminacion y suspense televisivo."},{id:"speed",icon:"⚡",title:"Test velocidad",desc:"Todo se decide por reflejos y respuestas rapidas."}];
-    const DURATIONS=[{id:"timed",icon:"⏱",title:"Quiero que dure un tiempo determinado",desc:"Sesiones por tiempo flexible."},{id:"questions",icon:"❓",title:"Quiero que dure una cantidad de preguntas determinada",desc:"Controlas la longitud por numero de preguntas."},{id:"olympic",icon:"🏆",title:"Trivialodon olimpico",desc:"Formato oficial de 40 minutos."}];
-    const EXAMPLE_QUESTION={prompt:"¿Que planeta del sistema solar es conocido como el planeta rojo?",answers:["Venus","Marte","Saturno","Mercurio","Neptuno"],correct:1},FUN_LINES=["espera espera, voy!","estoy buscando mi mejor foto","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"];
-    const $=id=>document.getElementById(id),ui={introView:$("introView"),appView:$("appView"),btnPickHost:$("btnPickHost"),btnPickGuest:$("btnPickGuest"),menuWrap:$("menuWrap"),menuBtn:$("menuBtn"),identityChip:$("identityChip"),miniAvatar:$("miniAvatar"),identityName:$("identityName"),identityRole:$("identityRole"),leftKicker:$("leftKicker"),leftTitle:$("leftTitle"),roomCodeBadge:$("roomCodeBadge"),joinCodeField:$("joinCodeField"),joinCodeInput:$("joinCodeInput"),nameField:$("nameField"),nameInput:$("nameInput"),avatarBlock:$("avatarBlock"),avatarStage:$("avatarStage"),avatarImg:$("avatarImg"),avatarPlaceholder:$("avatarPlaceholder"),photoInput:$("photoInput"),btnUpload:$("btnUpload"),btnEmoji:$("btnEmoji"),btnUseAvatar:$("btnUseAvatar"),leftStatus:$("leftStatus"),btnBack:$("btnBack"),btnReady:$("btnReady"),leftFooter:$("leftFooter"),phaseInfo:$("phaseInfo"),guestVotePanel:$("guestVotePanel"),guestVoteText:$("guestVoteText"),guestCountdown:$("guestCountdown"),boardKicker:$("boardKicker"),boardTitle:$("boardTitle"),boardDesc:$("boardDesc"),voteToggleWrap:$("voteToggleWrap"),voteToggle:$("voteToggle"),hostCountdown:$("hostCountdown"),btnHostNext:$("btnHostNext"),playerList:$("playerList"),setupPanel:$("setupPanel"),questionPanel:$("questionPanel"),emojiModal:$("emojiModal"),emojiGrid:$("emojiGrid"),btnCloseEmoji:$("btnCloseEmoji"),btnAcceptEmoji:$("btnAcceptEmoji")};
-    const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
-    const state={playerId:crypto.randomUUID(),role:"",roomCode:"",name:"",ready:false,waitingLine:"",channel:null,players:[],selectedEmoji:"mint",avatar:{kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"},localAnswer:null,game:{phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",votes:{},question:null,scores:{}}};
-    const esc=v=>String(v||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"),normalize=v=>String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6),lineFor=id=>FUN_LINES[[...id].reduce((a,c)=>a+c.charCodeAt(0),0)%FUN_LINES.length];
-    const roomCode=()=>{const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let out="";for(let i=0;i<6;i++) out+=chars[Math.floor(Math.random()*chars.length)];return out;};
-    const setStatus=(msg,tone="info")=>{ui.leftStatus.dataset.tone=tone;ui.leftStatus.textContent=msg;},countText=ts=>{const left=Math.max(0,Math.ceil((ts-Date.now())/1000));return `${String(Math.floor(left/60)).padStart(2,"0")}:${String(left%60).padStart(2,"0")}`;},hostCanContinue=()=>state.role==="host"&&state.players.length>0&&state.players.every(p=>p.ready);
-    const showApp=()=>{ui.introView.classList.remove("on");setTimeout(()=>ui.introView.style.display="none",420);ui.appView.classList.add("on");};
-    function renderEmojiChoices(){ui.emojiGrid.innerHTML=EMOJIS.map(([id,color])=>`<button class="emojiChoice ${state.selectedEmoji===id?"on":""}" data-emoji="${id}" type="button"><div class="emojiBall" style="background:${color}22;border:1px solid ${color}55">🦖</div><strong>${id}</strong></button>`).join("");ui.emojiGrid.querySelectorAll("[data-emoji]").forEach(btn=>btn.onclick=()=>{state.selectedEmoji=btn.dataset.emoji;renderEmojiChoices();});}
-    function emojiDataUrl(id){const map=Object.fromEntries(EMOJIS),color=map[id]||"#56d364",c=document.createElement("canvas");c.width=220;c.height=220;const ctx=c.getContext("2d");ctx.fillStyle=color+"22";ctx.beginPath();ctx.arc(110,110,108,0,Math.PI*2);ctx.fill();ctx.font="120px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("🦖",110,118);return c.toDataURL("image/png");}
-    function applyAvatar(){const src=state.avatar.rendered||state.avatar.src;ui.avatarImg.hidden=!src;ui.avatarPlaceholder.hidden=!!src;if(state.avatar.kind==="emoji"){state.avatar.src=emojiDataUrl(state.avatar.emoji);state.avatar.rendered=state.avatar.src;}if(state.avatar.src){ui.avatarImg.src=state.avatar.src;ui.avatarImg.style.setProperty("--x",state.avatar.x+"px");ui.avatarImg.style.setProperty("--y",state.avatar.y+"px");ui.avatarImg.style.setProperty("--s",state.avatar.s);}refreshIdentity();}
-    function refreshIdentity(){ui.identityChip.hidden=!state.role;ui.identityName.textContent=state.name||"Sin nombre";ui.identityRole.textContent=state.role==="host"?"Anfitrion":"Invitado";ui.roomCodeBadge.textContent=state.roomCode||"------";const src=state.avatar.rendered||state.avatar.src;ui.miniAvatar.innerHTML=src?`<img src="${src}" alt="">`:"&#129430;";}
-    async function readSource(source){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=source;});}
-    async function compressPhoto(file){const src=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=reject;r.readAsDataURL(file);});const img=await readSource(src);const max=720,ratio=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);c.getContext("2d").drawImage(img,0,0,c.width,c.height);return c.toDataURL("image/jpeg",.9);}
-    async function exportAvatar(){if(state.avatar.kind==="emoji") return emojiDataUrl(state.avatar.emoji);const img=await readSource(state.avatar.src),size=220,c=document.createElement("canvas");c.width=size;c.height=size;const ctx=c.getContext("2d");ctx.save();ctx.beginPath();ctx.arc(size/2,size/2,size/2,0,Math.PI*2);ctx.clip();ctx.translate(size/2,size/2);ctx.translate(state.avatar.x,state.avatar.y);ctx.scale(state.avatar.s,state.avatar.s);ctx.drawImage(img,-img.width/2,-img.height/2,img.width,img.height);ctx.restore();return c.toDataURL("image/png");}
-    function dedupePlayers(raw){const map=new Map();raw.forEach(e=>{const prev=map.get(e.playerId);if(!prev||e.updatedAt>prev.updatedAt) map.set(e.playerId,e);});return [...map.values()].sort((a,b)=>a.role===b.role?(a.ready===b.ready?String(a.name||a.waitingLine).localeCompare(String(b.name||b.waitingLine),"es"):a.ready?-1:1):a.role==="host"?-1:1);}
-    function renderPlayers(){ui.playerList.innerHTML=!state.players.length?'<article class="playerRow"><div class="playerMeta"><div class="playerName">Nadie todavia</div><div class="playerSub">La sala espera al primer dino.</div></div></article>':state.players.map(p=>`<article class="playerRow"><div class="avatarStack">${p.ready&&p.avatarSrc?`<div class="avatarHole"><img src="${p.avatarSrc}" alt=""></div>`:`<div class="dinoHole">&#129430;</div>`}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="playerMeta"><div class="playerName">${esc(p.ready?p.name:(p.waitingLine||lineFor(p.playerId)))}</div><div class="playerSub">${esc(p.ready?(p.role==="host"?"Anfitrion listo":"Invitado listo"):"Aun no ha pulsado listo")}</div></div></article>`).join("");}
-    async function updatePresence(){if(!state.channel) return;await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready?(state.avatar.rendered||state.avatar.src):"",updatedAt:Date.now()});}
-    async function broadcastGame(){if(state.role==="host"&&state.channel) await state.channel.send({type:"broadcast",event:"game_state",payload:state.game});}
-    function syncPlayers(){if(!state.channel) return;const raw=[];Object.values(state.channel.presenceState()).forEach(entries=>(entries||[]).forEach(entry=>raw.push(entry)));state.players=dedupePlayers(raw);renderPlayers();renderPhase();}
-    async function connectRoom(role,code){
-      if(state.channel){try{await sb.removeChannel(state.channel);}catch(_){ }}
-      const draftName=state.name;
-      const draftAvatar={...state.avatar};
-      state.role=role;
-      state.roomCode=code;
-      state.ready=false;
-      state.waitingLine=lineFor(state.playerId);
-      state.localAnswer=null;
-      state.name=draftName;
-      state.avatar=draftAvatar;
-      state.game={phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",votes:{},question:null,scores:{}};
-      applyAvatar();
-      const ch=sb.channel("trivialodon:session:"+code,{config:{broadcast:{self:true},presence:{key:state.playerId}}});
-      state.channel=ch;
-      ch.on("presence",{event:"sync"},syncPlayers)
-        .on("broadcast",{event:"game_state"},({payload})=>{
-          if(payload){
-            if(payload.phase!=="question") state.localAnswer=null;
-            if(payload.phase==="question"&&state.game.question&&payload.question&&payload.question.endAt!==state.game.question.endAt) state.localAnswer=null;
-            state.game=payload;
-            renderPhase();
-          }
-        })
-        .on("broadcast",{event:"guest_vote"},({payload})=>{
-          if(state.role==="host"&&payload){
-            state.game.votes[payload.playerId]={name:payload.name,mode:payload.mode||"",duration:payload.duration||""};
-            broadcastGame();
-            renderPhase();
-          }
-        })
-        .on("broadcast",{event:"guest_answer"},({payload})=>{
-          if(state.role==="host"&&state.game.question&&payload){
-            state.game.question.answers[payload.playerId]=payload.answerIndex;
-            broadcastGame();
-            renderPhase();
-          }
-        });
-      ch.subscribe(async status=>{
-        if(status==="SUBSCRIBED"){
-          await updatePresence();
-          syncPlayers();
-          setStatus(role==="host"?"Sala creada. Prepara tu avatar.":"Ya estas dentro. Configura tu avatar.","info");
-          if(role==="host") setTimeout(async()=>{if(state.players.some(p=>p.role==="host"&&p.playerId!==state.playerId)) await connectRoom("host",roomCode());},280);
-        }else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"){
-          setStatus("No he podido abrir la sala realtime en Supabase.","danger");
-        }
-      });
-    }
-    const modeVotes=id=>Object.values(state.game.votes||{}).filter(v=>v.mode===id).length,durationVotes=id=>Object.values(state.game.votes||{}).filter(v=>v.duration===id).length;
-    function majority(kind,list){let best="";let count=-1;list.forEach(item=>{const n=kind==="mode"?modeVotes(item.id):durationVotes(item.id);if(n>count){count=n;best=item.id;}});return best;}
-    function scoreEntries(){return state.players.filter(p=>p.ready).map(p=>({playerId:p.playerId,name:p.name,avatarSrc:p.avatarSrc,score:(state.game.scores&&state.game.scores[p.playerId])||0})).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name,"es"));}
-    function renderLeftScene(kind){
-      ui.phaseInfo.innerHTML="";
-      ui.nameField.hidden=kind!=="profile";
-      ui.avatarBlock.hidden=kind!=="profile";
-      ui.leftFooter.hidden=kind!=="profile";
-      ui.guestVotePanel.hidden=true;
-      if(kind==="profile") return;
-      if(kind==="waiting"){
-        ui.phaseInfo.innerHTML='<div class="screenCard" style="padding:18px"><span class="kicker">Todo listo</span><h3>Esperando que comience el juego</h3><p>El anfitrion esta montando la partida. En cuanto termine la configuracion, la pantalla cambiara sola.</p></div>';
-      }
-      if(kind==="setupHost"){
-        ui.phaseInfo.innerHTML='<div class="screenCard" style="padding:18px"><span class="kicker">Direccion</span><h3>Tu decides el formato</h3><p>Escoge modo y duracion. Si activas la votacion, veras caer la cuenta atras en directo.</p></div>';
-      }
-      if(kind==="setupGuest"){
-        ui.guestVotePanel.hidden=false;
-        ui.phaseInfo.innerHTML=`<div class="screenCard" style="padding:18px"><span class="kicker">Espera</span><h3>${state.game.allowVotes?"Votacion abierta":"Esperando al anfitrion"}</h3><p>${state.game.allowVotes?"Marca tu modo favorito y sigue el conteo en directo.":"El anfitrion esta eligiendo el formato final. En cuanto lo cierre, empezamos."}</p></div>`;
-      }
-      if(kind==="countdown"){
-        const count=(state.game.countdownValue||4);
-        ui.phaseInfo.innerHTML=`<div class="screenCard" style="padding:18px;text-align:center"><span class="kicker">Cuenta atras</span><div style="font-size:4rem;font-weight:1000;line-height:1">${count}</div><p>Preparando focos, marcadores y preguntas.</p></div>`;
-      }
-      if(kind==="question"){
-        const q=state.game.question||{};
-        ui.phaseInfo.innerHTML=`<div class="screenCard" style="padding:18px"><span class="kicker">En directo</span><h3>Pregunta en juego</h3><p>${q.prompt||"La ronda esta a punto de empezar."}</p></div>`;
-      }
-      if(kind==="answer"){
-        ui.phaseInfo.innerHTML='<div class="screenCard" style="padding:18px"><span class="kicker">Respuesta</span><h3>La solucion ya esta en pantalla</h3><p>Unos segundos para leer la correcta antes de pasar al marcador.</p></div>';
-      }
-      if(kind==="scores"){
-        const top=scoreEntries().slice(0,3).map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0"><strong>#${i+1}</strong><div class="miniAvatar">${p.avatarSrc?`<img src="${p.avatarSrc}" alt="">`:"&#129430;"}</div><div style="flex:1">${esc(p.name)}</div><strong>${p.score}</strong></div>`).join("");
-        ui.phaseInfo.innerHTML=`<div class="screenCard" style="padding:18px"><span class="kicker">Marcador</span><h3>Puntuacion actual</h3>${top||"<p>Aun no hay puntos.</p>"}</div>`;
-      }
-    }
-    function renderSetup(){ui.voteToggleWrap.hidden=state.role!=="host";ui.voteToggle.classList.toggle("on",state.game.allowVotes);ui.hostCountdown.textContent=state.game.voteDeadline?countText(state.game.voteDeadline):"01:00";ui.guestCountdown.textContent=state.game.voteDeadline?countText(state.game.voteDeadline):"01:00";ui.setupPanel.hidden=false;ui.questionPanel.hidden=true;ui.boardKicker.textContent="Modos de juego";ui.boardTitle.textContent="Esperando que comience el juego";ui.boardDesc.textContent=state.role==="host"?"Elige el modo, la duracion y lanza la pregunta de ejemplo.":"El anfitrion esta configurando la partida.";const cards=(items,kind,current)=>items.map(item=>`<button class="modeCard ${current===item.id?"on":""}" data-kind="${kind}" data-id="${item.id}" ${state.role==="guest"&&!state.game.allowVotes?"disabled":""}><div class="modeHead"><span class="modeIcon">${item.icon}</span><span class="modeVotes">${kind==="mode"?modeVotes(item.id):durationVotes(item.id)}</span></div><strong>${item.title}</strong><p>${item.desc}</p></button>`).join("");ui.setupPanel.innerHTML=`<div class="modeGrid">${cards(MODES,"mode",state.game.selectedMode)}</div><div class="modeGrid">${cards(DURATIONS,"duration",state.game.selectedDuration)}</div>${state.role==="host"?`<div class="actions" style="margin-top:6px"><button class="btn btnGhost" id="btnUseMajority">Usar mayoria</button><button class="btn btnPrimary" id="btnStartQuestion">Enviar pregunta de ejemplo</button></div>`:`<div class="screenCard" style="padding:18px"><span class="kicker">Espera</span><h3>Esperando que comience el juego</h3><p>${state.game.allowVotes?"Puedes votar tu modo favorito y seguir el conteo en directo.":"El anfitrion esta decidiendo el formato final."}</p></div>`}`;ui.setupPanel.querySelectorAll("[data-kind]").forEach(btn=>btn.onclick=async()=>{const kind=btn.dataset.kind,id=btn.dataset.id;if(state.role==="host"){if(kind==="mode") state.game.selectedMode=id; else state.game.selectedDuration=id;await broadcastGame();renderPhase();}else if(state.game.allowVotes){const vote=state.game.votes[state.playerId]||{name:state.name};if(kind==="mode"){vote.mode=id;ui.guestVoteText.textContent=`Votando ${MODES.find(x=>x.id===id)?.title||""}.`;}else vote.duration=id;vote.name=state.name;await state.channel.send({type:"broadcast",event:"guest_vote",payload:{playerId:state.playerId,name:state.name,mode:vote.mode||"",duration:vote.duration||""}});}});if(state.role==="host"){ui.setupPanel.querySelector("#btnUseMajority").onclick=async()=>{state.game.selectedMode=majority("mode",MODES)||"classic";state.game.selectedDuration=majority("duration",DURATIONS)||"olympic";await broadcastGame();renderPhase();};ui.setupPanel.querySelector("#btnStartQuestion").onclick=async()=>{state.game.phase="countdown";state.game.countdownValue=4;state.game.countdownStartedAt=Date.now();await broadcastGame();renderPhase();};}}
-    function renderCountdown(){ui.voteToggleWrap.hidden=true;ui.setupPanel.hidden=true;ui.questionPanel.hidden=false;const count=state.game.countdownValue||4;ui.boardKicker.textContent="Cuenta atras";ui.boardTitle.textContent="Todo listo para jugar";ui.boardDesc.textContent="Lectura breve antes de arrancar la primera pregunta.";ui.questionPanel.innerHTML=`<div class="questionHero" style="place-items:center;text-align:center;min-height:360px"><img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" style="width:min(240px,60%)"><div style="font-size:clamp(4rem,12vw,8rem);font-weight:1000;line-height:1">${count}</div><p>Respira. Enseguida empieza la accion.</p></div>`;}
-    function renderQuestion(){ui.voteToggleWrap.hidden=true;ui.setupPanel.hidden=true;ui.questionPanel.hidden=false;const q=state.game.question||{prompt:"",answers:[],correct:0,endAt:Date.now(),revealed:false};const left=Math.max(0,Math.ceil((q.endAt-Date.now())/1000)),progress=Math.max(0,Math.min(1,(q.endAt-Date.now())/20000));ui.boardKicker.textContent="Pregunta de ejemplo";ui.boardTitle.textContent="Responde antes de que termine el tiempo";ui.boardDesc.textContent=state.role==="guest"?"La pantalla ya ha entrado en directo. Marca tu respuesta.":"Vista previa de una ronda con cinco respuestas.";ui.questionPanel.innerHTML=`<div class="questionHero"><div class="actions between"><div><span class="kicker">Ejemplo</span><h2>${q.prompt}</h2></div><div class="timerRing" style="--timer:${progress}"><div class="timerInner">${left}</div></div></div><div class="answerGrid">${q.answers.map((a,i)=>`<button class="answerBtn ${(state.localAnswer===i)?"on":""} ${q.revealed&&q.correct===i?"correct":""}" data-answer="${i}" ${q.revealed||left===0?"disabled":""}><span><span class="answerKey">${String.fromCharCode(65+i)}</span> ${a}</span><span>${q.revealed&&q.correct===i?"Correcta":"Elegir"}</span></button>`).join("")}</div>${q.revealed?`<div class="screenCard" style="padding:18px"><strong>Respuesta correcta:</strong> ${q.answers[q.correct]}</div>`:""}</div>`;ui.questionPanel.querySelectorAll("[data-answer]").forEach(btn=>btn.onclick=async()=>{const i=Number(btn.dataset.answer);state.localAnswer=i;renderPhase();if(state.role==="host"){state.game.question.answers[state.playerId]=i;await broadcastGame();}else await state.channel.send({type:"broadcast",event:"guest_answer",payload:{playerId:state.playerId,answerIndex:i}});});}
-    function renderAnswer(){ui.voteToggleWrap.hidden=true;ui.setupPanel.hidden=true;ui.questionPanel.hidden=false;const q=state.game.question;ui.boardKicker.textContent="Respuesta";ui.boardTitle.textContent="La correcta era...";ui.boardDesc.textContent="Un momento para leer la solucion antes del marcador.";ui.questionPanel.innerHTML=`<div class="questionHero"><span class="kicker">Respuesta correcta</span><h2>${q.answers[q.correct]}</h2><p>${q.prompt}</p></div>`;}
-    function renderScores(){ui.voteToggleWrap.hidden=true;ui.setupPanel.hidden=true;ui.questionPanel.hidden=false;const scores=scoreEntries();const hero=scores[0];const rows=scores.map((p,i)=>`<div class="scoreRow"><div class="miniAvatar">${p.avatarSrc?`<img src="${p.avatarSrc}" alt="">`:"&#129430;"}</div><div><strong>#${i+1} ${esc(p.name)}</strong><div class="playerSub">${i===0?"Lider actual":"En carrera"}</div></div><strong>${p.score}</strong></div>`).join("");ui.boardKicker.textContent="Marcador";ui.boardTitle.textContent="Puntuacion del round";ui.boardDesc.textContent="Splash screen de marcador antes de seguir jugando.";ui.questionPanel.innerHTML=`<div class="scoreSplash"><div class="scoreHero"><span class="kicker">Round completado</span><h2>${hero?`${esc(hero.name)} lidera la partida`:"Marcador temporal"}</h2><p>${hero?`${hero.score} puntos`:"Aun no hay puntuaciones."}</p></div><div class="scoreList">${rows||"<p>Aun no hay puntuaciones.</p>"}</div></div>`;}
-    function renderPhase(){refreshIdentity();renderPlayers();ui.btnHostNext.style.display=state.role==="host"?"inline-flex":"none";ui.btnHostNext.disabled=!(state.role==="host"&&((state.game.phase==="lobby"&&hostCanContinue())||(state.game.phase==="setup"&&state.game.selectedMode&&state.game.selectedDuration)));if(state.game.phase==="lobby"){ui.voteToggleWrap.hidden=true;ui.setupPanel.hidden=true;ui.questionPanel.hidden=true;ui.guestVotePanel.hidden=true;ui.phaseInfo.innerHTML="";ui.playerList.hidden=false;ui.boardKicker.textContent="Lista de jugadores";ui.boardTitle.textContent="Preparando la sala";ui.boardDesc.textContent="Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida.";ui.leftKicker.textContent="Perfil";ui.leftTitle.textContent=state.role==="host"?"Configura el anfitrion":"Configura tu ficha";ui.joinCodeField.hidden=state.role!=="guest"||!!state.roomCode;if(state.role==="guest"&&state.ready) renderLeftScene("waiting"); else renderLeftScene("profile");}if(state.game.phase==="setup"){ui.playerList.hidden=true;ui.leftKicker.textContent=state.role==="host"?"Configuracion":"Espera";ui.leftTitle.textContent=state.role==="host"?"Prepara la partida":"Sala en preparacion";renderLeftScene(state.role==="host"?"setupHost":"setupGuest");renderSetup();}if(state.game.phase==="countdown"){ui.playerList.hidden=true;ui.leftKicker.textContent="Directo";ui.leftTitle.textContent="Todo preparado";renderLeftScene("countdown");renderCountdown();}if(state.game.phase==="question"){ui.playerList.hidden=true;ui.leftKicker.textContent="En juego";ui.leftTitle.textContent=state.role==="host"?"Control de ronda":"Tu respuesta";renderLeftScene("question");renderQuestion();}if(state.game.phase==="answer"){ui.playerList.hidden=true;ui.leftKicker.textContent="Respuesta";ui.leftTitle.textContent="Momento de revelar";renderLeftScene("answer");renderAnswer();}if(state.game.phase==="scores"){ui.playerList.hidden=true;ui.leftKicker.textContent="Marcador";ui.leftTitle.textContent="Puntuacion del round";renderLeftScene("scores");renderScores();}}
-    let drag=null,pinch=null;const touchDistance=(a,b)=>Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
-    function clampAvatar(){state.avatar.s=Math.max(.35,Math.min(3,state.avatar.s||1));state.avatar.x=Math.max(-180,Math.min(180,state.avatar.x||0));state.avatar.y=Math.max(-180,Math.min(180,state.avatar.y||0));applyAvatar();}
-    function startDrag(ev){if(state.avatar.kind!=="photo"||!state.avatar.src) return;const p=("touches" in ev)?ev.touches[0]:ev;drag={x:p.clientX,y:p.clientY,startX:state.avatar.x,startY:state.avatar.y};ui.avatarStage.classList.add("dragging");}
-    function moveDrag(ev){if(!drag) return;const p=("touches" in ev)?ev.touches[0]:ev;state.avatar.x=drag.startX+(p.clientX-drag.x);state.avatar.y=drag.startY+(p.clientY-drag.y);clampAvatar();}
-    function endDrag(){drag=null;ui.avatarStage.classList.remove("dragging");}
-    ui.menuBtn.onclick=()=>ui.menuWrap.classList.toggle("open");document.addEventListener("click",ev=>{if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open");});
-    ui.btnPickHost.onclick=async()=>{state.name="";state.avatar={kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"};state.localAnswer=null;showApp();ui.joinCodeField.hidden=true;await connectRoom("host",roomCode());renderPhase();};
-    ui.btnPickGuest.onclick=async()=>{state.name="";state.avatar={kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"};state.localAnswer=null;showApp();state.role="guest";state.roomCode="";ui.joinCodeField.hidden=false;ui.leftKicker.textContent="Invitado";ui.leftTitle.textContent="Introduce el codigo de sala";setStatus("Escribe el codigo y prepara tu avatar dentro del mismo panel.","info");renderPhase();};
-    ui.btnBack.onclick=()=>location.reload();
-    ui.btnUpload.onclick=()=>ui.photoInput.click();ui.photoInput.onchange=async()=>{const file=ui.photoInput.files?.[0];if(!file) return;state.avatar.kind="photo";state.avatar.src=await compressPhoto(file);state.avatar.rendered="";state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();setStatus("Foto cargada. Ajustala y pulsa usar avatar.","info");};
-    ui.btnEmoji.onclick=()=>{state.selectedEmoji=state.avatar.emoji||"mint";renderEmojiChoices();ui.emojiModal.classList.add("on");};ui.btnCloseEmoji.onclick=()=>ui.emojiModal.classList.remove("on");ui.btnAcceptEmoji.onclick=()=>{state.avatar.kind="emoji";state.avatar.emoji=state.selectedEmoji;state.avatar.src=emojiDataUrl(state.selectedEmoji);state.avatar.rendered=state.avatar.src;applyAvatar();ui.emojiModal.classList.remove("on");setStatus("Avatar seleccionado.","info");};
-    ui.btnUseAvatar.onclick=async()=>{if(state.avatar.kind==="photo"&&!state.avatar.src){ui.photoInput.click();return;}state.avatar.rendered=await exportAvatar();applyAvatar();setStatus("Avatar preparado. La vista final usara este encuadre.","info");};
-    ui.avatarStage.addEventListener("mousedown",startDrag);ui.avatarStage.addEventListener("touchstart",ev=>{if(ev.touches.length===2){pinch={distance:touchDistance(ev.touches[0],ev.touches[1]),startScale:state.avatar.s};return;}startDrag(ev);},{passive:false});ui.avatarStage.addEventListener("wheel",ev=>{if(state.avatar.kind!=="photo"||!state.avatar.src) return;ev.preventDefault();state.avatar.s+=(ev.deltaY<0?0.07:-0.07);clampAvatar();},{passive:false});window.addEventListener("mousemove",moveDrag,{passive:true});window.addEventListener("touchmove",ev=>{if(pinch&&ev.touches.length===2){ev.preventDefault();state.avatar.s=pinch.startScale*(touchDistance(ev.touches[0],ev.touches[1])/pinch.distance);clampAvatar();return;}moveDrag(ev);},{passive:false});window.addEventListener("mouseup",endDrag);window.addEventListener("touchend",()=>{pinch=null;endDrag();});
-    ui.btnReady.onclick=async()=>{const name=ui.nameInput.value.trim();if(!name){setStatus("Necesito tu nombre antes de continuar.","danger");return;}if(!(state.avatar.rendered||state.avatar.src)){setStatus("Prepara tu avatar antes de continuar.","danger");return;}state.name=name;if(!state.avatar.rendered) state.avatar.rendered=await exportAvatar();if(state.role==="guest"&&!state.roomCode){const code=normalize(ui.joinCodeInput.value);if(code.length!==6){setStatus("Necesito un codigo de sala valido para entrar como invitado.","danger");return;}await connectRoom("guest",code);state.name=name;state.avatar={...state.avatar,rendered:state.avatar.rendered||await exportAvatar()};applyAvatar();}state.ready=true;await updatePresence();syncPlayers();setStatus("Tu ficha ya esta lista.","");};
-    ui.voteToggle.onclick=async()=>{if(state.role!=="host") return;state.game.allowVotes=!state.game.allowVotes;state.game.voteDeadline=state.game.allowVotes?Date.now()+60000:0;await broadcastGame();renderPhase();};
-    ui.btnHostNext.onclick=async()=>{if(state.game.phase==="lobby"){state.game.phase="setup";state.game.allowVotes=false;state.game.voteDeadline=0;state.game.selectedMode="";state.game.selectedDuration="";state.game.votes={};await broadcastGame();renderPhase();return;}if(state.game.phase==="setup"&&state.game.selectedMode&&state.game.selectedDuration){state.localAnswer=null;state.game.phase="countdown";state.game.countdownValue=4;state.game.countdownStartedAt=Date.now();await broadcastGame();renderPhase();}};
-    setInterval(async()=>{
-      if(state.game.phase==="setup"&&state.game.allowVotes&&state.game.voteDeadline){
-        ui.hostCountdown.textContent=countText(state.game.voteDeadline);ui.guestCountdown.textContent=countText(state.game.voteDeadline);
-        if(Date.now()>=state.game.voteDeadline&&state.role==="host"){if(!state.game.selectedMode) state.game.selectedMode="classic";if(!state.game.selectedDuration) state.game.selectedDuration="olympic";state.game.allowVotes=false;await broadcastGame();renderPhase();}
-      }
-      if(state.game.phase==="countdown"&&state.role==="host"){
-        const left=Math.max(0,4-Math.floor((Date.now()-state.game.countdownStartedAt)/1000));state.game.countdownValue=left||1;
-        if(Date.now()-state.game.countdownStartedAt>=4000){state.game.phase="question";state.game.question={...EXAMPLE_QUESTION,endAt:Date.now()+20000,answers:{},revealed:false};await broadcastGame();}
-        renderPhase();
-      }
-      if(state.game.phase==="question"&&state.game.question&&Date.now()>=state.game.question.endAt&&!state.game.question.revealed&&state.role==="host"){
-        state.game.question.revealed=true;
-        const scores={...(state.game.scores||{})};
-        Object.entries(state.game.question.answers||{}).forEach(([playerId,answerIndex])=>{if(Number(answerIndex)===state.game.question.correct) scores[playerId]=(scores[playerId]||0)+100;});
-        state.game.scores=scores;
-        state.game.phase="answer";
-        state.game.answerShownAt=Date.now();
-        await broadcastGame();
-      }
-      if(state.game.phase==="answer"&&state.role==="host"&&Date.now()-state.game.answerShownAt>=4000){
-        state.game.phase="scores";
-        state.game.scoresShownAt=Date.now();
-        await broadcastGame();
-      }
-      if(state.game.phase==="scores"&&state.role==="host"&&Date.now()-state.game.scoresShownAt>=6000){
-        state.localAnswer=null;
-        state.game.phase="setup";
-        state.game.allowVotes=false;
-        state.game.voteDeadline=0;
-        state.game.votes={};
-        state.game.question=null;
-        await broadcastGame();
-        renderPhase();
-      }
-    },1000);
-    renderEmojiChoices();applyAvatar();renderPhase();
+    const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
+    const FRAME_SRC = "/shared/assets/brand/participantes-frame.png";
+    const EMOJIS = [["lava","#ff6b35"],["mint","#56d364"],["ocean","#38bdf8"],["sun","#facc15"],["orchid","#f472b6"],["jade","#22c55e"],["berry","#fb7185"],["sky","#60a5fa"]];
+    const MODES = [
+      {id:"classic",icon:"\uD83C\uDFA9",title:"Trivialodon classic",desc:"Rondas elegantes con ritmo de concurso clasico."},
+      {id:"custom",icon:"\uD83D\uDEE0",title:"Personalizado",desc:"Ajusta el tono del juego y juega a tu manera."},
+      {id:"deathmatch",icon:"\uD83D\uDCA5",title:"Deathmatch",desc:"Presion total, eliminacion y suspense televisivo."},
+      {id:"speed",icon:"\u26A1",title:"Test velocidad",desc:"Todo se decide por reflejos y respuestas rapidas."}
+    ];
+    const DURATIONS = [
+      {id:"timed",icon:"\u23F1",title:"Quiero que dure un tiempo determinado",desc:"Sesiones por tiempo flexible."},
+      {id:"questions",icon:"?",title:"Quiero que dure una cantidad de preguntas determinada",desc:"Controlas la longitud por numero de preguntas."},
+      {id:"olympic",icon:"\uD83C\uDFC6",title:"Trivialodon olimpico",desc:"Formato oficial de 40 minutos."}
+    ];
+    const EXAMPLE_QUESTION = {prompt:"\u00BFQue planeta del sistema solar es conocido como el planeta rojo?",answers:["Venus","Marte","Saturno","Mercurio","Neptuno"],correct:1};
+    const FUN_LINES = ["espera espera, voy!","estoy buscando mi mejor foto","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"];
+    const $ = id => document.getElementById(id);
+    const ui = {
+      introScene:$("introScene"), shell:$("shell"), btnHost:$("btnHost"), btnGuest:$("btnGuest"), menuWrap:$("menuWrap"), menuBtn:$("menuBtn"),
+      identity:$("identity"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
+      scenes:{profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene")},
+      profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"),
+      nameInput:$("nameInput"), avatarStage:$("avatarStage"), avatarImg:$("avatarImg"), avatarPlaceholder:$("avatarPlaceholder"), btnUpload:$("btnUpload"),
+      btnEmoji:$("btnEmoji"), btnUseAvatar:$("btnUseAvatar"), photoInput:$("photoInput"), profileStatus:$("profileStatus"), btnBack:$("btnBack"), btnReady:$("btnReady"),
+      profilePlayers:$("profilePlayers"), profileSideTitle:$("profileSideTitle"), profileSideText:$("profileSideText"), lobbySide:$("lobbySide"), lobbyTitle:$("lobbyTitle"),
+      lobbyDesc:$("lobbyDesc"), lobbyPlayers:$("lobbyPlayers"), btnToSetup:$("btnToSetup"), setupSide:$("setupSide"), setupDesc:$("setupDesc"), hostVoteWrap:$("hostVoteWrap"),
+      hostVoteCountdown:$("hostVoteCountdown"), voteToggle:$("voteToggle"), modeGrid:$("modeGrid"), durationGrid:$("durationGrid"), setupActions:$("setupActions"),
+      countdownValue:$("countdownValue"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
+      questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
+      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), emojiModal:$("emojiModal"), emojiGrid:$("emojiGrid"),
+      btnCloseEmoji:$("btnCloseEmoji"), btnAcceptEmoji:$("btnAcceptEmoji")
+    };
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
+    const state = {
+      playerId:crypto.randomUUID(), role:"", roomCode:"", name:"", ready:false, waitingLine:"", channel:null, players:[], selectedEmoji:"mint", localAnswer:null,
+      avatar:{kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"},
+      game:{phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",votes:{},question:null,scores:{}}
+    };
+    const esc = value => String(value || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const normalize = value => String(value || "").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6);
+    const countText = ts => { const left = Math.max(0, Math.ceil((ts - Date.now()) / 1000)); return `${String(Math.floor(left / 60)).padStart(2,"0")}:${String(left % 60).padStart(2,"0")}`; };
+    const lineFor = id => FUN_LINES[[...id].reduce((a,c)=>a + c.charCodeAt(0), 0) % FUN_LINES.length];
+    const roomCode = () => { const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let out = ""; for(let i=0;i<6;i++) out += chars[Math.floor(Math.random() * chars.length)]; return out; };
+    const hostCanContinue = () => state.role === "host" && state.players.length > 0 && state.players.every(player => player.ready);
+    const modeVotes = id => Object.values(state.game.votes || {}).filter(v => v.mode === id).length;
+    const durationVotes = id => Object.values(state.game.votes || {}).filter(v => v.duration === id).length;
+    function setStatus(text, tone){ ui.profileStatus.textContent = text; ui.profileStatus.className = `status ${tone || "info"}`; }
+    function renderEmojiChoices(){ ui.emojiGrid.innerHTML = EMOJIS.map(([id,color]) => `<button class="emojiChoice ${state.selectedEmoji === id ? "active" : ""}" data-emoji="${id}" type="button"><div class="emojiBall" style="background:${color}22;border:1px solid ${color}55">\uD83E\uDD96</div><strong>${esc(id)}</strong></button>`).join(""); ui.emojiGrid.querySelectorAll("[data-emoji]").forEach(btn => btn.onclick = () => { state.selectedEmoji = btn.dataset.emoji; renderEmojiChoices(); }); }
+    function emojiDataUrl(id){ const color = Object.fromEntries(EMOJIS)[id] || "#56d364"; const canvas = document.createElement("canvas"); canvas.width = 220; canvas.height = 220; const ctx = canvas.getContext("2d"); ctx.fillStyle = `${color}22`; ctx.beginPath(); ctx.arc(110,110,108,0,Math.PI * 2); ctx.fill(); ctx.font = "120px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("\uD83E\uDD96",110,118); return canvas.toDataURL("image/png"); }
+    function updateIdentity(){ ui.identity.hidden = !state.role; ui.identityName.textContent = state.name || "Sin nombre"; ui.identityRole.textContent = state.role === "host" ? "Anfitrion" : "Invitado"; ui.roomBadge.textContent = state.roomCode || "------"; const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; }
+    function applyAvatar(){ if(state.avatar.kind === "emoji"){ state.avatar.src = emojiDataUrl(state.avatar.emoji); state.avatar.rendered = state.avatar.src; } const src = state.avatar.src; ui.avatarImg.hidden = !src; ui.avatarPlaceholder.hidden = !!src; if(src){ ui.avatarImg.src = src; ui.avatarImg.style.setProperty("--x", `${state.avatar.x}px`); ui.avatarImg.style.setProperty("--y", `${state.avatar.y}px`); ui.avatarImg.style.setProperty("--s", `${state.avatar.s}`); } updateIdentity(); }
+    async function readSource(source){ return new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = source; }); }
+    async function compressPhoto(file){ const src = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = reject; reader.readAsDataURL(file); }); const img = await readSource(src); const max = 720; const ratio = Math.min(1, max / Math.max(img.width, img.height)); const canvas = document.createElement("canvas"); canvas.width = Math.round(img.width * ratio); canvas.height = Math.round(img.height * ratio); canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height); return canvas.toDataURL("image/jpeg", .9); }
+    async function exportAvatar(){ if(state.avatar.kind === "emoji") return emojiDataUrl(state.avatar.emoji); const img = await readSource(state.avatar.src); const size = 220; const canvas = document.createElement("canvas"); canvas.width = size; canvas.height = size; const ctx = canvas.getContext("2d"); ctx.save(); ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.clip(); ctx.translate(size / 2, size / 2); ctx.translate(state.avatar.x, state.avatar.y); ctx.scale(state.avatar.s, state.avatar.s); ctx.drawImage(img, -img.width / 2, -img.height / 2, img.width, img.height); ctx.restore(); return canvas.toDataURL("image/png"); }
+    function renderPlayerRows(players){ if(!players.length) return `<article class="playerCard"><div class="sceneStack"><div class="playerName">Nadie todavia</div><div class="playerSub">La sala espera al primer dino.</div></div></article>`; return players.map(player => `<article class="playerCard"><div class="avatarStack">${player.ready && player.avatarSrc ? `<div class="avatarShot"><img src="${player.avatarSrc}" alt=""></div>` : `<div class="dinoHole">\uD83E\uDD96</div>`}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="sceneStack" style="gap:6px"><div class="playerName">${esc(player.ready ? player.name : (player.waitingLine || lineFor(player.playerId)))}</div><div class="playerSub">${esc(player.ready ? (player.role === "host" ? "Anfitrion listo" : "Invitado listo") : "Aun no ha pulsado listo")}</div></div></article>`).join(""); }
+    function dedupePlayers(raw){ const map = new Map(); raw.forEach(entry => { const prev = map.get(entry.playerId); if(!prev || entry.updatedAt > prev.updatedAt) map.set(entry.playerId, entry); }); return [...map.values()].sort((a,b) => { if(a.role !== b.role) return a.role === "host" ? -1 : 1; if(a.ready !== b.ready) return a.ready ? -1 : 1; return String(a.name || a.waitingLine).localeCompare(String(b.name || b.waitingLine), "es"); }); }
+    function scoreEntries(){ return state.players.filter(player => player.ready).map(player => ({playerId:player.playerId,name:player.name,avatarSrc:player.avatarSrc,score:(state.game.scores && state.game.scores[player.playerId]) || 0})).sort((a,b) => b.score - a.score || a.name.localeCompare(b.name, "es")); }
+    function renderProfileScene(){ ui.profileKicker.textContent = state.role === "host" ? "Perfil" : "Invitado"; ui.profileTitle.textContent = state.role === "host" ? "Configura al anfitrion" : "Configura tu ficha"; ui.profileSideTitle.textContent = state.role === "host" ? "Preparando la sala" : "Entrando en la sala"; ui.profileSideText.textContent = state.role === "host" ? "Comparte el codigo de sala y espera a que entren los invitados." : "Introduce el codigo, prepara tu ficha y pulsa listo cuando termines."; ui.joinCodeField.hidden = state.role !== "guest" || !!state.roomCode; ui.profilePlayers.innerHTML = renderPlayerRows(state.players); }
+    function renderLobbyScene(){ ui.lobbyPlayers.innerHTML = renderPlayerRows(state.players); ui.btnToSetup.disabled = !hostCanContinue(); if(state.role === "host"){ ui.lobbySide.innerHTML = `<span class="kicker">Sala</span><h2 class="subtitle">Todos casi listos</h2><p>Cuando todos hayan pulsado listo, puedes pasar a la configuracion del juego.</p><div class="codeBadge">${esc(state.roomCode)}</div>`; } else { ui.lobbySide.innerHTML = `<span class="kicker">Espera</span><h2 class="subtitle">Esperando al anfitrion</h2><p>Tu ficha ya esta enviada. En cuanto el anfitrion avance, la sala cambiara sola.</p>`; } }
+    function renderSetupCards(items, kind, current){ return items.map(item => `<button class="modeCard ${current === item.id ? "active" : ""}" data-kind="${kind}" data-id="${item.id}" ${state.role === "guest" && !state.game.allowVotes ? "disabled" : ""}><div class="modeHead"><span class="modeIcon">${item.icon}</span><span class="modeVotes">${kind === "mode" ? modeVotes(item.id) : durationVotes(item.id)}</span></div><strong>${esc(item.title)}</strong><p>${esc(item.desc)}</p></button>`).join(""); }
+    function majority(kind, items){ let best = ""; let count = -1; items.forEach(item => { const amount = kind === "mode" ? modeVotes(item.id) : durationVotes(item.id); if(amount > count){ count = amount; best = item.id; } }); return best; }
+    function renderSetupScene(){ ui.hostVoteWrap.hidden = state.role !== "host"; ui.voteToggle.classList.toggle("on", state.game.allowVotes); ui.hostVoteCountdown.textContent = state.game.voteDeadline ? countText(state.game.voteDeadline) : "01:00"; ui.modeGrid.innerHTML = renderSetupCards(MODES, "mode", state.game.selectedMode); ui.durationGrid.innerHTML = renderSetupCards(DURATIONS, "duration", state.game.selectedDuration); ui.setupDesc.textContent = state.role === "host" ? "Elige el modo, la duracion y cuando quieras lanza la ronda." : (state.game.allowVotes ? "El anfitrion ha abierto votacion. Marca tus opciones favoritas." : "El anfitrion esta decidiendo el formato final."); if(state.role === "host"){ ui.setupSide.innerHTML = `<span class="kicker">Direccion</span><h2 class="subtitle">Tu decides el formato</h2><p>Puedes aceptar la mayoria o imponer la seleccion final desde aqui.</p><div class="countPill">${state.game.voteDeadline ? countText(state.game.voteDeadline) : "Sin cuenta atras"}</div>`; ui.setupActions.innerHTML = `<button class="btn btnGhost" id="btnUseMajority" type="button">Usar mayoria</button><button class="btn btnPrimary" id="btnStartRound" type="button" ${!(state.game.selectedMode && state.game.selectedDuration) ? "disabled" : ""}>Enviar pregunta de ejemplo</button>`; $("btnUseMajority").onclick = async () => { state.game.selectedMode = majority("mode", MODES) || "classic"; state.game.selectedDuration = majority("duration", DURATIONS) || "olympic"; await broadcastGame(); renderCurrentScene(); }; $("btnStartRound").onclick = async () => { if(!(state.game.selectedMode && state.game.selectedDuration)) return; state.localAnswer = null; state.game.phase = "countdown"; state.game.countdownValue = 4; state.game.countdownStartedAt = Date.now(); await broadcastGame(); renderCurrentScene(); }; } else { const myVote = state.game.votes[state.playerId] || {}; ui.setupSide.innerHTML = `<span class="kicker">Espera</span><h2 class="subtitle">${state.game.allowVotes ? "Votacion abierta" : "Esperando al anfitrion"}</h2><p>${state.game.allowVotes ? "Tus elecciones se actualizaran en tiempo real." : "La configuracion final la esta cerrando el anfitrion."}</p><div class="countPill">${state.game.voteDeadline ? countText(state.game.voteDeadline) : "Sin cuenta atras"}</div><p>Tu voto actual: ${esc((MODES.find(item => item.id === myVote.mode) || {}).title || "sin modo")} / ${esc((DURATIONS.find(item => item.id === myVote.duration) || {}).title || "sin duracion")}</p>`; ui.setupActions.innerHTML = ""; } [...ui.modeGrid.querySelectorAll("[data-kind]"), ...ui.durationGrid.querySelectorAll("[data-kind]")].forEach(btn => { btn.onclick = async () => { const kind = btn.dataset.kind; const id = btn.dataset.id; if(state.role === "host"){ if(kind === "mode") state.game.selectedMode = id; else state.game.selectedDuration = id; await broadcastGame(); renderCurrentScene(); return; } if(!state.game.allowVotes) return; const vote = state.game.votes[state.playerId] || {name:state.name}; if(kind === "mode") vote.mode = id; else vote.duration = id; vote.name = state.name; await state.channel.send({type:"broadcast",event:"guest_vote",payload:{playerId:state.playerId,name:state.name,mode:vote.mode || "",duration:vote.duration || ""}}); }; }); }
+    function renderCountdownScene(){ ui.countdownValue.textContent = String(state.game.countdownValue || 4); }
+    function renderQuestionScene(){ const question = state.game.question || {prompt:"",answers:[],correct:0,endAt:Date.now(),revealed:false}; const left = Math.max(0, Math.ceil((question.endAt - Date.now()) / 1000)); const progress = Math.max(0, Math.min(1, (question.endAt - Date.now()) / 20000)); ui.questionPrompt.textContent = question.prompt; ui.questionCopy.textContent = state.role === "host" ? "La ronda esta en directo para todos los jugadores." : "Marca tu respuesta antes de que termine la cuenta atras."; ui.questionTimer.textContent = String(left); ui.questionTimerRing.style.setProperty("--timer", progress); ui.questionAnswers.innerHTML = question.answers.map((answer, index) => `<button class="answerCard ${state.localAnswer === index ? "active" : ""} ${question.revealed && question.correct === index ? "correct" : ""}" data-answer="${index}" ${question.revealed || left === 0 ? "disabled" : ""}><span><span class="answerKey">${String.fromCharCode(65 + index)}</span> ${esc(answer)}</span><span class="answerState">${question.revealed && question.correct === index ? "Correcta" : (state.localAnswer === index ? "Elegida" : "Elegir")}</span></button>`).join(""); ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => { btn.onclick = async () => { const answerIndex = Number(btn.dataset.answer); state.localAnswer = answerIndex; renderQuestionScene(); if(state.role === "host"){ state.game.question.answers[state.playerId] = answerIndex; await broadcastGame(); } else { await state.channel.send({type:"broadcast",event:"guest_answer",payload:{playerId:state.playerId,answerIndex}}); } }; }); }
+    function renderAnswerScene(){ const question = state.game.question; ui.answerCorrect.textContent = question.answers[question.correct]; ui.answerPrompt.textContent = question.prompt; }
+    function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; ui.scoresTitle.textContent = leader ? `${leader.name} lidera la partida` : "Puntuacion del round"; ui.scoresLead.textContent = leader ? `${leader.score} puntos acumulados` : "Todavia no hay puntuaciones."; ui.scoresRows.innerHTML = entries.map((entry, index) => `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? "Lider actual" : "En carrera"}</span></div><strong>${entry.score}</strong></article>`).join("") || `<p>Aun no hay puntuaciones.</p>`; }
+    function showScene(name){ Object.entries(ui.scenes).forEach(([key,node]) => node.classList.toggle("on", key === name)); }
+    function currentScene(){ if(!state.ready) return "profile"; if(state.game.phase === "lobby") return "lobby"; if(state.game.phase === "setup") return "setup"; if(state.game.phase === "countdown") return "countdown"; if(state.game.phase === "question") return "question"; if(state.game.phase === "answer") return "answer"; if(state.game.phase === "scores") return "scores"; return "lobby"; }
+    function renderCurrentScene(){ updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); if(state.game.phase === "answer" && state.game.question) renderAnswerScene(); renderScoresScene(); showScene(currentScene()); }
+    async function updatePresence(){ if(!state.channel) return; await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready ? (state.avatar.rendered || state.avatar.src) : "",updatedAt:Date.now()}); }
+    async function broadcastGame(){ if(state.role !== "host" || !state.channel) return; await state.channel.send({type:"broadcast",event:"game_state",payload:state.game}); }
+    function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
+    async function connectRoom(role, code){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; state.role = role; state.roomCode = code; state.ready = false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = {phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",votes:{},question:null,scores:{}}; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; if(payload.phase !== "question") state.localAnswer = null; if(payload.phase === "question" && state.game.question && payload.question && payload.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = payload; renderCurrentScene(); }).on("broadcast",{event:"guest_vote"},({payload}) => { if(state.role !== "host" || !payload) return; state.game.votes[payload.playerId] = {name:payload.name,mode:payload.mode || "",duration:payload.duration || ""}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; state.game.question.answers[payload.playerId] = payload.answerIndex; broadcastGame(); renderCurrentScene(); }); channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); setStatus(role === "host" ? "Sala creada. Prepara tu avatar." : "Ya estas dentro. Configura tu avatar.","info"); if(role === "host"){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); } }); }
+    function showShell(){ ui.introScene.classList.remove("on"); ui.introScene.classList.add("off"); ui.shell.classList.add("on"); }
+    function resetDraft(){ state.name = ""; state.ready = false; state.localAnswer = null; state.avatar = {kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"}; ui.nameInput.value = ""; ui.joinCodeInput.value = ""; applyAvatar(); setStatus("Todavia no has preparado tu avatar.","info"); }
+    function clampAvatar(){ state.avatar.s = Math.max(.35, Math.min(3, state.avatar.s || 1)); state.avatar.x = Math.max(-180, Math.min(180, state.avatar.x || 0)); state.avatar.y = Math.max(-180, Math.min(180, state.avatar.y || 0)); applyAvatar(); }
+    let drag = null, pinch = null; const touchDistance = (a,b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    function startDrag(ev){ if(state.avatar.kind !== "photo" || !state.avatar.src) return; const point = "touches" in ev ? ev.touches[0] : ev; drag = {x:point.clientX,y:point.clientY,startX:state.avatar.x,startY:state.avatar.y}; ui.avatarStage.classList.add("dragging"); }
+    function moveDrag(ev){ if(!drag) return; const point = "touches" in ev ? ev.touches[0] : ev; state.avatar.x = drag.startX + (point.clientX - drag.x); state.avatar.y = drag.startY + (point.clientY - drag.y); clampAvatar(); }
+    function endDrag(){ drag = null; ui.avatarStage.classList.remove("dragging"); }
+    ui.menuBtn.onclick = () => ui.menuWrap.classList.toggle("open");
+    document.addEventListener("click", ev => { if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open"); });
+    ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; await connectRoom("host", roomCode()); renderCurrentScene(); };
+    ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; ui.joinCodeField.hidden = false; renderCurrentScene(); };
+    ui.btnBack.onclick = () => location.reload();
+    ui.btnUpload.onclick = () => ui.photoInput.click();
+    ui.photoInput.onchange = async () => { const file = ui.photoInput.files && ui.photoInput.files[0]; if(!file) return; state.avatar.kind = "photo"; state.avatar.src = await compressPhoto(file); state.avatar.rendered = ""; state.avatar.x = 0; state.avatar.y = 0; state.avatar.s = 1; clampAvatar(); setStatus("Foto cargada. Ajustala y pulsa usar avatar.","info"); };
+    ui.btnEmoji.onclick = () => { state.selectedEmoji = state.avatar.emoji || "mint"; renderEmojiChoices(); ui.emojiModal.classList.add("on"); };
+    ui.btnCloseEmoji.onclick = () => ui.emojiModal.classList.remove("on");
+    ui.btnAcceptEmoji.onclick = () => { state.avatar.kind = "emoji"; state.avatar.emoji = state.selectedEmoji; state.avatar.src = emojiDataUrl(state.selectedEmoji); state.avatar.rendered = state.avatar.src; applyAvatar(); ui.emojiModal.classList.remove("on"); setStatus("Avatar seleccionado.","ok"); };
+    ui.btnUseAvatar.onclick = async () => { if(state.avatar.kind === "photo" && !state.avatar.src){ ui.photoInput.click(); return; } state.avatar.rendered = await exportAvatar(); applyAvatar(); setStatus("Avatar preparado. La vista final usara este encuadre.","ok"); };
+    ui.avatarStage.addEventListener("mousedown", startDrag);
+    ui.avatarStage.addEventListener("touchstart", ev => { if(ev.touches.length === 2){ pinch = {distance:touchDistance(ev.touches[0], ev.touches[1]), startScale:state.avatar.s}; return; } startDrag(ev); }, {passive:false});
+    ui.avatarStage.addEventListener("wheel", ev => { if(state.avatar.kind !== "photo" || !state.avatar.src) return; ev.preventDefault(); state.avatar.s += ev.deltaY < 0 ? .07 : -.07; clampAvatar(); }, {passive:false});
+    window.addEventListener("mousemove", moveDrag, {passive:true});
+    window.addEventListener("touchmove", ev => { if(pinch && ev.touches.length === 2){ ev.preventDefault(); state.avatar.s = pinch.startScale * (touchDistance(ev.touches[0], ev.touches[1]) / pinch.distance); clampAvatar(); return; } moveDrag(ev); }, {passive:false});
+    window.addEventListener("mouseup", endDrag);
+    window.addEventListener("touchend", () => { pinch = null; endDrag(); });
+    ui.btnReady.onclick = async () => { const name = ui.nameInput.value.trim(); if(!name){ setStatus("Necesito tu nombre antes de continuar.","danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus("Prepara tu avatar antes de continuar.","danger"); return; } state.name = name; if(!state.avatar.rendered) state.avatar.rendered = await exportAvatar(); if(state.role === "guest" && !state.roomCode){ const code = normalize(ui.joinCodeInput.value); if(code.length !== 6){ setStatus("Necesito un codigo de sala valido para entrar como invitado.","danger"); return; } await connectRoom("guest", code); state.name = name; state.avatar = {...state.avatar, rendered:state.avatar.rendered || await exportAvatar()}; applyAvatar(); } state.ready = true; await updatePresence(); syncPlayers(); setStatus("Tu ficha ya esta lista.","ok"); renderCurrentScene(); };
+    ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.votes = {}; await broadcastGame(); renderCurrentScene(); };
+    ui.voteToggle.onclick = async () => { if(state.role !== "host") return; state.game.allowVotes = !state.game.allowVotes; state.game.voteDeadline = state.game.allowVotes ? (Date.now() + 60000) : 0; await broadcastGame(); renderCurrentScene(); };
+    setInterval(async () => { if(state.game.phase === "setup" && state.game.allowVotes && state.game.voteDeadline){ ui.hostVoteCountdown.textContent = countText(state.game.voteDeadline); if(Date.now() >= state.game.voteDeadline && state.role === "host"){ if(!state.game.selectedMode) state.game.selectedMode = "classic"; if(!state.game.selectedDuration) state.game.selectedDuration = "olympic"; state.game.allowVotes = false; await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "countdown" && state.role === "host"){ const left = Math.max(0, 4 - Math.floor((Date.now() - state.game.countdownStartedAt) / 1000)); state.game.countdownValue = left || 1; if(Date.now() - state.game.countdownStartedAt >= 4000){ state.game.phase = "question"; state.game.question = {...EXAMPLE_QUESTION, endAt:Date.now() + 20000, answers:{}, revealed:false}; await broadcastGame(); } renderCurrentScene(); } if(state.game.phase === "question" && state.game.question){ renderQuestionScene(); if(Date.now() >= state.game.question.endAt && !state.game.question.revealed && state.role === "host"){ state.game.question.revealed = true; const scores = {...(state.game.scores || {})}; Object.entries(state.game.question.answers || {}).forEach(([playerId, answerIndex]) => { if(Number(answerIndex) === state.game.question.correct) scores[playerId] = (scores[playerId] || 0) + 100; }); state.game.scores = scores; state.game.phase = "answer"; state.game.answerShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "answer" && state.role === "host" && Date.now() - state.game.answerShownAt >= 4000){ state.game.phase = "scores"; state.game.scoresShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } if(state.game.phase === "scores" && state.role === "host" && Date.now() - state.game.scoresShownAt >= 6000){ state.localAnswer = null; state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.votes = {}; state.game.question = null; await broadcastGame(); renderCurrentScene(); } }, 1000);
+    renderEmojiChoices();
+    applyAvatar();
+    renderCurrentScene();
   </script>
 </body>
 </html>
