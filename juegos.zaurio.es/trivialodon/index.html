@@ -5,106 +5,39 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Trivialodon | Zaurio</title>
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
-  <link rel="stylesheet" href="/shared/css/zaurio-ui.css" />
   <style>
-    :root{
-      --bg:radial-gradient(circle at top,#2a0046 0%,#12001d 35%,#000 100%);
-      --card:rgba(36,0,70,.82);
-      --card-soft:rgba(31,5,54,.74);
-      --stroke:rgba(255,255,255,.14);
-      --yellow:#ffee00;
-      --pink:#ff00aa;
-      --cyan:#2fd3ff;
-      --text:#fff;
-      --muted:rgba(255,255,255,.78);
-      --frameSize:160px;
-      --avatarSize:110px;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-    body{padding:22px}
-    .page{width:min(1180px,100%);margin:0 auto}
-    .view{opacity:0;transform:translateY(18px);pointer-events:none;transition:opacity .42s ease,transform .42s ease}
-    .view.on{opacity:1;transform:none;pointer-events:auto}
-    .intro{min-height:calc(100vh - 44px);display:grid;place-items:center}
-    .introCard,.panel,.board,.waitCard,.topbar{background:var(--card);border:1px solid var(--stroke);border-radius:30px;box-shadow:0 0 45px rgba(255,0,170,.14);backdrop-filter:blur(12px)}
-    .introCard{width:min(760px,100%);padding:42px 38px;text-align:center}
-    .introLogo{width:min(360px,80%);height:auto;display:block;margin:0 auto 18px;filter:drop-shadow(0 0 18px rgba(255,0,170,.18))}
-    .introCard h1{margin:0 0 10px;font-size:clamp(2rem,5vw,3.8rem);line-height:.95}
-    .introCard p{margin:0 auto;max-width:32ch;color:var(--muted);font-size:1.1rem;line-height:1.55}
-    .actions{display:flex;gap:12px;flex-wrap:wrap}
-    .actionsBetween{justify-content:space-between;align-items:center;flex-wrap:nowrap}
-    .introActions{justify-content:center;margin-top:26px}
-    .btn{border:0;border-radius:999px;padding:14px 20px;font:inherit;font-weight:900;cursor:pointer;text-decoration:none;transition:transform .16s ease,opacity .16s ease}
-    .btn:hover{transform:translateY(-1px)} .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-    .btnPrimary{background:linear-gradient(135deg,var(--yellow),#ff7ad9);color:#2a0035}
-    .btnGhost{background:rgba(255,255,255,.08);color:#fff}
-    .btnOk{background:rgba(121,216,93,.16);color:#e4ffd8}
-    .app{display:grid;gap:18px}
-    .topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:12px 16px;position:sticky;top:18px;z-index:20}
-    .topLeft,.topCenter,.topRight{display:flex;align-items:center}
-    .topLeft{justify-content:flex-start}.topCenter{justify-content:center}.topRight{justify-content:flex-end}
-    .logoMark{display:block;width:min(220px,42vw);height:auto}
-    .menuWrap{position:relative}
-    .menuBtn{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;font:inherit;font-weight:900;cursor:pointer}
-    .menuBtn img{width:24px;height:24px;border-radius:999px}
-    .menuDrop{position:absolute;left:0;top:calc(100% + 10px);min-width:240px;padding:8px;background:rgba(19,5,30,.96);border:1px solid var(--stroke);border-radius:22px;display:none;box-shadow:0 18px 42px rgba(0,0,0,.34)}
-    .menuWrap.open .menuDrop{display:grid}
-    .menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}
-    .menuDrop a:hover{background:rgba(255,255,255,.08)}
-    .menuDrop img{width:22px;height:22px;object-fit:contain}
-    .identityChip{display:inline-flex;align-items:center;gap:12px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);max-width:100%}
-    .identityChip[hidden]{display:none}
-    .miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));display:grid;place-items:center;flex:0 0 auto}
-    .miniAvatar img{width:100%;height:100%;object-fit:cover}
-    .identityName{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .identityRole{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-    .content{display:grid;grid-template-columns:minmax(360px,430px) minmax(0,1fr);gap:18px;align-items:start}
-    .panel,.board,.waitCard{padding:26px}
-    .panel h2,.board h2{margin:0 0 10px}.panel p,.board p,.waitCard p{margin:0;color:var(--muted);line-height:1.55}
-    .field{display:grid;gap:8px}.field label{font-size:.9rem;font-weight:700}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;font:inherit;outline:none}
-    .screen{display:none}.screen.on{display:grid;gap:16px}
-    .kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;width:max-content}
-    .status{min-height:22px;color:var(--cyan);font-size:.94rem}.status[data-tone="danger"]{color:#ff9ec6}.status[data-tone="ok"]{color:#b5ff99}
-    .codeBadge{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:18px;background:rgba(255,238,0,.1);color:var(--yellow);font-weight:900;letter-spacing:.08em;width:max-content}
-    .avatarEditor{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;align-items:start}
-    .avatarStageWrap{width:190px;height:190px;padding:12px;border-radius:36px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));border:1px solid rgba(255,255,255,.18);display:grid;place-items:center}
-    .avatarStageStack{width:var(--frameSize);height:var(--frameSize);position:relative}
-    .avatarStage{position:absolute;left:50%;top:50%;width:var(--avatarSize);height:var(--avatarSize);border-radius:999px;overflow:hidden;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);cursor:grab;transform:translate(-50%,-50%) translate(0,-10px);z-index:1}
-    .avatarStage.dragging{cursor:grabbing}
-    .avatarImg{position:absolute;left:50%;top:50%;width:auto;height:auto;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}
-    .avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.74);font-weight:900;text-align:center;padding:12px;font-size:.95rem}
-    .editorFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:2;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
-    .editorControls{display:grid;gap:14px;align-content:start}
-    .uploadCard{display:grid;gap:12px;padding:16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
-    .uploadActions{display:flex;gap:10px;flex-wrap:wrap}
-    .rangeRow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
-    .rangeRow input{width:100%}
-    .rangeValue{font-weight:900;color:var(--yellow);min-width:42px;text-align:right}
-    .boardHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
-    .playerGrid{display:grid;gap:14px}
-    .playerCard{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:14px;background:var(--card-soft);border:1px solid var(--stroke);border-radius:28px;padding:14px 18px}
-    .avatarStack{width:var(--frameSize);height:var(--frameSize);position:relative;margin:0 auto}
-    .avatarHole,.dinoHole{width:var(--avatarSize);height:var(--avatarSize);border-radius:999px;overflow:hidden;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translate(0,-10px);z-index:1}
-    .avatarHole img{position:absolute;left:50%;top:50%;width:100%;height:100%;object-fit:cover;transform:translate(-50%,-50%);transform-origin:center center}
-    .avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:2;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
-    .dinoHole{display:grid;place-items:center;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,0,170,.16));font-size:3rem}
-    .playerMeta{display:grid;gap:6px;min-width:0}
-    .playerName{margin:0;font-weight:1000;line-height:1.05;text-shadow:0 4px 0 rgba(0,0,0,.85),0 0 18px rgba(0,0,0,.55),0 0 18px rgba(255,0,170,.18);font-size:clamp(1rem,2vw,1.45rem);text-align:left;word-break:break-word}
-    .playerSub{font-size:.92rem;color:var(--muted);text-align:left}
-    .waitCard{display:none}.waitCard.on{display:grid;gap:8px}
-    @media (max-width:980px){
-      body{padding:16px}.content,.avatarEditor,.playerCard{grid-template-columns:1fr}.topbar{grid-template-columns:auto 1fr auto}.topCenter{justify-content:center}.logoMark{width:min(170px,38vw)}.playerName,.playerSub{text-align:center}
-    }
+    :root{--bg:radial-gradient(circle at top,#2a0046 0%,#12001d 35%,#000 100%);--card:rgba(36,0,70,.82);--card-soft:rgba(31,5,54,.72);--stroke:rgba(255,255,255,.14);--yellow:#ffee00;--pink:#ff00aa;--cyan:#2fd3ff;--green:#79d85d;--text:#fff;--muted:rgba(255,255,255,.8);--frameSize:160px;--avatarSize:110px}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}body{padding:22px}.page{width:min(1280px,100%);margin:0 auto}
+    .view{opacity:0;transform:translateY(18px) scale(.985);pointer-events:none;transition:opacity .45s ease,transform .45s ease}.view.on{opacity:1;transform:none;pointer-events:auto}.intro{min-height:calc(100vh - 44px);display:grid;place-items:center}
+    .card,.topbar,.modalCard,.screenCard,.playerRow,.modeCard,.answerBtn{background:var(--card);border:1px solid var(--stroke);border-radius:30px;box-shadow:0 0 40px rgba(255,0,170,.12);backdrop-filter:blur(12px)}
+    .introCard{padding:46px 38px;width:min(720px,100%);text-align:center}.introLogo{width:min(360px,80%);display:block;margin:0 auto 16px;filter:drop-shadow(0 0 18px rgba(255,0,170,.18))}.introCard p{margin:0 auto;max-width:32ch;color:var(--muted);font-size:1.12rem;line-height:1.55}
+    .actions{display:flex;gap:12px;flex-wrap:wrap}.actions.between{justify-content:space-between;align-items:center;flex-wrap:nowrap}.actions.center{justify-content:center}
+    .btn{border:0;border-radius:999px;padding:14px 20px;font:inherit;font-weight:900;cursor:pointer;transition:transform .16s ease,opacity .16s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.btnPrimary{background:linear-gradient(135deg,var(--yellow),#ff7ad9);color:#2a0035}.btnGhost{background:rgba(255,255,255,.08);color:#fff}.btnOk{background:rgba(121,216,93,.16);color:#eaffdf}
+    .app{display:grid;gap:18px}.topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:12px 16px;position:sticky;top:18px;z-index:20}.topLeft,.topCenter,.topRight{display:flex;align-items:center}.topLeft{justify-content:flex-start}.topCenter{justify-content:center}.topRight{justify-content:flex-end}
+    .logoMark{width:min(220px,42vw);display:block}.menuWrap{position:relative}.menuBtn{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;font:inherit;font-weight:900;cursor:pointer}.menuBtn img,.menuDrop img{width:22px;height:22px;object-fit:contain}.menuDrop{position:absolute;left:0;top:calc(100% + 10px);min-width:240px;padding:8px;background:rgba(19,5,30,.96);border:1px solid var(--stroke);border-radius:22px;display:none;box-shadow:0 18px 42px rgba(0,0,0,.34)}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}
+    .identityChip{display:inline-flex;align-items:center;gap:12px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);max-width:100%}.identityChip[hidden]{display:none}.miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));display:grid;place-items:center}.miniAvatar img{width:100%;height:100%;object-fit:cover}.identityName{font-weight:900}.identityRole{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+    .layout{display:grid;grid-template-columns:minmax(360px,430px) minmax(0,1fr);gap:18px;align-items:start}.screenCard{padding:26px;display:grid;gap:18px}.kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;width:max-content}
+    h1,h2,h3{margin:0}p{margin:0;color:var(--muted);line-height:1.55}.field{display:grid;gap:8px}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;font:inherit;outline:none}.codeBadge{display:inline-flex;padding:10px 14px;border-radius:18px;background:rgba(255,238,0,.1);color:var(--yellow);font-weight:900;letter-spacing:.08em;width:max-content}
+    .avatarBlock{display:grid;gap:14px;padding:18px;border-radius:28px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}.avatarStageWrap{width:100%;padding:16px;border-radius:26px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,0,170,.18));border:1px solid rgba(255,255,255,.18);display:grid;place-items:center}.avatarStageStack,.avatarStack{width:var(--frameSize);height:var(--frameSize);position:relative}
+    .avatarStage,.avatarHole,.dinoHole{position:absolute;left:50%;top:50%;width:var(--avatarSize);height:var(--avatarSize);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translate(0,-10px);z-index:1}.avatarStage{background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);cursor:grab;touch-action:none}.avatarStage.dragging{cursor:grabbing}
+    .avatarImg{position:absolute;left:50%;top:50%;width:auto;height:auto;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}.avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.78);font-weight:900;text-align:center;padding:12px;font-size:1rem}.editorFrame,.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:2;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
+    .avatarHint{font-size:.93rem}.status{min-height:22px;color:#b8ff9f}.status[data-tone="danger"]{color:#ff9ec6}.status[data-tone="info"]{color:var(--cyan)}
+    .board{padding:26px;display:grid;gap:16px}.boardHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.playerList{display:grid;gap:14px}.playerRow{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:14px;padding:14px 18px;animation:fadeUp .35s ease both}.avatarHole img{position:absolute;left:50%;top:50%;width:100%;height:100%;object-fit:cover;transform:translate(-50%,-50%)}.dinoHole{display:grid;place-items:center;font-size:3rem;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,0,170,.16))}.playerMeta{display:grid;gap:6px}.playerName{font-weight:1000;font-size:clamp(1rem,2vw,1.5rem);text-shadow:0 4px 0 rgba(0,0,0,.85),0 0 18px rgba(0,0,0,.55)}.playerSub{font-size:.95rem;color:var(--muted)}
+    .toggleRow{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}.switch{width:64px;height:36px;border-radius:999px;background:rgba(255,255,255,.1);position:relative;cursor:pointer}.switch::after{content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:999px;background:#fff;transition:transform .22s ease}.switch.on{background:linear-gradient(135deg,var(--yellow),#ff7ad9)}.switch.on::after{transform:translateX(28px)}.countdownPill{display:inline-flex;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.08);font-weight:900}
+    .modeGrid,.answerGrid{display:grid;gap:14px}.modeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.modeCard{padding:18px;display:grid;gap:8px;cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease}.modeCard:hover{transform:translateY(-2px)}.modeCard.on{border-color:rgba(255,238,0,.42);background:linear-gradient(135deg,rgba(255,238,0,.12),rgba(255,122,217,.14))}.modeHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.modeIcon{font-size:1.6rem}.modeVotes{font-weight:900;color:var(--yellow)}
+    .questionHero{padding:24px;border-radius:30px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);display:grid;gap:16px;animation:zoomIn .35s ease both}.timerRing{width:84px;height:84px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--yellow) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:6px}.timerInner{width:100%;height:100%;border-radius:999px;background:#220338;display:grid;place-items:center;font-weight:1000}.answerBtn{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease}.answerBtn:hover{transform:translateX(4px)}.answerBtn.on{border-color:rgba(47,211,255,.42);background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,0,170,.12))}.answerBtn.correct{border-color:rgba(121,216,93,.42);background:rgba(121,216,93,.14)}.answerKey{font-weight:1000;color:var(--yellow)}
+    .overlay{position:fixed;inset:0;background:rgba(5,3,10,.7);backdrop-filter:blur(10px);display:none;place-items:center;padding:20px;z-index:60}.overlay.on{display:grid}.modalCard{width:min(760px,100%);padding:28px;display:grid;gap:18px;animation:zoomIn .28s ease both}.emojiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.emojiChoice{padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;place-items:center;gap:8px;cursor:pointer;transition:transform .16s ease,border-color .16s ease}.emojiChoice:hover{transform:translateY(-2px)}.emojiChoice.on{border-color:rgba(255,238,0,.42)}.emojiBall{width:88px;height:88px;border-radius:999px;display:grid;place-items:center;font-size:2.5rem;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes zoomIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+    @media (max-width:980px){body{padding:14px}.layout,.modeGrid,.playerRow{grid-template-columns:1fr}.topbar{grid-template-columns:auto 1fr auto}.logoMark{width:min(170px,38vw)}.playerName,.playerSub{text-align:center}.emojiGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   </style>
 </head>
 <body>
   <main class="page">
     <section class="view intro on" id="introView">
-      <article class="introCard">
+      <article class="card introCard">
         <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
         <p>El juego de trivia mas actualizado y divertido.</p>
-        <div class="actions introActions">
+        <div class="actions center" style="margin-top:26px">
           <button class="btn btnPrimary" id="btnPickHost">Soy el anfitrion</button>
           <button class="btn btnGhost" id="btnPickGuest">Soy el invitado</button>
         </div>
@@ -113,420 +46,92 @@
 
     <section class="view app" id="appView">
       <header class="topbar">
-        <div class="topLeft">
-          <div class="menuWrap" id="menuWrap">
-            <button class="menuBtn" id="menuBtn" type="button">
-              <img src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio" />
-              <span>Zaurio</span>
-            </button>
-            <nav class="menuDrop">
-              <a href="https://zaurio.es"><img src="/shared/assets/brand/favicon-32x32.png" alt="">Inicio</a>
-              <a href="https://miercoles.zaurio.es"><img src="/shared/assets/brand/miercoles.png" alt="">Miercoles</a>
-              <a href="https://secretos.zaurio.es"><img src="/shared/assets/brand/confesion.png" alt="">Secretos</a>
-              <a href="https://herramientas.zaurio.es"><img src="/shared/assets/brand/emprezaurio-icono.png" alt="">Herramientas</a>
-              <a href="https://juegos.zaurio.es"><img src="/shared/assets/brand/trivialodon-icono.png" alt="">Juegos</a>
-            </nav>
-          </div>
-        </div>
-        <div class="topCenter">
-          <img class="logoMark" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
-        </div>
-        <div class="topRight">
-          <div class="identityChip" id="identityChip" hidden>
-            <div class="miniAvatar" id="miniAvatar"></div>
-            <div>
-              <div class="identityName" id="identityName">Jugador</div>
-              <div class="identityRole" id="identityRole">invitado</div>
-            </div>
-          </div>
-        </div>
+        <div class="topLeft"><div class="menuWrap" id="menuWrap"><button class="menuBtn" id="menuBtn" type="button"><img src="/shared/assets/brand/favicon-32x32.png" alt="">Zaurio</button><nav class="menuDrop"><a href="https://zaurio.es"><img src="/shared/assets/brand/favicon-32x32.png" alt="">Inicio</a><a href="https://miercoles.zaurio.es"><img src="/shared/assets/brand/miercoles.png" alt="">Miercoles</a><a href="https://secretos.zaurio.es"><img src="/shared/assets/brand/confesion.png" alt="">Secretos</a><a href="https://herramientas.zaurio.es"><img src="/shared/assets/brand/emprezaurio-icono.png" alt="">Herramientas</a><a href="https://juegos.zaurio.es"><img src="/shared/assets/brand/trivialodon-icono.png" alt="">Juegos</a></nav></div></div>
+        <div class="topCenter"><img class="logoMark" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon"></div>
+        <div class="topRight"><div class="identityChip" id="identityChip" hidden><div class="miniAvatar" id="miniAvatar"></div><div><div class="identityName" id="identityName">Jugador</div><div class="identityRole" id="identityRole">Invitado</div></div></div></div>
       </header>
 
-      <section class="content">
-        <aside style="display:grid;gap:18px;align-content:start">
-          <article class="panel">
-            <div class="screen" id="guestCodeScreen">
-              <span class="kicker">Invitado</span>
-              <h2>Introduce el codigo</h2>
-              <p>Escribe el codigo que te comparta el anfitrion y entra a preparar tu ficha.</p>
-              <div class="field">
-                <label for="guestCodeInput">Codigo de sala</label>
-                <input id="guestCodeInput" maxlength="6" placeholder="ABC123" />
-              </div>
-              <div class="actions">
-                <button class="btn btnPrimary" id="btnGuestNext">Siguiente</button>
-                <button class="btn btnGhost" id="btnRestartGuest">Volver</button>
-              </div>
+      <section class="layout">
+        <aside style="display:grid;gap:18px">
+          <article class="screenCard">
+            <span class="kicker" id="leftKicker">Perfil</span>
+            <h2 id="leftTitle">Configura tu ficha</h2>
+            <div class="codeBadge" id="roomCodeBadge">------</div>
+            <div class="field" id="nameField"><label>Tu nombre</label><input id="nameInput" maxlength="26" placeholder="Ejemplo: Marta Rex"></div>
+            <div class="avatarBlock" id="avatarBlock">
+              <div class="avatarStageWrap"><div class="avatarStageStack"><div class="avatarStage" id="avatarStage"><img class="avatarImg" id="avatarImg" alt="" hidden /><div class="avatarPlaceholder" id="avatarPlaceholder">+<br>Sube foto o elige avatar</div></div><img class="editorFrame" src="/shared/assets/brand/participantes-frame.png" alt=""></div></div>
+              <div class="actions center"><button class="btn btnPrimary" id="btnUpload">Subir foto</button><button class="btn btnGhost" id="btnEmoji">Avatar</button><button class="btn btnOk" id="btnUseAvatar">Usar avatar</button></div>
+              <p class="avatarHint">Arrastra con dedo o raton para mover. Usa la rueda o multitouch para hacer zoom.</p>
+              <input id="photoInput" type="file" accept="image/*" hidden>
             </div>
-
-            <div class="screen" id="profileScreen">
-              <span class="kicker">Perfil</span>
-              <h2 id="profileTitle">Prepara tu ficha</h2>
-              <div class="codeBadge" id="roomCodeBadge">------</div>
-              <div class="field">
-                <label for="nameInput">Tu nombre</label>
-                <input id="nameInput" maxlength="26" placeholder="Ejemplo: Marta Rex" />
-              </div>
-              <div class="avatarEditor">
-                <div class="avatarStageWrap">
-                  <div class="avatarStageStack">
-                    <div class="avatarStage" id="avatarStage">
-                      <img class="avatarImg" id="avatarImg" alt="" hidden />
-                      <div class="avatarPlaceholder" id="avatarPlaceholder">Sube tu foto y recolocala aqui</div>
-                    </div>
-                    <img class="editorFrame" src="/shared/assets/brand/participantes-frame.png" alt="">
-                  </div>
-                </div>
-                <div class="editorControls">
-                  <div class="uploadCard">
-                    <p>Escoge tu foto y recolocala dentro del circulo antes de marcar listo.</p>
-                    <div class="uploadActions">
-                      <button class="btn btnPrimary" id="btnPickPhoto">Subir foto</button>
-                      <button class="btn btnGhost" id="btnCenterPhoto">Recentrar</button>
-                    </div>
-                  </div>
-                  <input type="file" id="photoInput" accept="image/*" hidden />
-                    <div class="rangeRow"><span>Zoom</span><input type="range" id="zoomInput" min="0.35" max="3" step="0.01" value="0.55" /><span class="rangeValue" id="zoomValue">55%</span></div>
-                    <div class="actions actionsBetween">
-                      <button class="btn btnGhost" id="btnRestartProfile">Volver</button>
-                      <button class="btn btnOk" id="btnReady">Listo</button>
-                    </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="waitCard" id="guestWaiting">
-              <span class="kicker">Todo listo</span>
-              <h2>Esperando al anfitrion</h2>
-              <p>Tu ficha ya esta enviada. En cuanto el anfitrion vea que todos estais listos, pulsara siguiente.</p>
-            </div>
-
-            <div class="status" id="status">Todavia no estas dentro de ninguna sala.</div>
+            <div class="status" id="leftStatus" data-tone="info">Todavia no has preparado tu avatar.</div>
+            <div class="actions between" id="leftFooter"><button class="btn btnGhost" id="btnBack">Volver</button><button class="btn btnOk" id="btnReady">Listo</button></div>
+            <div id="guestVotePanel" hidden><div class="toggleRow" style="margin-top:6px"><div><strong>Tu voto</strong><p id="guestVoteText">Esperando opciones del anfitrion.</p></div><span class="countdownPill" id="guestCountdown">01:00</span></div></div>
           </article>
         </aside>
-
-        <section style="display:grid;gap:18px;align-content:start">
-          <article class="board">
+        <section style="display:grid;gap:18px">
+          <article class="board" id="mainBoard">
             <div class="boardHeader">
-              <div>
-                <span class="kicker">Lista de jugadores</span>
-                <h2>Preparando la sala</h2>
-                <p>Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida.</p>
-              </div>
-              <button class="btn btnPrimary" id="btnHostNext" disabled>Siguiente</button>
+              <div><span class="kicker" id="boardKicker">Lista de jugadores</span><h2 id="boardTitle">Preparando la sala</h2><p id="boardDesc">Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida.</p></div>
+              <div class="actions"><div class="toggleRow" id="voteToggleWrap" hidden style="padding:10px 12px;border-radius:999px"><div><strong style="display:block">Permitir a los invitados votar</strong><span class="countdownPill" id="hostCountdown">01:00</span></div><button class="switch" id="voteToggle" type="button"></button></div><button class="btn btnPrimary" id="btnHostNext" disabled>Siguiente</button></div>
             </div>
-            <div class="playerGrid" id="playerGrid"></div>
+            <div class="playerList" id="playerList"></div>
+            <div id="setupPanel" hidden></div>
+            <div id="questionPanel" hidden></div>
           </article>
         </section>
       </section>
     </section>
   </main>
-
+  <div class="overlay" id="emojiModal"><div class="modalCard"><span class="kicker">Avatar</span><h2>Elige tu dinosaurio</h2><div class="emojiGrid" id="emojiGrid"></div><div class="actions between"><button class="btn btnGhost" id="btnCloseEmoji">Cancelar</button><button class="btn btnPrimary" id="btnAcceptEmoji">Usar avatar</button></div></div></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL="https://adpjitccwwvlydrtvvqk.supabase.co";
-    const SUPABASE_KEY="sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
-    const FRAME_SRC="/shared/assets/brand/participantes-frame.png";
-    const FUN_LINES=["espera espera, voy!","estoy buscando mi mejor foto","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"];
-    const $=id=>document.getElementById(id);
-    const ui={introView:$("introView"),appView:$("appView"),btnPickHost:$("btnPickHost"),btnPickGuest:$("btnPickGuest"),menuWrap:$("menuWrap"),menuBtn:$("menuBtn"),identityChip:$("identityChip"),miniAvatar:$("miniAvatar"),identityName:$("identityName"),identityRole:$("identityRole"),guestCodeScreen:$("guestCodeScreen"),profileScreen:$("profileScreen"),guestWaiting:$("guestWaiting"),guestCodeInput:$("guestCodeInput"),btnGuestNext:$("btnGuestNext"),btnRestartGuest:$("btnRestartGuest"),btnRestartProfile:$("btnRestartProfile"),profileTitle:$("profileTitle"),roomCodeBadge:$("roomCodeBadge"),nameInput:$("nameInput"),photoInput:$("photoInput"),btnPickPhoto:$("btnPickPhoto"),btnCenterPhoto:$("btnCenterPhoto"),zoomInput:$("zoomInput"),zoomValue:$("zoomValue"),avatarStage:$("avatarStage"),avatarImg:$("avatarImg"),avatarPlaceholder:$("avatarPlaceholder"),btnReady:$("btnReady"),status:$("status"),playerGrid:$("playerGrid"),btnHostNext:$("btnHostNext")};
+    const SUPABASE_URL="https://adpjitccwwvlydrtvvqk.supabase.co",SUPABASE_KEY="sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk",FRAME_SRC="/shared/assets/brand/participantes-frame.png";
+    const EMOJIS=[["lava","#ff6b35"],["mint","#56d364"],["ocean","#38bdf8"],["sun","#facc15"],["orchid","#f472b6"],["jade","#22c55e"],["berry","#fb7185"],["sky","#60a5fa"]];
+    const MODES=[{id:"classic",icon:"🎩",title:"Trivialodon classic",desc:"Rondas elegantes con ritmo de concurso clasico."},{id:"custom",icon:"🛠",title:"Personalizado",desc:"Ajusta el tono del juego y juega a tu manera."},{id:"deathmatch",icon:"💥",title:"Deathmatch",desc:"Presion total, eliminacion y suspense televisivo."},{id:"speed",icon:"⚡",title:"Test velocidad",desc:"Todo se decide por reflejos y respuestas rapidas."}];
+    const DURATIONS=[{id:"timed",icon:"⏱",title:"Quiero que dure un tiempo determinado",desc:"Sesiones por tiempo flexible."},{id:"questions",icon:"❓",title:"Quiero que dure una cantidad de preguntas determinada",desc:"Controlas la longitud por numero de preguntas."},{id:"olympic",icon:"🏆",title:"Trivialodon olimpico",desc:"Formato oficial de 40 minutos."}];
+    const EXAMPLE_QUESTION={prompt:"¿Que planeta del sistema solar es conocido como el planeta rojo?",answers:["Venus","Marte","Saturno","Mercurio","Neptuno"],correct:1},FUN_LINES=["espera espera, voy!","estoy buscando mi mejor foto","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"];
+    const $=id=>document.getElementById(id),ui={introView:$("introView"),appView:$("appView"),btnPickHost:$("btnPickHost"),btnPickGuest:$("btnPickGuest"),menuWrap:$("menuWrap"),menuBtn:$("menuBtn"),identityChip:$("identityChip"),miniAvatar:$("miniAvatar"),identityName:$("identityName"),identityRole:$("identityRole"),leftKicker:$("leftKicker"),leftTitle:$("leftTitle"),roomCodeBadge:$("roomCodeBadge"),nameField:$("nameField"),nameInput:$("nameInput"),avatarStage:$("avatarStage"),avatarImg:$("avatarImg"),avatarPlaceholder:$("avatarPlaceholder"),photoInput:$("photoInput"),btnUpload:$("btnUpload"),btnEmoji:$("btnEmoji"),btnUseAvatar:$("btnUseAvatar"),leftStatus:$("leftStatus"),btnBack:$("btnBack"),btnReady:$("btnReady"),guestVotePanel:$("guestVotePanel"),guestVoteText:$("guestVoteText"),guestCountdown:$("guestCountdown"),boardKicker:$("boardKicker"),boardTitle:$("boardTitle"),boardDesc:$("boardDesc"),voteToggleWrap:$("voteToggleWrap"),voteToggle:$("voteToggle"),hostCountdown:$("hostCountdown"),btnHostNext:$("btnHostNext"),playerList:$("playerList"),setupPanel:$("setupPanel"),questionPanel:$("questionPanel"),emojiModal:$("emojiModal"),emojiGrid:$("emojiGrid"),btnCloseEmoji:$("btnCloseEmoji"),btnAcceptEmoji:$("btnAcceptEmoji")};
     const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
-    const state={playerId:crypto.randomUUID(),role:"",roomCode:"",name:"",ready:false,waitingLine:"",avatar:{src:"",rendered:"",x:0,y:0,s:1},channel:null,players:[]};
-
-    const esc=v=>String(v||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    const code=()=>{const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let out="";for(let i=0;i<6;i++) out+=chars[Math.floor(Math.random()*chars.length)];return out;};
-    const normalize=v=>String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6);
-    const setStatus=(msg,tone="")=>{ui.status.dataset.tone=tone;ui.status.textContent=msg;};
-    const lineFor=id=>FUN_LINES[[...id].reduce((a,c)=>a+c.charCodeAt(0),0)%FUN_LINES.length];
-    const hostCanContinue=()=>state.role==="host"&&state.players.length>0&&state.players.every(p=>p.ready);
-
-    function showApp(mode){
-      ui.introView.classList.remove("on");
-      setTimeout(()=>ui.introView.style.display="none",420);
-      ui.appView.classList.add("on");
-      ui.guestCodeScreen.classList.toggle("on",mode==="guestCode");
-      ui.profileScreen.classList.toggle("on",mode==="profile");
-      ui.guestWaiting.classList.remove("on");
-    }
-
-    function showProfile(){
-      ui.guestCodeScreen.classList.remove("on");
-      ui.profileScreen.classList.add("on");
-      ui.guestWaiting.classList.remove("on");
-    }
-
-    function refreshIdentity(){
-      ui.identityChip.hidden=!state.role;
-      if(!state.role) return;
-      ui.identityName.textContent=state.name||"Sin nombre";
-      ui.identityRole.textContent=state.role==="host"?"anfitrion":"invitado";
-      ui.miniAvatar.innerHTML=(state.avatar.rendered||state.avatar.src)?`<img src="${state.avatar.rendered||state.avatar.src}" alt="">`:"&#129430;";
-      ui.roomCodeBadge.textContent=state.roomCode||"------";
-      ui.btnHostNext.style.display=state.role==="host"?"inline-flex":"none";
-      ui.btnHostNext.disabled=!hostCanContinue();
-    }
-
-    function renderPlayers(){
-      refreshIdentity();
-      if(!state.players.length){
-        ui.playerGrid.innerHTML='<article class="playerCard"><div class="playerName">Nadie todavia</div><div class="playerSub">La sala espera al primer dino.</div></article>';
-        return;
-      }
-      ui.playerGrid.innerHTML=state.players.map(player=>{
-        const label=player.ready?esc(player.name||"Jugador listo"):esc(player.waitingLine||lineFor(player.playerId));
-        const sub=player.ready?(player.role==="host"?"Anfitrion listo":"Invitado listo"):"Aun no ha pulsado listo";
-        const avatar=player.ready&&player.avatarSrc
-          ? `<div class="avatarHole"><img src="${player.avatarSrc}" alt=""></div>`
-          : `<div class="dinoHole">&#129430;</div>`;
-        return `<article class="playerCard"><div class="avatarStack">${avatar}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="playerMeta"><div class="playerName">${label}</div><div class="playerSub">${esc(sub)}</div></div></article>`;
-      }).join("");
-    }
-
-    function applyAvatar(){
-      ui.avatarImg.hidden=!state.avatar.src;
-      ui.avatarPlaceholder.hidden=!!state.avatar.src;
-      if(state.avatar.src){
-        ui.avatarImg.src=state.avatar.src;
-        ui.avatarImg.style.setProperty("--x",state.avatar.x+"px");
-        ui.avatarImg.style.setProperty("--y",state.avatar.y+"px");
-        ui.avatarImg.style.setProperty("--s",state.avatar.s);
-      }
-      ui.zoomInput.value=String(state.avatar.s);
-      ui.zoomValue.textContent=Math.round(state.avatar.s*100)+"%";
-      refreshIdentity();
-    }
-
-    async function updatePresence(){
-      if(!state.channel) return;
-      await state.channel.track({
-        playerId:state.playerId,
-        role:state.role,
-        roomCode:state.roomCode,
-        ready:state.ready,
-        name:state.name,
-        waitingLine:state.waitingLine,
-        avatarSrc:state.ready?(state.avatar.rendered||state.avatar.src):"",
-        avatarX:state.ready?state.avatar.x:0,
-        avatarY:state.ready?state.avatar.y:0,
-        avatarScale:state.ready?state.avatar.s:1
-      });
-    }
-
-    function syncPlayers(){
-      if(!state.channel) return;
-      const presence=state.channel.presenceState();
-      const latest=new Map();
-      Object.values(presence).forEach(entries=>{
-        (entries||[]).forEach(entry=>{
-          const prev=latest.get(entry.playerId);
-          if(!prev || (!!entry.ready && !prev.ready) || (!!entry.avatarSrc && !prev.avatarSrc)){
-            latest.set(entry.playerId, entry);
-          }
-        });
-      });
-      const list=[...latest.values()];
-      list.sort((a,b)=>a.role===b.role?(a.ready===b.ready?String(a.name||a.waitingLine).localeCompare(String(b.name||b.waitingLine),"es"):a.ready?-1:1):a.role==="host"?-1:1);
-      state.players=list;
-      renderPlayers();
-    }
-
-    async function leaveRoom(){
-      if(state.channel){try{await sb.removeChannel(state.channel);}catch(_){ }}
-      state.channel=null;
-      state.players=[];
-      state.ready=false;
-      renderPlayers();
-    }
-
-    async function connectRoom(role, roomCode){
-      await leaveRoom();
-      state.role=role;
-      state.roomCode=roomCode;
-      state.ready=false;
-      state.name="";
-      state.waitingLine=lineFor(state.playerId);
-      state.avatar={src:"",rendered:"",x:0,y:0,s:1};
-      ui.nameInput.value="";
-      applyAvatar();
-      refreshIdentity();
-      showProfile();
-      ui.profileTitle.textContent=role==="host"?"Configura al anfitrion":"Configura tu ficha de invitado";
-      setStatus("Conectando con la sala "+roomCode+"...", "");
-
-      const channel=sb.channel("trivialodon:lobby:"+roomCode,{config:{broadcast:{self:true},presence:{key:state.playerId}}});
-      state.channel=channel;
-      channel.on("presence",{event:"sync"},syncPlayers);
-      channel.subscribe(async subState=>{
-        if(subState==="SUBSCRIBED"){
-          await updatePresence();
-          syncPlayers();
-          setStatus(role==="host"?"Sala creada. Ahora prepara tu ficha.":"Ya estas dentro. Completa tu ficha y pulsa listo.","ok");
-        }else if(subState==="CHANNEL_ERROR"||subState==="TIMED_OUT"){
-          setStatus("No he podido abrir la sala realtime en Supabase.","danger");
-        }
-      });
-    }
-
-    async function createUniqueHostRoom(attempt=0){
-      if(attempt>8){setStatus("No pude generar una sala libre ahora mismo. Prueba otra vez.","danger");return;}
-      const room=code();
-      showApp("profile");
-      await connectRoom("host",room);
-      setTimeout(async()=>{
-        const others=state.players.filter(p=>p.role==="host"&&p.playerId!==state.playerId);
-        if(others.length){await createUniqueHostRoom(attempt+1);return;}
-        setStatus("Sala creada con codigo unico. Ya puedes preparar tu ficha.","ok");
-      },350);
-    }
-
-    function clampAvatar(){
-      state.avatar.s=Math.max(.35,Math.min(3,Number(state.avatar.s)||1));
-      state.avatar.x=Math.max(-180,Math.min(180,Number(state.avatar.x)||0));
-      state.avatar.y=Math.max(-180,Math.min(180,Number(state.avatar.y)||0));
-      applyAvatar();
-    }
-
-    function readFileAsImage(file){
-      return new Promise((resolve,reject)=>{
-        const reader=new FileReader();
-        reader.onload=()=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=String(reader.result||"");};
-        reader.onerror=reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function compressImage(file){
-      const img=await readFileAsImage(file);
-      const maxSide=720;
-      const ratio=Math.min(1,maxSide/Math.max(img.width,img.height));
-      const canvas=document.createElement("canvas");
-      canvas.width=Math.round(img.width*ratio);
-      canvas.height=Math.round(img.height*ratio);
-      const ctx=canvas.getContext("2d");
-      ctx.drawImage(img,0,0,canvas.width,canvas.height);
-      return canvas.toDataURL("image/jpeg",.9);
-    }
-
-    async function renderAvatarExport(){
-      if(!state.avatar.src) return "";
-      const img=await readFileAsImage(dataUrlToFile(state.avatar.src));
-      const size=220;
-      const canvas=document.createElement("canvas");
-      canvas.width=size;
-      canvas.height=size;
-      const ctx=canvas.getContext("2d");
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(size/2,size/2,size/2,0,Math.PI*2);
-      ctx.clip();
-      ctx.translate(size/2,size/2);
-      ctx.translate(state.avatar.x,state.avatar.y);
-      ctx.scale(state.avatar.s,state.avatar.s);
-      ctx.drawImage(img,-img.width/2,-img.height/2,img.width,img.height);
-      ctx.restore();
-      return canvas.toDataURL("image/png");
-    }
-
-    function dataUrlToFile(dataUrl){
-      const [head, body]=dataUrl.split(",");
-      const mime=(head.match(/data:(.*?);base64/)||[])[1]||"image/png";
-      const bin=atob(body);
-      const len=bin.length;
-      const bytes=new Uint8Array(len);
-      for(let i=0;i<len;i++) bytes[i]=bin.charCodeAt(i);
-      return new File([bytes],"avatar",{type:mime});
-    }
-
-    let drag=null;
-    let pinch=null;
-    function startDrag(ev){
-      if(!state.avatar.src) return;
-      const p=("touches" in ev)?ev.touches[0]:ev;
-      drag={x:p.clientX,y:p.clientY,startX:state.avatar.x,startY:state.avatar.y};
-      ui.avatarStage.classList.add("dragging");
-    }
-    function moveDrag(ev){
-      if(!drag) return;
-      const p=("touches" in ev)?ev.touches[0]:ev;
-      state.avatar.x=drag.startX+(p.clientX-drag.x);
-      state.avatar.y=drag.startY+(p.clientY-drag.y);
-      clampAvatar();
-    }
+    const state={playerId:crypto.randomUUID(),role:"",roomCode:"",name:"",ready:false,waitingLine:"",channel:null,players:[],selectedEmoji:"mint",avatar:{kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"},game:{phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",votes:{},question:null}};
+    const esc=v=>String(v||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"),normalize=v=>String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6),lineFor=id=>FUN_LINES[[...id].reduce((a,c)=>a+c.charCodeAt(0),0)%FUN_LINES.length];
+    const roomCode=()=>{const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let out="";for(let i=0;i<6;i++) out+=chars[Math.floor(Math.random()*chars.length)];return out;};
+    const setStatus=(msg,tone="info")=>{ui.leftStatus.dataset.tone=tone;ui.leftStatus.textContent=msg;},countText=ts=>{const left=Math.max(0,Math.ceil((ts-Date.now())/1000));return `${String(Math.floor(left/60)).padStart(2,"0")}:${String(left%60).padStart(2,"0")}`;},hostCanContinue=()=>state.role==="host"&&state.players.length>0&&state.players.every(p=>p.ready);
+    const showApp=()=>{ui.introView.classList.remove("on");setTimeout(()=>ui.introView.style.display="none",420);ui.appView.classList.add("on");};
+    function renderEmojiChoices(){ui.emojiGrid.innerHTML=EMOJIS.map(([id,color])=>`<button class="emojiChoice ${state.selectedEmoji===id?"on":""}" data-emoji="${id}" type="button"><div class="emojiBall" style="background:${color}22;border:1px solid ${color}55">🦖</div><strong>${id}</strong></button>`).join("");ui.emojiGrid.querySelectorAll("[data-emoji]").forEach(btn=>btn.onclick=()=>{state.selectedEmoji=btn.dataset.emoji;renderEmojiChoices();});}
+    function emojiDataUrl(id){const map=Object.fromEntries(EMOJIS),color=map[id]||"#56d364",c=document.createElement("canvas");c.width=220;c.height=220;const ctx=c.getContext("2d");ctx.fillStyle=color+"22";ctx.beginPath();ctx.arc(110,110,108,0,Math.PI*2);ctx.fill();ctx.font="120px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("🦖",110,118);return c.toDataURL("image/png");}
+    function applyAvatar(){const src=state.avatar.rendered||state.avatar.src;ui.avatarImg.hidden=!src;ui.avatarPlaceholder.hidden=!!src;if(state.avatar.kind==="emoji"){state.avatar.src=emojiDataUrl(state.avatar.emoji);state.avatar.rendered=state.avatar.src;}if(state.avatar.src){ui.avatarImg.src=state.avatar.src;ui.avatarImg.style.setProperty("--x",state.avatar.x+"px");ui.avatarImg.style.setProperty("--y",state.avatar.y+"px");ui.avatarImg.style.setProperty("--s",state.avatar.s);}refreshIdentity();}
+    function refreshIdentity(){ui.identityChip.hidden=!state.role;ui.identityName.textContent=state.name||"Sin nombre";ui.identityRole.textContent=state.role==="host"?"Anfitrion":"Invitado";ui.roomCodeBadge.textContent=state.roomCode||"------";const src=state.avatar.rendered||state.avatar.src;ui.miniAvatar.innerHTML=src?`<img src="${src}" alt="">`:"&#129430;";}
+    async function readSource(source){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=source;});}
+    async function compressPhoto(file){const src=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=reject;r.readAsDataURL(file);});const img=await readSource(src);const max=720,ratio=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);c.getContext("2d").drawImage(img,0,0,c.width,c.height);return c.toDataURL("image/jpeg",.9);}
+    async function exportAvatar(){if(state.avatar.kind==="emoji") return emojiDataUrl(state.avatar.emoji);const img=await readSource(state.avatar.src),size=220,c=document.createElement("canvas");c.width=size;c.height=size;const ctx=c.getContext("2d");ctx.save();ctx.beginPath();ctx.arc(size/2,size/2,size/2,0,Math.PI*2);ctx.clip();ctx.translate(size/2,size/2);ctx.translate(state.avatar.x,state.avatar.y);ctx.scale(state.avatar.s,state.avatar.s);ctx.drawImage(img,-img.width/2,-img.height/2,img.width,img.height);ctx.restore();return c.toDataURL("image/png");}
+    function dedupePlayers(raw){const map=new Map();raw.forEach(e=>{const prev=map.get(e.playerId);if(!prev||e.updatedAt>prev.updatedAt) map.set(e.playerId,e);});return [...map.values()].sort((a,b)=>a.role===b.role?(a.ready===b.ready?String(a.name||a.waitingLine).localeCompare(String(b.name||b.waitingLine),"es"):a.ready?-1:1):a.role==="host"?-1:1);}
+    function renderPlayers(){ui.playerList.innerHTML=!state.players.length?'<article class="playerRow"><div class="playerMeta"><div class="playerName">Nadie todavia</div><div class="playerSub">La sala espera al primer dino.</div></div></article>':state.players.map(p=>`<article class="playerRow"><div class="avatarStack">${p.ready&&p.avatarSrc?`<div class="avatarHole"><img src="${p.avatarSrc}" alt=""></div>`:`<div class="dinoHole">&#129430;</div>`}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="playerMeta"><div class="playerName">${esc(p.ready?p.name:(p.waitingLine||lineFor(p.playerId)))}</div><div class="playerSub">${esc(p.ready?(p.role==="host"?"Anfitrion listo":"Invitado listo"):"Aun no ha pulsado listo")}</div></div></article>`).join("");}
+    async function updatePresence(){if(!state.channel) return;await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready?(state.avatar.rendered||state.avatar.src):"",updatedAt:Date.now()});}
+    async function broadcastGame(){if(state.role==="host"&&state.channel) await state.channel.send({type:"broadcast",event:"game_state",payload:state.game});}
+    function syncPlayers(){if(!state.channel) return;const raw=[];Object.values(state.channel.presenceState()).forEach(entries=>(entries||[]).forEach(entry=>raw.push(entry)));state.players=dedupePlayers(raw);renderPlayers();renderPhase();}
+    async function connectRoom(role,code){if(state.channel){try{await sb.removeChannel(state.channel);}catch(_){ }}state.role=role;state.roomCode=code;state.ready=false;state.name="";state.waitingLine=lineFor(state.playerId);state.avatar={kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"};state.game={phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",votes:{},question:null};applyAvatar();const ch=sb.channel("trivialodon:session:"+code,{config:{broadcast:{self:true},presence:{key:state.playerId}}});state.channel=ch;ch.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload})=>{if(payload){state.game=payload;renderPhase();}}).on("broadcast",{event:"guest_vote"},({payload})=>{if(state.role==="host"&&payload){state.game.votes[payload.playerId]={name:payload.name,mode:payload.mode||"",duration:payload.duration||""};broadcastGame();renderPhase();}}).on("broadcast",{event:"guest_answer"},({payload})=>{if(state.role==="host"&&state.game.question&&payload){state.game.question.answers[payload.playerId]=payload.answerIndex;broadcastGame();renderPhase();}});ch.subscribe(async status=>{if(status==="SUBSCRIBED"){await updatePresence();syncPlayers();setStatus(role==="host"?"Sala creada. Prepara tu avatar.":"Ya estas dentro. Configura tu avatar.","info");if(role==="host") setTimeout(async()=>{if(state.players.some(p=>p.role==="host"&&p.playerId!==state.playerId)) await connectRoom("host",roomCode());},280);}else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"){setStatus("No he podido abrir la sala realtime en Supabase.","danger");}});}
+    const modeVotes=id=>Object.values(state.game.votes||{}).filter(v=>v.mode===id).length,durationVotes=id=>Object.values(state.game.votes||{}).filter(v=>v.duration===id).length;
+    function majority(kind,list){let best="";let count=-1;list.forEach(item=>{const n=kind==="mode"?modeVotes(item.id):durationVotes(item.id);if(n>count){count=n;best=item.id;}});return best;}
+    function renderSetup(){ui.voteToggleWrap.hidden=state.role!=="host";ui.voteToggle.classList.toggle("on",state.game.allowVotes);ui.hostCountdown.textContent=state.game.voteDeadline?countText(state.game.voteDeadline):"01:00";ui.guestCountdown.textContent=state.game.voteDeadline?countText(state.game.voteDeadline):"01:00";ui.setupPanel.hidden=false;ui.questionPanel.hidden=true;ui.boardKicker.textContent="Modos de juego";ui.boardTitle.textContent="Esperando que comience el juego";ui.boardDesc.textContent=state.role==="host"?"Elige el modo, la duracion y lanza la pregunta de ejemplo.":"El anfitrion esta configurando la partida.";ui.guestVotePanel.hidden=!(state.role==="guest");const cards=(items,kind,current)=>items.map(item=>`<button class="modeCard ${current===item.id?"on":""}" data-kind="${kind}" data-id="${item.id}" ${state.role==="guest"&&!state.game.allowVotes?"disabled":""}><div class="modeHead"><span class="modeIcon">${item.icon}</span><span class="modeVotes">${kind==="mode"?modeVotes(item.id):durationVotes(item.id)}</span></div><strong>${item.title}</strong><p>${item.desc}</p></button>`).join("");ui.setupPanel.innerHTML=`<div class="modeGrid">${cards(MODES,"mode",state.game.selectedMode)}</div><div class="modeGrid">${cards(DURATIONS,"duration",state.game.selectedDuration)}</div>${state.role==="host"?`<div class="actions" style="margin-top:6px"><button class="btn btnGhost" id="btnUseMajority">Usar mayoria</button><button class="btn btnPrimary" id="btnStartQuestion">Enviar pregunta de ejemplo</button></div>`:`<div class="screenCard" style="padding:18px">${state.game.allowVotes?`<p>Puedes votar y ver el resultado en tiempo real.</p>`:`<p>Esperando que comience el juego.</p>`}</div>`}`;ui.setupPanel.querySelectorAll("[data-kind]").forEach(btn=>btn.onclick=async()=>{const kind=btn.dataset.kind,id=btn.dataset.id;if(state.role==="host"){if(kind==="mode") state.game.selectedMode=id; else state.game.selectedDuration=id;await broadcastGame();renderPhase();}else if(state.game.allowVotes){const vote=state.game.votes[state.playerId]||{name:state.name};if(kind==="mode"){vote.mode=id;ui.guestVoteText.textContent=`Votando ${MODES.find(x=>x.id===id)?.title||""}.`;}else vote.duration=id;vote.name=state.name;await state.channel.send({type:"broadcast",event:"guest_vote",payload:{playerId:state.playerId,name:state.name,mode:vote.mode||"",duration:vote.duration||""}});}});if(state.role==="host"){ui.setupPanel.querySelector("#btnUseMajority").onclick=async()=>{state.game.selectedMode=majority("mode",MODES)||"classic";state.game.selectedDuration=majority("duration",DURATIONS)||"olympic";await broadcastGame();renderPhase();};ui.setupPanel.querySelector("#btnStartQuestion").onclick=async()=>{state.game.phase="question";state.game.question={...EXAMPLE_QUESTION,endAt:Date.now()+20000,answers:{},revealed:false};await broadcastGame();renderPhase();};}}
+    function renderQuestion(){ui.voteToggleWrap.hidden=true;ui.setupPanel.hidden=true;ui.questionPanel.hidden=false;const q=state.game.question||{prompt:"",answers:[],correct:0,endAt:Date.now(),revealed:false};const left=Math.max(0,Math.ceil((q.endAt-Date.now())/1000)),progress=Math.max(0,Math.min(1,(q.endAt-Date.now())/20000));ui.boardKicker.textContent="Pregunta de ejemplo";ui.boardTitle.textContent="Responde antes de que termine el tiempo";ui.boardDesc.textContent=state.role==="guest"?"La pantalla ya ha entrado en directo. Marca tu respuesta.":"Vista previa de una ronda con cinco respuestas.";ui.questionPanel.innerHTML=`<div class="questionHero"><div class="actions between"><div><span class="kicker">Ejemplo</span><h2>${q.prompt}</h2></div><div class="timerRing" style="--timer:${progress}"><div class="timerInner">${left}</div></div></div><div class="answerGrid">${q.answers.map((a,i)=>`<button class="answerBtn ${(q.selected===i)?"on":""} ${q.revealed&&q.correct===i?"correct":""}" data-answer="${i}" ${q.revealed||left===0?"disabled":""}><span><span class="answerKey">${String.fromCharCode(65+i)}</span> ${a}</span><span>${q.revealed&&q.correct===i?"Correcta":"Elegir"}</span></button>`).join("")}</div>${q.revealed?`<div class="screenCard" style="padding:18px"><strong>Respuesta correcta:</strong> ${q.answers[q.correct]}</div>`:""}</div>`;ui.questionPanel.querySelectorAll("[data-answer]").forEach(btn=>btn.onclick=async()=>{const i=Number(btn.dataset.answer);state.game.question.selected=i;renderPhase();if(state.role==="host"){state.game.question.answers[state.playerId]=i;await broadcastGame();}else await state.channel.send({type:"broadcast",event:"guest_answer",payload:{playerId:state.playerId,answerIndex:i}});});}
+    function renderPhase(){refreshIdentity();renderPlayers();ui.btnHostNext.style.display=state.role==="host"?"inline-flex":"none";ui.btnHostNext.disabled=!(state.role==="host"&&((state.game.phase==="lobby"&&hostCanContinue())||(state.game.phase==="setup"&&state.game.selectedMode&&state.game.selectedDuration)));if(state.game.phase==="lobby"){ui.voteToggleWrap.hidden=true;ui.setupPanel.hidden=true;ui.questionPanel.hidden=true;ui.guestVotePanel.hidden=true;ui.boardKicker.textContent="Lista de jugadores";ui.boardTitle.textContent="Preparando la sala";ui.boardDesc.textContent="Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida.";ui.leftKicker.textContent="Perfil";ui.leftTitle.textContent=state.role==="host"?"Configura el anfitrion":"Configura tu ficha";}if(state.game.phase==="setup") renderSetup();if(state.game.phase==="question") renderQuestion();}
+    let drag=null,pinch=null;const touchDistance=(a,b)=>Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+    function clampAvatar(){state.avatar.s=Math.max(.35,Math.min(3,state.avatar.s||1));state.avatar.x=Math.max(-180,Math.min(180,state.avatar.x||0));state.avatar.y=Math.max(-180,Math.min(180,state.avatar.y||0));applyAvatar();}
+    function startDrag(ev){if(state.avatar.kind!=="photo"||!state.avatar.src) return;const p=("touches" in ev)?ev.touches[0]:ev;drag={x:p.clientX,y:p.clientY,startX:state.avatar.x,startY:state.avatar.y};ui.avatarStage.classList.add("dragging");}
+    function moveDrag(ev){if(!drag) return;const p=("touches" in ev)?ev.touches[0]:ev;state.avatar.x=drag.startX+(p.clientX-drag.x);state.avatar.y=drag.startY+(p.clientY-drag.y);clampAvatar();}
     function endDrag(){drag=null;ui.avatarStage.classList.remove("dragging");}
-
-    function wheelZoom(ev){
-      if(!state.avatar.src) return;
-      ev.preventDefault();
-      const delta=ev.deltaY<0?0.06:-0.06;
-      state.avatar.s+=delta;
-      clampAvatar();
-    }
-
-    function touchDistance(t0,t1){
-      const dx=t0.clientX-t1.clientX;
-      const dy=t0.clientY-t1.clientY;
-      return Math.hypot(dx,dy);
-    }
-
-    ui.menuBtn.onclick=()=>ui.menuWrap.classList.toggle("open");
-    document.addEventListener("click",ev=>{if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open");});
-
-    ui.btnPickHost.onclick=()=>createUniqueHostRoom();
-    ui.btnPickGuest.onclick=()=>showApp("guestCode");
-    ui.btnGuestNext.onclick=async()=>{const room=normalize(ui.guestCodeInput.value);if(room.length!==6){setStatus("El codigo de sala debe tener 6 caracteres.","danger");return;}showApp("profile");await connectRoom("guest",room);};
-    ui.btnRestartGuest.onclick=()=>location.reload();
-    ui.btnRestartProfile.onclick=()=>location.reload();
-    ui.btnPickPhoto.onclick=()=>ui.photoInput.click();
-    ui.photoInput.onchange=async()=>{const file=ui.photoInput.files?.[0];if(!file) return;state.avatar.src=await compressImage(file);state.avatar.rendered="";state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();setStatus("Foto cargada. Ahora recolocala a tu gusto.","ok");};
-    ui.zoomInput.oninput=()=>{state.avatar.s=Number(ui.zoomInput.value);clampAvatar();};
-    ui.btnCenterPhoto.onclick=()=>{state.avatar.rendered="";state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();};
-    ui.avatarStage.addEventListener("mousedown",startDrag);
-    ui.avatarStage.addEventListener("touchstart",ev=>{
-      if(ev.touches.length===2){
-        pinch={distance:touchDistance(ev.touches[0],ev.touches[1]),startScale:state.avatar.s};
-        return;
-      }
-      startDrag(ev);
-    },{passive:false});
-    ui.avatarStage.addEventListener("wheel",wheelZoom,{passive:false});
-    window.addEventListener("mousemove",moveDrag,{passive:true});
-    window.addEventListener("touchmove",ev=>{
-      if(pinch && ev.touches.length===2){
-        ev.preventDefault();
-        const nextDistance=touchDistance(ev.touches[0],ev.touches[1]);
-        state.avatar.s=pinch.startScale*(nextDistance/pinch.distance);
-        clampAvatar();
-        return;
-      }
-      moveDrag(ev);
-    },{passive:false});
-    window.addEventListener("mouseup",endDrag);
-    window.addEventListener("touchend",()=>{pinch=null;endDrag();});
-
-    ui.btnReady.onclick=async()=>{
-      const name=ui.nameInput.value.trim();
-      if(!name){setStatus("Necesito tu nombre antes de continuar.","danger");return;}
-      if(!state.avatar.src){setStatus("Escoge una foto antes de marcar listo.","danger");return;}
-      state.name=name;
-      state.avatar.rendered=await renderAvatarExport();
-      state.ready=true;
-      await updatePresence();
-      syncPlayers();
-      setStatus("Tu ficha ya esta lista.","ok");
-      if(state.role==="guest"){
-        ui.profileScreen.classList.remove("on");
-        ui.guestWaiting.classList.add("on");
-      }
-      refreshIdentity();
-    };
-
-    ui.btnHostNext.onclick=()=>{
-      if(!hostCanContinue()){setStatus("Aun falta que alguien pulse listo.","danger");return;}
-      setStatus("Todo preparado. El siguiente paso sera conectar este boton con la partida real.","ok");
-    };
-
-    renderPlayers();
-    applyAvatar();
+    ui.menuBtn.onclick=()=>ui.menuWrap.classList.toggle("open");document.addEventListener("click",ev=>{if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open");});
+    ui.btnPickHost.onclick=async()=>{showApp();await connectRoom("host",roomCode());renderPhase();};ui.btnPickGuest.onclick=async()=>{const code=prompt("Codigo de sala");if(!code) return;showApp();await connectRoom("guest",normalize(code));renderPhase();};ui.btnBack.onclick=()=>location.reload();
+    ui.btnUpload.onclick=()=>ui.photoInput.click();ui.photoInput.onchange=async()=>{const file=ui.photoInput.files?.[0];if(!file) return;state.avatar.kind="photo";state.avatar.src=await compressPhoto(file);state.avatar.rendered="";state.avatar.x=0;state.avatar.y=0;state.avatar.s=1;clampAvatar();setStatus("Foto cargada. Ajustala y pulsa usar avatar.","info");};
+    ui.btnEmoji.onclick=()=>{state.selectedEmoji=state.avatar.emoji||"mint";renderEmojiChoices();ui.emojiModal.classList.add("on");};ui.btnCloseEmoji.onclick=()=>ui.emojiModal.classList.remove("on");ui.btnAcceptEmoji.onclick=()=>{state.avatar.kind="emoji";state.avatar.emoji=state.selectedEmoji;state.avatar.src=emojiDataUrl(state.selectedEmoji);state.avatar.rendered=state.avatar.src;applyAvatar();ui.emojiModal.classList.remove("on");setStatus("Avatar seleccionado.","info");};
+    ui.btnUseAvatar.onclick=async()=>{if(state.avatar.kind==="photo"&&!state.avatar.src){ui.photoInput.click();return;}state.avatar.rendered=await exportAvatar();applyAvatar();setStatus("Avatar preparado. La vista final usara este encuadre.","info");};
+    ui.avatarStage.addEventListener("mousedown",startDrag);ui.avatarStage.addEventListener("touchstart",ev=>{if(ev.touches.length===2){pinch={distance:touchDistance(ev.touches[0],ev.touches[1]),startScale:state.avatar.s};return;}startDrag(ev);},{passive:false});ui.avatarStage.addEventListener("wheel",ev=>{if(state.avatar.kind!=="photo"||!state.avatar.src) return;ev.preventDefault();state.avatar.s+=(ev.deltaY<0?0.07:-0.07);clampAvatar();},{passive:false});window.addEventListener("mousemove",moveDrag,{passive:true});window.addEventListener("touchmove",ev=>{if(pinch&&ev.touches.length===2){ev.preventDefault();state.avatar.s=pinch.startScale*(touchDistance(ev.touches[0],ev.touches[1])/pinch.distance);clampAvatar();return;}moveDrag(ev);},{passive:false});window.addEventListener("mouseup",endDrag);window.addEventListener("touchend",()=>{pinch=null;endDrag();});
+    ui.btnReady.onclick=async()=>{const name=ui.nameInput.value.trim();if(!name){setStatus("Necesito tu nombre antes de continuar.","danger");return;}if(!(state.avatar.rendered||state.avatar.src)){setStatus("Prepara tu avatar antes de continuar.","danger");return;}state.name=name;if(!state.avatar.rendered) state.avatar.rendered=await exportAvatar();state.ready=true;await updatePresence();syncPlayers();setStatus("Tu ficha ya esta lista.","");};
+    ui.voteToggle.onclick=async()=>{if(state.role!=="host") return;state.game.allowVotes=!state.game.allowVotes;state.game.voteDeadline=state.game.allowVotes?Date.now()+60000:0;await broadcastGame();renderPhase();};
+    ui.btnHostNext.onclick=async()=>{if(state.game.phase==="lobby"){state.game.phase="setup";state.game.allowVotes=false;state.game.voteDeadline=0;state.game.selectedMode="";state.game.selectedDuration="";state.game.votes={};await broadcastGame();renderPhase();return;}if(state.game.phase==="setup"&&state.game.selectedMode&&state.game.selectedDuration){state.game.phase="question";state.game.question={...EXAMPLE_QUESTION,endAt:Date.now()+20000,answers:{},revealed:false};await broadcastGame();renderPhase();}};
+    setInterval(async()=>{if(state.game.phase==="setup"&&state.game.allowVotes&&state.game.voteDeadline){ui.hostCountdown.textContent=countText(state.game.voteDeadline);ui.guestCountdown.textContent=countText(state.game.voteDeadline);if(Date.now()>=state.game.voteDeadline&&state.role==="host"){if(!state.game.selectedMode) state.game.selectedMode="classic";if(!state.game.selectedDuration) state.game.selectedDuration="olympic";state.game.allowVotes=false;await broadcastGame();renderPhase();}}if(state.game.phase==="question"&&state.game.question&&Date.now()>=state.game.question.endAt&&!state.game.question.revealed&&state.role==="host"){state.game.question.revealed=true;await broadcastGame();renderPhase();}},1000);
+    renderEmojiChoices();applyAvatar();renderPhase();
   </script>
 </body>
 </html>
