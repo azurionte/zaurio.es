@@ -50,7 +50,7 @@ function ensureEditorMotionStyle(){
   document.head.appendChild(st);
 }
 
-export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCustomGradient, onSaveProject, onOpenLibrary, canOpenLibrary, canAdmin, onAdminDemo, onAdminWelcome, onPrintExport }){
+export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCustomGradient, onSaveProject, onOpenLibrary, canOpenLibrary, canAdmin, onAdminDemo, onAdminWelcome, onPrintExport, onAltPrintExport }){
   ensureEditorMotionStyle();
   const top = document.getElementById('topbar-root');
   top.innerHTML = `
@@ -123,6 +123,7 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
         </div>` : ''}
 
         <button id="btnPrint" class="mbtn"><i class="fa-solid fa-download"></i> Descargar</button>
+        <button id="btnPrintAlt" class="mbtn"><i class="fa-solid fa-file-arrow-down"></i> Descarga alt</button>
         <button id="btnPreview" class="mbtn">Vista previa</button>
       </div>
     </div>
@@ -205,6 +206,7 @@ export function mountEditor({ onThemePick, onDarkToggle, onMaterialPick, onCusto
   };
 
   top.querySelector('#btnPrint').onclick = () => onPrintExport?.();
+  top.querySelector('#btnPrintAlt').onclick = () => onAltPrintExport?.();
 
   const root = document.getElementById('canvas-root');
   root.innerHTML = `

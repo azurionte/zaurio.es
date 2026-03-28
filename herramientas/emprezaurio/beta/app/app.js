@@ -1431,6 +1431,303 @@ async function openPrintExportWindow(){
   }
 }
 
+function escapeHtml(value){
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getAlternateExportAccentPair(){
+  const rootStyles = getComputedStyle(document.documentElement);
+  const accent = String(rootStyles.getPropertyValue('--accent') || '').trim() || '#c026d3';
+  const accent2 = String(rootStyles.getPropertyValue('--accent2') || '').trim() || '#9333ea';
+  return { accent, accent2 };
+}
+
+function getAlternateExportContactKeys(){
+  const preferred = Array.isArray(S.contactOrder) ? S.contactOrder : [];
+  const fallback = ['phone','phone2','email','idDoc','address','linkedin','info1','info2','info3','info4','info5','info6','info7'];
+  const ordered = [];
+  preferred.forEach(key => {
+    if (!ordered.includes(key) && String(S.contact?.[key] || '').trim()) ordered.push(key);
+  });
+  fallback.forEach(key => {
+    if (!ordered.includes(key) && String(S.contact?.[key] || '').trim()) ordered.push(key);
+  });
+  return ordered;
+}
+
+function renderAlternateExportContactItems(){
+  return getAlternateExportContactKeys().map(key => {
+    const value = String(S.contact?.[key] || '').trim();
+    if (!value) return '';
+    return `<div class="alt-chip"><i class="fa-solid ${PRINT_CONTACT_FIELDS[key]?.icon || 'fa-circle-info'}"></i><span>${escapeHtml(value)}</span></div>`;
+  }).filter(Boolean).join('');
+}
+
+function renderAlternateExportSkills(){
+  const list = Array.isArray(S.skills) ? S.skills : [];
+  if (!list.length) return '';
+  const rows = list.map(skill => {
+    const label = escapeHtml(skill?.label || 'Skill');
+    const valueMarkup = skill?.type === 'slider'
+      ? `<div class="alt-skill-meter"><span style="width:${Math.max(0, Math.min(100, Number(skill?.value ?? 60)))}%"></span></div>`
+      : `<div class="alt-skill-stars">${[1,2,3,4,5].map(i => `<span class="${(skill?.stars || 0) >= i ? 'on' : ''}">&#9733;</span>`).join('')}</div>`;
+    return `<div class="alt-skill-row"><div class="alt-skill-name">${label}</div><div class="alt-skill-val">${valueMarkup}</div></div>`;
+  }).join('');
+  return `
+    <section class="alt-section alt-skills">
+      <div class="alt-section-head">
+        <h3>Skills</h3>
+        <div class="alt-section-line"></div>
+      </div>
+      <div class="alt-skills-list">${rows}</div>
+    </section>
+  `;
+}
+
+function renderAlternateExportEdu(){
+  const items = Array.isArray(S.edu) ? S.edu : [];
+  if (!items.length) return '';
+  const cards = items.map(item => `
+    <article class="alt-card">
+      ${item?.year ? `<div class="alt-pill">${escapeHtml(item.year)}</div>` : ''}
+      ${item?.title ? `<div class="alt-card-title">${escapeHtml(item.title)}</div>` : ''}
+      ${item?.academy ? `<div class="alt-card-sub">${escapeHtml(item.academy)}</div>` : ''}
+    </article>
+  `).join('');
+  return `
+    <section class="alt-section">
+      <div class="alt-section-head">
+        <h3>Education</h3>
+        <div class="alt-section-line"></div>
+      </div>
+      <div class="alt-card-grid">${cards}</div>
+    </section>
+  `;
+}
+
+function renderAlternateExportExp(){
+  const items = Array.isArray(S.exp) ? S.exp : [];
+  if (!items.length) return '';
+  const cards = items.map(item => `
+    <article class="alt-card">
+      ${item?.dates ? `<div class="alt-pill">${escapeHtml(item.dates)}</div>` : ''}
+      ${item?.role ? `<div class="alt-card-title">${escapeHtml(item.role)}</div>` : ''}
+      ${item?.org ? `<div class="alt-card-sub">${escapeHtml(item.org)}</div>` : ''}
+      ${item?.desc ? `<div class="alt-copy">${escapeHtml(item.desc)}</div>` : ''}
+    </article>
+  `).join('');
+  return `
+    <section class="alt-section">
+      <div class="alt-section-head">
+        <h3>Experience</h3>
+        <div class="alt-section-line"></div>
+      </div>
+      <div class="alt-stack-list">${cards}</div>
+    </section>
+  `;
+}
+
+function renderAlternateExportBio(){
+  const text = String(S.bio || '').trim();
+  if (!text) return '';
+  return `
+    <section class="alt-section">
+      <div class="alt-section-head">
+        <h3>Profile</h3>
+        <div class="alt-section-line"></div>
+      </div>
+      <div class="alt-copy">${escapeHtml(text)}</div>
+    </section>
+  `;
+}
+
+function getAlternateExportSections(){
+  const renderers = {
+    skills: renderAlternateExportSkills,
+    edu: renderAlternateExportEdu,
+    exp: renderAlternateExportExp,
+    bio: renderAlternateExportBio
+  };
+  const available = Object.keys(renderers).filter(key => {
+    if (key === 'skills') return Array.isArray(S.skills) && S.skills.length;
+    if (key === 'edu') return Array.isArray(S.edu) && S.edu.length;
+    if (key === 'exp') return Array.isArray(S.exp) && S.exp.length;
+    return !!String(S.bio || '').trim();
+  });
+  const ordered = [];
+  (Array.isArray(S.sectionOrder) ? S.sectionOrder : []).forEach(key => {
+    if (available.includes(key) && !ordered.includes(key)) ordered.push(key);
+  });
+  available.forEach(key => {
+    if (!ordered.includes(key)) ordered.push(key);
+  });
+  return ordered.map(key => ({ key, html: renderers[key]() })).filter(item => item.html);
+}
+
+function buildAlternateExportDocument(){
+  const { accent, accent2 } = getAlternateExportAccentPair();
+  const isDark = !!S.dark;
+  const name = escapeHtml(S.contact?.name || S.project?.title || 'Mi CV');
+  const contacts = renderAlternateExportContactItems();
+  const avatar = S.avatar?.src
+    ? `<div class="alt-avatar"><img src="${S.avatar.src}" alt=""></div>`
+    : `<div class="alt-avatar alt-avatar-empty"></div>`;
+  const sections = getAlternateExportSections();
+  const sidebarSections = S.layout === 'side' && S.skillsInSidebar
+    ? sections.filter(section => section.key === 'skills')
+    : [];
+  const mainSections = S.layout === 'side' && S.skillsInSidebar
+    ? sections.filter(section => section.key !== 'skills')
+    : sections;
+
+  const sideBody = `
+    <div class="alt-page alt-page-side">
+      <aside class="alt-sidebar">
+        ${avatar}
+        <div class="alt-sidebar-name">${name}</div>
+        ${contacts ? `<div class="alt-sidebar-chips">${contacts}</div>` : ''}
+        ${sidebarSections.map(section => section.html).join('')}
+      </aside>
+      <main class="alt-main">
+        ${mainSections.map(section => section.html).join('')}
+      </main>
+    </div>
+  `;
+
+  const topBody = `
+    <div class="alt-page alt-page-top">
+      <header class="alt-hero ${S.layout === 'fancy' ? 'is-fancy' : ''}">
+        <div class="alt-hero-band"></div>
+        <div class="alt-hero-content">
+          <div class="alt-hero-copy">
+            <h1>${name}</h1>
+            ${contacts ? `<div class="alt-hero-chips">${contacts}</div>` : ''}
+          </div>
+          ${avatar}
+        </div>
+      </header>
+      <main class="alt-main alt-main-top">
+        ${mainSections.map(section => section.html).join('')}
+      </main>
+    </div>
+  `;
+
+  return `<!doctype html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>${name}</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+      <style>
+        :root{
+          --alt-accent:${accent};
+          --alt-accent2:${accent2};
+          --alt-ink:${isDark ? '#f8f4ff' : '#160f1f'};
+          --alt-ink-soft:${isDark ? 'rgba(248,244,255,.76)' : 'rgba(22,15,31,.72)'};
+          --alt-paper:${isDark ? '#0f0d14' : '#fffdfd'};
+          --alt-panel:${isDark ? '#17131f' : '#fff'};
+          --alt-card:${isDark ? '#1d1826' : '#fff'};
+          --alt-line:${isDark ? 'rgba(255,255,255,.09)' : 'rgba(22,15,31,.09)'};
+          --alt-shadow:${isDark ? '0 18px 40px rgba(0,0,0,.34)' : '0 18px 40px rgba(62,32,78,.08)'};
+        }
+        *{box-sizing:border-box}
+        html,body{margin:0;padding:0;background:${isDark ? '#09070d' : '#efe8f6'};color:var(--alt-ink);font-family:"Segoe UI",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        body{padding:24px}
+        .alt-page{width:210mm;min-height:297mm;margin:0 auto;background:var(--alt-paper);box-shadow:var(--alt-shadow);overflow:hidden}
+        .alt-page-side{display:grid;grid-template-columns:74mm minmax(0,1fr)}
+        .alt-sidebar{display:grid;align-content:start;gap:16px;padding:24px 18px 28px;background:linear-gradient(180deg,var(--alt-accent2),var(--alt-accent));color:#fff;min-height:297mm}
+        .alt-sidebar-name{font:900 28px/1.02 "Trebuchet MS",sans-serif;text-align:center}
+        .alt-sidebar-chips{display:grid;gap:10px}
+        .alt-main{display:grid;align-content:start;gap:16px;padding:24px;background:var(--alt-paper)}
+        .alt-main-top{padding-top:18px}
+        .alt-avatar{width:132px;height:132px;margin:0 auto;border-radius:50%;overflow:hidden;border:4px solid rgba(255,255,255,.88);background:rgba(255,255,255,.2)}
+        .alt-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+        .alt-avatar-empty::before{content:"";display:block;width:100%;height:100%;background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.75), rgba(255,255,255,.22))}
+        .alt-chip{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:999px;background:rgba(255,255,255,.94);color:#1b1423;font-size:13px;line-height:1.2;min-width:0}
+        .alt-chip span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .alt-hero{padding:18px 18px 0;background:var(--alt-paper)}
+        .alt-hero-band{height:86px;border-radius:26px;background:linear-gradient(135deg,var(--alt-accent2),var(--alt-accent))}
+        .alt-hero-content{display:grid;grid-template-columns:minmax(0,1fr) 132px;gap:18px;align-items:end;margin-top:-34px;padding:0 8px}
+        .alt-hero.is-fancy .alt-hero-content{grid-template-columns:1fr;justify-items:center;text-align:center}
+        .alt-hero.is-fancy .alt-avatar{margin-top:-10px}
+        .alt-hero-copy h1{margin:0;font:900 34px/1.02 "Trebuchet MS",sans-serif;color:var(--alt-ink)}
+        .alt-hero-chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+        .alt-section{display:grid;gap:12px;padding:16px;border:1px solid var(--alt-line);border-radius:22px;background:var(--alt-panel);break-inside:avoid-page;page-break-inside:avoid}
+        .alt-section-head{display:grid;gap:6px}
+        .alt-section-head h3{margin:0;font:900 18px/1 "Trebuchet MS",sans-serif;color:var(--alt-ink)}
+        .alt-section-line{width:110px;height:4px;border-radius:999px;background:linear-gradient(90deg,var(--alt-accent2),var(--alt-accent))}
+        .alt-copy{color:var(--alt-ink-soft);line-height:1.65;white-space:pre-wrap}
+        .alt-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+        .alt-stack-list{display:grid;gap:12px}
+        .alt-card{display:grid;gap:8px;padding:14px;border-radius:18px;background:var(--alt-card);border:1px solid var(--alt-line);break-inside:avoid-page;page-break-inside:avoid}
+        .alt-pill{display:inline-flex;justify-self:start;padding:7px 10px;border-radius:999px;background:linear-gradient(135deg,var(--alt-accent2),var(--alt-accent));color:#fff;font-size:12px;font-weight:800}
+        .alt-card-title{font-weight:800;font-size:18px;line-height:1.25}
+        .alt-card-sub{color:var(--alt-ink-soft);line-height:1.45}
+        .alt-skills-list{display:grid;gap:10px}
+        .alt-skill-row{display:grid;gap:7px;padding:12px;border-radius:16px;background:rgba(255,255,255,.92);color:#1b1423;border:1px solid rgba(0,0,0,.07)}
+        .alt-main .alt-skill-row{background:var(--alt-card);color:var(--alt-ink);border-color:var(--alt-line)}
+        .alt-skill-name{font-size:14px;font-weight:700;line-height:1.3}
+        .alt-skill-val{display:flex;justify-content:center}
+        .alt-skill-meter{position:relative;width:100%;max-width:160px;height:8px;border-radius:999px;background:rgba(27,20,35,.14);overflow:hidden}
+        .alt-skill-meter span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--alt-accent2),var(--alt-accent))}
+        .alt-skill-stars{display:flex;justify-content:center;gap:5px;font-size:15px;color:rgba(27,20,35,.22)}
+        .alt-main .alt-skill-stars{color:rgba(22,15,31,.18)}
+        .alt-skill-stars .on{color:var(--alt-accent)}
+        @media print{
+          body{padding:0;background:#fff}
+          .alt-page{width:auto;min-height:auto;box-shadow:none}
+        }
+      </style>
+    </head>
+    <body>
+      ${S.layout === 'side' ? sideBody : topBody}
+      <script>
+        window.addEventListener('load', function(){
+          setTimeout(function(){ window.print(); }, 120);
+        });
+      </script>
+    </body>
+  </html>`;
+}
+
+async function openAlternatePrintExportWindow(){
+  try {
+    const html = buildAlternateExportDocument();
+    const existing = document.getElementById('altPrintExportHost');
+    if (existing) existing.remove();
+    const host = document.createElement('div');
+    host.id = 'altPrintExportHost';
+    host.style.position = 'fixed';
+    host.style.left = '-200vw';
+    host.style.top = '-200vh';
+    host.style.width = '1px';
+    host.style.height = '1px';
+    host.style.overflow = 'hidden';
+    host.style.opacity = '0';
+    host.style.pointerEvents = 'none';
+    document.body.appendChild(host);
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.width = '1px';
+    iframe.style.height = '1px';
+    iframe.style.border = '0';
+    host.appendChild(iframe);
+    iframe.onload = () => {
+      iframe.contentWindow?.addEventListener('afterprint', () => setTimeout(() => host.remove(), 300), { once:true });
+    };
+    iframe.srcdoc = html;
+  } catch (error) {
+    console.error('[Emprezaurio alt print export]', error);
+    alert('No se pudo preparar la descarga alternativa del CV.');
+  }
+}
+
 async function boot(){
   const auth = await initAuth();
   setStorageScope(getStorageScope());
@@ -1511,7 +1808,8 @@ async function boot(){
       mountWelcome();
       mountWizard();
     },
-    onPrintExport: openPrintExportWindow
+    onPrintExport: openPrintExportWindow,
+    onAltPrintExport: openAlternatePrintExportWindow
   });
 
   // Make sure a clean page exists
