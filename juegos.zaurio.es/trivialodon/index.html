@@ -303,10 +303,14 @@
       ui.profileSideTitle.textContent = state.role === "host" ? "Preparando la sala" : "Sala encontrada";
       ui.profileSideText.textContent = state.role === "host" ? "Comparte el codigo de sala y espera a que entren los invitados." : "Ya estas dentro. Ahora solo falta tu nombre y tu avatar.";
       ui.roomBadge.hidden = state.role !== "host";
+      ui.roomBadge.style.display = state.role !== "host" ? "none" : "inline-flex";
       ui.joinCodeField.hidden = true;
+      ui.joinCodeField.style.display = "none";
       ui.profilePlayers.innerHTML = renderPlayerRows(state.players);
       ui.profileSideCard.hidden = guestDraft;
+      ui.profileSideCard.style.display = guestDraft ? "none" : "grid";
       ui.profileLayout.style.gridTemplateColumns = guestDraft ? "minmax(320px,520px)" : "minmax(320px,440px) minmax(0,1fr)";
+      ui.profileLayout.style.justifyContent = guestDraft ? "center" : "stretch";
     }
     function renderLobbyScene(){ ui.lobbyPlayers.innerHTML = renderPlayerRows(state.players); ui.btnToSetup.disabled = !hostCanContinue(); if(state.role === "host"){ ui.lobbyLayout.style.gridTemplateColumns = "minmax(320px,420px) minmax(0,1fr)"; ui.lobbySide.hidden = false; ui.lobbyTitle.textContent = "Preparando la sala"; ui.lobbyDesc.textContent = "Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida."; ui.lobbySide.innerHTML = `<span class="kicker">Sala</span><h2 class="subtitle">Todos casi listos</h2><p>Cuando todos hayan pulsado listo, puedes pasar a la configuracion del juego.</p><div class="codeBadge">${esc(state.roomCode)}</div>`; } else { ui.lobbyLayout.style.gridTemplateColumns = "minmax(320px,760px)"; ui.lobbySide.hidden = true; ui.lobbyTitle.textContent = "Esperando en sala"; ui.lobbyDesc.textContent = "Jugadores"; } }
     function renderSetupCards(items, kind, current){ return items.map(item => `<button class="modeCard ${current === item.id ? "active" : ""}" data-kind="${kind}" data-id="${item.id}" ${state.role === "guest" && !state.game.allowVotes ? "disabled" : ""}><div class="modeHead"><span class="modeIcon">${item.icon}</span><span class="modeVotes">${kind === "mode" ? modeVotes(item.id) : durationVotes(item.id)}</span></div><strong>${esc(item.title)}</strong><p>${esc(item.desc)}</p></button>`).join(""); }
