@@ -74,7 +74,7 @@
       </header>
 
       <section class="scene sceneCenter on" id="profileScene">
-        <div class="sceneSplit" style="width:min(1160px,100%)">
+        <div class="sceneSplit" id="profileLayout" style="width:min(1160px,100%)">
           <article class="panel sceneStack">
             <span class="kicker" id="profileKicker">Perfil</span>
             <h2 class="subtitle" id="profileTitle">Configura tu ficha</h2>
@@ -111,7 +111,7 @@
               <button class="btn btnOk" id="btnReady" type="button">Listo</button>
             </div>
           </article>
-          <article class="panel sceneStack">
+          <article class="panel sceneStack" id="profileSideCard">
             <span class="kicker">Sala</span>
             <h2 class="subtitle" id="profileSideTitle">Entrando en Trivialodon</h2>
             <p id="profileSideText">Prepara tu foto, elige tu nombre y entra listo a la sala.</p>
@@ -260,7 +260,7 @@
       identity:$("identity"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
       scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene")},
       joinCodeOnlyInput:$("joinCodeOnlyInput"), joinStatus:$("joinStatus"), btnJoinBack:$("btnJoinBack"), btnJoinNext:$("btnJoinNext"),
-      profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"),
+      profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"),
       nameInput:$("nameInput"), avatarStage:$("avatarStage"), avatarImg:$("avatarImg"), avatarPlaceholder:$("avatarPlaceholder"), btnUpload:$("btnUpload"),
       btnEmoji:$("btnEmoji"), btnUseAvatar:$("btnUseAvatar"), photoInput:$("photoInput"), profileStatus:$("profileStatus"), btnBack:$("btnBack"), btnReady:$("btnReady"),
       profilePlayers:$("profilePlayers"), profileSideTitle:$("profileSideTitle"), profileSideText:$("profileSideText"), lobbySide:$("lobbySide"), lobbyTitle:$("lobbyTitle"),
@@ -296,7 +296,18 @@
     function renderPlayerRows(players){ if(!players.length) return `<article class="playerCard"><div class="sceneStack"><div class="playerName">Nadie todavia</div><div class="playerSub">La sala espera al primer dino.</div></div></article>`; return players.map(player => `<article class="playerCard"><div class="avatarStack">${player.ready && player.avatarSrc ? `<div class="avatarShot"><img src="${player.avatarSrc}" alt=""></div>` : `<div class="dinoHole">\uD83E\uDD96</div>`}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="sceneStack" style="gap:6px"><div class="playerName">${esc(player.ready ? player.name : (player.waitingLine || lineFor(player.playerId)))}</div><div class="playerSub">${esc(player.ready ? (player.role === "host" ? "Anfitrion listo" : "Invitado listo") : "Aun no ha pulsado listo")}</div></div></article>`).join(""); }
     function dedupePlayers(raw){ const map = new Map(); raw.forEach(entry => { const prev = map.get(entry.playerId); if(!prev || entry.updatedAt > prev.updatedAt) map.set(entry.playerId, entry); }); return [...map.values()].sort((a,b) => { if(a.role !== b.role) return a.role === "host" ? -1 : 1; if(a.ready !== b.ready) return a.ready ? -1 : 1; return String(a.name || a.waitingLine).localeCompare(String(b.name || b.waitingLine), "es"); }); }
     function scoreEntries(){ return state.players.filter(player => player.ready).map(player => ({playerId:player.playerId,name:player.name,avatarSrc:player.avatarSrc,score:(state.game.scores && state.game.scores[player.playerId]) || 0})).sort((a,b) => b.score - a.score || a.name.localeCompare(b.name, "es")); }
-    function renderProfileScene(){ ui.profileKicker.textContent = state.role === "host" ? "Perfil" : "Invitado"; ui.profileTitle.textContent = state.role === "host" ? "Configura al anfitrion" : "Prepara tu ficha"; ui.profileSideTitle.textContent = state.role === "host" ? "Preparando la sala" : "Sala encontrada"; ui.profileSideText.textContent = state.role === "host" ? "Comparte el codigo de sala y espera a que entren los invitados." : "Ya estas dentro. Ahora solo falta tu nombre y tu avatar."; ui.joinCodeField.hidden = true; ui.profilePlayers.innerHTML = renderPlayerRows(state.players); }
+    function renderProfileScene(){
+      const guestDraft = state.role === "guest" && !!state.roomCode;
+      ui.profileKicker.textContent = state.role === "host" ? "Perfil" : "Invitado";
+      ui.profileTitle.textContent = state.role === "host" ? "Configura al anfitrion" : "Prepara tu ficha";
+      ui.profileSideTitle.textContent = state.role === "host" ? "Preparando la sala" : "Sala encontrada";
+      ui.profileSideText.textContent = state.role === "host" ? "Comparte el codigo de sala y espera a que entren los invitados." : "Ya estas dentro. Ahora solo falta tu nombre y tu avatar.";
+      ui.roomBadge.hidden = state.role !== "host";
+      ui.joinCodeField.hidden = true;
+      ui.profilePlayers.innerHTML = renderPlayerRows(state.players);
+      ui.profileSideCard.hidden = guestDraft;
+      ui.profileLayout.style.gridTemplateColumns = guestDraft ? "minmax(320px,520px)" : "minmax(320px,440px) minmax(0,1fr)";
+    }
     function renderLobbyScene(){ ui.lobbyPlayers.innerHTML = renderPlayerRows(state.players); ui.btnToSetup.disabled = !hostCanContinue(); if(state.role === "host"){ ui.lobbyTitle.textContent = "Preparando la sala"; ui.lobbyDesc.textContent = "Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida."; ui.lobbySide.innerHTML = `<span class="kicker">Sala</span><h2 class="subtitle">Todos casi listos</h2><p>Cuando todos hayan pulsado listo, puedes pasar a la configuracion del juego.</p><div class="codeBadge">${esc(state.roomCode)}</div>`; } else { ui.lobbyTitle.textContent = "Esperando en sala"; ui.lobbyDesc.textContent = "Jugadores"; ui.lobbySide.innerHTML = `<span class="kicker">Espera</span><h2 class="subtitle">Esperando en sala</h2><p>Tu ficha ya esta enviada. Espera a que el anfitrion empiece la partida.</p>`; } }
     function renderSetupCards(items, kind, current){ return items.map(item => `<button class="modeCard ${current === item.id ? "active" : ""}" data-kind="${kind}" data-id="${item.id}" ${state.role === "guest" && !state.game.allowVotes ? "disabled" : ""}><div class="modeHead"><span class="modeIcon">${item.icon}</span><span class="modeVotes">${kind === "mode" ? modeVotes(item.id) : durationVotes(item.id)}</span></div><strong>${esc(item.title)}</strong><p>${esc(item.desc)}</p></button>`).join(""); }
     function majority(kind, items){ let best = ""; let count = -1; items.forEach(item => { const amount = kind === "mode" ? modeVotes(item.id) : durationVotes(item.id); if(amount > count){ count = amount; best = item.id; } }); return best; }
