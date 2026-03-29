@@ -691,7 +691,35 @@
     document.addEventListener("click", ev => { if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open"); });
     ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; await connectRoom("host", roomCode()); renderCurrentScene(); };
     ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); };
-    ui.btnContinue.onclick = async () => { const saved = readSession(); if(!saved?.role || !saved?.roomCode) return; resetDraft(); showShell(); if(saved.playerId) state.playerId = saved.playerId; state.role = saved.role; state.name = saved.name || ""; state.avatar = saved.avatar || state.avatar; applyAvatar(); await connectRoom(saved.role, saved.roomCode); state.name = saved.name || ""; state.ready = !!saved.ready; state.avatar = saved.avatar || state.avatar; state.game = saved.game || state.game; state.roomCode = saved.roomCode; applyAvatar(); ui.nameInput.value = state.name; await updatePresence(); if(state.role === "host" && saved.game){ await broadcastGame(); } renderCurrentScene(); };
+    ui.btnContinue.onclick = async () => {
+      const saved = readSession();
+      if(!saved?.role || !saved?.roomCode) return;
+      showShell();
+      if(saved.playerId) state.playerId = saved.playerId;
+      state.role = saved.role;
+      state.roomCode = saved.roomCode;
+      state.name = saved.name || "";
+      state.ready = !!saved.ready;
+      state.waitingLine = lineFor(state.playerId);
+      state.avatar = saved.avatar || state.avatar;
+      state.game = saved.game || state.game;
+      ui.nameInput.value = state.name;
+      applyAvatar();
+      await connectRoom(saved.role, saved.roomCode);
+      state.roomCode = saved.roomCode;
+      state.name = saved.name || "";
+      state.ready = !!saved.ready;
+      state.waitingLine = lineFor(state.playerId);
+      state.avatar = saved.avatar || state.avatar;
+      state.game = saved.game || state.game;
+      ui.nameInput.value = state.name;
+      applyAvatar();
+      await updatePresence();
+      if(state.role === "host" && saved.game){
+        await broadcastGame();
+      }
+      renderCurrentScene();
+    };
     ui.btnJoinBack.onclick = () => location.reload();
     ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = "Necesito un codigo valido de 4 cifras."; return; } ui.joinStatus.textContent = "Entrando en la sala..."; await connectRoom("guest", code); renderCurrentScene(); };
     ui.joinCodeOnlyInput.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); ui.btnJoinNext.click(); } });
