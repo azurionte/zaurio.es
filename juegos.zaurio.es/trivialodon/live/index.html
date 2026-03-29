@@ -322,6 +322,11 @@
       });
       syncAudio();
     }
+    function ensureAudioReady(){
+      if(!soundEnabled) return;
+      primeAudio();
+      syncAudio();
+    }
     function syncAudio(){
       if(!soundEnabled || !liveAudio.unlocked) return;
       const useAnswering = game.phase === "question" || game.phase === "answer";
@@ -535,6 +540,7 @@
     }
 
     ui.btnJoin.onclick = () => {
+      ensureAudioReady();
       const code = normalize(ui.codeInput.value);
       if(code.length === 4) join(code);
     };

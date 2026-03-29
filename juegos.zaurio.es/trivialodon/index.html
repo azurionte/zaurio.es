@@ -666,6 +666,11 @@
       });
       syncAudio();
     }
+    function ensureAudioReady(){
+      if(audioState.muted) return;
+      primeAudio();
+      syncAudio();
+    }
     function setMuted(value){
       audioState.muted = !!value;
       try{ localStorage.setItem(SOUND_KEY, audioState.muted ? "1" : "0"); } catch(_){}
@@ -923,7 +928,14 @@
     function endDrag(){ drag = null; ui.avatarStage.classList.remove("dragging"); }
     ui.menuBtn.onclick = () => ui.menuWrap.classList.toggle("open");
     ui.scoreChip.onclick = () => { renderScoresScene(); ui.scoreModal.classList.add("on"); };
-    ui.soundChip.onclick = () => setMuted(!audioState.muted);
+    ui.soundChip.onclick = () => {
+      if(audioState.muted){
+        setMuted(false);
+        ensureAudioReady();
+        return;
+      }
+      setMuted(true);
+    };
     ui.btnCloseScore.onclick = () => ui.scoreModal.classList.remove("on");
     ui.btnCloseDuration.onclick = () => ui.durationModal.classList.remove("on");
     ui.btnAcceptDuration.onclick = async () => {
@@ -945,11 +957,11 @@
     ui.customDifficultyChoices.querySelectorAll("[data-difficulty]").forEach(btn => btn.onclick = () => { state.game.customConfig.difficulty = btn.dataset.difficulty; syncChoiceGroup(ui.customDifficultyChoices, "difficulty", state.game.customConfig.difficulty); });
     document.addEventListener("click", ev => { if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open"); });
     ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
-    ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; await connectRoom("host", roomCode()); renderCurrentScene(); };
-    ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); };
-    ui.btnContinue.onclick = async () => { const ok = await restoreSavedSession(readSession()); if(!ok) location.reload(); };
+    ui.btnHost.onclick = async () => { ensureAudioReady(); resetDraft(); showShell(); state.role = "host"; await connectRoom("host", roomCode()); renderCurrentScene(); };
+    ui.btnGuest.onclick = async () => { ensureAudioReady(); resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); };
+    ui.btnContinue.onclick = async () => { ensureAudioReady(); const ok = await restoreSavedSession(readSession()); if(!ok) location.reload(); };
     ui.btnJoinBack.onclick = () => location.reload();
-    ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = "Necesito un codigo valido de 4 cifras."; return; } ui.joinStatus.textContent = "Entrando en la sala..."; await connectRoom("guest", code); renderCurrentScene(); };
+    ui.btnJoinNext.onclick = async () => { ensureAudioReady(); const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = "Necesito un codigo valido de 4 cifras."; return; } ui.joinStatus.textContent = "Entrando en la sala..."; await connectRoom("guest", code); renderCurrentScene(); };
     ui.joinCodeOnlyInput.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); ui.btnJoinNext.click(); } });
     ui.btnBack.onclick = () => location.reload();
     ui.btnUpload.onclick = () => ui.photoInput.click();
@@ -966,7 +978,7 @@
     window.addEventListener("touchmove", ev => { if(pinch && ev.touches.length === 2){ ev.preventDefault(); state.avatar.s = pinch.startScale * (touchDistance(ev.touches[0], ev.touches[1]) / pinch.distance); clampAvatar(); return; } moveDrag(ev); }, {passive:false});
     window.addEventListener("mouseup", endDrag);
     window.addEventListener("touchend", () => { pinch = null; endDrag(); });
-    ui.btnReady.onclick = async () => { const name = ui.nameInput.value.trim(); if(!name){ setStatus("Necesito tu nombre antes de continuar.","danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus("Prepara tu avatar antes de continuar.","danger"); return; } state.name = name; if(!state.avatar.rendered) state.avatar.rendered = await exportAvatar(); state.ready = true; await updatePresence(); syncPlayers(); setStatus("Tu ficha ya esta lista.","ok"); renderCurrentScene(); };
+    ui.btnReady.onclick = async () => { ensureAudioReady(); const name = ui.nameInput.value.trim(); if(!name){ setStatus("Necesito tu nombre antes de continuar.","danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus("Prepara tu avatar antes de continuar.","danger"); return; } state.name = name; if(!state.avatar.rendered) state.avatar.rendered = await exportAvatar(); state.ready = true; await updatePresence(); syncPlayers(); setStatus("Tu ficha ya esta lista.","ok"); renderCurrentScene(); };
     ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.votes = {}; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; await broadcastGame(); renderCurrentScene(); };
     ui.voteToggle.onclick = async () => { if(state.role !== "host") return; state.game.allowVotes = !state.game.allowVotes; state.game.voteDeadline = state.game.allowVotes ? (Date.now() + 60000) : 0; await broadcastGame(); renderCurrentScene(); };
     setInterval(async () => { if(state.game.phase === "setup" && state.game.allowVotes && state.game.voteDeadline){ ui.hostVoteCountdown.textContent = countText(state.game.voteDeadline); if(Date.now() >= state.game.voteDeadline && state.role === "host"){ if(!state.game.selectedMode) state.game.selectedMode = "classic"; if(!state.game.selectedDuration) state.game.selectedDuration = "olympic"; if(state.game.selectedDuration === "olympic") state.game.selectedDurationValue = 40; state.game.allowVotes = false; await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "generating"){ renderGeneratingScene(); } if(state.game.phase === "countdown"){ renderCountdownScene(); if(state.role === "host" && state.game.countdownEndAt && Date.now() >= state.game.countdownEndAt){ const bank = activeQuestionSet(); const q = bank[state.game.questionIndex || 0]; const prepared = prepareQuestion(q); const leadMs = Math.max(0, Number(state.game.questionLeadSeconds || 6)) * 1000; const answerMs = Math.max(5, Number(state.game.answerSeconds || 15)) * 1000; const answersVisibleAt = Date.now() + leadMs; state.game.phase = "question"; state.game.question = {type:prepared.type || "standard",prompt:prepared.prompt, category:prepared.category, choices:prepared.choices, correct:prepared.correct, scores:prepared.scores || [], ranking:prepared.ranking || [], answersVisibleAt, endAt:answersVisibleAt + answerMs, responses:{}, revealed:false, explanation:prepared.explanation || ""}; await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "question" && state.game.question){ renderQuestionScene(); if(Date.now() >= state.game.question.endAt && !state.game.question.revealed && state.role === "host"){ state.game.question.revealed = true; const scores = {...(state.game.scores || {})}; const deltas = {}; const responses = Object.entries(state.game.question.responses || {}).map(([playerId, response]) => ({playerId,answerIndex:Number(response?.answerIndex),answeredAt:Number(response?.answeredAt || Number.MAX_SAFE_INTEGER)})); if(state.game.question.type === "speed"){ responses.forEach(entry => { const gain = Number(state.game.question.scores?.[entry.answerIndex] || 0); scores[entry.playerId] = (scores[entry.playerId] || 0) + gain; deltas[entry.playerId] = gain; }); } else { const correct = responses.filter(entry => entry.answerIndex === state.game.question.correct).sort((a,b) => a.answeredAt - b.answeredAt); correct.forEach((entry, idx) => { const gain = idx === 0 && correct.length > 1 ? 110 : 100; scores[entry.playerId] = (scores[entry.playerId] || 0) + gain; deltas[entry.playerId] = gain; }); } state.game.scores = scores; state.game.lastRoundScores = deltas; state.game.phase = "answer"; state.game.answerShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "answer" && state.role === "host" && Date.now() - state.game.answerShownAt >= 7000){ state.game.phase = "scores"; state.game.scoresShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } if(state.game.phase === "scores"){ renderScoresScene(); if(state.role === "host" && !state.game.finished && Date.now() - state.game.scoresShownAt >= 8000){ state.localAnswer = null; if((state.game.questionIndex || 0) + 1 < activeQuestionSet().length){ state.game.questionIndex = (state.game.questionIndex || 0) + 1; state.game.phase = "countdown"; state.game.question = null; state.game.countdownEndAt = Date.now() + 4000; state.game.lastRoundScores = {}; await broadcastGame(); renderCurrentScene(); return; } state.game.finished = true; state.game.finishedAt = Date.now(); await broadcastGame(); renderCurrentScene(); } } }, 1000);
