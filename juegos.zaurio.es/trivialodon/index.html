@@ -31,7 +31,7 @@
     .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.modeCard{padding:18px;display:grid;gap:8px;cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease;color:#fff}.modeCard:hover{transform:translateY(-2px)}.modeCard.active{border-color:rgba(255,216,58,.42);background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.12))}.modeCard:disabled{opacity:.62;cursor:not-allowed;transform:none}.modeHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.modeIcon{font-size:1.5rem}.modeVotes{font-weight:1000;color:var(--yellow)}
     .switch{position:relative;width:66px;height:38px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1)}.switch::after{content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:999px;background:#fff;transition:transform .2s ease}.switch.on{background:linear-gradient(135deg,var(--yellow),var(--pink))}.switch.on::after{transform:translateX(28px)}.toggleBar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
     .scoreBoard{display:grid;gap:14px}.scoreHero{padding:22px;border-radius:28px;background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.14));border:1px solid rgba(255,255,255,.1);text-align:center}.scoreRow{padding:14px 16px;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center}.rankAvatar{width:58px;height:58px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,119,203,.14));display:grid;place-items:center}.rankAvatar img{width:100%;height:100%;object-fit:cover}.scoreValueWrap{position:relative;min-width:96px;text-align:right;font-weight:1000}.scoreDelta{position:absolute;right:46px;top:-6px;color:#a6ff8b;font-weight:1000;animation:scoreFly 2.2s ease forwards}
-    .overlay{position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(5,2,12,.76);backdrop-filter:blur(12px);z-index:80}.overlay.on{display:grid}.modalCard{width:min(760px,100%);padding:28px;display:grid;gap:18px}.emojiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.emojiChoice{padding:18px;border-radius:22px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);display:grid;gap:8px;place-items:center}.emojiChoice.active{border-color:rgba(255,216,58,.42)}.emojiBall{width:84px;height:84px;border-radius:999px;display:grid;place-items:center;font-size:2.35rem;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.miniForm{display:grid;gap:14px}.miniForm input,.miniForm textarea,.miniForm select{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}.gridTwo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .overlay{position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(5,2,12,.76);backdrop-filter:blur(12px);z-index:80}.overlay.on{display:grid}.modalCard{width:min(760px,100%);padding:28px;display:grid;gap:18px}.emojiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.emojiChoice{padding:18px;border-radius:22px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);display:grid;gap:8px;place-items:center}.emojiChoice.active{border-color:rgba(255,216,58,.42)}.emojiBall{width:84px;height:84px;border-radius:999px;display:grid;place-items:center;font-size:2.35rem;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.miniForm{display:grid;gap:14px}.miniForm input,.miniForm textarea{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}.gridTwo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pillChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pillChoice{padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-weight:900;text-align:center}.pillChoice.active{border-color:rgba(255,216,58,.48);background:linear-gradient(135deg,rgba(255,216,58,.16),rgba(255,119,203,.12));color:#fff}
     @keyframes sceneIn{from{opacity:0;transform:translateY(20px) scale(.985)}to{transform:none;opacity:1}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes scoreFly{0%{opacity:0;transform:translateX(-26px) translateY(8px) scale(.82)}18%{opacity:1}72%{opacity:1}100%{opacity:0;transform:translateX(50px) translateY(-10px) scale(1.08)}}@keyframes twinkle{0%,100%{transform:scale(.94);opacity:.72}50%{transform:scale(1.14);opacity:1}}
     @media (max-width:980px){
       body{padding:10px}
@@ -257,6 +257,7 @@
         <article class="heroCard" style="width:min(860px,100%)">
           <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" style="width:min(280px,70%);margin-bottom:0">
           <span class="kicker" style="justify-self:center">Cuenta atras</span>
+          <h2 class="subtitle" id="countdownCategory">Cultura general</h2>
           <div class="bigCount" id="countdownValue">4</div>
           <p>Respira. Enseguida empieza la accion.</p>
         </article>
@@ -351,21 +352,21 @@
         </div>
         <div class="gridTwo">
           <div class="field">
-            <label for="customToneInput">Tono</label>
-            <select id="customToneInput">
-              <option value="divertido">Divertido</option>
-              <option value="televisivo">Televisivo</option>
-              <option value="serio">Serio</option>
-              <option value="familiar">Familiar</option>
-            </select>
+            <label>Tono</label>
+            <div class="pillChoices" id="customToneChoices">
+              <button class="pillChoice" data-tone="divertido" type="button">Divertido</button>
+              <button class="pillChoice" data-tone="televisivo" type="button">Televisivo</button>
+              <button class="pillChoice" data-tone="serio" type="button">Serio</button>
+              <button class="pillChoice" data-tone="familiar" type="button">Familiar</button>
+            </div>
           </div>
           <div class="field">
-            <label for="customDifficultyInput">Dificultad</label>
-            <select id="customDifficultyInput">
-              <option value="facil">Facil</option>
-              <option value="media" selected>Media</option>
-              <option value="dificil">Dificil</option>
-            </select>
+            <label>Dificultad</label>
+            <div class="pillChoices" id="customDifficultyChoices">
+              <button class="pillChoice" data-difficulty="facil" type="button">Facil</button>
+              <button class="pillChoice" data-difficulty="media" type="button">Media</button>
+              <button class="pillChoice" data-difficulty="dificil" type="button">Dificil</button>
+            </div>
           </div>
         </div>
         <div class="field">
@@ -397,21 +398,21 @@
       {id:"olympic",icon:"\uD83C\uDFC6",title:"Trivialodon olimpico",desc:"Formato oficial de 40 minutos."}
     ];
     const QUESTION_BANK = [
-      {prompt:"\u00BFQue planeta del sistema solar es conocido como el planeta rojo?",answers:["Venus","Marte","Saturno","Mercurio","Neptuno"],correct:1},
-      {prompt:"\u00BFCual es la capital de Australia?",answers:["Sidney","Melbourne","Canberra","Perth","Brisbane"],correct:2},
-      {prompt:"\u00BFCuantos lados tiene un hexagono?",answers:["5","6","7","8","9"],correct:1},
-      {prompt:"\u00BFCual es el oceano mas grande del planeta?",answers:["Atlantico","Indico","Pacifico","Artico","Antartico"],correct:2},
-      {prompt:"\u00BFCual es el metal principal del bronce?",answers:["Hierro","Cobre","Plata","Aluminio","Zinc"],correct:1},
-      {prompt:"\u00BFCual es el idioma mas hablado del mundo por numero total de hablantes?",answers:["Ingles","Hindi","Espanol","Mandarin","Arabe"],correct:3},
-      {prompt:"\u00BFCual es el resultado de 9 x 7?",answers:["56","63","72","49","58"],correct:1},
-      {prompt:"\u00BFCual de estos animales es un mamifero?",answers:["Pinguino","Cocodrilo","Delfin","Tortuga","Pulpo"],correct:2},
-      {prompt:"\u00BFCual es el continente mas pequeno?",answers:["Europa","Oceania","Antartida","Sudamerica","Africa"],correct:1},
-      {prompt:"\u00BFCual es el gas que respiramos en mayor proporcion en la atmosfera?",answers:["Oxigeno","Dioxido de carbono","Nitrogeno","Helio","Hidrogeno"],correct:2},
-      {prompt:"\u00BFCuantos minutos tiene una hora y media?",answers:["30","60","90","120","150"],correct:2},
-      {prompt:"\u00BFCual es el rio mas largo de Espana?",answers:["Ebro","Tajo","Duero","Guadalquivir","Jucar"],correct:1},
-      {prompt:"\u00BFCual es la primera letra del alfabeto griego?",answers:["Beta","Gamma","Alfa","Delta","Omega"],correct:2},
-      {prompt:"\u00BFCual de estos instrumentos tiene teclas?",answers:["Violin","Trompeta","Piano","Flauta","Tambor"],correct:2},
-      {prompt:"\u00BFCuantos dias tiene un ano bisiesto?",answers:["364","365","366","367","368"],correct:2}
+      {category:"Ciencia",prompt:"\u00BFQue planeta del sistema solar es conocido como el planeta rojo?",answers:["Venus","Marte","Saturno","Mercurio","Neptuno"],correct:1},
+      {category:"Mundo",prompt:"\u00BFCual es la capital de Australia?",answers:["Sidney","Melbourne","Canberra","Perth","Brisbane"],correct:2},
+      {category:"Cultura general",prompt:"\u00BFCuantos lados tiene un hexagono?",answers:["5","6","7","8","9"],correct:1},
+      {category:"Mundo",prompt:"\u00BFCual es el oceano mas grande del planeta?",answers:["Atlantico","Indico","Pacifico","Artico","Antartico"],correct:2},
+      {category:"Historia y cultura",prompt:"\u00BFCual es el metal principal del bronce?",answers:["Hierro","Cobre","Plata","Aluminio","Zinc"],correct:1},
+      {category:"Lengua y cultura",prompt:"\u00BFCual es el idioma mas hablado del mundo por numero total de hablantes?",answers:["Ingles","Hindi","Espanol","Mandarin","Arabe"],correct:3},
+      {category:"Cultura general",prompt:"\u00BFCual es el resultado de 9 x 7?",answers:["56","63","72","49","58"],correct:1},
+      {category:"Naturaleza",prompt:"\u00BFCual de estos animales es un mamifero?",answers:["Pinguino","Cocodrilo","Delfin","Tortuga","Pulpo"],correct:2},
+      {category:"Mundo",prompt:"\u00BFCual es el continente mas pequeno?",answers:["Europa","Oceania","Antartida","Sudamerica","Africa"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFCual es el gas que respiramos en mayor proporcion en la atmosfera?",answers:["Oxigeno","Dioxido de carbono","Nitrogeno","Helio","Hidrogeno"],correct:2},
+      {category:"Cultura general",prompt:"\u00BFCuantos minutos tiene una hora y media?",answers:["30","60","90","120","150"],correct:2},
+      {category:"Espana",prompt:"\u00BFCual es el rio mas largo de Espana?",answers:["Ebro","Tajo","Duero","Guadalquivir","Jucar"],correct:1},
+      {category:"Historia y cultura",prompt:"\u00BFCual es la primera letra del alfabeto griego?",answers:["Beta","Gamma","Alfa","Delta","Omega"],correct:2},
+      {category:"Arte y musica",prompt:"\u00BFCual de estos instrumentos tiene teclas?",answers:["Violin","Trompeta","Piano","Flauta","Tambor"],correct:2},
+      {category:"Cultura general",prompt:"\u00BFCuantos dias tiene un ano bisiesto?",answers:["364","365","366","367","368"],correct:2}
     ];
     const FUN_LINES = ["espera espera, voy!","estoy buscando mi mejor foto","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"];
     const GENERATING_LINES = ["Trivialodon esta buscando preguntas con chispa jurasica...","Trivialodon esta abriendo cajones secretos del saber...","Trivialodon esta peinando datos para que no salgan preguntas sosas...","Trivialodon esta afinando opciones trampa con elegancia televisiva...","Trivialodon esta desenterrando curiosidades frescas del planeta trivia..."];
@@ -428,13 +429,13 @@
       profilePlayers:$("profilePlayers"), profileSideTitle:$("profileSideTitle"), profileSideText:$("profileSideText"), lobbySide:$("lobbySide"), lobbyTitle:$("lobbyTitle"),
       lobbyDesc:$("lobbyDesc"), lobbyPlayers:$("lobbyPlayers"), btnToSetup:$("btnToSetup"), setupSide:$("setupSide"), setupDesc:$("setupDesc"), hostVoteWrap:$("hostVoteWrap"),
       hostVoteCountdown:$("hostVoteCountdown"), voteToggle:$("voteToggle"), modeGrid:$("modeGrid"), durationGrid:$("durationGrid"), setupActions:$("setupActions"),
-      generatingLine:$("generatingLine"), countdownValue:$("countdownValue"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
+      generatingLine:$("generatingLine"), countdownCategory:$("countdownCategory"), countdownValue:$("countdownValue"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
       scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), emojiModal:$("emojiModal"), emojiGrid:$("emojiGrid"), scoreModal:$("scoreModal"), scoreModalRows:$("scoreModalRows"),
       btnCloseEmoji:$("btnCloseEmoji"), btnAcceptEmoji:$("btnAcceptEmoji"), btnCloseScore:$("btnCloseScore"),
       durationModal:$("durationModal"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
       durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
-      customModal:$("customModal"), customThemeInput:$("customThemeInput"), customToneInput:$("customToneInput"), customDifficultyInput:$("customDifficultyInput"), customPromptInput:$("customPromptInput"),
+      customModal:$("customModal"), customThemeInput:$("customThemeInput"), customToneChoices:$("customToneChoices"), customDifficultyChoices:$("customDifficultyChoices"), customPromptInput:$("customPromptInput"),
       btnCloseCustom:$("btnCloseCustom"), btnAcceptCustom:$("btnAcceptCustom")
     };
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
@@ -451,6 +452,18 @@
     const hostCanContinue = () => state.role === "host" && state.players.length > 0 && state.players.every(player => player.ready);
     const modeVotes = id => Object.values(state.game.votes || {}).filter(v => v.mode === id).length;
     const durationVotes = id => Object.values(state.game.votes || {}).filter(v => v.duration === id).length;
+    const shuffle = list => { const copy = [...list]; for(let i = copy.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [copy[i], copy[j]] = [copy[j], copy[i]]; } return copy; };
+    const prepareQuestion = source => {
+      const choices = (source.answers || source.choices || []).map((text, index) => ({text, correct:index === source.correct}));
+      const shuffled = shuffle(choices);
+      return {
+        prompt: source.prompt,
+        category: source.category || "Cultura general",
+        choices: shuffled.map(item => item.text),
+        correct: shuffled.findIndex(item => item.correct),
+        explanation: source.explanation || ""
+      };
+    };
     const fallbackFact = question => {
       const choices = Array.isArray(question?.choices) ? question.choices : [];
       const answer = choices[question?.correct] || "esa opcion";
@@ -473,6 +486,7 @@
     function saveSession(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({role:state.role,roomCode:state.roomCode,name:state.name,ready:state.ready,avatar:state.avatar,game:state.game})); } catch(_){} }
     function clearSession(){ try{ localStorage.removeItem(STORAGE_KEY); } catch(_){} }
     function readSession(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch(_){ return null; } }
+    function syncChoiceGroup(root, key, value){ if(!root) return; root.querySelectorAll(`[data-${key}]`).forEach(btn => btn.classList.toggle("active", btn.dataset[key] === value)); }
     function setStatus(text, tone){ ui.profileStatus.textContent = text; ui.profileStatus.className = `status ${tone || "info"}`; }
     function renderEmojiChoices(){ ui.emojiGrid.innerHTML = EMOJIS.map(([id,color]) => `<button class="emojiChoice ${state.selectedEmoji === id ? "active" : ""}" data-emoji="${id}" type="button"><div class="emojiBall" style="background:${color}22;border:1px solid ${color}55">\uD83E\uDD96</div><strong>${esc(id)}</strong></button>`).join(""); ui.emojiGrid.querySelectorAll("[data-emoji]").forEach(btn => btn.onclick = () => { state.selectedEmoji = btn.dataset.emoji; renderEmojiChoices(); }); }
     function emojiDataUrl(id){ const color = Object.fromEntries(EMOJIS)[id] || "#56d364"; const canvas = document.createElement("canvas"); canvas.width = 220; canvas.height = 220; const ctx = canvas.getContext("2d"); ctx.fillStyle = `${color}22`; ctx.beginPath(); ctx.arc(110,110,108,0,Math.PI * 2); ctx.fill(); ctx.font = "120px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("\uD83E\uDD96",110,118); return canvas.toDataURL("image/png"); }
@@ -512,13 +526,12 @@
       ui.modeGrid.innerHTML = renderSetupCards(MODES, "mode", state.game.selectedMode);
       ui.durationGrid.innerHTML = renderSetupCards(DURATIONS, "duration", state.game.selectedDuration);
       if(state.role === "host"){
-        ui.setupDesc.textContent = "Elige el modo y la duracion. Si usas Personalizado, Trivialodon preparara un lote entero acorde a esa duracion.";
-        ui.setupLayout.style.gridTemplateColumns = "minmax(320px,420px) minmax(0,1fr)";
-        ui.setupLayout.style.width = "min(1200px,100%)";
-        ui.setupLayout.style.justifyContent = "stretch";
-        ui.setupSide.hidden = false;
-        ui.setupSide.style.display = "grid";
-        ui.setupSide.innerHTML = `<span class="kicker">Direccion</span><h2 class="subtitle">Tu decides el formato</h2><p>${state.game.selectedMode === "custom" ? `Trivialodon preparara ${plannedQuestionCount()} preguntas para ${durationLabel() || "la duracion elegida"}.` : `La ronda tendra ${plannedQuestionCount()} preguntas para ${durationLabel() || "la duracion elegida"}.`}</p><div class="countPill">${state.game.voteDeadline ? countText(state.game.voteDeadline) : "Sin cuenta atras"}</div>`;
+        ui.setupDesc.textContent = "Elige el modo y la duracion de esta partida. Cuando lo tengas claro, lanzamos la ronda.";
+        ui.setupLayout.style.gridTemplateColumns = "minmax(320px,980px)";
+        ui.setupLayout.style.width = "min(980px,100%)";
+        ui.setupLayout.style.justifyContent = "center";
+        ui.setupSide.hidden = true;
+        ui.setupSide.style.display = "none";
         ui.setupActions.innerHTML = `<div class="field" style="min-width:180px"><label for="leadSecondsInput">Mostrar pregunta sola</label><input id="leadSecondsInput" type="number" min="0" max="30" value="${Number(state.game.questionLeadSeconds || 6)}"></div><div class="field" style="min-width:180px"><label for="answerSecondsInput">Tiempo para responder</label><input id="answerSecondsInput" type="number" min="5" max="60" value="${Number(state.game.answerSeconds || 15)}"></div><button class="btn btnGhost" id="btnUseMajority" type="button">Usar mayoria</button><button class="btn btnPrimary" id="btnStartRound" type="button" ${!(state.game.selectedMode && state.game.selectedDuration) ? "disabled" : ""}>${state.game.selectedMode === "custom" ? `Generar ${plannedQuestionCount()} preguntas` : `Empezar ${plannedQuestionCount()} preguntas`}</button>`;
         $("leadSecondsInput").onchange = async ev => { state.game.questionLeadSeconds = Math.max(0, Math.min(30, Number(ev.target.value || 6))); await broadcastGame(); renderCurrentScene(); };
         $("answerSecondsInput").onchange = async ev => { state.game.answerSeconds = Math.max(5, Math.min(60, Number(ev.target.value || 15))); await broadcastGame(); renderCurrentScene(); };
@@ -557,9 +570,9 @@
               renderCurrentScene();
               return;
             }
-            state.game.questionSet = generated.map(item => ({prompt:item.question,answers:item.choices,correct:item.correct_index,explanation:item.explanation || ""}));
+            state.game.questionSet = shuffle(generated.map(item => ({prompt:item.question,answers:item.choices,correct:item.correct_index,explanation:item.explanation || "",category:item.category || "Personalizado"})));
           } else {
-            state.game.questionSet = activeQuestionSet().slice(0, plannedQuestionCount());
+            state.game.questionSet = shuffle(QUESTION_BANK).slice(0, plannedQuestionCount());
           }
           state.game.phase = "countdown";
           state.game.countdownEndAt = Date.now() + 4000;
@@ -584,8 +597,8 @@
               state.game.selectedMode = id;
               if(id === "custom"){
                 ui.customThemeInput.value = state.game.customConfig.theme || "";
-                ui.customToneInput.value = state.game.customConfig.tone || "divertido";
-                ui.customDifficultyInput.value = state.game.customConfig.difficulty || "media";
+                syncChoiceGroup(ui.customToneChoices, "tone", state.game.customConfig.tone || "divertido");
+                syncChoiceGroup(ui.customDifficultyChoices, "difficulty", state.game.customConfig.difficulty || "media");
                 ui.customPromptInput.value = state.game.customConfig.customPrompt || "";
                 ui.customModal.classList.add("on");
               }
@@ -619,7 +632,7 @@
         };
       });
     }
-    function renderCountdownScene(){ const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - Date.now()) / 1000)) : 4; ui.countdownValue.textContent = String(left); }
+    function renderCountdownScene(){ const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - Date.now()) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; ui.countdownCategory.textContent = next?.category || "Cultura general"; ui.countdownValue.textContent = String(left); }
     function renderQuestionScene(){ const question = state.game.question || {prompt:"",choices:[],correct:0,endAt:Date.now(),revealed:false,responses:{}}; const choices = Array.isArray(question.choices) ? question.choices : []; const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt; const left = answersVisible ? Math.max(0, Math.ceil((question.endAt - Date.now()) / 1000)) : Math.max(0, Math.ceil((question.answersVisibleAt - Date.now()) / 1000)); const total = answersVisible ? Math.max(1, Number(state.game.answerSeconds || 15)) : Math.max(1, Number(state.game.questionLeadSeconds || 6)); const progress = Math.max(0, Math.min(1, left / total)); const wasCorrect = state.localAnswer === question.correct; ui.questionPrompt.textContent = question.prompt; ui.questionCopy.textContent = question.revealed ? "Tiempo. Mira la correcta y quédate con el dato curioso." : (answersVisible ? (state.role === "host" ? `Pregunta ${(state.game.questionIndex || 0) + 1} de ${activeQuestionSet().length}` : "Marca tu respuesta antes de que termine la cuenta atras.") : "Lee la pregunta. Las opciones aparecen enseguida."); ui.questionTimer.textContent = String(left); ui.questionTimerRing.style.setProperty("--timer", progress); if(!answersVisible){ ui.questionAnswers.innerHTML = `<article class="answerCard" style="justify-content:center;text-align:center"><span class="answerText">Preparando respuestas...</span></article>`; return; } const cards = choices.map((answer, index) => { const revealCorrect = question.revealed && question.correct === index; const revealWrong = question.revealed && state.localAnswer === index && state.localAnswer !== question.correct; const sparkle = question.revealed && wasCorrect && revealCorrect; return `<button class="answerCard ${state.localAnswer === index ? "active" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""} ${sparkle ? "sparkle" : ""}" data-answer="${index}" ${question.revealed || left === 0 ? "disabled" : ""}><span class="answerText"><span class="answerKey">${String.fromCharCode(65 + index)}</span> ${esc(answer)}</span><span class="answerState">${revealCorrect ? "Correcta" : (revealWrong ? "Tu respuesta" : (state.localAnswer === index ? "Elegida" : "Elegir"))}</span></button>`; }).join(""); const fact = question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Fun fact</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : ""; ui.questionAnswers.innerHTML = fact + cards; ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => { btn.onclick = async () => { const answerIndex = Number(btn.dataset.answer); const answeredAt = Date.now(); state.localAnswer = answerIndex; renderQuestionScene(); if(state.role === "host"){ state.game.question.responses[state.playerId] = {answerIndex,answeredAt}; await broadcastGame(); } else { await state.channel.send({type:"broadcast",event:"guest_answer",payload:{playerId:state.playerId,answerIndex,answeredAt}}); } }; }); }
     function renderAnswerScene(){ const question = state.game.question; const choices = Array.isArray(question.choices) ? question.choices : []; ui.answerCorrect.textContent = choices[question.correct] || ""; ui.answerPrompt.textContent = question.prompt; }
     function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? "Lider actual" : "En carrera"}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>Aun no hay puntuaciones.</p>`; ui.scoresTitle.textContent = leader ? `${leader.name} lidera la partida` : "Puntuacion del round"; ui.scoresLead.textContent = leader ? `${leader.score} puntos acumulados` : "Todavia no hay puntuaciones."; ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; }
@@ -652,13 +665,13 @@
     ui.btnCloseCustom.onclick = () => ui.customModal.classList.remove("on");
     ui.btnAcceptCustom.onclick = async () => {
       state.game.customConfig.theme = ui.customThemeInput.value.trim();
-      state.game.customConfig.tone = ui.customToneInput.value;
-      state.game.customConfig.difficulty = ui.customDifficultyInput.value;
       state.game.customConfig.customPrompt = ui.customPromptInput.value.trim();
       ui.customModal.classList.remove("on");
       await broadcastGame();
       renderCurrentScene();
     };
+    ui.customToneChoices.querySelectorAll("[data-tone]").forEach(btn => btn.onclick = () => { state.game.customConfig.tone = btn.dataset.tone; syncChoiceGroup(ui.customToneChoices, "tone", state.game.customConfig.tone); });
+    ui.customDifficultyChoices.querySelectorAll("[data-difficulty]").forEach(btn => btn.onclick = () => { state.game.customConfig.difficulty = btn.dataset.difficulty; syncChoiceGroup(ui.customDifficultyChoices, "difficulty", state.game.customConfig.difficulty); });
     document.addEventListener("click", ev => { if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open"); });
     ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; await connectRoom("host", roomCode()); renderCurrentScene(); };
     ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); };
@@ -684,9 +697,11 @@
     ui.btnReady.onclick = async () => { const name = ui.nameInput.value.trim(); if(!name){ setStatus("Necesito tu nombre antes de continuar.","danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus("Prepara tu avatar antes de continuar.","danger"); return; } state.name = name; if(!state.avatar.rendered) state.avatar.rendered = await exportAvatar(); state.ready = true; await updatePresence(); syncPlayers(); setStatus("Tu ficha ya esta lista.","ok"); renderCurrentScene(); };
     ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.votes = {}; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; await broadcastGame(); renderCurrentScene(); };
     ui.voteToggle.onclick = async () => { if(state.role !== "host") return; state.game.allowVotes = !state.game.allowVotes; state.game.voteDeadline = state.game.allowVotes ? (Date.now() + 60000) : 0; await broadcastGame(); renderCurrentScene(); };
-    setInterval(async () => { if(state.game.phase === "setup" && state.game.allowVotes && state.game.voteDeadline){ ui.hostVoteCountdown.textContent = countText(state.game.voteDeadline); if(Date.now() >= state.game.voteDeadline && state.role === "host"){ if(!state.game.selectedMode) state.game.selectedMode = "classic"; if(!state.game.selectedDuration) state.game.selectedDuration = "olympic"; if(state.game.selectedDuration === "olympic") state.game.selectedDurationValue = 40; state.game.allowVotes = false; await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "generating"){ renderGeneratingScene(); } if(state.game.phase === "countdown"){ renderCountdownScene(); if(state.role === "host" && state.game.countdownEndAt && Date.now() >= state.game.countdownEndAt){ const bank = activeQuestionSet(); const q = bank[state.game.questionIndex || 0]; const leadMs = Math.max(0, Number(state.game.questionLeadSeconds || 6)) * 1000; const answerMs = Math.max(5, Number(state.game.answerSeconds || 15)) * 1000; const answersVisibleAt = Date.now() + leadMs; state.game.phase = "question"; state.game.question = {prompt:q.prompt, choices:[...(q.answers || q.choices || [])], correct:q.correct, answersVisibleAt, endAt:answersVisibleAt + answerMs, responses:{}, revealed:false, explanation:q.explanation || ""}; await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "question" && state.game.question){ renderQuestionScene(); if(Date.now() >= state.game.question.endAt && !state.game.question.revealed && state.role === "host"){ state.game.question.revealed = true; const scores = {...(state.game.scores || {})}; const deltas = {}; const correct = Object.entries(state.game.question.responses || {}).map(([playerId, response]) => ({playerId,answerIndex:Number(response?.answerIndex),answeredAt:Number(response?.answeredAt || Number.MAX_SAFE_INTEGER)})).filter(entry => entry.answerIndex === state.game.question.correct).sort((a,b) => a.answeredAt - b.answeredAt); correct.forEach((entry, idx) => { const gain = idx === 0 && correct.length > 1 ? 110 : 100; scores[entry.playerId] = (scores[entry.playerId] || 0) + gain; deltas[entry.playerId] = gain; }); state.game.scores = scores; state.game.lastRoundScores = deltas; state.game.phase = "answer"; state.game.answerShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "answer" && state.role === "host" && Date.now() - state.game.answerShownAt >= 7000){ state.game.phase = "scores"; state.game.scoresShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } if(state.game.phase === "scores" && state.role === "host" && Date.now() - state.game.scoresShownAt >= 8000){ state.localAnswer = null; if((state.game.questionIndex || 0) + 1 < activeQuestionSet().length){ state.game.questionIndex = (state.game.questionIndex || 0) + 1; state.game.phase = "countdown"; state.game.question = null; state.game.countdownEndAt = Date.now() + 4000; state.game.lastRoundScores = {}; await broadcastGame(); renderCurrentScene(); return; } state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.votes = {}; state.game.question = null; state.game.questionIndex = 0; state.game.questionSet = []; state.game.lastRoundScores = {}; await broadcastGame(); renderCurrentScene(); } }, 1000);
+    setInterval(async () => { if(state.game.phase === "setup" && state.game.allowVotes && state.game.voteDeadline){ ui.hostVoteCountdown.textContent = countText(state.game.voteDeadline); if(Date.now() >= state.game.voteDeadline && state.role === "host"){ if(!state.game.selectedMode) state.game.selectedMode = "classic"; if(!state.game.selectedDuration) state.game.selectedDuration = "olympic"; if(state.game.selectedDuration === "olympic") state.game.selectedDurationValue = 40; state.game.allowVotes = false; await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "generating"){ renderGeneratingScene(); } if(state.game.phase === "countdown"){ renderCountdownScene(); if(state.role === "host" && state.game.countdownEndAt && Date.now() >= state.game.countdownEndAt){ const bank = activeQuestionSet(); const q = bank[state.game.questionIndex || 0]; const prepared = prepareQuestion(q); const leadMs = Math.max(0, Number(state.game.questionLeadSeconds || 6)) * 1000; const answerMs = Math.max(5, Number(state.game.answerSeconds || 15)) * 1000; const answersVisibleAt = Date.now() + leadMs; state.game.phase = "question"; state.game.question = {prompt:prepared.prompt, category:prepared.category, choices:prepared.choices, correct:prepared.correct, answersVisibleAt, endAt:answersVisibleAt + answerMs, responses:{}, revealed:false, explanation:prepared.explanation || ""}; await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "question" && state.game.question){ renderQuestionScene(); if(Date.now() >= state.game.question.endAt && !state.game.question.revealed && state.role === "host"){ state.game.question.revealed = true; const scores = {...(state.game.scores || {})}; const deltas = {}; const correct = Object.entries(state.game.question.responses || {}).map(([playerId, response]) => ({playerId,answerIndex:Number(response?.answerIndex),answeredAt:Number(response?.answeredAt || Number.MAX_SAFE_INTEGER)})).filter(entry => entry.answerIndex === state.game.question.correct).sort((a,b) => a.answeredAt - b.answeredAt); correct.forEach((entry, idx) => { const gain = idx === 0 && correct.length > 1 ? 110 : 100; scores[entry.playerId] = (scores[entry.playerId] || 0) + gain; deltas[entry.playerId] = gain; }); state.game.scores = scores; state.game.lastRoundScores = deltas; state.game.phase = "answer"; state.game.answerShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "answer" && state.role === "host" && Date.now() - state.game.answerShownAt >= 7000){ state.game.phase = "scores"; state.game.scoresShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } if(state.game.phase === "scores" && state.role === "host" && Date.now() - state.game.scoresShownAt >= 8000){ state.localAnswer = null; if((state.game.questionIndex || 0) + 1 < activeQuestionSet().length){ state.game.questionIndex = (state.game.questionIndex || 0) + 1; state.game.phase = "countdown"; state.game.question = null; state.game.countdownEndAt = Date.now() + 4000; state.game.lastRoundScores = {}; await broadcastGame(); renderCurrentScene(); return; } state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.votes = {}; state.game.question = null; state.game.questionIndex = 0; state.game.questionSet = []; state.game.lastRoundScores = {}; await broadcastGame(); renderCurrentScene(); } }, 1000);
     const savedSession = readSession();
     if(savedSession?.role && savedSession?.roomCode){ ui.btnContinue.hidden = false; }
+    syncChoiceGroup(ui.customToneChoices, "tone", state.game.customConfig.tone);
+    syncChoiceGroup(ui.customDifficultyChoices, "difficulty", state.game.customConfig.difficulty);
     renderEmojiChoices();
     applyAvatar();
     renderCurrentScene();
