@@ -372,6 +372,7 @@
     ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); };
     ui.btnJoinBack.onclick = () => location.reload();
     ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 6){ ui.joinStatus.textContent = "Necesito un codigo valido de 6 caracteres."; return; } ui.joinStatus.textContent = "Entrando en la sala..."; await connectRoom("guest", code); renderCurrentScene(); };
+    ui.joinCodeOnlyInput.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); ui.btnJoinNext.click(); } });
     ui.btnBack.onclick = () => location.reload();
     ui.btnUpload.onclick = () => ui.photoInput.click();
     ui.avatarStage.onclick = () => { if(!state.avatar.src) ui.photoInput.click(); };
