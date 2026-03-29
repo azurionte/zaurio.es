@@ -43,6 +43,56 @@
     .hero.compact .titleWrap{padding-right:120px}
     .hero.scores{align-content:start;justify-items:center;text-align:center}
     .hero.scores .titleWrap{justify-items:center;text-align:center;max-width:min(980px,92%);margin:0 auto}
+    .hero.scores.tvStage{align-content:center;gap:26px}
+    .scoreStage{display:grid;gap:18px;width:min(1180px,100%);margin:0 auto}
+    .scoreLead{padding:20px 24px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,216,74,.16),rgba(255,125,207,.12));display:grid;gap:8px;justify-items:center;text-align:center}
+    .scoreLead strong{font-size:clamp(2rem,3.6vw,3.2rem);line-height:1}
+    .scoreLead span{font-size:1.02rem;color:var(--muted)}
+    .scoreGridTv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .tvScoreWrap{display:grid;gap:20px;width:min(1520px,100%);margin:0 auto;align-content:start}
+    .tvScoreHero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(380px,.8fr);gap:18px;align-items:stretch}
+    .tvLeaderHero{padding:28px 32px;border-radius:32px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(135deg,rgba(255,216,74,.2),rgba(255,125,207,.14));display:grid;gap:12px;align-content:center;min-height:230px}
+    .tvLeaderHero .kick{justify-self:start}
+    .tvLeaderHero h2{margin:0;font-size:clamp(2.6rem,4.3vw,4.8rem);line-height:.9}
+    .tvLeaderHero p{margin:0;font-size:1.06rem;color:var(--muted);line-height:1.4}
+    .tvLeaderBadge{padding:22px 24px;border-radius:30px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center}
+    .tvLeaderBadge .avatar{width:74px;height:74px}
+    .tvLeaderBadge .playerName{font-size:1.5rem}
+    .tvLeaderBadge .playerSub{font-size:.9rem}
+    .tvLeaderBadge .points{font-size:2.4rem}
+    .tvRankGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .tvRankCard{padding:16px 18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;grid-template-columns:32px 44px minmax(0,1fr) auto;gap:12px;align-items:center}
+    .tvRankCard .rank{width:32px;height:32px}
+    .tvRankCard .avatar{width:44px;height:44px}
+    .tvRankCard .playerName{font-size:1.06rem}
+    .tvRankCard .points{font-size:1.22rem}
+    .tvPodiumStage{display:grid;gap:22px;width:min(1580px,100%);margin:0 auto}
+    .tvPodiumHero{display:grid;gap:10px;justify-items:center;text-align:center}
+    .tvPodiumHero .kick{justify-self:center}
+    .tvPodiumHero h2{margin:0;font-size:clamp(3rem,5vw,5.5rem);line-height:.9}
+    .tvPodiumHero p{margin:0;color:var(--muted);font-size:1.04rem}
+    .tvPodium{display:grid;gap:20px;align-items:end;min-height:450px}
+    .tvPodium.trio{grid-template-columns:1fr 1.18fr 1fr}
+    .tvPodium.duo{grid-template-columns:1fr 1.18fr}
+    .tvPodium.solo{grid-template-columns:minmax(360px,560px);justify-content:center}
+    .tvPodiumCard{padding:22px 20px;border-radius:34px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);display:grid;justify-items:center;text-align:center;gap:12px;position:relative;overflow:hidden}
+    .tvPodiumCard.first{min-height:390px;background:linear-gradient(180deg,rgba(255,216,74,.26),rgba(255,125,207,.16))}
+    .tvPodiumCard.second{min-height:310px;background:linear-gradient(180deg,rgba(196,214,255,.16),rgba(255,255,255,.06))}
+    .tvPodiumCard.third{min-height:270px;background:linear-gradient(180deg,rgba(255,180,120,.18),rgba(255,255,255,.05))}
+    .tvPodiumCard::after{content:"";position:absolute;inset:auto 0 0 0;height:34%;background:linear-gradient(180deg,transparent,rgba(0,0,0,.16))}
+    .tvPodiumRank{position:relative;z-index:1;font-size:.92rem;font-weight:1000;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .tvPodiumAvatar{position:relative;z-index:1;width:126px;height:126px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:0 18px 34px rgba(0,0,0,.22)}
+    .tvPodiumAvatar img{width:100%;height:100%;object-fit:cover}
+    .tvPodiumName{position:relative;z-index:1;font-size:clamp(1.4rem,2.2vw,2.15rem);font-weight:1000;line-height:1}
+    .tvPodiumMeta{position:relative;z-index:1;font-size:.94rem;color:var(--muted)}
+    .tvPodiumPoints{position:relative;z-index:1;font-size:clamp(2rem,3vw,3rem);font-weight:1000;color:var(--gold)}
+    .tvRestGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .tvRestCard{padding:14px 16px;border-radius:22px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;grid-template-columns:28px 38px minmax(0,1fr) auto;gap:10px;align-items:center}
+    .tvRestCard .rank{width:28px;height:28px;font-size:.72rem}
+    .tvRestCard .avatar{width:38px;height:38px}
+    .tvRestCard .playerName{font-size:.96rem}
+    .tvRestCard .playerSub{font-size:.72rem}
+    .tvRestCard .points{font-size:1rem}
     .titleWrap{display:grid;gap:12px}
     .title{margin:0;font-size:clamp(2.6rem,5vw,5.5rem);line-height:.94;font-weight:1000}
     .copy{margin:0;color:var(--muted);font-size:1.04rem;line-height:1.48}
@@ -185,9 +235,15 @@
     body.vertical.phase-scores .podiumAvatar{width:54px;height:54px}
     body.vertical.phase-scores .podiumName{font-size:.86rem}
     body.vertical.phase-scores .podiumMeta{font-size:.64rem}
-    body.vertical.phase-scores .podiumPoints{font-size:1.1rem}
+      body.vertical.phase-scores .podiumPoints{font-size:1.1rem}
     @media (max-width:980px){
       .answers{grid-template-columns:1fr}
+      .scoreGridTv{grid-template-columns:1fr}
+      .tvScoreHero{grid-template-columns:1fr}
+      .tvRankGrid{grid-template-columns:1fr 1fr}
+      .tvRestGrid{grid-template-columns:1fr 1fr}
+      .tvPodium.trio,.tvPodium.duo,.tvPodium.solo{grid-template-columns:1fr}
+      .tvPodiumCard,.tvPodiumCard.first,.tvPodiumCard.second,.tvPodiumCard.third{min-height:auto}
       .podium{grid-template-columns:1fr}
       .podiumCard,.podiumCard.first,.podiumCard.second,.podiumCard.third{min-height:auto}
     }
@@ -676,6 +732,29 @@
       const visible = rows.slice(0, visibleCount);
       const leader = visible[0];
       const rest = visible.slice(1);
+      if(!isVertical){
+        const tvRows = visible.slice(0, 6);
+        const leaderRow = tvRows[0];
+        const chaseRows = tvRows.slice(1);
+        ui.hero.className = "hero scores tvStage";
+        ui.hero.innerHTML = `<div class="scoreStage">
+            <div class="titleWrap">
+              <span class="kick">Marcador</span>
+              <h1 class="title">Puntuacion del round</h1>
+            </div>
+            <article class="scoreLead">
+              <strong>${esc(leaderRow.name || "Jugador")} manda por ahora</strong>
+              <span>${leaderRow.score} puntos acumulados${chaseRows.length ? " · La tabla se aprieta para la siguiente." : ""}</span>
+            </article>
+            <div class="scoreGridTv">
+              ${tvRows.map((player, index) => `<article class="roundRow ${index === 0 ? "leader" : ""}"><div class="rank">#${index + 1}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}
+            </div>
+            ${rows.length > visibleCount ? `<div class="moreLine">+${rows.length - visibleCount} jugadores mas</div>` : ""}
+          </div>`;
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = "";
+        return;
+      }
       ui.answers.className = "answers";
       ui.answers.innerHTML = `<div class="roundBoard" style="grid-column:1/-1">
         <article class="roundHeadline">
@@ -693,6 +772,122 @@
         </div>
         ${rows.length > visibleCount ? `<div class="moreLine">+${rows.length - visibleCount} jugadores mas</div>` : ""}
       </div>`;
+    }
+
+    function renderScoresPhase(){
+      ui.hero.className = "hero scores";
+      lastAnswersVisible = false;
+      ui.category.textContent = "Marcador";
+      ui.prompt.textContent = game.finished ? "Podio final" : "Puntuacion del round";
+      ui.copy.textContent = "";
+      setTimer("", 0, false);
+      ui.hero.innerHTML = "";
+      ui.fact.classList.add("hidden");
+      const rows = scoreRows();
+      if(!rows.length){
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">El marcador aparecera aqui.</div>`;
+        return;
+      }
+
+      const isVertical = document.body.classList.contains("vertical");
+      const leader = rows[0];
+
+      if(game.finished){
+        if(isVertical){
+          const topThree = [rows[0], rows[1], rows[2]].filter(Boolean);
+          const classes = ["first","second","third"];
+          const ranks = ["1º","2º","3º"];
+          const remainder = rows.slice(3, 7);
+          ui.hero.className = "hero scores center";
+          ui.hero.innerHTML = `<div class="titleWrap">
+                <span class="kick">Marcador</span>
+                <h1 class="title">Podio final</h1>
+              </div>
+              <div class="podiumBoard">
+                <div class="podium">
+                  ${topThree.map((player, index) => `<article class="podiumCard ${classes[index]}"><div class="podiumRank">${ranks[index]}</div><div class="podiumAvatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div class="podiumName">${esc(player.name || "Jugador")}</div><div class="podiumMeta">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div><div class="podiumPoints">${player.score}</div></article>`).join("")}
+                </div>
+                ${remainder.length ? `<div class="restBoard">${remainder.map((player, index) => `<article class="roundRow"><div class="rank">#${index + 4}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}${rows.length > 7 ? `<div class="moreLine">+${rows.length - 7} jugadores mas</div>` : ""}</div>` : ""}
+              </div>`;
+          ui.answers.className = "answers";
+          ui.answers.innerHTML = "";
+          return;
+        }
+
+        const podiumEntries = [
+          rows[1] ? { player: rows[1], cls: "second", rank: "2º" } : null,
+          rows[0] ? { player: rows[0], cls: "first", rank: "1º" } : null,
+          rows[2] ? { player: rows[2], cls: "third", rank: "3º" } : null
+        ].filter(Boolean);
+        const remainder = rows.slice(3, 11);
+        const podiumMode = podiumEntries.length === 1 ? "solo" : podiumEntries.length === 2 ? "duo" : "trio";
+        ui.hero.className = "hero scores center";
+        ui.hero.innerHTML = `<div class="tvPodiumStage">
+            <div class="tvPodiumHero">
+              <span class="kick">Marcador</span>
+              <h2>Podio final</h2>
+              <p>${esc(leader.name || "Jugador")} cierra la partida al frente con ${leader.score} puntos.</p>
+            </div>
+            <div class="tvPodium ${podiumMode}">
+              ${podiumEntries.map((entry) => `<article class="tvPodiumCard ${entry.cls}"><div class="tvPodiumRank">${entry.rank}</div><div class="tvPodiumAvatar">${entry.player.avatarSrc ? `<img src="${entry.player.avatarSrc}" alt="">` : "🦖"}</div><div class="tvPodiumName">${esc(entry.player.name || "Jugador")}</div><div class="tvPodiumMeta">${esc(entry.player.role === "host" ? "Anfitrion" : "Invitado")}</div><div class="tvPodiumPoints">${entry.player.score}</div></article>`).join("")}
+            </div>
+            ${remainder.length ? `<div class="tvRestGrid">${remainder.map((player, index) => `<article class="tvRestCard"><div class="rank">#${index + 4}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}</div>` : ""}${rows.length > 11 ? `<div class="moreLine">+${rows.length - 11} jugadores mas</div>` : ""}
+          </div>`;
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = "";
+        return;
+      }
+
+      if(isVertical){
+        const visible = rows.slice(0, 10);
+        const rest = visible.slice(1);
+        ui.hero.className = "hero scores center";
+        ui.hero.innerHTML = `<div class="titleWrap">
+              <span class="kick">Marcador</span>
+              <h1 class="title">Puntuacion del round</h1>
+            </div>
+            <div class="roundBoard">
+              <article class="roundHeadline">
+                <strong>${esc(leader.name || "Jugador")} manda por ahora</strong>
+                <span>${leader.score} puntos acumulados${rest.length ? " · El resto aprieta para la siguiente." : ""}</span>
+              </article>
+              <div class="roundGrid">
+                <article class="roundRow leader">
+                  <div class="rank">#1</div>
+                  <div class="avatar">${leader.avatarSrc ? `<img src="${leader.avatarSrc}" alt="">` : "🦖"}</div>
+                  <div><div class="playerName">${esc(leader.name || "Jugador")}</div><div class="playerSub">${esc(leader.role === "host" ? "Anfitrion" : "Invitado")}</div></div>
+                  <div class="points">${leader.score}</div>
+                </article>
+                ${rest.map((player, index) => `<article class="roundRow"><div class="rank">#${index + 2}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}
+              </div>
+              ${rows.length > 10 ? `<div class="moreLine">+${rows.length - 10} jugadores mas</div>` : ""}
+            </div>`;
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = "";
+        return;
+      }
+
+      const visible = rows.slice(0, 9);
+      const rest = visible.slice(1);
+      ui.hero.className = "hero scores center";
+      ui.hero.innerHTML = `<div class="tvScoreWrap">
+          <div class="tvScoreHero">
+            <article class="tvLeaderHero">
+              <span class="kick">Marcador</span>
+              <h2>${esc(leader.name || "Jugador")} lidera el round</h2>
+              <p>${leader.score} puntos acumulados${rest.length ? " · La siguiente ronda puede cambiarlo todo." : ""}</p>
+            </article>
+            <article class="tvLeaderBadge">
+              <div class="avatar">${leader.avatarSrc ? `<img src="${leader.avatarSrc}" alt="">` : "🦖"}</div>
+              <div><div class="playerName">${esc(leader.name || "Jugador")}</div><div class="playerSub">${esc(leader.role === "host" ? "Anfitrion" : "Invitado")}</div></div>
+              <div class="points">${leader.score}</div>
+            </article>
+          </div>
+          ${rest.length ? `<div class="tvRankGrid">${rest.map((player, index) => `<article class="tvRankCard"><div class="rank">#${index + 2}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}</div>` : ""}${rows.length > 9 ? `<div class="moreLine">+${rows.length - 9} jugadores mas</div>` : ""}
+        </div>`;
+      ui.answers.className = "answers";
+      ui.answers.innerHTML = "";
     }
 
     function renderLobby(){

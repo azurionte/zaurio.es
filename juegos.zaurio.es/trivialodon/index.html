@@ -20,9 +20,17 @@
     .soundPanel input[type="range"]{width:100%}
     .soundPanelRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .soundMini{font-size:.9rem;color:#fff;font-weight:900}
-    .profileMenu{position:absolute;top:calc(100% + 10px);right:0;display:none;min-width:240px;padding:10px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20;gap:8px}
+    .profileMenu{position:absolute;top:calc(100% + 10px);right:0;display:none;min-width:260px;padding:10px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20;gap:8px}
     .profileWrap.open .profileMenu{display:grid}
     .profileMenu button{width:100%;justify-content:flex-start;text-align:left}
+    .castRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+    .castMeta{display:grid;gap:4px}
+    .castMeta strong{font-size:1rem}
+    .castMeta span{font-size:.86rem;color:var(--muted)}
+    .castStatus{min-height:22px;font-weight:800}
+    .castStatus.ok{color:#c8ffab}
+    .castStatus.info{color:var(--cyan)}
+    .castStatus.danger{color:var(--danger)}
     .intro{min-height:calc(100vh - 36px);display:grid;place-items:center}.intro.on{display:grid}.intro.off{display:none}.introCard{width:min(760px,100%);padding:48px 38px;text-align:center}.introLogo{width:min(360px,82%);display:block;margin:0 auto 18px;filter:drop-shadow(0 10px 24px rgba(255,0,170,.2))}.introLead{max-width:34ch;margin:0 auto;color:var(--muted);font-size:1.15rem;line-height:1.55}
     .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.actions.center{justify-content:center}.actions.between{justify-content:space-between}.btn{padding:14px 20px;border-radius:999px;font-weight:900;color:#fff;background:rgba(255,255,255,.08);transition:transform .18s ease,opacity .18s ease,background .18s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.btnPrimary{background:linear-gradient(135deg,var(--yellow),var(--pink));color:#2c003d}.btnGhost{background:rgba(255,255,255,.08)}.btnOk{background:rgba(136,225,110,.16);color:#f2ffe8}
     .scene{display:none;animation:sceneIn .42s ease both}.scene.on{display:grid}.sceneWrap{min-height:calc(100vh - 154px)}.sceneCenter{justify-items:center;align-content:start}.sceneSplit{display:grid;grid-template-columns:minmax(320px,440px) minmax(0,1fr);gap:18px;align-items:start}.sceneStack{display:grid;gap:18px}.panel{padding:28px}.panel.narrow{width:min(520px,100%)}.kicker{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
@@ -222,6 +230,7 @@
               </div>
             </button>
             <div class="profileMenu" id="profileMenu">
+              <button class="btn btnGhost" id="btnProfileCast" type="button">📺 Enviar a TV</button>
               <button class="btn btnGhost" id="btnProfileContinue" type="button">Continuar juego</button>
               <button class="btn btnGhost" id="btnProfileNew" type="button">Empezar nueva partida</button>
             </div>
@@ -492,6 +501,34 @@
       </div>
     </div>
   </div>
+  <div class="overlay" id="castModal">
+    <div class="modalCard">
+      <span class="kicker">Chromecast</span>
+      <h2 class="subtitle">Enviar a TV</h2>
+      <p>Emite la pantalla de TV de Trivialodon y controla el audio del Chromecast desde aqui.</p>
+      <div class="castRow">
+        <div class="castMeta">
+          <strong id="castDeviceName">Sin dispositivo conectado</strong>
+          <span id="castDeviceHint">Busca tu Chromecast y lanza la pantalla de TV de la sala actual.</span>
+        </div>
+        <button class="btn btnPrimary" id="btnCastConnect" type="button">Conectar</button>
+      </div>
+      <div class="field" style="gap:6px">
+        <label for="castVolumeInput">Volumen de la TV</label>
+        <input id="castVolumeInput" type="range" min="0" max="100" step="1" value="70">
+      </div>
+      <div class="actions between">
+        <button class="btn btnGhost" id="btnCastMute" type="button">Mute TV</button>
+        <button class="btn btnGhost" id="btnCastDisconnect" type="button">Desconectar</button>
+      </div>
+      <div class="castStatus info" id="castStatus">Chromecast listo para vincularse cuando quieras.</div>
+      <div class="actions between">
+        <span></span>
+        <button class="btn btnPrimary" id="btnCloseCast" type="button">Cerrar</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
@@ -540,10 +577,12 @@
     const ANSWERING_AUDIO_SRC = "/trivialodon/assets/answering.mp3";
     const WINNER_AUDIO_SRC = "/trivialodon/assets/winner.mp3";
     const LOSER_AUDIO_SRC = "/trivialodon/assets/loser.mp3";
+    const CAST_APP_ID = "C5432B88";
+    const CAST_NAMESPACE = "urn:x-cast:zaurio.trivialodon";
     const $ = id => document.getElementById(id);
     const ui = {
       introScene:$("introScene"), shell:$("shell"), btnHost:$("btnHost"), btnGuest:$("btnGuest"), btnContinue:$("btnContinue"), menuWrap:$("menuWrap"), menuBtn:$("menuBtn"),
-      identity:$("identity"), scoreChip:$("scoreChip"), scoreChipValue:$("scoreChipValue"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), btnToggleMute:$("btnToggleMute"), soundVolumeInput:$("soundVolumeInput"), profileWrap:$("profileWrap"), profileMenu:$("profileMenu"), btnProfileContinue:$("btnProfileContinue"), btnProfileNew:$("btnProfileNew"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
+      identity:$("identity"), scoreChip:$("scoreChip"), scoreChipValue:$("scoreChipValue"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), btnToggleMute:$("btnToggleMute"), soundVolumeInput:$("soundVolumeInput"), profileWrap:$("profileWrap"), profileMenu:$("profileMenu"), btnProfileCast:$("btnProfileCast"), btnProfileContinue:$("btnProfileContinue"), btnProfileNew:$("btnProfileNew"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
       scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene")},
       joinCodeOnlyInput:$("joinCodeOnlyInput"), joinStatus:$("joinStatus"), btnJoinBack:$("btnJoinBack"), btnJoinNext:$("btnJoinNext"),
       profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), lobbyLayout:$("lobbyLayout"), setupLayout:$("setupLayout"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"),
@@ -559,7 +598,8 @@
       durationModal:$("durationModal"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
       durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
       customModal:$("customModal"), customThemeInput:$("customThemeInput"), customToneChoices:$("customToneChoices"), customDifficultyChoices:$("customDifficultyChoices"), customPromptInput:$("customPromptInput"),
-      btnCloseCustom:$("btnCloseCustom"), btnAcceptCustom:$("btnAcceptCustom")
+      btnCloseCustom:$("btnCloseCustom"), btnAcceptCustom:$("btnAcceptCustom"),
+      castModal:$("castModal"), castDeviceName:$("castDeviceName"), castDeviceHint:$("castDeviceHint"), btnCastConnect:$("btnCastConnect"), castVolumeInput:$("castVolumeInput"), btnCastMute:$("btnCastMute"), btnCastDisconnect:$("btnCastDisconnect"), castStatus:$("castStatus"), btnCloseCast:$("btnCloseCast")
     };
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
     const state = {
@@ -577,6 +617,7 @@
       winner: new Audio(WINNER_AUDIO_SRC),
       loser: new Audio(LOSER_AUDIO_SRC)
     };
+    const castState = {available:false, session:null, connected:false, deviceName:"", volume:.7, muted:false};
     const esc = value => String(value || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     const normalize = value => String(value || "").replace(/\D/g,"").slice(0,4);
     const countText = ts => { const left = Math.max(0, Math.ceil((ts - Date.now()) / 1000)); return `${String(Math.floor(left / 60)).padStart(2,"0")}:${String(left % 60).padStart(2,"0")}`; };
@@ -818,7 +859,124 @@
     function readSession(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch(_){ return null; } }
     function showResumeModal(){ ui.resumeModal.classList.add("on"); }
     function hideResumeModal(){ ui.resumeModal.classList.remove("on"); }
+    function showCastModal(){ ui.castModal.classList.add("on"); updateCastUi(); }
+    function hideCastModal(){ ui.castModal.classList.remove("on"); }
     function startFreshFromMenu(){ clearSession(); location.reload(); }
+    function setCastStatus(text, type = "info"){ ui.castStatus.textContent = text; ui.castStatus.className = `castStatus ${type}`; }
+    function getCastContext(){ return window.cast?.framework?.CastContext?.getInstance?.() || null; }
+    function getCastSession(){ return getCastContext()?.getCurrentSession?.() || null; }
+    function getCastRawSession(){ return castState.session?.getSessionObj?.() || null; }
+    function refreshCastSessionData(){
+      castState.session = getCastSession();
+      castState.connected = !!castState.session;
+      const raw = getCastRawSession();
+      castState.deviceName = raw?.getCastDevice?.()?.friendlyName || raw?.receiver?.friendlyName || "";
+      const level = raw?.receiver?.volume?.level;
+      const muted = raw?.receiver?.volume?.muted;
+      if(Number.isFinite(level)) castState.volume = Math.max(0, Math.min(1, Number(level)));
+      if(typeof muted === "boolean") castState.muted = muted;
+    }
+    function updateCastUi(){
+      const hostReady = state.role === "host" && !!state.roomCode;
+      if(ui.btnProfileCast) ui.btnProfileCast.hidden = !hostReady;
+      refreshCastSessionData();
+      ui.castDeviceName.textContent = castState.connected ? (castState.deviceName || "Chromecast conectado") : "Sin dispositivo conectado";
+      ui.castDeviceHint.textContent = castState.connected ? `Emitiendo la sala ${state.roomCode || "----"} en la TV.` : "Busca tu Chromecast y lanza la pantalla de TV de la sala actual.";
+      ui.btnCastConnect.textContent = castState.connected ? "Reconectar emision" : "Conectar";
+      ui.btnCastDisconnect.disabled = !castState.connected;
+      ui.btnCastMute.disabled = !castState.connected;
+      ui.castVolumeInput.disabled = !castState.connected;
+      ui.castVolumeInput.value = String(Math.round((castState.volume || 0) * 100));
+      ui.btnCastMute.textContent = castState.muted ? "Activar audio TV" : "Mute TV";
+      if(!castState.available) setCastStatus("Google Cast aun no esta disponible en este navegador.", "danger");
+      else if(castState.connected) setCastStatus(`TV conectada${castState.deviceName ? `: ${castState.deviceName}` : ""}.`, "ok");
+      else setCastStatus("Chromecast listo para vincularse cuando quieras.", "info");
+    }
+    function castPayload(){
+      return {type:"sync", roomCode:state.roomCode, soundOff:false, sentAt:Date.now(), title:"Trivialodon Live"};
+    }
+    function sendCastMessage(payload){
+      if(!castState.connected) return;
+      try{
+        const raw = getCastRawSession();
+        if(raw?.sendMessage) raw.sendMessage(CAST_NAMESPACE, JSON.stringify(payload), ()=>{}, ()=>{});
+      } catch(_){}
+    }
+    function syncCastSession(){
+      if(state.role !== "host" || !state.roomCode || !castState.connected) return;
+      sendCastMessage(castPayload());
+      updateCastUi();
+    }
+    function setCastVolume(level){
+      return new Promise(resolve => {
+        const raw = getCastRawSession();
+        if(!raw?.setReceiverVolumeLevel) return resolve(false);
+        raw.setReceiverVolumeLevel(level, () => {
+          castState.volume = level;
+          castState.muted = level === 0 ? true : castState.muted;
+          updateCastUi();
+          resolve(true);
+        }, () => resolve(false));
+      });
+    }
+    function setCastMuted(muted){
+      return new Promise(resolve => {
+        const raw = getCastRawSession();
+        if(!raw?.setReceiverMuted) return resolve(false);
+        raw.setReceiverMuted(muted, () => {
+          castState.muted = muted;
+          updateCastUi();
+          resolve(true);
+        }, () => resolve(false));
+      });
+    }
+    async function connectCast(){
+      if(state.role !== "host" || !state.roomCode){
+        setCastStatus("Primero necesitamos una sala activa del anfitrion.", "danger");
+        return;
+      }
+      const ctx = getCastContext();
+      if(!ctx){
+        setCastStatus("Google Cast no esta listo todavia en este navegador.", "danger");
+        return;
+      }
+      try{
+        await ctx.requestSession();
+        refreshCastSessionData();
+        syncCastSession();
+        setCastStatus(`Emision enviada${castState.deviceName ? ` a ${castState.deviceName}` : ""}.`, "ok");
+      } catch(error){
+        setCastStatus("No he podido conectar con Chromecast.", "danger");
+      }
+      updateCastUi();
+    }
+    function disconnectCast(){
+      const ctx = getCastContext();
+      try{ ctx?.endCurrentSession?.(true); } catch(_){}
+      castState.session = null;
+      castState.connected = false;
+      castState.deviceName = "";
+      updateCastUi();
+    }
+    window.__onGCastApiAvailable = function(isAvailable){
+      castState.available = !!isAvailable;
+      if(!isAvailable) return updateCastUi();
+      const ctx = getCastContext();
+      if(!ctx) return updateCastUi();
+      ctx.setOptions({
+        receiverApplicationId: CAST_APP_ID,
+        autoJoinPolicy: window.chrome?.cast?.AutoJoinPolicy?.ORIGIN_SCOPED || "origin_scoped"
+      });
+      const evtType = window.cast?.framework?.CastContextEventType?.SESSION_STATE_CHANGED;
+      if(evtType){
+        ctx.addEventListener(evtType, () => {
+          refreshCastSessionData();
+          if(castState.connected) syncCastSession();
+          updateCastUi();
+        });
+      }
+      updateCastUi();
+    };
     function syncChoiceGroup(root, key, value){ if(!root) return; root.querySelectorAll(`[data-${key}]`).forEach(btn => btn.classList.toggle("active", btn.dataset[key] === value)); }
     async function restoreSavedSession(saved){
       if(!saved?.role || !saved?.roomCode) return false;
@@ -858,7 +1016,7 @@
     function setStatus(text, tone){ ui.profileStatus.textContent = text; ui.profileStatus.className = `status ${tone || "info"}`; }
     function renderEmojiChoices(){ ui.emojiGrid.innerHTML = EMOJIS.map(([id,color]) => `<button class="emojiChoice ${state.selectedEmoji === id ? "active" : ""}" data-emoji="${id}" type="button"><div class="emojiBall" style="background:${color}22;border:1px solid ${color}55">\uD83E\uDD96</div><strong>${esc(id)}</strong></button>`).join(""); ui.emojiGrid.querySelectorAll("[data-emoji]").forEach(btn => btn.onclick = () => { state.selectedEmoji = btn.dataset.emoji; renderEmojiChoices(); }); }
     function emojiDataUrl(id){ const color = Object.fromEntries(EMOJIS)[id] || "#56d364"; const canvas = document.createElement("canvas"); canvas.width = 220; canvas.height = 220; const ctx = canvas.getContext("2d"); ctx.fillStyle = `${color}22`; ctx.beginPath(); ctx.arc(110,110,108,0,Math.PI * 2); ctx.fill(); ctx.font = "120px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("\uD83E\uDD96",110,118); return canvas.toDataURL("image/png"); }
-    function updateIdentity(){ ui.identity.hidden = !state.role; ui.scoreChip.hidden = !state.role; updateSoundChip(); ui.identityName.textContent = state.name || "Sin nombre"; ui.identityRole.textContent = state.role === "host" ? "Anfitrion" : "Invitado"; ui.roomBadge.textContent = state.roomCode || "------"; ui.scoreChipValue.textContent = String((state.game.scores && state.game.scores[state.playerId]) || 0); const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; }
+    function updateIdentity(){ ui.identity.hidden = !state.role; ui.scoreChip.hidden = !state.role; updateSoundChip(); ui.identityName.textContent = state.name || "Sin nombre"; ui.identityRole.textContent = state.role === "host" ? "Anfitrion" : "Invitado"; ui.roomBadge.textContent = state.roomCode || "------"; ui.scoreChipValue.textContent = String((state.game.scores && state.game.scores[state.playerId]) || 0); const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; updateCastUi(); }
     function applyAvatar(){ if(state.avatar.kind === "emoji"){ state.avatar.src = emojiDataUrl(state.avatar.emoji); state.avatar.rendered = state.avatar.src; } const src = state.avatar.src; ui.avatarImg.hidden = !src; ui.avatarPlaceholder.hidden = !!src; if(src){ ui.avatarImg.src = src; ui.avatarImg.style.setProperty("--x", `${state.avatar.x}px`); ui.avatarImg.style.setProperty("--y", `${state.avatar.y}px`); ui.avatarImg.style.setProperty("--s", `${state.avatar.s}`); } updateIdentity(); }
     async function readSource(source){ return new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = source; }); }
     async function compressPhoto(file){ const src = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = reject; reader.readAsDataURL(file); }); const img = await readSource(src); const max = 720; const ratio = Math.min(1, max / Math.max(img.width, img.height)); const canvas = document.createElement("canvas"); canvas.width = Math.round(img.width * ratio); canvas.height = Math.round(img.height * ratio); canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height); return canvas.toDataURL("image/jpeg", .9); }
@@ -1009,7 +1167,7 @@
     function renderGeneratingScene(){ const line = GENERATING_LINES[Math.floor(Date.now() / 3200) % GENERATING_LINES.length]; ui.generatingLine.textContent = line; }
     function showScene(name){ Object.entries(ui.scenes).forEach(([key,node]) => node.classList.toggle("on", key === name)); }
     function currentScene(){ if(state.role === "guest" && !state.roomCode) return "join"; if(!state.ready) return "profile"; if(state.game.phase === "lobby") return "lobby"; if(state.game.phase === "setup") return state.role === "guest" && !state.game.allowVotes ? "lobby" : "setup"; if(state.game.phase === "generating") return "generating"; if(state.game.phase === "paused") return "paused"; if(state.game.phase === "countdown") return "countdown"; if(state.game.phase === "question" || state.game.phase === "answer") return "question"; if(state.game.phase === "scores") return "scores"; return "lobby"; }
-    function renderCurrentScene(){ updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderGeneratingScene(); renderPausedScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); renderScoresScene(); saveSession(); showScene(currentScene()); syncAudio(); }
+    function renderCurrentScene(){ updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderGeneratingScene(); renderPausedScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); renderScoresScene(); saveSession(); showScene(currentScene()); syncAudio(); syncCastSession(); }
     async function updatePresence(){ if(!state.channel) return; await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready ? (state.avatar.rendered || state.avatar.src) : "",updatedAt:Date.now()}); }
     async function broadcastGame(){ if(state.role !== "host" || !state.channel) return; await state.channel.send({type:"broadcast",event:"game_state",payload:state.game}); }
     function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
@@ -1276,6 +1434,7 @@
     ui.scoreChip.onclick = () => { renderScoresScene(); ui.scoreModal.classList.add("on"); };
     ui.soundChip.onclick = ev => { ev.stopPropagation(); ui.soundWrap.classList.toggle("open"); };
     ui.identity.onclick = ev => { ev.stopPropagation(); ui.profileWrap.classList.toggle("open"); };
+    ui.btnProfileCast.onclick = () => { ui.profileWrap.classList.remove("open"); showCastModal(); };
     ui.btnToggleMute.onclick = ev => {
       ev.stopPropagation();
       if(audioState.muted){
@@ -1290,6 +1449,17 @@
       if(!audioState.muted) ensureAudioReady();
     };
     ui.btnCloseScore.onclick = () => ui.scoreModal.classList.remove("on");
+    ui.btnCloseCast.onclick = () => hideCastModal();
+    ui.btnCastConnect.onclick = async () => { await connectCast(); };
+    ui.btnCastDisconnect.onclick = () => { disconnectCast(); };
+    ui.btnCastMute.onclick = async () => {
+      const ok = await setCastMuted(!castState.muted);
+      if(!ok) setCastStatus("No he podido cambiar el mute de la TV.", "danger");
+    };
+    ui.castVolumeInput.oninput = async ev => {
+      const ok = await setCastVolume(Math.max(0, Math.min(1, Number(ev.target.value || 0) / 100)));
+      if(!ok) setCastStatus("No he podido ajustar el volumen de la TV.", "danger");
+    };
     ui.btnResumeContinue.onclick = () => hideResumeModal();
     ui.btnResumeNew.onclick = () => startFreshFromMenu();
     ui.btnProfileContinue.onclick = () => { hideResumeModal(); ui.profileWrap.classList.remove("open"); };
