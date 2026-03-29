@@ -11,9 +11,15 @@
     .app{width:min(1320px,100%);margin:0 auto;display:grid;gap:18px}.shell{display:none;gap:18px}.shell.on{display:grid}
     .topbar,.panel,.playerCard,.answerCard,.scoreRow,.modeCard,.modalCard,.heroCard{border:1px solid var(--stroke);border-radius:30px;background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.24),0 0 32px rgba(255,0,170,.08);backdrop-filter:blur(14px)}
     .topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 18px}.topLeft,.topCenter,.topRight{display:flex;align-items:center}.topLeft{justify-content:flex-start}.topCenter{justify-content:center}.topRight{justify-content:flex-end}.logoMark{width:min(230px,42vw);display:block}
-    .menuWrap{position:relative}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.scoreChip,.soundChip{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn img{width:20px;height:20px}
+    .menuWrap,.soundWrap{position:relative}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.scoreChip,.soundChip{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn img{width:20px;height:20px}
     .menuDrop{position:absolute;left:0;top:calc(100% + 10px);display:none;min-width:240px;padding:8px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}.menuDrop img{width:22px;height:22px;object-fit:contain}
-    .identity{max-width:100%}.identity[hidden],.scoreChip[hidden],.soundChip[hidden]{display:none}.scoreChip,.soundChip{margin-right:10px}.scoreValue{font-weight:1000;color:var(--yellow)}.soundLabel{font-weight:900}.miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18))}.miniAvatar img{width:100%;height:100%;object-fit:cover}.identityMeta{display:grid;gap:2px}.identityName{font-size:1rem;font-weight:900}.identityRole{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .identity{max-width:100%}.identity[hidden],.scoreChip[hidden],.soundChip[hidden]{display:none}.scoreChip,.soundChip{margin-right:10px}.scoreValue{font-weight:1000;color:var(--yellow)}.soundGlyph{font-size:1rem;line-height:1}.miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18))}.miniAvatar img{width:100%;height:100%;object-fit:cover}.identityMeta{display:grid;gap:2px}.identityName{font-size:1rem;font-weight:900}.identityRole{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .soundPanel{position:absolute;top:calc(100% + 10px);right:0;display:none;min-width:220px;padding:14px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20;gap:12px}
+    .soundWrap.open .soundPanel{display:grid}
+    .soundPanel label{font-size:.82rem;color:var(--muted);font-weight:800}
+    .soundPanel input[type="range"]{width:100%}
+    .soundPanelRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .soundMini{font-size:.9rem;color:#fff;font-weight:900}
     .intro{min-height:calc(100vh - 36px);display:grid;place-items:center}.intro.on{display:grid}.intro.off{display:none}.introCard{width:min(760px,100%);padding:48px 38px;text-align:center}.introLogo{width:min(360px,82%);display:block;margin:0 auto 18px;filter:drop-shadow(0 10px 24px rgba(255,0,170,.2))}.introLead{max-width:34ch;margin:0 auto;color:var(--muted);font-size:1.15rem;line-height:1.55}
     .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.actions.center{justify-content:center}.actions.between{justify-content:space-between}.btn{padding:14px 20px;border-radius:999px;font-weight:900;color:#fff;background:rgba(255,255,255,.08);transition:transform .18s ease,opacity .18s ease,background .18s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.btnPrimary{background:linear-gradient(135deg,var(--yellow),var(--pink));color:#2c003d}.btnGhost{background:rgba(255,255,255,.08)}.btnOk{background:rgba(136,225,110,.16);color:#f2ffe8}
     .scene{display:none;animation:sceneIn .42s ease both}.scene.on{display:grid}.sceneWrap{min-height:calc(100vh - 154px)}.sceneCenter{justify-items:center;align-content:start}.sceneSplit{display:grid;grid-template-columns:minmax(320px,440px) minmax(0,1fr);gap:18px;align-items:start}.sceneStack{display:grid;gap:18px}.panel{padding:28px}.panel.narrow{width:min(520px,100%)}.kicker{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
@@ -155,7 +161,19 @@
         <div class="topCenter"><img class="logoMark" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon"></div>
         <div class="topRight">
           <button class="scoreChip" id="scoreChip" type="button" hidden><span>Puntos</span><span class="scoreValue" id="scoreChipValue">0</span></button>
-          <button class="soundChip" id="soundChip" type="button" hidden><span>Sonido</span><span class="soundLabel" id="soundChipLabel">On</span></button>
+          <div class="soundWrap" id="soundWrap">
+            <button class="soundChip" id="soundChip" type="button" hidden><span class="soundGlyph" id="soundChipGlyph">🔊</span></button>
+            <div class="soundPanel" id="soundPanel">
+              <div class="soundPanelRow">
+                <span class="soundMini">Sonido</span>
+                <button class="btn btnGhost" id="btnToggleMute" type="button">Mute</button>
+              </div>
+              <div class="field" style="gap:6px">
+                <label for="soundVolumeInput">Volumen</label>
+                <input id="soundVolumeInput" type="range" min="0" max="100" step="1" value="70">
+              </div>
+            </div>
+          </div>
           <div class="identity" id="identity" hidden>
             <div class="miniAvatar" id="identityAvatar"></div>
             <div class="identityMeta">
@@ -461,6 +479,7 @@
     const GENERATING_LINES = ["Trivialodon esta buscando preguntas con chispa jurasica...","Trivialodon esta abriendo cajones secretos del saber...","Trivialodon esta peinando datos para que no salgan preguntas sosas...","Trivialodon esta afinando opciones trampa con elegancia televisiva...","Trivialodon esta desenterrando curiosidades frescas del planeta trivia..."];
     const STORAGE_KEY = "trivialodon-session-v1";
     const SOUND_KEY = "trivialodon-sound-muted-v1";
+    const SOUND_VOLUME_KEY = "trivialodon-sound-volume-v1";
     const WAITING_AUDIO_SRC = "/trivialodon/assets/waiting.mp3";
     const ANSWERING_AUDIO_SRC = "/trivialodon/assets/answering.mp3";
     const WINNER_AUDIO_SRC = "/trivialodon/assets/winner.mp3";
@@ -468,7 +487,7 @@
     const $ = id => document.getElementById(id);
     const ui = {
       introScene:$("introScene"), shell:$("shell"), btnHost:$("btnHost"), btnGuest:$("btnGuest"), btnContinue:$("btnContinue"), menuWrap:$("menuWrap"), menuBtn:$("menuBtn"),
-      identity:$("identity"), scoreChip:$("scoreChip"), scoreChipValue:$("scoreChipValue"), soundChip:$("soundChip"), soundChipLabel:$("soundChipLabel"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
+      identity:$("identity"), scoreChip:$("scoreChip"), scoreChipValue:$("scoreChipValue"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), btnToggleMute:$("btnToggleMute"), soundVolumeInput:$("soundVolumeInput"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
       scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene")},
       joinCodeOnlyInput:$("joinCodeOnlyInput"), joinStatus:$("joinStatus"), btnJoinBack:$("btnJoinBack"), btnJoinNext:$("btnJoinNext"),
       profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), lobbyLayout:$("lobbyLayout"), setupLayout:$("setupLayout"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"),
@@ -494,6 +513,7 @@
     };
     const audioState = {
       muted: localStorage.getItem(SOUND_KEY) === "1",
+      volume: Math.max(0, Math.min(1, Number(localStorage.getItem(SOUND_VOLUME_KEY) || .72))),
       unlocked: false,
       lastFinalCue: "",
       fadeTimers: new Map(),
@@ -563,14 +583,24 @@
     function createLoopDeck(src, targetVolume){
       const tracks = [new Audio(src), new Audio(src)];
       tracks.forEach(track => { track.preload = "auto"; track.loop = false; track.volume = 0; });
-      return {tracks, activeIndex:0, targetVolume, playing:false, transition:false, handoffSeconds:.45};
+      return {tracks, activeIndex:0, baseVolume:targetVolume, targetVolume:targetVolume, playing:false, transition:false, handoffSeconds:.45};
     }
     audioState.decks.waiting = createLoopDeck(WAITING_AUDIO_SRC, .34);
     audioState.decks.answering = createLoopDeck(ANSWERING_AUDIO_SRC, .38);
-    audioState.winner.volume = .52;
-    audioState.loser.volume = .46;
     [audioState.winner,audioState.loser].forEach(track => { track.preload = "auto"; });
-    function updateSoundChip(){ ui.soundChip.hidden = !state.role; ui.soundChipLabel.textContent = audioState.muted ? "Off" : "On"; }
+    function refreshAudioTargets(){
+      audioState.decks.waiting.targetVolume = audioState.decks.waiting.baseVolume * audioState.volume;
+      audioState.decks.answering.targetVolume = audioState.decks.answering.baseVolume * audioState.volume;
+      audioState.winner.volume = .52 * audioState.volume;
+      audioState.loser.volume = .46 * audioState.volume;
+      ui.soundVolumeInput.value = String(Math.round(audioState.volume * 100));
+    }
+    function updateSoundChip(){
+      ui.soundChip.hidden = !state.role;
+      ui.soundChipGlyph.textContent = audioState.muted ? "🔇" : (audioState.volume < .45 ? "🔉" : "🔊");
+      ui.btnToggleMute.textContent = audioState.muted ? "Activar" : "Mute";
+    }
+    refreshAudioTargets();
     function safePause(track){ try{ track.pause(); } catch(_){} }
     function safeRewind(track){ try{ track.currentTime = 0; } catch(_){} }
     function safePlay(track){
@@ -663,6 +693,20 @@
       primeAudio();
       syncAudio();
     }
+    function setVolume(value){
+      audioState.volume = Math.max(0, Math.min(1, Number(value)));
+      try{ localStorage.setItem(SOUND_VOLUME_KEY, String(audioState.volume)); } catch(_){}
+      if(audioState.volume <= 0.001 && !audioState.muted){
+        audioState.muted = true;
+        try{ localStorage.setItem(SOUND_KEY, "1"); } catch(_){}
+      } else if(audioState.volume > 0.001 && audioState.muted){
+        audioState.muted = false;
+        try{ localStorage.setItem(SOUND_KEY, "0"); } catch(_){}
+      }
+      refreshAudioTargets();
+      updateSoundChip();
+      syncAudio();
+    }
     function setMuted(value){
       audioState.muted = !!value;
       try{ localStorage.setItem(SOUND_KEY, audioState.muted ? "1" : "0"); } catch(_){}
@@ -703,7 +747,7 @@
       }
       safePause(audioState.winner);
       safePause(audioState.loser);
-      const useAnswering = scene === "question";
+      const useAnswering = scene === "question" || (scene === "countdown" && state.game.countdownEndAt && (state.game.countdownEndAt - Date.now()) <= 2000);
       const target = useAnswering ? audioState.decks.answering : audioState.decks.waiting;
       const other = useAnswering ? audioState.decks.waiting : audioState.decks.answering;
       ensureDeckPlaying(target);
@@ -920,13 +964,19 @@
     function endDrag(){ drag = null; ui.avatarStage.classList.remove("dragging"); }
     ui.menuBtn.onclick = () => ui.menuWrap.classList.toggle("open");
     ui.scoreChip.onclick = () => { renderScoresScene(); ui.scoreModal.classList.add("on"); };
-    ui.soundChip.onclick = () => {
+    ui.soundChip.onclick = ev => { ev.stopPropagation(); ui.soundWrap.classList.toggle("open"); };
+    ui.btnToggleMute.onclick = ev => {
+      ev.stopPropagation();
       if(audioState.muted){
         setMuted(false);
         ensureAudioReady();
-        return;
+      } else {
+        setMuted(true);
       }
-      setMuted(true);
+    };
+    ui.soundVolumeInput.oninput = ev => {
+      setVolume(Number(ev.target.value || 0) / 100);
+      if(!audioState.muted) ensureAudioReady();
     };
     ui.btnCloseScore.onclick = () => ui.scoreModal.classList.remove("on");
     ui.btnCloseDuration.onclick = () => ui.durationModal.classList.remove("on");
@@ -948,6 +998,7 @@
     ui.customToneChoices.querySelectorAll("[data-tone]").forEach(btn => btn.onclick = () => { state.game.customConfig.tone = btn.dataset.tone; syncChoiceGroup(ui.customToneChoices, "tone", state.game.customConfig.tone); });
     ui.customDifficultyChoices.querySelectorAll("[data-difficulty]").forEach(btn => btn.onclick = () => { state.game.customConfig.difficulty = btn.dataset.difficulty; syncChoiceGroup(ui.customDifficultyChoices, "difficulty", state.game.customConfig.difficulty); });
     document.addEventListener("click", ev => { if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open"); });
+    document.addEventListener("click", ev => { if(!ui.soundWrap.contains(ev.target)) ui.soundWrap.classList.remove("open"); });
     ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
     ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; renderCurrentScene(); ensureAudioReady(); await connectRoom("host", roomCode()); renderCurrentScene(); };
     ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); ensureAudioReady(); renderCurrentScene(); };
