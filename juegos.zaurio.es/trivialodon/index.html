@@ -863,6 +863,15 @@
     function hideCastModal(){ ui.castModal.classList.remove("on"); }
     function startFreshFromMenu(){ clearSession(); location.reload(); }
     function setCastStatus(text, type = "info"){ ui.castStatus.textContent = text; ui.castStatus.className = `castStatus ${type}`; }
+    function isIosLike(){ return /iPad|iPhone|iPod/i.test(navigator.userAgent || "") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
+    function castErrorText(error){
+      const code = error?.code || error?.errorCode || "";
+      const text = String(error?.description || error?.message || "").trim();
+      if(code === "cancel" || code === "cancel_session_error" || code === "cancel_request_session_error") return "Has cancelado la seleccion del Chromecast.";
+      if(code === "receiver_unavailable" || code === "receiver_unavailable_error") return "No encuentro ningun Chromecast disponible ahora mismo.";
+      if(code === "timeout" || code === "timeout_error") return "La conexion con Chromecast ha tardado demasiado.";
+      return text || "No he podido conectar con Chromecast.";
+    }
     function getCastContext(){ return window.cast?.framework?.CastContext?.getInstance?.() || null; }
     function getCastSession(){ return getCastContext()?.getCurrentSession?.() || null; }
     function getCastRawSession(){ return castState.session?.getSessionObj?.() || null; }
@@ -888,7 +897,8 @@
       ui.castVolumeInput.disabled = !castState.connected;
       ui.castVolumeInput.value = String(Math.round((castState.volume || 0) * 100));
       ui.btnCastMute.textContent = castState.muted ? "Activar audio TV" : "Mute TV";
-      if(!castState.available) setCastStatus("Google Cast aun no esta disponible en este navegador.", "danger");
+      if(isIosLike()) setCastStatus("En iPhone o iPad Google Cast web no suele estar disponible. Usa Chrome en escritorio o Android.", "danger");
+      else if(!castState.available) setCastStatus("Google Cast aun no esta disponible en este navegador.", "danger");
       else if(castState.connected) setCastStatus(`TV conectada${castState.deviceName ? `: ${castState.deviceName}` : ""}.`, "ok");
       else setCastStatus("Chromecast listo para vincularse cuando quieras.", "info");
     }
@@ -906,6 +916,21 @@
       if(state.role !== "host" || !state.roomCode || !castState.connected) return;
       sendCastMessage(castPayload());
       updateCastUi();
+    }
+    function syncCastSessionBurst(){
+      syncCastSession();
+      setTimeout(syncCastSession, 400);
+      setTimeout(syncCastSession, 1200);
+    }
+    function fallbackRequestSession(){
+      return new Promise((resolve, reject) => {
+        const req = window.chrome?.cast?.requestSession;
+        if(!req) return reject(new Error("requestSession no disponible"));
+        req(
+          session => resolve(session),
+          err => reject(err || new Error("No he podido abrir el selector de Chromecast."))
+        );
+      });
     }
     function setCastVolume(level){
       return new Promise(resolve => {
@@ -935,18 +960,27 @@
         setCastStatus("Primero necesitamos una sala activa del anfitrion.", "danger");
         return;
       }
+      if(isIosLike()){
+        setCastStatus("En iPhone o iPad Google Cast web no esta soportado aqui. Usa Chrome en escritorio o Android.", "danger");
+        return;
+      }
       const ctx = getCastContext();
-      if(!ctx){
+      if(!ctx && !window.chrome?.cast?.requestSession){
         setCastStatus("Google Cast no esta listo todavia en este navegador.", "danger");
         return;
       }
+      ui.btnCastConnect.disabled = true;
+      setCastStatus("Abriendo selector de Chromecast...", "info");
       try{
-        await ctx.requestSession();
+        if(ctx?.requestSession) await ctx.requestSession();
+        else await fallbackRequestSession();
         refreshCastSessionData();
-        syncCastSession();
+        syncCastSessionBurst();
         setCastStatus(`Emision enviada${castState.deviceName ? ` a ${castState.deviceName}` : ""}.`, "ok");
       } catch(error){
-        setCastStatus("No he podido conectar con Chromecast.", "danger");
+        setCastStatus(castErrorText(error), "danger");
+      } finally {
+        ui.btnCastConnect.disabled = false;
       }
       updateCastUi();
     }
