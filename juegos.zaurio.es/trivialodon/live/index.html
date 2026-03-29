@@ -469,14 +469,11 @@
       ui.category.textContent = "";
       ui.prompt.textContent = "";
       ui.copy.textContent = "";
-      setTimer(String(Math.max(1, left)), Math.max(0, Math.min(1, left / Math.max(1, Number(game.countdownSeconds || 4)))), true);
+      setTimer("", 0, false);
       ui.fact.classList.add("hidden");
       ui.answers.className = "answers";
       ui.answers.innerHTML = "";
-      ui.hero.innerHTML = `<div class="timer" id="timerRing" style="--timer:${Math.max(0, Math.min(1, left / Math.max(1, Number(game.countdownSeconds || 4))))}">
-            <div class="timerInner" id="timer">${Math.max(1, left)}</div>
-          </div>
-          <div class="countStage heroStage">
+      ui.hero.innerHTML = `<div class="countStage heroStage">
         <div class="countLabel">${next?.type === "speed" ? "Test de velocidad" : "Siguiente ronda"}</div>
         <div class="countCategory">${esc(next?.category || "Categoria sorpresa")}</div>
         <div class="countBig">${Math.max(1, left)}</div>
@@ -583,6 +580,36 @@
         return;
       }
       const isVertical = document.body.classList.contains("vertical");
+      if(isVertical && !game.finished){
+        const visibleCount = 10;
+        const visible = rows.slice(0, visibleCount);
+        const leader = visible[0];
+        const rest = visible.slice(1);
+        ui.hero.className = "hero scores center";
+        ui.hero.innerHTML = `<div class="titleWrap">
+              <span class="kick">Marcador</span>
+              <h1 class="title">Puntuacion del round</h1>
+            </div>
+            <div class="roundBoard">
+              <article class="roundHeadline">
+                <strong>${esc(leader.name || "Jugador")} manda por ahora</strong>
+                <span>${leader.score} puntos acumulados${rest.length ? " · El resto aprieta para la siguiente." : ""}</span>
+              </article>
+              <div class="roundGrid">
+                <article class="roundRow leader">
+                  <div class="rank">#1</div>
+                  <div class="avatar">${leader.avatarSrc ? `<img src="${leader.avatarSrc}" alt="">` : "🦖"}</div>
+                  <div><div class="playerName">${esc(leader.name || "Jugador")}</div><div class="playerSub">${esc(leader.role === "host" ? "Anfitrion" : "Invitado")}</div></div>
+                  <div class="points">${leader.score}</div>
+                </article>
+                ${rest.map((player, index) => `<article class="roundRow"><div class="rank">#${index + 2}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}
+              </div>
+              ${rows.length > visibleCount ? `<div class="moreLine">+${rows.length - visibleCount} jugadores mas</div>` : ""}
+            </div>`;
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = "";
+        return;
+      }
       if(game.finished){
         const podium = [rows[1], rows[0], rows[2]];
         const podiumClasses = ["second","first","third"];
