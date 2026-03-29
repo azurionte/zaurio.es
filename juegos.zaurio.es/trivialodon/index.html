@@ -654,15 +654,7 @@
       if(audioState.unlocked) return;
       audioState.unlocked = true;
       [...audioState.decks.waiting.tracks, ...audioState.decks.answering.tracks, audioState.winner, audioState.loser].forEach(track => {
-        try{
-          const playAttempt = track.play();
-          if(playAttempt && typeof playAttempt.then === "function"){
-            playAttempt.then(() => { track.pause(); track.currentTime = 0; }).catch(() => {});
-          } else {
-            track.pause();
-            track.currentTime = 0;
-          }
-        } catch(_){}
+        try{ track.load(); } catch(_){}
       });
       syncAudio();
     }
