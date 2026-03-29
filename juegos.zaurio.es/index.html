@@ -8,83 +8,292 @@
   <link rel="stylesheet" href="/shared/css/zaurio-ui.css" />
   <style>
     :root{
-      --bg-1:#160321;
-      --bg-2:#0a0610;
-      --card:rgba(31,12,45,.88);
+      --bg-top:#2a063c;
+      --bg-mid:#14021f;
+      --bg-bottom:#07000c;
+      --panel:rgba(34,8,49,.84);
+      --panel-soft:rgba(255,255,255,.05);
       --stroke:rgba(255,255,255,.12);
-      --text:#fff8fc;
-      --muted:rgba(255,255,255,.68);
-      --gold:#ffd36f;
+      --text:#fffafc;
+      --muted:rgba(255,255,255,.74);
+      --cyan:#39dbff;
+      --gold:#ffd452;
+      --pink:#ff7bc7;
+      --green:#9af07a;
     }
     *{box-sizing:border-box}
     html,body{
       margin:0;
       min-height:100%;
-      background:
-        radial-gradient(circle at 20% 18%, rgba(255,211,111,.16), transparent 24%),
-        radial-gradient(circle at 82% 16%, rgba(134,239,255,.14), transparent 22%),
-        linear-gradient(180deg, var(--bg-1), var(--bg-2));
       color:var(--text);
-      font-family:Segoe UI, Arial, sans-serif;
+      font-family:"Trebuchet MS","Avenir Next Condensed",Segoe UI,Arial,sans-serif;
+      background:
+        radial-gradient(circle at 14% 14%, rgba(57,219,255,.16), transparent 22%),
+        radial-gradient(circle at 84% 16%, rgba(255,123,199,.18), transparent 24%),
+        radial-gradient(circle at 50% 0%, rgba(255,212,82,.12), transparent 28%),
+        linear-gradient(180deg,var(--bg-top),var(--bg-mid) 46%,var(--bg-bottom));
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,.1) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,212,82,.12) 0 1px, transparent 1.5px);
+      background-size:140px 140px, 220px 220px;
+      background-position:0 0, 36px 54px;
+      opacity:.35;
+      mix-blend-mode:screen;
     }
     .page{
-      width:min(1080px,94vw);
-      margin:0 auto 48px;
+      width:min(1220px, calc(100vw - 28px));
+      margin:0 auto 56px;
+      display:grid;
+      gap:18px;
+      position:relative;
+      z-index:1;
+    }
+    .hero,.spotlight,.futureCard,.miniCard{
+      border:1px solid var(--stroke);
+      border-radius:32px;
+      background:var(--panel);
+      box-shadow:0 20px 60px rgba(0,0,0,.28),0 0 34px rgba(255,0,170,.08);
+      backdrop-filter:blur(14px);
     }
     .hero{
-      border:1px solid var(--stroke);
-      border-radius:30px;
-      background:var(--card);
-      padding:34px;
-      box-shadow:0 24px 60px rgba(0,0,0,.3);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);
+      gap:22px;
+      padding:28px;
+      align-items:center;
     }
-    h1{
-      margin:0 0 12px;
-      font-size:clamp(2.6rem, 6vw, 4.6rem);
-      line-height:.98;
+    .eyebrow,.pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
     }
-    p{
+    .eyebrow{
+      color:var(--cyan);
+      background:rgba(57,219,255,.14);
+    }
+    .heroTitle{
+      margin:14px 0 14px;
+      font-size:clamp(2.9rem,7vw,5.8rem);
+      line-height:.9;
+      font-weight:1000;
+      max-width:10ch;
+      text-wrap:balance;
+    }
+    .heroCopy{
+      margin:0;
+      max-width:58ch;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:1.05rem;
+    }
+    .heroActions{
+      margin-top:24px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .cta,.ctaGhost{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:52px;
+      padding:14px 20px;
+      border-radius:999px;
+      text-decoration:none;
+      font-weight:1000;
+      transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .cta{
+      color:#2d042f;
+      background:linear-gradient(135deg,var(--gold),var(--pink));
+      box-shadow:0 12px 24px rgba(255,123,199,.22);
+    }
+    .ctaGhost{
+      color:#fff;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+    }
+    .cta:hover,.ctaGhost:hover{transform:translateY(-1px)}
+    .heroVisual{
+      min-height:100%;
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at 50% 16%, rgba(255,212,82,.2), transparent 30%),
+        radial-gradient(circle at 20% 32%, rgba(57,219,255,.14), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      padding:22px;
+      display:grid;
+      gap:16px;
+      align-content:space-between;
+      position:relative;
+      overflow:hidden;
+    }
+    .heroVisual::after{
+      content:"";
+      position:absolute;
+      inset:auto -12% -22% auto;
+      width:220px;
+      height:220px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(255,123,199,.22), transparent 66%);
+      pointer-events:none;
+    }
+    .trivialLogo{
+      width:min(320px,100%);
+      justify-self:center;
+      filter:drop-shadow(0 14px 30px rgba(0,0,0,.28));
+    }
+    .featureList{
+      display:grid;
+      gap:12px;
+    }
+    .featureItem{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      gap:10px;
+      align-items:start;
+      padding:12px 14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .featureIcon{
+      width:34px;
+      height:34px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,rgba(57,219,255,.18),rgba(255,123,199,.18));
+      font-size:1rem;
+    }
+    .featureItem strong{display:block;font-size:1rem}
+    .featureItem span{display:block;color:var(--muted);font-size:.94rem;line-height:1.45}
+    .spotlight{
+      padding:22px;
+      display:grid;
+      grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);
+      gap:18px;
+      align-items:stretch;
+    }
+    .spotlightMain{
+      display:grid;
+      gap:14px;
+      padding:22px;
+      border-radius:26px;
+      background:
+        radial-gradient(circle at 85% 18%, rgba(57,219,255,.18), transparent 24%),
+        linear-gradient(135deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .spotlightTitle{
+      margin:0;
+      font-size:clamp(1.9rem,3.2vw,3rem);
+      line-height:.95;
+    }
+    .spotlightCopy{
+      margin:0;
+      color:var(--muted);
+      line-height:1.65;
+      max-width:54ch;
+    }
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+    }
+    .stat{
+      padding:16px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.05);
+      text-align:center;
+    }
+    .stat strong{
+      display:block;
+      font-size:1.7rem;
+      color:var(--gold);
+      margin-bottom:4px;
+    }
+    .stat span{
+      color:var(--muted);
+      font-size:.9rem;
+    }
+    .spotlightSide{
+      display:grid;
+      gap:14px;
+    }
+    .miniCard,.futureCard{
+      padding:20px;
+    }
+    .miniCard h3,.futureCard h3{
+      margin:10px 0 8px;
+      font-size:1.4rem;
+    }
+    .miniCard p,.futureCard p{
       margin:0;
       color:var(--muted);
       line-height:1.6;
-      max-width:60ch;
     }
-    .cards{
-      margin-top:20px;
+    .pill{
+      color:var(--gold);
+      background:rgba(255,212,82,.14);
+    }
+    .futureGrid{
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:repeat(3,minmax(0,1fr));
       gap:16px;
     }
-    .card{
-      border:1px solid var(--stroke);
-      border-radius:24px;
-      background:rgba(255,255,255,.04);
-      padding:22px;
+    .futureCard{
+      min-height:100%;
+      display:grid;
+      gap:12px;
+      align-content:start;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
     }
-    .tag{
-      display:inline-flex;
-      padding:4px 8px;
-      border-radius:999px;
-      background:rgba(255,211,111,.14);
-      color:var(--gold);
-      font-size:11px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:.04em;
-      margin-bottom:10px;
+    .futureBadge{
+      width:48px;
+      height:48px;
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,rgba(57,219,255,.14),rgba(255,123,199,.16));
+      font-size:1.3rem;
     }
-    .btn{
-      display:inline-flex;
-      margin-top:18px;
-      padding:12px 18px;
-      border-radius:999px;
-      text-decoration:none;
-      color:#1c0a1f;
-      background:linear-gradient(135deg, #ffd36f, #ff9ec4);
-      font-weight:800;
+    .footerNote{
+      text-align:center;
+      color:rgba(255,255,255,.58);
+      font-size:.92rem;
+      padding:4px 0 8px;
     }
-    @media (max-width: 800px){
-      .cards{grid-template-columns:1fr}
+    @media (max-width:980px){
+      .hero,.spotlight,.futureGrid{grid-template-columns:1fr}
+      .heroTitle{max-width:none}
+      .stats{grid-template-columns:1fr}
+    }
+    @media (max-width:680px){
+      .page{width:min(100vw - 16px, 100%)}
+      .hero,.spotlight,.futureCard,.miniCard{border-radius:24px}
+      .hero,.spotlight,.miniCard,.futureCard{padding:18px}
+      .heroVisual{padding:16px;border-radius:22px}
+      .heroActions{flex-direction:column}
+      .cta,.ctaGhost{width:100%}
+      .featureItem{grid-template-columns:1fr}
+      .futureGrid{gap:12px}
     }
   </style>
 </head>
@@ -93,23 +302,99 @@
   <div class="topMenu" hidden></div>
   <main class="page">
     <section class="hero">
-      <span class="tag">Nuevo territorio</span>
-      <h1>Juegos Zaurio ya tiene guarida.</h1>
-      <p>Esta zona queda lista para crecer con cada juego nuevo. De momento, Trivialodon es el primer huevo en incubacion y el resto del bestiario vendra despues.</p>
-      <div class="cards">
-        <article class="card">
-          <span class="tag">Proximamente</span>
-          <h2>Trivialodon</h2>
-          <p>Juego de preguntas con colmillos. Aun no esta abierto al publico, pero ya tiene nido oficial dentro de `juegos.zaurio.es`.</p>
-          <a class="btn" href="https://juegos.zaurio.es/trivialodon/">Ver placeholder</a>
-        </article>
-        <article class="card">
-          <span class="tag">Vision</span>
-          <h2>Mas juegos despues</h2>
-          <p>La idea es que esta seccion crezca sin volver a romper la arquitectura. Cada juego podra vivir bajo su propia ruta manteniendo la misma identidad.</p>
-        </article>
+      <div>
+        <span class="eyebrow">Arcade Jurásico</span>
+        <h1 class="heroTitle">Juegos con garra y cero pinta genérica.</h1>
+        <p class="heroCopy">Esta guarida ya no está incubando: aquí empiezan las partidas rápidas, teatrales y un poco caóticas que encajan con el universo de Zaurio. `Trivialodon` abre la veda y el resto del bestiario llegará después.</p>
+        <div class="heroActions">
+          <a class="cta" href="https://juegos.zaurio.es/trivialodon/">Entrar en Trivialodon</a>
+          <a class="ctaGhost" href="#proximos">Ver lo que viene</a>
+        </div>
       </div>
+      <aside class="heroVisual">
+        <img class="trivialLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
+        <div class="featureList">
+          <article class="featureItem">
+            <div class="featureIcon">🎤</div>
+            <div>
+              <strong>Partidas por sesión</strong>
+              <span>Host e invitados en tiempo real, con ritmo de programa de televisión.</span>
+            </div>
+          </article>
+          <article class="featureItem">
+            <div class="featureIcon">⚡</div>
+            <div>
+              <strong>Puntos por acierto y velocidad</strong>
+              <span>No basta con saberla: también cuenta reaccionar antes que el resto.</span>
+            </div>
+          </article>
+          <article class="featureItem">
+            <div class="featureIcon">🦖</div>
+            <div>
+              <strong>Caos bonito</strong>
+              <span>Más concurso salvaje que herramienta fría. Como debe ser.</span>
+            </div>
+          </article>
+        </div>
+      </aside>
     </section>
+
+    <section class="spotlight">
+      <article class="spotlightMain">
+        <span class="pill">Juego destacado</span>
+        <h2 class="spotlightTitle">Trivialodon ya está abierto y listo para rugir.</h2>
+        <p class="spotlightCopy">El anfitrión crea sala, los invitados entran con código corto, personalizan su avatar y la partida avanza como un concurso vivo: presentación, pregunta, revelación, marcador y revancha. Todo sin salirse del ecosistema de Zaurio.</p>
+        <div class="stats">
+          <div class="stat">
+            <strong>Realtime</strong>
+            <span>Partida sincronizada en directo</span>
+          </div>
+          <div class="stat">
+            <strong>TV Feel</strong>
+            <span>Ritmo, suspense y reveals</span>
+          </div>
+          <div class="stat">
+            <strong>4 cifras</strong>
+            <span>Código corto para entrar rápido</span>
+          </div>
+        </div>
+      </article>
+      <aside class="spotlightSide">
+        <article class="miniCard">
+          <span class="pill">Ahora mismo</span>
+          <h3>Host, invitados y rondas</h3>
+          <p>Ya no es un placeholder: `Trivialodon` vive aquí y puede jugarse como experiencia completa por sesión.</p>
+        </article>
+        <article class="miniCard">
+          <span class="pill">Próximo salto</span>
+          <h3>Más bestias después</h3>
+          <p>La idea es que esta sección crezca como una pequeña cartelera de juegos, cada uno con su propia personalidad y su propia ruta.</p>
+        </article>
+      </aside>
+    </section>
+
+    <section class="futureGrid" id="proximos">
+      <article class="futureCard">
+        <div class="futureBadge">🎯</div>
+        <span class="pill">Diseño</span>
+        <h3>No más home de relleno</h3>
+        <p>La portada deja de sonar a “próximamente” y empieza a sentirse como una sección viva con identidad propia.</p>
+      </article>
+      <article class="futureCard">
+        <div class="futureBadge">🕹️</div>
+        <span class="pill">Arquitectura</span>
+        <h3>Cada juego con su guarida</h3>
+        <p>La estructura ya permite crecer sin romper nada: cada experiencia puede vivir bajo su ruta y mantener estilo común.</p>
+      </article>
+      <article class="futureCard">
+        <div class="futureBadge">🌟</div>
+        <span class="pill">Ambición</span>
+        <h3>Más sorpresa, menos plantilla</h3>
+        <p>La idea no es llenar esto de clones, sino sacar pequeños juegos con carácter propio y un punto travieso.</p>
+      </article>
+    </section>
+
+    <p class="footerNote">Zaurio Juegos: menos placeholder triste, más cartelera jurásica.</p>
   </main>
   <script src="/shared/js/zaurio-nav.js"></script>
 </body>
