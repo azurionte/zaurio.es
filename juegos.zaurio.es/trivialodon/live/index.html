@@ -111,7 +111,8 @@
     button{padding:14px 18px;border:0;border-radius:999px;background:linear-gradient(135deg,var(--gold),var(--pink));font:inherit;font-weight:1000;color:#240433;cursor:pointer}
     .hidden{display:none!important}
     @keyframes answersIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-    body.vertical .top{grid-template-columns:1fr;justify-items:center;padding:10px 12px}
+    body.vertical .top{display:none !important}
+    body.vertical .app{grid-template-rows:minmax(0,1fr)}
     body.vertical .brand{width:min(150px,44vw)}
     body.vertical .code{display:none}
     body.vertical .card{padding:14px;gap:12px;border-radius:22px}
@@ -135,11 +136,6 @@
     body.vertical .aState{font-size:.82rem}
     body.vertical .voteAvatar{width:28px;height:28px}
     body.vertical .voteMore{height:24px;font-size:.72rem}
-    body.vertical.phase-lobby .top{display:none !important}
-    body.vertical.phase-lobby .top .brand,
-    body.vertical.phase-lobby .topCenter,
-    body.vertical.phase-lobby .code{display:none !important}
-    body.vertical.phase-lobby .app{grid-template-rows:minmax(0,1fr) !important}
     body.vertical .hero.lobby{min-height:min(52vh,430px);gap:16px}
     body.vertical .hero.lobby .titleWrap{max-width:min(92%,30ch)}
     body.vertical .lobbyCast{gap:14px 12px}
