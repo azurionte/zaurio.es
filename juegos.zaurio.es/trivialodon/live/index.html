@@ -33,6 +33,8 @@
     .hero{display:grid;gap:18px;position:relative;min-height:0}
     .hero.center{align-content:center;justify-items:center;text-align:center;min-height:min(70vh,780px)}
     .hero.center .titleWrap{justify-items:center;text-align:center;max-width:min(1180px,90%);margin:0 auto}
+    .hero.lobby{align-content:center;justify-items:center;text-align:center;gap:26px;min-height:min(72vh,820px)}
+    .hero.lobby .titleWrap{justify-items:center;text-align:center;max-width:min(1180px,82%);margin:0 auto}
     .hero.lead{align-content:center;justify-items:center;text-align:center;min-height:min(72vh,820px)}
     .hero.lead .titleWrap{justify-items:center;text-align:center;max-width:min(1220px,88%);margin:0 auto}
     .hero.compact{align-content:start}
@@ -134,17 +136,10 @@
     body.vertical .aState{font-size:.82rem}
     body.vertical .voteAvatar{width:28px;height:28px}
     body.vertical .voteMore{height:24px;font-size:.72rem}
-    body.vertical.phase-lobby .topCenter{display:none}
-    body.vertical.phase-lobby .top{
-      padding:0;
-      min-height:0;
-      height:0;
-      border:0;
-      background:transparent;
-      box-shadow:none;
-      overflow:hidden;
-      gap:0;
-    }
+    body.vertical.phase-lobby .top{display:none}
+    body.vertical.phase-lobby .app{grid-template-rows:minmax(0,1fr)}
+    body.vertical .hero.lobby{min-height:min(52vh,430px);gap:16px}
+    body.vertical .hero.lobby .titleWrap{max-width:min(92%,30ch)}
     body.vertical .lobbyCast{gap:14px 12px}
     body.vertical .castPlayer{min-width:68px}
     body.vertical .castAvatar{width:60px;height:60px}
@@ -212,6 +207,7 @@
       body.vertical .lobbyCast{gap:10px 8px}
       body.vertical .castAvatar{width:50px;height:50px}
       body.vertical .castName{font-size:.62rem}
+      body.vertical .hero.lobby{min-height:min(44vh,320px);gap:12px}
     }
     body.phase-question .card,body.phase-answer .card{grid-template-rows:auto auto minmax(0,1fr)}
     body.phase-question .hero.compact,body.phase-answer .hero.compact{gap:10px}
@@ -598,7 +594,7 @@
     }
 
     function renderLobby(){
-      ui.hero.className = "hero center";
+      ui.hero.className = "hero lobby";
       lastAnswersVisible = false;
       const visible = players.slice(0, document.body.classList.contains("vertical") ? 8 : 12);
       const overflow = Math.max(0, players.length - visible.length);
@@ -609,13 +605,14 @@
       ui.hero.innerHTML = `<div class="titleWrap">
             <h1 class="title" id="prompt">Esperando que la partida arranque</h1>
             <p class="copy" id="copy"></p>
-          </div>`;
+          </div>
+          ${visible.length ? `<div class="lobbyCast">
+            ${visible.map(player => `<div class="castPlayer">${castBubble(player)}<div class="castName">${esc(player.name || "Jugador")}</div><div class="castRole">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div>`).join("")}
+            ${overflow ? `<div class="castPlayer"><div class="castAvatar">+${overflow}</div><div class="castName">Mas</div><div class="castRole">jugadores</div></div>` : ""}
+          </div>` : ""}`;
       ui.fact.classList.add("hidden");
       ui.answers.className = "answers";
-      ui.answers.innerHTML = visible.length ? `<div class="lobbyCast" style="grid-column:1/-1">
-        ${visible.map(player => `<div class="castPlayer">${castBubble(player)}<div class="castName">${esc(player.name || "Jugador")}</div><div class="castRole">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div>`).join("")}
-        ${overflow ? `<div class="castPlayer"><div class="castAvatar">+${overflow}</div><div class="castName">Mas</div><div class="castRole">jugadores</div></div>` : ""}
-      </div>` : "";
+      ui.answers.innerHTML = "";
     }
 
     function render(){
