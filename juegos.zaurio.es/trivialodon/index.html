@@ -957,11 +957,11 @@
     ui.customDifficultyChoices.querySelectorAll("[data-difficulty]").forEach(btn => btn.onclick = () => { state.game.customConfig.difficulty = btn.dataset.difficulty; syncChoiceGroup(ui.customDifficultyChoices, "difficulty", state.game.customConfig.difficulty); });
     document.addEventListener("click", ev => { if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open"); });
     ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
-    ui.btnHost.onclick = async () => { ensureAudioReady(); resetDraft(); showShell(); state.role = "host"; await connectRoom("host", roomCode()); renderCurrentScene(); };
-    ui.btnGuest.onclick = async () => { ensureAudioReady(); resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); };
+    ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; renderCurrentScene(); ensureAudioReady(); await connectRoom("host", roomCode()); renderCurrentScene(); };
+    ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); ensureAudioReady(); renderCurrentScene(); };
     ui.btnContinue.onclick = async () => { ensureAudioReady(); const ok = await restoreSavedSession(readSession()); if(!ok) location.reload(); };
     ui.btnJoinBack.onclick = () => location.reload();
-    ui.btnJoinNext.onclick = async () => { ensureAudioReady(); const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = "Necesito un codigo valido de 4 cifras."; return; } ui.joinStatus.textContent = "Entrando en la sala..."; await connectRoom("guest", code); renderCurrentScene(); };
+    ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = "Necesito un codigo valido de 4 cifras."; return; } ui.joinStatus.textContent = "Entrando en la sala..."; ensureAudioReady(); await connectRoom("guest", code); renderCurrentScene(); };
     ui.joinCodeOnlyInput.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); ui.btnJoinNext.click(); } });
     ui.btnBack.onclick = () => location.reload();
     ui.btnUpload.onclick = () => ui.photoInput.click();
