@@ -1014,6 +1014,257 @@
     async function broadcastGame(){ if(state.role !== "host" || !state.channel) return; await state.channel.send({type:"broadcast",event:"game_state",payload:state.game}); }
     function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
     async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || {phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",selectedDurationValue:15,votes:{},question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}}; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; if(!["question","answer"].includes(payload.phase)) state.localAnswer = null; if(payload.phase === "question" && state.game.question && payload.question && payload.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = payload; renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_vote"},({payload}) => { if(state.role !== "host" || !payload) return; state.game.votes[payload.playerId] = {name:payload.name,mode:payload.mode || "",duration:payload.duration || ""}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; state.game.question.responses[payload.playerId] = {answerIndex:payload.answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(!options.silentStatus) setStatus(role === "host" ? "Sala creada. Prepara tu avatar." : "Ya estas dentro. Configura tu avatar.","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
+    function sampleStandardQuestion(){
+      return {
+        prompt:"En la pelicula 'Pulp Fiction', que numero de hamburguesa pide Jules Winfield antes de citar su famoso pasaje biblico?",
+        category:"Cine",
+        choices:["A Cheeseburger Doble con queso","Un cuarto de libra con queso","Un Big Mac grande","Un Whopper con bacon","Un menu de nuggets"],
+        correct:1,
+        explanation:"En la escena original Jules habla del 'Royale with Cheese', la adaptacion francesa del cuarto de libra con queso de McDonald's.",
+        responses:{},
+        revealed:false,
+        type:"standard"
+      };
+    }
+    function sampleSpeedQuestion(){
+      return {
+        type:"speed",
+        prompt:"Cual de estos edificios es mas alto?",
+        category:"Arquitectura",
+        choices:["Burj Khalifa","Merdeka 118","Shanghai Tower","Makkah Royal Clock Tower","Ping An Finance Center"],
+        scores:[140,120,100,80,0],
+        ranking:[
+          {rank:1,text:"Burj Khalifa",score:140},
+          {rank:2,text:"Merdeka 118",score:120},
+          {rank:3,text:"Shanghai Tower",score:100},
+          {rank:4,text:"Makkah Royal Clock Tower",score:80},
+          {rank:5,text:"Ping An Finance Center",score:0}
+        ],
+        explanation:"El Burj Khalifa sigue liderando el ranking de altura total entre estos gigantes.",
+        responses:{},
+        revealed:false
+      };
+    }
+    function debugPlayers(){
+      return state.players.filter(player => player.ready);
+    }
+    function debugScores(){
+      const scores = {};
+      debugPlayers().forEach((player, index) => {
+        scores[player.playerId] = Math.max(0, 240 - index * 40);
+      });
+      return scores;
+    }
+    function debugResponses(question, speed){
+      const players = debugPlayers();
+      const responses = {};
+      if(!players.length) return responses;
+      if(speed){
+        players.slice(0, Math.min(players.length, question.choices.length)).forEach((player, index) => {
+          responses[player.playerId] = {answerIndex:index, answeredAt:Date.now() - (index * 420)};
+        });
+        return responses;
+      }
+      players.slice(0, Math.min(players.length, 3)).forEach((player, index) => {
+        const answerIndex = index === 0 ? question.correct : Math.min(question.choices.length - 1, (question.correct + index) % question.choices.length);
+        responses[player.playerId] = {answerIndex, answeredAt:Date.now() - (index * 380)};
+      });
+      return responses;
+    }
+    function debugRequireHost(){
+      if(state.role !== "host" || !state.channel) throw new Error("Abre la consola en el anfitrion, con una sala ya conectada.");
+    }
+    async function debugPush(gamePatch){
+      debugRequireHost();
+      state.localAnswer = null;
+      state.game = {
+        ...state.game,
+        ...gamePatch
+      };
+      await broadcastGame();
+      renderCurrentScene();
+      return state.game;
+    }
+    function debugQuestionBase(speed = false){
+      const base = speed ? sampleSpeedQuestion() : sampleStandardQuestion();
+      const choices = Array.isArray(base.choices) ? base.choices : [];
+      return {
+        ...base,
+        choices:[...choices],
+        responses:{},
+        revealed:false,
+        endAt:0,
+        answersVisibleAt:0
+      };
+    }
+    async function debugPhaseLobby(){
+      return debugPush({
+        phase:"lobby",
+        allowVotes:false,
+        voteDeadline:0,
+        question:null,
+        lastRoundScores:{}
+      });
+    }
+    async function debugPhaseSetup(allowVotes = false){
+      return debugPush({
+        phase:"setup",
+        allowVotes:!!allowVotes,
+        voteDeadline:allowVotes ? Date.now() + 60000 : 0,
+        selectedMode:"classic",
+        selectedDuration:"questions",
+        selectedDurationValue:15,
+        question:null
+      });
+    }
+    async function debugPhaseGenerating(){
+      return debugPush({
+        phase:"generating",
+        question:null
+      });
+    }
+    async function debugPhasePaused(){
+      return debugPush({
+        phase:"paused",
+        pausedRemainingMs:4000
+      });
+    }
+    async function debugPhaseCountdown(opts = {}){
+      const speed = !!opts.speed;
+      const seconds = Math.max(1, Number(opts.seconds || 4));
+      const question = debugQuestionBase(speed);
+      return debugPush({
+        phase:"countdown",
+        question:null,
+        questionSet:[question],
+        questionIndex:0,
+        countdownEndAt:Date.now() + (seconds * 1000)
+      });
+    }
+    async function debugPhaseQuestionLead(opts = {}){
+      const speed = !!opts.speed;
+      const leadSeconds = Math.max(1, Number(opts.seconds || state.game.questionLeadSeconds || 6));
+      const answerSeconds = Math.max(5, Number(opts.answerSeconds || state.game.answerSeconds || 15));
+      const question = debugQuestionBase(speed);
+      question.answersVisibleAt = Date.now() + (leadSeconds * 1000);
+      question.endAt = question.answersVisibleAt + (answerSeconds * 1000);
+      return debugPush({
+        phase:"question",
+        questionLeadSeconds:leadSeconds,
+        answerSeconds,
+        question,
+        questionSet:[question],
+        questionIndex:0
+      });
+    }
+    async function debugPhaseQuestionAnswers(opts = {}){
+      const speed = !!opts.speed;
+      const answerSeconds = Math.max(5, Number(opts.seconds || state.game.answerSeconds || 15));
+      const question = debugQuestionBase(speed);
+      question.answersVisibleAt = Date.now() - 500;
+      question.endAt = Date.now() + (answerSeconds * 1000);
+      question.responses = debugResponses(question, speed && !!opts.withLocks);
+      return debugPush({
+        phase:"question",
+        questionLeadSeconds:Math.max(1, Number(state.game.questionLeadSeconds || 6)),
+        answerSeconds,
+        question,
+        questionSet:[question],
+        questionIndex:0
+      });
+    }
+    async function debugPhaseAnswer(opts = {}){
+      const speed = !!opts.speed;
+      const question = debugQuestionBase(speed);
+      question.answersVisibleAt = Date.now() - 6000;
+      question.endAt = Date.now() - 1000;
+      question.responses = debugResponses(question, speed);
+      question.revealed = true;
+      return debugPush({
+        phase:"answer",
+        question,
+        questionSet:[question],
+        questionIndex:0,
+        answerShownAt:Date.now()
+      });
+    }
+    async function debugPhaseScores(opts = {}){
+      const finished = !!opts.finished;
+      const scores = debugScores();
+      const players = debugPlayers();
+      const lastRoundScores = {};
+      players.forEach((player, index) => {
+        lastRoundScores[player.playerId] = Math.max(0, 110 - index * 10);
+      });
+      return debugPush({
+        phase:"scores",
+        scores,
+        lastRoundScores,
+        finished,
+        finishedAt:finished ? Date.now() : 0,
+        scoresShownAt:Date.now()
+      });
+    }
+    async function debugResetRound(){
+      return debugPush({
+        phase:"setup",
+        finished:false,
+        finishedAt:0,
+        question:null,
+        questionIndex:0,
+        lastRoundScores:{},
+        selectedMode:"classic",
+        selectedDuration:"questions",
+        selectedDurationValue:15,
+        allowVotes:false,
+        voteDeadline:0
+      });
+    }
+    const debugApi = {
+      list(){
+        const items = [
+          {command:"td.lobby()", desc:"Lobby / esperando en sala"},
+          {command:"td.setup()", desc:"Setup del anfitrion sin votacion"},
+          {command:"td.setupVotes()", desc:"Setup con votacion activa para invitados"},
+          {command:"td.generating()", desc:"Pantalla generando preguntas"},
+          {command:"td.paused()", desc:"Juego pausado"},
+          {command:"td.countdown()", desc:"Cuenta atras normal"},
+          {command:"td.countdown({ speed:true })", desc:"Cuenta atras de test de velocidad"},
+          {command:"td.questionLead()", desc:"Pregunta sola antes de mostrar respuestas"},
+          {command:"td.questionLead({ speed:true })", desc:"Pregunta sola para speed test"},
+          {command:"td.question()", desc:"Pregunta con respuestas visibles"},
+          {command:"td.question({ speed:true, withLocks:true })", desc:"Pregunta speed con bloqueos en vivo"},
+          {command:"td.answer()", desc:"Respuesta revelada con correcta y fun fact"},
+          {command:"td.answer({ speed:true })", desc:"Respuesta revelada de speed test"},
+          {command:"td.scores()", desc:"Marcador entre preguntas"},
+          {command:"td.finished()", desc:"Podio final / fin de partida"},
+          {command:"td.reset()", desc:"Vuelve a setup limpio"},
+          {command:"td.state()", desc:"Devuelve el game_state actual"}
+        ];
+        console.table(items);
+        return items;
+      },
+      help(){
+        return this.list();
+      },
+      state(){
+        return structuredClone(state.game);
+      },
+      lobby:() => debugPhaseLobby(),
+      setup:(opts = {}) => debugPhaseSetup(!!opts.allowVotes),
+      setupVotes:() => debugPhaseSetup(true),
+      generating:() => debugPhaseGenerating(),
+      paused:() => debugPhasePaused(),
+      countdown:(opts = {}) => debugPhaseCountdown(opts),
+      questionLead:(opts = {}) => debugPhaseQuestionLead(opts),
+      question:(opts = {}) => debugPhaseQuestionAnswers(opts),
+      answer:(opts = {}) => debugPhaseAnswer(opts),
+      scores:() => debugPhaseScores({finished:false}),
+      finished:() => debugPhaseScores({finished:true}),
+      reset:() => debugResetRound()
+    };
+    window.trivialodonDebug = debugApi;
+    window.td = debugApi;
     function showShell(){ ui.introScene.classList.remove("on"); ui.introScene.classList.add("off"); ui.shell.classList.add("on"); }
     function resetDraft(){ state.name = ""; state.ready = false; state.roomCode = ""; state.localAnswer = null; state.avatar = {kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"}; ui.nameInput.value = ""; if(ui.joinCodeOnlyInput) ui.joinCodeOnlyInput.value = ""; ui.joinCodeInput.value = ""; applyAvatar(); setStatus("Todavia no has preparado tu avatar.","info"); if(ui.joinStatus) ui.joinStatus.textContent = "Escribe el codigo tal como te lo haya dado el anfitrion."; }
     function clampAvatar(){ state.avatar.s = Math.max(.35, Math.min(3, state.avatar.s || 1)); state.avatar.x = Math.max(-180, Math.min(180, state.avatar.x || 0)); state.avatar.y = Math.max(-180, Math.min(180, state.avatar.y || 0)); applyAvatar(); }
