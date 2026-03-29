@@ -618,7 +618,8 @@
     }
 
     function render(){
-      document.body.classList.toggle("phase-lobby", game.phase === "lobby");
+      const waitingPhase = !["paused","countdown","question","answer","scores"].includes(game.phase);
+      document.body.classList.toggle("phase-lobby", waitingPhase);
       document.body.classList.toggle("phase-question", game.phase === "question");
       document.body.classList.toggle("phase-answer", game.phase === "answer");
       document.body.classList.toggle("phase-scores", game.phase === "scores");
