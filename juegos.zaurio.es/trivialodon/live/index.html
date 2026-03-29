@@ -51,13 +51,20 @@
     .fact{padding:18px 20px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,216,74,.08));display:grid;gap:8px}
     .fact p{margin:0;color:var(--muted);line-height:1.45;font-size:1rem}
     .scoreHead{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .scoreList{display:grid;gap:10px;min-height:0}
-    .score{padding:12px 14px;display:grid;grid-template-columns:50px minmax(0,1fr) auto;gap:12px;align-items:center}
+    .scoreList{display:grid;gap:10px;min-height:0;align-content:start}
+    .leader{padding:16px 18px;border-radius:24px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(135deg,rgba(255,216,74,.16),rgba(255,126,207,.12));display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center}
+    .leader .avatar{width:64px;height:64px}
+    .leaderLabel{font-size:.74rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:900}
+    .leader .playerName{font-size:1.22rem}
+    .leaderPoints{font-size:2rem;font-weight:1000;color:var(--gold)}
+    .score{padding:12px 14px;display:grid;grid-template-columns:38px 42px minmax(0,1fr) auto;gap:12px;align-items:center;background:rgba(255,255,255,.03)}
+    .rank{width:38px;height:38px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.06);font-weight:1000;color:var(--gold)}
     .avatar{width:50px;height:50px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08)}
     .avatar img{width:100%;height:100%;object-fit:cover}
     .playerName{font-weight:1000;font-size:1.04rem;line-height:1.15}
     .playerSub{margin-top:4px;color:var(--muted);font-size:.88rem}
-    .points{font-size:1.28rem;font-weight:1000;color:var(--gold)}
+    .points{font-size:1.18rem;font-weight:1000;color:var(--gold)}
+    .moreLine{padding:8px 12px;text-align:center;color:var(--muted);font-size:.9rem}
     .empty{display:grid;place-items:center;text-align:center;color:var(--muted);height:100%}
     .paused,.countdownHero{display:grid;place-items:center;text-align:center;height:100%}
     .paused .title,.countdownHero .title{font-size:clamp(2.2rem,5vw,5rem)}
@@ -83,8 +90,13 @@
     body.vertical .aText{font-size:.94rem}
     body.vertical .aState{font-size:.82rem}
     body.vertical .voteTag{font-size:.75rem;padding:5px 8px}
-    body.vertical .score{padding:10px 12px;grid-template-columns:40px minmax(0,1fr) auto}
-    body.vertical .avatar{width:40px;height:40px}
+    body.vertical .leader{padding:12px 14px;grid-template-columns:50px minmax(0,1fr) auto;gap:10px}
+    body.vertical .leader .avatar{width:50px;height:50px}
+    body.vertical .leader .playerName{font-size:1rem}
+    body.vertical .leaderPoints{font-size:1.35rem}
+    body.vertical .score{padding:9px 10px;grid-template-columns:28px 34px minmax(0,1fr) auto}
+    body.vertical .rank{width:28px;height:28px;font-size:.82rem}
+    body.vertical .avatar{width:34px;height:34px}
     body.vertical .playerName{font-size:.9rem}
     body.vertical .playerSub{font-size:.76rem}
     body.vertical .points{font-size:1.02rem}
@@ -110,7 +122,7 @@
           <div class="hero">
             <div class="titleWrap">
               <span class="kick" id="category">Categoria</span>
-              <h1 class="title" id="prompt">Esperando partida…</h1>
+              <h1 class="title" id="prompt">Esperando partida...</h1>
               <p class="copy" id="copy">Conecta una sala para emitir Trivialodon en directo.</p>
             </div>
             <div class="timer" id="timerRing" style="--timer:1">
@@ -187,8 +199,23 @@
     }
     function renderScores(){
       const rows = scoreRows();
+      const leader = rows[0];
+      const rest = rows.slice(1, 6);
+      const extra = Math.max(0, rows.length - 6);
       ui.scoreStatus.textContent = game.finished ? "Partida cerrada" : "Sesion en directo";
-      ui.scores.innerHTML = rows.length ? rows.map((player, index) => `<article class="score"><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">#${index + 1} ${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("") : `<div class="empty">El marcador aparecera aqui cuando entren jugadores.</div>`;
+      ui.scores.innerHTML = rows.length ? `
+        <article class="leader">
+          <div class="avatar">${leader.avatarSrc ? `<img src="${leader.avatarSrc}" alt="">` : "🦖"}</div>
+          <div>
+            <div class="leaderLabel">Lider actual</div>
+            <div class="playerName">${esc(leader.name || "Jugador")}</div>
+            <div class="playerSub">${esc(leader.role === "host" ? "Anfitrion" : "Invitado")}</div>
+          </div>
+          <div class="leaderPoints">${leader.score}</div>
+        </article>
+        ${rest.map((player, index) => `<article class="score"><div class="rank">#${index + 2}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}
+        ${extra ? `<div class="moreLine">+${extra} jugadores mas en la sala</div>` : ""}
+      ` : `<div class="empty">El marcador aparecera aqui cuando entren jugadores.</div>`;
     }
     function renderCountdown(){
       const next = nextQuestion();
@@ -219,14 +246,14 @@
       const total = answersVisible ? Math.max(1, Number(game.answerSeconds || 15)) : Math.max(1, Number(game.questionLeadSeconds || 6));
       const left = answersVisible ? answerLeft : leadLeft;
       ui.category.textContent = isSpeed ? `Test de velocidad · ${question.category || "Categoria sorpresa"}` : (question.category || "Cultura general");
-      ui.prompt.textContent = question.prompt || "Esperando pregunta…";
+      ui.prompt.textContent = question.prompt || "Esperando pregunta...";
       ui.copy.textContent = !answersVisible ? "Primero entra la pregunta. Las opciones caen en pantalla en unos segundos." : (isSpeed ? "Las respuestas se bloquean en tiempo real. Cuanto mejor sea la opcion, mas puntos vale." : "Se ve en directo que opciones esta marcando la gente.");
       ui.timer.textContent = String(left);
       ui.timerRing.style.setProperty("--timer", Math.max(0, Math.min(1, left / total)));
 
       if(!answersVisible){
         ui.fact.classList.add("hidden");
-        ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">Las opciones entran en ${left}…</div>`;
+        ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">Las opciones entran en ${left}...</div>`;
         return;
       }
 
@@ -317,6 +344,7 @@
     });
     window.addEventListener("resize", setLayoutMode);
     setLayoutMode();
+    setInterval(() => { if(channel) render(); }, 250);
 
     const auto = normalize(params.get("sala"));
     if(auto.length === 4) join(auto);
