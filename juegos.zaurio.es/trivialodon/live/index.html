@@ -160,6 +160,23 @@
     body.vertical .podiumAvatar{width:62px;height:62px}
     body.vertical .podiumName{font-size:1rem}
     body.vertical .podiumPoints{font-size:1.28rem}
+    body.vertical.phase-scores .card{padding:10px;gap:8px}
+    body.vertical.phase-scores .hero.scores{gap:8px;align-content:start}
+    body.vertical.phase-scores .hero.scores .titleWrap{max-width:100%;gap:8px}
+    body.vertical.phase-scores .title{font-size:clamp(1.15rem,5.2vw,1.7rem);line-height:1}
+    body.vertical.phase-scores .roundBoard{gap:8px}
+    body.vertical.phase-scores .roundHeadline{padding:10px 12px;border-radius:18px;gap:6px}
+    body.vertical.phase-scores .roundHeadline strong{font-size:1.02rem}
+    body.vertical.phase-scores .roundHeadline span{font-size:.72rem}
+    body.vertical.phase-scores .roundGrid{gap:6px}
+    body.vertical.phase-scores .roundRow{padding:7px 8px;grid-template-columns:20px 24px minmax(0,1fr) auto;gap:6px;border-radius:15px}
+    body.vertical.phase-scores .roundRow.leader{padding:8px 9px}
+    body.vertical.phase-scores .rank{width:20px;height:20px;font-size:.58rem}
+    body.vertical.phase-scores .avatar{width:24px;height:24px}
+    body.vertical.phase-scores .playerName{font-size:.72rem}
+    body.vertical.phase-scores .playerSub{font-size:.56rem;margin-top:2px}
+    body.vertical.phase-scores .points{font-size:.78rem}
+    body.vertical.phase-scores .moreLine{font-size:.68rem}
     @media (max-width:980px){
       .answers{grid-template-columns:1fr}
       .podium{grid-template-columns:1fr}
@@ -206,6 +223,17 @@
       body.vertical .castAvatar{width:50px;height:50px}
       body.vertical .castName{font-size:.62rem}
       body.vertical .hero.lobby{min-height:min(44vh,320px);gap:12px}
+      body.vertical.phase-scores .card{padding:8px;gap:6px}
+      body.vertical.phase-scores .title{font-size:clamp(1rem,5vw,1.35rem)}
+      body.vertical.phase-scores .roundHeadline{padding:8px 10px}
+      body.vertical.phase-scores .roundHeadline strong{font-size:.9rem}
+      body.vertical.phase-scores .roundHeadline span{font-size:.62rem}
+      body.vertical.phase-scores .roundRow{padding:6px 7px;grid-template-columns:18px 20px minmax(0,1fr) auto;gap:5px}
+      body.vertical.phase-scores .rank{width:18px;height:18px;font-size:.52rem}
+      body.vertical.phase-scores .avatar{width:20px;height:20px}
+      body.vertical.phase-scores .playerName{font-size:.66rem}
+      body.vertical.phase-scores .playerSub{font-size:.5rem}
+      body.vertical.phase-scores .points{font-size:.7rem}
     }
     body.phase-question .card,body.phase-answer .card{grid-template-rows:auto auto minmax(0,1fr)}
     body.phase-question .hero.compact,body.phase-answer .hero.compact{gap:10px}
