@@ -10,8 +10,8 @@
     *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,system-ui,sans-serif}body{padding:18px}button,input{font:inherit}button{cursor:pointer}
     .app{width:min(1320px,100%);margin:0 auto;display:grid;gap:18px}.shell{display:none;gap:18px}.shell.on{display:grid}
     .topbar,.panel,.playerCard,.answerCard,.scoreRow,.modeCard,.modalCard,.heroCard{border:1px solid var(--stroke);border-radius:30px;background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.24),0 0 32px rgba(255,0,170,.08);backdrop-filter:blur(14px)}
-    .topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 18px}.topLeft,.topCenter,.topRight{display:flex;align-items:center}.topLeft{justify-content:flex-start}.topCenter{justify-content:center}.topRight{justify-content:flex-end}.logoMark{width:min(230px,42vw);display:block}
-    .menuWrap,.soundWrap{position:relative}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.scoreChip,.soundChip{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn img{width:20px;height:20px}
+    .topbar{position:relative;z-index:120;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 18px}.topLeft,.topCenter,.topRight{display:flex;align-items:center}.topLeft{justify-content:flex-start}.topCenter{justify-content:center}.topRight{justify-content:flex-end}.logoMark{width:min(230px,42vw);display:block}
+    .menuWrap,.soundWrap,.profileWrap{position:relative;z-index:121}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.scoreChip,.soundChip{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn img{width:20px;height:20px}
     .menuDrop{position:absolute;left:0;top:calc(100% + 10px);display:none;min-width:240px;padding:8px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}.menuDrop img{width:22px;height:22px;object-fit:contain}
     .identity{max-width:100%}.identity[hidden],.scoreChip[hidden],.soundChip[hidden]{display:none}.scoreChip,.soundChip{margin-right:10px}.scoreValue{font-weight:1000;color:var(--yellow)}.soundGlyph{font-size:1rem;line-height:1}.miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18))}.miniAvatar img{width:100%;height:100%;object-fit:cover}.identityMeta{display:grid;gap:2px}.identityName{font-size:1rem;font-weight:900}.identityRole{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
     .soundPanel{position:absolute;top:calc(100% + 10px);right:0;display:none;min-width:220px;padding:14px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20;gap:12px}
@@ -20,6 +20,9 @@
     .soundPanel input[type="range"]{width:100%}
     .soundPanelRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .soundMini{font-size:.9rem;color:#fff;font-weight:900}
+    .profileMenu{position:absolute;top:calc(100% + 10px);right:0;display:none;min-width:240px;padding:10px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20;gap:8px}
+    .profileWrap.open .profileMenu{display:grid}
+    .profileMenu button{width:100%;justify-content:flex-start;text-align:left}
     .intro{min-height:calc(100vh - 36px);display:grid;place-items:center}.intro.on{display:grid}.intro.off{display:none}.introCard{width:min(760px,100%);padding:48px 38px;text-align:center}.introLogo{width:min(360px,82%);display:block;margin:0 auto 18px;filter:drop-shadow(0 10px 24px rgba(255,0,170,.2))}.introLead{max-width:34ch;margin:0 auto;color:var(--muted);font-size:1.15rem;line-height:1.55}
     .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.actions.center{justify-content:center}.actions.between{justify-content:space-between}.btn{padding:14px 20px;border-radius:999px;font-weight:900;color:#fff;background:rgba(255,255,255,.08);transition:transform .18s ease,opacity .18s ease,background .18s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.btnPrimary{background:linear-gradient(135deg,var(--yellow),var(--pink));color:#2c003d}.btnGhost{background:rgba(255,255,255,.08)}.btnOk{background:rgba(136,225,110,.16);color:#f2ffe8}
     .scene{display:none;animation:sceneIn .42s ease both}.scene.on{display:grid}.sceneWrap{min-height:calc(100vh - 154px)}.sceneCenter{justify-items:center;align-content:start}.sceneSplit{display:grid;grid-template-columns:minmax(320px,440px) minmax(0,1fr);gap:18px;align-items:start}.sceneStack{display:grid;gap:18px}.panel{padding:28px}.panel.narrow{width:min(520px,100%)}.kicker{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
@@ -174,11 +177,17 @@
               </div>
             </div>
           </div>
-          <div class="identity" id="identity" hidden>
-            <div class="miniAvatar" id="identityAvatar"></div>
-            <div class="identityMeta">
-              <div class="identityName" id="identityName">Jugador</div>
-              <div class="identityRole" id="identityRole">Invitado</div>
+          <div class="profileWrap" id="profileWrap">
+            <button class="identity" id="identity" type="button" hidden>
+              <div class="miniAvatar" id="identityAvatar"></div>
+              <div class="identityMeta">
+                <div class="identityName" id="identityName">Jugador</div>
+                <div class="identityRole" id="identityRole">Invitado</div>
+              </div>
+            </button>
+            <div class="profileMenu" id="profileMenu">
+              <button class="btn btnGhost" id="btnProfileContinue" type="button">Continuar juego</button>
+              <button class="btn btnGhost" id="btnProfileNew" type="button">Empezar nueva partida</button>
             </div>
           </div>
         </div>
@@ -379,6 +388,17 @@
       </div>
     </div>
   </div>
+  <div class="overlay" id="resumeModal">
+    <div class="modalCard">
+      <span class="kicker">Sesion guardada</span>
+      <h2 class="subtitle">Quieres continuar donde lo dejaste?</h2>
+      <p>Hemos recuperado tu sala, tu perfil y el estado actual. Puedes seguir jugando o empezar desde cero.</p>
+      <div class="actions between">
+        <button class="btn btnGhost" id="btnResumeNew" type="button">Empezar nueva partida</button>
+        <button class="btn btnPrimary" id="btnResumeContinue" type="button">Continuar juego</button>
+      </div>
+    </div>
+  </div>
   <div class="overlay" id="durationModal">
     <div class="modalCard">
       <span class="kicker">Duracion</span>
@@ -487,7 +507,7 @@
     const $ = id => document.getElementById(id);
     const ui = {
       introScene:$("introScene"), shell:$("shell"), btnHost:$("btnHost"), btnGuest:$("btnGuest"), btnContinue:$("btnContinue"), menuWrap:$("menuWrap"), menuBtn:$("menuBtn"),
-      identity:$("identity"), scoreChip:$("scoreChip"), scoreChipValue:$("scoreChipValue"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), btnToggleMute:$("btnToggleMute"), soundVolumeInput:$("soundVolumeInput"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
+      identity:$("identity"), scoreChip:$("scoreChip"), scoreChipValue:$("scoreChipValue"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), btnToggleMute:$("btnToggleMute"), soundVolumeInput:$("soundVolumeInput"), profileWrap:$("profileWrap"), profileMenu:$("profileMenu"), btnProfileContinue:$("btnProfileContinue"), btnProfileNew:$("btnProfileNew"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
       scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene")},
       joinCodeOnlyInput:$("joinCodeOnlyInput"), joinStatus:$("joinStatus"), btnJoinBack:$("btnJoinBack"), btnJoinNext:$("btnJoinNext"),
       profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), lobbyLayout:$("lobbyLayout"), setupLayout:$("setupLayout"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"),
@@ -499,7 +519,7 @@
       generatingLine:$("generatingLine"), pausedTitle:$("pausedTitle"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownCategory:$("countdownCategory"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
       scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), emojiModal:$("emojiModal"), emojiGrid:$("emojiGrid"), scoreModal:$("scoreModal"), scoreModalRows:$("scoreModalRows"),
-      btnCloseEmoji:$("btnCloseEmoji"), btnAcceptEmoji:$("btnAcceptEmoji"), btnCloseScore:$("btnCloseScore"),
+      btnCloseEmoji:$("btnCloseEmoji"), btnAcceptEmoji:$("btnAcceptEmoji"), btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
       durationModal:$("durationModal"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
       durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
       customModal:$("customModal"), customThemeInput:$("customThemeInput"), customToneChoices:$("customToneChoices"), customDifficultyChoices:$("customDifficultyChoices"), customPromptInput:$("customPromptInput"),
@@ -760,6 +780,9 @@
     function saveSession(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({playerId:state.playerId,role:state.role,roomCode:state.roomCode,name:state.name,ready:state.ready,avatar:state.avatar,game:state.game})); } catch(_){} }
     function clearSession(){ try{ localStorage.removeItem(STORAGE_KEY); } catch(_){} }
     function readSession(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch(_){ return null; } }
+    function showResumeModal(){ ui.resumeModal.classList.add("on"); }
+    function hideResumeModal(){ ui.resumeModal.classList.remove("on"); }
+    function startFreshFromMenu(){ clearSession(); location.reload(); }
     function syncChoiceGroup(root, key, value){ if(!root) return; root.querySelectorAll(`[data-${key}]`).forEach(btn => btn.classList.toggle("active", btn.dataset[key] === value)); }
     async function restoreSavedSession(saved){
       if(!saved?.role || !saved?.roomCode) return false;
@@ -965,6 +988,7 @@
     ui.menuBtn.onclick = () => ui.menuWrap.classList.toggle("open");
     ui.scoreChip.onclick = () => { renderScoresScene(); ui.scoreModal.classList.add("on"); };
     ui.soundChip.onclick = ev => { ev.stopPropagation(); ui.soundWrap.classList.toggle("open"); };
+    ui.identity.onclick = ev => { ev.stopPropagation(); ui.profileWrap.classList.toggle("open"); };
     ui.btnToggleMute.onclick = ev => {
       ev.stopPropagation();
       if(audioState.muted){
@@ -979,6 +1003,10 @@
       if(!audioState.muted) ensureAudioReady();
     };
     ui.btnCloseScore.onclick = () => ui.scoreModal.classList.remove("on");
+    ui.btnResumeContinue.onclick = () => hideResumeModal();
+    ui.btnResumeNew.onclick = () => startFreshFromMenu();
+    ui.btnProfileContinue.onclick = () => { hideResumeModal(); ui.profileWrap.classList.remove("open"); };
+    ui.btnProfileNew.onclick = () => { ui.profileWrap.classList.remove("open"); startFreshFromMenu(); };
     ui.btnCloseDuration.onclick = () => ui.durationModal.classList.remove("on");
     ui.btnAcceptDuration.onclick = async () => {
       if(state.game.selectedDuration === "timed") state.game.selectedDurationValue = Math.max(5, Number(ui.durationMinutesInput.value || 15));
@@ -999,6 +1027,7 @@
     ui.customDifficultyChoices.querySelectorAll("[data-difficulty]").forEach(btn => btn.onclick = () => { state.game.customConfig.difficulty = btn.dataset.difficulty; syncChoiceGroup(ui.customDifficultyChoices, "difficulty", state.game.customConfig.difficulty); });
     document.addEventListener("click", ev => { if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open"); });
     document.addEventListener("click", ev => { if(!ui.soundWrap.contains(ev.target)) ui.soundWrap.classList.remove("open"); });
+    document.addEventListener("click", ev => { if(!ui.profileWrap.contains(ev.target)) ui.profileWrap.classList.remove("open"); });
     ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
     ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; renderCurrentScene(); ensureAudioReady(); await connectRoom("host", roomCode()); renderCurrentScene(); };
     ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); ensureAudioReady(); renderCurrentScene(); };
@@ -1033,7 +1062,10 @@
     applyAvatar();
     renderCurrentScene();
     if(savedSession?.role && savedSession?.roomCode && !state.role){
-      setTimeout(() => { restoreSavedSession(savedSession); }, 120);
+      setTimeout(async () => {
+        const ok = await restoreSavedSession(savedSession);
+        if(ok) showResumeModal();
+      }, 120);
     }
   </script>
 </body>
