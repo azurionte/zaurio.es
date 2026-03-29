@@ -177,6 +177,15 @@
     body.vertical.phase-scores .playerSub{font-size:.56rem;margin-top:2px}
     body.vertical.phase-scores .points{font-size:.78rem}
     body.vertical.phase-scores .moreLine{font-size:.68rem}
+    body.vertical.phase-scores .podiumBoard{gap:8px}
+    body.vertical.phase-scores .podium{grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+    body.vertical.phase-scores .podiumCard{min-height:auto;padding:10px 10px;border-radius:18px;gap:6px}
+    body.vertical.phase-scores .podiumCard.first{grid-column:1/-1;order:-1}
+    body.vertical.phase-scores .podiumRank{font-size:.64rem}
+    body.vertical.phase-scores .podiumAvatar{width:54px;height:54px}
+    body.vertical.phase-scores .podiumName{font-size:.86rem}
+    body.vertical.phase-scores .podiumMeta{font-size:.64rem}
+    body.vertical.phase-scores .podiumPoints{font-size:1.1rem}
     @media (max-width:980px){
       .answers{grid-template-columns:1fr}
       .podium{grid-template-columns:1fr}
@@ -234,6 +243,12 @@
       body.vertical.phase-scores .playerName{font-size:.66rem}
       body.vertical.phase-scores .playerSub{font-size:.5rem}
       body.vertical.phase-scores .points{font-size:.7rem}
+      body.vertical.phase-scores .podium{gap:6px}
+      body.vertical.phase-scores .podiumCard{padding:8px 8px}
+      body.vertical.phase-scores .podiumAvatar{width:46px;height:46px}
+      body.vertical.phase-scores .podiumName{font-size:.76rem}
+      body.vertical.phase-scores .podiumMeta{font-size:.58rem}
+      body.vertical.phase-scores .podiumPoints{font-size:.96rem}
     }
     body.phase-question .card,body.phase-answer .card{grid-template-rows:auto auto minmax(0,1fr)}
     body.phase-question .hero.compact,body.phase-answer .hero.compact{gap:10px}
@@ -611,6 +626,40 @@
         return;
       }
       if(game.finished){
+        if(isVertical){
+          const topThree = [rows[0], rows[1], rows[2]];
+          const podiumClasses = ["first","second","third"];
+          const podiumRanks = ["1º","2º","3º"];
+          const remainder = rows.slice(3, 7);
+          ui.hero.className = "hero scores center";
+          ui.hero.innerHTML = `<div class="titleWrap">
+                <span class="kick">Marcador</span>
+                <h1 class="title">Podio final</h1>
+              </div>
+              <div class="podiumBoard">
+                <div class="podium">
+                  ${topThree.map((player, index) => player ? `<article class="podiumCard ${podiumClasses[index]}"><div class="podiumRank">${podiumRanks[index]}</div><div class="podiumAvatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div class="podiumName">${esc(player.name || "Jugador")}</div><div class="podiumMeta">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div><div class="podiumPoints">${player.score}</div></article>` : "" ).join("")}
+                </div>
+                ${remainder.length ? `<div class="restBoard">${remainder.map((player, index) => `<article class="roundRow"><div class="rank">#${index + 4}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}${rows.length > 7 ? `<div class="moreLine">+${rows.length - 7} jugadores mas</div>` : ""}</div>` : ""}
+              </div>`;
+          ui.answers.className = "answers";
+          ui.answers.innerHTML = "";
+          return;
+        }
+        const podiumEntries = [
+          rows[1] ? { player: rows[1], cls: "second", rank: "2º" } : null,
+          rows[0] ? { player: rows[0], cls: "first", rank: "1º" } : null,
+          rows[2] ? { player: rows[2], cls: "third", rank: "3º" } : null
+        ].filter(Boolean);
+        const remainderRows = rows.slice(3, 9);
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = `<div class="podiumBoard" style="grid-column:1/-1">
+          <div class="podium">
+            ${podiumEntries.map((entry) => `<article class="podiumCard ${entry.cls}"><div class="podiumRank">${entry.rank}</div><div class="podiumAvatar">${entry.player.avatarSrc ? `<img src="${entry.player.avatarSrc}" alt="">` : "🦖"}</div><div class="podiumName">${esc(entry.player.name || "Jugador")}</div><div class="podiumMeta">${esc(entry.player.role === "host" ? "Anfitrion" : "Invitado")}</div><div class="podiumPoints">${entry.player.score}</div></article>`).join("")}
+          </div>
+          ${remainderRows.length ? `<div class="restBoard"><div class="restTitle">Resto de jugadores</div>${remainderRows.map((player, index) => `<article class="roundRow"><div class="rank">#${index + 4}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}${rows.length > 9 ? `<div class="moreLine">+${rows.length - 9} jugadores mas</div>` : ""}</div>` : ""}
+        </div>`;
+        return;
         const podium = [rows[1], rows[0], rows[2]];
         const podiumClasses = ["second","first","third"];
         const podiumRanks = ["2º","1º","3º"];
