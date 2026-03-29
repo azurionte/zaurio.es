@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Trivialodon Live</title>
+  <style>
+    :root{
+      --bg:radial-gradient(circle at top,#32044d 0%,#170224 42%,#07000b 100%);
+      --panel:rgba(44,7,70,.9);
+      --soft:rgba(255,255,255,.07);
+      --stroke:rgba(255,255,255,.12);
+      --text:#fff;
+      --muted:rgba(255,255,255,.74);
+      --cyan:#3ad8ff;
+      --gold:#ffd84a;
+      --pink:#ff7ecf;
+      --green:#8dea7d;
+      --red:#ff7c92;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Arial,system-ui,sans-serif}
+    body{padding:14px}
+    .app{height:calc(100dvh - 28px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:14px}
+    .top,.card,.answer,.score,.joinCard{border:1px solid var(--stroke);background:var(--panel);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+    .top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding:14px 18px}
+    .brand{width:min(220px,22vw);display:block}
+    .code{justify-self:end;padding:10px 16px;border-radius:999px;background:rgba(255,216,74,.12);color:var(--gold);font-weight:1000;letter-spacing:.08em}
+    .kick{display:inline-flex;padding:6px 12px;border-radius:999px;background:rgba(58,216,255,.14);color:var(--cyan);font-weight:900;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+    .layout{display:grid;grid-template-columns:minmax(0,1.26fr) minmax(320px,.74fr);gap:14px;min-height:0}
+    .mainCol,.sideCol{min-height:0;display:grid;gap:14px}
+    .card{padding:22px;display:grid;gap:18px;min-height:0}
+    .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start}
+    .titleWrap{display:grid;gap:10px}
+    .title{margin:0;font-size:clamp(2rem,3.8vw,4.5rem);line-height:.94;font-weight:1000}
+    .copy{margin:0;color:var(--muted);font-size:1.02rem;line-height:1.5}
+    .timer{width:102px;height:102px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:7px}
+    .timerInner{width:100%;height:100%;border-radius:999px;background:#220433;display:grid;place-items:center;font-weight:1000;font-size:1.6rem}
+    .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:0}
+    .answer{padding:16px 18px;display:grid;gap:10px;align-content:start;background:rgba(255,255,255,.02)}
+    .answer.selected{border-color:rgba(58,216,255,.44);background:linear-gradient(135deg,rgba(58,216,255,.12),rgba(255,126,207,.08))}
+    .answer.correct{border-color:rgba(141,234,125,.82);background:linear-gradient(135deg,rgba(141,234,125,.2),rgba(58,216,255,.08))}
+    .answer.wrong{border-color:rgba(255,124,146,.88);background:linear-gradient(135deg,rgba(255,124,146,.18),rgba(255,126,207,.08))}
+    .answer.locked{box-shadow:0 0 0 1px rgba(58,216,255,.14),0 0 22px rgba(58,216,255,.08)}
+    .answerTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .aKey{color:var(--gold);font-weight:1000;margin-right:8px}
+    .aText{font-size:clamp(1rem,1.35vw,1.42rem);font-weight:900;line-height:1.24}
+    .aState{font-size:.95rem;font-weight:900;color:#fff;white-space:nowrap}
+    .voteCloud{display:flex;flex-wrap:wrap;gap:8px}
+    .voteTag{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);font-size:.84rem;color:#fff}
+    .fact{padding:18px 20px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,216,74,.08));display:grid;gap:8px}
+    .fact p{margin:0;color:var(--muted);line-height:1.45;font-size:1rem}
+    .scoreHead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .scoreList{display:grid;gap:10px;min-height:0}
+    .score{padding:12px 14px;display:grid;grid-template-columns:50px minmax(0,1fr) auto;gap:12px;align-items:center}
+    .avatar{width:50px;height:50px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .playerName{font-weight:1000;font-size:1.04rem;line-height:1.15}
+    .playerSub{margin-top:4px;color:var(--muted);font-size:.88rem}
+    .points{font-size:1.28rem;font-weight:1000;color:var(--gold)}
+    .empty{display:grid;place-items:center;text-align:center;color:var(--muted);height:100%}
+    .paused,.countdownHero{display:grid;place-items:center;text-align:center;height:100%}
+    .paused .title,.countdownHero .title{font-size:clamp(2.2rem,5vw,5rem)}
+    .countValue{font-size:clamp(4rem,12vw,9rem);font-weight:1000;line-height:1}
+    .join{height:100dvh;display:grid;place-items:center;padding:16px}
+    .joinCard{width:min(520px,100%);padding:28px;display:grid;gap:16px}
+    input{width:100%;padding:15px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;font:inherit}
+    button{padding:14px 18px;border:0;border-radius:999px;background:linear-gradient(135deg,var(--gold),var(--pink));font:inherit;font-weight:1000;color:#230333;cursor:pointer}
+    .statusLine{color:var(--muted);font-size:.96rem}
+    .hidden{display:none!important}
+    body.vertical .app{gap:10px;height:calc(100dvh - 20px)}
+    body.vertical .top{grid-template-columns:1fr auto;gap:10px;padding:10px 12px}
+    body.vertical .brand{width:min(148px,44vw)}
+    body.vertical .layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1.05fr) minmax(220px,.95fr);gap:10px}
+    body.vertical .card{padding:14px;gap:12px;border-radius:22px}
+    body.vertical .hero{gap:12px}
+    body.vertical .title{font-size:clamp(1.45rem,6.7vw,2.4rem)}
+    body.vertical .copy{font-size:.9rem}
+    body.vertical .timer{width:74px;height:74px;padding:5px}
+    body.vertical .timerInner{font-size:1.1rem}
+    body.vertical .answers{gap:8px}
+    body.vertical .answer{padding:11px 12px;border-radius:20px}
+    body.vertical .aText{font-size:.94rem}
+    body.vertical .aState{font-size:.82rem}
+    body.vertical .voteTag{font-size:.75rem;padding:5px 8px}
+    body.vertical .score{padding:10px 12px;grid-template-columns:40px minmax(0,1fr) auto}
+    body.vertical .avatar{width:40px;height:40px}
+    body.vertical .playerName{font-size:.9rem}
+    body.vertical .playerSub{font-size:.76rem}
+    body.vertical .points{font-size:1.02rem}
+    body.vertical .countValue{font-size:clamp(3.2rem,18vw,6rem)}
+    body.vertical .fact{padding:14px 16px}
+    @media (max-width:980px){
+      .layout{grid-template-columns:1fr}
+      .answers{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <main class="app hidden" id="app">
+    <header class="top">
+      <img class="brand" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon">
+      <div></div>
+      <div class="code" id="roomCode">0000</div>
+    </header>
+
+    <section class="layout">
+      <section class="mainCol">
+        <article class="card" id="mainCard">
+          <div class="hero">
+            <div class="titleWrap">
+              <span class="kick" id="category">Categoria</span>
+              <h1 class="title" id="prompt">Esperando partida…</h1>
+              <p class="copy" id="copy">Conecta una sala para emitir Trivialodon en directo.</p>
+            </div>
+            <div class="timer" id="timerRing" style="--timer:1">
+              <div class="timerInner" id="timer">--</div>
+            </div>
+          </div>
+          <div class="fact hidden" id="fact">
+            <span class="kick" id="factKick">Resumen</span>
+            <p id="factText"></p>
+          </div>
+          <div class="answers" id="answers"></div>
+        </article>
+      </section>
+
+      <aside class="sideCol">
+        <article class="card">
+          <div class="scoreHead">
+            <span class="kick">Marcador</span>
+            <span class="statusLine" id="scoreStatus">Sesion en directo</span>
+          </div>
+          <div class="scoreList" id="scores"></div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <section class="join" id="join">
+    <article class="joinCard">
+      <span class="kick">Live</span>
+      <h2 style="margin:0;font-size:2rem">Introduce el codigo de sala</h2>
+      <p class="statusLine" style="margin:0">Usa `?sala=1234` para abrirlo directo y `?layout=vertical` si lo quieres en formato TikTok.</p>
+      <input id="codeInput" maxlength="4" inputmode="numeric" placeholder="1234">
+      <button id="btnJoin" type="button">Conectar emision</button>
+    </article>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
+    const params = new URLSearchParams(location.search);
+    const $ = id => document.getElementById(id);
+    const ui = {
+      app:$("app"), join:$("join"), roomCode:$("roomCode"), category:$("category"), prompt:$("prompt"), copy:$("copy"),
+      timer:$("timer"), timerRing:$("timerRing"), fact:$("fact"), factKick:$("factKick"), factText:$("factText"),
+      answers:$("answers"), scores:$("scores"), scoreStatus:$("scoreStatus"), codeInput:$("codeInput"), btnJoin:$("btnJoin")
+    };
+    let channel = null;
+    let game = {phase:"lobby",scores:{},questionSet:[]};
+    let players = [];
+
+    const esc = value => String(value || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    const normalize = value => String(value || "").replace(/\D/g,"").slice(0,4);
+    const countSeconds = ts => Math.max(0, Math.ceil((Number(ts || 0) - Date.now()) / 1000));
+    const nextQuestion = () => Array.isArray(game.questionSet) ? game.questionSet[game.questionIndex || 0] : null;
+    const scoreRows = () => players.filter(player => player.ready).map(player => ({...player, score:Number((game.scores || {})[player.playerId] || 0)})).sort((a,b) => b.score - a.score || String(a.name || "").localeCompare(String(b.name || ""),"es"));
+    const voteMap = question => {
+      const map = {};
+      Object.entries(question?.responses || {}).forEach(([playerId, response]) => {
+        const idx = Number(response?.answerIndex);
+        if(Number.isInteger(idx)){
+          map[idx] ||= [];
+          const player = players.find(item => item.playerId === playerId);
+          map[idx].push(player?.name || "Jugador");
+        }
+      });
+      return map;
+    };
+    function setLayoutMode(){
+      const forced = params.get("layout");
+      const vertical = forced === "vertical" || (forced !== "horizontal" && window.matchMedia("(orientation: portrait)").matches);
+      document.body.classList.toggle("vertical", vertical);
+    }
+    function renderScores(){
+      const rows = scoreRows();
+      ui.scoreStatus.textContent = game.finished ? "Partida cerrada" : "Sesion en directo";
+      ui.scores.innerHTML = rows.length ? rows.map((player, index) => `<article class="score"><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">#${index + 1} ${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("") : `<div class="empty">El marcador aparecera aqui cuando entren jugadores.</div>`;
+    }
+    function renderCountdown(){
+      const next = nextQuestion();
+      const left = countSeconds(game.countdownEndAt || Date.now());
+      ui.category.textContent = next?.type === "speed" ? `Test de velocidad · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general");
+      ui.prompt.textContent = next?.type === "speed" ? "Se viene un test de velocidad" : "Preparando la siguiente pregunta";
+      ui.copy.textContent = next?.type === "speed" ? "Todas las respuestas puntuan distinto. La mejor desaparece en cuanto alguien la coge." : "Respira un segundo. Enseguida aparecen la pregunta y las opciones.";
+      ui.timer.textContent = String(left || 0);
+      ui.timerRing.style.setProperty("--timer", Math.max(0, Math.min(1, left / 4)));
+      ui.fact.classList.add("hidden");
+      ui.answers.innerHTML = `<div class="countdownHero" style="grid-column:1/-1"><div style="display:grid;gap:12px;justify-items:center"><span class="kick">${esc(next?.category || "Categoria sorpresa")}</span><div class="countValue">${Math.max(1,left)}</div></div></div>`;
+    }
+    function renderPaused(){
+      ui.category.textContent = "Sesion";
+      ui.prompt.textContent = "Juego pausado";
+      ui.copy.textContent = "La partida esta detenida por el anfitrion. La emision sigue viva y volvera cuando se reanude.";
+      ui.timer.textContent = "||";
+      ui.timerRing.style.setProperty("--timer", 0);
+      ui.fact.classList.add("hidden");
+      ui.answers.innerHTML = `<div class="paused" style="grid-column:1/-1"><div style="display:grid;gap:12px;justify-items:center"><span class="kick">Pausa</span><div class="countValue">⏸</div></div></div>`;
+    }
+    function renderQuestion(){
+      const question = game.question || {};
+      const isSpeed = question.type === "speed";
+      const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt;
+      const leadLeft = countSeconds(question.answersVisibleAt || Date.now());
+      const answerLeft = countSeconds(question.endAt || Date.now());
+      const total = answersVisible ? Math.max(1, Number(game.answerSeconds || 15)) : Math.max(1, Number(game.questionLeadSeconds || 6));
+      const left = answersVisible ? answerLeft : leadLeft;
+      ui.category.textContent = isSpeed ? `Test de velocidad · ${question.category || "Categoria sorpresa"}` : (question.category || "Cultura general");
+      ui.prompt.textContent = question.prompt || "Esperando pregunta…";
+      ui.copy.textContent = !answersVisible ? "Primero entra la pregunta. Las opciones caen en pantalla en unos segundos." : (isSpeed ? "Las respuestas se bloquean en tiempo real. Cuanto mejor sea la opcion, mas puntos vale." : "Se ve en directo que opciones esta marcando la gente.");
+      ui.timer.textContent = String(left);
+      ui.timerRing.style.setProperty("--timer", Math.max(0, Math.min(1, left / total)));
+
+      if(!answersVisible){
+        ui.fact.classList.add("hidden");
+        ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">Las opciones entran en ${left}…</div>`;
+        return;
+      }
+
+      const votes = voteMap(question);
+      const cards = (question.choices || []).map((choice, index) => {
+        const names = votes[index] || [];
+        const locked = isSpeed && names.length > 0;
+        const revealCorrect = !isSpeed && question.revealed && question.correct === index;
+        const revealWrong = isSpeed && question.revealed && Number(question.scores?.[index] || 0) === 0;
+        const stateLine = isSpeed
+          ? (question.revealed ? `${Number(question.scores?.[index] || 0)} pts` : (locked ? "Cogida" : "Libre"))
+          : (question.revealed ? (revealCorrect ? "Correcta" : `${names.length} voto${names.length === 1 ? "" : "s"}`) : `${names.length} voto${names.length === 1 ? "" : "s"}`);
+        return `<article class="answer ${locked ? "locked selected" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""}"><div class="answerTop"><div class="aText"><span class="aKey">${String.fromCharCode(65 + index)}</span>${esc(choice)}</div><div class="aState">${esc(stateLine)}</div></div><div class="voteCloud">${names.map(name => `<span class="voteTag">${esc(name)}</span>`).join("")}</div></article>`;
+      }).join("");
+      ui.answers.innerHTML = cards || `<div class="empty" style="grid-column:1/-1">La pregunta aparecera aqui.</div>`;
+
+      if(question.revealed && isSpeed && Array.isArray(question.ranking) && question.ranking.length){
+        ui.fact.classList.remove("hidden");
+        ui.factKick.textContent = "Orden correcto";
+        ui.factText.textContent = question.ranking.map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" · ");
+      } else if(question.revealed && question.explanation){
+        ui.fact.classList.remove("hidden");
+        ui.factKick.textContent = "Fun fact";
+        ui.factText.textContent = question.explanation;
+      } else {
+        ui.fact.classList.add("hidden");
+      }
+    }
+    function renderScoresPhase(){
+      ui.category.textContent = "Marcador";
+      ui.prompt.textContent = game.finished ? "Partida terminada" : "Puntuacion del round";
+      ui.copy.textContent = game.finished ? "Resumen final de la sesion." : "Miramos el ranking antes de la siguiente ronda.";
+      ui.timer.textContent = "--";
+      ui.timerRing.style.setProperty("--timer", 0);
+      ui.fact.classList.add("hidden");
+      ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">${game.finished ? "La sesion ha llegado al final." : "Pausa breve para leer el marcador."}</div>`;
+    }
+    function renderLobby(){
+      ui.category.textContent = "Sala";
+      ui.prompt.textContent = "Esperando que la partida arranque";
+      ui.copy.textContent = "Cuando el anfitrion avance, aqui se vera la pregunta, los bloqueos en tiempo real y el marcador.";
+      ui.timer.textContent = "--";
+      ui.timerRing.style.setProperty("--timer", 0);
+      ui.fact.classList.add("hidden");
+      ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">La emision esta lista para salir a pantalla.</div>`;
+    }
+    function render(){
+      ui.app.classList.toggle("hidden", !channel);
+      ui.join.classList.toggle("hidden", !!channel);
+      ui.roomCode.textContent = channel ? channel.topic.split(":").pop() : "0000";
+      if(game.phase === "paused") renderPaused();
+      else if(game.phase === "countdown") renderCountdown();
+      else if(game.phase === "question" || game.phase === "answer") renderQuestion();
+      else if(game.phase === "scores") renderScoresPhase();
+      else renderLobby();
+      renderScores();
+    }
+    function syncPlayers(){
+      if(!channel) return;
+      const raw = [];
+      Object.values(channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry)));
+      const map = new Map();
+      raw.forEach(entry => {
+        const prev = map.get(entry.playerId);
+        if(!prev || entry.updatedAt > prev.updatedAt) map.set(entry.playerId, entry);
+      });
+      players = [...map.values()];
+      render();
+    }
+    async function join(code){
+      if(channel){ try{ await sb.removeChannel(channel); } catch(_){} }
+      channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:`live-${code}`}}});
+      channel
+        .on("presence",{event:"sync"},syncPlayers)
+        .on("broadcast",{event:"game_state"},({payload}) => { if(payload){ game = payload; render(); } })
+        .subscribe(status => { if(status === "SUBSCRIBED") render(); });
+    }
+
+    ui.btnJoin.onclick = () => {
+      const code = normalize(ui.codeInput.value);
+      if(code.length === 4) join(code);
+    };
+    ui.codeInput.addEventListener("keydown", ev => {
+      if(ev.key === "Enter"){
+        ev.preventDefault();
+        ui.btnJoin.click();
+      }
+    });
+    window.addEventListener("resize", setLayoutMode);
+    setLayoutMode();
+
+    const auto = normalize(params.get("sala"));
+    if(auto.length === 4) join(auto);
+  </script>
+</body>
+</html>

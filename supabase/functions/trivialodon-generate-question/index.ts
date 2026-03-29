@@ -20,8 +20,9 @@ function json(body, init) {
 
 function buildPrompt(input) {
   const shape = input.questionCount > 1
-    ? '[{"question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."}]'
-    : '{"question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."}';
+    ? '[{"type":"standard","question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."},{"type":"speed","question":"...","choices":[{"text":"...","score":140,"rank":1}],"explanation":"...","category":"...","difficulty":"..."}]'
+    : '{"type":"standard","question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."}';
+  const speedCount = Math.max(1, Math.round(input.questionCount * 0.2));
   return [
     input.questionCount > 1
       ? `Genera ${input.questionCount} preguntas para un concurso de trivia en espanol.`
@@ -37,8 +38,12 @@ function buildPrompt(input) {
     "El JSON debe seguir exactamente esta forma:",
     shape,
     "Reglas:",
-    "- choices debe tener exactamente el numero pedido.",
-    "- correct_index debe apuntar a una unica respuesta correcta.",
+    "- En preguntas standard, choices debe tener exactamente el numero pedido.",
+    "- En preguntas standard, correct_index debe apuntar a una unica respuesta correcta.",
+    "- En preguntas speed, choices debe ser un array de objetos con text, score y rank.",
+    "- En preguntas speed, todas las respuestas deben ser validas, pero unas mejores que otras.",
+    "- En preguntas speed, rank 1 debe ser la mejor y rank mayor la peor.",
+    `- Si devuelves varias preguntas, exactamente ${speedCount} deben ser de tipo "speed" y el resto "standard".`,
     "- No repitas opciones ni hagas respuestas ambiguas.",
     "- explanation debe ser breve, maxima dos frases.",
     input.questionCount > 1 ? `- Debes devolver exactamente ${input.questionCount} preguntas.` : "",
@@ -46,6 +51,25 @@ function buildPrompt(input) {
 }
 
 function normalizeQuestion(raw, answerCount) {
+  const type = String(raw.type || "standard").trim();
+  if (type === "speed") {
+    const choices = Array.isArray(raw.choices) ? raw.choices : [];
+    if (choices.length !== answerCount) {
+      throw new Error(`Gemini devolvio ${choices.length} opciones speed y esperabamos ${answerCount}.`);
+    }
+    return {
+      type: "speed",
+      question: String(raw.question || "").trim(),
+      choices: choices.map((item) => ({
+        text: String(item?.text || "").trim(),
+        score: Number(item?.score || 0),
+        rank: Number(item?.rank || 0),
+      })),
+      explanation: String(raw.explanation || "").trim(),
+      category: String(raw.category || "Personalizado").trim(),
+      difficulty: String(raw.difficulty || "media").trim(),
+    };
+  }
   const choices = Array.isArray(raw.choices) ? raw.choices.filter(Boolean).map(String) : [];
   if (choices.length !== answerCount) {
     throw new Error(`Gemini devolvio ${choices.length} opciones y esperabamos ${answerCount}.`);
@@ -55,6 +79,7 @@ function normalizeQuestion(raw, answerCount) {
     throw new Error("Gemini devolvio un correct_index invalido.");
   }
   return {
+    type: "standard",
     question: String(raw.question || "").trim(),
     choices,
     correct_index: correctIndex,
