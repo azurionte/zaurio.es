@@ -183,7 +183,7 @@
     const ui = {
       app:$("app"), join:$("join"), roomCode:$("roomCode"), category:$("category"), prompt:$("prompt"), copy:$("copy"),
       timer:$("timer"), timerRing:$("timerRing"), fact:$("fact"), factKick:$("factKick"), factText:$("factText"),
-      answers:$("answers"), scores:$("scores"), scoreStatus:$("scoreStatus"), sideKick:$("sideKick"), codeInput:$("codeInput"), btnJoin:$("btnJoin")
+      answers:$("answers"), scores:$("scores"), scoreStatus:$("scoreStatus"), sideKick:$("sideKick"), codeInput:$("codeInput"), btnJoin:$("btnJoin"), sideCol:document.querySelector(".sideCol")
     };
     let channel = null;
     let game = {phase:"lobby",scores:{},questionSet:[]};
@@ -240,6 +240,7 @@
       ` : `<div class="empty">El marcador aparecera aqui cuando entren jugadores.</div>`;
     }
     function renderCountdown(){
+      ui.sideCol.classList.remove("hidden");
       const next = nextQuestion();
       const left = countSeconds(game.countdownEndAt || Date.now());
       ui.category.textContent = next?.type === "speed" ? `Test de velocidad · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general");
@@ -251,6 +252,7 @@
       ui.answers.innerHTML = `<div class="countdownHero" style="grid-column:1/-1"><div style="display:grid;gap:12px;justify-items:center"><span class="kick">${esc(next?.category || "Categoria sorpresa")}</span><div class="countValue">${Math.max(1,left)}</div></div></div>`;
     }
     function renderPaused(){
+      ui.sideCol.classList.remove("hidden");
       ui.category.textContent = "Sesion";
       ui.prompt.textContent = "Juego pausado";
       ui.copy.textContent = "La partida esta detenida por el anfitrion. La emision sigue viva y volvera cuando se reanude.";
@@ -262,6 +264,7 @@
     function renderQuestion(){
       const question = game.question || {};
       const isSpeed = question.type === "speed";
+      ui.sideCol.classList.add("hidden");
       const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt;
       const leadLeft = countSeconds(question.answersVisibleAt || Date.now());
       const answerLeft = countSeconds(question.endAt || Date.now());
@@ -280,7 +283,6 @@
       }
 
       const votes = voteMap(question);
-      renderAudienceBoard(question);
       const cards = (question.choices || []).map((choice, index) => {
         const voters = votes[index] || [];
         const locked = isSpeed && voters.length > 0;
@@ -308,6 +310,7 @@
       }
     }
     function renderScoresPhase(){
+      ui.sideCol.classList.remove("hidden");
       ui.category.textContent = "Marcador";
       ui.prompt.textContent = game.finished ? "Partida terminada" : "Puntuacion del round";
       ui.copy.textContent = game.finished ? "Resumen final de la sesion." : "Miramos el ranking antes de la siguiente ronda.";
@@ -317,6 +320,7 @@
       ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">${game.finished ? "La sesion ha llegado al final." : "Pausa breve para leer el marcador."}</div>`;
     }
     function renderLobby(){
+      ui.sideCol.classList.remove("hidden");
       ui.sideKick.textContent = "Marcador";
       ui.category.textContent = "Sala";
       ui.prompt.textContent = "Esperando que la partida arranque";
@@ -335,6 +339,9 @@
       else if(game.phase === "question" || game.phase === "answer") renderQuestion();
       else if(game.phase === "scores") renderScoresPhase();
       else renderLobby();
+      if(game.phase === "question" || game.phase === "answer"){
+        return;
+      }
       renderScores();
     }
     function syncPlayers(){
@@ -355,7 +362,12 @@
       channel
         .on("presence",{event:"sync"},syncPlayers)
         .on("broadcast",{event:"game_state"},({payload}) => { if(payload){ game = payload; render(); } })
-        .subscribe(status => { if(status === "SUBSCRIBED") render(); });
+        .subscribe(async status => {
+          if(status === "SUBSCRIBED"){
+            render();
+            await channel.send({type:"broadcast",event:"request_state",payload:{viewer:"live",requestedAt:Date.now()}});
+          }
+        });
     }
 
     ui.btnJoin.onclick = () => {
