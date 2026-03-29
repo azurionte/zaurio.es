@@ -512,7 +512,7 @@
           if(state.game.selectedMode === "custom"){
             const amount = plannedQuestionCount();
             ui.setupActions.innerHTML = `<div class="countPill">Generando ${amount} preguntas...</div>`;
-            const { data, error } = await sb.functions.invoke("trivialodon-generate-question", { body:{
+            const { data, error } = await sb.functions.invoke("trivialodon-generate-question", { headers:{Authorization:`Bearer ${SUPABASE_KEY}`,apikey:SUPABASE_KEY}, body:{
               theme: state.game.customConfig.theme || "conocimiento general",
               tone: state.game.customConfig.tone || "divertido",
               difficulty: state.game.customConfig.difficulty || "media",
