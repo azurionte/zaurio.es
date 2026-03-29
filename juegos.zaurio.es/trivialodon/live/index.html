@@ -6,162 +6,139 @@
   <title>Trivialodon Live</title>
   <style>
     :root{
-      --bg:radial-gradient(circle at top,#32044d 0%,#170224 42%,#07000b 100%);
-      --panel:rgba(44,7,70,.9);
-      --soft:rgba(255,255,255,.07);
+      --bg:radial-gradient(circle at top,#31044c 0%,#180225 44%,#07000b 100%);
+      --panel:rgba(44,7,70,.92);
+      --panel-soft:rgba(255,255,255,.04);
       --stroke:rgba(255,255,255,.12);
       --text:#fff;
-      --muted:rgba(255,255,255,.74);
-      --cyan:#3ad8ff;
+      --muted:rgba(255,255,255,.72);
+      --cyan:#38dcff;
       --gold:#ffd84a;
-      --pink:#ff7ecf;
-      --green:#8dea7d;
-      --red:#ff7c92;
+      --pink:#ff7dcf;
+      --green:#90eb7c;
+      --red:#ff8095;
     }
     *{box-sizing:border-box}
     html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Arial,system-ui,sans-serif}
     body{padding:14px}
     .app{height:calc(100dvh - 28px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:14px}
-    .top,.card,.answer,.score,.joinCard{border:1px solid var(--stroke);background:var(--panel);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
-    .top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding:14px 18px}
+    .top,.card,.answer,.roundRow,.podiumCard,.joinCard{border:1px solid var(--stroke);background:var(--panel);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+    .top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:14px 18px;gap:12px}
     .brand{width:min(220px,22vw);display:block}
-    .code{justify-self:end;padding:10px 16px;border-radius:999px;background:rgba(255,216,74,.12);color:var(--gold);font-weight:1000;letter-spacing:.08em}
-    .kick{display:inline-flex;padding:6px 12px;border-radius:999px;background:rgba(58,216,255,.14);color:var(--cyan);font-weight:900;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
-    .layout{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;min-height:0}
-    .layout.withScores{grid-template-columns:minmax(0,1.18fr) minmax(320px,.82fr)}
-    .mainCol,.sideCol{min-height:0;display:grid;gap:14px}
-    .card{padding:22px;display:grid;gap:18px;min-height:0}
-    .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start}
-    .hero.centered{min-height:min(62vh,720px);align-content:center}
-    .hero.centered .titleWrap{justify-items:center;text-align:center;max-width:min(1100px,92%)}
-    .hero.centered .copy{max-width:48ch}
-    .hero.questionLead{position:relative;grid-template-columns:1fr;justify-items:center;text-align:center;min-height:min(72vh,780px);align-content:center}
-    .hero.questionLead .titleWrap{justify-items:center;text-align:center;max-width:min(1180px,90%)}
-    .hero.questionLead .copy{max-width:40ch}
-    .hero.questionLead .timer{position:absolute;top:4px;right:4px}
-    .hero.scoreOnly{grid-template-columns:1fr;justify-items:center;text-align:center;min-height:min(66vh,740px);align-content:start}
-    .hero.scoreOnly .titleWrap{justify-items:center;text-align:center;max-width:min(980px,92%)}
-    .hero.compact{min-height:auto;align-content:start}
-    .hero.compact .titleWrap{justify-items:start;text-align:left;max-width:none}
-    .titleWrap{display:grid;gap:10px}
-    .title{margin:0;font-size:clamp(2.3rem,4.4vw,5rem);line-height:.94;font-weight:1000}
-    .copy{margin:0;color:var(--muted);font-size:1.02rem;line-height:1.5}
-    .timer{width:102px;height:102px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:7px}
-    .timerInner{width:100%;height:100%;border-radius:999px;background:#220433;display:grid;place-items:center;font-weight:1000;font-size:1.6rem}
-    .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:0}
-    .answers.revealed{animation:answersIn .48s ease both}
-    .answer{padding:16px 18px;display:grid;gap:10px;align-content:start;background:rgba(255,255,255,.02)}
-    .answer.selected{border-color:rgba(58,216,255,.44);background:linear-gradient(135deg,rgba(58,216,255,.12),rgba(255,126,207,.08))}
-    .answer.correct{border-color:rgba(141,234,125,.82);background:linear-gradient(135deg,rgba(141,234,125,.2),rgba(58,216,255,.08))}
-    .answer.wrong{border-color:rgba(255,124,146,.88);background:linear-gradient(135deg,rgba(255,124,146,.18),rgba(255,126,207,.08))}
-    .answer.locked{box-shadow:0 0 0 1px rgba(58,216,255,.14),0 0 22px rgba(58,216,255,.08)}
+    .topCenter{display:grid;place-items:center}
+    .code{padding:10px 16px;border-radius:999px;background:rgba(255,216,74,.12);color:var(--gold);font-weight:1000;letter-spacing:.08em}
+    .layout{display:grid;grid-template-columns:1fr;min-height:0}
+    .card{padding:22px;display:grid;gap:16px;min-height:0}
+    .kick{display:inline-flex;padding:6px 12px;border-radius:999px;background:rgba(56,220,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .hero{display:grid;gap:18px;position:relative;min-height:0}
+    .hero.center{align-content:center;justify-items:center;text-align:center;min-height:min(70vh,780px)}
+    .hero.center .titleWrap{justify-items:center;text-align:center;max-width:min(1180px,90%);margin:0 auto}
+    .hero.lead{align-content:center;justify-items:center;text-align:center;min-height:min(72vh,820px)}
+    .hero.lead .titleWrap{justify-items:center;text-align:center;max-width:min(1220px,88%);margin:0 auto}
+    .hero.compact{align-content:start}
+    .hero.compact .titleWrap{max-width:none}
+    .hero.compact .title{font-size:clamp(1.8rem,3vw,3.4rem)}
+    .hero.scores{align-content:start;justify-items:center;text-align:center}
+    .hero.scores .titleWrap{justify-items:center;text-align:center;max-width:min(980px,92%);margin:0 auto}
+    .titleWrap{display:grid;gap:12px}
+    .title{margin:0;font-size:clamp(2.6rem,5vw,5.5rem);line-height:.94;font-weight:1000}
+    .copy{margin:0;color:var(--muted);font-size:1.04rem;line-height:1.48}
+    .timer{width:96px;height:96px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:7px;position:absolute;top:0;right:0}
+    .timerInner{width:100%;height:100%;border-radius:999px;background:#220432;display:grid;place-items:center;font-weight:1000;font-size:1.5rem}
+    .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .answers.revealed{animation:answersIn .45s ease both}
+    .countStage{display:grid;gap:16px;justify-items:center;text-align:center;align-content:center;min-height:min(48vh,520px);width:min(980px,100%);margin:0 auto;padding:34px 28px;border-radius:34px;border:1px solid rgba(255,255,255,.1);background:
+      radial-gradient(circle at top,rgba(255,255,255,.06),transparent 48%),
+      linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+    .countLabel{font-size:.78rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+    .countCategory{font-size:clamp(2rem,3.2vw,3.1rem);font-weight:1000;line-height:1.04}
+    .countBig{font-size:clamp(6rem,13vw,9rem);font-weight:1000;line-height:1;color:#fff;text-shadow:0 10px 30px rgba(255,216,74,.16)}
+    .countText{font-size:1rem;color:var(--muted);max-width:34ch}
+    .answer{padding:16px 18px;display:grid;gap:10px;background:rgba(255,255,255,.02)}
+    .answer.selected{border-color:rgba(56,220,255,.48);background:linear-gradient(135deg,rgba(56,220,255,.12),rgba(255,125,207,.08))}
+    .answer.correct{border-color:rgba(144,235,124,.84);background:linear-gradient(135deg,rgba(144,235,124,.22),rgba(56,220,255,.08))}
+    .answer.wrong{border-color:rgba(255,128,149,.86);background:linear-gradient(135deg,rgba(255,128,149,.18),rgba(255,125,207,.08))}
     .answerTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-    .aKey{color:var(--gold);font-weight:1000;margin-right:8px}
-    .aText{font-size:clamp(1rem,1.35vw,1.42rem);font-weight:900;line-height:1.24}
-    .aState{font-size:.95rem;font-weight:900;color:#fff;white-space:nowrap}
+    .aKey{margin-right:8px;color:var(--gold);font-weight:1000}
+    .aText{font-size:clamp(1rem,1.34vw,1.45rem);font-weight:900;line-height:1.24}
+    .aState{font-size:.94rem;font-weight:900;color:#fff;white-space:nowrap}
     .voteCloud{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-    .voteAvatar{width:34px;height:34px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 18px rgba(0,0,0,.18)}
+    .voteAvatar{width:34px;height:34px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
     .voteAvatar img{width:100%;height:100%;object-fit:cover}
-    .voteMore{padding:0 8px;height:30px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:.8rem;color:#fff}
+    .voteMore{padding:0 8px;height:30px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:.8rem}
     .fact{padding:18px 20px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,216,74,.08));display:grid;gap:8px}
-    .fact p{margin:0;color:var(--muted);line-height:1.45;font-size:1rem}
-    .scoreHead{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .scoreList{display:grid;gap:10px;min-height:0;align-content:start}
-    .liveBoard{display:grid;gap:12px;align-content:start}
-    .liveStrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:12px}
-    .livePlayer{padding:10px;border-radius:22px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;gap:8px;justify-items:center;text-align:center}
-    .livePlayer .avatar{width:58px;height:58px}
-    .livePlayerName{font-size:.84rem;font-weight:900;line-height:1.1;color:#fff}
-    .livePlayerState{font-size:.74rem;color:var(--muted)}
-    .leader{padding:16px 18px;border-radius:24px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(135deg,rgba(255,216,74,.16),rgba(255,126,207,.12));display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center}
-    .leader .avatar{width:64px;height:64px}
-    .leaderLabel{font-size:.74rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:900}
-    .leader .playerName{font-size:1.22rem}
-    .leaderPoints{font-size:2rem;font-weight:1000;color:var(--gold)}
-    .score{padding:12px 14px;display:grid;grid-template-columns:38px 42px minmax(0,1fr) auto;gap:12px;align-items:center;background:rgba(255,255,255,.03)}
-    .rank{width:38px;height:38px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.06);font-weight:1000;color:var(--gold)}
-    .avatar{width:50px;height:50px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+    .fact p{margin:0;color:var(--muted);line-height:1.45}
+    .roundBoard,.podiumBoard{display:grid;gap:12px;width:min(1280px,100%);margin:0 auto}
+    .roundHeadline{display:grid;gap:10px;justify-items:center;text-align:center;padding:18px 22px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,216,74,.16),rgba(255,125,207,.12))}
+    .roundHeadline strong{font-size:clamp(1.6rem,3.1vw,2.9rem);line-height:1}
+    .roundHeadline span{color:var(--muted);font-size:1rem}
+    .roundGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .roundRow{padding:12px 14px;display:grid;grid-template-columns:34px 42px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--panel-soft)}
+    .roundRow.leader{grid-column:1/-1;padding:14px 16px;background:linear-gradient(135deg,rgba(255,216,74,.16),rgba(255,125,207,.12))}
+    .rank{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.06);font-size:.8rem;font-weight:1000;color:var(--gold)}
+    .avatar{width:42px;height:42px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08)}
     .avatar img{width:100%;height:100%;object-fit:cover}
-    .playerName{font-weight:1000;font-size:1.04rem;line-height:1.15}
-    .playerSub{margin-top:4px;color:var(--muted);font-size:.88rem}
-    .points{font-size:1.18rem;font-weight:1000;color:var(--gold)}
-    .moreLine{padding:8px 12px;text-align:center;color:var(--muted);font-size:.9rem}
-    .empty{display:grid;place-items:center;text-align:center;color:var(--muted);height:100%}
-    .scoreStage{display:grid;gap:16px;width:min(1120px,100%);margin:0 auto}
+    .playerName{font-size:1rem;font-weight:1000;line-height:1.04}
+    .playerSub{margin-top:3px;color:var(--muted);font-size:.8rem}
+    .points{font-size:1.1rem;font-weight:1000;color:var(--gold)}
+    .moreLine,.empty{color:var(--muted);text-align:center}
     .podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:16px;align-items:end}
-    .podiumCard{padding:18px 16px;border-radius:28px;border:1px solid rgba(255,255,255,.12);display:grid;gap:10px;justify-items:center;text-align:center;background:rgba(255,255,255,.04)}
-    .podiumCard.first{min-height:320px;background:linear-gradient(180deg,rgba(255,216,74,.2),rgba(255,126,207,.12))}
-    .podiumCard.second,.podiumCard.third{min-height:260px}
-    .podiumRank{font-size:.84rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:900}
-    .podiumAvatar{width:120px;height:120px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:0 16px 38px rgba(0,0,0,.22)}
+    .podiumCard{padding:18px 16px;display:grid;gap:10px;justify-items:center;text-align:center;background:rgba(255,255,255,.04)}
+    .podiumCard.first{min-height:300px;background:linear-gradient(180deg,rgba(255,216,74,.2),rgba(255,125,207,.12))}
+    .podiumCard.second,.podiumCard.third{min-height:248px}
+    .podiumRank{font-size:.78rem;font-weight:900;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+    .podiumAvatar{width:112px;height:112px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08)}
     .podiumAvatar img{width:100%;height:100%;object-fit:cover}
-    .podiumName{font-size:1.6rem;font-weight:1000;line-height:1.05}
-    .podiumPoints{font-size:2.4rem;font-weight:1000;color:var(--gold)}
-    .podiumMeta{font-size:.9rem;color:var(--muted)}
+    .podiumName{font-size:1.5rem;font-weight:1000;line-height:1.04}
+    .podiumMeta{font-size:.92rem;color:var(--muted)}
+    .podiumPoints{font-size:2.1rem;font-weight:1000;color:var(--gold)}
     .restBoard{display:grid;gap:10px}
-    .restTitle{font-size:.84rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:900;text-align:center}
-    .paused,.countdownHero{display:grid;place-items:center;text-align:center;height:100%}
-    .paused .title,.countdownHero .title{font-size:clamp(2.2rem,5vw,5rem)}
-    .countValue{font-size:clamp(4rem,12vw,9rem);font-weight:1000;line-height:1}
+    .restTitle{font-size:.8rem;font-weight:900;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;text-align:center}
     .join{height:100dvh;display:grid;place-items:center;padding:16px}
     .joinCard{width:min(520px,100%);padding:28px;display:grid;gap:16px}
     input{width:100%;padding:15px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;font:inherit}
-    button{padding:14px 18px;border:0;border-radius:999px;background:linear-gradient(135deg,var(--gold),var(--pink));font:inherit;font-weight:1000;color:#230333;cursor:pointer}
-    .statusLine{color:var(--muted);font-size:.96rem}
+    button{padding:14px 18px;border:0;border-radius:999px;background:linear-gradient(135deg,var(--gold),var(--pink));font:inherit;font-weight:1000;color:#240433;cursor:pointer}
     .hidden{display:none!important}
     @keyframes answersIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-    @keyframes heroLift{from{transform:translateY(36px);opacity:.82}to{transform:none;opacity:1}}
-    .hero.revealed{animation:heroLift .45s ease both}
-    body.vertical .app{gap:10px;height:calc(100dvh - 20px)}
-    body.vertical .top{grid-template-columns:1fr;gap:8px;padding:10px 12px;justify-items:center}
-    body.vertical .brand{width:min(148px,44vw)}
+    body.vertical .top{grid-template-columns:1fr;justify-items:center;padding:10px 12px}
+    body.vertical .brand{width:min(150px,44vw)}
     body.vertical .code{display:none}
-    body.vertical .layout,body.vertical .layout.withScores{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);gap:10px}
     body.vertical .card{padding:14px;gap:12px;border-radius:22px}
-    body.vertical .hero{gap:12px}
-    body.vertical .hero.centered{min-height:min(58vh,520px)}
-    body.vertical .hero.questionLead{min-height:min(62vh,560px)}
-    body.vertical .hero.questionLead .timer{top:0;right:0}
-    body.vertical .hero.scoreOnly{min-height:auto}
-    body.vertical .title{font-size:clamp(1.45rem,6.7vw,2.4rem)}
-    body.vertical .copy{font-size:.9rem}
-    body.vertical .timer{width:74px;height:74px;padding:5px}
-    body.vertical .timerInner{font-size:1.1rem}
-    body.vertical .answers{gap:8px}
-    body.vertical .answer{padding:11px 12px;border-radius:20px}
-    body.vertical .aText{font-size:.94rem}
+    body.vertical .title{font-size:clamp(1.55rem,6.8vw,2.55rem)}
+    body.vertical .copy{font-size:.92rem}
+    body.vertical .timer{width:72px;height:72px;padding:5px;top:6px;right:6px}
+    body.vertical .timerInner{font-size:1.08rem}
+    body.vertical .hero.center{min-height:min(58vh,520px)}
+    body.vertical .hero.lead{min-height:min(62vh,560px)}
+    body.vertical .hero.compact .title{font-size:clamp(1.35rem,5vw,2rem)}
+    body.vertical .answers{grid-template-columns:1fr;gap:8px}
+    body.vertical .countStage{min-height:min(52vh,560px);padding:24px 18px;gap:12px}
+    body.vertical .countCategory{font-size:clamp(1.35rem,5.6vw,2rem)}
+    body.vertical .countBig{font-size:clamp(4rem,18vw,6.4rem)}
+    body.vertical .countText{font-size:.88rem}
+    body.vertical .answer{padding:11px 12px}
+    body.vertical .aText{font-size:.95rem}
     body.vertical .aState{font-size:.82rem}
     body.vertical .voteAvatar{width:28px;height:28px}
     body.vertical .voteMore{height:24px;font-size:.72rem}
-    body.vertical .liveStrip{grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:8px}
-    body.vertical .livePlayer{padding:8px;border-radius:18px}
-    body.vertical .livePlayer .avatar{width:42px;height:42px}
-    body.vertical .livePlayerName{font-size:.72rem}
-    body.vertical .livePlayerState{font-size:.64rem}
-    body.vertical .leader{padding:10px 12px;grid-template-columns:42px minmax(0,1fr) auto;gap:8px}
-    body.vertical .leader .avatar{width:50px;height:50px}
-    body.vertical .leader .avatar{width:42px;height:42px}
-    body.vertical .leader .playerName{font-size:.92rem}
-    body.vertical .leaderLabel{font-size:.62rem}
-    body.vertical .leaderPoints{font-size:1.16rem}
-    body.vertical .scoreStage{gap:10px}
+    body.vertical .roundBoard,.body.vertical .podiumBoard{gap:10px}
+    body.vertical .roundHeadline{padding:12px 14px;border-radius:22px}
+    body.vertical .roundHeadline strong{font-size:1.3rem}
+    body.vertical .roundHeadline span{font-size:.82rem}
+    body.vertical .roundGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    body.vertical .roundRow{padding:8px 9px;grid-template-columns:22px 26px minmax(0,1fr) auto;gap:7px;border-radius:18px}
+    body.vertical .roundRow.leader{padding:10px 12px}
+    body.vertical .rank{width:22px;height:22px;font-size:.66rem}
+    body.vertical .avatar{width:26px;height:26px}
+    body.vertical .playerName{font-size:.8rem}
+    body.vertical .playerSub{font-size:.62rem}
+    body.vertical .points{font-size:.86rem}
     body.vertical .podium{grid-template-columns:1fr;gap:10px}
-    body.vertical .podiumCard,.podiumCard.first,.podiumCard.second,.podiumCard.third{min-height:auto}
+    body.vertical .podiumCard,.body.vertical .podiumCard.first,.body.vertical .podiumCard.second,.body.vertical .podiumCard.third{min-height:auto}
     body.vertical .podiumAvatar{width:62px;height:62px}
     body.vertical .podiumName{font-size:1rem}
-    body.vertical .podiumPoints{font-size:1.3rem}
-    body.vertical .score{padding:8px 9px;grid-template-columns:24px 30px minmax(0,1fr) auto;gap:8px}
-    body.vertical .rank{width:28px;height:28px;font-size:.82rem}
-    body.vertical .rank{width:24px;height:24px;font-size:.72rem}
-    body.vertical .avatar{width:34px;height:34px}
-    body.vertical .avatar{width:30px;height:30px}
-    body.vertical .playerName{font-size:.9rem}
-    body.vertical .playerSub{font-size:.66rem}
-    body.vertical .points{font-size:.92rem}
-    body.vertical .countValue{font-size:clamp(3.2rem,18vw,6rem)}
-    body.vertical .fact{padding:14px 16px}
+    body.vertical .podiumPoints{font-size:1.28rem}
     @media (max-width:980px){
-      .layout,.layout.withScores{grid-template-columns:1fr}
       .answers{grid-template-columns:1fr}
       .podium{grid-template-columns:1fr}
       .podiumCard,.podiumCard.first,.podiumCard.second,.podiumCard.third{min-height:auto}
@@ -171,41 +148,30 @@
 <body>
   <main class="app hidden" id="app">
     <header class="top">
-      <img class="brand" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon">
       <div></div>
+      <div class="topCenter">
+        <img class="brand" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon">
+      </div>
       <div class="code" id="roomCode">0000</div>
     </header>
-
     <section class="layout">
-      <section class="mainCol">
-        <article class="card" id="mainCard">
-          <div class="hero">
-            <div class="titleWrap">
-              <span class="kick" id="category">Categoria</span>
-              <h1 class="title" id="prompt">Esperando partida...</h1>
-              <p class="copy" id="copy">Conecta una sala para emitir Trivialodon en directo.</p>
-            </div>
-            <div class="timer" id="timerRing" style="--timer:1">
-              <div class="timerInner" id="timer">--</div>
-            </div>
+      <article class="card">
+        <div class="hero center" id="hero">
+          <div class="titleWrap">
+            <span class="kick" id="category">Categoria</span>
+            <h1 class="title" id="prompt">Esperando partida...</h1>
+            <p class="copy" id="copy"></p>
           </div>
-          <div class="fact hidden" id="fact">
-            <span class="kick" id="factKick">Resumen</span>
-            <p id="factText"></p>
+          <div class="timer hidden" id="timerRing" style="--timer:1">
+            <div class="timerInner" id="timer"></div>
           </div>
-          <div class="answers" id="answers"></div>
-        </article>
-      </section>
-
-      <aside class="sideCol">
-        <article class="card">
-          <div class="scoreHead">
-            <span class="kick" id="sideKick">Marcador</span>
-            <span class="statusLine" id="scoreStatus">Sesion en directo</span>
-          </div>
-          <div class="scoreList" id="scores"></div>
-        </article>
-      </aside>
+        </div>
+        <div class="fact hidden" id="fact">
+          <span class="kick" id="factKick">Fun fact</span>
+          <p id="factText"></p>
+        </div>
+        <div class="answers" id="answers"></div>
+      </article>
     </section>
   </main>
 
@@ -213,7 +179,7 @@
     <article class="joinCard">
       <span class="kick">Live</span>
       <h2 style="margin:0;font-size:2rem">Introduce el codigo de sala</h2>
-      <p class="statusLine" style="margin:0">Usa `?sala=1234` para abrirlo directo y `?layout=vertical` si lo quieres en formato TikTok.</p>
+      <p style="margin:0;color:var(--muted)">Usa <code>?sala=1234</code> para abrirlo directo y <code>?layout=vertical</code> para formato TikTok.</p>
       <input id="codeInput" maxlength="4" inputmode="numeric" placeholder="1234">
       <button id="btnJoin" type="button">Conectar emision</button>
     </article>
@@ -223,24 +189,35 @@
   <script>
     const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
+    const WAITING_AUDIO_SRC = "/juegos.zaurio.es/trivialodon/assets/waiting.mp3";
+    const ANSWERING_AUDIO_SRC = "/juegos.zaurio.es/trivialodon/assets/answering.mp3";
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
     const params = new URLSearchParams(location.search);
     const $ = id => document.getElementById(id);
     const ui = {
       app:$("app"), join:$("join"), roomCode:$("roomCode"), category:$("category"), prompt:$("prompt"), copy:$("copy"),
       timer:$("timer"), timerRing:$("timerRing"), fact:$("fact"), factKick:$("factKick"), factText:$("factText"),
-      answers:$("answers"), scores:$("scores"), scoreStatus:$("scoreStatus"), sideKick:$("sideKick"), codeInput:$("codeInput"), btnJoin:$("btnJoin"), sideCol:document.querySelector(".sideCol"), layout:document.querySelector(".layout"), mainCard:$("mainCard")
+      answers:$("answers"), codeInput:$("codeInput"), btnJoin:$("btnJoin"), hero:$("hero")
     };
     let channel = null;
     let game = {phase:"lobby",scores:{},questionSet:[]};
     let players = [];
     let lastAnswersVisible = false;
+    const soundEnabled = params.get("sound") !== "off";
+    const liveAudio = {
+      unlocked:false,
+      fadeTimers:new Map(),
+      decks:{}
+    };
 
     const esc = value => String(value || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
     const normalize = value => String(value || "").replace(/\D/g,"").slice(0,4);
     const countSeconds = ts => Math.max(0, Math.ceil((Number(ts || 0) - Date.now()) / 1000));
     const nextQuestion = () => Array.isArray(game.questionSet) ? game.questionSet[game.questionIndex || 0] : null;
-    const scoreRows = () => players.filter(player => player.ready).map(player => ({...player, score:Number((game.scores || {})[player.playerId] || 0)})).sort((a,b) => b.score - a.score || String(a.name || "").localeCompare(String(b.name || ""),"es"));
+    const scoreRows = () => players
+      .filter(player => player.ready)
+      .map(player => ({...player, score:Number((game.scores || {})[player.playerId] || 0)}))
+      .sort((a,b) => b.score - a.score || String(a.name || "").localeCompare(String(b.name || ""),"es"));
     const voteMap = question => {
       const map = {};
       Object.entries(question?.responses || {}).forEach(([playerId, response]) => {
@@ -254,71 +231,155 @@
       return map;
     };
     const avatarBubble = player => player?.avatarSrc ? `<span class="voteAvatar"><img src="${player.avatarSrc}" alt="${esc(player.name || "Jugador")}"></span>` : `<span class="voteAvatar">🦖</span>`;
-    function renderAudienceBoard(question){
-      const rows = scoreRows();
-      ui.sideKick.textContent = "Jugadores";
-      ui.scoreStatus.textContent = question?.type === "speed" ? "Bloqueos en directo" : "Pulso en directo";
-      ui.scores.innerHTML = rows.length ? `<div class="liveBoard"><div class="liveStrip">${rows.slice(0, 10).map(player => `<article class="livePlayer"><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div class="livePlayerName">${esc(player.name || "Jugador")}</div><div class="livePlayerState">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></article>`).join("")}</div></div>` : `<div class="empty">Los jugadores listos apareceran aqui.</div>`;
+    function createLoopDeck(src, targetVolume){
+      const tracks = [new Audio(src), new Audio(src)];
+      tracks.forEach(track => { track.loop = false; track.preload = "auto"; track.volume = 0; });
+      return {tracks, activeIndex:0, targetVolume, playing:false, transition:false, handoffSeconds:.45};
     }
+    if(soundEnabled){
+      liveAudio.decks.waiting = createLoopDeck(WAITING_AUDIO_SRC, .28);
+      liveAudio.decks.answering = createLoopDeck(ANSWERING_AUDIO_SRC, .34);
+    }
+    function clearFade(track){
+      const timer = liveAudio.fadeTimers.get(track);
+      if(timer){ clearInterval(timer); liveAudio.fadeTimers.delete(track); }
+    }
+    function fadeTrack(track, to, duration = 420, pauseOnZero = false){
+      if(!track) return;
+      clearFade(track);
+      const from = Number(track.volume || 0);
+      const start = Date.now();
+      const timer = setInterval(() => {
+        const progress = Math.min(1, (Date.now() - start) / duration);
+        track.volume = from + (to - from) * progress;
+        if(progress >= 1){
+          clearFade(track);
+          track.volume = to;
+          if(pauseOnZero && to <= 0.001){
+            try{ track.pause(); track.currentTime = 0; } catch(_){}
+          }
+        }
+      }, 40);
+      liveAudio.fadeTimers.set(track, timer);
+    }
+    function activeTrack(deck){ return deck.tracks[deck.activeIndex]; }
+    function standbyTrack(deck){ return deck.tracks[1 - deck.activeIndex]; }
+    function ensureDeckPlaying(deck){
+      if(!deck || deck.playing) return;
+      const track = activeTrack(deck);
+      try{ track.pause(); track.currentTime = 0; } catch(_){}
+      track.volume = 0;
+      const attempt = track.play();
+      if(attempt && typeof attempt.catch === "function") attempt.catch(() => {});
+      fadeTrack(track, deck.targetVolume, 520, false);
+      deck.playing = true;
+      deck.transition = false;
+    }
+    function stopDeck(deck, immediate = false){
+      if(!deck) return;
+      deck.playing = false;
+      deck.transition = false;
+      deck.tracks.forEach(track => {
+        clearFade(track);
+        if(immediate){
+          try{ track.pause(); track.currentTime = 0; track.volume = 0; } catch(_){}
+        } else {
+          fadeTrack(track, 0, 320, true);
+        }
+      });
+    }
+    function maintainDeck(deck){
+      if(!deck || !deck.playing || deck.transition || !liveAudio.unlocked) return;
+      const current = activeTrack(deck);
+      const next = standbyTrack(deck);
+      if(!current.duration || current.currentTime < Math.max(0, current.duration - deck.handoffSeconds)) return;
+      deck.transition = true;
+      try{ next.pause(); next.currentTime = 0; } catch(_){}
+      next.volume = 0;
+      const attempt = next.play();
+      if(attempt && typeof attempt.catch === "function") attempt.catch(() => {});
+      fadeTrack(next, deck.targetVolume, 420, false);
+      fadeTrack(current, 0, 420, true);
+      setTimeout(() => {
+        deck.activeIndex = 1 - deck.activeIndex;
+        deck.transition = false;
+      }, 440);
+    }
+
+    function primeAudio(){
+      if(!soundEnabled || liveAudio.unlocked) return;
+      liveAudio.unlocked = true;
+      [...liveAudio.decks.waiting.tracks, ...liveAudio.decks.answering.tracks].forEach(track => {
+        try{
+          const playAttempt = track.play();
+          if(playAttempt && typeof playAttempt.then === "function"){
+            playAttempt.then(() => { track.pause(); track.currentTime = 0; }).catch(() => {});
+          } else {
+            track.pause();
+            track.currentTime = 0;
+          }
+        } catch(_){}
+      });
+      syncAudio();
+    }
+    function syncAudio(){
+      if(!soundEnabled || !liveAudio.unlocked) return;
+      const useAnswering = game.phase === "question" || game.phase === "answer";
+      const target = useAnswering ? liveAudio.decks.answering : liveAudio.decks.waiting;
+      const other = useAnswering ? liveAudio.decks.waiting : liveAudio.decks.answering;
+      ensureDeckPlaying(target);
+      stopDeck(other, false);
+    }
+    setInterval(() => {
+      if(!soundEnabled) return;
+      maintainDeck(liveAudio.decks.waiting);
+      maintainDeck(liveAudio.decks.answering);
+    }, 120);
+
     function setLayoutMode(){
       const forced = params.get("layout");
       const vertical = forced === "vertical" || (forced !== "horizontal" && window.matchMedia("(orientation: portrait)").matches);
       document.body.classList.toggle("vertical", vertical);
     }
-    function renderScores(){
-      const rows = scoreRows();
-      const leader = rows[0];
-      const rest = rows.slice(1, 6);
-      const extra = Math.max(0, rows.length - 6);
-      ui.sideKick.textContent = "Marcador";
-      ui.scoreStatus.textContent = game.finished ? "Partida cerrada" : "Sesion en directo";
-      ui.scores.innerHTML = rows.length ? `
-        <article class="leader">
-          <div class="avatar">${leader.avatarSrc ? `<img src="${leader.avatarSrc}" alt="">` : "🦖"}</div>
-          <div>
-            <div class="leaderLabel">Lider actual</div>
-            <div class="playerName">${esc(leader.name || "Jugador")}</div>
-            <div class="playerSub">${esc(leader.role === "host" ? "Anfitrion" : "Invitado")}</div>
-          </div>
-          <div class="leaderPoints">${leader.score}</div>
-        </article>
-        ${rest.map((player, index) => `<article class="score"><div class="rank">#${index + 2}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}
-        ${extra ? `<div class="moreLine">+${extra} jugadores mas en la sala</div>` : ""}
-      ` : `<div class="empty">El marcador aparecera aqui cuando entren jugadores.</div>`;
+
+    function setTimer(value, progress, visible){
+      ui.timer.textContent = value;
+      ui.timerRing.style.setProperty("--timer", progress);
+      ui.timerRing.classList.toggle("hidden", !visible);
     }
+
     function renderCountdown(){
-      ui.layout.classList.remove("withScores");
-      ui.sideCol.classList.add("hidden");
       const next = nextQuestion();
       const left = countSeconds(game.countdownEndAt || Date.now());
-      ui.category.textContent = next?.type === "speed" ? `Test de velocidad · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general");
-      ui.prompt.textContent = next?.type === "speed" ? "Se viene un test de velocidad" : "Preparando la siguiente pregunta";
-      ui.copy.textContent = next?.type === "speed" ? "Todas las respuestas puntuan distinto. La mejor desaparece en cuanto alguien la coge." : "Respira un segundo. Enseguida aparecen la pregunta y las opciones.";
-      ui.timer.textContent = String(left || 0);
-      ui.timerRing.style.setProperty("--timer", Math.max(0, Math.min(1, left / 4)));
+      ui.hero.className = "hero center";
+      ui.category.textContent = "Cuenta atras";
+      ui.prompt.textContent = "";
+      ui.copy.textContent = "";
+      setTimer("", 0, false);
       ui.fact.classList.add("hidden");
-      ui.mainCard.querySelector(".hero").className = "hero centered";
       ui.answers.className = "answers";
-      ui.answers.innerHTML = "";
+      ui.answers.innerHTML = `<div class="countStage" style="grid-column:1/-1">
+        <div class="countLabel">${next?.type === "speed" ? "Test de velocidad" : "Siguiente ronda"}</div>
+        <div class="countCategory">${esc(next?.category || "Categoria sorpresa")}</div>
+        <div class="countBig">${Math.max(1, left)}</div>
+        <div class="countText">${next?.type === "speed" ? "Se viene una ronda donde cada respuesta puntua distinto." : "Respira. Enseguida entra la siguiente pregunta."}</div>
+      </div>`;
     }
+
     function renderPaused(){
-      ui.layout.classList.remove("withScores");
-      ui.sideCol.classList.add("hidden");
+      ui.hero.className = "hero center";
       ui.category.textContent = "Sesion";
       ui.prompt.textContent = "Juego pausado";
-      ui.copy.textContent = "La partida esta detenida por el anfitrion. La emision sigue viva y volvera cuando se reanude.";
-      ui.timer.textContent = "||";
-      ui.timerRing.style.setProperty("--timer", 0);
+      ui.copy.textContent = "La partida se reanudara en cuanto el anfitrion vuelva a ponerla en marcha.";
+      setTimer("", 0, false);
       ui.fact.classList.add("hidden");
-      ui.mainCard.querySelector(".hero").className = "hero centered";
       ui.answers.className = "answers";
       ui.answers.innerHTML = "";
     }
+
     function renderQuestion(){
       const question = game.question || {};
       const isSpeed = question.type === "speed";
-      ui.layout.classList.remove("withScores");
-      ui.sideCol.classList.add("hidden");
       const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt;
       const justRevealed = answersVisible && !lastAnswersVisible;
       lastAnswersVisible = answersVisible;
@@ -328,18 +389,15 @@
       const left = answersVisible ? answerLeft : leadLeft;
       ui.category.textContent = isSpeed ? `Test de velocidad · ${question.category || "Categoria sorpresa"}` : (question.category || "Cultura general");
       ui.prompt.textContent = question.prompt || "Esperando pregunta...";
-      ui.copy.textContent = !answersVisible ? "Primero entra la pregunta. Las opciones caen en pantalla en unos segundos." : (isSpeed ? "Las respuestas se bloquean en tiempo real. Cuanto mejor sea la opcion, mas puntos vale." : "Se ve en directo que opciones esta marcando la gente.");
-      ui.timer.textContent = String(left);
-      ui.timerRing.style.setProperty("--timer", Math.max(0, Math.min(1, left / total)));
-      ui.mainCard.querySelector(".hero").className = `hero ${answersVisible ? "compact" : "questionLead"}${justRevealed ? " revealed" : ""}`;
-
+      ui.copy.textContent = !answersVisible ? "Lee la pregunta. Las opciones aparecen enseguida." : (isSpeed ? "Las respuestas se bloquean en directo y puntuan distinto." : "Se ve en vivo que opcion esta marcando cada jugador.");
+      setTimer(String(left), Math.max(0, Math.min(1, left / total)), true);
+      ui.hero.className = `hero ${answersVisible ? "compact" : "lead"}${justRevealed ? " revealed" : ""}`;
       if(!answersVisible){
         ui.fact.classList.add("hidden");
         ui.answers.className = "answers";
         ui.answers.innerHTML = "";
         return;
       }
-
       const votes = voteMap(question);
       const cards = (question.choices || []).map((choice, index) => {
         const voters = votes[index] || [];
@@ -351,11 +409,16 @@
           : (question.revealed ? (revealCorrect ? "Correcta" : `${voters.length} voto${voters.length === 1 ? "" : "s"}`) : `${voters.length} voto${voters.length === 1 ? "" : "s"}`);
         const visibleVoters = voters.slice(0, 6).map(player => avatarBubble(player)).join("");
         const overflow = voters.length > 6 ? `<span class="voteMore">+${voters.length - 6}</span>` : "";
-        return `<article class="answer ${locked ? "locked selected" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""}"><div class="answerTop"><div class="aText"><span class="aKey">${String.fromCharCode(65 + index)}</span>${esc(choice)}</div><div class="aState">${esc(stateLine)}</div></div><div class="voteCloud">${visibleVoters}${overflow}</div></article>`;
+        return `<article class="answer ${locked ? "selected" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""}">
+          <div class="answerTop">
+            <div class="aText"><span class="aKey">${String.fromCharCode(65 + index)}</span>${esc(choice)}</div>
+            <div class="aState">${esc(stateLine)}</div>
+          </div>
+          <div class="voteCloud">${visibleVoters}${overflow}</div>
+        </article>`;
       }).join("");
       ui.answers.className = `answers${justRevealed ? " revealed" : ""}`;
       ui.answers.innerHTML = cards || `<div class="empty" style="grid-column:1/-1">La pregunta aparecera aqui.</div>`;
-
       if(question.revealed && isSpeed && Array.isArray(question.ranking) && question.ranking.length){
         ui.fact.classList.remove("hidden");
         ui.factKick.textContent = "Orden correcto";
@@ -368,67 +431,70 @@
         ui.fact.classList.add("hidden");
       }
     }
+
     function renderScoresPhase(){
-      ui.layout.classList.remove("withScores");
-      ui.sideCol.classList.add("hidden");
-      ui.mainCard.querySelector(".hero").className = "hero scoreOnly";
+      ui.hero.className = "hero scores";
       lastAnswersVisible = false;
       ui.category.textContent = "Marcador";
       ui.prompt.textContent = game.finished ? "Podio final" : "Puntuacion del round";
       ui.copy.textContent = "";
-      ui.timer.textContent = "--";
-      ui.timerRing.style.setProperty("--timer", 0);
+      setTimer("", 0, false);
       ui.fact.classList.add("hidden");
       const rows = scoreRows();
-      const leader = rows[0];
-      const isVertical = document.body.classList.contains("vertical");
-      const rest = rows.slice(1, isVertical ? 5 : 7);
-      ui.answers.className = "answers";
       if(!rows.length){
+        ui.answers.className = "answers";
         ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">El marcador aparecera aqui.</div>`;
         return;
       }
+      const isVertical = document.body.classList.contains("vertical");
       if(game.finished){
         const podium = [rows[1], rows[0], rows[2]];
         const podiumClasses = ["second","first","third"];
         const podiumRanks = ["2º","1º","3º"];
         const remainder = rows.slice(3, isVertical ? 7 : 9);
-        ui.answers.innerHTML = `<div class="scoreStage" style="grid-column:1/-1">
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = `<div class="podiumBoard" style="grid-column:1/-1">
           <div class="podium">
             ${podium.map((player, index) => player ? `<article class="podiumCard ${podiumClasses[index]}"><div class="podiumRank">${podiumRanks[index]}</div><div class="podiumAvatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div class="podiumName">${esc(player.name || "Jugador")}</div><div class="podiumMeta">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div><div class="podiumPoints">${player.score}</div></article>` : `<article class="podiumCard ${podiumClasses[index]}"><div class="podiumRank">${podiumRanks[index]}</div><div class="podiumAvatar">🦖</div><div class="podiumName">---</div><div class="podiumMeta">Sin jugador</div><div class="podiumPoints">0</div></article>`).join("")}
           </div>
-          ${remainder.length ? `<div class="restBoard"><div class="restTitle">Resto de jugadores</div>${remainder.map((player, index) => `<article class="score"><div class="rank">#${index + 4}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}${rows.length > (isVertical ? 7 : 9) ? `<div class="moreLine">+${rows.length - (isVertical ? 7 : 9)} jugadores mas</div>` : ""}</div>` : ""}
-        </div>`;
+          ${remainder.length ? `<div class="restBoard"><div class="restTitle">Resto de jugadores</div>${remainder.map((player, index) => `<article class="roundRow"><div class="rank">#${index + 4}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}${rows.length > (isVertical ? 7 : 9) ? `<div class="moreLine">+${rows.length - (isVertical ? 7 : 9)} jugadores mas</div>` : ""}</div>` : ""}</div>`;
         return;
       }
-      ui.answers.innerHTML = `<div class="scoreStage" style="grid-column:1/-1">
-        <article class="leader">
-          <div class="avatar">${leader.avatarSrc ? `<img src="${leader.avatarSrc}" alt="">` : "🦖"}</div>
-          <div>
-            <div class="leaderLabel">Lider actual</div>
-            <div class="playerName">${esc(leader.name || "Jugador")}</div>
-            <div class="playerSub">${leader.score} puntos acumulados</div>
-          </div>
-          <div class="leaderPoints">${leader.score}</div>
+      const visibleCount = 10;
+      const visible = rows.slice(0, visibleCount);
+      const leader = visible[0];
+      const rest = visible.slice(1);
+      ui.answers.className = "answers";
+      ui.answers.innerHTML = `<div class="roundBoard" style="grid-column:1/-1">
+        <article class="roundHeadline">
+          <strong>${esc(leader.name || "Jugador")} manda por ahora</strong>
+          <span>${leader.score} puntos acumulados${rest.length ? " · El resto aprieta para la siguiente." : ""}</span>
         </article>
-        ${rest.map((player, index) => `<article class="score"><div class="rank">#${index + 2}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}
-        ${rows.length > (isVertical ? 5 : 7) ? `<div class="moreLine">+${rows.length - (isVertical ? 5 : 7)} jugadores mas</div>` : ""}
+        <div class="roundGrid">
+          <article class="roundRow leader">
+            <div class="rank">#1</div>
+            <div class="avatar">${leader.avatarSrc ? `<img src="${leader.avatarSrc}" alt="">` : "🦖"}</div>
+            <div><div class="playerName">${esc(leader.name || "Jugador")}</div><div class="playerSub">${esc(leader.role === "host" ? "Anfitrion" : "Invitado")}</div></div>
+            <div class="points">${leader.score}</div>
+          </article>
+          ${rest.map((player, index) => `<article class="roundRow"><div class="rank">#${index + 2}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(player.name || "Jugador")}</div><div class="playerSub">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div><div class="points">${player.score}</div></article>`).join("")}
+        </div>
+        ${rows.length > visibleCount ? `<div class="moreLine">+${rows.length - visibleCount} jugadores mas</div>` : ""}
       </div>`;
     }
+
     function renderLobby(){
-      ui.layout.classList.remove("withScores");
-      ui.sideCol.classList.add("hidden");
-      ui.mainCard.querySelector(".hero").className = "hero centered";
+      ui.hero.className = "hero center";
       lastAnswersVisible = false;
-      ui.sideKick.textContent = "Marcador";
       ui.category.textContent = "Sala";
       ui.prompt.textContent = "Esperando que la partida arranque";
-      ui.copy.textContent = "Cuando el anfitrion avance, aqui se vera la pregunta, los bloqueos en tiempo real y el marcador.";
-      ui.timer.textContent = "--";
-      ui.timerRing.style.setProperty("--timer", 0);
+      ui.copy.textContent = "";
+      setTimer("", 0, false);
       ui.fact.classList.add("hidden");
-      ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">La emision esta lista para salir a pantalla.</div>`;
+      ui.answers.className = "answers";
+      ui.answers.innerHTML = "";
     }
+
     function render(){
       ui.app.classList.toggle("hidden", !channel);
       ui.join.classList.toggle("hidden", !!channel);
@@ -438,11 +504,9 @@
       else if(game.phase === "question" || game.phase === "answer") renderQuestion();
       else if(game.phase === "scores") renderScoresPhase();
       else renderLobby();
-      if(game.phase === "question" || game.phase === "answer"){
-        return;
-      }
-      renderScores();
+      syncAudio();
     }
+
     function syncPlayers(){
       if(!channel) return;
       const raw = [];
@@ -455,6 +519,7 @@
       players = [...map.values()];
       render();
     }
+
     async function join(code){
       if(channel){ try{ await sb.removeChannel(channel); } catch(_){} }
       channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:`live-${code}`}}});
@@ -479,10 +544,10 @@
         ui.btnJoin.click();
       }
     });
+    ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
     window.addEventListener("resize", setLayoutMode);
     setLayoutMode();
     setInterval(() => { if(channel) render(); }, 250);
-
     const auto = normalize(params.get("sala"));
     if(auto.length === 4) join(auto);
   </script>
