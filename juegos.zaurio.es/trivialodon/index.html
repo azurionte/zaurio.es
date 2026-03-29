@@ -81,22 +81,22 @@
     }
     @media (max-width:640px){
       body{padding:8px}
-      .topbar{position:sticky;top:8px;z-index:20;grid-template-columns:auto 1fr auto;grid-template-areas:"logo logo logo" "menu score profile";align-items:center;gap:8px;padding:10px 10px 12px}
+      .topbar{position:sticky;top:8px;z-index:20;grid-template-columns:auto 1fr auto;grid-template-areas:"logo logo logo" "menu score profile";align-items:center;gap:6px;padding:8px 8px 10px;border-radius:22px}
       .topCenter{grid-area:logo}
       .topLeft{grid-area:menu;justify-content:flex-start}
       .topRight{grid-area:profile;justify-content:flex-end;display:grid;grid-template-columns:auto auto;gap:8px;align-items:center}
-      .menuBtn,.identity,.scoreChip{width:auto;justify-content:center;padding:8px 10px}
+      .menuBtn,.identity,.scoreChip{width:auto;justify-content:center;padding:6px 8px;border-radius:18px}
       .menuBtn{min-width:0}
       .menuBtn span{display:none}
       .menuBtn{font-size:0}
-      .menuBtn img{width:18px;height:18px;margin:0}
-      .scoreChip{min-width:auto;font-size:.86rem}
+      .menuBtn img{width:16px;height:16px;margin:0}
+      .scoreChip{min-width:auto;font-size:.82rem}
       .scoreChip span:first-child{display:none}
-      .identity{max-width:150px;gap:8px;padding:7px 10px}
-      .miniAvatar{width:32px;height:32px}
-      .identityName{font-size:.84rem;line-height:1.05;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
-      .identityRole{font-size:.62rem;letter-spacing:.04em}
-      .logoMark{width:min(150px,48vw)}
+      .identity{max-width:120px;gap:6px;padding:6px 8px}
+      .miniAvatar{width:26px;height:26px}
+      .identityName{font-size:.74rem;line-height:1.02;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
+      .identityRole{font-size:.55rem;letter-spacing:.03em}
+      .logoMark{width:min(110px,34vw)}
       .menuDrop{left:0;right:auto;min-width:210px}
       .actions.center .btn{flex:1 1 100%}
       .actions.between .btn{flex:1 1 100%}
@@ -502,6 +502,41 @@
     function clearSession(){ try{ localStorage.removeItem(STORAGE_KEY); } catch(_){} }
     function readSession(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch(_){ return null; } }
     function syncChoiceGroup(root, key, value){ if(!root) return; root.querySelectorAll(`[data-${key}]`).forEach(btn => btn.classList.toggle("active", btn.dataset[key] === value)); }
+    async function restoreSavedSession(saved){
+      if(!saved?.role || !saved?.roomCode) return false;
+      showShell();
+      try{
+        if(saved.playerId) state.playerId = saved.playerId;
+        state.role = saved.role;
+        state.roomCode = saved.roomCode;
+        state.name = saved.name || "";
+        state.ready = !!saved.ready;
+        state.waitingLine = lineFor(state.playerId);
+        state.avatar = saved.avatar || state.avatar;
+        state.game = saved.game || state.game;
+        ui.nameInput.value = state.name;
+        applyAvatar();
+        await connectRoom(saved.role, saved.roomCode);
+        state.role = saved.role;
+        state.roomCode = saved.roomCode;
+        state.name = saved.name || "";
+        state.ready = !!saved.ready;
+        state.waitingLine = lineFor(state.playerId);
+        state.avatar = saved.avatar || state.avatar;
+        state.game = saved.game || state.game;
+        ui.nameInput.value = state.name;
+        applyAvatar();
+        await updatePresence();
+        if(state.role === "host" && saved.game){
+          await broadcastGame();
+        }
+        renderCurrentScene();
+        return true;
+      } catch(error){
+        console.error("No he podido restaurar la partida", error);
+        return false;
+      }
+    }
     function setStatus(text, tone){ ui.profileStatus.textContent = text; ui.profileStatus.className = `status ${tone || "info"}`; }
     function renderEmojiChoices(){ ui.emojiGrid.innerHTML = EMOJIS.map(([id,color]) => `<button class="emojiChoice ${state.selectedEmoji === id ? "active" : ""}" data-emoji="${id}" type="button"><div class="emojiBall" style="background:${color}22;border:1px solid ${color}55">\uD83E\uDD96</div><strong>${esc(id)}</strong></button>`).join(""); ui.emojiGrid.querySelectorAll("[data-emoji]").forEach(btn => btn.onclick = () => { state.selectedEmoji = btn.dataset.emoji; renderEmojiChoices(); }); }
     function emojiDataUrl(id){ const color = Object.fromEntries(EMOJIS)[id] || "#56d364"; const canvas = document.createElement("canvas"); canvas.width = 220; canvas.height = 220; const ctx = canvas.getContext("2d"); ctx.fillStyle = `${color}22`; ctx.beginPath(); ctx.arc(110,110,108,0,Math.PI * 2); ctx.fill(); ctx.font = "120px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("\uD83E\uDD96",110,118); return canvas.toDataURL("image/png"); }
@@ -691,35 +726,7 @@
     document.addEventListener("click", ev => { if(!ui.menuWrap.contains(ev.target)) ui.menuWrap.classList.remove("open"); });
     ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; await connectRoom("host", roomCode()); renderCurrentScene(); };
     ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); };
-    ui.btnContinue.onclick = async () => {
-      const saved = readSession();
-      if(!saved?.role || !saved?.roomCode) return;
-      showShell();
-      if(saved.playerId) state.playerId = saved.playerId;
-      state.role = saved.role;
-      state.roomCode = saved.roomCode;
-      state.name = saved.name || "";
-      state.ready = !!saved.ready;
-      state.waitingLine = lineFor(state.playerId);
-      state.avatar = saved.avatar || state.avatar;
-      state.game = saved.game || state.game;
-      ui.nameInput.value = state.name;
-      applyAvatar();
-      await connectRoom(saved.role, saved.roomCode);
-      state.roomCode = saved.roomCode;
-      state.name = saved.name || "";
-      state.ready = !!saved.ready;
-      state.waitingLine = lineFor(state.playerId);
-      state.avatar = saved.avatar || state.avatar;
-      state.game = saved.game || state.game;
-      ui.nameInput.value = state.name;
-      applyAvatar();
-      await updatePresence();
-      if(state.role === "host" && saved.game){
-        await broadcastGame();
-      }
-      renderCurrentScene();
-    };
+    ui.btnContinue.onclick = async () => { const ok = await restoreSavedSession(readSession()); if(!ok) location.reload(); };
     ui.btnJoinBack.onclick = () => location.reload();
     ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = "Necesito un codigo valido de 4 cifras."; return; } ui.joinStatus.textContent = "Entrando en la sala..."; await connectRoom("guest", code); renderCurrentScene(); };
     ui.joinCodeOnlyInput.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); ui.btnJoinNext.click(); } });
@@ -749,6 +756,7 @@
     renderEmojiChoices();
     applyAvatar();
     renderCurrentScene();
+    if(savedSession?.role && savedSession?.roomCode && performance?.navigation?.type === 1){ restoreSavedSession(savedSession); }
   </script>
 </body>
 </html>
