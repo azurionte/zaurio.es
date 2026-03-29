@@ -38,6 +38,7 @@
     .hero.compact{align-content:start}
     .hero.compact .titleWrap{max-width:none}
     .hero.compact .title{font-size:clamp(1.8rem,3vw,3.4rem)}
+    .hero.compact .titleWrap{padding-right:120px}
     .hero.scores{align-content:start;justify-items:center;text-align:center}
     .hero.scores .titleWrap{justify-items:center;text-align:center;max-width:min(980px,92%);margin:0 auto}
     .titleWrap{display:grid;gap:12px}
@@ -45,8 +46,9 @@
     .copy{margin:0;color:var(--muted);font-size:1.04rem;line-height:1.48}
     .timer{width:96px;height:96px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:7px;position:absolute;top:0;right:0}
     .timerInner{width:100%;height:100%;border-radius:999px;background:#220432;display:grid;place-items:center;font-weight:1000;font-size:1.5rem}
-    .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
     .answers.revealed{animation:answersIn .45s ease both}
+    .answers.questionBoard{grid-auto-rows:minmax(108px,auto)}
     .countStage{display:grid;gap:16px;justify-items:center;text-align:center;align-content:center;min-height:min(48vh,520px);width:min(980px,100%);margin:0 auto;padding:34px 28px;border-radius:34px;border:1px solid rgba(255,255,255,.1);background:
       radial-gradient(circle at top,rgba(255,255,255,.06),transparent 48%),
       linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
@@ -97,10 +99,17 @@
     .restTitle{font-size:.8rem;font-weight:900;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;text-align:center}
     .join{height:100dvh;display:grid;place-items:center;padding:16px}
     .joinCard{width:min(520px,100%);padding:28px;display:grid;gap:16px}
+    .lobbyCast{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:22px 18px;width:min(1240px,100%);margin:0 auto}
+    .castPlayer{display:grid;gap:8px;justify-items:center;min-width:88px;animation:castIn .34s ease both}
+    .castAvatar{width:86px;height:86px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);box-shadow:0 12px 30px rgba(0,0,0,.24)}
+    .castAvatar img{width:100%;height:100%;object-fit:cover}
+    .castName{font-size:.9rem;font-weight:1000;line-height:1.08;text-align:center;max-width:10ch;text-wrap:balance}
+    .castRole{font-size:.68rem;color:var(--muted);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
     input{width:100%;padding:15px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;font:inherit}
     button{padding:14px 18px;border:0;border-radius:999px;background:linear-gradient(135deg,var(--gold),var(--pink));font:inherit;font-weight:1000;color:#240433;cursor:pointer}
     .hidden{display:none!important}
     @keyframes answersIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+    @keyframes castIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
     body.vertical .top{grid-template-columns:1fr;justify-items:center;padding:10px 12px}
     body.vertical .brand{width:min(150px,44vw)}
     body.vertical .code{display:none}
@@ -112,7 +121,9 @@
     body.vertical .hero.center{min-height:min(58vh,520px)}
     body.vertical .hero.lead{min-height:min(62vh,560px)}
     body.vertical .hero.compact .title{font-size:clamp(1.35rem,5vw,2rem)}
+    body.vertical .hero.compact .titleWrap{padding-right:72px;gap:8px}
     body.vertical .answers{grid-template-columns:1fr;gap:8px}
+    body.vertical .answers.questionBoard{grid-auto-rows:minmax(0,auto)}
     body.vertical .countStage{min-height:min(52vh,560px);padding:24px 18px;gap:12px}
     body.vertical .countStage.heroStage{min-height:min(58vh,620px);width:min(100%,96%)}
     body.vertical .countCategory{font-size:clamp(1.35rem,5.6vw,2rem)}
@@ -123,6 +134,13 @@
     body.vertical .aState{font-size:.82rem}
     body.vertical .voteAvatar{width:28px;height:28px}
     body.vertical .voteMore{height:24px;font-size:.72rem}
+    body.vertical.phase-lobby .topCenter{display:none}
+    body.vertical.phase-lobby .top{padding:8px 10px;min-height:0}
+    body.vertical .lobbyCast{gap:14px 12px}
+    body.vertical .castPlayer{min-width:68px}
+    body.vertical .castAvatar{width:60px;height:60px}
+    body.vertical .castName{font-size:.7rem;max-width:8ch}
+    body.vertical .castRole{font-size:.58rem}
     body.vertical .roundBoard,.body.vertical .podiumBoard{gap:10px}
     body.vertical .roundHeadline{padding:12px 14px;border-radius:22px}
     body.vertical .roundHeadline strong{font-size:1.3rem}
@@ -182,7 +200,31 @@
       body.vertical .aState{font-size:.72rem}
       body.vertical .voteAvatar{width:22px;height:22px}
       body.vertical .voteMore{height:20px;font-size:.66rem}
+      body.vertical .lobbyCast{gap:10px 8px}
+      body.vertical .castAvatar{width:50px;height:50px}
+      body.vertical .castName{font-size:.62rem}
     }
+    body.phase-question .card,body.phase-answer .card{grid-template-rows:auto auto minmax(0,1fr)}
+    body.phase-question .hero.compact,body.phase-answer .hero.compact{gap:10px}
+    body.phase-question .copy,body.phase-answer .copy{max-width:72ch}
+    body.vertical.phase-question .top,body.vertical.phase-answer .top{padding:6px 10px}
+    body.vertical.phase-question .brand,body.vertical.phase-answer .brand{width:min(96px,28vw)}
+    body.vertical.phase-question .card,body.vertical.phase-answer .card{padding:9px;gap:7px}
+    body.vertical.phase-question .hero.compact,body.vertical.phase-answer .hero.compact{gap:6px}
+    body.vertical.phase-question .hero.compact .title,body.vertical.phase-answer .hero.compact .title{font-size:clamp(1.02rem,4.8vw,1.45rem);line-height:.98}
+    body.vertical.phase-question .hero.compact .copy,body.vertical.phase-answer .hero.compact .copy{font-size:.68rem;line-height:1.2}
+    body.vertical.phase-question .hero.compact .titleWrap,body.vertical.phase-answer .hero.compact .titleWrap{padding-right:58px;gap:6px}
+    body.vertical.phase-question .kick,body.vertical.phase-answer .kick{padding:4px 8px;font-size:9px}
+    body.vertical.phase-question .timer,body.vertical.phase-answer .timer{width:50px;height:50px;padding:4px;top:2px;right:2px}
+    body.vertical.phase-question .timerInner,body.vertical.phase-answer .timerInner{font-size:.82rem}
+    body.vertical.phase-question .answers.questionBoard,body.vertical.phase-answer .answers.questionBoard{gap:5px}
+    body.vertical.phase-question .answer,body.vertical.phase-answer .answer{padding:7px 9px;gap:4px;border-radius:16px}
+    body.vertical.phase-question .answerTop,body.vertical.phase-answer .answerTop{gap:8px}
+    body.vertical.phase-question .aText,body.vertical.phase-answer .aText{font-size:.74rem;line-height:1.14}
+    body.vertical.phase-question .aState,body.vertical.phase-answer .aState{font-size:.64rem}
+    body.vertical.phase-question .voteCloud,body.vertical.phase-answer .voteCloud{gap:4px}
+    body.vertical.phase-question .voteAvatar,body.vertical.phase-answer .voteAvatar{width:18px;height:18px}
+    body.vertical.phase-question .voteMore,body.vertical.phase-answer .voteMore{height:18px;font-size:.58rem;padding:0 6px}
   </style>
 </head>
 <body>
@@ -271,6 +313,7 @@
       return map;
     };
     const avatarBubble = player => player?.avatarSrc ? `<span class="voteAvatar"><img src="${player.avatarSrc}" alt="${esc(player.name || "Jugador")}"></span>` : `<span class="voteAvatar">🦖</span>`;
+    const castBubble = player => player?.avatarSrc ? `<span class="castAvatar"><img src="${player.avatarSrc}" alt="${esc(player.name || "Jugador")}"></span>` : `<span class="castAvatar">🦖</span>`;
     function createLoopDeck(src, targetVolume){
       const tracks = [new Audio(src), new Audio(src)];
       tracks.forEach(track => { track.loop = false; track.preload = "auto"; track.volume = 0; });
@@ -474,7 +517,7 @@
           <div class="voteCloud">${visibleVoters}${overflow}</div>
         </article>`;
       }).join("");
-      ui.answers.className = `answers${justRevealed ? " revealed" : ""}`;
+      ui.answers.className = `answers questionBoard${justRevealed ? " revealed" : ""}`;
       ui.answers.innerHTML = cards || `<div class="empty" style="grid-column:1/-1">La pregunta aparecera aqui.</div>`;
       if(question.revealed && isSpeed && Array.isArray(question.ranking) && question.ranking.length){
         ui.fact.classList.remove("hidden");
@@ -548,21 +591,29 @@
     function renderLobby(){
       ui.hero.className = "hero center";
       lastAnswersVisible = false;
-      ui.category.textContent = "Sala";
+      const visible = players.slice(0, document.body.classList.contains("vertical") ? 8 : 12);
+      const overflow = Math.max(0, players.length - visible.length);
+      ui.category.textContent = "";
       ui.prompt.textContent = "Esperando que la partida arranque";
       ui.copy.textContent = "";
       setTimer("", 0, false);
       ui.hero.innerHTML = `<div class="titleWrap">
-            <span class="kick" id="category">Sala</span>
             <h1 class="title" id="prompt">Esperando que la partida arranque</h1>
             <p class="copy" id="copy"></p>
           </div>`;
       ui.fact.classList.add("hidden");
       ui.answers.className = "answers";
-      ui.answers.innerHTML = "";
+      ui.answers.innerHTML = visible.length ? `<div class="lobbyCast" style="grid-column:1/-1">
+        ${visible.map(player => `<div class="castPlayer">${castBubble(player)}<div class="castName">${esc(player.name || "Jugador")}</div><div class="castRole">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></div>`).join("")}
+        ${overflow ? `<div class="castPlayer"><div class="castAvatar">+${overflow}</div><div class="castName">Mas</div><div class="castRole">jugadores</div></div>` : ""}
+      </div>` : "";
     }
 
     function render(){
+      document.body.classList.toggle("phase-lobby", game.phase === "lobby");
+      document.body.classList.toggle("phase-question", game.phase === "question");
+      document.body.classList.toggle("phase-answer", game.phase === "answer");
+      document.body.classList.toggle("phase-scores", game.phase === "scores");
       ui.app.classList.toggle("hidden", !channel);
       ui.join.classList.toggle("hidden", !!channel);
       ui.roomCode.textContent = channel ? channel.topic.split(":").pop() : "0000";
