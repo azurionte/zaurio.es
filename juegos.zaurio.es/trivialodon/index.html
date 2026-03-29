@@ -81,9 +81,23 @@
     }
     @media (max-width:640px){
       body{padding:8px}
-      .topbar{position:sticky;top:8px;z-index:20}
-      .topLeft,.topRight{width:100%}
-      .menuBtn,.identity,.scoreChip{width:100%;justify-content:center}
+      .topbar{position:sticky;top:8px;z-index:20;grid-template-columns:auto 1fr auto;grid-template-areas:"logo logo logo" "menu score profile";align-items:center;gap:8px;padding:10px 10px 12px}
+      .topCenter{grid-area:logo}
+      .topLeft{grid-area:menu;justify-content:flex-start}
+      .topRight{grid-area:profile;justify-content:flex-end;display:grid;grid-template-columns:auto auto;gap:8px;align-items:center}
+      .menuBtn,.identity,.scoreChip{width:auto;justify-content:center;padding:8px 10px}
+      .menuBtn{min-width:0}
+      .menuBtn span{display:none}
+      .menuBtn{font-size:0}
+      .menuBtn img{width:18px;height:18px;margin:0}
+      .scoreChip{min-width:auto;font-size:.86rem}
+      .scoreChip span:first-child{display:none}
+      .identity{max-width:150px;gap:8px;padding:7px 10px}
+      .miniAvatar{width:32px;height:32px}
+      .identityName{font-size:.84rem;line-height:1.05;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
+      .identityRole{font-size:.62rem;letter-spacing:.04em}
+      .logoMark{width:min(150px,48vw)}
+      .menuDrop{left:0;right:auto;min-width:210px}
       .actions.center .btn{flex:1 1 100%}
       .actions.between .btn{flex:1 1 100%}
       .playerCard{grid-template-columns:1fr;justify-items:center;text-align:center}
