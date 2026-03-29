@@ -189,8 +189,8 @@
   <script>
     const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
-    const WAITING_AUDIO_SRC = "/juegos.zaurio.es/trivialodon/assets/waiting.mp3";
-    const ANSWERING_AUDIO_SRC = "/juegos.zaurio.es/trivialodon/assets/answering.mp3";
+    const WAITING_AUDIO_SRC = "/trivialodon/assets/waiting.mp3";
+    const ANSWERING_AUDIO_SRC = "/trivialodon/assets/answering.mp3";
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
     const params = new URLSearchParams(location.search);
     const $ = id => document.getElementById(id);
@@ -348,7 +348,7 @@
     function renderCountdown(){
       const next = nextQuestion();
       const left = countSeconds(game.countdownEndAt || Date.now());
-      ui.hero.className = "hero center";
+      ui.hero.className = "hero compact";
       ui.category.textContent = "Cuenta atras";
       ui.prompt.textContent = "";
       ui.copy.textContent = "";
