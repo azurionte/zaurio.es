@@ -50,6 +50,7 @@
     .countStage{display:grid;gap:16px;justify-items:center;text-align:center;align-content:center;min-height:min(48vh,520px);width:min(980px,100%);margin:0 auto;padding:34px 28px;border-radius:34px;border:1px solid rgba(255,255,255,.1);background:
       radial-gradient(circle at top,rgba(255,255,255,.06),transparent 48%),
       linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+    .countStage.heroStage{min-height:min(62vh,680px);width:min(1080px,94%)}
     .countLabel{font-size:.78rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
     .countCategory{font-size:clamp(2rem,3.2vw,3.1rem);font-weight:1000;line-height:1.04}
     .countBig{font-size:clamp(6rem,13vw,9rem);font-weight:1000;line-height:1;color:#fff;text-shadow:0 10px 30px rgba(255,216,74,.16)}
@@ -113,6 +114,7 @@
     body.vertical .hero.compact .title{font-size:clamp(1.35rem,5vw,2rem)}
     body.vertical .answers{grid-template-columns:1fr;gap:8px}
     body.vertical .countStage{min-height:min(52vh,560px);padding:24px 18px;gap:12px}
+    body.vertical .countStage.heroStage{min-height:min(58vh,620px);width:min(100%,96%)}
     body.vertical .countCategory{font-size:clamp(1.35rem,5.6vw,2rem)}
     body.vertical .countBig{font-size:clamp(4rem,18vw,6.4rem)}
     body.vertical .countText{font-size:.88rem}
@@ -142,6 +144,44 @@
       .answers{grid-template-columns:1fr}
       .podium{grid-template-columns:1fr}
       .podiumCard,.podiumCard.first,.podiumCard.second,.podiumCard.third{min-height:auto}
+    }
+    @media (max-height:560px){
+      body{padding:8px}
+      .app{height:calc(100dvh - 16px);gap:8px}
+      .top{padding:8px 12px;border-radius:22px}
+      .brand{width:min(150px,22vw)}
+      .card{padding:14px;gap:10px;border-radius:22px}
+      .title{font-size:clamp(1.7rem,4vw,3.2rem)}
+      .copy{font-size:.9rem;line-height:1.35}
+      .timer{width:74px;height:74px;padding:5px}
+      .timerInner{font-size:1.1rem}
+      .countStage,.countStage.heroStage{min-height:min(46vh,320px);padding:18px 18px;gap:10px}
+      .countCategory{font-size:clamp(1.2rem,2.2vw,2rem)}
+      .countBig{font-size:clamp(3.4rem,8vw,5.4rem)}
+      .countText{font-size:.86rem}
+      .answer{padding:10px 12px;gap:6px}
+      .aText{font-size:.92rem}
+      .aState{font-size:.8rem}
+    }
+    @media (max-width:520px) and (max-height:700px){
+      body.vertical .top{padding:8px 10px}
+      body.vertical .brand{width:min(120px,34vw)}
+      body.vertical .card{padding:10px;gap:8px}
+      body.vertical .hero.lead{min-height:min(40vh,300px)}
+      body.vertical .title{font-size:clamp(1.2rem,5.8vw,2rem)}
+      body.vertical .copy{font-size:.78rem;line-height:1.28}
+      body.vertical .timer{width:58px;height:58px;padding:4px;top:4px;right:4px}
+      body.vertical .timerInner{font-size:.94rem}
+      body.vertical .countStage,body.vertical .countStage.heroStage{min-height:min(36vh,240px);padding:16px 12px;gap:8px}
+      body.vertical .countCategory{font-size:clamp(1rem,5.2vw,1.5rem)}
+      body.vertical .countBig{font-size:clamp(2.9rem,15vw,4.7rem)}
+      body.vertical .countText{font-size:.74rem}
+      body.vertical .answers{gap:6px}
+      body.vertical .answer{padding:8px 10px}
+      body.vertical .aText{font-size:.82rem}
+      body.vertical .aState{font-size:.72rem}
+      body.vertical .voteAvatar{width:22px;height:22px}
+      body.vertical .voteMore{height:20px;font-size:.66rem}
     }
   </style>
 </head>
@@ -340,22 +380,29 @@
     }
 
     function setTimer(value, progress, visible){
-      ui.timer.textContent = value;
-      ui.timerRing.style.setProperty("--timer", progress);
-      ui.timerRing.classList.toggle("hidden", !visible);
+      const timer = document.getElementById("timer");
+      const timerRing = document.getElementById("timerRing");
+      if(!timer || !timerRing) return;
+      timer.textContent = value;
+      timerRing.style.setProperty("--timer", progress);
+      timerRing.classList.toggle("hidden", !visible);
     }
 
     function renderCountdown(){
       const next = nextQuestion();
       const left = countSeconds(game.countdownEndAt || Date.now());
-      ui.hero.className = "hero compact";
-      ui.category.textContent = "Cuenta atras";
+      ui.hero.className = "hero center";
+      ui.category.textContent = "";
       ui.prompt.textContent = "";
       ui.copy.textContent = "";
-      setTimer("", 0, false);
+      setTimer(String(Math.max(1, left)), Math.max(0, Math.min(1, left / Math.max(1, Number(game.countdownSeconds || 4)))), true);
       ui.fact.classList.add("hidden");
       ui.answers.className = "answers";
-      ui.answers.innerHTML = `<div class="countStage" style="grid-column:1/-1">
+      ui.answers.innerHTML = "";
+      ui.hero.innerHTML = `<div class="timer" id="timerRing" style="--timer:${Math.max(0, Math.min(1, left / Math.max(1, Number(game.countdownSeconds || 4))))}">
+            <div class="timerInner" id="timer">${Math.max(1, left)}</div>
+          </div>
+          <div class="countStage heroStage">
         <div class="countLabel">${next?.type === "speed" ? "Test de velocidad" : "Siguiente ronda"}</div>
         <div class="countCategory">${esc(next?.category || "Categoria sorpresa")}</div>
         <div class="countBig">${Math.max(1, left)}</div>
@@ -365,9 +412,14 @@
 
     function renderPaused(){
       ui.hero.className = "hero center";
-      ui.category.textContent = "Sesion";
-      ui.prompt.textContent = "Juego pausado";
-      ui.copy.textContent = "La partida se reanudara en cuanto el anfitrion vuelva a ponerla en marcha.";
+      ui.hero.innerHTML = `<div class="titleWrap">
+            <span class="kick" id="category">Sesion</span>
+            <h1 class="title" id="prompt">Juego pausado</h1>
+            <p class="copy" id="copy">La partida se reanudara en cuanto el anfitrion vuelva a ponerla en marcha.</p>
+          </div>
+          <div class="timer hidden" id="timerRing" style="--timer:1">
+            <div class="timerInner" id="timer"></div>
+          </div>`;
       setTimer("", 0, false);
       ui.fact.classList.add("hidden");
       ui.answers.className = "answers";
@@ -389,6 +441,14 @@
       ui.copy.textContent = !answersVisible ? "Lee la pregunta. Las opciones aparecen enseguida." : (isSpeed ? "Las respuestas se bloquean en directo y puntuan distinto." : "Se ve en vivo que opcion esta marcando cada jugador.");
       setTimer(String(left), Math.max(0, Math.min(1, left / total)), true);
       ui.hero.className = `hero ${answersVisible ? "compact" : "lead"}${justRevealed ? " revealed" : ""}`;
+      ui.hero.innerHTML = `<div class="titleWrap">
+            <span class="kick" id="category">${esc(isSpeed ? `Test de velocidad · ${question.category || "Categoria sorpresa"}` : (question.category || "Cultura general"))}</span>
+            <h1 class="title" id="prompt">${esc(question.prompt || "Esperando pregunta...")}</h1>
+            <p class="copy" id="copy">${esc(!answersVisible ? "Lee la pregunta. Las opciones aparecen enseguida." : (isSpeed ? "Las respuestas se bloquean en directo y puntuan distinto." : "Se ve en vivo que opcion esta marcando cada jugador."))}</p>
+          </div>
+          <div class="timer${left || left === 0 ? "" : " hidden"}" id="timerRing" style="--timer:${Math.max(0, Math.min(1, left / total))}">
+            <div class="timerInner" id="timer">${esc(String(left))}</div>
+          </div>`;
       if(!answersVisible){
         ui.fact.classList.add("hidden");
         ui.answers.className = "answers";
@@ -436,6 +496,11 @@
       ui.prompt.textContent = game.finished ? "Podio final" : "Puntuacion del round";
       ui.copy.textContent = "";
       setTimer("", 0, false);
+      ui.hero.innerHTML = `<div class="titleWrap">
+            <span class="kick" id="category">Marcador</span>
+            <h1 class="title" id="prompt">${esc(game.finished ? "Podio final" : "Puntuacion del round")}</h1>
+            <p class="copy" id="copy"></p>
+          </div>`;
       ui.fact.classList.add("hidden");
       const rows = scoreRows();
       if(!rows.length){
@@ -487,6 +552,11 @@
       ui.prompt.textContent = "Esperando que la partida arranque";
       ui.copy.textContent = "";
       setTimer("", 0, false);
+      ui.hero.innerHTML = `<div class="titleWrap">
+            <span class="kick" id="category">Sala</span>
+            <h1 class="title" id="prompt">Esperando que la partida arranque</h1>
+            <p class="copy" id="copy"></p>
+          </div>`;
       ui.fact.classList.add("hidden");
       ui.answers.className = "answers";
       ui.answers.innerHTML = "";
