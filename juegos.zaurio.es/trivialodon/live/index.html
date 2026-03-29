@@ -46,12 +46,20 @@
     .aKey{color:var(--gold);font-weight:1000;margin-right:8px}
     .aText{font-size:clamp(1rem,1.35vw,1.42rem);font-weight:900;line-height:1.24}
     .aState{font-size:.95rem;font-weight:900;color:#fff;white-space:nowrap}
-    .voteCloud{display:flex;flex-wrap:wrap;gap:8px}
-    .voteTag{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);font-size:.84rem;color:#fff}
+    .voteCloud{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .voteAvatar{width:34px;height:34px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 18px rgba(0,0,0,.18)}
+    .voteAvatar img{width:100%;height:100%;object-fit:cover}
+    .voteMore{padding:0 8px;height:30px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:.8rem;color:#fff}
     .fact{padding:18px 20px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,216,74,.08));display:grid;gap:8px}
     .fact p{margin:0;color:var(--muted);line-height:1.45;font-size:1rem}
     .scoreHead{display:flex;justify-content:space-between;align-items:center;gap:12px}
     .scoreList{display:grid;gap:10px;min-height:0;align-content:start}
+    .liveBoard{display:grid;gap:12px;align-content:start}
+    .liveStrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:12px}
+    .livePlayer{padding:10px;border-radius:22px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;gap:8px;justify-items:center;text-align:center}
+    .livePlayer .avatar{width:58px;height:58px}
+    .livePlayerName{font-size:.84rem;font-weight:900;line-height:1.1;color:#fff}
+    .livePlayerState{font-size:.74rem;color:var(--muted)}
     .leader{padding:16px 18px;border-radius:24px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(135deg,rgba(255,216,74,.16),rgba(255,126,207,.12));display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center}
     .leader .avatar{width:64px;height:64px}
     .leaderLabel{font-size:.74rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:900}
@@ -89,7 +97,13 @@
     body.vertical .answer{padding:11px 12px;border-radius:20px}
     body.vertical .aText{font-size:.94rem}
     body.vertical .aState{font-size:.82rem}
-    body.vertical .voteTag{font-size:.75rem;padding:5px 8px}
+    body.vertical .voteAvatar{width:28px;height:28px}
+    body.vertical .voteMore{height:24px;font-size:.72rem}
+    body.vertical .liveStrip{grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:8px}
+    body.vertical .livePlayer{padding:8px;border-radius:18px}
+    body.vertical .livePlayer .avatar{width:42px;height:42px}
+    body.vertical .livePlayerName{font-size:.72rem}
+    body.vertical .livePlayerState{font-size:.64rem}
     body.vertical .leader{padding:12px 14px;grid-template-columns:50px minmax(0,1fr) auto;gap:10px}
     body.vertical .leader .avatar{width:50px;height:50px}
     body.vertical .leader .playerName{font-size:1rem}
@@ -140,7 +154,7 @@
       <aside class="sideCol">
         <article class="card">
           <div class="scoreHead">
-            <span class="kick">Marcador</span>
+            <span class="kick" id="sideKick">Marcador</span>
             <span class="statusLine" id="scoreStatus">Sesion en directo</span>
           </div>
           <div class="scoreList" id="scores"></div>
@@ -169,7 +183,7 @@
     const ui = {
       app:$("app"), join:$("join"), roomCode:$("roomCode"), category:$("category"), prompt:$("prompt"), copy:$("copy"),
       timer:$("timer"), timerRing:$("timerRing"), fact:$("fact"), factKick:$("factKick"), factText:$("factText"),
-      answers:$("answers"), scores:$("scores"), scoreStatus:$("scoreStatus"), codeInput:$("codeInput"), btnJoin:$("btnJoin")
+      answers:$("answers"), scores:$("scores"), scoreStatus:$("scoreStatus"), sideKick:$("sideKick"), codeInput:$("codeInput"), btnJoin:$("btnJoin")
     };
     let channel = null;
     let game = {phase:"lobby",scores:{},questionSet:[]};
@@ -187,11 +201,18 @@
         if(Number.isInteger(idx)){
           map[idx] ||= [];
           const player = players.find(item => item.playerId === playerId);
-          map[idx].push(player?.name || "Jugador");
+          map[idx].push(player || {name:"Jugador", avatarSrc:"", role:"guest"});
         }
       });
       return map;
     };
+    const avatarBubble = player => player?.avatarSrc ? `<span class="voteAvatar"><img src="${player.avatarSrc}" alt="${esc(player.name || "Jugador")}"></span>` : `<span class="voteAvatar">🦖</span>`;
+    function renderAudienceBoard(question){
+      const rows = scoreRows();
+      ui.sideKick.textContent = "Jugadores";
+      ui.scoreStatus.textContent = question?.type === "speed" ? "Bloqueos en directo" : "Pulso en directo";
+      ui.scores.innerHTML = rows.length ? `<div class="liveBoard"><div class="liveStrip">${rows.slice(0, 10).map(player => `<article class="livePlayer"><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div class="livePlayerName">${esc(player.name || "Jugador")}</div><div class="livePlayerState">${esc(player.role === "host" ? "Anfitrion" : "Invitado")}</div></article>`).join("")}</div></div>` : `<div class="empty">Los jugadores listos apareceran aqui.</div>`;
+    }
     function setLayoutMode(){
       const forced = params.get("layout");
       const vertical = forced === "vertical" || (forced !== "horizontal" && window.matchMedia("(orientation: portrait)").matches);
@@ -202,6 +223,7 @@
       const leader = rows[0];
       const rest = rows.slice(1, 6);
       const extra = Math.max(0, rows.length - 6);
+      ui.sideKick.textContent = "Marcador";
       ui.scoreStatus.textContent = game.finished ? "Partida cerrada" : "Sesion en directo";
       ui.scores.innerHTML = rows.length ? `
         <article class="leader">
@@ -258,15 +280,18 @@
       }
 
       const votes = voteMap(question);
+      renderAudienceBoard(question);
       const cards = (question.choices || []).map((choice, index) => {
-        const names = votes[index] || [];
-        const locked = isSpeed && names.length > 0;
+        const voters = votes[index] || [];
+        const locked = isSpeed && voters.length > 0;
         const revealCorrect = !isSpeed && question.revealed && question.correct === index;
         const revealWrong = isSpeed && question.revealed && Number(question.scores?.[index] || 0) === 0;
         const stateLine = isSpeed
           ? (question.revealed ? `${Number(question.scores?.[index] || 0)} pts` : (locked ? "Cogida" : "Libre"))
-          : (question.revealed ? (revealCorrect ? "Correcta" : `${names.length} voto${names.length === 1 ? "" : "s"}`) : `${names.length} voto${names.length === 1 ? "" : "s"}`);
-        return `<article class="answer ${locked ? "locked selected" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""}"><div class="answerTop"><div class="aText"><span class="aKey">${String.fromCharCode(65 + index)}</span>${esc(choice)}</div><div class="aState">${esc(stateLine)}</div></div><div class="voteCloud">${names.map(name => `<span class="voteTag">${esc(name)}</span>`).join("")}</div></article>`;
+          : (question.revealed ? (revealCorrect ? "Correcta" : `${voters.length} voto${voters.length === 1 ? "" : "s"}`) : `${voters.length} voto${voters.length === 1 ? "" : "s"}`);
+        const visibleVoters = voters.slice(0, 6).map(player => avatarBubble(player)).join("");
+        const overflow = voters.length > 6 ? `<span class="voteMore">+${voters.length - 6}</span>` : "";
+        return `<article class="answer ${locked ? "locked selected" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""}"><div class="answerTop"><div class="aText"><span class="aKey">${String.fromCharCode(65 + index)}</span>${esc(choice)}</div><div class="aState">${esc(stateLine)}</div></div><div class="voteCloud">${visibleVoters}${overflow}</div></article>`;
       }).join("");
       ui.answers.innerHTML = cards || `<div class="empty" style="grid-column:1/-1">La pregunta aparecera aqui.</div>`;
 
@@ -292,6 +317,7 @@
       ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">${game.finished ? "La sesion ha llegado al final." : "Pausa breve para leer el marcador."}</div>`;
     }
     function renderLobby(){
+      ui.sideKick.textContent = "Marcador";
       ui.category.textContent = "Sala";
       ui.prompt.textContent = "Esperando que la partida arranque";
       ui.copy.textContent = "Cuando el anfitrion avance, aqui se vera la pregunta, los bloqueos en tiempo real y el marcador.";
