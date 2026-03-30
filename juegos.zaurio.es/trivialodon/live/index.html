@@ -29,7 +29,7 @@
     body.cast .top{padding:8px 14px;border-radius:22px;min-height:92px}
     .brand{width:min(220px,22vw);display:block}
     body.cast .brand{width:min(136px,12vw)}
-    .topCenter{display:grid;place-items:center}
+    .topCenter{display:grid;place-items:start}
     .code{padding:10px 16px;border-radius:999px;background:rgba(255,216,74,.12);color:var(--gold);font-weight:1000;letter-spacing:.08em}
     .layout{display:grid;grid-template-columns:1fr;min-height:0}
     .card{padding:22px;display:grid;gap:16px;min-height:0}
@@ -198,10 +198,10 @@
     button{padding:14px 18px;border:0;border-radius:999px;background:linear-gradient(135deg,var(--gold),var(--pink));font:inherit;font-weight:1000;color:#240433;cursor:pointer}
     .hidden{display:none!important}
     @keyframes answersIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-    body.vertical .top{display:none !important}
-    body.vertical .app{grid-template-rows:minmax(0,1fr)}
-    body.vertical .brand{width:min(150px,44vw)}
-    body.vertical .code{display:none}
+    body.vertical .top{padding:10px 12px;border-radius:22px;min-height:76px}
+    body.vertical .app{grid-template-rows:auto minmax(0,1fr)}
+    body.vertical .brand{width:min(118px,36vw)}
+    body.vertical .code{display:inline-flex;padding:8px 12px;font-size:.92rem}
     body.vertical .card{padding:14px;gap:12px;border-radius:22px}
     body.vertical .title{font-size:clamp(1.55rem,6.8vw,2.55rem)}
     body.vertical .copy{font-size:.92rem}
@@ -370,10 +370,10 @@
 <body>
   <main class="app hidden" id="app">
     <header class="top">
-      <div></div>
       <div class="topCenter">
         <img class="brand" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon">
       </div>
+      <div></div>
       <div class="code" id="roomCode">0000</div>
     </header>
     <section class="layout">
