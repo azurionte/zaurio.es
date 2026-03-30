@@ -555,6 +555,30 @@
       const vertical = forced === "vertical" || (forced !== "horizontal" && window.matchMedia("(orientation: portrait)").matches);
       document.body.classList.toggle("vertical", vertical);
     }
+    function applyCastFit(){
+      if(!castMode || document.body.classList.contains("vertical")){
+        ui.app.style.transform = "";
+        ui.app.style.transformOrigin = "";
+        ui.app.style.width = "";
+        ui.app.style.height = "";
+        return;
+      }
+      ui.app.style.transform = "";
+      ui.app.style.transformOrigin = "";
+      ui.app.style.width = "";
+      ui.app.style.height = "";
+      const availableWidth = window.innerWidth - 16;
+      const availableHeight = window.innerHeight - 16;
+      const naturalWidth = ui.app.scrollWidth || availableWidth;
+      const naturalHeight = ui.app.scrollHeight || availableHeight;
+      const scale = Math.min(1, availableWidth / naturalWidth, availableHeight / naturalHeight);
+      if(scale < 0.999){
+        ui.app.style.transform = `scale(${scale})`;
+        ui.app.style.transformOrigin = "top center";
+        ui.app.style.width = `${100 / scale}%`;
+        ui.app.style.height = `${(availableHeight / scale)}px`;
+      }
+    }
 
     function setTimer(value, progress, visible){
       const timer = document.getElementById("timer");
@@ -961,6 +985,7 @@
       else renderLobby();
       syncAudio();
       if(castMode) tryCastAutoplay();
+      applyCastFit();
     }
 
     function syncPlayers(){
@@ -1004,6 +1029,7 @@
     });
     ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
     window.addEventListener("resize", setLayoutMode);
+    window.addEventListener("resize", applyCastFit);
     setLayoutMode();
     if(castMode) setTimeout(() => ensureAudioReady(), 120);
     setInterval(() => { if(channel) render(); }, 250);
