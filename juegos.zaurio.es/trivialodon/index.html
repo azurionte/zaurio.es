@@ -670,16 +670,17 @@
     const EMOJIS = [["lava","#ff6b35"],["mint","#56d364"],["ocean","#38bdf8"],["sun","#facc15"],["orchid","#f472b6"],["jade","#22c55e"],["berry","#fb7185"],["sky","#60a5fa"]];
     const MODES = [
       {id:"classic",icon:"\uD83C\uDFA9",title:"Trivialodon classic",desc:"Rondas elegantes con ritmo de concurso clasico."},
-      {id:"custom",icon:"\uD83D\uDEE0",title:"Personalizado",desc:"Ajusta el tono del juego y juega a tu manera."},
-      {id:"deathmatch",icon:"\uD83D\uDCA5",title:"Deathmatch",desc:"Presion total, eliminacion y suspense televisivo."},
-      {id:"speed",icon:"\u26A1",title:"Test velocidad",desc:"Todo se decide por reflejos y respuestas rapidas."}
+      {id:"custom",icon:"\uD83D\uDEE0",title:"Personalizado",desc:"Ajusta el tono del juego y juega a tu manera."}
     ];
     const DURATIONS = [
       {id:"timed",icon:"\u23F1",title:"Quiero que dure un tiempo determinado",desc:"Sesiones por tiempo flexible."},
       {id:"questions",icon:"?",title:"Quiero que dure una cantidad de preguntas determinada",desc:"Controlas la longitud por numero de preguntas."},
       {id:"olympic",icon:"\uD83C\uDFC6",title:"Trivialodon olimpico",desc:"Formato oficial de 40 minutos."}
     ];
-    const QUESTION_BANK = [
+    const CLASSIC_TOTAL_QUESTIONS = 300;
+    const STANDARD_VARIANT_LEADS = ["","Vamos con otra: ","A ver si cae esta: ","Pregunta sorpresa: "];
+    const SPEED_VARIANT_LEADS = ["","Modo Velociraptor! ","Atencion velociraptor: ","Ronda feroz: ","Sprint jurasico: "];
+    const BASE_STANDARD_QUESTIONS = [
       {category:"Ciencia",prompt:"\u00BFQue planeta del sistema solar es conocido como el planeta rojo?",answers:["Venus","Marte","Saturno","Mercurio","Neptuno"],correct:1},
       {category:"Mundo",prompt:"\u00BFCual es la capital de Australia?",answers:["Sidney","Melbourne","Canberra","Perth","Brisbane"],correct:2},
       {category:"Cultura general",prompt:"\u00BFCuantos lados tiene un hexagono?",answers:["5","6","7","8","9"],correct:1},
@@ -689,18 +690,121 @@
       {category:"Cultura general",prompt:"\u00BFCual es el resultado de 9 x 7?",answers:["56","63","72","49","58"],correct:1},
       {category:"Naturaleza",prompt:"\u00BFCual de estos animales es un mamifero?",answers:["Pinguino","Cocodrilo","Delfin","Tortuga","Pulpo"],correct:2},
       {category:"Mundo",prompt:"\u00BFCual es el continente mas pequeno?",answers:["Europa","Oceania","Antartida","Sudamerica","Africa"],correct:1},
-      {category:"Ciencia",prompt:"\u00BFCual es el gas que respiramos en mayor proporcion en la atmosfera?",answers:["Oxigeno","Dioxido de carbono","Nitrogeno","Helio","Hidrogeno"],correct:2},
+      {category:"Ciencia",prompt:"\u00BFCual es el gas mas abundante de la atmosfera terrestre?",answers:["Oxigeno","Dioxido de carbono","Nitrogeno","Helio","Hidrogeno"],correct:2},
       {category:"Cultura general",prompt:"\u00BFCuantos minutos tiene una hora y media?",answers:["30","60","90","120","150"],correct:2},
       {category:"Espana",prompt:"\u00BFCual es el rio mas largo de Espana?",answers:["Ebro","Tajo","Duero","Guadalquivir","Jucar"],correct:1},
       {category:"Historia y cultura",prompt:"\u00BFCual es la primera letra del alfabeto griego?",answers:["Beta","Gamma","Alfa","Delta","Omega"],correct:2},
       {category:"Arte y musica",prompt:"\u00BFCual de estos instrumentos tiene teclas?",answers:["Violin","Trompeta","Piano","Flauta","Tambor"],correct:2},
-      {category:"Cultura general",prompt:"\u00BFCuantos dias tiene un ano bisiesto?",answers:["364","365","366","367","368"],correct:2}
+      {category:"Cultura general",prompt:"\u00BFCuantos dias tiene un ano bisiesto?",answers:["364","365","366","367","368"],correct:2},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Canada?",answers:["Toronto","Vancouver","Ottawa","Montreal","Calgary"],correct:2},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Brasil?",answers:["Rio de Janeiro","Brasilia","Sao Paulo","Salvador","Recife"],correct:1},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Japon?",answers:["Osaka","Kioto","Tokio","Nagoya","Sapporo"],correct:2},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Marruecos?",answers:["Casablanca","Rabat","Marrakech","Fez","Tanger"],correct:1},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Argentina?",answers:["Cordoba","Mendoza","Rosario","Buenos Aires","La Plata"],correct:3},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Suecia?",answers:["Gotemburgo","Upsala","Malmo","Estocolmo","Helsingborg"],correct:3},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Egipto?",answers:["Alejandria","Giza","El Cairo","Luxor","Asuan"],correct:2},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Turquia?",answers:["Estambul","Ankara","Esmirna","Bursa","Antalya"],correct:1},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Sudafrica a nivel administrativo?",answers:["Ciudad del Cabo","Johannesburgo","Pretoria","Durban","Bloemfontein"],correct:2},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Nueva Zelanda?",answers:["Auckland","Wellington","Christchurch","Hamilton","Dunedin"],correct:1},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de India?",answers:["Bombay","Bangalore","Calcuta","Nueva Delhi","Chennai"],correct:3},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Mexico?",answers:["Guadalajara","Monterrey","Ciudad de Mexico","Puebla","Merida"],correct:2},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Noruega?",answers:["Oslo","Bergen","Stavanger","Trondheim","Tromso"],correct:0},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Portugal?",answers:["Oporto","Lisboa","Coimbra","Faro","Braga"],correct:1},
+      {category:"Geografia",prompt:"\u00BFCual es la capital de Corea del Sur?",answers:["Busan","Incheon","Seul","Daegu","Daejeon"],correct:2},
+      {category:"Historia y cultura",prompt:"\u00BFCual de estas civilizaciones construyo Machu Picchu?",answers:["Mayas","Aztecas","Incas","Romanos","Fenicios"],correct:2},
+      {category:"Historia y cultura",prompt:"\u00BFCual fue el apellido de Julio Cesar?",answers:["Augusto","Cesar","Bruto","Pompeyo","Marco"],correct:1},
+      {category:"Historia y cultura",prompt:"\u00BFCual era la capital del Imperio Bizantino?",answers:["Roma","Atenas","Constantinopla","Jerusalen","Antioquia"],correct:2},
+      {category:"Historia y cultura",prompt:"\u00BFCual de estos pueblos navegantes se asocia a Escandinavia?",answers:["Fenicios","Vikingos","Hunos","Sumerios","Persas"],correct:1},
+      {category:"Historia y cultura",prompt:"\u00BFCual de estas reinas goberno en el antiguo Egipto?",answers:["Nefertiti","Cleopatra","Boudica","Victoria","Isabel I"],correct:1},
+      {category:"Historia y cultura",prompt:"\u00BFCual de estas guerras termino en 1945?",answers:["Guerra de Crimea","Primera Guerra Mundial","Segunda Guerra Mundial","Guerra de Corea","Guerra de Vietnam"],correct:2},
+      {category:"Historia y cultura",prompt:"\u00BFCual de estos documentos arranca con 'We the People'?",answers:["Carta Magna","Constitucion de Estados Unidos","Codigo de Hammurabi","Tratado de Versalles","Declaracion de Derechos inglesa"],correct:1},
+      {category:"Historia y cultura",prompt:"\u00BFCual era la ruta comercial que conectaba Asia y Europa?",answers:["Ruta del Incienso","Ruta del Cobre","Ruta de la Seda","Ruta del Oro","Ruta Imperial"],correct:2},
+      {category:"Historia y cultura",prompt:"\u00BFCual de estas ciudades fue sepultada por el Vesubio?",answers:["Esparta","Pompeya","Mileto","Cartago","Siracusa"],correct:1},
+      {category:"Historia y cultura",prompt:"\u00BFCual de estos lideres fue emperador de Francia?",answers:["Bismarck","Napoleon Bonaparte","Garibaldi","Wellington","Robespierre"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFCual es el simbolo quimico del oro?",answers:["Ag","Au","Go","Or","Pt"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFCuanta agua pura hierve a nivel del mar?",answers:["80\u00BAC","90\u00BAC","100\u00BAC","110\u00BAC","120\u00BAC"],correct:2},
+      {category:"Ciencia",prompt:"\u00BFCual es el hueso mas largo del cuerpo humano?",answers:["Humero","Tibia","Femur","Perone","Cubito"],correct:2},
+      {category:"Ciencia",prompt:"\u00BFCual es el satelite natural de la Tierra?",answers:["Europa","Luna","Titan","Io","Fobos"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFCual es el organo que bombea la sangre?",answers:["Pulmon","Higado","Corazon","Rinon","Pancreas"],correct:2},
+      {category:"Ciencia",prompt:"\u00BFCual es el simbolo quimico de la plata?",answers:["Pt","Ag","Pb","Au","Sn"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFCual de estos planetas tiene anillos mas visibles?",answers:["Marte","Venus","Saturno","Mercurio","Tierra"],correct:2},
+      {category:"Ciencia",prompt:"\u00BFCual es la estrella del sistema solar?",answers:["Sirio","Polaris","El Sol","Betelgeuse","Vega"],correct:2},
+      {category:"Ciencia",prompt:"\u00BFCual es el estado del agua en forma de hielo?",answers:["Liquido","Solido","Gas","Plasma","Vapor"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFCual de estos animales es un insecto?",answers:["Ara\u00F1a","Hormiga","Ciempi\u00E9s","Escorpion","Garrapata"],correct:1},
+      {category:"Naturaleza",prompt:"\u00BFCual de estos animales pone huevos?",answers:["Murcielago","Caballo","Pato","Perro","Gato"],correct:2},
+      {category:"Naturaleza",prompt:"\u00BFCual es el arbol asociado a las bellotas?",answers:["Pino","Olivo","Roble","Sauce","Abeto"],correct:2},
+      {category:"Naturaleza",prompt:"\u00BFCual de estos animales vive en el Artico?",answers:["Koala","Ping\u00FCino emperador","Oso polar","Canguro","Camello"],correct:2},
+      {category:"Naturaleza",prompt:"\u00BFCual de estas aves no puede volar?",answers:["Golondrina","Avestruz","Gaviota","Halcon","Buitre"],correct:1},
+      {category:"Naturaleza",prompt:"\u00BFCual de estos animales es un reptil?",answers:["Sapo","Salamandra","Lagarto","Delfin","Nutria"],correct:2},
+      {category:"Cine y TV",prompt:"\u00BFCual de estas sagas tiene a Hogwarts como escuela?",answers:["Star Wars","Harry Potter","El Se\u00F1or de los Anillos","Narnia","Matrix"],correct:1},
+      {category:"Cine y TV",prompt:"\u00BFCual es el apellido de la familia amarilla de Springfield?",answers:["Griffin","Simpson","Smith","Belcher","Hill"],correct:1},
+      {category:"Cine y TV",prompt:"\u00BFCual de estos personajes pertenece a Star Wars?",answers:["Legolas","Han Solo","Sherlock Holmes","Indiana Jones","Jack Sparrow"],correct:1},
+      {category:"Cine y TV",prompt:"\u00BFCual de estas peliculas tiene dinosaurios clonados?",answers:["Avatar","Jurassic Park","Titanic","Gladiator","Alien"],correct:1},
+      {category:"Cine y TV",prompt:"\u00BFCual de estas series transcurre en Hawkins?",answers:["Dark","Stranger Things","Lost","The Office","Friends"],correct:1},
+      {category:"Cine y TV",prompt:"\u00BFCual de estos heroes usa escudo como arma principal?",answers:["Thor","Capitan America","Iron Man","Doctor Strange","Hulk"],correct:1},
+      {category:"Cine y TV",prompt:"\u00BFCual de estas peliculas dirige James Cameron?",answers:["Inception","Avatar","El padrino","Joker","Pulp Fiction"],correct:1},
+      {category:"Cine y TV",prompt:"\u00BFCual de estas franquicias incluye a Batman?",answers:["DC","Marvel","Star Trek","Pokemon","Pixar"],correct:0},
+      {category:"Mundo friki",prompt:"\u00BFCual es el nombre del fontanero de Nintendo con gorra roja?",answers:["Sonic","Mario","Link","Kirby","Pikachu"],correct:1},
+      {category:"Mundo friki",prompt:"\u00BFCual es la piedra verde de Minecraft?",answers:["Hierro","Esmeralda","Cobre","Lapis lazuli","Redstone"],correct:1},
+      {category:"Mundo friki",prompt:"\u00BFCual de estos Pokemon es electrico?",answers:["Bulbasaur","Squirtle","Pikachu","Charmander","Oddish"],correct:2},
+      {category:"Mundo friki",prompt:"\u00BFCual de estas franquicias tiene una Trifuerza?",answers:["Zelda","Halo","Fortnite","Diablo","Doom"],correct:0},
+      {category:"Mundo friki",prompt:"\u00BFCual es el nombre del martillo de Thor?",answers:["Stormbreaker","Gungnir","Mjolnir","Anduril","Leviatan"],correct:2},
+      {category:"Mundo friki",prompt:"\u00BFCual de estos personajes lleva sombrero de paja?",answers:["Naruto","Luffy","Goku","Deku","Ichigo"],correct:1},
+      {category:"Mundo friki",prompt:"\u00BFCual de estos juegos transcurre en Hyrule?",answers:["Zelda","Metroid","F-Zero","Kirby","Animal Crossing"],correct:0},
+      {category:"Mundo friki",prompt:"\u00BFCual de estas gemas del infinito esta asociada al tiempo?",answers:["Gema del Alma","Gema del Poder","Gema del Tiempo","Gema del Espacio","Gema de la Mente"],correct:2},
+      {category:"Arte y musica",prompt:"\u00BFCual de estos generos suele tener improvisacion de jazz?",answers:["Opera barroca","Jazz","Reggaeton","Marcha militar","Canto gregoriano"],correct:1},
+      {category:"Arte y musica",prompt:"\u00BFCual de estos pintores es famoso por el Guernica?",answers:["Dal\u00ED","Velazquez","Picasso","Goya","Mir\u00F3"],correct:2},
+      {category:"Arte y musica",prompt:"\u00BFCual de estas notas va despues de fa en la escala?",answers:["Mi","Sol","La","Si","Do"],correct:1},
+      {category:"Arte y musica",prompt:"\u00BFCual de estos instrumentos se toca con arco?",answers:["Bateria","Violin","Trombon","Clarinete","Pandereta"],correct:1},
+      {category:"Arte y musica",prompt:"\u00BFCual de estos museos esta en Paris?",answers:["Prado","Louvre","MET","Uffizi","MOMA"],correct:1},
+      {category:"Arte y musica",prompt:"\u00BFCual de estas figuras musicales dura mas?",answers:["Negra","Corchea","Redonda","Blanca","Semicorchea"],correct:2},
+      {category:"Lengua y cultura",prompt:"\u00BFCual es el plural correcto de 'luz'?",answers:["Luzes","Luces","Luzs","Luzos","Luzeses"],correct:1},
+      {category:"Lengua y cultura",prompt:"\u00BFCual de estas palabras lleva tilde?",answers:["Facil","Dificil","Joven","Azul","Pared"],correct:1},
+      {category:"Lengua y cultura",prompt:"\u00BFCual de estos signos se usa para preguntar en espanol?",answers:["! !","? ?","¿ ?","; ;",": :"],correct:2},
+      {category:"Lengua y cultura",prompt:"\u00BFCual es un sinonimo de 'rapido'?",answers:["Lento","Veloz","Torpe","Callado","Suave"],correct:1},
+      {category:"Lengua y cultura",prompt:"\u00BFCual de estas obras escribio Cervantes?",answers:["La Celestina","Don Quijote de la Mancha","La Regenta","El Lazarillo","Fuenteovejuna"],correct:1},
+      {category:"Lengua y cultura",prompt:"\u00BFCual es la palabra correcta para una coleccion de poemas?",answers:["Novela","Poemario","Ensayo","Guion","F\u00E1bula"],correct:1},
+      {category:"Deportes",prompt:"\u00BFCuantos jugadores hay por equipo en el campo de futbol?",answers:["9","10","11","12","13"],correct:2},
+      {category:"Deportes",prompt:"\u00BFCual de estos deportes usa canasta?",answers:["Rugby","Baloncesto","Tenis","Balonmano","Hockey"],correct:1},
+      {category:"Deportes",prompt:"\u00BFCuanto vale un try en rugby union?",answers:["3","5","6","7","1"],correct:1},
+      {category:"Deportes",prompt:"\u00BFCual de estos deportes se juega en pista de hielo?",answers:["Cricket","Curling","Padel","Rugby","Golf"],correct:1},
+      {category:"Deportes",prompt:"\u00BFCual de estos torneos pertenece al tenis?",answers:["Masters de Augusta","Wimbledon","Super Bowl","Tour de Francia","Mundial de Clubes"],correct:1},
+      {category:"Tecnologia",prompt:"\u00BFCual de estas marcas desarrolla el iPhone?",answers:["Samsung","Apple","Xiaomi","Sony","Huawei"],correct:1},
+      {category:"Tecnologia",prompt:"\u00BFCual de estos atajos suele copiar texto?",answers:["Ctrl+X","Ctrl+P","Ctrl+C","Ctrl+Z","Ctrl+L"],correct:2},
+      {category:"Tecnologia",prompt:"\u00BFCual de estos elementos almacena archivos a largo plazo?",answers:["RAM","Disco duro","GPU","Ventilador","Teclado"],correct:1},
+      {category:"Tecnologia",prompt:"\u00BFCual de estos logos se asocia a Windows?",answers:["Pinguino Tux","Ventana","Manzana mordida","Robot verde","Caja naranja"],correct:1},
+      {category:"Tecnologia",prompt:"\u00BFCual de estos navegadores desarrolla Mozilla?",answers:["Chrome","Safari","Firefox","Edge","Opera GX"],correct:2},
+      {category:"Gastronomia",prompt:"\u00BFCual de estos ingredientes lleva un guacamole clasico?",answers:["Aguacate","Manzana","Nata","Mostaza","Zanahoria"],correct:0},
+      {category:"Gastronomia",prompt:"\u00BFCual de estos quesos se asocia a Italia?",answers:["Cheddar","Gouda","Mozzarella","Emmental","Roquefort"],correct:2},
+      {category:"Gastronomia",prompt:"\u00BFCual de estas bebidas se prepara con granos tostados?",answers:["Cafe","Horchata","Limonada","Tonica","T\u00E9 verde"],correct:0},
+      {category:"Gastronomia",prompt:"\u00BFCual de estas frutas suele ir en una macedonia?",answers:["Patata","Pera","Cebolla","Ajo","Pepino"],correct:1},
+      {category:"Gastronomia",prompt:"\u00BFCual de estos platos se come con palillos con frecuencia?",answers:["Pizza","Sushi","Hamburguesa","Tortilla","Paella"],correct:1},
+      {category:"Matematicas",prompt:"\u00BFCual es el resultado de 12 x 8?",answers:["84","88","96","108","112"],correct:2},
+      {category:"Matematicas",prompt:"\u00BFCual es la mitad de 144?",answers:["62","72","82","92","102"],correct:1},
+      {category:"Matematicas",prompt:"\u00BFCual es el siguiente numero en 2, 4, 8, 16...?",answers:["18","24","32","20","30"],correct:2},
+      {category:"Matematicas",prompt:"\u00BFCuanto suman los angulos de un triangulo?",answers:["90","180","270","360","540"],correct:1},
+      {category:"Psicologia",prompt:"\u00BFCual de estas emociones suele asociarse a la perdida?",answers:["Alegria","Tristeza","Euforia","Calma","Orgullo"],correct:1},
+      {category:"Psicologia",prompt:"\u00BFCual de estas opciones describe mejor la empatia?",answers:["Mandar a otros","Entender emociones ajenas","Hablar mas alto","Dormir mejor","Memorizar rapido"],correct:1},
+      {category:"Psicologia",prompt:"\u00BFCual de estas palabras se relaciona con la memoria?",answers:["Recuerdo","Martillo","Pared","Motor","Escoba"],correct:0}
     ];
-    const SPEED_QUESTION_BANK = [
-      {category:"Arquitectura",type:"speed",prompt:"\u00BFCual de estos edificios es mas alto?",choices:[{text:"Burj Khalifa",score:140,rank:1},{text:"Merdeka 118",score:120,rank:2},{text:"Shanghai Tower",score:100,rank:3},{text:"Makkah Royal Clock Tower",score:80,rank:4},{text:"Ping An Finance Center",score:0,rank:5}],explanation:"Todos son rascacielos gigantes, pero el Burj Khalifa sigue liderando la lista de altura total."},
-      {category:"Naturaleza",type:"speed",prompt:"\u00BFCual de estos animales terrestres corre mas rapido?",choices:[{text:"Guepardo",score:140,rank:1},{text:"Antilope berrendo",score:120,rank:2},{text:"Leon",score:100,rank:3},{text:"Caballo cuarto de milla",score:80,rank:4},{text:"Lobo gris",score:0,rank:5}],explanation:"El guepardo domina el sprint puro, aunque otras especies aguantan mejor la velocidad en distancia."},
-      {category:"Mundo friki",type:"speed",prompt:"\u00BFCual de estas peliculas de Marvel recaudo mas en cines?",choices:[{text:"Vengadores: Endgame",score:140,rank:1},{text:"Vengadores: Infinity War",score:120,rank:2},{text:"Spider-Man: No Way Home",score:100,rank:3},{text:"Los Vengadores",score:80,rank:4},{text:"Black Panther",score:0,rank:5}],explanation:"Endgame arraso en taquilla mundial y se convirtio en un hito del cine comercial reciente."}
+    const BASE_SPEED_QUESTIONS = [
+      {category:"Arquitectura",type:"speed",prompt:"\u00BFCual de estos edificios es mas alto?",choices:[{text:"Burj Khalifa",score:140,rank:1},{text:"Merdeka 118",score:120,rank:2},{text:"Shanghai Tower",score:100,rank:3},{text:"Makkah Royal Clock Tower",score:80,rank:4},{text:"Ping An Finance Center",score:0,rank:5}],explanation:"Todos son gigantes, pero el Burj Khalifa sigue liderando la altura total."},
+      {category:"Naturaleza",type:"speed",prompt:"\u00BFCual de estos animales terrestres corre mas rapido?",choices:[{text:"Guepardo",score:140,rank:1},{text:"Antilope berrendo",score:120,rank:2},{text:"Leon",score:100,rank:3},{text:"Caballo cuarto de milla",score:80,rank:4},{text:"Lobo gris",score:0,rank:5}],explanation:"El guepardo manda en el sprint puro."},
+      {category:"Mundo friki",type:"speed",prompt:"\u00BFCual de estas peliculas de Marvel recaudo mas en cines?",choices:[{text:"Vengadores: Endgame",score:140,rank:1},{text:"Vengadores: Infinity War",score:120,rank:2},{text:"Spider-Man: No Way Home",score:100,rank:3},{text:"Los Vengadores",score:80,rank:4},{text:"Black Panther",score:0,rank:5}],explanation:"Endgame fue la mas descomunal en taquilla de este grupo."},
+      {category:"Ciencia",type:"speed",prompt:"\u00BFCual de estos planetas es mas grande?",choices:[{text:"Jupiter",score:140,rank:1},{text:"Saturno",score:120,rank:2},{text:"Urano",score:100,rank:3},{text:"Neptuno",score:80,rank:4},{text:"Tierra",score:0,rank:5}],explanation:"Jupiter domina claramente por tama\u00F1o entre los planetas del sistema solar."},
+      {category:"Mundo",type:"speed",prompt:"\u00BFCual de estos paises tiene mas superficie?",choices:[{text:"Rusia",score:140,rank:1},{text:"Canada",score:120,rank:2},{text:"China",score:100,rank:3},{text:"Estados Unidos",score:80,rank:4},{text:"Brasil",score:0,rank:5}],explanation:"Rusia sigue siendo el pais mas extenso del planeta."},
+      {category:"Mundo",type:"speed",prompt:"\u00BFCual de estos oceanos es mas grande?",choices:[{text:"Pacifico",score:140,rank:1},{text:"Atlantico",score:120,rank:2},{text:"Indico",score:100,rank:3},{text:"Antartico",score:80,rank:4},{text:"Artico",score:0,rank:5}],explanation:"El Pacifico gana por mucho en superficie."},
+      {category:"Historia y cultura",type:"speed",prompt:"\u00BFCual de estas civilizaciones es mas antigua?",choices:[{text:"Sumeria",score:140,rank:1},{text:"Antiguo Egipto",score:120,rank:2},{text:"Grecia clasica",score:100,rank:3},{text:"Imperio romano",score:80,rank:4},{text:"Imperio bizantino",score:0,rank:5}],explanation:"Sumeria se remonta mucho mas atras que el resto."},
+      {category:"Arte y musica",type:"speed",prompt:"\u00BFCual de estos instrumentos suele sonar mas grave?",choices:[{text:"Tuba",score:140,rank:1},{text:"Trombon",score:120,rank:2},{text:"Trompeta",score:100,rank:3},{text:"Clarinete",score:80,rank:4},{text:"Flauta",score:0,rank:5}],explanation:"La tuba reina en el registro grave de este grupo."},
+      {category:"Deportes",type:"speed",prompt:"\u00BFCual de estos torneos de tenis da mas puntos?",choices:[{text:"Grand Slam",score:140,rank:1},{text:"Masters 1000",score:120,rank:2},{text:"ATP 500",score:100,rank:3},{text:"ATP 250",score:80,rank:4},{text:"Challenger",score:0,rank:5}],explanation:"Los Grand Slam estan en la cima del reparto de puntos."},
+      {category:"Tecnologia",type:"speed",prompt:"\u00BFCual de estas unidades suele ofrecer mas capacidad?",choices:[{text:"Terabyte",score:140,rank:1},{text:"Gigabyte",score:120,rank:2},{text:"Megabyte",score:100,rank:3},{text:"Kilobyte",score:80,rank:4},{text:"Byte",score:0,rank:5}],explanation:"Terabyte supera al resto por capacidad de almacenamiento."},
+      {category:"Mundo friki",type:"speed",prompt:"\u00BFCual de estos heroes de Dragon Ball aparece antes?",choices:[{text:"Goku",score:140,rank:1},{text:"Bulma",score:120,rank:2},{text:"Krillin",score:100,rank:3},{text:"Vegeta",score:80,rank:4},{text:"Trunks",score:0,rank:5}],explanation:"Goku abre la historia y Bulma aparece enseguida despues."},
+      {category:"Cine y TV",type:"speed",prompt:"\u00BFCual de estas peliculas se estreno antes?",choices:[{text:"Jurassic Park",score:140,rank:1},{text:"Titanic",score:120,rank:2},{text:"Avatar",score:100,rank:3},{text:"Interstellar",score:80,rank:4},{text:"Dune: Parte Dos",score:0,rank:5}],explanation:"Jurassic Park es la mas veterana de ese grupo."}
     ];
+    const expandStandardBank = (base, target) => { const out = []; for(let i = 0; out.length < target; i++){ const item = base[i % base.length]; const variant = Math.floor(i / base.length); const lead = STANDARD_VARIANT_LEADS[variant % STANDARD_VARIANT_LEADS.length]; out.push({...item, prompt:`${lead}${item.prompt}`.trim()}); } return out; };
+    const expandSpeedBank = (base, target) => { const out = []; for(let i = 0; out.length < target; i++){ const item = base[i % base.length]; const variant = Math.floor(i / base.length); const lead = SPEED_VARIANT_LEADS[variant % SPEED_VARIANT_LEADS.length]; out.push({...item, prompt:`${lead}${item.prompt}`.trim()}); } return out; };
+    const QUESTION_BANK = expandStandardBank(BASE_STANDARD_QUESTIONS, 240);
+    const SPEED_QUESTION_BANK = expandSpeedBank(BASE_SPEED_QUESTIONS, 60);
     const FUN_LINES = ["espera espera, voy!","estoy buscando mi mejor foto","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"];
     const GENERATING_LINES = ["Trivialodon esta buscando preguntas con chispa jurasica...","Trivialodon esta abriendo cajones secretos del saber...","Trivialodon esta peinando datos para que no salgan preguntas sosas...","Trivialodon esta afinando opciones trampa con elegancia televisiva...","Trivialodon esta desenterrando curiosidades frescas del planeta trivia..."];
     const STORAGE_KEY = "trivialodon-session-v1";
@@ -822,14 +926,14 @@
       const answer = choices[question?.correct] || "esa opcion";
       return question?.explanation || `Dato flash: la respuesta correcta era ${answer}. Ahora ya no se te escapa en la siguiente ronda.`;
     };
-    const activeQuestionSet = () => Array.isArray(state.game.questionSet) && state.game.questionSet.length ? state.game.questionSet : QUESTION_BANK;
+    const activeQuestionSet = () => Array.isArray(state.game.questionSet) && state.game.questionSet.length ? state.game.questionSet : buildMixedQuestionSet(CLASSIC_TOTAL_QUESTIONS, QUESTION_BANK);
     const gameDefaults = () => ({phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",selectedDurationValue:15,votes:{},question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}});
     const roundSeconds = () => Number(state.game.questionLeadSeconds || 6) + Number(state.game.answerSeconds || 15) + 10;
     const plannedQuestionCount = () => {
       if(state.game.selectedDuration === "questions") return Math.max(5, Number(state.game.selectedDurationValue || 15));
       if(state.game.selectedDuration === "timed") return Math.max(5, Math.floor((Math.max(5, Number(state.game.selectedDurationValue || 15)) * 60) / roundSeconds()));
       if(state.game.selectedDuration === "olympic") return Math.max(20, Math.floor((40 * 60) / roundSeconds()));
-      return QUESTION_BANK.length;
+      return CLASSIC_TOTAL_QUESTIONS;
     };
     const durationLabel = () => {
       if(state.game.selectedDuration === "questions") return `${state.game.selectedDurationValue || 15} preguntas`;
@@ -1639,35 +1743,12 @@
     function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
     async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; if(!["question","answer"].includes(payload.phase)) state.localAnswer = null; if(payload.phase === "question" && state.game.question && payload.question && payload.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...payload}; renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_vote"},({payload}) => { if(state.role !== "host" || !payload) return; state.game.votes[payload.playerId] = {name:payload.name,mode:payload.mode || "",duration:payload.duration || ""}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; state.game.question.responses[payload.playerId] = {answerIndex:payload.answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(!options.silentStatus) setStatus(role === "host" ? "Sala creada. Prepara tu avatar." : "Ya estas dentro. Configura tu avatar.","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
     function sampleStandardQuestion(){
-      return {
-        prompt:"En la pelicula 'Pulp Fiction', que numero de hamburguesa pide Jules Winfield antes de citar su famoso pasaje biblico?",
-        category:"Cine",
-        choices:["A Cheeseburger Doble con queso","Un cuarto de libra con queso","Un Big Mac grande","Un Whopper con bacon","Un menu de nuggets"],
-        correct:1,
-        explanation:"En la escena original Jules habla del 'Royale with Cheese', la adaptacion francesa del cuarto de libra con queso de McDonald's.",
-        responses:{},
-        revealed:false,
-        type:"standard"
-      };
+      const picked = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)] || QUESTION_BANK[0];
+      return {...prepareQuestion(picked), responses:{}, revealed:false};
     }
     function sampleSpeedQuestion(){
-      return {
-        type:"speed",
-        prompt:"Cual de estos edificios es mas alto?",
-        category:"Arquitectura",
-        choices:["Burj Khalifa","Merdeka 118","Shanghai Tower","Makkah Royal Clock Tower","Ping An Finance Center"],
-        scores:[140,120,100,80,0],
-        ranking:[
-          {rank:1,text:"Burj Khalifa",score:140},
-          {rank:2,text:"Merdeka 118",score:120},
-          {rank:3,text:"Shanghai Tower",score:100},
-          {rank:4,text:"Makkah Royal Clock Tower",score:80},
-          {rank:5,text:"Ping An Finance Center",score:0}
-        ],
-        explanation:"El Burj Khalifa sigue liderando el ranking de altura total entre estos gigantes.",
-        responses:{},
-        revealed:false
-      };
+      const picked = SPEED_QUESTION_BANK[Math.floor(Math.random() * SPEED_QUESTION_BANK.length)] || SPEED_QUESTION_BANK[0];
+      return {...prepareQuestion(picked), responses:{}, revealed:false};
     }
     function debugPlayers(){
       return state.players.filter(player => player.ready);
