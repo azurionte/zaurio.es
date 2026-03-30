@@ -480,7 +480,7 @@
     function createLoopDeck(sources, targetVolume){
       const tracks = [new Audio(), new Audio()];
       tracks.forEach(track => { track.loop = false; track.preload = "auto"; track.volume = 0; });
-      return {tracks, sources:[...(sources || [])], activeIndex:0, targetVolume, playing:false, transition:false, handoffSeconds:.45, lastSourceIndex:-1};
+      return {tracks, sources:[...(sources || [])], activeIndex:0, targetVolume, playing:false, transition:false, handoffSeconds:1.1, lastSourceIndex:-1};
     }
     function pickDeckSourceIndex(deck, excludeIndex = -1){
       const total = deck?.sources?.length || 0;
@@ -517,7 +517,7 @@
       const timer = liveAudio.fadeTimers.get(track);
       if(timer){ clearInterval(timer); liveAudio.fadeTimers.delete(track); }
     }
-    function fadeTrack(track, to, duration = 420, pauseOnZero = false){
+    function fadeTrack(track, to, duration = 980, pauseOnZero = false){
       if(!track) return;
       clearFade(track);
       const from = Number(track.volume || 0);
@@ -545,7 +545,7 @@
       track.volume = 0;
       const attempt = track.play();
       if(attempt && typeof attempt.catch === "function") attempt.catch(() => {});
-      fadeTrack(track, deck.targetVolume, 520, false);
+      fadeTrack(track, deck.targetVolume, 1100, false);
       deck.playing = true;
       deck.transition = false;
     }
@@ -558,7 +558,7 @@
         if(immediate){
           try{ track.pause(); track.currentTime = 0; track.volume = 0; } catch(_){}
         } else {
-          fadeTrack(track, 0, 320, true);
+          fadeTrack(track, 0, 900, true);
         }
       });
     }
@@ -606,7 +606,9 @@
     }
     function syncAudio(){
       if(!soundEnabled || !liveAudio.unlocked) return;
-      const useAnswering = game.phase === "question" || game.phase === "answer";
+      const useAnswering = game.phase === "answer"
+        || (game.phase === "question" && (!game.question?.answersVisibleAt || (Number(game.question.answersVisibleAt) - Date.now()) <= 3200))
+        || (game.phase === "countdown" && game.countdownEndAt && (Number(game.countdownEndAt) - Date.now()) <= 3200);
       const target = useAnswering ? liveAudio.decks.answering : liveAudio.decks.waiting;
       const other = useAnswering ? liveAudio.decks.waiting : liveAudio.decks.answering;
       ensureDeckPlaying(target);
