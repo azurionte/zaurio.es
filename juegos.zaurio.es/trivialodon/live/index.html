@@ -561,12 +561,16 @@
         ui.app.style.transformOrigin = "";
         ui.app.style.width = "";
         ui.app.style.height = "";
+        ui.app.style.margin = "";
+        ui.app.style.justifySelf = "";
         return;
       }
       ui.app.style.transform = "";
       ui.app.style.transformOrigin = "";
       ui.app.style.width = "";
       ui.app.style.height = "";
+      ui.app.style.margin = "";
+      ui.app.style.justifySelf = "";
       const availableWidth = window.innerWidth - 16;
       const availableHeight = window.innerHeight - 16;
       const naturalWidth = ui.app.scrollWidth || availableWidth;
@@ -575,8 +579,10 @@
       if(scale < 0.999){
         ui.app.style.transform = `scale(${scale})`;
         ui.app.style.transformOrigin = "top center";
-        ui.app.style.width = `${100 / scale}%`;
-        ui.app.style.height = `${(availableHeight / scale)}px`;
+        ui.app.style.width = `${naturalWidth}px`;
+        ui.app.style.height = `${naturalHeight}px`;
+        ui.app.style.margin = "0 auto";
+        ui.app.style.justifySelf = "center";
       }
     }
 
