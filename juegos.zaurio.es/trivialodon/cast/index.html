@@ -37,10 +37,11 @@
     const placeholder = document.getElementById("placeholder");
     let currentRoom = "";
 
+    const LIVE_BUILD = "20260330-cast-fix-1";
     function liveUrl(roomCode){
       const code = String(roomCode || "").replace(/\D/g, "").slice(0, 4);
       if(!code) return "";
-      return `${location.origin}/trivialodon/live?sala=${encodeURIComponent(code)}&layout=horizontal&cast=1`;
+      return `${location.origin}/trivialodon/live?sala=${encodeURIComponent(code)}&layout=horizontal&cast=1&v=${encodeURIComponent(LIVE_BUILD)}`;
     }
 
     function showRoom(roomCode){
