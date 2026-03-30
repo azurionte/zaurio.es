@@ -990,9 +990,11 @@
       const paymentMode = card.paymentMode || card.cardSubtype || 'revolving';
       const ledger = buildCardLedger(card, throughYm);
       const transactions = ledger.entries;
+      const paidInfo = getDebtPaidOverride(card.id);
+      const forcedSettled = !!(paidInfo && throughYm >= paidInfo.monthKey);
       if(paymentMode === 'revolving'){
         const carried = Number(card.currentDebt || 0);
-        const balance = ledger.balance;
+        const balance = forcedSettled ? 0 : ledger.balance;
         const spent = transactions
           .filter(tx => !['payment','interest'].includes(tx.type))
           .reduce((sum, tx) => sum + Math.max(0, Number(tx.amount || 0)), 0);
@@ -1000,7 +1002,7 @@
         const available = creditLimit > 0 ? Math.max(0, creditLimit - balance) : null;
         return { balance, spent: carried > 0 ? Math.max(spent, carried) : spent, available, transactions };
       }
-      const balance = ledger.balance;
+      const balance = forcedSettled ? 0 : ledger.balance;
       const spent = transactions
         .filter(tx => tx.type !== 'payment')
         .reduce((sum, tx) => sum + Math.max(0, Number(tx.amount || 0)), 0);
