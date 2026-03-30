@@ -1060,7 +1060,7 @@
     }
     function decodeDebtStorageName(rawName, fallbackType = 'loan'){
       const text = String(rawName || '').trim();
-      if(!text) return { entityName:'', instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1 };
+      if(!text) return { entityName:'', instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'' };
       if(text.startsWith(DEBT_META_PREFIX)){
         try{
           const payload = JSON.parse(text.slice(DEBT_META_PREFIX.length));
@@ -1070,13 +1070,14 @@
             instrumentType: payload.instrumentType === 'card' ? 'card' : 'loan',
             creditLimit: Number(payload.creditLimit || 0),
             totalBorrowed: Number(payload.totalBorrowed || 0),
-            intervalMonths: Math.max(1, Number(payload.intervalMonths || 1))
+            intervalMonths: Math.max(1, Number(payload.intervalMonths || 1)),
+            settledMonth: String(payload.settledMonth || '').trim()
           };
         }catch(err){
           console.error('Error decodificando nombre de deuda', err);
         }
       }
-      return { entityName:text, instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1 };
+      return { entityName:text, instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'' };
     }
     function debtEntityName(item){
       return String(item?.entityName || item?.name || '').trim();
@@ -1108,7 +1109,8 @@
         instrumentType: item?.instrumentType || item?.debtKind || 'loan',
         creditLimit: Number(item?.creditLimit || 0),
         totalBorrowed: Number(item?.totalBorrowed || 0),
-        intervalMonths: Math.max(1, Number(item?.intervalMonths || 1))
+        intervalMonths: Math.max(1, Number(item?.intervalMonths || 1)),
+        settledMonth: String(item?.settledMonth || '').trim()
       })}`;
     }
     function normalizeDebtItem(item = {}){
@@ -1142,7 +1144,8 @@
         tin: Number(item.tin || 0),
         tae: Number(item.tae || 0),
         periodicity: normalizeExpensePeriodicity(item.periodicity || (instrumentType === 'card' && paymentMode === 'pay_end_month' ? 'monthly' : 'monthly')),
-        intervalMonths: Math.max(1, Number(item.intervalMonths || decoded.intervalMonths || 1))
+        intervalMonths: Math.max(1, Number(item.intervalMonths || decoded.intervalMonths || 1)),
+        settledMonth: String(item.settledMonth || decoded.settledMonth || '').trim()
       };
     }
     function emptyPersistableState(){
@@ -1779,6 +1782,9 @@
       return out;
     }
     function debtDescription(d){
+      if(d.settledMonth){
+        return `Deuda saldada · ${prettyMonthLabel(d.settledMonth)}`;
+      }
       const label = debtInstrumentName(d) || debtPaymentModeLabel(d.paymentMode || d.cardSubtype) || debtInstrumentTypeLabel(d.instrumentType || d.debtKind);
       if((d.instrumentType || d.debtKind || 'loan') === 'loan'){
         return d.lastMonth
@@ -1835,6 +1841,8 @@
       return null;
     }
     function getDebtPaidMonth(debtId){
+      const source = (state.debts || []).find(item => item.id === debtId);
+      if(source?.settledMonth) return source.settledMonth;
       const months = Object.keys(state.monthAdjustments || {}).sort();
       for(const monthKey of months){
         const mode = state.monthAdjustments?.[monthKey]?.debtOverrides?.[debtId]?.mode;
@@ -2005,6 +2013,7 @@
     }
 
     function debtBaseDisplayAmount(d){
+      if(d.settledMonth) return 0;
       return getDebtMonthlyCharge(d, state.defaultStartMonth);
     }
     function buildForecastMonthSnapshot(ym){
@@ -3460,6 +3469,10 @@
           if(amount <= 0){
             alert('Necesito un monto mayor que 0 para registrar el pago completo.');
             return;
+          }
+          const sourceDebt = state.debts.find(item => item.id === debt.id);
+          if(sourceDebt){
+            sourceDebt.settledMonth = ym;
           }
           commitMonthAdjustment(nextAdj => {
             nextAdj.debtOverrides[debt.id] = { mode:'paid', amount };
