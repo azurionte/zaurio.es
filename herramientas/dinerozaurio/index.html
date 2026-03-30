@@ -856,6 +856,7 @@
     function buildCardLedger(card, throughYm){
       const paymentMode = card.paymentMode || card.cardSubtype || 'revolving';
       const start = state.defaultStartMonth || card.startMonth || throughYm;
+      const paidInfo = getDebtPaidOverride(card.id);
       const ledger = [];
       let balance = 0;
       if(paymentMode === 'revolving'){
@@ -874,6 +875,7 @@
       monthsInRange(start, throughYm).forEach(monthKey => {
         const monthTxs = cardTransactionsForMonth(card.id, monthKey).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
         if(paymentMode === 'revolving'){
+          if(paidInfo && monthKey > paidInfo.monthKey) return;
           const annual = Number(card.tin || card.tae || 0) / 100;
           const monthlyRate = annual / 12;
           const interest = balance > 0.01 ? balance * monthlyRate : 0;
@@ -887,6 +889,21 @@
               type:'interest',
               balanceAfter: balance
             });
+          }
+          if(paidInfo && monthKey === paidInfo.monthKey){
+            const payoff = Math.min(Math.max(0, Number(paidInfo.amount || 0)), balance);
+            if(payoff > 0.01){
+              balance -= payoff;
+              ledger.push({
+                id:`${card.id}:payoff:${monthKey}`,
+                date:`${monthKey}-28`,
+                name:`Pago completo ${prettyMonthLabel(monthKey)}`,
+                amount: -payoff,
+                type:'payment',
+                balanceAfter: balance
+              });
+            }
+            return;
           }
           const payment = Number(card.currentPayment || 0) > 0 ? Math.min(Number(card.currentPayment || 0), balance) : 0;
           if(payment > 0.01){
@@ -906,10 +923,26 @@
           });
           return;
         }
+        if(paidInfo && monthKey > paidInfo.monthKey) return;
         monthTxs.forEach(tx => {
           balance += Number(tx.amount || 0);
           ledger.push({ ...tx, balanceAfter: balance });
         });
+        if(paidInfo && monthKey === paidInfo.monthKey){
+          const payoff = Math.min(Math.max(0, Number(paidInfo.amount || 0)), balance || getDebtPayoffAmount(card, monthKey));
+          if(payoff > 0.01){
+            balance = Math.max(0, balance - payoff);
+            ledger.push({
+              id:`${card.id}:payoff:${monthKey}`,
+              date:`${monthKey}-28`,
+              name:`Pago completo ${prettyMonthLabel(monthKey)}`,
+              amount: -payoff,
+              type:'payment',
+              balanceAfter: balance
+            });
+          }
+          return;
+        }
         const monthCharge = getDebtMonthlyCharge(card, monthKey);
         if(monthCharge > 0.01){
           balance = Math.max(0, balance - monthCharge);
@@ -1849,6 +1882,12 @@
         if(mode === 'paid') return monthKey;
       }
       return '';
+    }
+    function getDebtPaidOverride(debtId){
+      const monthKey = getDebtPaidMonth(debtId);
+      if(!monthKey) return null;
+      const override = state.monthAdjustments?.[monthKey]?.debtOverrides?.[debtId];
+      return override?.mode === 'paid' ? { monthKey, amount: Number(override.amount || 0) } : { monthKey, amount: 0 };
     }
     function getDebtPayoffAmount(d, ym){
       const start = d.startMonth || state.defaultStartMonth;
@@ -3616,7 +3655,7 @@
       const month = state.defaultStartMonth || todayMonth();
       const income = state.incomes.reduce((a,b)=>a + getIncomeMonthlyCharge(b, month), 0);
       const expense = state.expenses.reduce((a,b)=>a + getExpenseMonthlyCharge(b, month), 0);
-      const debt = state.debts.reduce((a,b)=>a + getDebtMonthlyCharge(b, month), 0);
+      const debt = state.debts.reduce((a,b)=>a + getDebtAmountForMonth(b, month), 0);
       const savings = state.goals.reduce((a,g)=>a + getGoalMonthlyCharge(g, month, 999999999).amount, 0);
 
       const incomeEl = document.getElementById('kpiIncome');
