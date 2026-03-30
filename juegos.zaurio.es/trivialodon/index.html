@@ -1782,11 +1782,11 @@
     function renderPausedScene(){ ui.pausedTitle.textContent = "Juego pausado"; ui.pausedCopy.textContent = state.role === "host" ? "Has pausado la partida entre preguntas. Reanudamos cuando quieras." : "El anfitrion ha pausado la partida. Espera a que vuelva el rugido."; ui.pausedActions.innerHTML = state.role === "host" ? `<button class="btn btnPrimary" id="btnResumeGame" type="button">Reanudar</button>` : ""; if(state.role === "host" && $("btnResumeGame")) $("btnResumeGame").onclick = async () => { state.game.phase = "countdown"; state.game.countdownEndAt = Date.now() + Math.max(1000, Number(state.game.pausedRemainingMs || 4000)); state.game.pausedRemainingMs = 0; await broadcastGame(); renderCurrentScene(); }; }
     function renderAnswerScene(){ const question = state.game.question; const choices = Array.isArray(question.choices) ? question.choices : []; ui.answerCorrect.textContent = choices[question.correct] || ""; ui.answerPrompt.textContent = question.prompt; }
     function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? "Lider actual" : "En carrera"}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>Aun no hay puntuaciones.</p>`; if(finished){ ui.scoresTitle.textContent = win ? "Victoria Jurasica!" : "Has perdido :("; ui.scoresLead.textContent = win ? `Te coronas con ${myScore} puntos. Rugido de campeon.` : "Te tocara saborear las sobras. Pero la proxima remontas."; } else { ui.scoresTitle.textContent = leader ? `${leader.name} lidera la partida` : "Puntuacion del round"; ui.scoresLead.textContent = leader ? `${leader.score} puntos acumulados` : "Todavia no hay puntuaciones."; } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">Continuar partida</button><button class="btn btnGhost" id="btnNewGame" type="button">Partida nueva</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); }; } }
-    function renderVersusPlayerCard(playerId, activeId, revealedChoices){
+    function renderVersusPlayerCard(playerId, activeId, visibleChoiceId){
       const player = findPlayer(playerId);
-      const choiceId = revealedChoices?.[playerId] || "";
-      const choice = choiceId ? versusMoveById(choiceId) : null;
-      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong>${esc(player?.name || "Jugador")}</strong><span class="playerSub">${playerId === state.playerId ? "Tu duelo" : "Duelo en curso"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Esperando tu marca" : "Sin revelar")}</div>`;
+      const choice = visibleChoiceId ? versusMoveById(visibleChoiceId) : null;
+      const waitingText = playerId === state.playerId ? "Esperando tu marca" : "Eleccion oculta";
+      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong>${esc(player?.name || "Jugador")}</strong><span class="playerSub">${playerId === state.playerId ? "Tu duelo" : "Duelo en curso"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Esperando tu marca" : waitingText)}</div>`;
     }
     function renderVersusIntroScene(){
       const versus = state.game.versus || {};
@@ -1811,21 +1811,25 @@
       const playerBData = findPlayer(playerB);
       const championId = versus.finalWinnerId || "";
       const champion = championId ? findPlayer(championId) : null;
+      const ownChoiceA = playerA === state.playerId ? ((versus.choices || {})[playerA] || "") : "";
+      const ownChoiceB = playerB === state.playerId ? ((versus.choices || {})[playerB] || "") : "";
+      const visibleChoiceA = (revealActive || versus.finalWinnerId || versus.roundWinnerId) ? ((versus.revealChoices || {})[playerA] || "") : ownChoiceA;
+      const visibleChoiceB = (revealActive || versus.finalWinnerId || versus.roundWinnerId) ? ((versus.revealChoices || {})[playerB] || "") : ownChoiceB;
       ui.versusLead.textContent = contenderIds.length === 2 ? `${playerAData?.name || "Jugador 1"} y ${playerBData?.name || "Jugador 2"} no pueden seguir empatando. Resolvamos esto como en la era jurasica.` : "Dos dinos no pueden seguir empatando.";
       ui.versusRoundBadge.textContent = versus.finalWinnerId ? "Duelo resuelto" : ((winsA === neededWins - 1 && winsB === neededWins - 1) ? "Ronda decisiva" : `Ronda ${Number(versus.roundNumber || 1)}`);
-      const handMoveA = (versus.revealChoices || {})[playerA] || (versus.choices || {})[playerA] || "rock";
-      const handMoveB = (versus.revealChoices || {})[playerB] || (versus.choices || {})[playerB] || "rock";
+      const handMoveA = visibleChoiceA || "rock";
+      const handMoveB = visibleChoiceB || "rock";
       ui.versusHandA.dataset.move = handMoveA;
       ui.versusHandB.dataset.move = handMoveB;
-      ui.versusHandA.className = `versusHand ${(revealActive || versus.finalWinnerId || versus.roundWinnerId) ? "revealed" : ((versus.choices || {})[playerA] ? "locked" : "")}`;
-      ui.versusHandB.className = `versusHand right ${(revealActive || versus.finalWinnerId || versus.roundWinnerId) ? "revealed" : ((versus.choices || {})[playerB] ? "locked" : "")}`;
+      ui.versusHandA.className = `versusHand ${(revealActive || versus.finalWinnerId || versus.roundWinnerId) ? "revealed" : (ownChoiceA ? "locked" : "")}`;
+      ui.versusHandB.className = `versusHand right ${(revealActive || versus.finalWinnerId || versus.roundWinnerId) ? "revealed" : (ownChoiceB ? "locked" : "")}`;
       ui.versusPlayerA.className = `versusPlayer ${versus.roundWinnerId === playerA ? "active" : ""} ${championId === playerA ? "champion" : ""}`;
       ui.versusPlayerB.className = `versusPlayer ${versus.roundWinnerId === playerB ? "active" : ""} ${championId === playerB ? "champion" : ""}`;
       ui.versusBurst.className = `versusBurst ${championId ? "champion" : ""}`;
       ui.versusChampionFx.className = `versusChampionFx ${championId ? "on" : ""}`;
       ui.versusChampionText.textContent = champion ? `${champion.name} domina la era jurasica` : "Victoria jurasica";
-      ui.versusPlayerA.innerHTML = renderVersusPlayerCard(playerA, canPick ? state.playerId : "", versus.revealChoices || {});
-      ui.versusPlayerB.innerHTML = renderVersusPlayerCard(playerB, canPick ? state.playerId : "", versus.revealChoices || {});
+      ui.versusPlayerA.innerHTML = renderVersusPlayerCard(playerA, canPick ? state.playerId : "", visibleChoiceA);
+      ui.versusPlayerB.innerHTML = renderVersusPlayerCard(playerB, canPick ? state.playerId : "", visibleChoiceB);
       ui.versusScoreline.innerHTML = contenderIds.map(playerId => {
         const player = findPlayer(playerId);
         const wins = Number(versus.wins?.[playerId] || 0);
