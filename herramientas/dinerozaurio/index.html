@@ -873,10 +873,6 @@
       }
       monthsInRange(start, throughYm).forEach(monthKey => {
         const monthTxs = cardTransactionsForMonth(card.id, monthKey).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
-        monthTxs.forEach(tx => {
-          balance += Number(tx.amount || 0);
-          ledger.push({ ...tx, balanceAfter: balance });
-        });
         if(paymentMode === 'revolving'){
           const annual = Number(card.tin || card.tae || 0) / 100;
           const monthlyRate = annual / 12;
@@ -904,8 +900,16 @@
               balanceAfter: balance
             });
           }
+          monthTxs.forEach(tx => {
+            balance += Number(tx.amount || 0);
+            ledger.push({ ...tx, balanceAfter: balance });
+          });
           return;
         }
+        monthTxs.forEach(tx => {
+          balance += Number(tx.amount || 0);
+          ledger.push({ ...tx, balanceAfter: balance });
+        });
         const monthCharge = getDebtMonthlyCharge(card, monthKey);
         if(monthCharge > 0.01){
           balance = Math.max(0, balance - monthCharge);
@@ -931,12 +935,6 @@
       let cur = start;
       let safe = 0;
       while(cur <= ym && safe < 240){
-        const monthCharges = debtCardEntriesForMonth(card.id, cur)
-          .filter(entry => (entry.cardUseMode || card.paymentMode || card.cardSubtype || 'revolving') === 'revolving')
-          .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-        const monthTransfers = debtCardTransfersForMonth(card.id, cur)
-          .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-        balance += monthCharges + monthTransfers;
         if(balance > 0.01 && payment > 0){
           const interest = balance * monthlyRate;
           const charge = Math.min(payment, balance + interest);
@@ -944,6 +942,12 @@
         } else if(balance <= 0.01){
           balance = 0;
         }
+        const monthCharges = debtCardEntriesForMonth(card.id, cur)
+          .filter(entry => (entry.cardUseMode || card.paymentMode || card.cardSubtype || 'revolving') === 'revolving')
+          .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+        const monthTransfers = debtCardTransfersForMonth(card.id, cur)
+          .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+        balance += monthCharges + monthTransfers;
         cur = addMonthsStr(cur, 1);
         safe++;
       }
@@ -1845,15 +1849,15 @@
         let cur = start;
         let safe = 0;
         while(cur <= ym && safe < 240){
-          const entriesThisMonth = debtCardEntriesForMonth(d.id, cur)
-            .filter(entry => {
-              const useMode = entry.cardUseMode || d.paymentMode || d.cardSubtype || 'revolving';
-              return useMode === 'revolving';
-            });
-          const transferAmount = debtCardTransfersForMonth(d.id, cur).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
-          balance += entriesThisMonth.reduce((sum, entry) => sum + Number(entry.amount || 0), 0) + transferAmount;
           if(balance <= 0.01){
             if(cur === ym) return 0;
+            const entriesThisMonth = debtCardEntriesForMonth(d.id, cur)
+              .filter(entry => {
+                const useMode = entry.cardUseMode || d.paymentMode || d.cardSubtype || 'revolving';
+                return useMode === 'revolving';
+              });
+            const transferAmount = debtCardTransfersForMonth(d.id, cur).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+            balance += entriesThisMonth.reduce((sum, entry) => sum + Number(entry.amount || 0), 0) + transferAmount;
             cur = addMonthsStr(cur, 1);
             safe++;
             continue;
@@ -1862,6 +1866,13 @@
           if(cur === ym) return charge > 0.01 ? charge : 0;
           const interest = balance * monthlyRate;
           balance = Math.max(0, balance + interest - charge);
+          const entriesThisMonth = debtCardEntriesForMonth(d.id, cur)
+            .filter(entry => {
+              const useMode = entry.cardUseMode || d.paymentMode || d.cardSubtype || 'revolving';
+              return useMode === 'revolving';
+            });
+          const transferAmount = debtCardTransfersForMonth(d.id, cur).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+          balance += entriesThisMonth.reduce((sum, entry) => sum + Number(entry.amount || 0), 0) + transferAmount;
           cur = addMonthsStr(cur, 1);
           safe++;
         }
