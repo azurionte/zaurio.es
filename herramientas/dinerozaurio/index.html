@@ -855,7 +855,7 @@
     }
     function buildCardLedger(card, throughYm){
       const paymentMode = card.paymentMode || card.cardSubtype || 'revolving';
-      const start = card.startMonth || state.defaultStartMonth || throughYm;
+      const start = state.defaultStartMonth || card.startMonth || throughYm;
       const ledger = [];
       let balance = 0;
       if(paymentMode === 'revolving'){

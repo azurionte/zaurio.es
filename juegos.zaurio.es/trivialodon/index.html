@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -145,9 +145,6 @@
       .questionHeader{display:grid}
       .questionBox{gap:16px}
       .timerRing{width:76px;height:76px;justify-self:center}
-      .categoryLead{grid-template-columns:1fr;justify-items:center;gap:14px}
-      .categoryLead .categoryArt{width:min(180px,48vw)}
-      .categoryLead .answerCard{min-height:0}
       .title{font-size:clamp(1.6rem,8vw,2.4rem)}
       .subtitle{font-size:clamp(1.1rem,6vw,1.6rem)}
       .bigCount{font-size:clamp(4.5rem,28vw,7rem)}
@@ -203,6 +200,9 @@
       .timerInner{font-size:1.2rem}
       .answerCard{padding:14px 16px}
       .answerText{font-size:1rem}
+      .categoryLead{grid-template-columns:1fr;justify-items:center;gap:14px}
+      .categoryLead .categoryArt{width:min(180px,48vw)}
+      .categoryLead .answerCard{min-height:0}
     }
     @media (max-height:520px){
       body{padding:6px}
@@ -274,7 +274,7 @@
         <div class="topRight">
           <button class="scoreChip" id="scoreChip" type="button" hidden><span>Puntos</span><span class="scoreValue" id="scoreChipValue">0</span></button>
           <div class="soundWrap" id="soundWrap">
-            <button class="soundChip" id="soundChip" type="button" hidden><span class="soundGlyph" id="soundChipGlyph">🔊</span></button>
+            <button class="soundChip" id="soundChip" type="button" hidden><span class="soundGlyph" id="soundChipGlyph">ðŸ”Š</span></button>
             <div class="soundPanel" id="soundPanel">
               <div class="soundPanelRow">
                 <span class="soundMini">Sonido</span>
@@ -295,7 +295,7 @@
               </div>
             </button>
             <div class="profileMenu" id="profileMenu">
-              <button class="btn btnGhost" id="btnProfileCast" type="button">📺 Enviar a TV</button>
+              <button class="btn btnGhost" id="btnProfileCast" type="button">ðŸ“º Enviar a TV</button>
               <button class="btn btnGhost" id="btnProfileContinue" type="button">Continuar juego</button>
               <button class="btn btnGhost" id="btnProfileNew" type="button">Empezar nueva partida</button>
             </div>
@@ -311,7 +311,7 @@
             <div class="codeBadge" id="roomBadge">------</div>
             <div class="field" id="joinCodeField" hidden>
               <label for="joinCodeInput">Codigo de sala</label>
-              <input id="joinCodeInput" maxlength="6" placeholder="ABC123" />
+              <input id="joinCodeInput" maxlength="4" inputmode="numeric" placeholder="1234" />
             </div>
             <div class="field">
               <label for="nameInput">Tu nombre</label>
@@ -528,7 +528,7 @@
               </div>
             </div>
           </div>
-          <div class="versusChampionFx" id="versusChampionFx"><span class="versusCrown">👑</span><span id="versusChampionText">Victoria jurásica</span></div>
+          <div class="versusChampionFx" id="versusChampionFx"><span class="versusCrown">👑</span><span id="versusChampionText">Victoria jurasica</span></div>
           <div class="versusDuel">
             <article class="versusPlayer" id="versusPlayerA"></article>
             <article class="versusPlayer" id="versusPlayerB"></article>
@@ -678,8 +678,8 @@
       {id:"olympic",icon:"\uD83C\uDFC6",title:"Trivialodon olimpico",desc:"Formato oficial de 40 minutos."}
     ];
     const CLASSIC_TOTAL_QUESTIONS = 300;
-    const STANDARD_VARIANT_LEADS = ["","Vamos con otra: ","A ver si cae esta: ","Pregunta sorpresa: "];
-    const SPEED_VARIANT_LEADS = ["","Modo Velociraptor! ","Atencion velociraptor: ","Ronda feroz: ","Sprint jurasico: "];
+    const STANDARD_VARIANT_LEADS = ["","Cambiamos de tercio: ","Vamos con una mas fina: ","Subimos un poco el nivel: "];
+    const SPEED_VARIANT_LEADS = ["","Modo Velociraptor! ","Ronda Velociraptor! ","Velociraptor en pista: ","Atencion, garras fuera: "];
     const BASE_STANDARD_QUESTIONS = [
       {category:"Ciencia",prompt:"\u00BFQue planeta del sistema solar es conocido como el planeta rojo?",answers:["Venus","Marte","Saturno","Mercurio","Neptuno"],correct:1},
       {category:"Mundo",prompt:"\u00BFCual es la capital de Australia?",answers:["Sidney","Melbourne","Canberra","Perth","Brisbane"],correct:2},
@@ -787,6 +787,97 @@
       {category:"Psicologia",prompt:"\u00BFCual de estas opciones describe mejor la empatia?",answers:["Mandar a otros","Entender emociones ajenas","Hablar mas alto","Dormir mejor","Memorizar rapido"],correct:1},
       {category:"Psicologia",prompt:"\u00BFCual de estas palabras se relaciona con la memoria?",answers:["Recuerdo","Martillo","Pared","Motor","Escoba"],correct:0}
     ];
+    const HARDER_STANDARD_QUESTIONS = [
+      {category:"Historia y cultura",prompt:"\u00BFQue tratado puso fin oficialmente a la Primera Guerra Mundial?",answers:["Utrecht","Versalles","Tordesillas","Yalta","Ginebra"],correct:1},
+      {category:"Historia y cultura",prompt:"\u00BFQue ciudad fue la capital del califato omeya en Al-Andalus?",answers:["Toledo","Sevilla","Granada","Cordoba","Merida"],correct:3},
+      {category:"Historia y cultura",prompt:"\u00BFQue monarca frances es conocido como el Rey Sol?",answers:["Luis XIV","Luis XVI","Enrique IV","Carlos X","Felipe Augusto"],correct:0},
+      {category:"Historia y cultura",prompt:"\u00BFQue emperador romano legalizo el cristianismo con el Edicto de Milan?",answers:["Neron","Trajano","Constantino","Adriano","Diocleciano"],correct:2},
+      {category:"Historia y cultura",prompt:"\u00BFQue navegante completo la primera vuelta al mundo tras la muerte de Magallanes?",answers:["Elcano","Drake","Caboto","Colon","Vespucci"],correct:0},
+      {category:"Historia y cultura",prompt:"\u00BFEn que ano cayo el Muro de Berlin?",answers:["1987","1988","1989","1990","1991"],correct:2},
+      {category:"Historia y cultura",prompt:"\u00BFQue conflicto enfrento a Atenas y Esparta?",answers:["Guerras Medicas","Guerra del Peloponeso","Guerra de los Treinta Anos","Guerras Punicas","Guerra de Troya"],correct:1},
+      {category:"Historia y cultura",prompt:"\u00BFQue ciudad fue dividida por un muro durante la Guerra Fria?",answers:["Praga","Budapest","Varsovia","Berlin","Viena"],correct:3},
+      {category:"Mundo",prompt:"\u00BFQue estrecho separa Europa de Africa?",answers:["Bosforo","Dardanelos","Ormuz","Gibraltar","Magallanes"],correct:3},
+      {category:"Mundo",prompt:"\u00BFQue rio atraviesa Viena, Budapest y Belgrado?",answers:["Rin","Danubio","Vistula","Elba","Po"],correct:1},
+      {category:"Mundo",prompt:"\u00BFCual es la capital administrativa de Bolivia?",answers:["La Paz","Sucre","Cochabamba","Santa Cruz","Oruro"],correct:0},
+      {category:"Mundo",prompt:"\u00BFQue pais tiene por capital a Abuja?",answers:["Kenia","Nigeria","Ghana","Etiopia","Uganda"],correct:1},
+      {category:"Mundo",prompt:"\u00BFQue pais no forma parte de la peninsula iberica?",answers:["Portugal","Andorra","Espana","Francia","Gibraltar"],correct:3},
+      {category:"Ciencia",prompt:"\u00BFQue elemento tiene el simbolo Sn?",answers:["Sodio","Esta\u00F1o","Silicio","Estroncio","Selenio"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFCual es la luna mas grande de Saturno?",answers:["Europa","Titan","Io","Calisto","Encelado"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFQue planeta tarda mas en dar una vuelta al Sol?",answers:["Jupiter","Saturno","Urano","Neptuno","Mercurio"],correct:3},
+      {category:"Ciencia",prompt:"\u00BFQue cientifica descubrio la radiactividad junto a Pierre Curie?",answers:["Lise Meitner","Marie Curie","Dorothy Hodgkin","Rosalind Franklin","Ada Lovelace"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFQue parte de la celula contiene la mayor parte del ADN?",answers:["Citoplasma","Membrana","Nucleo","Ribosoma","Mitocondria"],correct:2},
+      {category:"Ciencia",prompt:"\u00BFQue escala se usa para medir la dureza de los minerales?",answers:["Richter","Mohs","Kelvin","Beaufort","Mercalli"],correct:1},
+      {category:"Ciencia",prompt:"\u00BFQue cientifico formulo las leyes del movimiento y la gravitacion clasica?",answers:["Galileo","Newton","Kepler","Faraday","Planck"],correct:1},
+      {category:"Arte y musica",prompt:"\u00BFQuien compuso La consagracion de la primavera?",answers:["Debussy","Ravel","Stravinsky","Satie","Berlioz"],correct:2},
+      {category:"Arte y musica",prompt:"\u00BFQue pintor espanol es autor de Las meninas?",answers:["Goya","El Greco","Velazquez","Sorolla","Murillo"],correct:2},
+      {category:"Arte y musica",prompt:"\u00BFEn que ciudad italiana se encuentra la Capilla Sixtina?",answers:["Florencia","Venecia","Roma","Milan","Napoles"],correct:2},
+      {category:"Arte y musica",prompt:"\u00BFQue compositor quedo sordo en la etapa final de su vida?",answers:["Mozart","Chopin","Beethoven","Haydn","Schubert"],correct:2},
+      {category:"Arte y musica",prompt:"\u00BFQue instrumento pertenece a la familia de cuerda frotada?",answers:["Oboe","Timbal","Viola","Trompa","Fagot"],correct:2},
+      {category:"Lengua y cultura",prompt:"\u00BFQue obra teatral de Lorca transcurre en una casa de luto rigido?",answers:["Yerma","Bodas de sangre","La casa de Bernarda Alba","Mariana Pineda","Dona Rosita la soltera"],correct:2},
+      {category:"Lengua y cultura",prompt:"\u00BFQue lengua romance tiene mas hablantes nativos?",answers:["Italiano","Frances","Portugues","Espanol","Rumano"],correct:3},
+      {category:"Literatura",prompt:"\u00BFQuien escribio Crimen y castigo?",answers:["Tolstoi","Dostoievski","Gogol","Turgueniev","Pushkin"],correct:1},
+      {category:"Literatura",prompt:"\u00BFQue detective creo Agatha Christie y es belga?",answers:["Poirot","Marlowe","Holmes","Maigret","Lupin"],correct:0},
+      {category:"Literatura",prompt:"\u00BFQue novela empieza con la frase 'Llamadme Ismael'?",answers:["La isla del tesoro","Moby Dick","Dracula","Ulises","Robinson Crusoe"],correct:1},
+      {category:"Literatura",prompt:"\u00BFQue escritor latinoamericano creo Macondo?",answers:["Borges","Cortazar","Garcia Marquez","Vargas Llosa","Bioy Casares"],correct:2},
+      {category:"Economia",prompt:"\u00BFQue organismo fija la politica monetaria de la eurozona?",answers:["Comision Europea","Banco Central Europeo","Banco Mundial","Ecofin","FMI"],correct:1},
+      {category:"Economia",prompt:"\u00BFQue impuesto indirecto grava el consumo en Espana?",answers:["IRPF","Sucesiones","IVA","IAE","IBI"],correct:2},
+      {category:"Tecnologia",prompt:"\u00BFQue empresa creo originalmente el lenguaje Java?",answers:["Microsoft","Sun Microsystems","IBM","Oracle","Adobe"],correct:1},
+      {category:"Tecnologia",prompt:"\u00BFQue protocolo se usa normalmente para navegar por webs seguras?",answers:["FTP","SSH","HTTPS","SMTP","SNMP"],correct:2},
+      {category:"Tecnologia",prompt:"\u00BFQue componente interpreta y ejecuta instrucciones de un programa?",answers:["GPU","SSD","CPU","RAM","Router"],correct:2},
+      {category:"Cine y TV",prompt:"\u00BFQuien dirigio Pulp Fiction?",answers:["Scorsese","Tarantino","Fincher","Coppola","Ridley Scott"],correct:1},
+      {category:"Cine y TV",prompt:"\u00BFEn que pelicula aparece la frase 'Siempre nos quedara Paris'?",answers:["Casablanca","Ciudadano Kane","Lo que el viento se llevo","Rebecca","Vertigo"],correct:0},
+      {category:"Cine y TV",prompt:"\u00BFQue actor interpreto a Vito Corleone en la primera pelicula de El padrino?",answers:["Al Pacino","Robert De Niro","Marlon Brando","James Caan","Robert Duvall"],correct:2},
+      {category:"Gastronomia",prompt:"\u00BFQue pais popularizo el plato llamado pho?",answers:["Corea del Sur","Japon","Tailandia","Vietnam","China"],correct:3},
+      {category:"Gastronomia",prompt:"\u00BFQue queso frances se elabora tradicionalmente con moho azul y leche de oveja?",answers:["Brie","Camembert","Roquefort","Comte","Reblochon"],correct:2},
+      {category:"Deportes",prompt:"\u00BFCuantos hoyos tiene una vuelta completa de golf en torneo?",answers:["9","12","18","24","27"],correct:2},
+      {category:"Deportes",prompt:"\u00BFQue ciclista apodado El Canibal gano cinco Tours?",answers:["Coppi","Merckx","Indurain","Hinault","Anquetil"],correct:1},
+      {category:"Psicologia",prompt:"\u00BFQue sesgo consiste en buscar solo informacion que confirma lo que ya pensamos?",answers:["Halo","Anclaje","Confirmacion","Disponibilidad","Atribucion"],correct:2},
+      {category:"Psicologia",prompt:"\u00BFQue termino describe la dificultad para decidir por exceso de opciones?",answers:["Disonancia","Habituacion","Paralisis por analisis","Priming","Catarsis"],correct:2},
+      {category:"Espana",prompt:"\u00BFQue ciudad andaluza alberga la Alhambra?",answers:["Cordoba","Sevilla","Granada","Jaen","Malaga"],correct:2},
+      {category:"Espana",prompt:"\u00BFEn que comunidad autonoma esta Merida?",answers:["Andalucia","Castilla-La Mancha","Extremadura","Aragon","Murcia"],correct:2},
+      {category:"Matematicas",prompt:"\u00BFCual de estos numeros es primo?",answers:["21","27","29","33","39"],correct:2}
+    ];
+    const TOO_EASY_PROMPTS = new Set([
+      "\u00BFQue planeta del sistema solar es conocido como el planeta rojo?",
+      "\u00BFCuantos lados tiene un hexagono?",
+      "\u00BFCual es el resultado de 9 x 7?",
+      "\u00BFCual de estos animales es un mamifero?",
+      "\u00BFCuantos minutos tiene una hora y media?",
+      "\u00BFCual es la primera letra del alfabeto griego?",
+      "\u00BFCual de estos instrumentos tiene teclas?",
+      "\u00BFCuantos dias tiene un ano bisiesto?",
+      "\u00BFCual es el simbolo quimico del oro?",
+      "\u00BFCuanta agua pura hierve a nivel del mar?",
+      "\u00BFCual es el hueso mas largo del cuerpo humano?",
+      "\u00BFCual es el satelite natural de la Tierra?",
+      "\u00BFCual es el organo que bombea la sangre?",
+      "\u00BFCual es el simbolo quimico de la plata?",
+      "\u00BFCual es la estrella del sistema solar?",
+      "\u00BFCual es el estado del agua en forma de hielo?",
+      "\u00BFCual de estos animales es un insecto?",
+      "\u00BFCual de estos animales pone huevos?",
+      "\u00BFCual es el arbol asociado a las bellotas?",
+      "\u00BFCual de estas aves no puede volar?",
+      "\u00BFCual de estos animales es un reptil?",
+      "\u00BFCual es el nombre del fontanero de Nintendo con gorra roja?",
+      "\u00BFCual de estos Pokemon es electrico?",
+      "\u00BFCual de estas sagas tiene a Hogwarts como escuela?",
+      "\u00BFCual es el apellido de la familia amarilla de Springfield?",
+      "\u00BFCual de estos personajes pertenece a Star Wars?",
+      "\u00BFCual de estas peliculas tiene dinosaurios clonados?",
+      "\u00BFCual de estas marcas desarrolla el iPhone?",
+      "\u00BFCual de estos atajos suele copiar texto?",
+      "\u00BFCual de estos logos se asocia a Windows?",
+      "\u00BFCual de estos ingredientes lleva un guacamole clasico?",
+      "\u00BFCual de estas bebidas se prepara con granos tostados?",
+      "\u00BFCual de estas frutas suele ir en una macedonia?",
+      "\u00BFCual de estos platos se come con palillos con frecuencia?",
+      "\u00BFCual es la mitad de 144?",
+      "\u00BFCual es el siguiente numero en 2, 4, 8, 16...?",
+      "\u00BFCuanto suman los angulos de un triangulo?",
+      "\u00BFCual de estas emociones suele asociarse a la perdida?",
+      "\u00BFCual de estas opciones describe mejor la empatia?"
+    ]);
     const BASE_SPEED_QUESTIONS = [
       {category:"Arquitectura",type:"speed",prompt:"\u00BFCual de estos edificios es mas alto?",choices:[{text:"Burj Khalifa",score:140,rank:1},{text:"Merdeka 118",score:120,rank:2},{text:"Shanghai Tower",score:100,rank:3},{text:"Makkah Royal Clock Tower",score:80,rank:4},{text:"Ping An Finance Center",score:0,rank:5}],explanation:"Todos son gigantes, pero el Burj Khalifa sigue liderando la altura total."},
       {category:"Naturaleza",type:"speed",prompt:"\u00BFCual de estos animales terrestres corre mas rapido?",choices:[{text:"Guepardo",score:140,rank:1},{text:"Antilope berrendo",score:120,rank:2},{text:"Leon",score:100,rank:3},{text:"Caballo cuarto de milla",score:80,rank:4},{text:"Lobo gris",score:0,rank:5}],explanation:"El guepardo manda en el sprint puro."},
@@ -801,10 +892,22 @@
       {category:"Mundo friki",type:"speed",prompt:"\u00BFCual de estos heroes de Dragon Ball aparece antes?",choices:[{text:"Goku",score:140,rank:1},{text:"Bulma",score:120,rank:2},{text:"Krillin",score:100,rank:3},{text:"Vegeta",score:80,rank:4},{text:"Trunks",score:0,rank:5}],explanation:"Goku abre la historia y Bulma aparece enseguida despues."},
       {category:"Cine y TV",type:"speed",prompt:"\u00BFCual de estas peliculas se estreno antes?",choices:[{text:"Jurassic Park",score:140,rank:1},{text:"Titanic",score:120,rank:2},{text:"Avatar",score:100,rank:3},{text:"Interstellar",score:80,rank:4},{text:"Dune: Parte Dos",score:0,rank:5}],explanation:"Jurassic Park es la mas veterana de ese grupo."}
     ];
-    const expandStandardBank = (base, target) => { const out = []; for(let i = 0; out.length < target; i++){ const item = base[i % base.length]; const variant = Math.floor(i / base.length); const lead = STANDARD_VARIANT_LEADS[variant % STANDARD_VARIANT_LEADS.length]; out.push({...item, prompt:`${lead}${item.prompt}`.trim()}); } return out; };
-    const expandSpeedBank = (base, target) => { const out = []; for(let i = 0; out.length < target; i++){ const item = base[i % base.length]; const variant = Math.floor(i / base.length); const lead = SPEED_VARIANT_LEADS[variant % SPEED_VARIANT_LEADS.length]; out.push({...item, prompt:`${lead}${item.prompt}`.trim()}); } return out; };
-    const QUESTION_BANK = expandStandardBank(BASE_STANDARD_QUESTIONS, 240);
-    const SPEED_QUESTION_BANK = expandSpeedBank(BASE_SPEED_QUESTIONS, 60);
+    const CURATED_STANDARD_QUESTIONS = [
+      ...HARDER_STANDARD_QUESTIONS,
+      ...BASE_STANDARD_QUESTIONS.filter(item => !TOO_EASY_PROMPTS.has(item.prompt))
+    ];
+    const HARDER_SPEED_QUESTIONS = [
+      {category:"Historia y cultura",type:"speed",prompt:"\u00BFCual de estos inventos aparecio antes?",choices:[{text:"Imprenta de tipos moviles",score:140,rank:1},{text:"Telefono",score:120,rank:2},{text:"Radio",score:100,rank:3},{text:"Television",score:80,rank:4},{text:"Internet comercial",score:0,rank:5}],explanation:"La imprenta moderna va siglos por delante del resto."},
+      {category:"Arte y musica",type:"speed",prompt:"\u00BFCual de estos pintores nacio antes?",choices:[{text:"Leonardo da Vinci",score:140,rank:1},{text:"Miguel Angel",score:120,rank:2},{text:"Velazquez",score:100,rank:3},{text:"Goya",score:80,rank:4},{text:"Picasso",score:0,rank:5}],explanation:"Leonardo es claramente el mas antiguo del grupo."},
+      {category:"Literatura",type:"speed",prompt:"\u00BFCual de estas obras se publico antes?",choices:[{text:"Don Quijote de la Mancha",score:140,rank:1},{text:"Los viajes de Gulliver",score:120,rank:2},{text:"Madame Bovary",score:100,rank:3},{text:"1984",score:80,rank:4},{text:"El nombre de la rosa",score:0,rank:5}],explanation:"El Quijote juega en otra liga temporal frente a las demas."},
+      {category:"Mundo",type:"speed",prompt:"\u00BFCual de estos paises tiene mas poblacion?",choices:[{text:"India",score:140,rank:1},{text:"China",score:120,rank:2},{text:"Estados Unidos",score:100,rank:3},{text:"Indonesia",score:80,rank:4},{text:"Pakistan",score:0,rank:5}],explanation:"India ya supera al resto de esta lista en poblacion total."},
+      {category:"Lengua y cultura",type:"speed",prompt:"\u00BFCual de estas lenguas tiene mas hablantes nativos?",choices:[{text:"Mandarin",score:140,rank:1},{text:"Espanol",score:120,rank:2},{text:"Ingles",score:100,rank:3},{text:"Arabe",score:80,rank:4},{text:"Frances",score:0,rank:5}],explanation:"El mandarin sigue en cabeza por hablantes nativos."},
+      {category:"Ciencia",type:"speed",prompt:"\u00BFCual de estas unidades de almacenamiento ofrece mas capacidad?",choices:[{text:"Petabyte",score:140,rank:1},{text:"Terabyte",score:120,rank:2},{text:"Gigabyte",score:100,rank:3},{text:"Megabyte",score:80,rank:4},{text:"Kilobyte",score:0,rank:5}],explanation:"Petabyte queda muy por encima del resto de unidades."}
+    ];
+    const expandStandardBank = (base, target) => { const out = []; for(let i = 0; out.length < target; i++){ const item = base[i % base.length]; const variant = Math.floor(i / base.length); const lead = STANDARD_VARIANT_LEADS[variant % STANDARD_VARIANT_LEADS.length]; out.push({...item, basePrompt:item.prompt, prompt:`${lead}${item.prompt}`.trim()}); } return out; };
+    const expandSpeedBank = (base, target) => { const out = []; for(let i = 0; out.length < target; i++){ const item = base[i % base.length]; const variant = Math.floor(i / base.length); const lead = SPEED_VARIANT_LEADS[variant % SPEED_VARIANT_LEADS.length]; out.push({...item, basePrompt:item.prompt, prompt:`${lead}${item.prompt}`.trim()}); } return out; };
+    const QUESTION_BANK = expandStandardBank(CURATED_STANDARD_QUESTIONS, 240);
+    const SPEED_QUESTION_BANK = expandSpeedBank([...HARDER_SPEED_QUESTIONS, ...BASE_SPEED_QUESTIONS], 60);
     const FUN_LINES = ["espera espera, voy!","estoy buscando mi mejor foto","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"];
     const GENERATING_LINES = ["Trivialodon esta buscando preguntas con chispa jurasica...","Trivialodon esta abriendo cajones secretos del saber...","Trivialodon esta peinando datos para que no salgan preguntas sosas...","Trivialodon esta afinando opciones trampa con elegancia televisiva...","Trivialodon esta desenterrando curiosidades frescas del planeta trivia..."];
     const STORAGE_KEY = "trivialodon-session-v1";
@@ -896,7 +999,7 @@
         return {
           type:"speed",
           prompt: source.prompt,
-          category: source.category || "Test de velocidad",
+          category: source.category || "Modo Velociraptor!",
           choices: shuffled.map(item => item.text),
           scores: shuffled.map(item => Number(item.score || 0)),
           ranking: [...(source.choices || [])].sort((a,b) => (a.rank || 99) - (b.rank || 99)).map(item => ({text:item.text,score:Number(item.score || 0),rank:Number(item.rank || 0)})),
@@ -914,11 +1017,46 @@
         explanation: source.explanation || ""
       };
     };
+    const takeDiverseQuestions = (pool, target) => {
+      const buckets = new Map();
+      shuffle(pool).forEach(item => {
+        const category = item.category || "Otros";
+        if(!buckets.has(category)) buckets.set(category, []);
+        buckets.get(category).push(item);
+      });
+      const categoryOrder = shuffle([...buckets.keys()]);
+      const chosen = [];
+      const usedBasePrompts = new Set();
+      let progressed = true;
+      while(chosen.length < target && progressed){
+        progressed = false;
+        categoryOrder.forEach(category => {
+          if(chosen.length >= target) return;
+          const bucket = buckets.get(category) || [];
+          while(bucket.length){
+            const candidate = bucket.shift();
+            const key = candidate.basePrompt || candidate.prompt;
+            if(usedBasePrompts.has(key)) continue;
+            chosen.push(candidate);
+            usedBasePrompts.add(key);
+            progressed = true;
+            break;
+          }
+        });
+      }
+      if(chosen.length < target){
+        shuffle(pool).forEach(item => {
+          if(chosen.length >= target) return;
+          chosen.push(item);
+        });
+      }
+      return chosen.slice(0, target);
+    };
     const buildMixedQuestionSet = (count, bank) => {
       const speedCount = Math.max(1, Math.round(count * 0.2));
       const standardCount = Math.max(0, count - speedCount);
-      const base = shuffle(bank || QUESTION_BANK).slice(0, standardCount);
-      const speed = shuffle(SPEED_QUESTION_BANK).slice(0, Math.min(speedCount, SPEED_QUESTION_BANK.length));
+      const base = takeDiverseQuestions(bank || QUESTION_BANK, standardCount);
+      const speed = takeDiverseQuestions(SPEED_QUESTION_BANK, Math.min(speedCount, SPEED_QUESTION_BANK.length));
       return shuffle([...base, ...speed]).slice(0, count);
     };
     const fallbackFact = question => {
@@ -1101,7 +1239,7 @@
     }
     function updateSoundChip(){
       ui.soundChip.hidden = !state.role;
-      ui.soundChipGlyph.textContent = audioState.muted ? "🔇" : (audioState.volume < .45 ? "🔉" : "🔊");
+      ui.soundChipGlyph.textContent = audioState.muted ? "ðŸ”‡" : (audioState.volume < .45 ? "ðŸ”‰" : "ðŸ”Š");
       ui.btnToggleMute.textContent = audioState.muted ? "Activar" : "Mute";
     }
     refreshAudioTargets();
@@ -1642,15 +1780,13 @@
       });
     }
     function renderPausedScene(){ ui.pausedTitle.textContent = "Juego pausado"; ui.pausedCopy.textContent = state.role === "host" ? "Has pausado la partida entre preguntas. Reanudamos cuando quieras." : "El anfitrion ha pausado la partida. Espera a que vuelva el rugido."; ui.pausedActions.innerHTML = state.role === "host" ? `<button class="btn btnPrimary" id="btnResumeGame" type="button">Reanudar</button>` : ""; if(state.role === "host" && $("btnResumeGame")) $("btnResumeGame").onclick = async () => { state.game.phase = "countdown"; state.game.countdownEndAt = Date.now() + Math.max(1000, Number(state.game.pausedRemainingMs || 4000)); state.game.pausedRemainingMs = 0; await broadcastGame(); renderCurrentScene(); }; }
-    function renderCountdownScene(){ const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - Date.now()) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; ui.countdownCategory.textContent = next?.type === "speed" ? `Test de velocidad · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general"); ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">Pausar</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
-    function renderQuestionScene(){ const question = state.game.question || {prompt:"",choices:[],correct:0,endAt:Date.now(),revealed:false,responses:{}}; const choices = Array.isArray(question.choices) ? question.choices : []; const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt; const left = answersVisible ? Math.max(0, Math.ceil((question.endAt - Date.now()) / 1000)) : Math.max(0, Math.ceil((question.answersVisibleAt - Date.now()) / 1000)); const total = answersVisible ? Math.max(1, Number(state.game.answerSeconds || 15)) : Math.max(1, Number(state.game.questionLeadSeconds || 6)); const progress = Math.max(0, Math.min(1, left / total)); const isSpeed = question.type === "speed"; const wasCorrect = isSpeed ? question.scores?.[state.localAnswer] > 0 : state.localAnswer === question.correct; ui.questionPrompt.textContent = question.prompt; ui.questionCopy.textContent = question.revealed ? (isSpeed ? "Tiempo. Mira el ranking completo del test de velocidad." : "Tiempo. Mira la correcta y quédate con el dato curioso.") : (answersVisible ? (isSpeed ? "Test de velocidad. Cada respuesta se bloquea al instante y da puntos distintos." : (state.role === "host" ? `Pregunta ${(state.game.questionIndex || 0) + 1} de ${activeQuestionSet().length}` : "Marca tu respuesta antes de que termine la cuenta atras.")) : (isSpeed ? "Atencion: se acerca un test de velocidad." : "Lee la pregunta. Las opciones aparecen enseguida.")); ui.questionTimer.textContent = String(left); ui.questionTimerRing.style.setProperty("--timer", progress); if(!answersVisible){ ui.questionAnswers.innerHTML = `<article class="answerCard" style="justify-content:center;text-align:center"><span class="answerText">${isSpeed ? "Preparando test de velocidad..." : "Preparando respuestas..."}</span></article>`; return; } const taken = {}; Object.entries(question.responses || {}).forEach(([playerId,response]) => { if(Number.isInteger(Number(response?.answerIndex))) taken[Number(response.answerIndex)] = playerId; }); const cards = choices.map((answer, index) => { const revealCorrect = !isSpeed && question.revealed && question.correct === index; const revealWrong = !isSpeed && question.revealed && state.localAnswer === index && state.localAnswer !== question.correct; const sparkle = !isSpeed && question.revealed && wasCorrect && revealCorrect; const lockedBy = taken[index] && taken[index] !== state.playerId; const mineLocked = taken[index] && taken[index] === state.playerId; const speedScore = isSpeed && question.revealed ? Number(question.scores?.[index] || 0) : null; const speedRank = isSpeed && question.revealed ? Number(question.ranking?.find(item => item.text === answer)?.rank || 0) : 0; return `<button class="answerCard ${state.localAnswer === index ? "active" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""} ${sparkle ? "sparkle" : ""} ${isSpeed && speedScore > 0 ? "correct" : ""} ${isSpeed && question.revealed && speedScore === 0 ? "wrong" : ""}" data-answer="${index}" ${(question.revealed || left === 0 || (isSpeed && (lockedBy || mineLocked))) ? "disabled" : ""}><span class="answerText"><span class="answerKey">${String.fromCharCode(65 + index)}</span> ${esc(answer)}</span><span class="answerState">${isSpeed ? (question.revealed ? `${speedRank ? `#${speedRank}` : ""} ${speedScore} pts` : (mineLocked ? "Tuya" : (lockedBy ? "Bloqueada" : "Coger"))) : (revealCorrect ? "Correcta" : (revealWrong ? "Tu respuesta" : (state.localAnswer === index ? "Elegida" : "Elegir")))}</span></button>`; }).join(""); const ranking = isSpeed && question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Orden correcto</span><strong>${esc(question.category || "Test de velocidad")}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" · ")}</p></article>` : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Fun fact</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : ""); ui.questionAnswers.innerHTML = ranking + cards; ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => { btn.onclick = async () => { const answerIndex = Number(btn.dataset.answer); const answeredAt = Date.now(); if(isSpeed){ const occupied = Object.values(question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex); if(occupied) return; } state.localAnswer = answerIndex; renderQuestionScene(); if(state.role === "host"){ if(isSpeed && Object.values(state.game.question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex)) return; state.game.question.responses[state.playerId] = {answerIndex,answeredAt}; await broadcastGame(); } else { await state.channel.send({type:"broadcast",event:"guest_answer",payload:{playerId:state.playerId,answerIndex,answeredAt}}); } }; }); }
     function renderAnswerScene(){ const question = state.game.question; const choices = Array.isArray(question.choices) ? question.choices : []; ui.answerCorrect.textContent = choices[question.correct] || ""; ui.answerPrompt.textContent = question.prompt; }
     function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? "Lider actual" : "En carrera"}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>Aun no hay puntuaciones.</p>`; if(finished){ ui.scoresTitle.textContent = win ? "Victoria Jurasica!" : "Has perdido :("; ui.scoresLead.textContent = win ? `Te coronas con ${myScore} puntos. Rugido de campeon.` : "Te tocara saborear las sobras. Pero la proxima remontas."; } else { ui.scoresTitle.textContent = leader ? `${leader.name} lidera la partida` : "Puntuacion del round"; ui.scoresLead.textContent = leader ? `${leader.score} puntos acumulados` : "Todavia no hay puntuaciones."; } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">Continuar partida</button><button class="btn btnGhost" id="btnNewGame" type="button">Partida nueva</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); }; } }
     function renderVersusPlayerCard(playerId, activeId, revealedChoices){
       const player = findPlayer(playerId);
       const choiceId = revealedChoices?.[playerId] || "";
       const choice = choiceId ? versusMoveById(choiceId) : null;
-      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong>${esc(player?.name || "Jugador")}</strong><span class="playerSub">${playerId === state.playerId ? "Tu duelo" : "Duelo en curso"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Esperando tu marca" : "Sin revelar")}</div>`;
+      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "ðŸ¦–"}</div><strong>${esc(player?.name || "Jugador")}</strong><span class="playerSub">${playerId === state.playerId ? "Tu duelo" : "Duelo en curso"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Esperando tu marca" : "Sin revelar")}</div>`;
     }
     function renderVersusIntroScene(){
       const versus = state.game.versus || {};
@@ -1934,7 +2070,7 @@
           {command:"td.generating()", desc:"Pantalla generando preguntas"},
           {command:"td.paused()", desc:"Juego pausado"},
           {command:"td.countdown()", desc:"Cuenta atras normal"},
-          {command:"td.countdown({ speed:true })", desc:"Cuenta atras de test de velocidad"},
+          {command:"td.countdown({ speed:true })", desc:"Cuenta atras de Modo Velociraptor!"},
           {command:"td.questionLead()", desc:"Pregunta sola antes de mostrar respuestas"},
           {command:"td.questionLead({ speed:true })", desc:"Pregunta sola para speed test"},
           {command:"td.question()", desc:"Pregunta con respuestas visibles"},
@@ -2058,7 +2194,7 @@
     ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.votes = {}; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; state.game.lastRoundScores = {}; state.game.tieTracker = {streak:0,pair:[]}; state.game.versus = null; await broadcastGame(); renderCurrentScene(); };
     ui.voteToggle.onclick = async () => { if(state.role !== "host") return; state.game.allowVotes = !state.game.allowVotes; state.game.voteDeadline = state.game.allowVotes ? (Date.now() + 60000) : 0; await broadcastGame(); renderCurrentScene(); };
     function renderCountdownScene(){ const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - Date.now()) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `Modo Velociraptor! · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general"); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = next?.category || "Categoria"; ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">Pausar</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
-    function renderQuestionScene(){ const question = state.game.question || {prompt:"",choices:[],correct:0,endAt:Date.now(),revealed:false,responses:{}}; const choices = Array.isArray(question.choices) ? question.choices : []; const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt; const left = answersVisible ? Math.max(0, Math.ceil((question.endAt - Date.now()) / 1000)) : Math.max(0, Math.ceil((question.answersVisibleAt - Date.now()) / 1000)); const total = answersVisible ? Math.max(1, Number(state.game.answerSeconds || 15)) : Math.max(1, Number(state.game.questionLeadSeconds || 6)); const progress = Math.max(0, Math.min(1, left / total)); const isSpeed = question.type === "speed"; const wasCorrect = isSpeed ? question.scores?.[state.localAnswer] > 0 : state.localAnswer === question.correct; const art = categoryArtFor(question.category || ""); ui.questionPrompt.textContent = question.prompt; ui.questionCopy.textContent = question.revealed ? (isSpeed ? "Tiempo. Mira el ranking completo del test de velocidad." : "Tiempo. Mira la correcta y quedate con el dato curioso.") : (answersVisible ? (isSpeed ? "Modo Velociraptor! Cada respuesta se bloquea al instante y da puntos distintos." : (state.role === "host" ? `Pregunta ${(state.game.questionIndex || 0) + 1} de ${activeQuestionSet().length}` : "Marca tu respuesta antes de que termine la cuenta atras.")) : (isSpeed ? "Atencion: se acerca un Modo Velociraptor!" : "Lee la pregunta. Las opciones aparecen enseguida.")); ui.questionTimer.textContent = String(left); ui.questionTimerRing.style.setProperty("--timer", progress); if(!answersVisible){ ui.questionAnswers.innerHTML = `<div class="categoryLead"><img class="categoryArt" src="${art.src}" alt="${esc(question.category || "Categoria")}"><article class="answerCard" style="text-align:left"><div class="categoryLeadText"><span class="kicker">Categoria</span><span class="answerText">${esc(question.category || "Categoria sorpresa")}</span><span class="answerState" style="justify-self:start">${isSpeed ? "Preparando Modo Velociraptor!" : "Preparando respuestas..."}</span></div></article></div>`; return; } const taken = {}; Object.entries(question.responses || {}).forEach(([playerId,response]) => { if(Number.isInteger(Number(response?.answerIndex))) taken[Number(response.answerIndex)] = playerId; }); const cards = choices.map((answer, index) => { const revealCorrect = !isSpeed && question.revealed && question.correct === index; const revealWrong = !isSpeed && question.revealed && state.localAnswer === index && state.localAnswer !== question.correct; const sparkle = !isSpeed && question.revealed && wasCorrect && revealCorrect; const lockedBy = taken[index] && taken[index] !== state.playerId; const mineLocked = taken[index] && taken[index] === state.playerId; const speedScore = isSpeed && question.revealed ? Number(question.scores?.[index] || 0) : null; const speedRank = isSpeed && question.revealed ? Number(question.ranking?.find(item => item.text === answer)?.rank || 0) : 0; return `<button class="answerCard ${state.localAnswer === index ? "active" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""} ${sparkle ? "sparkle" : ""} ${isSpeed && speedScore > 0 ? "correct" : ""} ${isSpeed && question.revealed && speedScore === 0 ? "wrong" : ""}" data-answer="${index}" ${(question.revealed || left === 0 || (isSpeed && (lockedBy || mineLocked))) ? "disabled" : ""}><span class="answerText"><span class="answerKey">${String.fromCharCode(65 + index)}</span> ${esc(answer)}</span><span class="answerState">${isSpeed ? (question.revealed ? `${speedRank ? `#${speedRank}` : ""} ${speedScore} pts` : (mineLocked ? "Tuya" : (lockedBy ? "Bloqueada" : "Coger"))) : (revealCorrect ? "Correcta" : (revealWrong ? "Tu respuesta" : (state.localAnswer === index ? "Elegida" : "Elegir")))}</span></button>`; }).join(""); const ranking = isSpeed && question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">âœ¦ âœ¨ â˜… âœ¨ âœ¦</div>` : ""}<span class="kicker">Orden correcto</span><strong>${esc(question.category || "Modo Velociraptor!")}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" · ")}</p></article>` : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">âœ¦ âœ¨ â˜… âœ¨ âœ¦</div>` : ""}<span class="kicker">Fun fact</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : ""); ui.questionAnswers.innerHTML = ranking + cards; ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => { btn.onclick = async () => { const answerIndex = Number(btn.dataset.answer); const answeredAt = Date.now(); if(isSpeed){ const occupied = Object.values(question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex); if(occupied) return; } state.localAnswer = answerIndex; renderQuestionScene(); if(state.role === "host"){ if(isSpeed && Object.values(state.game.question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex)) return; state.game.question.responses[state.playerId] = {answerIndex,answeredAt}; await broadcastGame(); } else { await state.channel.send({type:"broadcast",event:"guest_answer",payload:{playerId:state.playerId,answerIndex,answeredAt}}); } }; }); }
+    function renderQuestionScene(){ const question = state.game.question || {prompt:"",choices:[],correct:0,endAt:Date.now(),revealed:false,responses:{}}; const choices = Array.isArray(question.choices) ? question.choices : []; const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt; const left = answersVisible ? Math.max(0, Math.ceil((question.endAt - Date.now()) / 1000)) : Math.max(0, Math.ceil((question.answersVisibleAt - Date.now()) / 1000)); const total = answersVisible ? Math.max(1, Number(state.game.answerSeconds || 15)) : Math.max(1, Number(state.game.questionLeadSeconds || 6)); const progress = Math.max(0, Math.min(1, left / total)); const isSpeed = question.type === "speed"; const wasCorrect = isSpeed ? question.scores?.[state.localAnswer] > 0 : state.localAnswer === question.correct; const art = categoryArtFor(question.category || ""); ui.questionPrompt.textContent = question.prompt; ui.questionCopy.textContent = question.revealed ? (isSpeed ? "Tiempo. Mira el ranking completo del Modo Velociraptor!." : "Tiempo. Mira la correcta y quedate con el dato curioso.") : (answersVisible ? (isSpeed ? "Modo Velociraptor! Cada respuesta se bloquea al instante y da puntos distintos." : (state.role === "host" ? `Pregunta ${(state.game.questionIndex || 0) + 1} de ${activeQuestionSet().length}` : "Marca tu respuesta antes de que termine la cuenta atras.")) : (isSpeed ? "Atencion: se acerca un Modo Velociraptor!" : "Lee la pregunta. Las opciones aparecen enseguida.")); ui.questionTimer.textContent = String(left); ui.questionTimerRing.style.setProperty("--timer", progress); if(!answersVisible){ ui.questionAnswers.innerHTML = `<div class="categoryLead"><img class="categoryArt" src="${art.src}" alt="${esc(question.category || "Categoria")}"><article class="answerCard" style="text-align:left"><div class="categoryLeadText"><span class="kicker">Categoria</span><span class="answerText">${esc(question.category || "Categoria sorpresa")}</span><span class="answerState" style="justify-self:start">${isSpeed ? "Preparando Modo Velociraptor!" : "Preparando respuestas..."}</span></div></article></div>`; return; } const taken = {}; Object.entries(question.responses || {}).forEach(([playerId,response]) => { if(Number.isInteger(Number(response?.answerIndex))) taken[Number(response.answerIndex)] = playerId; }); const cards = choices.map((answer, index) => { const revealCorrect = !isSpeed && question.revealed && question.correct === index; const revealWrong = !isSpeed && question.revealed && state.localAnswer === index && state.localAnswer !== question.correct; const sparkle = !isSpeed && question.revealed && wasCorrect && revealCorrect; const lockedBy = taken[index] && taken[index] !== state.playerId; const mineLocked = taken[index] && taken[index] === state.playerId; const speedScore = isSpeed && question.revealed ? Number(question.scores?.[index] || 0) : null; const speedRank = isSpeed && question.revealed ? Number(question.ranking?.find(item => item.text === answer)?.rank || 0) : 0; return `<button class="answerCard ${state.localAnswer === index ? "active" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""} ${sparkle ? "sparkle" : ""} ${isSpeed && speedScore > 0 ? "correct" : ""} ${isSpeed && question.revealed && speedScore === 0 ? "wrong" : ""}" data-answer="${index}" ${(question.revealed || left === 0 || (isSpeed && (lockedBy || mineLocked))) ? "disabled" : ""}><span class="answerText"><span class="answerKey">${String.fromCharCode(65 + index)}</span> ${esc(answer)}</span><span class="answerState">${isSpeed ? (question.revealed ? `${speedRank ? `#${speedRank}` : ""} ${speedScore} pts` : (mineLocked ? "Tuya" : (lockedBy ? "Bloqueada" : "Coger"))) : (revealCorrect ? "Correcta" : (revealWrong ? "Tu respuesta" : (state.localAnswer === index ? "Elegida" : "Elegir")))}</span></button>`; }).join(""); const ranking = isSpeed && question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Orden correcto</span><strong>${esc(question.category || "Modo Velociraptor!")}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" · ")}</p></article>` : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Fun fact</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : ""); ui.questionAnswers.innerHTML = ranking + cards; ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => { btn.onclick = async () => { const answerIndex = Number(btn.dataset.answer); const answeredAt = Date.now(); if(isSpeed){ const occupied = Object.values(question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex); if(occupied) return; } state.localAnswer = answerIndex; renderQuestionScene(); if(state.role === "host"){ if(isSpeed && Object.values(state.game.question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex)) return; state.game.question.responses[state.playerId] = {answerIndex,answeredAt}; await broadcastGame(); } else { await state.channel.send({type:"broadcast",event:"guest_answer",payload:{playerId:state.playerId,answerIndex,answeredAt}}); } }; }); }
     setInterval(async () => {
       if(state.game.phase === "setup" && state.game.allowVotes && state.game.voteDeadline){
         ui.hostVoteCountdown.textContent = countText(state.game.voteDeadline);
