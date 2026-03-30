@@ -1360,8 +1360,8 @@
         itemId:item.id,
         groupKey:`${collection}:${item.id}`,
         groupTitle:`${getItemDisplayName(item, collection)} - total ${euros(itemGroupTotal(collection, item))}`,
-        title:`${collectionLabel(collection)} añadid${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
-        desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, detailField).toLowerCase()} de ${formatFieldValue(collection, detailField, item[detailField])}`,
+        title:`Se ha añadido ${collectionLabel(collection).toLowerCase()} en Configuracion`,
+        desc:`Se ha añadido "${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, detailField).toLowerCase()} de ${formatFieldValue(collection, detailField, item[detailField])}.`,
         ops:[]
       };
     }
@@ -1377,8 +1377,8 @@
         itemId:item.id,
         groupKey:`${collection}:${item.id}`,
         groupTitle:`${getItemDisplayName(item, collection)} - total ${euros(itemGroupTotal(collection, item))}`,
-        title:`${collectionLabel(collection)} eliminad${collection === 'debts' ? 'a' : collection === 'expenses' ? 'o' : 'o'} desde Configuracion`,
-        desc:`"${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, detailField).toLowerCase()} de ${formatFieldValue(collection, detailField, item[detailField])}`,
+        title:`Se ha eliminado ${collectionLabel(collection).toLowerCase()} en Configuracion`,
+        desc:`Se ha eliminado "${getItemDisplayName(item, collection)}" con ${fieldLabel(collection, detailField).toLowerCase()} de ${formatFieldValue(collection, detailField, item[detailField])}.`,
         ops:[]
       };
     }
@@ -1393,8 +1393,8 @@
         groupTitle:`${itemName} - total ${euros(itemGroupTotal(collection, after || before || {}))}`,
         changeType:'field',
         field,
-        title:`${fieldLabel(collection, field)} cambiado en ${itemName} (${collectionAreaLabel(collection)})`,
-        desc:`De ${formatFieldValue(collection, field, before?.[field])} a ${formatFieldValue(collection, field, after?.[field])} desde Configuracion`,
+        title:`Se ha cambiado ${fieldLabel(collection, field).toLowerCase()} en ${itemName}`,
+        desc:`Se ha cambiado de ${formatFieldValue(collection, field, before?.[field])} a ${formatFieldValue(collection, field, after?.[field])} en ${collectionAreaLabel(collection)}.`,
         ops:[{ path:[field], value: cloneData(after?.[field]) }]
       };
     }
@@ -1425,8 +1425,8 @@
       if(!beforeName && !beforeAmount && (afterName || afterAmount)){
         changes.push(createMonthOpsChange(
           `monthAdjustments:${monthKey}:${prefix}:create`,
-          `${label} puntual añadid${label === 'Deuda' ? 'a' : 'o'} en ${prettyMonth}`,
-          `"${afterName || label}" con monto de ${euros(afterAmount)}`,
+          `Se ha añadido ${label.toLowerCase()} puntual en ${prettyMonth}`,
+          `Se ha añadido "${afterName || label}" con monto de ${euros(afterAmount)}.`,
           monthKey,
           ops,
           `month:${monthKey}:${prefix}`,
@@ -1437,8 +1437,8 @@
       if((beforeName || beforeAmount) && !afterName && !afterAmount){
         changes.push(createMonthOpsChange(
           `monthAdjustments:${monthKey}:${prefix}:delete`,
-          `${label} puntual eliminad${label === 'Deuda' ? 'a' : 'o'} en ${prettyMonth}`,
-          `"${beforeName || label}" con monto de ${euros(beforeAmount)}`,
+          `Se ha eliminado ${label.toLowerCase()} puntual en ${prettyMonth}`,
+          `Se ha eliminado "${beforeName || label}" con monto de ${euros(beforeAmount)}.`,
           monthKey,
           ops,
           `month:${monthKey}:${prefix}`,
@@ -1448,8 +1448,8 @@
       }
       changes.push(createMonthOpsChange(
         `monthAdjustments:${monthKey}:${prefix}:update`,
-        `${label} puntual cambiado en ${prettyMonth}`,
-        `De "${beforeName || label}" ${euros(beforeAmount)} a "${afterName || label}" ${euros(afterAmount)}`,
+        `Se ha cambiado ${label.toLowerCase()} puntual en ${prettyMonth}`,
+        `Se ha cambiado de "${beforeName || label}" ${euros(beforeAmount)} a "${afterName || label}" ${euros(afterAmount)}.`,
         monthKey,
         ops,
         `month:${monthKey}:${prefix}`,
@@ -1474,25 +1474,25 @@
         const sourceList = stateForNames?.[collection] || [];
         const item = sourceList.find(entry => entry.id === id) || {};
         const itemName = getItemDisplayName(item, collection);
-        let title = `Ajuste en ${itemName} (${collectionAreaLabel(collection)}) para ${prettyMonth}`;
-        let desc = `De ${formatFieldValue(collection, 'amount', beforeMap[id])} a ${formatFieldValue(collection, 'amount', afterMap[id])}`;
+        let title = `Se ha cambiado ${itemName} en ${prettyMonth}`;
+        let desc = `Se ha cambiado de ${formatFieldValue(collection, 'amount', beforeMap[id])} a ${formatFieldValue(collection, 'amount', afterMap[id])}.`;
         if(collection === 'debts'){
           const beforeMode = beforeMap[id]?.mode || '';
           const afterMode = afterMap[id]?.mode || '';
           const beforeAmount = Number(beforeMap[id]?.amount || 0);
           const afterAmount = Number(afterMap[id]?.amount || 0);
           if(afterMode === 'custom' || beforeMode === 'custom'){
-            title = `Pago de deuda cambiado en ${itemName} (${collectionAreaLabel(collection)}) para ${prettyMonth}`;
-            desc = `De ${euros(beforeAmount)} a ${euros(afterAmount)}`;
+            title = `Se ha cambiado el pago de deuda en ${itemName} para ${prettyMonth}`;
+            desc = `Se ha cambiado de ${euros(beforeAmount)} a ${euros(afterAmount)}.`;
           } else if(afterMode || beforeMode){
-            title = `Estado de deuda cambiado en ${itemName} (${collectionAreaLabel(collection)}) para ${prettyMonth}`;
-            desc = `De ${beforeMode || 'sin ajuste'} a ${afterMode || 'sin ajuste'}`;
+            title = `Se ha cambiado el estado de deuda en ${itemName} para ${prettyMonth}`;
+            desc = `Se ha cambiado de ${beforeMode || 'sin ajuste'} a ${afterMode || 'sin ajuste'}.`;
           }
         }
         changes.push(createMonthOpsChange(
           `monthAdjustments:${monthKey}:${overrideKey}:${id}`,
           title,
-          `${desc} desde Configuracion mensual`,
+          desc,
           monthKey,
           [{ path:[overrideKey, id], value: cloneData(afterMap[id]) }],
           `month:${monthKey}:${collection}:${id}`,
@@ -1524,8 +1524,8 @@
         if(!beforeEntry && afterEntry){
           changes.push(createMonthOpsChange(
             `monthAdjustments:${monthKey}:oneOffExpense:create:${id}`,
-            `Gasto puntual añadido en ${prettyMonth}`,
-            `"${afterEntry.name || 'Gasto puntual'}" con monto de ${euros(afterEntry.amount || 0)} · ${paymentDesc(afterEntry)}`,
+            `Se ha añadido gasto puntual en ${prettyMonth}`,
+            `Se ha añadido "${afterEntry.name || 'Gasto puntual'}" con monto de ${euros(afterEntry.amount || 0)} y ${paymentDesc(afterEntry)}.`,
             monthKey,
             ops,
             `month:${monthKey}:expense:${id}`,
@@ -1536,8 +1536,8 @@
         if(beforeEntry && !afterEntry){
           changes.push(createMonthOpsChange(
             `monthAdjustments:${monthKey}:oneOffExpense:delete:${id}`,
-            `Gasto puntual eliminado en ${prettyMonth}`,
-            `"${beforeEntry.name || 'Gasto puntual'}" con monto de ${euros(beforeEntry.amount || 0)} · ${paymentDesc(beforeEntry)}`,
+            `Se ha eliminado gasto puntual en ${prettyMonth}`,
+            `Se ha eliminado "${beforeEntry.name || 'Gasto puntual'}" con monto de ${euros(beforeEntry.amount || 0)} y ${paymentDesc(beforeEntry)}.`,
             monthKey,
             ops,
             `month:${monthKey}:expense:${id}`,
@@ -1547,8 +1547,8 @@
         }
         changes.push(createMonthOpsChange(
           `monthAdjustments:${monthKey}:oneOffExpense:update:${id}`,
-          `Gasto puntual cambiado en ${prettyMonth}`,
-          `De "${beforeEntry.name || 'Gasto puntual'}" ${euros(beforeEntry.amount || 0)} a "${afterEntry.name || 'Gasto puntual'}" ${euros(afterEntry.amount || 0)} · ${paymentDesc(afterEntry)}`,
+          `Se ha cambiado gasto puntual en ${prettyMonth}`,
+          `Se ha cambiado de "${beforeEntry.name || 'Gasto puntual'}" ${euros(beforeEntry.amount || 0)} a "${afterEntry.name || 'Gasto puntual'}" ${euros(afterEntry.amount || 0)} y ${paymentDesc(afterEntry)}.`,
           monthKey,
           ops,
           `month:${monthKey}:expense:${id}`,
@@ -1574,8 +1574,8 @@
         if(!beforeEntry && afterEntry){
           changes.push(createMonthOpsChange(
             `monthAdjustments:${monthKey}:cardTransfer:create:${id}`,
-            `Traspaso desde tarjeta añadido en ${prettyMonth}`,
-            `"${afterEntry.name || 'Traspaso'}" por ${euros(afterEntry.amount || 0)} usando ${debtName}`,
+            `Se ha añadido traspaso desde tarjeta en ${prettyMonth}`,
+            `Se ha añadido "${afterEntry.name || 'Traspaso desde tarjeta'}" por ${euros(afterEntry.amount || 0)} usando ${debtName}.`,
             monthKey,
             ops,
             `month:${monthKey}:cardTransfer:${id}`,
@@ -1586,8 +1586,8 @@
         if(beforeEntry && !afterEntry){
           changes.push(createMonthOpsChange(
             `monthAdjustments:${monthKey}:cardTransfer:delete:${id}`,
-            `Traspaso desde tarjeta eliminado en ${prettyMonth}`,
-            `"${beforeEntry.name || 'Traspaso'}" por ${euros(beforeEntry.amount || 0)} usando ${debtName}`,
+            `Se ha eliminado traspaso desde tarjeta en ${prettyMonth}`,
+            `Se ha eliminado "${beforeEntry.name || 'Traspaso desde tarjeta'}" por ${euros(beforeEntry.amount || 0)} usando ${debtName}.`,
             monthKey,
             ops,
             `month:${monthKey}:cardTransfer:${id}`,
@@ -1597,8 +1597,8 @@
         }
         changes.push(createMonthOpsChange(
           `monthAdjustments:${monthKey}:cardTransfer:update:${id}`,
-          `Traspaso desde tarjeta cambiado en ${prettyMonth}`,
-          `De "${beforeEntry.name || 'Traspaso'}" ${euros(beforeEntry.amount || 0)} a "${afterEntry.name || 'Traspaso'}" ${euros(afterEntry.amount || 0)} usando ${debtName}`,
+          `Se ha cambiado traspaso desde tarjeta en ${prettyMonth}`,
+          `Se ha cambiado de "${beforeEntry.name || 'Traspaso desde tarjeta'}" ${euros(beforeEntry.amount || 0)} a "${afterEntry.name || 'Traspaso desde tarjeta'}" ${euros(afterEntry.amount || 0)} usando ${debtName}.`,
           monthKey,
           ops,
           `month:${monthKey}:cardTransfer:${id}`,
@@ -3223,6 +3223,17 @@
             <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Ingreso')}</div><div class="miniSub">${euros(it.monthAmount)}</div></div>
             <div class="miniActions"><button class="btn ghost" data-income-edit="${it.id}">Editar</button></div>
           </div>`).join('') : '';
+        const transfers = monthCardTransfers(ym).length ? monthCardTransfers(ym).map(entry => {
+          const card = availableCards.find(item => item.id === entry.cardDebtId);
+          return `
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(entry.name || 'Ingreso extra por traspaso desde tarjeta')}</div>
+              <div class="miniSub">${euros(entry.amount || 0)} · ingreso extra desde ${escapeHtml(card ? debtDisplayName(card) : 'tarjeta')}</div>
+            </div>
+            <div class="miniActions"></div>
+          </div>`;
+        }).join('') : '';
         const punctual = adj.extraIncomeAmount ? `
           <div class="miniItem">
             <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraIncomeName||'Ingreso puntual')}</div><div class="miniSub">${euros(adj.extraIncomeAmount)} · puntual</div></div>
@@ -3231,7 +3242,7 @@
               <button class="btn danger" id="removeExtraIncomeBtn">Eliminar</button>
             </div>
           </div>` : '';
-        return (base + punctual) || '<div class="empty">No hay ingresos activos este mes.</div>';
+        return (base + transfers + punctual) || '<div class="empty">No hay ingresos activos este mes.</div>';
       }
       function expenseListHtml(){
         const base = current.expenses.length ? current.expenses.map(it => `
