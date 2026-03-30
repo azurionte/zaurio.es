@@ -706,6 +706,7 @@
     const SOUND_VOLUME_KEY = "trivialodon-sound-volume-v1";
     const WAITING_AUDIO_SRCS = ["/trivialodon/assets/waiting.mp3","/trivialodon/assets/waiting 2.mp3","/trivialodon/assets/waiting 3.mp3","/trivialodon/assets/waiting 4.mp3","/trivialodon/assets/waiting 5.mp3","/trivialodon/assets/waiting 6.mp3"];
     const ANSWERING_AUDIO_SRCS = ["/trivialodon/assets/answering.mp3","/trivialodon/assets/answering 2.mp3","/trivialodon/assets/answering 3.mp3","/trivialodon/assets/answering 4.mp3","/trivialodon/assets/answering 5.mp3","/trivialodon/assets/answering 6.mp3","/trivialodon/assets/answering 7.mp3"];
+    const VERSUS_AUDIO_SRC = "/trivialodon/assets/vs.mp3";
     const WINNER_AUDIO_SRC = "/trivialodon/assets/winner.mp3";
     const LOSER_AUDIO_SRC = "/trivialodon/assets/loser.mp3";
     const CATEGORY_ARTS = {
@@ -762,6 +763,7 @@
       lastFinalCue: "",
       fadeTimers: new Map(),
       decks: {},
+      versus: new Audio(VERSUS_AUDIO_SRC),
       winner: new Audio(WINNER_AUDIO_SRC),
       loser: new Audio(LOSER_AUDIO_SRC)
     };
@@ -980,10 +982,13 @@
     audioState.decks.waiting = createLoopDeck(WAITING_AUDIO_SRCS, .34);
     audioState.decks.answering = createLoopDeck(ANSWERING_AUDIO_SRCS, .38);
     audioState.preloads = [...WAITING_AUDIO_SRCS, ...ANSWERING_AUDIO_SRCS].map(src => { const track = new Audio(src); track.preload = "auto"; return track; });
-    [audioState.winner,audioState.loser, ...(audioState.preloads || [])].forEach(track => { track.preload = "auto"; });
+    audioState.versus.preload = "auto";
+    audioState.versus.loop = true;
+    [audioState.versus,audioState.winner,audioState.loser, ...(audioState.preloads || [])].forEach(track => { track.preload = "auto"; });
     function refreshAudioTargets(){
       audioState.decks.waiting.targetVolume = audioState.decks.waiting.baseVolume * audioState.volume;
       audioState.decks.answering.targetVolume = audioState.decks.answering.baseVolume * audioState.volume;
+      audioState.versus.volume = .44 * audioState.volume;
       audioState.winner.volume = .52 * audioState.volume;
       audioState.loser.volume = .46 * audioState.volume;
       ui.soundVolumeInput.value = String(Math.round(audioState.volume * 100));
@@ -1078,7 +1083,7 @@
     function primeAudio(){
       if(audioState.unlocked) return;
       audioState.unlocked = true;
-      [...audioState.decks.waiting.tracks, ...audioState.decks.answering.tracks, ...(audioState.preloads || []), audioState.winner, audioState.loser].forEach(track => {
+      [...audioState.decks.waiting.tracks, ...audioState.decks.answering.tracks, ...(audioState.preloads || []), audioState.versus, audioState.winner, audioState.loser].forEach(track => {
         try{ track.load(); } catch(_){}
       });
       syncAudio();
@@ -1107,7 +1112,7 @@
       try{ localStorage.setItem(SOUND_KEY, audioState.muted ? "1" : "0"); } catch(_){}
       if(audioState.muted){
         pauseBackgroundAudio(true);
-        [audioState.winner,audioState.loser].forEach(track => { safePause(track); safeRewind(track); });
+        [audioState.versus,audioState.winner,audioState.loser].forEach(track => { safePause(track); safeRewind(track); });
       } else {
         primeAudio();
       }
@@ -1127,7 +1132,7 @@
       updateSoundChip();
       if(!state.role || audioState.muted || !audioState.unlocked){
         pauseBackgroundAudio(true);
-        [audioState.winner,audioState.loser].forEach(track => safePause(track));
+        [audioState.versus,audioState.winner,audioState.loser].forEach(track => safePause(track));
         return;
       }
       const scene = currentScene();
@@ -1140,6 +1145,14 @@
         playFinalCue(win);
         return;
       }
+      if(scene === "versusIntro" || scene === "versus"){
+        pauseBackgroundAudio();
+        safePause(audioState.winner);
+        safePause(audioState.loser);
+        safePlay(audioState.versus);
+        return;
+      }
+      safePause(audioState.versus);
       safePause(audioState.winner);
       safePause(audioState.loser);
       const useAnswering = scene === "question" || (scene === "countdown" && state.game.countdownEndAt && (state.game.countdownEndAt - Date.now()) <= 3200);
