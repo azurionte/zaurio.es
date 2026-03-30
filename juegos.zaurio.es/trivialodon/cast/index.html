@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Trivialodon Cast</title>
   <style>
-    html,body{margin:0;height:100%;overflow:hidden;background:#05000a;color:#fff;font-family:Arial,system-ui,sans-serif}
-    body{display:grid}
-    .shell{position:relative;height:100%;width:100%}
-    iframe{width:100%;height:100%;border:0;background:#05000a}
+    html,body{margin:0;width:100vw;height:100vh;overflow:hidden;background:#05000a;color:#fff;font-family:Arial,system-ui,sans-serif}
+    body{position:fixed;inset:0}
+    .shell{position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden}
+    iframe{position:absolute;inset:0;width:100vw;height:100vh;border:0;background:#05000a;display:block}
     .placeholder{position:absolute;inset:0;display:grid;place-items:center;padding:40px;background:radial-gradient(circle at top,#2f0049 0%,#180024 36%,#060009 100%)}
     .card{width:min(860px,92vw);padding:42px 36px;border-radius:32px;border:1px solid rgba(255,255,255,.12);background:rgba(43,4,73,.9);box-shadow:0 16px 48px rgba(0,0,0,.28);display:grid;gap:16px;justify-items:center;text-align:center}
     .card img{width:min(320px,64vw);display:block}
