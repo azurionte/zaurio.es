@@ -54,57 +54,57 @@
     .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.modeCard{padding:18px;display:grid;gap:8px;cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease;color:#fff}.modeCard:hover{transform:translateY(-2px)}.modeCard.active{border-color:rgba(255,216,58,.42);background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.12))}.modeCard:disabled{opacity:.62;cursor:not-allowed;transform:none}.modeHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.modeIcon{font-size:1.5rem}.modeVotes{font-weight:1000;color:var(--yellow)}
     .switch{position:relative;width:66px;height:38px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1)}.switch::after{content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:999px;background:#fff;transition:transform .2s ease}.switch.on{background:linear-gradient(135deg,var(--yellow),var(--pink))}.switch.on::after{transform:translateX(28px)}.toggleBar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
     .scoreBoard{display:grid;gap:14px}.scoreHero{padding:22px;border-radius:28px;background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.14));border:1px solid rgba(255,255,255,.1);text-align:center}.scoreRow{padding:14px 16px;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center}.rankAvatar{width:58px;height:58px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,119,203,.14));display:grid;place-items:center}.rankAvatar img{width:100%;height:100%;object-fit:cover}.scoreValueWrap{position:relative;min-width:120px;text-align:right;font-weight:1000;display:flex;justify-content:flex-end;align-items:center;gap:10px}.scoreDelta{position:static;color:#a6ff8b;font-weight:1000;animation:scoreFly 2.2s ease forwards}.scoreGlitter{color:var(--yellow);animation:twinkle .9s ease-in-out infinite}.finalActions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
-    .versusCard,.versusIntroCard{width:min(1080px,100%);display:grid;gap:18px;padding:24px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.03))}
+    .versusCard,.versusIntroCard{width:min(1080px,100%);display:grid;gap:14px;padding:18px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.03))}
     .versusIntroCard{width:min(920px,100%);text-align:center}
     .versusHero{position:relative;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.16))}
-    .versusHero img{display:block;width:100%;height:min(300px,36vw);object-fit:cover;opacity:.82}
+    .versusHero img{display:block;width:100%;height:clamp(160px,24vw,240px);object-fit:cover;opacity:.82}
     .versusOverlay{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;background:linear-gradient(180deg,rgba(9,0,15,.12),rgba(9,0,15,.72))}
-    .versusOverlay .title{font-size:clamp(2.4rem,7vw,4.8rem);text-shadow:0 8px 18px rgba(0,0,0,.4)}
+    .versusOverlay .title{font-size:clamp(2rem,6vw,4rem);text-shadow:0 8px 18px rgba(0,0,0,.4)}
     .versusOverlay p{max-width:34ch}
     .versusIntroNames{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
-    .versusIntroCount{justify-self:center;min-width:86px;font-size:2rem;padding:14px 18px;border-radius:24px;background:rgba(255,216,58,.16);border:1px solid rgba(255,216,58,.32);color:var(--yellow);font-weight:1000}
-    .versusDuel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-    .versusPlayer{padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;justify-items:center;gap:10px;text-align:center}
+    .versusIntroCount{justify-self:center;min-width:74px;font-size:1.65rem;padding:10px 16px;border-radius:22px;background:rgba(255,216,58,.16);border:1px solid rgba(255,216,58,.32);color:var(--yellow);font-weight:1000}
+    .versusDuel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .versusPlayer{padding:14px;border-radius:22px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;justify-items:center;gap:8px;text-align:center}
     .versusPlayer.active{box-shadow:0 0 0 1px rgba(255,216,58,.28),0 0 30px rgba(255,119,203,.16)}
     .versusPlayer.champion{border-color:rgba(255,216,58,.58);background:linear-gradient(135deg,rgba(255,216,58,.18),rgba(136,225,110,.12));box-shadow:0 0 0 1px rgba(255,216,58,.28),0 0 38px rgba(255,216,58,.18),0 0 68px rgba(136,225,110,.12)}
-    .versusAvatar{width:88px;height:88px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18));display:grid;place-items:center}
+    .versusAvatar{width:72px;height:72px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18));display:grid;place-items:center}
     .versusAvatar img{width:100%;height:100%;object-fit:cover}
-    .versusChoice{font-size:1.12rem;font-weight:1000;color:var(--yellow)}
-    .versusRoundGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-    .versusMove{padding:18px 16px;border-radius:24px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);display:grid;gap:8px;justify-items:center;text-align:center;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
+    .versusChoice{font-size:1rem;font-weight:1000;color:var(--yellow)}
+    .versusRoundGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .versusMove{padding:14px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);display:grid;gap:6px;justify-items:center;text-align:center;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
     .versusMove:hover{transform:translateY(-2px)}
     .versusMove.active{border-color:rgba(57,219,255,.48);background:linear-gradient(135deg,rgba(57,219,255,.16),rgba(255,119,203,.12))}
     .versusMove.win{border-color:rgba(136,225,110,.78);background:linear-gradient(135deg,rgba(136,225,110,.24),rgba(57,219,255,.08));box-shadow:0 0 24px rgba(136,225,110,.18)}
     .versusMove:disabled{opacity:.55;transform:none;cursor:not-allowed}
-    .versusGlyph{font-size:2.2rem;line-height:1}
-    .versusMeta{display:grid;gap:12px;text-align:center}
+    .versusGlyph{font-size:1.9rem;line-height:1}
+    .versusMeta{display:grid;gap:10px;text-align:center}
     .versusRoundBadge{justify-self:center;display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:linear-gradient(135deg,rgba(255,216,58,.18),rgba(255,119,203,.16));border:1px solid rgba(255,216,58,.28);font-weight:1000}
     .versusScoreline{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
     .versusPill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);font-weight:900}
     .versusPill strong{font-size:1.15rem;color:var(--yellow)}
-    .versusSpectators{padding:16px 18px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);text-align:center}
+    .versusSpectators{padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);text-align:center}
     .versusSpectators strong{color:var(--yellow)}
-    .versusArena{display:grid;gap:18px;padding:20px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at top,rgba(57,219,255,.09),rgba(255,255,255,.02) 38%,rgba(0,0,0,.16) 100%)}
-    .versusHands{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:18px}
+    .versusArena{display:grid;gap:12px;padding:14px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at top,rgba(57,219,255,.09),rgba(255,255,255,.02) 38%,rgba(0,0,0,.16) 100%)}
+    .versusHands{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
     .versusHandWrap{display:grid;justify-items:center;gap:8px}
-    .versusHand{margin:10px;width:200px;height:200px;position:relative;display:inline-block;transform:rotate(10deg);animation:handShake 1s infinite}
+    .versusHand{margin:6px;width:150px;height:150px;position:relative;display:inline-block;transform:rotate(10deg);animation:handShake 1s infinite}
     .versusHand.right{transform:rotateY(180deg);animation:handShakeMirror 1s infinite}
     .versusHand.revealed,.versusHand.locked{animation:none}
     .versusHand > div{position:absolute;box-sizing:border-box;border:2px solid rgba(35,13,0,.92);background:linear-gradient(180deg,#ffd66f,#f3aa41);transition:all .18s ease}
-    .versusHand .fist{height:110px;left:40px;top:50px;width:90px;border-radius:20px 0 0 20px}
-    .versusHand .finger{width:70px;height:30px;border-radius:20px;left:80px;transform-origin:0 50%}
-    .versusHand .finger-1{top:50px;--dif:0px}
-    .versusHand .finger-2{top:78px;left:84px;--dif:4px}
-    .versusHand .finger-3{top:106px;--dif:0px}
-    .versusHand .finger-4{top:134px;height:26px;left:76px;--dif:-8px}
-    .versusHand .thumb{width:35px;height:70px;border-radius:0 20px 20px 20px;top:50px;left:80px;border-left:0;box-shadow:-17px 6px 0 -15px rgba(35,13,0,.92)}
-    .versusHand .arm{width:22px;height:70px;left:20px;top:70px;border:0;border-top:2px solid rgba(35,13,0,.92);border-bottom:2px solid rgba(35,13,0,.92);background:linear-gradient(180deg,#f8bd57,#d88a2a)}
-    .versusHand[data-move="scissors"] .finger-1{width:130px;transform:rotate(-5deg)}
-    .versusHand[data-move="scissors"] .finger-2{width:130px;transform:rotate(5deg)}
-    .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(124px + var(--dif));width:80px;border-left:0;border-radius:0 20px 20px 0}
-    .versusBurst{width:88px;height:88px;border-radius:999px;display:grid;place-items:center;background:radial-gradient(circle,rgba(255,216,58,.28),rgba(255,119,203,.08));border:1px solid rgba(255,216,58,.22);font-size:1.4rem;font-weight:1000;color:var(--yellow);box-shadow:0 0 28px rgba(255,216,58,.12)}
+    .versusHand .fist{height:84px;left:30px;top:38px;width:66px;border-radius:18px 0 0 18px}
+    .versusHand .finger{width:52px;height:22px;border-radius:16px;left:60px;transform-origin:0 50%}
+    .versusHand .finger-1{top:38px;--dif:0px}
+    .versusHand .finger-2{top:60px;left:64px;--dif:3px}
+    .versusHand .finger-3{top:82px;--dif:0px}
+    .versusHand .finger-4{top:104px;height:20px;left:56px;--dif:-6px}
+    .versusHand .thumb{width:26px;height:52px;border-radius:0 16px 16px 16px;top:38px;left:60px;border-left:0;box-shadow:-13px 5px 0 -12px rgba(35,13,0,.92)}
+    .versusHand .arm{width:18px;height:56px;left:14px;top:52px;border:0;border-top:2px solid rgba(35,13,0,.92);border-bottom:2px solid rgba(35,13,0,.92);background:linear-gradient(180deg,#f8bd57,#d88a2a)}
+    .versusHand[data-move="scissors"] .finger-1{width:92px;transform:rotate(-5deg)}
+    .versusHand[data-move="scissors"] .finger-2{width:92px;transform:rotate(5deg)}
+    .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(93px + var(--dif));width:58px;border-left:0;border-radius:0 16px 16px 0}
+    .versusBurst{width:66px;height:66px;border-radius:999px;display:grid;place-items:center;background:radial-gradient(circle,rgba(255,216,58,.28),rgba(255,119,203,.08));border:1px solid rgba(255,216,58,.22);font-size:1.1rem;font-weight:1000;color:var(--yellow);box-shadow:0 0 28px rgba(255,216,58,.12)}
     .versusBurst.champion{background:radial-gradient(circle,rgba(255,216,58,.5),rgba(255,119,203,.14));box-shadow:0 0 36px rgba(255,216,58,.28),0 0 80px rgba(255,216,58,.12);transform:scale(1.08)}
-    .versusChampionFx{display:none;justify-self:center;padding:14px 20px;border-radius:999px;background:linear-gradient(135deg,rgba(255,216,58,.24),rgba(136,225,110,.18));border:1px solid rgba(255,216,58,.38);font-weight:1000;color:#fff;letter-spacing:.03em;box-shadow:0 0 34px rgba(255,216,58,.18);animation:championPulse .9s ease-in-out infinite}
+    .versusChampionFx{display:none;justify-self:center;padding:12px 18px;border-radius:999px;background:linear-gradient(135deg,rgba(255,216,58,.24),rgba(136,225,110,.18));border:1px solid rgba(255,216,58,.38);font-weight:1000;color:#fff;letter-spacing:.03em;box-shadow:0 0 34px rgba(255,216,58,.18);animation:championPulse .9s ease-in-out infinite}
     .versusChampionFx.on{display:inline-flex;align-items:center;gap:10px}
     .versusCrown{font-size:1.35rem;filter:drop-shadow(0 3px 10px rgba(255,216,58,.3))}
     @keyframes handShake{0%,100%{transform:rotate(10deg)}50%{transform:rotate(-10deg)}}
@@ -158,6 +158,19 @@
       .rankAvatar{width:48px;height:48px}
       .emojiGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .gridTwo,.pillChoices{grid-template-columns:1fr}
+      .versusCard,.versusIntroCard{padding:16px;gap:12px}
+      .versusHands{gap:8px}
+      .versusHand{width:124px;height:124px}
+      .versusHand .fist{height:70px;left:24px;top:30px;width:56px}
+      .versusHand .finger{width:44px;height:18px;left:52px}
+      .versusHand .finger-1{top:30px}
+      .versusHand .finger-2{top:48px;left:55px}
+      .versusHand .finger-3{top:66px}
+      .versusHand .finger-4{top:84px;height:17px;left:48px}
+      .versusHand .thumb{width:22px;height:44px;top:30px;left:52px}
+      .versusHand .arm{width:14px;height:44px;left:12px;top:42px}
+      .versusHand[data-move="scissors"] .finger-1,.versusHand[data-move="scissors"] .finger-2{width:76px}
+      .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(76px + var(--dif));width:50px}
     }
     @media (max-width:640px){
       body{padding:8px}
@@ -203,6 +216,36 @@
       .categoryLead{grid-template-columns:1fr;justify-items:center;gap:14px}
       .categoryLead .categoryArt{width:min(180px,48vw)}
       .categoryLead .answerCard{min-height:0}
+      .sceneWrap{min-height:calc(100vh - 108px)}
+      .versusHero img{height:140px}
+      .versusOverlay{padding:16px}
+      .versusOverlay .title{font-size:clamp(1.8rem,10vw,2.8rem)}
+      .versusIntroCount{font-size:1.45rem;min-width:64px;padding:8px 14px}
+      .versusMeta{gap:8px}
+      .versusRoundBadge,.versusPill{padding:8px 12px;font-size:.92rem}
+      .versusArena{padding:10px}
+      .versusHands{gap:4px}
+      .versusHand{width:94px;height:94px;margin:2px}
+      .versusHand .fist{height:52px;left:18px;top:24px;width:42px;border-radius:14px 0 0 14px}
+      .versusHand .finger{width:34px;height:14px;left:40px;border-radius:12px}
+      .versusHand .finger-1{top:24px}
+      .versusHand .finger-2{top:38px;left:43px}
+      .versusHand .finger-3{top:52px}
+      .versusHand .finger-4{top:66px;height:13px;left:37px}
+      .versusHand .thumb{width:18px;height:34px;top:24px;left:40px;border-radius:0 12px 12px 12px}
+      .versusHand .arm{width:11px;height:34px;left:9px;top:34px}
+      .versusHand[data-move="scissors"] .finger-1,.versusHand[data-move="scissors"] .finger-2{width:58px}
+      .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(58px + var(--dif));width:36px}
+      .versusBurst{width:48px;height:48px;font-size:.9rem}
+      .versusDuel{gap:8px}
+      .versusPlayer{padding:10px;gap:6px}
+      .versusAvatar{width:56px;height:56px}
+      .versusChoice{font-size:.92rem}
+      .versusRoundGrid{gap:8px}
+      .versusMove{padding:10px 6px;border-radius:18px}
+      .versusGlyph{font-size:1.5rem}
+      .versusChampionFx{padding:10px 14px;font-size:.92rem}
+      .versusSpectators{padding:10px 12px;font-size:.92rem}
     }
     @media (max-height:520px){
       body{padding:6px}
@@ -229,6 +272,13 @@
       .timerInner{font-size:1rem}
       .answerCard{padding:12px 14px}
       .countPill,.codeBadge{padding:8px 12px}
+      .versusCard,.versusIntroCard{gap:10px;padding:12px}
+      .versusHero img{height:120px}
+      .versusHand{width:86px;height:86px}
+      .versusBurst{width:42px;height:42px}
+      .versusPlayer{padding:8px;gap:5px}
+      .versusRoundGrid{gap:6px}
+      .versusMove{padding:8px 6px}
     }
     @media (max-width:520px) and (max-height:520px){
       .topbar{grid-template-columns:36px minmax(0,1fr) auto;gap:6px;min-height:50px;padding:6px 8px}
