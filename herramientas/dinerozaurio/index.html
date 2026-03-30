@@ -3439,13 +3439,15 @@
           { id:'md_amount', label:'Monto', type:'number', step:'0.01', value:debt.monthAmount }
         ], () => {
           const amount = Number(document.getElementById('md_amount').value||0);
-          adj.debtOverrides[debt.id] = { mode:'custom', amount };
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+          commitMonthAdjustment(nextAdj => {
+            nextAdj.debtOverrides[debt.id] = { mode:'custom', amount };
+          });
         });
       });
       root.querySelectorAll('[data-debt-skip]').forEach(btn => btn.onclick = () => {
-        adj.debtOverrides[btn.dataset.debtSkip] = { mode:'skip' };
-        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+        commitMonthAdjustment(nextAdj => {
+          nextAdj.debtOverrides[btn.dataset.debtSkip] = { mode:'skip' };
+        });
       });
       root.querySelectorAll('[data-debt-paid]').forEach(btn => btn.onclick = () => {
         const debt = current.debts.find(x => x.id === btn.dataset.debtPaid);
@@ -3459,8 +3461,9 @@
             alert('Necesito un monto mayor que 0 para registrar el pago completo.');
             return;
           }
-          adj.debtOverrides[debt.id] = { mode:'paid', amount };
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+          commitMonthAdjustment(nextAdj => {
+            nextAdj.debtOverrides[debt.id] = { mode:'paid', amount };
+          });
         });
       });
 
