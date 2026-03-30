@@ -332,6 +332,27 @@
     .warnDetails{margin-top:10px;padding-left:18px;color:var(--muted)}
     .month{cursor:pointer;transition:.16s ease all}
     .month:hover{transform:translateY(-2px);border-color:#3556b5}
+    .cardBalancesPanel{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:14px}
+    .cardBalanceCard{background:#0c1330;border:1px solid var(--line);border-radius:18px;padding:14px;cursor:pointer;transition:.16s ease all}
+    .cardBalanceCard:hover{transform:translateY(-2px);border-color:#3556b5}
+    .cardBalanceTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .cardBalanceName{font-weight:900}
+    .cardBalanceLabel{font-size:12px;color:var(--muted);margin-top:4px}
+    .cardBalanceValue{font-size:26px;font-weight:900;margin-top:10px}
+    .cardBalanceMeta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .cardBalanceStat{border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px;background:#10193a}
+    .cardBalanceStatLabel{font-size:11px;color:var(--muted);margin-bottom:4px}
+    .cardBalanceStatValue{font-weight:900}
+    .monthHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+    .monthHead h4{margin:0}
+    .monthAlertBtn{min-width:40px;padding:8px 10px;font-size:18px;line-height:1}
+    .monthAlertBtn.bad{box-shadow:0 0 0 1px rgba(255,91,127,.38) inset}
+    .txList{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+    .txRow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px;border-radius:14px;background:#10193a;border:1px solid rgba(255,255,255,.06)}
+    .txDate{font-size:12px;color:var(--muted);font-weight:700}
+    .txName{font-weight:800}
+    .txType{font-size:12px;color:var(--muted);margin-top:3px}
+    .txAmount{font-weight:900}
     .modalRoot{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:160;padding:18px}
     .modalCard{width:min(760px,100%);max-height:88vh;overflow:auto;background:linear-gradient(180deg,#121933,#0f1630);border:1px solid var(--line);border-radius:20px;padding:18px}
     .modalHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
@@ -559,7 +580,7 @@
             <span class="pill">Siguiente parte: modales y ajustes por mes.</span>
           </div>
         </div>
-        <div id="forecastWarnings"></div><div id="monthsGrid" class="months-grid"></div>
+        <div id="forecastWarnings"></div><div id="cardBalancesPanel" class="cardBalancesPanel"></div><div id="monthsGrid" class="months-grid"></div>
       </section>
     </section>
   </div>
@@ -699,17 +720,28 @@
       return 'monthly';
     }
     function normalizeOneOffExpenseEntry(entry = {}, monthKey = ''){
+      const resolvedMonth = entry.monthKey || monthKey || todayMonth();
       return {
         id: entry.id || uid(),
-        monthKey: entry.monthKey || monthKey || '',
+        monthKey: resolvedMonth,
         name: String(entry.name || '').trim(),
         amount: Number(entry.amount || 0),
         paymentSource: entry.paymentSource === 'card' ? 'card' : 'salary',
         cardDebtId: String(entry.cardDebtId || '').trim(),
         cardUseMode: entry.cardUseMode || '',
+        entryDate: entry.entryDate || `${resolvedMonth}-01`,
         installmentMonthlyPayment: Number(entry.installmentMonthlyPayment || 0),
         installmentRemainingInstallments: Math.max(0, Number(entry.installmentRemainingInstallments || 0)),
         installmentLastMonth: entry.installmentLastMonth || ''
+      };
+    }
+    function normalizeCardTransferEntry(entry = {}, monthKey = ''){
+      return {
+        id: entry.id || uid(),
+        monthKey: entry.monthKey || monthKey || '',
+        cardDebtId: String(entry.cardDebtId || '').trim(),
+        name: String(entry.name || 'Traspaso desde tarjeta').trim(),
+        amount: Number(entry.amount || 0)
       };
     }
     function packExpenseOverridesForSave(adj){
@@ -719,12 +751,19 @@
       } else {
         delete overrides.__oneOffExpenses;
       }
+      if(Array.isArray(adj.cardTransfers) && adj.cardTransfers.length){
+        overrides.__cardTransfers = adj.cardTransfers.map(entry => normalizeCardTransferEntry(entry, entry.monthKey || ''));
+      } else {
+        delete overrides.__cardTransfers;
+      }
       return overrides;
     }
     function normalizeMonthAdjustmentShape(adj = {}, monthKey = ''){
       const expenseOverrides = cloneData(adj.expenseOverrides || {});
       const embeddedOneOffExpenses = Array.isArray(expenseOverrides.__oneOffExpenses) ? expenseOverrides.__oneOffExpenses : [];
+      const embeddedCardTransfers = Array.isArray(expenseOverrides.__cardTransfers) ? expenseOverrides.__cardTransfers : [];
       delete expenseOverrides.__oneOffExpenses;
+      delete expenseOverrides.__cardTransfers;
       return {
         extraIncomeName: String(adj.extraIncomeName || '').trim(),
         extraIncomeAmount: Number(adj.extraIncomeAmount || 0),
@@ -739,6 +778,8 @@
         expenseOverrides,
         goalOverrides: cloneData(adj.goalOverrides || {}),
         debtOverrides: cloneData(adj.debtOverrides || {}),
+        cardTransfers: (Array.isArray(adj.cardTransfers) ? adj.cardTransfers : embeddedCardTransfers)
+          .map(entry => normalizeCardTransferEntry(entry, monthKey)),
         oneOffExpenses: (Array.isArray(adj.oneOffExpenses) ? adj.oneOffExpenses : embeddedOneOffExpenses)
           .map(entry => normalizeOneOffExpenseEntry(entry, monthKey))
       };
@@ -754,6 +795,15 @@
     function debtCardEntriesForMonth(debtId, ym){
       return monthOneOffExpenses(ym).filter(entry => entry.paymentSource === 'card' && entry.cardDebtId === debtId);
     }
+    function monthCardTransfers(ym){
+      return normalizeMonthAdjustmentShape(state.monthAdjustments?.[ym] || {}, ym).cardTransfers || [];
+    }
+    function debtCardTransfersForMonth(debtId, ym){
+      return monthCardTransfers(ym).filter(entry => entry.cardDebtId === debtId);
+    }
+    function monthCardTransfersTotal(ym){
+      return monthCardTransfers(ym).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+    }
     function installmentEntryMonthlyCharge(entry, ym){
       if(!entry) return 0;
       const start = entry.monthKey || ym;
@@ -764,6 +814,163 @@
         if(remaining && monthDiff(start, ym) >= remaining) return 0;
       }
       return Number(entry.installmentMonthlyPayment || 0);
+    }
+    function cardTransactionLabel(tx){
+      if(tx.type === 'transfer') return 'Traspaso a cuenta';
+      if(tx.type === 'initial') return 'Saldo arrastrado';
+      if(tx.type === 'installment') return 'Compra aplazada';
+      if(tx.type === 'pay_end_month') return 'Cargo a fin de mes';
+      return 'Gasto con tarjeta';
+    }
+    function prettyDateLabel(value){
+      if(!value) return '';
+      if(/^\d{4}-\d{2}-\d{2}$/.test(value)){
+        const [y, m, d] = value.split('-').map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
+      }
+      return prettyMonthLabel(value);
+    }
+    function cardTransactionsForMonth(cardId, ym){
+      const expenses = debtCardEntriesForMonth(cardId, ym).map(entry => ({
+        id: entry.id,
+        date: entry.entryDate || entry.monthKey || ym,
+        name: entry.name || 'Gasto con tarjeta',
+        amount: Number(entry.amount || 0),
+        type: entry.cardUseMode || 'card_expense'
+      }));
+      const transfers = debtCardTransfersForMonth(cardId, ym).map(entry => ({
+        id: entry.id,
+        date: entry.monthKey || ym,
+        name: entry.name || 'Traspaso desde tarjeta',
+        amount: Number(entry.amount || 0),
+        type: 'transfer'
+      }));
+      return [...expenses, ...transfers];
+    }
+    function cardTransactionsThroughMonth(cardId, throughYm){
+      const start = state.defaultStartMonth || throughYm;
+      return monthsInRange(start, throughYm).flatMap(monthKey => cardTransactionsForMonth(cardId, monthKey));
+    }
+    function getRevolvingBalanceAtMonth(card, ym){
+      const start = card.startMonth || state.defaultStartMonth;
+      let balance = Number(card.currentDebt || 0);
+      const payment = Number(card.currentPayment || 0);
+      const annual = Number(card.tin || card.tae || 0) / 100;
+      const monthlyRate = annual / 12;
+      if(ym < start) return balance;
+      let cur = start;
+      let safe = 0;
+      while(cur <= ym && safe < 240){
+        const monthCharges = debtCardEntriesForMonth(card.id, cur)
+          .filter(entry => (entry.cardUseMode || card.paymentMode || card.cardSubtype || 'revolving') === 'revolving')
+          .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+        const monthTransfers = debtCardTransfersForMonth(card.id, cur)
+          .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+        balance += monthCharges + monthTransfers;
+        if(balance > 0.01 && payment > 0){
+          const interest = balance * monthlyRate;
+          const charge = Math.min(payment, balance + interest);
+          balance = Math.max(0, balance + interest - charge);
+        } else if(balance <= 0.01){
+          balance = 0;
+        }
+        cur = addMonthsStr(cur, 1);
+        safe++;
+      }
+      return balance;
+    }
+    function getCardSummary(card, throughYm){
+      const paymentMode = card.paymentMode || card.cardSubtype || 'revolving';
+      const transactions = cardTransactionsThroughMonth(card.id, throughYm);
+      if(paymentMode === 'revolving'){
+        const carried = Number(card.currentDebt || 0);
+        const balance = getRevolvingBalanceAtMonth(card, throughYm);
+        const spent = carried + transactions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+        const creditLimit = Number(card.creditLimit || 0);
+        const available = creditLimit > 0 ? Math.max(0, creditLimit - balance) : null;
+        const ledger = carried > 0
+          ? [{ id:`${card.id}:initial`, date: card.startMonth || state.defaultStartMonth, name:'Saldo arrastrado', amount: carried, type:'initial' }, ...transactions]
+          : transactions;
+        return { balance, spent, available, transactions: ledger };
+      }
+      const balance = getDebtMonthlyCharge(card, throughYm);
+      const spent = transactions.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+      const creditLimit = Number(card.creditLimit || 0);
+      const available = creditLimit > 0 ? Math.max(0, creditLimit - balance) : null;
+      return { balance, spent, available, transactions };
+    }
+    function getForecastCardMonth(){
+      return state.forecast?.to || todayMonth();
+    }
+    function renderCardBalancesPanel(){
+      const mount = document.getElementById('cardBalancesPanel');
+      if(!mount) return;
+      const throughYm = getForecastCardMonth();
+      const cards = (state.debts || []).filter(item => (item.instrumentType || item.debtKind) === 'card');
+      if(!cards.length){
+        mount.innerHTML = '';
+        return;
+      }
+      mount.innerHTML = cards.map(card => {
+        const summary = getCardSummary(card, throughYm);
+        return `<article class="cardBalanceCard" data-card-summary="${card.id}">
+          <div class="cardBalanceTop">
+            <div>
+              <div class="cardBalanceName">${escapeHtml(debtDisplayName(card))}</div>
+              <div class="cardBalanceLabel">Saldo de tarjeta actual · ${escapeHtml(prettyMonthLabel(throughYm))}</div>
+            </div>
+            <span class="pill">${escapeHtml(debtPaymentModeLabel(card.paymentMode || card.cardSubtype || 'revolving'))}</span>
+          </div>
+          <div class="cardBalanceValue ${summary.balance > 0 ? 'neg' : 'pos'}">${euros(summary.balance)}</div>
+          <div class="cardBalanceMeta">
+            <div class="cardBalanceStat">
+              <div class="cardBalanceStatLabel">Total gastado</div>
+              <div class="cardBalanceStatValue">${euros(summary.spent)}</div>
+            </div>
+            <div class="cardBalanceStat">
+              <div class="cardBalanceStatLabel">Disponible</div>
+              <div class="cardBalanceStatValue">${summary.available === null ? 'Sin limite' : euros(summary.available)}</div>
+            </div>
+          </div>
+        </article>`;
+      }).join('');
+      mount.querySelectorAll('[data-card-summary]').forEach(btn => {
+        btn.addEventListener('click', () => openCardLedgerModal(btn.dataset.cardSummary, throughYm));
+      });
+    }
+    function openCardLedgerModal(cardId, throughYm){
+      const card = (state.debts || []).find(item => item.id === cardId);
+      if(!card) return;
+      const summary = getCardSummary(card, throughYm);
+      const root = document.getElementById('modalRoot');
+      const rows = [...summary.transactions]
+        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+        .map(tx => `<div class="txRow">
+          <div class="txDate">${escapeHtml(prettyDateLabel(tx.date || throughYm))}</div>
+          <div>
+            <div class="txName">${escapeHtml(tx.name || cardTransactionLabel(tx))}</div>
+            <div class="txType">${escapeHtml(cardTransactionLabel(tx))}</div>
+          </div>
+          <div class="txAmount">${euros(tx.amount || 0)}</div>
+        </div>`).join('');
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead">
+          <div>
+            <h3>${escapeHtml(debtDisplayName(card))}</h3>
+            <div class="muted">Movimientos acumulados hasta ${escapeHtml(prettyMonthLabel(throughYm))}</div>
+          </div>
+          <button id="closeModalBtn" class="btn danger">Cerrar</button>
+        </div>
+        <div class="summary">
+          <div class="card"><div class="label">Saldo actual</div><div class="value ${summary.balance > 0 ? 'kpi-red' : 'kpi-green'}">${euros(summary.balance)}</div></div>
+          <div class="card"><div class="label">Total gastado</div><div class="value kpi-yellow">${euros(summary.spent)}</div></div>
+          <div class="card"><div class="label">Disponible</div><div class="value kpi-cyan">${summary.available === null ? 'Sin limite' : euros(summary.available)}</div></div>
+        </div>
+        <div class="txList">${rows || '<div class="empty">Todavía no hay movimientos registrados para esta tarjeta.</div>'}</div>
+      </div>`;
+      root.onclick = (e) => { if(e.target === root) closeModal(); };
+      document.getElementById('closeModalBtn').onclick = closeModal;
     }
     function periodIntervalMonths(item){
       const periodicity = normalizeExpensePeriodicity(item.periodicity);
@@ -1235,11 +1442,62 @@
         ));
       });
     }
+    function pushCardTransferChanges(changes, monthKey, before, after, current){
+      const beforeEntries = Array.isArray(before?.cardTransfers) ? before.cardTransfers : [];
+      const afterEntries = Array.isArray(after?.cardTransfers) ? after.cardTransfers : [];
+      const beforeMap = new Map(beforeEntries.map(entry => [entry.id, entry]));
+      const afterMap = new Map(afterEntries.map(entry => [entry.id, entry]));
+      const ids = new Set([...beforeMap.keys(), ...afterMap.keys()]);
+      const prettyMonth = prettyMonthLabel(monthKey);
+      ids.forEach(id => {
+        const beforeEntry = beforeMap.get(id);
+        const afterEntry = afterMap.get(id);
+        if(stableStringify(beforeEntry) === stableStringify(afterEntry)) return;
+        const entry = afterEntry || beforeEntry || {};
+        const debt = (current.debts || []).find(item => item.id === (entry.cardDebtId || ''));
+        const debtName = debt ? debtDisplayName(debt) : 'tarjeta';
+        const ops = [{ path:['cardTransfers'], value: cloneData(afterEntries) }];
+        if(!beforeEntry && afterEntry){
+          changes.push(createMonthOpsChange(
+            `monthAdjustments:${monthKey}:cardTransfer:create:${id}`,
+            `Traspaso desde tarjeta añadido en ${prettyMonth}`,
+            `"${afterEntry.name || 'Traspaso'}" por ${euros(afterEntry.amount || 0)} usando ${debtName}`,
+            monthKey,
+            ops,
+            `month:${monthKey}:cardTransfer:${id}`,
+            `${afterEntry.name || 'Traspaso'} · ${prettyMonth}`
+          ));
+          return;
+        }
+        if(beforeEntry && !afterEntry){
+          changes.push(createMonthOpsChange(
+            `monthAdjustments:${monthKey}:cardTransfer:delete:${id}`,
+            `Traspaso desde tarjeta eliminado en ${prettyMonth}`,
+            `"${beforeEntry.name || 'Traspaso'}" por ${euros(beforeEntry.amount || 0)} usando ${debtName}`,
+            monthKey,
+            ops,
+            `month:${monthKey}:cardTransfer:${id}`,
+            `${beforeEntry.name || 'Traspaso'} · ${prettyMonth}`
+          ));
+          return;
+        }
+        changes.push(createMonthOpsChange(
+          `monthAdjustments:${monthKey}:cardTransfer:update:${id}`,
+          `Traspaso desde tarjeta cambiado en ${prettyMonth}`,
+          `De "${beforeEntry.name || 'Traspaso'}" ${euros(beforeEntry.amount || 0)} a "${afterEntry.name || 'Traspaso'}" ${euros(afterEntry.amount || 0)} usando ${debtName}`,
+          monthKey,
+          ops,
+          `month:${monthKey}:cardTransfer:${id}`,
+          `${afterEntry.name || beforeEntry.name || 'Traspaso'} · ${prettyMonth}`
+        ));
+      });
+    }
     function pushMonthAdjustmentChanges(changes, monthKey, before, after, current){
       pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraIncome', 'Ingreso');
       pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraExpense', 'Gasto');
       pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraSaving', 'Ahorro');
       pushOneOffExpenseChanges(changes, monthKey, before, after, current);
+      pushCardTransferChanges(changes, monthKey, before, after, current);
       pushOverrideChanges(changes, monthKey, before, after, 'incomeOverrides', current);
       pushOverrideChanges(changes, monthKey, before, after, 'expenseOverrides', current);
       pushOverrideChanges(changes, monthKey, before, after, 'goalOverrides', current);
@@ -1520,7 +1778,8 @@
               const useMode = entry.cardUseMode || d.paymentMode || d.cardSubtype || 'revolving';
               return useMode === 'revolving';
             });
-          balance += entriesThisMonth.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+          const transferAmount = debtCardTransfersForMonth(d.id, cur).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+          balance += entriesThisMonth.reduce((sum, entry) => sum + Number(entry.amount || 0), 0) + transferAmount;
           if(balance <= 0.01){
             if(cur === ym) return 0;
             cur = addMonthsStr(cur, 1);
@@ -1563,21 +1822,22 @@
       const start = d.startMonth || state.defaultStartMonth;
       if(ym < start) return { visible:false, active:false, settled:false, recoveredAmount:0, monthAmount:0 };
       const monthCardEntries = debtCardEntriesForMonth(d.id, ym);
+      const monthCardTransfers = debtCardTransfersForMonth(d.id, ym);
 
       if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype) === 'revolving'){
         const monthAmount = getDebtMonthlyCharge(d, ym);
-        return { visible: monthAmount > 0, active: monthAmount > 0, settled:false, recoveredAmount:0, monthAmount };
+        return { visible: monthAmount > 0 || monthCardEntries.length > 0 || monthCardTransfers.length > 0, active: monthAmount > 0 || monthCardEntries.length > 0 || monthCardTransfers.length > 0, settled:false, recoveredAmount:0, monthAmount };
       }
 
       const end = debtEndMonth(d);
       const recoveryMonth = end ? addMonthsStr(end, 1) : null;
       const active = end ? (ym >= start && ym <= end) : false;
       const settled = recoveryMonth ? ym === recoveryMonth : false;
-      const monthAmount = active || monthCardEntries.length ? getDebtMonthlyCharge(d, ym) : 0;
+      const monthAmount = active || monthCardEntries.length || monthCardTransfers.length ? getDebtMonthlyCharge(d, ym) : 0;
       const recoveredAmount = settled
         ? Number(((d.instrumentType || d.debtKind) === 'loan' || (d.paymentMode || d.cardSubtype) === 'installment') ? (d.monthlyPayment || 0) : (d.amount || 0))
         : 0;
-      return { visible: active || settled || monthCardEntries.length > 0, active: active || monthCardEntries.length > 0, settled, recoveredAmount, monthAmount };
+      return { visible: active || settled || monthCardEntries.length > 0 || monthCardTransfers.length > 0, active: active || monthCardEntries.length > 0 || monthCardTransfers.length > 0, settled, recoveredAmount, monthAmount };
     }
 
     function debtMonthlyAmount(d, ym){
@@ -1594,6 +1854,126 @@
 
     function debtBaseDisplayAmount(d){
       return getDebtMonthlyCharge(d, state.defaultStartMonth);
+    }
+    function buildForecastMonthSnapshot(ym){
+      const adj = adjustmentForMonth(ym);
+      const income = state.incomes.reduce((sum, item) => {
+        const override = adj.incomeOverrides[item.id];
+        return sum + (override !== undefined ? Number(override) : getIncomeMonthlyCharge(item, ym));
+      }, 0) + Number(adj.extraIncomeAmount || 0) + monthCardTransfersTotal(ym);
+      const expenseItems = state.expenses
+        .map(item => {
+          const override = adj.expenseOverrides[item.id];
+          return { ...item, monthAmount: override !== undefined ? Number(override) : getExpenseMonthlyCharge(item, ym) };
+        })
+        .filter(item => item.monthAmount !== 0);
+      const expense = expenseItems.reduce((sum, item) => sum + Number(item.monthAmount || 0), 0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(ym);
+      const debt = state.debts.reduce((sum, item) => {
+        let amount = getDebtMonthState(item, ym).monthAmount;
+        const override = adj.debtOverrides[item.id];
+        if(override){
+          if(override.mode === 'skip' || override.mode === 'paid') amount = 0;
+          if(override.mode === 'custom') amount = Number(override.amount || 0);
+        }
+        return sum + Number(amount || 0);
+      }, 0);
+      let remainingAvailable = income - expense - debt;
+      let savings = Number(adj.extraSavingAmount || 0);
+      state.goals.forEach(goal => {
+        const override = adj.goalOverrides[goal.id];
+        let amount = 0;
+        if(override && override.mode === 'remove_from_here') amount = 0;
+        else if(override && override.mode === 'this_month') amount = Number(override.amount || 0);
+        else amount = getGoalMonthlyCharge(goal, ym, remainingAvailable).amount;
+        savings += amount;
+        remainingAvailable -= amount;
+      });
+      return { income, expense, debt, savings, net: income - expense - debt - savings, expenseItems };
+    }
+    function buildNegativeMonthSuggestions(ym){
+      const snapshot = buildForecastMonthSnapshot(ym);
+      const deficit = Math.abs(Math.min(0, snapshot.net));
+      if(deficit <= 0) return { deficit:0, suggestions:[] };
+      const salaryOneOffs = monthOneOffExpenses(ym)
+        .filter(entry => entry.paymentSource !== 'card')
+        .map(entry => ({
+          id: entry.id,
+          name: entry.name || 'Gasto puntual',
+          amount: Number(entry.amount || 0),
+          reason: 'Gasto puntual pagado con sueldo'
+        }));
+      const regularExpenses = snapshot.expenseItems
+        .sort((a, b) => {
+          const av = a.kind === 'variable' ? 0 : 1;
+          const bv = b.kind === 'variable' ? 0 : 1;
+          if(av !== bv) return av - bv;
+          return Number(b.monthAmount || 0) - Number(a.monthAmount || 0);
+        })
+        .map(item => ({
+          id: item.id,
+          name: item.name || 'Gasto',
+          amount: Number(item.monthAmount || 0),
+          reason: item.kind === 'variable' ? 'Gasto variable más flexible para mover a tarjeta' : 'Gasto del mes que podría cargarse a tarjeta'
+        }));
+      const pool = [...salaryOneOffs, ...regularExpenses];
+      let covered = 0;
+      const suggestions = [];
+      for(const item of pool){
+        if(covered >= deficit) break;
+        covered += Number(item.amount || 0);
+        suggestions.push(item);
+      }
+      return { deficit, suggestions };
+    }
+    function openNegativeMonthModal(ym){
+      const cardOptions = (state.debts || [])
+        .filter(item => (item.instrumentType || item.debtKind) === 'card' && (item.paymentMode || item.cardSubtype || 'revolving') === 'revolving')
+        .map(item => `<option value="${item.id}">${escapeHtml(debtDisplayName(item))}</option>`)
+        .join('');
+      const { deficit, suggestions } = buildNegativeMonthSuggestions(ym);
+      const root = document.getElementById('modalRoot');
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead">
+          <div>
+            <h3>Mes en negativo · ${escapeHtml(prettyMonthLabel(ym))}</h3>
+            <div class="muted">Faltan ${euros(deficit)} para que el mes no quede en rojo.</div>
+          </div>
+          <button id="closeModalBtn" class="btn danger">Cerrar</button>
+        </div>
+        <div class="warnBox">
+          <h4>Las siguientes cosas deberían pagarse con tarjeta</h4>
+          ${suggestions.length ? `<ul class="warnDetails">${suggestions.map(item => `<li><strong>${escapeHtml(item.name)}</strong> · ${euros(item.amount)} · ${escapeHtml(item.reason)}</li>`).join('')}</ul>` : '<div class="muted">No veo gastos claros para mover a tarjeta en este mes.</div>'}
+        </div>
+        <div class="panel">
+          <h4 style="margin:0 0 10px">Haz un traspaso de dinero desde la tarjeta</h4>
+          <div class="sub" style="margin-bottom:12px">Si prefieres cubrirlo con crédito, registramos un traspaso en una tarjeta revolving y lo reflejamos en su saldo actual.</div>
+          <div class="modalGrid">
+            <div class="field"><label>Tarjeta</label><select id="negativeTransferCard" class="select">${cardOptions || '<option value="">No hay tarjetas revolving disponibles</option>'}</select></div>
+            <div class="field"><label>Monto</label><input id="negativeTransferAmount" class="input" type="number" step="0.01" value="${deficit > 0 ? deficit : 0}"></div>
+            <div class="field" style="grid-column:1/-1"><label>Concepto</label><input id="negativeTransferName" class="input" value="Traspaso a cuenta para cubrir negativo"></div>
+          </div>
+          <div class="btnRow" style="margin-top:14px">
+            <button id="applyNegativeTransferBtn" class="btn primary" ${cardOptions ? '' : 'disabled'}>Resolver con traspaso</button>
+          </div>
+        </div>
+      </div>`;
+      root.onclick = (e) => { if(e.target === root) closeModal(); };
+      document.getElementById('closeModalBtn').onclick = closeModal;
+      const applyBtn = document.getElementById('applyNegativeTransferBtn');
+      if(applyBtn) applyBtn.onclick = () => {
+        const cardDebtId = document.getElementById('negativeTransferCard').value;
+        const amount = Number(document.getElementById('negativeTransferAmount').value || 0);
+        const name = document.getElementById('negativeTransferName').value.trim() || 'Traspaso desde tarjeta';
+        if(!cardDebtId || amount <= 0){
+          alert('Necesito una tarjeta revolving y un monto válido para resolver el negativo.');
+          return;
+        }
+        closeModal();
+        commitMonthAdjustmentGlobal(ym, nextAdj => {
+          nextAdj.cardTransfers = [...(nextAdj.cardTransfers || []), normalizeCardTransferEntry({ cardDebtId, amount, name, monthKey: ym }, ym)];
+        });
+      };
     }
     function itemGroupTotal(collection, item){
       if(collection === 'incomes' || collection === 'expenses') return Number(item.amount || 0);
@@ -1635,6 +2015,30 @@
         state.monthAdjustments[ym] = normalizeMonthAdjustmentShape(state.monthAdjustments[ym], ym);
       }
       return state.monthAdjustments[ym];
+    }
+    function monthAdjustmentHasDataGlobal(target){
+      if(!target) return false;
+      if(String(target.extraIncomeName || '').trim()) return true;
+      if(Number(target.extraIncomeAmount || 0) !== 0) return true;
+      if(String(target.extraExpenseName || '').trim()) return true;
+      if(Number(target.extraExpenseAmount || 0) !== 0) return true;
+      if(String(target.extraSavingName || '').trim()) return true;
+      if(Number(target.extraSavingAmount || 0) !== 0) return true;
+      if(Object.keys(target.incomeOverrides || {}).length) return true;
+      if(Object.keys(target.expenseOverrides || {}).length) return true;
+      if(Object.keys(target.goalOverrides || {}).length) return true;
+      if(Object.keys(target.debtOverrides || {}).length) return true;
+      if(Array.isArray(target.oneOffExpenses) && target.oneOffExpenses.length) return true;
+      if(Array.isArray(target.cardTransfers) && target.cardTransfers.length) return true;
+      return false;
+    }
+    function commitMonthAdjustmentGlobal(monthKey, mutator, options = {}){
+      const { reopenMonth = null } = options;
+      const nextAdj = normalizeMonthAdjustmentShape(state.monthAdjustments?.[monthKey] || {}, monthKey);
+      mutator(nextAdj);
+      if(monthAdjustmentHasDataGlobal(nextAdj)) state.monthAdjustments[monthKey] = nextAdj;
+      else delete state.monthAdjustments[monthKey];
+      touchState({ reopenMonth });
     }
     function loadLocal(){
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -2598,6 +3002,7 @@
         if(Object.keys(target.expenseOverrides || {}).length) return true;
         if(Object.keys(target.goalOverrides || {}).length) return true;
         if(Object.keys(target.debtOverrides || {}).length) return true;
+        if(Array.isArray(target.cardTransfers) && target.cardTransfers.length) return true;
         if(Array.isArray(target.oneOffExpenses) && target.oneOffExpenses.length) return true;
         return false;
       }
@@ -2764,6 +3169,7 @@
         mountInlineForm('monthExpenseForm', entry ? 'Editar gasto puntual' : 'Añadir gasto puntual', [
           { id:'ame_name', label:'Nombre', type:'text', value:currentEntry.name || '' },
           { id:'ame_amount', label:'Monto', type:'number', step:'0.01', value:currentEntry.amount || 0 },
+          { id:'ame_date', label:'Fecha', type:'date', value:currentEntry.entryDate || `${ym}-01` },
           { id:'ame_source', label:'Como lo has pagado', type:'select', options:`
             <option value="salary" ${currentEntry.paymentSource === 'salary' ? 'selected' : ''}>Con sueldo</option>
             <option value="card" ${currentEntry.paymentSource === 'card' ? 'selected' : ''}>Con tarjeta de credito</option>
@@ -2792,6 +3198,7 @@
             name,
             amount,
             paymentSource,
+            entryDate: document.getElementById('ame_date').value || `${ym}-01`,
             cardDebtId: paymentSource === 'card' ? document.getElementById('ame_card').value : '',
             cardUseMode: paymentSource === 'card' ? document.getElementById('ame_card_mode').value : '',
             installmentMonthlyPayment: Number(document.getElementById('ame_installment_payment').value || 0),
@@ -3196,11 +3603,12 @@
 
       allMonths.forEach(m => {
         const adj = adjustmentForMonth(m);
+        const transferIn = monthCardTransfersTotal(m);
 
         const income = state.incomes.reduce((a,b)=>{
           const ov = adj.incomeOverrides[b.id];
           return a + (ov !== undefined ? Number(ov) : getIncomeMonthlyCharge(b, m));
-        },0) + Number(adj.extraIncomeAmount || 0);
+        },0) + Number(adj.extraIncomeAmount || 0) + transferIn;
 
         const expense = state.expenses.reduce((a,b)=>{
           const ov = adj.expenseOverrides[b.id];
@@ -3241,12 +3649,17 @@
         const net = income - expense - debt - totalSaving;
         reserve += net;
         cumulativeSavings += totalSaving;
+        const monthRisk = net < 0 ? buildNegativeMonthSuggestions(m) : { deficit:0, suggestions:[] };
 
         if(m >= from && m <= to){
           visibleCards.push(`<div class="month" data-month="${m}">
-            <h4>${escapeHtml(m)}</h4>
+            <div class="monthHead">
+              <h4>${escapeHtml(m)}</h4>
+              ${net < 0 ? `<button class="btn danger monthAlertBtn bad" data-month-alert="${m}" title="Mes en negativo">!</button>` : ''}
+            </div>
             <div class="rows">
               <div class="lab">Ingreso</div><div>${euros(income)}</div>
+              ${transferIn ? `<div class="lab">Traspaso tarjeta</div><div>${euros(transferIn)}</div>` : ''}
               <div class="lab">Gastos</div><div>${euros(expense)}</div>
               <div class="lab">Deuda</div><div>${euros(debt)}</div>
               <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
@@ -3255,11 +3668,13 @@
               <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
               <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
             </div>
+            ${net < 0 ? `<div class="sub" style="margin-top:10px">Faltan ${euros(monthRisk.deficit)}. Toca el aviso para ver sugerencias o resolverlo con tarjeta.</div>` : ''}
           </div>`);
         }
       });
 
       document.getElementById('monthsGrid').innerHTML = visibleCards.join('');
+      renderCardBalancesPanel();
 
       const warnEl = document.getElementById('forecastWarnings');
       if(warnings.length){
@@ -3277,6 +3692,12 @@
 
       document.querySelectorAll('.month').forEach(card => {
         card.addEventListener('click', () => openMonthModal(card.dataset.month));
+      });
+      document.querySelectorAll('[data-month-alert]').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          openNegativeMonthModal(btn.dataset.monthAlert);
+        });
       });
 
       saveLocal();
