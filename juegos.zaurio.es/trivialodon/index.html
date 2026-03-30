@@ -933,26 +933,57 @@
       });
     }
     function setCastVolume(level){
-      return new Promise(resolve => {
-        const raw = getCastRawSession();
-        if(!raw?.setReceiverVolumeLevel) return resolve(false);
-        raw.setReceiverVolumeLevel(level, () => {
-          castState.volume = level;
-          castState.muted = level === 0 ? true : castState.muted;
-          updateCastUi();
-          resolve(true);
-        }, () => resolve(false));
+      return new Promise(async resolve => {
+        try{
+          const session = getCastSession();
+          if(session?.setVolume){
+            await session.setVolume(level);
+            castState.volume = level;
+            if(level > 0) castState.muted = false;
+            refreshCastSessionData();
+            updateCastUi();
+            return resolve(true);
+          }
+        } catch(_){}
+        try{
+          const raw = getCastRawSession();
+          if(!raw?.setReceiverVolumeLevel) return resolve(false);
+          raw.setReceiverVolumeLevel(level, () => {
+            castState.volume = level;
+            if(level > 0) castState.muted = false;
+            refreshCastSessionData();
+            updateCastUi();
+            resolve(true);
+          }, () => resolve(false));
+        } catch(_){
+          resolve(false);
+        }
       });
     }
     function setCastMuted(muted){
-      return new Promise(resolve => {
-        const raw = getCastRawSession();
-        if(!raw?.setReceiverMuted) return resolve(false);
-        raw.setReceiverMuted(muted, () => {
-          castState.muted = muted;
-          updateCastUi();
-          resolve(true);
-        }, () => resolve(false));
+      return new Promise(async resolve => {
+        try{
+          const session = getCastSession();
+          if(session?.setMute){
+            await session.setMute(muted);
+            castState.muted = muted;
+            refreshCastSessionData();
+            updateCastUi();
+            return resolve(true);
+          }
+        } catch(_){}
+        try{
+          const raw = getCastRawSession();
+          if(!raw?.setReceiverMuted) return resolve(false);
+          raw.setReceiverMuted(muted, () => {
+            castState.muted = muted;
+            refreshCastSessionData();
+            updateCastUi();
+            resolve(true);
+          }, () => resolve(false));
+        } catch(_){
+          resolve(false);
+        }
       });
     }
     async function connectCast(){
