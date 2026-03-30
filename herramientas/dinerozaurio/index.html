@@ -1834,6 +1834,62 @@
       }
       return null;
     }
+    function getDebtPaidMonth(debtId){
+      const months = Object.keys(state.monthAdjustments || {}).sort();
+      for(const monthKey of months){
+        const mode = state.monthAdjustments?.[monthKey]?.debtOverrides?.[debtId]?.mode;
+        if(mode === 'paid') return monthKey;
+      }
+      return '';
+    }
+    function getDebtPayoffAmount(d, ym){
+      const start = d.startMonth || state.defaultStartMonth;
+      const paymentMode = d.paymentMode || d.cardSubtype || '';
+      if((d.instrumentType || d.debtKind) === 'card' && paymentMode === 'revolving'){
+        const prevMonth = addMonthsStr(ym, -1);
+        return Math.max(0, getRevolvingBalanceAtMonth(d, prevMonth));
+      }
+      if((d.instrumentType || d.debtKind) === 'card' && paymentMode === 'pay_end_month'){
+        return Math.max(0, getDebtMonthlyCharge(d, ym));
+      }
+      if((d.instrumentType || d.debtKind) === 'loan' || paymentMode === 'installment'){
+        const monthly = Number(d.monthlyPayment || 0);
+        if(monthly <= 0 || ym < start) return 0;
+        if(d.lastMonth){
+          const last = d.lastMonth;
+          if(ym > last) return 0;
+          return monthsInRange(ym, last).length * monthly;
+        }
+        const totalRemaining = Math.max(0, Number(d.remainingInstallments || 0) - Math.max(0, monthDiff(start, ym)));
+        return totalRemaining * monthly;
+      }
+      return Math.max(0, getDebtMonthlyCharge(d, ym));
+    }
+    function getDebtAmountForMonth(d, ym){
+      const paidMonth = getDebtPaidMonth(d.id);
+      const override = adjustmentForMonth(ym).debtOverrides?.[d.id];
+      if(paidMonth && ym > paidMonth) return 0;
+      if(override?.mode === 'paid') return getDebtPayoffAmount(d, ym);
+      let amount = getDebtMonthlyCharge(d, ym);
+      if(override){
+        if(override.mode === 'skip') amount = 0;
+        if(override.mode === 'custom') amount = Number(override.amount || 0);
+      }
+      return amount;
+    }
+    function getDebtRecoveredForMonth(d, ym){
+      const paidMonth = getDebtPaidMonth(d.id);
+      if(paidMonth && ym === addMonthsStr(paidMonth, 1)){
+        if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype || '') === 'revolving'){
+          return Number(d.currentPayment || 0);
+        }
+        if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype || '') === 'pay_end_month'){
+          return Number(d.amount || 0);
+        }
+        return Number(d.monthlyPayment || 0);
+      }
+      return getDebtMonthState(d, ym).recoveredAmount;
+    }
 
     function getDebtMonthlyCharge(d, ym){
       const start = d.startMonth || state.defaultStartMonth;
@@ -1906,9 +1962,20 @@
       if(ym < start) return { visible:false, active:false, settled:false, recoveredAmount:0, monthAmount:0 };
       const monthCardEntries = debtCardEntriesForMonth(d.id, ym);
       const monthCardTransfers = debtCardTransfersForMonth(d.id, ym);
+      const paidMonth = getDebtPaidMonth(d.id);
+      if(paidMonth && ym > paidMonth){
+        const recoveredAmount = ym === addMonthsStr(paidMonth, 1)
+          ? ((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype || '') === 'revolving'
+            ? Number(d.currentPayment || 0)
+            : ((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype || '') === 'pay_end_month'
+              ? Number(d.amount || 0)
+              : Number(d.monthlyPayment || 0)))
+          : 0;
+        return { visible: recoveredAmount > 0, active:false, settled: recoveredAmount > 0, recoveredAmount, monthAmount:0 };
+      }
 
       if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype) === 'revolving'){
-        const monthAmount = getDebtMonthlyCharge(d, ym);
+        const monthAmount = paidMonth === ym ? getDebtPayoffAmount(d, ym) : getDebtMonthlyCharge(d, ym);
         return { visible: monthAmount > 0 || monthCardEntries.length > 0 || monthCardTransfers.length > 0, active: monthAmount > 0 || monthCardEntries.length > 0 || monthCardTransfers.length > 0, settled:false, recoveredAmount:0, monthAmount };
       }
 
@@ -1916,7 +1983,9 @@
       const recoveryMonth = end ? addMonthsStr(end, 1) : null;
       const active = end ? (ym >= start && ym <= end) : false;
       const settled = recoveryMonth ? ym === recoveryMonth : false;
-      const monthAmount = active || monthCardEntries.length || monthCardTransfers.length ? getDebtMonthlyCharge(d, ym) : 0;
+      const monthAmount = active || monthCardEntries.length || monthCardTransfers.length
+        ? (paidMonth === ym ? getDebtPayoffAmount(d, ym) : getDebtMonthlyCharge(d, ym))
+        : 0;
       const recoveredAmount = settled
         ? Number(((d.instrumentType || d.debtKind) === 'loan' || (d.paymentMode || d.cardSubtype) === 'installment') ? (d.monthlyPayment || 0) : (d.amount || 0))
         : 0;
@@ -1952,13 +2021,7 @@
         .filter(item => item.monthAmount !== 0);
       const expense = expenseItems.reduce((sum, item) => sum + Number(item.monthAmount || 0), 0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(ym);
       const debt = state.debts.reduce((sum, item) => {
-        let amount = getDebtMonthState(item, ym).monthAmount;
-        const override = adj.debtOverrides[item.id];
-        if(override){
-          if(override.mode === 'skip' || override.mode === 'paid') amount = 0;
-          if(override.mode === 'custom') amount = Number(override.amount || 0);
-        }
-        return sum + Number(amount || 0);
+        return sum + Number(getDebtAmountForMonth(item, ym) || 0);
       }, 0);
       let remainingAvailable = income - expense - debt;
       let savings = Number(adj.extraSavingAmount || 0);
@@ -2555,13 +2618,8 @@
 
       const debts = state.debts.map(it => {
         const base = getDebtMonthState(it, ym);
-        let monthAmount = base.monthAmount;
-        const ov = adj.debtOverrides[it.id];
-        if(ov){
-          if(ov.mode === 'skip' || ov.mode === 'paid') monthAmount = 0;
-          if(ov.mode === 'custom') monthAmount = Number(ov.amount || 0);
-        }
-        return { ...it, monthAmount, active: base.active, settled: base.settled, recoveredAmount: base.recoveredAmount, visible: base.visible };
+        const monthAmount = getDebtAmountForMonth(it, ym);
+        return { ...it, monthAmount, active: base.active, settled: base.settled, recoveredAmount: getDebtRecoveredForMonth(it, ym), visible: base.visible || monthAmount > 0 };
       }).filter(it => it.visible);
 
       return { incomes, expenses, goals, debts };
@@ -3699,16 +3757,10 @@
         },0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(m);
 
         const debt = state.debts.reduce((a,b)=>{
-          let amount = getDebtMonthState(b, m).monthAmount;
-          const ov = adj.debtOverrides[b.id];
-          if(ov){
-            if(ov.mode === 'skip' || ov.mode === 'paid') amount = 0;
-            if(ov.mode === 'custom') amount = Number(ov.amount || 0);
-          }
-          return a + Number(amount || 0);
+          return a + Number(getDebtAmountForMonth(b, m) || 0);
         },0);
 
-        const recovered = state.debts.reduce((a,b)=> a + getDebtMonthState(b, m).recoveredAmount, 0);
+        const recovered = state.debts.reduce((a,b)=> a + getDebtRecoveredForMonth(b, m), 0);
 
         let totalSaving = Number(adj.extraSavingAmount || 0);
         let remainingAvailable = income - expense - debt;

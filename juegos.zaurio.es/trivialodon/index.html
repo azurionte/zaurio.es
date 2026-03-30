@@ -274,7 +274,7 @@
         <div class="topRight">
           <button class="scoreChip" id="scoreChip" type="button" hidden><span>Puntos</span><span class="scoreValue" id="scoreChipValue">0</span></button>
           <div class="soundWrap" id="soundWrap">
-            <button class="soundChip" id="soundChip" type="button" hidden><span class="soundGlyph" id="soundChipGlyph">ðŸ”Š</span></button>
+            <button class="soundChip" id="soundChip" type="button" hidden><span class="soundGlyph" id="soundChipGlyph">🔊</span></button>
             <div class="soundPanel" id="soundPanel">
               <div class="soundPanelRow">
                 <span class="soundMini">Sonido</span>
@@ -295,7 +295,7 @@
               </div>
             </button>
             <div class="profileMenu" id="profileMenu">
-              <button class="btn btnGhost" id="btnProfileCast" type="button">ðŸ“º Enviar a TV</button>
+              <button class="btn btnGhost" id="btnProfileCast" type="button">📺 Enviar a TV</button>
               <button class="btn btnGhost" id="btnProfileContinue" type="button">Continuar juego</button>
               <button class="btn btnGhost" id="btnProfileNew" type="button">Empezar nueva partida</button>
             </div>
@@ -1239,7 +1239,7 @@
     }
     function updateSoundChip(){
       ui.soundChip.hidden = !state.role;
-      ui.soundChipGlyph.textContent = audioState.muted ? "ðŸ”‡" : (audioState.volume < .45 ? "ðŸ”‰" : "ðŸ”Š");
+      ui.soundChipGlyph.textContent = audioState.muted ? "🔇" : (audioState.volume < .45 ? "🔉" : "🔊");
       ui.btnToggleMute.textContent = audioState.muted ? "Activar" : "Mute";
     }
     refreshAudioTargets();
@@ -1786,7 +1786,7 @@
       const player = findPlayer(playerId);
       const choiceId = revealedChoices?.[playerId] || "";
       const choice = choiceId ? versusMoveById(choiceId) : null;
-      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "ðŸ¦–"}</div><strong>${esc(player?.name || "Jugador")}</strong><span class="playerSub">${playerId === state.playerId ? "Tu duelo" : "Duelo en curso"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Esperando tu marca" : "Sin revelar")}</div>`;
+      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong>${esc(player?.name || "Jugador")}</strong><span class="playerSub">${playerId === state.playerId ? "Tu duelo" : "Duelo en curso"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Esperando tu marca" : "Sin revelar")}</div>`;
     }
     function renderVersusIntroScene(){
       const versus = state.game.versus || {};
