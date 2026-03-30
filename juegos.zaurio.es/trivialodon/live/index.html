@@ -21,14 +21,19 @@
     *{box-sizing:border-box}
     html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Arial,system-ui,sans-serif}
     body{padding:14px}
+    body.cast{padding:10px}
     .app{height:calc(100dvh - 28px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:14px}
+    body.cast .app{height:calc(100dvh - 20px);gap:10px}
     .top,.card,.answer,.roundRow,.podiumCard,.joinCard{border:1px solid var(--stroke);background:var(--panel);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
     .top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:14px 18px;gap:12px}
+    body.cast .top{padding:10px 16px;border-radius:24px}
     .brand{width:min(220px,22vw);display:block}
+    body.cast .brand{width:min(160px,15vw)}
     .topCenter{display:grid;place-items:center}
     .code{padding:10px 16px;border-radius:999px;background:rgba(255,216,74,.12);color:var(--gold);font-weight:1000;letter-spacing:.08em}
     .layout{display:grid;grid-template-columns:1fr;min-height:0}
     .card{padding:22px;display:grid;gap:16px;min-height:0}
+    body.cast .card{padding:16px;gap:12px;border-radius:24px}
     .kick{display:inline-flex;padding:6px 12px;border-radius:999px;background:rgba(56,220,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
     .hero{display:grid;gap:18px;position:relative;min-height:0}
     .hero.center{align-content:center;justify-items:center;text-align:center;min-height:min(70vh,780px)}
@@ -41,6 +46,10 @@
     .hero.compact .titleWrap{max-width:none}
     .hero.compact .title{font-size:clamp(1.8rem,3vw,3.4rem)}
     .hero.compact .titleWrap{padding-right:120px}
+    body.cast .hero.compact{gap:8px}
+    body.cast .hero.compact .title{font-size:clamp(1.65rem,2.6vw,2.9rem);line-height:.98}
+    body.cast .hero.compact .copy{font-size:.92rem;line-height:1.34}
+    body.cast .hero.compact .titleWrap{padding-right:92px;gap:8px}
     .hero.scores{align-content:start;justify-items:center;text-align:center}
     .hero.scores .titleWrap{justify-items:center;text-align:center;max-width:min(980px,92%);margin:0 auto}
     .hero.scores.tvStage{align-content:center;gap:26px}
@@ -98,9 +107,13 @@
     .copy{margin:0;color:var(--muted);font-size:1.04rem;line-height:1.48}
     .timer{width:96px;height:96px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:7px;position:absolute;top:0;right:0}
     .timerInner{width:100%;height:100%;border-radius:999px;background:#220432;display:grid;place-items:center;font-weight:1000;font-size:1.5rem}
+    body.cast .timer{width:84px;height:84px;padding:6px}
+    body.cast .timerInner{font-size:1.28rem}
     .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
     .answers.revealed{animation:answersIn .45s ease both}
     .answers.questionBoard{grid-auto-rows:minmax(108px,auto)}
+    body.cast .answers{gap:10px}
+    body.cast .answers.questionBoard{grid-auto-rows:minmax(88px,auto)}
     .countStage{display:grid;gap:16px;justify-items:center;text-align:center;align-content:center;min-height:min(48vh,520px);width:min(980px,100%);margin:0 auto;padding:34px 28px;border-radius:34px;border:1px solid rgba(255,255,255,.1);background:
       radial-gradient(circle at top,rgba(255,255,255,.06),transparent 48%),
       linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
@@ -110,6 +123,7 @@
     .countBig{font-size:clamp(6rem,13vw,9rem);font-weight:1000;line-height:1;color:#fff;text-shadow:0 10px 30px rgba(255,216,74,.16)}
     .countText{font-size:1rem;color:var(--muted);max-width:34ch}
     .answer{padding:16px 18px;display:grid;gap:10px;background:rgba(255,255,255,.02)}
+    body.cast .answer{padding:12px 14px;gap:8px;border-radius:20px}
     .answer.selected{border-color:rgba(56,220,255,.48);background:linear-gradient(135deg,rgba(56,220,255,.12),rgba(255,125,207,.08))}
     .answer.correct{border-color:rgba(144,235,124,.84);background:linear-gradient(135deg,rgba(144,235,124,.22),rgba(56,220,255,.08))}
     .answer.wrong{border-color:rgba(255,128,149,.86);background:linear-gradient(135deg,rgba(255,128,149,.18),rgba(255,125,207,.08))}
@@ -117,10 +131,14 @@
     .aKey{margin-right:8px;color:var(--gold);font-weight:1000}
     .aText{font-size:clamp(1rem,1.34vw,1.45rem);font-weight:900;line-height:1.24}
     .aState{font-size:.94rem;font-weight:900;color:#fff;white-space:nowrap}
+    body.cast .aText{font-size:clamp(.98rem,1.08vw,1.18rem);line-height:1.16}
+    body.cast .aState{font-size:.82rem}
     .voteCloud{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
     .voteAvatar{width:34px;height:34px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
     .voteAvatar img{width:100%;height:100%;object-fit:cover}
     .voteMore{padding:0 8px;height:30px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:.8rem}
+    body.cast .voteAvatar{width:28px;height:28px}
+    body.cast .voteMore{height:24px;font-size:.72rem}
     .fact{padding:18px 20px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,216,74,.08));display:grid;gap:8px}
     .fact p{margin:0;color:var(--muted);line-height:1.45}
     .roundBoard,.podiumBoard{display:grid;gap:12px;width:min(1280px,100%);margin:0 auto}
@@ -388,6 +406,7 @@
     let players = [];
     let lastAnswersVisible = false;
     const soundEnabled = params.get("sound") !== "off";
+    const castMode = params.get("cast") === "1";
     const liveAudio = {
       unlocked:false,
       fadeTimers:new Map(),
@@ -504,6 +523,16 @@
       primeAudio();
       syncAudio();
     }
+    function tryCastAutoplay(){
+      if(!castMode || !soundEnabled) return;
+      ensureAudioReady();
+      const active = game.phase === "question" || game.phase === "answer" ? liveAudio.decks.answering : liveAudio.decks.waiting;
+      const track = active?.tracks?.[active.activeIndex || 0];
+      try{
+        const attempt = track?.play?.();
+        if(attempt && typeof attempt.catch === "function") attempt.catch(() => {});
+      } catch(_){}
+    }
     function syncAudio(){
       if(!soundEnabled || !liveAudio.unlocked) return;
       const useAnswering = game.phase === "question" || game.phase === "answer";
@@ -580,13 +609,13 @@
       const left = answersVisible ? answerLeft : leadLeft;
       ui.category.textContent = isSpeed ? `Test de velocidad · ${question.category || "Categoria sorpresa"}` : (question.category || "Cultura general");
       ui.prompt.textContent = question.prompt || "Esperando pregunta...";
-      ui.copy.textContent = !answersVisible ? "Lee la pregunta. Las opciones aparecen enseguida." : (isSpeed ? "Las respuestas se bloquean en directo y puntuan distinto." : "Se ve en vivo que opcion esta marcando cada jugador.");
+      ui.copy.textContent = !answersVisible ? "Lee la pregunta. Las opciones aparecen enseguida." : (isSpeed ? "Las respuestas se bloquean en directo y puntuan distinto." : "");
       setTimer(String(left), Math.max(0, Math.min(1, left / total)), true);
       ui.hero.className = `hero ${answersVisible ? "compact" : "lead"}${justRevealed ? " revealed" : ""}`;
       ui.hero.innerHTML = `<div class="titleWrap">
             <span class="kick" id="category">${esc(isSpeed ? `Test de velocidad · ${question.category || "Categoria sorpresa"}` : (question.category || "Cultura general"))}</span>
             <h1 class="title" id="prompt">${esc(question.prompt || "Esperando pregunta...")}</h1>
-            <p class="copy" id="copy">${esc(!answersVisible ? "Lee la pregunta. Las opciones aparecen enseguida." : (isSpeed ? "Las respuestas se bloquean en directo y puntuan distinto." : "Se ve en vivo que opcion esta marcando cada jugador."))}</p>
+            <p class="copy" id="copy">${esc(!answersVisible ? "Lee la pregunta. Las opciones aparecen enseguida." : (isSpeed ? "Las respuestas se bloquean en directo y puntuan distinto." : ""))}</p>
           </div>
           <div class="timer${left || left === 0 ? "" : " hidden"}" id="timerRing" style="--timer:${Math.max(0, Math.min(1, left / total))}">
             <div class="timerInner" id="timer">${esc(String(left))}</div>
@@ -914,6 +943,7 @@
 
     function render(){
       const waitingPhase = !["paused","countdown","question","answer","scores"].includes(game.phase);
+      document.body.classList.toggle("cast", castMode);
       document.body.classList.toggle("phase-lobby", waitingPhase);
       document.body.classList.toggle("phase-question", game.phase === "question");
       document.body.classList.toggle("phase-answer", game.phase === "answer");
@@ -927,6 +957,7 @@
       else if(game.phase === "scores") renderScoresPhase();
       else renderLobby();
       syncAudio();
+      if(castMode) tryCastAutoplay();
     }
 
     function syncPlayers(){
@@ -950,6 +981,7 @@
         .on("broadcast",{event:"game_state"},({payload}) => { if(payload){ game = payload; render(); } })
         .subscribe(async status => {
           if(status === "SUBSCRIBED"){
+            if(castMode) ensureAudioReady();
             render();
             await channel.send({type:"broadcast",event:"request_state",payload:{viewer:"live",requestedAt:Date.now()}});
           }
@@ -970,9 +1002,13 @@
     ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
     window.addEventListener("resize", setLayoutMode);
     setLayoutMode();
+    if(castMode) setTimeout(() => ensureAudioReady(), 120);
     setInterval(() => { if(channel) render(); }, 250);
     const auto = normalize(params.get("sala"));
-    if(auto.length === 4) join(auto);
+    if(auto.length === 4){
+      if(castMode) ensureAudioReady();
+      join(auto);
+    }
   </script>
 </body>
 </html>

@@ -40,7 +40,7 @@
     function liveUrl(roomCode){
       const code = String(roomCode || "").replace(/\D/g, "").slice(0, 4);
       if(!code) return "";
-      return `${location.origin}/trivialodon/live?sala=${encodeURIComponent(code)}&layout=horizontal`;
+      return `${location.origin}/trivialodon/live?sala=${encodeURIComponent(code)}&layout=horizontal&cast=1`;
     }
 
     function showRoom(roomCode){
