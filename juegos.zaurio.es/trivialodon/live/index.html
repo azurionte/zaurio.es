@@ -146,6 +146,8 @@
     .voteMore{padding:0 8px;height:30px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:.8rem}
     body.cast .voteAvatar{width:24px;height:24px}
     body.cast .voteMore{height:20px;font-size:.64rem}
+    .debugHud{position:fixed;left:8px;top:8px;z-index:9999;padding:8px 10px;border-radius:14px;background:rgba(0,0,0,.64);border:1px solid rgba(255,255,255,.16);font:12px/1.35 Consolas,monospace;color:#9ff7ff;white-space:pre-wrap;max-width:min(42vw,420px);pointer-events:none}
+    body:not(.cast) .debugHud{display:none}
     body.cast .lobbyCast{gap:14px 12px;max-width:min(1240px,90%);margin:0 auto}
     body.cast .castAvatar{width:74px;height:74px}
     body.cast .castName{font-size:.82rem}
@@ -397,6 +399,7 @@
       <button id="btnJoin" type="button">Conectar emision</button>
     </article>
   </section>
+  <pre class="debugHud" id="debugHud"></pre>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -410,6 +413,7 @@
     const ui = {
       app:$("app"), join:$("join"), roomCode:$("roomCode"), category:$("category"), prompt:$("prompt"), copy:$("copy"),
       timer:$("timer"), timerRing:$("timerRing"), fact:$("fact"), factKick:$("factKick"), factText:$("factText"),
+      debugHud:$("debugHud"),
       answers:$("answers"), codeInput:$("codeInput"), btnJoin:$("btnJoin"), hero:$("hero")
     };
     let channel = null;
@@ -570,6 +574,22 @@
       ui.app.style.height = "";
       ui.app.style.margin = "";
       ui.app.style.justifySelf = "";
+    }
+    function updateDebugHud(){
+      if(!castMode || !ui.debugHud) return;
+      const appRect = ui.app.getBoundingClientRect();
+      const heroRect = ui.hero.getBoundingClientRect();
+      const card = document.querySelector(".card");
+      const cardRect = card?.getBoundingClientRect?.();
+      ui.debugHud.textContent = [
+        `cast=${castMode} vertical=${document.body.classList.contains("vertical")}`,
+        `inner=${window.innerWidth}x${window.innerHeight}`,
+        `screen=${window.screen?.width || "?"}x${window.screen?.height || "?"}`,
+        `app=${Math.round(appRect.width)}x${Math.round(appRect.height)} @ ${Math.round(appRect.left)},${Math.round(appRect.top)}`,
+        `card=${cardRect ? `${Math.round(cardRect.width)}x${Math.round(cardRect.height)} @ ${Math.round(cardRect.left)},${Math.round(cardRect.top)}` : "?"}`,
+        `hero=${Math.round(heroRect.width)}x${Math.round(heroRect.height)} @ ${Math.round(heroRect.left)},${Math.round(heroRect.top)}`,
+        `phase=${game.phase || "lobby"}`
+      ].join("\n");
     }
 
     function setTimer(value, progress, visible){
@@ -978,6 +998,7 @@
       syncAudio();
       if(castMode) tryCastAutoplay();
       applyCastFit();
+      updateDebugHud();
     }
 
     function syncPlayers(){
