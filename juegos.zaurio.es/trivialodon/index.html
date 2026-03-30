@@ -41,6 +41,8 @@
     .playersGrid{display:grid;gap:14px}.playerCard{padding:16px 18px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}.playerName{font-size:clamp(1rem,2vw,1.45rem);font-weight:1000;text-shadow:0 4px 0 rgba(0,0,0,.72),0 0 16px rgba(0,0,0,.45)}.playerSub{font-size:.96rem;color:var(--muted)}
     .dinoHole,.avatarShot{position:absolute;left:50%;top:50%;width:var(--avatar);height:var(--avatar);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translateY(-10px)}.dinoHole{display:grid;place-items:center;font-size:3rem;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,119,203,.16))}.avatarShot img{width:100%;height:100%;object-fit:cover}
     .heroCard{padding:32px;display:grid;gap:20px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));text-align:center}.bigCount{font-size:clamp(5rem,18vw,11rem);font-weight:1000;line-height:1}
+    .categoryArt{width:min(220px,48vw);max-width:100%;justify-self:center;display:block;filter:drop-shadow(0 12px 26px rgba(0,0,0,.26))}
+    .categoryLead{display:grid;justify-items:center;gap:14px;padding:12px 0 2px}
     .questionBox{display:grid;gap:20px}.questionHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.timerRing{width:88px;height:88px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--yellow) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:6px}.timerInner{width:100%;height:100%;border-radius:999px;background:#240436;display:grid;place-items:center;font-weight:1000;font-size:1.4rem}
     .questionTitle{font-size:clamp(1.7rem,4.4vw,2.8rem);line-height:1.08}
     .answers{display:grid;gap:14px}.answerCard{width:100%;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:14px;transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;color:#fff;text-align:left}.answerCard *{pointer-events:none}.answerCard:hover{transform:translateX(4px)}.answerCard.active{border-color:rgba(47,211,255,.38);background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,119,203,.1))}.answerCard.correct{border-color:rgba(136,225,110,.86);background:linear-gradient(135deg,rgba(136,225,110,.28),rgba(47,211,255,.1));box-shadow:0 0 0 1px rgba(136,225,110,.2),0 0 28px rgba(136,225,110,.22)}.answerCard.wrong{border-color:rgba(255,112,112,.95);background:linear-gradient(135deg,rgba(255,112,112,.26),rgba(255,119,203,.1));box-shadow:0 0 0 1px rgba(255,112,112,.24),0 0 24px rgba(255,112,112,.18)}.answerCard.sparkle{box-shadow:0 0 0 1px rgba(255,255,255,.12),0 0 26px rgba(255,216,58,.28),0 0 46px rgba(136,225,110,.18)}.answerKey{font-weight:1000;color:var(--yellow)}.answerState{font-weight:900;color:#fff}.answerText{color:#fff;font-size:clamp(1rem,2vw,1.14rem);line-height:1.35}.factCard{padding:18px 20px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,216,58,.08));display:grid;gap:8px;order:-1}.factCard strong{color:var(--yellow)}.sparkles{display:flex;justify-content:center;gap:10px;font-size:1.3rem;letter-spacing:.3rem;animation:twinkle 1.2s ease-in-out infinite}
@@ -48,6 +50,30 @@
     .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.modeCard{padding:18px;display:grid;gap:8px;cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease;color:#fff}.modeCard:hover{transform:translateY(-2px)}.modeCard.active{border-color:rgba(255,216,58,.42);background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.12))}.modeCard:disabled{opacity:.62;cursor:not-allowed;transform:none}.modeHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.modeIcon{font-size:1.5rem}.modeVotes{font-weight:1000;color:var(--yellow)}
     .switch{position:relative;width:66px;height:38px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1)}.switch::after{content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:999px;background:#fff;transition:transform .2s ease}.switch.on{background:linear-gradient(135deg,var(--yellow),var(--pink))}.switch.on::after{transform:translateX(28px)}.toggleBar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
     .scoreBoard{display:grid;gap:14px}.scoreHero{padding:22px;border-radius:28px;background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.14));border:1px solid rgba(255,255,255,.1);text-align:center}.scoreRow{padding:14px 16px;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center}.rankAvatar{width:58px;height:58px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,119,203,.14));display:grid;place-items:center}.rankAvatar img{width:100%;height:100%;object-fit:cover}.scoreValueWrap{position:relative;min-width:120px;text-align:right;font-weight:1000;display:flex;justify-content:flex-end;align-items:center;gap:10px}.scoreDelta{position:static;color:#a6ff8b;font-weight:1000;animation:scoreFly 2.2s ease forwards}.scoreGlitter{color:var(--yellow);animation:twinkle .9s ease-in-out infinite}.finalActions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+    .versusCard{width:min(1080px,100%);display:grid;gap:18px;padding:24px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.03))}
+    .versusHero{position:relative;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.16))}
+    .versusHero img{display:block;width:100%;height:min(300px,36vw);object-fit:cover;opacity:.82}
+    .versusOverlay{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;background:linear-gradient(180deg,rgba(9,0,15,.12),rgba(9,0,15,.72))}
+    .versusOverlay .title{font-size:clamp(2.4rem,7vw,4.8rem);text-shadow:0 8px 18px rgba(0,0,0,.4)}
+    .versusOverlay p{max-width:34ch}
+    .versusDuel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .versusPlayer{padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;justify-items:center;gap:10px;text-align:center}
+    .versusPlayer.active{box-shadow:0 0 0 1px rgba(255,216,58,.28),0 0 30px rgba(255,119,203,.16)}
+    .versusAvatar{width:88px;height:88px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18));display:grid;place-items:center}
+    .versusAvatar img{width:100%;height:100%;object-fit:cover}
+    .versusChoice{font-size:1.12rem;font-weight:1000;color:var(--yellow)}
+    .versusRoundGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .versusMove{padding:18px 16px;border-radius:24px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);display:grid;gap:8px;justify-items:center;text-align:center;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
+    .versusMove:hover{transform:translateY(-2px)}
+    .versusMove.active{border-color:rgba(57,219,255,.48);background:linear-gradient(135deg,rgba(57,219,255,.16),rgba(255,119,203,.12))}
+    .versusMove.win{border-color:rgba(136,225,110,.78);background:linear-gradient(135deg,rgba(136,225,110,.24),rgba(57,219,255,.08));box-shadow:0 0 24px rgba(136,225,110,.18)}
+    .versusMove:disabled{opacity:.55;transform:none;cursor:not-allowed}
+    .versusGlyph{font-size:2.2rem;line-height:1}
+    .versusMeta{display:grid;gap:12px;text-align:center}
+    .versusScoreline{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+    .versusPill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);font-weight:900}
+    .versusSpectators{padding:16px 18px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);text-align:center}
+    .versusSpectators strong{color:var(--yellow)}
     .overlay{position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(5,2,12,.76);backdrop-filter:blur(12px);z-index:80}.overlay.on{display:grid}.modalCard{width:min(760px,100%);max-height:min(86vh,920px);overflow:auto;padding:28px;display:grid;gap:18px}.emojiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.emojiChoice{padding:18px;border-radius:22px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);display:grid;gap:8px;place-items:center}.emojiChoice.active{border-color:rgba(255,216,58,.42)}.emojiBall{width:84px;height:84px;border-radius:999px;display:grid;place-items:center;font-size:2.35rem;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.miniForm{display:grid;gap:14px}.miniForm input,.miniForm textarea{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}.gridTwo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.choiceBlock{display:grid;gap:10px}.pillChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pillChoice{padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-weight:900;text-align:center}.pillChoice.active{border-color:rgba(255,216,58,.48);background:linear-gradient(135deg,rgba(255,216,58,.16),rgba(255,119,203,.12));color:#fff}
     @keyframes sceneIn{from{opacity:0;transform:translateY(20px) scale(.985)}to{transform:none;opacity:1}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes scoreFly{0%{opacity:0;transform:translateX(-26px) translateY(8px) scale(.82)}18%{opacity:1}72%{opacity:1}100%{opacity:0;transform:translateX(50px) translateY(-10px) scale(1.08)}}@keyframes twinkle{0%,100%{transform:scale(.94);opacity:.72}50%{transform:scale(1.14);opacity:1}}
     @media (max-width:980px){
@@ -367,6 +393,7 @@
         <article class="heroCard" style="width:min(860px,100%)">
           <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" style="width:min(280px,70%);margin-bottom:0">
           <span class="kicker" style="justify-self:center">Cuenta atras</span>
+          <img class="categoryArt" id="countdownCategoryArt" alt="" hidden>
           <h2 class="subtitle" id="countdownCategory">Cultura general</h2>
           <div class="bigCount" id="countdownValue">4</div>
           <p>Respira. Enseguida empieza la accion.</p>
@@ -407,6 +434,32 @@
           </div>
           <div id="scoresRows"></div>
           <div class="finalActions" id="finalActions"></div>
+        </article>
+      </section>
+
+      <section class="scene sceneCenter sceneWrap" id="versusScene">
+        <article class="panel versusCard">
+          <div class="versusHero">
+            <img src="/trivialodon/assets/vs.png" alt="Versus">
+            <div class="versusOverlay">
+              <div class="sceneStack" style="gap:10px;justify-items:center">
+                <span class="kicker">Desempate jurasico</span>
+                <h2 class="title">VERSUS!</h2>
+                <p id="versusLead">Dos dinos no pueden seguir empatando.</p>
+              </div>
+            </div>
+          </div>
+          <div class="versusDuel">
+            <article class="versusPlayer" id="versusPlayerA"></article>
+            <article class="versusPlayer" id="versusPlayerB"></article>
+          </div>
+          <div class="versusMeta">
+            <div class="versusScoreline" id="versusScoreline"></div>
+            <div class="countPill" style="justify-self:center" id="versusTimer">5</div>
+            <p id="versusRoundCopy">Teneis 5 segundos para marcar.</p>
+          </div>
+          <div class="versusRoundGrid" id="versusButtons"></div>
+          <div class="versusSpectators" id="versusSpectators">El resto mira el duelo desde la grada.</div>
         </article>
       </section>
     </section>
@@ -573,17 +626,33 @@
     const STORAGE_KEY = "trivialodon-session-v1";
     const SOUND_KEY = "trivialodon-sound-muted-v1";
     const SOUND_VOLUME_KEY = "trivialodon-sound-volume-v1";
-    const WAITING_AUDIO_SRCS = ["/trivialodon/assets/waiting.mp3","/trivialodon/assets/waiting 2.mp3","/trivialodon/assets/waiting 3.mp3"];
-    const ANSWERING_AUDIO_SRCS = ["/trivialodon/assets/answering.mp3","/trivialodon/assets/answering 2.mp3","/trivialodon/assets/answering 3.mp3"];
+    const WAITING_AUDIO_SRCS = ["/trivialodon/assets/waiting.mp3","/trivialodon/assets/waiting 2.mp3","/trivialodon/assets/waiting 3.mp3","/trivialodon/assets/waiting 4.mp3","/trivialodon/assets/waiting 5.mp3","/trivialodon/assets/waiting 6.mp3"];
+    const ANSWERING_AUDIO_SRCS = ["/trivialodon/assets/answering.mp3","/trivialodon/assets/answering 2.mp3","/trivialodon/assets/answering 3.mp3","/trivialodon/assets/answering 4.mp3","/trivialodon/assets/answering 5.mp3","/trivialodon/assets/answering 6.mp3","/trivialodon/assets/answering 7.mp3"];
     const WINNER_AUDIO_SRC = "/trivialodon/assets/winner.mp3";
     const LOSER_AUDIO_SRC = "/trivialodon/assets/loser.mp3";
+    const CATEGORY_ARTS = {
+      ciencia:{src:"/trivialodon/assets/ciencia.png", keywords:["ciencia","naturaleza","biologia","quimica","fisica","tecnologia","espacio","salud"]},
+      cineytv:{src:"/trivialodon/assets/cineytv.png", keywords:["cine","tv","television","series","peliculas","streaming","famosos"]},
+      friki:{src:"/trivialodon/assets/friki.png", keywords:["friki","geek","marvel","dc","anime","manga","videojuego","videojuegos","fantasia","superheroes","superheroe","comic","comics","star wars","star trek"]},
+      geografia:{src:"/trivialodon/assets/geografia.png", keywords:["geografia","mundo","paises","capitales","continentes","mapas","espana","viajes"]},
+      mundo_antiguo:{src:"/trivialodon/assets/mundo%20antiguo.png", keywords:["historia","antigua","antiguo","edad media","romanos","egipto","grecia","mundo antiguo","prehistoria"]},
+      psicologia:{src:"/trivialodon/assets/psicologia.png", keywords:["psicologia","mente","emociones","conducta","cerebro","personalidad"]},
+      otros:{src:"/trivialodon/assets/otros.png", keywords:[]}
+    };
+    const VERSUS_MOVES = [
+      {id:"rock",label:"Piedra",glyph:"✊"},
+      {id:"paper",label:"Papel",glyph:"✋"},
+      {id:"scissors",label:"Tijera",glyph:"✌️"}
+    ];
+    const VERSUS_BONUS_POINTS = 20;
+    const VERSUS_ROUND_SECONDS = 5;
     const CAST_APP_ID = "C5432B88";
     const CAST_NAMESPACE = "urn:x-cast:zaurio.trivialodon";
     const $ = id => document.getElementById(id);
     const ui = {
       introScene:$("introScene"), shell:$("shell"), btnHost:$("btnHost"), btnGuest:$("btnGuest"), btnContinue:$("btnContinue"), menuWrap:$("menuWrap"), menuBtn:$("menuBtn"),
       identity:$("identity"), scoreChip:$("scoreChip"), scoreChipValue:$("scoreChipValue"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), btnToggleMute:$("btnToggleMute"), soundVolumeInput:$("soundVolumeInput"), profileWrap:$("profileWrap"), profileMenu:$("profileMenu"), btnProfileCast:$("btnProfileCast"), btnProfileContinue:$("btnProfileContinue"), btnProfileNew:$("btnProfileNew"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
-      scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene")},
+      scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene"), versus:$("versusScene")},
       joinCodeOnlyInput:$("joinCodeOnlyInput"), joinStatus:$("joinStatus"), btnJoinBack:$("btnJoinBack"), btnJoinNext:$("btnJoinNext"),
       profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), lobbyLayout:$("lobbyLayout"), setupLayout:$("setupLayout"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"),
       nameInput:$("nameInput"), avatarStage:$("avatarStage"), avatarImg:$("avatarImg"), avatarPlaceholder:$("avatarPlaceholder"), btnUpload:$("btnUpload"),
@@ -591,9 +660,9 @@
       profilePlayers:$("profilePlayers"), profileSideTitle:$("profileSideTitle"), profileSideText:$("profileSideText"), lobbySide:$("lobbySide"), lobbyTitle:$("lobbyTitle"),
       lobbyDesc:$("lobbyDesc"), lobbyPlayers:$("lobbyPlayers"), btnToSetup:$("btnToSetup"), setupSide:$("setupSide"), setupDesc:$("setupDesc"), hostVoteWrap:$("hostVoteWrap"),
       hostVoteCountdown:$("hostVoteCountdown"), voteToggle:$("voteToggle"), modeGrid:$("modeGrid"), durationGrid:$("durationGrid"), setupActions:$("setupActions"),
-      generatingLine:$("generatingLine"), pausedTitle:$("pausedTitle"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownCategory:$("countdownCategory"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
+      generatingLine:$("generatingLine"), pausedTitle:$("pausedTitle"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
-      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), emojiModal:$("emojiModal"), emojiGrid:$("emojiGrid"), scoreModal:$("scoreModal"), scoreModalRows:$("scoreModalRows"),
+      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusLead:$("versusLead"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), versusSpectators:$("versusSpectators"), emojiModal:$("emojiModal"), emojiGrid:$("emojiGrid"), scoreModal:$("scoreModal"), scoreModalRows:$("scoreModalRows"),
       btnCloseEmoji:$("btnCloseEmoji"), btnAcceptEmoji:$("btnAcceptEmoji"), btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
       durationModal:$("durationModal"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
       durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
@@ -605,7 +674,7 @@
     const state = {
       playerId:crypto.randomUUID(), role:"", roomCode:"", name:"", ready:false, waitingLine:"", channel:null, players:[], selectedEmoji:"mint", localAnswer:null,
       avatar:{kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"},
-      game:{phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",selectedDurationValue:15,votes:{},question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}}
+      game:{phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",selectedDurationValue:15,votes:{},question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}}
     };
     const audioState = {
       muted: localStorage.getItem(SOUND_KEY) === "1",
@@ -619,6 +688,13 @@
     };
     const castState = {available:false, session:null, connected:false, deviceName:"", volume:.7, muted:false};
     const esc = value => String(value || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const normalizeCategory = value => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+    function categoryArtFor(category){
+      const raw = normalizeCategory(category);
+      if(!raw) return CATEGORY_ARTS.otros;
+      const match = Object.values(CATEGORY_ARTS).find(entry => entry.keywords.some(keyword => raw.includes(keyword)));
+      return match || CATEGORY_ARTS.otros;
+    }
     const normalize = value => String(value || "").replace(/\D/g,"").slice(0,4);
     const countText = ts => { const left = Math.max(0, Math.ceil((ts - Date.now()) / 1000)); return `${String(Math.floor(left / 60)).padStart(2,"0")}:${String(left % 60).padStart(2,"0")}`; };
     const lineFor = id => FUN_LINES[[...id].reduce((a,c)=>a + c.charCodeAt(0), 0) % FUN_LINES.length];
@@ -664,6 +740,7 @@
       return question?.explanation || `Dato flash: la respuesta correcta era ${answer}. Ahora ya no se te escapa en la siguiente ronda.`;
     };
     const activeQuestionSet = () => Array.isArray(state.game.questionSet) && state.game.questionSet.length ? state.game.questionSet : QUESTION_BANK;
+    const gameDefaults = () => ({phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",selectedDurationValue:15,votes:{},question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}});
     const roundSeconds = () => Number(state.game.questionLeadSeconds || 6) + Number(state.game.answerSeconds || 15) + 10;
     const plannedQuestionCount = () => {
       if(state.game.selectedDuration === "questions") return Math.max(5, Number(state.game.selectedDurationValue || 15));
@@ -677,6 +754,114 @@
       if(state.game.selectedDuration === "olympic") return "40 min";
       return "";
     };
+    const scorePairKey = pair => [...(pair || [])].sort().join("|");
+    const versusMoveById = id => VERSUS_MOVES.find(move => move.id === id) || VERSUS_MOVES[0];
+    const versusBeats = (left, right) => (left === "rock" && right === "scissors") || (left === "paper" && right === "rock") || (left === "scissors" && right === "paper");
+    function readyPlayers(){
+      return state.players.filter(player => player.ready);
+    }
+    function findPlayer(playerId){
+      return state.players.find(player => player.playerId === playerId) || null;
+    }
+    function currentTiePair(scores){
+      const buckets = new Map();
+      readyPlayers().forEach(player => {
+        const score = Number((scores || {})[player.playerId] || 0);
+        if(!buckets.has(score)) buckets.set(score, []);
+        buckets.get(score).push(player.playerId);
+      });
+      const tiedPairs = [...buckets.values()].filter(group => group.length === 2);
+      const crowded = [...buckets.values()].some(group => group.length > 2);
+      if(crowded || tiedPairs.length !== 1) return [];
+      return [...tiedPairs[0]].sort();
+    }
+    function evaluateTieTracker(scores){
+      const pair = currentTiePair(scores);
+      if(pair.length !== 2) return {streak:0,pair:[]};
+      const previous = state.game.tieTracker || {streak:0,pair:[]};
+      if(scorePairKey(previous.pair) === scorePairKey(pair)) return {streak:Number(previous.streak || 0) + 1,pair};
+      return {streak:1,pair};
+    }
+    function createVersusState(pair){
+      return {
+        pair:[...pair],
+        bestOf:3,
+        wins:{[pair[0]]:0,[pair[1]]:0},
+        roundNumber:1,
+        roundDeadline:Date.now() + (VERSUS_ROUND_SECONDS * 1000),
+        choices:{},
+        revealChoices:{},
+        roundWinnerId:"",
+        finalWinnerId:"",
+        awarded:false,
+        spectatorIds:readyPlayers().map(player => player.playerId).filter(playerId => !pair.includes(playerId))
+      };
+    }
+    function resetVersusRound(versus){
+      versus.choices = {};
+      versus.revealChoices = {};
+      versus.roundWinnerId = "";
+      versus.roundDeadline = Date.now() + (VERSUS_ROUND_SECONDS * 1000);
+      return versus;
+    }
+    function concludeVersusRound(versus){
+      const [playerA, playerB] = versus.pair || [];
+      const moveA = versus.choices?.[playerA] || "";
+      const moveB = versus.choices?.[playerB] || "";
+      versus.revealChoices = {...(versus.choices || {})};
+      if(!moveA && !moveB){
+        versus.roundWinnerId = "";
+      } else if(!moveA){
+        versus.roundWinnerId = playerB;
+      } else if(!moveB){
+        versus.roundWinnerId = playerA;
+      } else if(moveA === moveB){
+        versus.roundWinnerId = "";
+      } else {
+        versus.roundWinnerId = versusBeats(moveA, moveB) ? playerA : playerB;
+      }
+      if(versus.roundWinnerId){
+        versus.wins[versus.roundWinnerId] = Number(versus.wins[versus.roundWinnerId] || 0) + 1;
+      }
+      const neededWins = Math.ceil(Number(versus.bestOf || 3) / 2);
+      const winner = versus.pair.find(playerId => Number(versus.wins[playerId] || 0) >= neededWins) || "";
+      if(winner){
+        versus.finalWinnerId = winner;
+        return versus;
+      }
+      versus.roundNumber = Number(versus.roundNumber || 1) + 1;
+      return resetVersusRound(versus);
+    }
+    function resetGameToSetup(clearScores = false){
+      const next = gameDefaults();
+      state.game.phase = "setup";
+      state.game.finished = false;
+      state.game.finishedAt = 0;
+      state.game.allowVotes = false;
+      state.game.voteDeadline = 0;
+      state.game.votes = {};
+      state.game.question = null;
+      state.game.questionIndex = 0;
+      state.game.questionSet = [];
+      state.game.lastRoundScores = {};
+      state.game.tieTracker = next.tieTracker;
+      state.game.versus = null;
+      state.game.selectedMode = "classic";
+      state.game.selectedDuration = "questions";
+      state.game.selectedDurationValue = 15;
+      if(clearScores) state.game.scores = {};
+    }
+    function maybeStartVersus(){
+      const nextTie = evaluateTieTracker(state.game.scores || {});
+      state.game.tieTracker = nextTie;
+      if(Number(nextTie.streak || 0) >= 2 && (nextTie.pair || []).length === 2){
+        state.game.phase = "versus";
+        state.game.versus = createVersusState(nextTie.pair);
+        return true;
+      }
+      state.game.versus = null;
+      return false;
+    }
     function createLoopDeck(sources, targetVolume){
       const tracks = [new Audio(), new Audio()];
       tracks.forEach(track => { track.preload = "auto"; track.loop = false; track.volume = 0; });
@@ -1119,7 +1304,7 @@
     async function exportAvatar(){ if(state.avatar.kind === "emoji") return emojiDataUrl(state.avatar.emoji); const img = await readSource(state.avatar.src); const size = 220; const canvas = document.createElement("canvas"); canvas.width = size; canvas.height = size; const ctx = canvas.getContext("2d"); ctx.save(); ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.clip(); ctx.translate(size / 2, size / 2); ctx.translate(state.avatar.x, state.avatar.y); ctx.scale(state.avatar.s, state.avatar.s); ctx.drawImage(img, -img.width / 2, -img.height / 2, img.width, img.height); ctx.restore(); return canvas.toDataURL("image/png"); }
     function renderPlayerRows(players){ if(!players.length) return `<article class="playerCard"><div class="sceneStack"><div class="playerName">Nadie todavia</div><div class="playerSub">La sala espera al primer dino.</div></div></article>`; return players.map(player => `<article class="playerCard"><div class="avatarStack">${player.ready && player.avatarSrc ? `<div class="avatarShot"><img src="${player.avatarSrc}" alt=""></div>` : `<div class="dinoHole">\uD83E\uDD96</div>`}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="sceneStack" style="gap:6px"><div class="playerName">${esc(player.ready ? player.name : (player.waitingLine || lineFor(player.playerId)))}</div><div class="playerSub">${esc(player.ready ? (player.role === "host" ? "Anfitrion listo" : "Invitado listo") : "Aun no ha pulsado listo")}</div></div></article>`).join(""); }
     function dedupePlayers(raw){ const map = new Map(); raw.forEach(entry => { const prev = map.get(entry.playerId); if(!prev || entry.updatedAt > prev.updatedAt) map.set(entry.playerId, entry); }); return [...map.values()].sort((a,b) => { if(a.role !== b.role) return a.role === "host" ? -1 : 1; if(a.ready !== b.ready) return a.ready ? -1 : 1; return String(a.name || a.waitingLine).localeCompare(String(b.name || b.waitingLine), "es"); }); }
-    function scoreEntries(){ return state.players.filter(player => player.ready).map(player => ({playerId:player.playerId,name:player.name,avatarSrc:player.avatarSrc,score:(state.game.scores && state.game.scores[player.playerId]) || 0})).sort((a,b) => b.score - a.score || a.name.localeCompare(b.name, "es")); }
+    function scoreEntries(){ return readyPlayers().map(player => ({playerId:player.playerId,name:player.name,avatarSrc:player.avatarSrc,score:(state.game.scores && state.game.scores[player.playerId]) || 0})).sort((a,b) => b.score - a.score || a.name.localeCompare(b.name, "es")); }
     function renderProfileScene(){
       const guestDraft = state.role === "guest" && !!state.roomCode;
       ui.profileKicker.textContent = state.role === "host" ? "Perfil" : "Invitado";
@@ -1258,15 +1443,75 @@
     function renderCountdownScene(){ const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - Date.now()) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; ui.countdownCategory.textContent = next?.type === "speed" ? `Test de velocidad · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general"); ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">Pausar</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
     function renderQuestionScene(){ const question = state.game.question || {prompt:"",choices:[],correct:0,endAt:Date.now(),revealed:false,responses:{}}; const choices = Array.isArray(question.choices) ? question.choices : []; const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt; const left = answersVisible ? Math.max(0, Math.ceil((question.endAt - Date.now()) / 1000)) : Math.max(0, Math.ceil((question.answersVisibleAt - Date.now()) / 1000)); const total = answersVisible ? Math.max(1, Number(state.game.answerSeconds || 15)) : Math.max(1, Number(state.game.questionLeadSeconds || 6)); const progress = Math.max(0, Math.min(1, left / total)); const isSpeed = question.type === "speed"; const wasCorrect = isSpeed ? question.scores?.[state.localAnswer] > 0 : state.localAnswer === question.correct; ui.questionPrompt.textContent = question.prompt; ui.questionCopy.textContent = question.revealed ? (isSpeed ? "Tiempo. Mira el ranking completo del test de velocidad." : "Tiempo. Mira la correcta y quédate con el dato curioso.") : (answersVisible ? (isSpeed ? "Test de velocidad. Cada respuesta se bloquea al instante y da puntos distintos." : (state.role === "host" ? `Pregunta ${(state.game.questionIndex || 0) + 1} de ${activeQuestionSet().length}` : "Marca tu respuesta antes de que termine la cuenta atras.")) : (isSpeed ? "Atencion: se acerca un test de velocidad." : "Lee la pregunta. Las opciones aparecen enseguida.")); ui.questionTimer.textContent = String(left); ui.questionTimerRing.style.setProperty("--timer", progress); if(!answersVisible){ ui.questionAnswers.innerHTML = `<article class="answerCard" style="justify-content:center;text-align:center"><span class="answerText">${isSpeed ? "Preparando test de velocidad..." : "Preparando respuestas..."}</span></article>`; return; } const taken = {}; Object.entries(question.responses || {}).forEach(([playerId,response]) => { if(Number.isInteger(Number(response?.answerIndex))) taken[Number(response.answerIndex)] = playerId; }); const cards = choices.map((answer, index) => { const revealCorrect = !isSpeed && question.revealed && question.correct === index; const revealWrong = !isSpeed && question.revealed && state.localAnswer === index && state.localAnswer !== question.correct; const sparkle = !isSpeed && question.revealed && wasCorrect && revealCorrect; const lockedBy = taken[index] && taken[index] !== state.playerId; const mineLocked = taken[index] && taken[index] === state.playerId; const speedScore = isSpeed && question.revealed ? Number(question.scores?.[index] || 0) : null; const speedRank = isSpeed && question.revealed ? Number(question.ranking?.find(item => item.text === answer)?.rank || 0) : 0; return `<button class="answerCard ${state.localAnswer === index ? "active" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""} ${sparkle ? "sparkle" : ""} ${isSpeed && speedScore > 0 ? "correct" : ""} ${isSpeed && question.revealed && speedScore === 0 ? "wrong" : ""}" data-answer="${index}" ${(question.revealed || left === 0 || (isSpeed && (lockedBy || mineLocked))) ? "disabled" : ""}><span class="answerText"><span class="answerKey">${String.fromCharCode(65 + index)}</span> ${esc(answer)}</span><span class="answerState">${isSpeed ? (question.revealed ? `${speedRank ? `#${speedRank}` : ""} ${speedScore} pts` : (mineLocked ? "Tuya" : (lockedBy ? "Bloqueada" : "Coger"))) : (revealCorrect ? "Correcta" : (revealWrong ? "Tu respuesta" : (state.localAnswer === index ? "Elegida" : "Elegir")))}</span></button>`; }).join(""); const ranking = isSpeed && question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Orden correcto</span><strong>${esc(question.category || "Test de velocidad")}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" · ")}</p></article>` : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Fun fact</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : ""); ui.questionAnswers.innerHTML = ranking + cards; ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => { btn.onclick = async () => { const answerIndex = Number(btn.dataset.answer); const answeredAt = Date.now(); if(isSpeed){ const occupied = Object.values(question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex); if(occupied) return; } state.localAnswer = answerIndex; renderQuestionScene(); if(state.role === "host"){ if(isSpeed && Object.values(state.game.question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex)) return; state.game.question.responses[state.playerId] = {answerIndex,answeredAt}; await broadcastGame(); } else { await state.channel.send({type:"broadcast",event:"guest_answer",payload:{playerId:state.playerId,answerIndex,answeredAt}}); } }; }); }
     function renderAnswerScene(){ const question = state.game.question; const choices = Array.isArray(question.choices) ? question.choices : []; ui.answerCorrect.textContent = choices[question.correct] || ""; ui.answerPrompt.textContent = question.prompt; }
-    function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? "Lider actual" : "En carrera"}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>Aun no hay puntuaciones.</p>`; if(finished){ ui.scoresTitle.textContent = win ? "Victoria Jurasica!" : "Has perdido :("; ui.scoresLead.textContent = win ? `Te coronas con ${myScore} puntos. Rugido de campeon.` : "Te tocara saborear las sobras. Pero la proxima remontas."; } else { ui.scoresTitle.textContent = leader ? `${leader.name} lidera la partida` : "Puntuacion del round"; ui.scoresLead.textContent = leader ? `${leader.score} puntos acumulados` : "Todavia no hay puntuaciones."; } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">Continuar partida</button><button class="btn btnGhost" id="btnNewGame" type="button">Partida nueva</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; state.game.phase = "setup"; state.game.finished = false; state.game.finishedAt = 0; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.votes = {}; state.game.question = null; state.game.questionIndex = 0; state.game.questionSet = []; state.game.lastRoundScores = {}; await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; state.game.phase = "setup"; state.game.finished = false; state.game.finishedAt = 0; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.votes = {}; state.game.question = null; state.game.questionIndex = 0; state.game.questionSet = []; state.game.lastRoundScores = {}; state.game.scores = {}; await broadcastGame(); renderCurrentScene(); }; } }
+    function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? "Lider actual" : "En carrera"}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>Aun no hay puntuaciones.</p>`; if(finished){ ui.scoresTitle.textContent = win ? "Victoria Jurasica!" : "Has perdido :("; ui.scoresLead.textContent = win ? `Te coronas con ${myScore} puntos. Rugido de campeon.` : "Te tocara saborear las sobras. Pero la proxima remontas."; } else { ui.scoresTitle.textContent = leader ? `${leader.name} lidera la partida` : "Puntuacion del round"; ui.scoresLead.textContent = leader ? `${leader.score} puntos acumulados` : "Todavia no hay puntuaciones."; } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">Continuar partida</button><button class="btn btnGhost" id="btnNewGame" type="button">Partida nueva</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); }; } }
+    function renderVersusPlayerCard(playerId, activeId, revealedChoices){
+      const player = findPlayer(playerId);
+      const choiceId = revealedChoices?.[playerId] || "";
+      const choice = choiceId ? versusMoveById(choiceId) : null;
+      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong>${esc(player?.name || "Jugador")}</strong><span class="playerSub">${playerId === state.playerId ? "Tu duelo" : "Duelo en curso"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Esperando tu marca" : "Sin revelar")}</div>`;
+    }
+    function renderVersusScene(){
+      const versus = state.game.versus || {};
+      const [playerA, playerB] = versus.pair || [];
+      const contenderIds = [playerA, playerB].filter(Boolean);
+      const isContender = contenderIds.includes(state.playerId);
+      const canPick = isContender && !versus.finalWinnerId && Date.now() < Number(versus.roundDeadline || 0);
+      const countdown = Math.max(0, Math.ceil((Number(versus.roundDeadline || 0) - Date.now()) / 1000));
+      const playerAData = findPlayer(playerA);
+      const playerBData = findPlayer(playerB);
+      ui.versusLead.textContent = contenderIds.length === 2 ? `${playerAData?.name || "Jugador 1"} y ${playerBData?.name || "Jugador 2"} no pueden seguir empatando. Resolvamos esto como en la era jurasica.` : "Dos dinos no pueden seguir empatando.";
+      ui.versusPlayerA.className = `versusPlayer ${versus.roundWinnerId === playerA ? "active" : ""}`;
+      ui.versusPlayerB.className = `versusPlayer ${versus.roundWinnerId === playerB ? "active" : ""}`;
+      ui.versusPlayerA.innerHTML = renderVersusPlayerCard(playerA, canPick ? state.playerId : "", versus.revealChoices || {});
+      ui.versusPlayerB.innerHTML = renderVersusPlayerCard(playerB, canPick ? state.playerId : "", versus.revealChoices || {});
+      ui.versusScoreline.innerHTML = contenderIds.map(playerId => {
+        const player = findPlayer(playerId);
+        return `<span class="versusPill">${esc(player?.name || "Jugador")} <strong>${Number(versus.wins?.[playerId] || 0)}</strong></span>`;
+      }).join("") || `<span class="versusPill">Best of 3</span>`;
+      ui.versusTimer.textContent = String(countdown);
+      if(versus.finalWinnerId){
+        const winner = findPlayer(versus.finalWinnerId);
+        ui.versusRoundCopy.textContent = `${winner?.name || "Ganador"} gana el VS y se lleva ${VERSUS_BONUS_POINTS} puntos extra.`;
+      } else if(versus.roundWinnerId){
+        const winner = findPlayer(versus.roundWinnerId);
+        ui.versusRoundCopy.textContent = `${winner?.name || "Ganador"} gana esta mano. Seguimos con el mejor de 3.`;
+      } else if(countdown === 0){
+        ui.versusRoundCopy.textContent = "Tiempo. Resolviendo la mano...";
+      } else if(isContender){
+        ui.versusRoundCopy.textContent = "Teneis 5 segundos para marcar.";
+      } else {
+        ui.versusRoundCopy.textContent = "Solo los duelistas pueden marcar. El resto observa.";
+      }
+      ui.versusButtons.innerHTML = VERSUS_MOVES.map(move => {
+        const mine = (versus.choices || {})[state.playerId] === move.id;
+        const winningMove = versus.roundWinnerId && Object.entries(versus.revealChoices || {}).some(([playerId, value]) => playerId === versus.roundWinnerId && value === move.id);
+        return `<button class="versusMove ${mine ? "active" : ""} ${winningMove ? "win" : ""}" data-versus-move="${move.id}" type="button" ${canPick ? "" : "disabled"}><span class="versusGlyph">${move.glyph}</span><strong>${move.label}</strong></button>`;
+      }).join("");
+      const spectators = (versus.spectatorIds || []).map(playerId => findPlayer(playerId)?.name).filter(Boolean);
+      ui.versusSpectators.innerHTML = spectators.length ? `<strong>Mirando el duelo:</strong> ${spectators.map(name => esc(name)).join(" · ")}` : "No hay espectadores en este VS.";
+      ui.versusButtons.querySelectorAll("[data-versus-move]").forEach(btn => {
+        btn.onclick = async () => {
+          if(!canPick) return;
+          const move = btn.dataset.versusMove;
+          if(!move) return;
+          state.game.versus.choices[state.playerId] = move;
+          if(state.role === "host"){
+            await broadcastGame();
+          } else {
+            await state.channel.send({type:"broadcast",event:"guest_versus_choice",payload:{playerId:state.playerId,move}});
+          }
+          renderCurrentScene();
+        };
+      });
+    }
     function renderGeneratingScene(){ const line = GENERATING_LINES[Math.floor(Date.now() / 3200) % GENERATING_LINES.length]; ui.generatingLine.textContent = line; }
     function showScene(name){ Object.entries(ui.scenes).forEach(([key,node]) => node.classList.toggle("on", key === name)); }
-    function currentScene(){ if(state.role === "guest" && !state.roomCode) return "join"; if(!state.ready) return "profile"; if(state.game.phase === "lobby") return "lobby"; if(state.game.phase === "setup") return state.role === "guest" && !state.game.allowVotes ? "lobby" : "setup"; if(state.game.phase === "generating") return "generating"; if(state.game.phase === "paused") return "paused"; if(state.game.phase === "countdown") return "countdown"; if(state.game.phase === "question" || state.game.phase === "answer") return "question"; if(state.game.phase === "scores") return "scores"; return "lobby"; }
-    function renderCurrentScene(){ updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderGeneratingScene(); renderPausedScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); renderScoresScene(); saveSession(); showScene(currentScene()); syncAudio(); syncCastSession(); }
+    function currentScene(){ if(state.role === "guest" && !state.roomCode) return "join"; if(!state.ready) return "profile"; if(state.game.phase === "lobby") return "lobby"; if(state.game.phase === "setup") return state.role === "guest" && !state.game.allowVotes ? "lobby" : "setup"; if(state.game.phase === "generating") return "generating"; if(state.game.phase === "paused") return "paused"; if(state.game.phase === "countdown") return "countdown"; if(state.game.phase === "question" || state.game.phase === "answer") return "question"; if(state.game.phase === "scores") return "scores"; if(state.game.phase === "versus") return "versus"; return "lobby"; }
+    function renderCurrentScene(){ updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderGeneratingScene(); renderPausedScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); renderScoresScene(); renderVersusScene(); saveSession(); showScene(currentScene()); syncAudio(); syncCastSession(); }
     async function updatePresence(){ if(!state.channel) return; await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready ? (state.avatar.rendered || state.avatar.src) : "",updatedAt:Date.now()}); }
     async function broadcastGame(){ if(state.role !== "host" || !state.channel) return; await state.channel.send({type:"broadcast",event:"game_state",payload:state.game}); }
     function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
-    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || {phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",selectedDurationValue:15,votes:{},question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}}; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; if(!["question","answer"].includes(payload.phase)) state.localAnswer = null; if(payload.phase === "question" && state.game.question && payload.question && payload.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = payload; renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_vote"},({payload}) => { if(state.role !== "host" || !payload) return; state.game.votes[payload.playerId] = {name:payload.name,mode:payload.mode || "",duration:payload.duration || ""}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; state.game.question.responses[payload.playerId] = {answerIndex:payload.answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(!options.silentStatus) setStatus(role === "host" ? "Sala creada. Prepara tu avatar." : "Ya estas dentro. Configura tu avatar.","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
+    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; if(!["question","answer"].includes(payload.phase)) state.localAnswer = null; if(payload.phase === "question" && state.game.question && payload.question && payload.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...payload}; renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_vote"},({payload}) => { if(state.role !== "host" || !payload) return; state.game.votes[payload.playerId] = {name:payload.name,mode:payload.mode || "",duration:payload.duration || ""}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; state.game.question.responses[payload.playerId] = {answerIndex:payload.answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(!options.silentStatus) setStatus(role === "host" ? "Sala creada. Prepara tu avatar." : "Ya estas dentro. Configura tu avatar.","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
     function sampleStandardQuestion(){
       return {
         prompt:"En la pelicula 'Pulp Fiction', que numero de hamburguesa pide Jules Winfield antes de citar su famoso pasaje biblico?",
@@ -1603,9 +1848,143 @@
     window.addEventListener("mouseup", endDrag);
     window.addEventListener("touchend", () => { pinch = null; endDrag(); });
     ui.btnReady.onclick = async () => { ensureAudioReady(); const name = ui.nameInput.value.trim(); if(!name){ setStatus("Necesito tu nombre antes de continuar.","danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus("Prepara tu avatar antes de continuar.","danger"); return; } state.name = name; if(!state.avatar.rendered) state.avatar.rendered = await exportAvatar(); state.ready = true; await updatePresence(); syncPlayers(); setStatus("Tu ficha ya esta lista.","ok"); renderCurrentScene(); };
-    ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.votes = {}; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; await broadcastGame(); renderCurrentScene(); };
+    ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.votes = {}; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; state.game.lastRoundScores = {}; state.game.tieTracker = {streak:0,pair:[]}; state.game.versus = null; await broadcastGame(); renderCurrentScene(); };
     ui.voteToggle.onclick = async () => { if(state.role !== "host") return; state.game.allowVotes = !state.game.allowVotes; state.game.voteDeadline = state.game.allowVotes ? (Date.now() + 60000) : 0; await broadcastGame(); renderCurrentScene(); };
-    setInterval(async () => { if(state.game.phase === "setup" && state.game.allowVotes && state.game.voteDeadline){ ui.hostVoteCountdown.textContent = countText(state.game.voteDeadline); if(Date.now() >= state.game.voteDeadline && state.role === "host"){ if(!state.game.selectedMode) state.game.selectedMode = "classic"; if(!state.game.selectedDuration) state.game.selectedDuration = "olympic"; if(state.game.selectedDuration === "olympic") state.game.selectedDurationValue = 40; state.game.allowVotes = false; await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "generating"){ renderGeneratingScene(); } if(state.game.phase === "countdown"){ renderCountdownScene(); if(state.role === "host" && state.game.countdownEndAt && Date.now() >= state.game.countdownEndAt){ const bank = activeQuestionSet(); const q = bank[state.game.questionIndex || 0]; const prepared = prepareQuestion(q); const leadMs = Math.max(0, Number(state.game.questionLeadSeconds || 6)) * 1000; const answerMs = Math.max(5, Number(state.game.answerSeconds || 15)) * 1000; const answersVisibleAt = Date.now() + leadMs; state.game.phase = "question"; state.game.question = {type:prepared.type || "standard",prompt:prepared.prompt, category:prepared.category, choices:prepared.choices, correct:prepared.correct, scores:prepared.scores || [], ranking:prepared.ranking || [], answersVisibleAt, endAt:answersVisibleAt + answerMs, responses:{}, revealed:false, explanation:prepared.explanation || ""}; await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "question" && state.game.question){ renderQuestionScene(); if(Date.now() >= state.game.question.endAt && !state.game.question.revealed && state.role === "host"){ state.game.question.revealed = true; const scores = {...(state.game.scores || {})}; const deltas = {}; const responses = Object.entries(state.game.question.responses || {}).map(([playerId, response]) => ({playerId,answerIndex:Number(response?.answerIndex),answeredAt:Number(response?.answeredAt || Number.MAX_SAFE_INTEGER)})); if(state.game.question.type === "speed"){ responses.forEach(entry => { const gain = Number(state.game.question.scores?.[entry.answerIndex] || 0); scores[entry.playerId] = (scores[entry.playerId] || 0) + gain; deltas[entry.playerId] = gain; }); } else { const correct = responses.filter(entry => entry.answerIndex === state.game.question.correct).sort((a,b) => a.answeredAt - b.answeredAt); correct.forEach((entry, idx) => { const gain = idx === 0 && correct.length > 1 ? 110 : 100; scores[entry.playerId] = (scores[entry.playerId] || 0) + gain; deltas[entry.playerId] = gain; }); } state.game.scores = scores; state.game.lastRoundScores = deltas; state.game.phase = "answer"; state.game.answerShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } } if(state.game.phase === "answer" && state.role === "host" && Date.now() - state.game.answerShownAt >= 7000){ state.game.phase = "scores"; state.game.scoresShownAt = Date.now(); await broadcastGame(); renderCurrentScene(); } if(state.game.phase === "scores"){ renderScoresScene(); if(state.role === "host" && !state.game.finished && Date.now() - state.game.scoresShownAt >= 8000){ state.localAnswer = null; if((state.game.questionIndex || 0) + 1 < activeQuestionSet().length){ state.game.questionIndex = (state.game.questionIndex || 0) + 1; state.game.phase = "countdown"; state.game.question = null; state.game.countdownEndAt = Date.now() + 4000; state.game.lastRoundScores = {}; await broadcastGame(); renderCurrentScene(); return; } state.game.finished = true; state.game.finishedAt = Date.now(); await broadcastGame(); renderCurrentScene(); } } }, 1000);
+    function renderCountdownScene(){ const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - Date.now()) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `Modo Velociraptor! · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general"); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = next?.category || "Categoria"; ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">Pausar</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
+    function renderQuestionScene(){ const question = state.game.question || {prompt:"",choices:[],correct:0,endAt:Date.now(),revealed:false,responses:{}}; const choices = Array.isArray(question.choices) ? question.choices : []; const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt; const left = answersVisible ? Math.max(0, Math.ceil((question.endAt - Date.now()) / 1000)) : Math.max(0, Math.ceil((question.answersVisibleAt - Date.now()) / 1000)); const total = answersVisible ? Math.max(1, Number(state.game.answerSeconds || 15)) : Math.max(1, Number(state.game.questionLeadSeconds || 6)); const progress = Math.max(0, Math.min(1, left / total)); const isSpeed = question.type === "speed"; const wasCorrect = isSpeed ? question.scores?.[state.localAnswer] > 0 : state.localAnswer === question.correct; const art = categoryArtFor(question.category || ""); ui.questionPrompt.textContent = question.prompt; ui.questionCopy.textContent = question.revealed ? (isSpeed ? "Tiempo. Mira el ranking completo del test de velocidad." : "Tiempo. Mira la correcta y quedate con el dato curioso.") : (answersVisible ? (isSpeed ? "Modo Velociraptor! Cada respuesta se bloquea al instante y da puntos distintos." : (state.role === "host" ? `Pregunta ${(state.game.questionIndex || 0) + 1} de ${activeQuestionSet().length}` : "Marca tu respuesta antes de que termine la cuenta atras.")) : (isSpeed ? "Atencion: se acerca un Modo Velociraptor!" : "Lee la pregunta. Las opciones aparecen enseguida.")); ui.questionTimer.textContent = String(left); ui.questionTimerRing.style.setProperty("--timer", progress); if(!answersVisible){ ui.questionAnswers.innerHTML = `<div class="categoryLead"><img class="categoryArt" src="${art.src}" alt="${esc(question.category || "Categoria")}"><article class="answerCard" style="justify-content:center;text-align:center"><span class="answerText">${isSpeed ? "Preparando Modo Velociraptor!" : "Preparando respuestas..."}</span></article></div>`; return; } const taken = {}; Object.entries(question.responses || {}).forEach(([playerId,response]) => { if(Number.isInteger(Number(response?.answerIndex))) taken[Number(response.answerIndex)] = playerId; }); const cards = choices.map((answer, index) => { const revealCorrect = !isSpeed && question.revealed && question.correct === index; const revealWrong = !isSpeed && question.revealed && state.localAnswer === index && state.localAnswer !== question.correct; const sparkle = !isSpeed && question.revealed && wasCorrect && revealCorrect; const lockedBy = taken[index] && taken[index] !== state.playerId; const mineLocked = taken[index] && taken[index] === state.playerId; const speedScore = isSpeed && question.revealed ? Number(question.scores?.[index] || 0) : null; const speedRank = isSpeed && question.revealed ? Number(question.ranking?.find(item => item.text === answer)?.rank || 0) : 0; return `<button class="answerCard ${state.localAnswer === index ? "active" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""} ${sparkle ? "sparkle" : ""} ${isSpeed && speedScore > 0 ? "correct" : ""} ${isSpeed && question.revealed && speedScore === 0 ? "wrong" : ""}" data-answer="${index}" ${(question.revealed || left === 0 || (isSpeed && (lockedBy || mineLocked))) ? "disabled" : ""}><span class="answerText"><span class="answerKey">${String.fromCharCode(65 + index)}</span> ${esc(answer)}</span><span class="answerState">${isSpeed ? (question.revealed ? `${speedRank ? `#${speedRank}` : ""} ${speedScore} pts` : (mineLocked ? "Tuya" : (lockedBy ? "Bloqueada" : "Coger"))) : (revealCorrect ? "Correcta" : (revealWrong ? "Tu respuesta" : (state.localAnswer === index ? "Elegida" : "Elegir")))}</span></button>`; }).join(""); const ranking = isSpeed && question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">âœ¦ âœ¨ â˜… âœ¨ âœ¦</div>` : ""}<span class="kicker">Orden correcto</span><strong>${esc(question.category || "Modo Velociraptor!")}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" · ")}</p></article>` : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">âœ¦ âœ¨ â˜… âœ¨ âœ¦</div>` : ""}<span class="kicker">Fun fact</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : ""); ui.questionAnswers.innerHTML = ranking + cards; ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => { btn.onclick = async () => { const answerIndex = Number(btn.dataset.answer); const answeredAt = Date.now(); if(isSpeed){ const occupied = Object.values(question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex); if(occupied) return; } state.localAnswer = answerIndex; renderQuestionScene(); if(state.role === "host"){ if(isSpeed && Object.values(state.game.question.responses || {}).some(response => Number(response?.answerIndex) === answerIndex)) return; state.game.question.responses[state.playerId] = {answerIndex,answeredAt}; await broadcastGame(); } else { await state.channel.send({type:"broadcast",event:"guest_answer",payload:{playerId:state.playerId,answerIndex,answeredAt}}); } }; }); }
+    setInterval(async () => {
+      if(state.game.phase === "setup" && state.game.allowVotes && state.game.voteDeadline){
+        ui.hostVoteCountdown.textContent = countText(state.game.voteDeadline);
+        if(Date.now() >= state.game.voteDeadline && state.role === "host"){
+          if(!state.game.selectedMode) state.game.selectedMode = "classic";
+          if(!state.game.selectedDuration) state.game.selectedDuration = "olympic";
+          if(state.game.selectedDuration === "olympic") state.game.selectedDurationValue = 40;
+          state.game.allowVotes = false;
+          await broadcastGame();
+          renderCurrentScene();
+        }
+      }
+      if(state.game.phase === "generating"){
+        renderGeneratingScene();
+      }
+      if(state.game.phase === "countdown"){
+        renderCountdownScene();
+        if(state.role === "host" && state.game.countdownEndAt && Date.now() >= state.game.countdownEndAt){
+          const bank = activeQuestionSet();
+          const q = bank[state.game.questionIndex || 0];
+          const prepared = prepareQuestion(q);
+          const leadMs = Math.max(0, Number(state.game.questionLeadSeconds || 6)) * 1000;
+          const answerMs = Math.max(5, Number(state.game.answerSeconds || 15)) * 1000;
+          const answersVisibleAt = Date.now() + leadMs;
+          state.game.phase = "question";
+          state.game.question = {type:prepared.type || "standard",prompt:prepared.prompt, category:prepared.category, choices:prepared.choices, correct:prepared.correct, scores:prepared.scores || [], ranking:prepared.ranking || [], answersVisibleAt, endAt:answersVisibleAt + answerMs, responses:{}, revealed:false, explanation:prepared.explanation || ""};
+          await broadcastGame();
+          renderCurrentScene();
+        }
+      }
+      if(state.game.phase === "question" && state.game.question){
+        renderQuestionScene();
+        if(Date.now() >= state.game.question.endAt && !state.game.question.revealed && state.role === "host"){
+          state.game.question.revealed = true;
+          const scores = {...(state.game.scores || {})};
+          const deltas = {};
+          const responses = Object.entries(state.game.question.responses || {}).map(([playerId, response]) => ({playerId,answerIndex:Number(response?.answerIndex),answeredAt:Number(response?.answeredAt || Number.MAX_SAFE_INTEGER)}));
+          if(state.game.question.type === "speed"){
+            responses.forEach(entry => {
+              const gain = Number(state.game.question.scores?.[entry.answerIndex] || 0);
+              scores[entry.playerId] = (scores[entry.playerId] || 0) + gain;
+              deltas[entry.playerId] = gain;
+            });
+          } else {
+            const correct = responses.filter(entry => entry.answerIndex === state.game.question.correct).sort((a,b) => a.answeredAt - b.answeredAt);
+            correct.forEach((entry, idx) => {
+              const gain = idx === 0 && correct.length > 1 ? 110 : 100;
+              scores[entry.playerId] = (scores[entry.playerId] || 0) + gain;
+              deltas[entry.playerId] = gain;
+            });
+          }
+          state.game.scores = scores;
+          state.game.lastRoundScores = deltas;
+          state.game.phase = "answer";
+          state.game.answerShownAt = Date.now();
+          await broadcastGame();
+          renderCurrentScene();
+        }
+      }
+      if(state.game.phase === "answer" && state.role === "host" && Date.now() - state.game.answerShownAt >= 7000){
+        state.game.phase = "scores";
+        state.game.scoresShownAt = Date.now();
+        await broadcastGame();
+        renderCurrentScene();
+      }
+      if(state.game.phase === "scores"){
+        renderScoresScene();
+        if(state.role === "host" && !state.game.finished && Date.now() - state.game.scoresShownAt >= 8000){
+          state.localAnswer = null;
+          if(maybeStartVersus()){
+            await broadcastGame();
+            renderCurrentScene();
+            return;
+          }
+          if((state.game.questionIndex || 0) + 1 < activeQuestionSet().length){
+            state.game.questionIndex = (state.game.questionIndex || 0) + 1;
+            state.game.phase = "countdown";
+            state.game.question = null;
+            state.game.countdownEndAt = Date.now() + 4000;
+            state.game.lastRoundScores = {};
+            await broadcastGame();
+            renderCurrentScene();
+            return;
+          }
+          state.game.finished = true;
+          state.game.finishedAt = Date.now();
+          await broadcastGame();
+          renderCurrentScene();
+        }
+      }
+      if(state.game.phase === "versus"){
+        renderVersusScene();
+        if(state.role === "host" && state.game.versus){
+          const versus = state.game.versus;
+          const bothChosen = (versus.pair || []).length === 2 && (versus.pair || []).every(playerId => !!versus.choices?.[playerId]);
+          if(!versus.finalWinnerId && (bothChosen || Date.now() >= Number(versus.roundDeadline || 0))){
+            concludeVersusRound(versus);
+            await broadcastGame();
+            renderCurrentScene();
+            return;
+          }
+          if(versus.finalWinnerId && !versus.awarded){
+            const winnerId = versus.finalWinnerId;
+            state.game.scores = {...(state.game.scores || {}), [winnerId]:Number((state.game.scores || {})[winnerId] || 0) + VERSUS_BONUS_POINTS};
+            state.game.lastRoundScores = {[winnerId]:VERSUS_BONUS_POINTS};
+            state.game.tieTracker = {streak:0,pair:[]};
+            versus.awarded = true;
+            await broadcastGame();
+            renderCurrentScene();
+            return;
+          }
+          if(versus.finalWinnerId && versus.awarded){
+            if((state.game.questionIndex || 0) + 1 < activeQuestionSet().length){
+              state.game.questionIndex = (state.game.questionIndex || 0) + 1;
+              state.game.phase = "countdown";
+              state.game.question = null;
+              state.game.versus = null;
+              state.game.countdownEndAt = Date.now() + 4000;
+              await broadcastGame();
+              renderCurrentScene();
+              return;
+            }
+            state.game.versus = null;
+            state.game.finished = true;
+            state.game.finishedAt = Date.now();
+            state.game.phase = "scores";
+            state.game.scoresShownAt = Date.now();
+            await broadcastGame();
+            renderCurrentScene();
+          }
+        }
+      }
+    }, 1000);
     const savedSession = readSession();
     if(savedSession?.role && savedSession?.roomCode){ ui.btnContinue.hidden = false; }
     syncChoiceGroup(ui.customToneChoices, "tone", state.game.customConfig.tone);

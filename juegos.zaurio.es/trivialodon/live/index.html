@@ -125,6 +125,7 @@
       radial-gradient(circle at top,rgba(255,255,255,.06),transparent 48%),
       linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
     .countStage.heroStage{min-height:min(62vh,680px);width:min(1080px,94%)}
+    .categorySplash{width:min(190px,26vw);max-width:100%;display:block;justify-self:center;filter:drop-shadow(0 12px 26px rgba(0,0,0,.26))}
     .countLabel{font-size:.78rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
     .countCategory{font-size:clamp(2rem,3.2vw,3.1rem);font-weight:1000;line-height:1.04}
     .countBig{font-size:clamp(6rem,13vw,9rem);font-weight:1000;line-height:1;color:#fff;text-shadow:0 10px 30px rgba(255,216,74,.16)}
@@ -409,8 +410,17 @@
   <script>
     const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
-    const WAITING_AUDIO_SRCS = ["/trivialodon/assets/waiting.mp3","/trivialodon/assets/waiting 2.mp3","/trivialodon/assets/waiting 3.mp3"];
-    const ANSWERING_AUDIO_SRCS = ["/trivialodon/assets/answering.mp3","/trivialodon/assets/answering 2.mp3","/trivialodon/assets/answering 3.mp3"];
+    const WAITING_AUDIO_SRCS = ["/trivialodon/assets/waiting.mp3","/trivialodon/assets/waiting 2.mp3","/trivialodon/assets/waiting 3.mp3","/trivialodon/assets/waiting 4.mp3","/trivialodon/assets/waiting 5.mp3","/trivialodon/assets/waiting 6.mp3"];
+    const ANSWERING_AUDIO_SRCS = ["/trivialodon/assets/answering.mp3","/trivialodon/assets/answering 2.mp3","/trivialodon/assets/answering 3.mp3","/trivialodon/assets/answering 4.mp3","/trivialodon/assets/answering 5.mp3","/trivialodon/assets/answering 6.mp3","/trivialodon/assets/answering 7.mp3"];
+    const CATEGORY_ARTS = {
+      ciencia:{src:"/trivialodon/assets/ciencia.png", keywords:["ciencia","naturaleza","biologia","quimica","fisica","tecnologia","espacio","salud"]},
+      cineytv:{src:"/trivialodon/assets/cineytv.png", keywords:["cine","tv","television","series","peliculas","streaming","famosos"]},
+      friki:{src:"/trivialodon/assets/friki.png", keywords:["friki","geek","marvel","dc","anime","manga","videojuego","videojuegos","fantasia","superheroes","superheroe","comic","comics","star wars","star trek"]},
+      geografia:{src:"/trivialodon/assets/geografia.png", keywords:["geografia","mundo","paises","capitales","continentes","mapas","espana","viajes"]},
+      mundo_antiguo:{src:"/trivialodon/assets/mundo%20antiguo.png", keywords:["historia","antigua","antiguo","edad media","romanos","egipto","grecia","mundo antiguo","prehistoria"]},
+      psicologia:{src:"/trivialodon/assets/psicologia.png", keywords:["psicologia","mente","emociones","conducta","cerebro","personalidad"]},
+      otros:{src:"/trivialodon/assets/otros.png", keywords:[]}
+    };
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
     const params = new URLSearchParams(location.search);
     const $ = id => document.getElementById(id);
@@ -433,6 +443,20 @@
 
     const esc = value => String(value || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
     const normalize = value => String(value || "").replace(/\D/g,"").slice(0,4);
+    const normalizeCategory = value => String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+    function categoryArtFor(category){
+      const raw = normalizeCategory(category);
+      if(!raw) return CATEGORY_ARTS.otros;
+      const match = Object.values(CATEGORY_ARTS).find(entry =>
+        entry.keywords.some(keyword => raw.includes(keyword))
+      );
+      return match || CATEGORY_ARTS.otros;
+    }
     const countSeconds = ts => Math.max(0, Math.ceil((Number(ts || 0) - Date.now()) / 1000));
     const nextQuestion = () => Array.isArray(game.questionSet) ? game.questionSet[game.questionIndex || 0] : null;
     const scoreRows = () => players
@@ -994,6 +1018,94 @@
       ui.fact.classList.add("hidden");
       ui.answers.className = "answers";
       ui.answers.innerHTML = "";
+    }
+
+    function renderCountdown(){
+      const next = nextQuestion();
+      const left = countSeconds(game.countdownEndAt || Date.now());
+      const art = categoryArtFor(next?.category || "");
+      ui.hero.className = "hero center";
+      ui.category.textContent = "";
+      ui.prompt.textContent = "";
+      ui.copy.textContent = "";
+      setTimer("", 0, false);
+      ui.fact.classList.add("hidden");
+      ui.answers.className = "answers";
+      ui.answers.innerHTML = "";
+      ui.hero.innerHTML = `<div class="countStage heroStage">
+        <div class="countLabel">${next?.type === "speed" ? "Modo Velociraptor!" : "Siguiente ronda"}</div>
+        <img class="categorySplash" src="${art.src}" alt="${esc(next?.category || "Categoria")}">
+        <div class="countCategory">${esc(next?.category || "Categoria sorpresa")}</div>
+        <div class="countBig">${Math.max(1, left)}</div>
+        <div class="countText">${next?.type === "speed" ? "Se viene una ronda donde cada respuesta puntua distinto." : "Respira. Enseguida entra la siguiente pregunta."}</div>
+      </div>`;
+    }
+
+    function renderQuestion(){
+      const question = game.question || {};
+      const isSpeed = question.type === "speed";
+      const art = categoryArtFor(question.category || "");
+      const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt;
+      const justRevealed = answersVisible && !lastAnswersVisible;
+      lastAnswersVisible = answersVisible;
+      const leadLeft = countSeconds(question.answersVisibleAt || Date.now());
+      const answerLeft = countSeconds(question.endAt || Date.now());
+      const total = answersVisible ? Math.max(1, Number(game.answerSeconds || 15)) : Math.max(1, Number(game.questionLeadSeconds || 6));
+      const left = answersVisible ? answerLeft : leadLeft;
+      const categoryLabel = isSpeed ? `Modo Velociraptor! · ${question.category || "Categoria sorpresa"}` : (question.category || "Cultura general");
+      const copyLabel = !answersVisible ? "Lee la pregunta. Las opciones aparecen enseguida." : (isSpeed ? "Las respuestas se bloquean en directo y puntuan distinto." : "");
+      ui.category.textContent = categoryLabel;
+      ui.prompt.textContent = question.prompt || "Esperando pregunta...";
+      ui.copy.textContent = copyLabel;
+      setTimer(String(left), Math.max(0, Math.min(1, left / total)), true);
+      ui.hero.className = `hero ${answersVisible ? "compact" : "lead"}${justRevealed ? " revealed" : ""}`;
+      ui.hero.innerHTML = `<div class="titleWrap">
+            <span class="kick" id="category">${esc(categoryLabel)}</span>
+            ${!answersVisible ? `<img class="categorySplash" src="${art.src}" alt="${esc(question.category || "Categoria")}">` : ""}
+            <h1 class="title" id="prompt">${esc(question.prompt || "Esperando pregunta...")}</h1>
+            <p class="copy" id="copy">${esc(copyLabel)}</p>
+          </div>
+          <div class="timer${left || left === 0 ? "" : " hidden"}" id="timerRing" style="--timer:${Math.max(0, Math.min(1, left / total))}">
+            <div class="timerInner" id="timer">${esc(String(left))}</div>
+          </div>`;
+      if(!answersVisible){
+        ui.fact.classList.add("hidden");
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = "";
+        return;
+      }
+      const votes = voteMap(question);
+      const cards = (question.choices || []).map((choice, index) => {
+        const voters = votes[index] || [];
+        const locked = isSpeed && voters.length > 0;
+        const revealCorrect = !isSpeed && question.revealed && question.correct === index;
+        const revealWrong = isSpeed && question.revealed && Number(question.scores?.[index] || 0) === 0;
+        const stateLine = isSpeed
+          ? (question.revealed ? `${Number(question.scores?.[index] || 0)} pts` : (locked ? "Cogida" : "Libre"))
+          : (question.revealed ? (revealCorrect ? "Correcta" : `${voters.length} voto${voters.length === 1 ? "" : "s"}`) : `${voters.length} voto${voters.length === 1 ? "" : "s"}`);
+        const visibleVoters = voters.slice(0, 6).map(player => avatarBubble(player)).join("");
+        const overflow = voters.length > 6 ? `<span class="voteMore">+${voters.length - 6}</span>` : "";
+        return `<article class="answer ${locked ? "selected" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""}">
+          <div class="answerTop">
+            <div class="aText"><span class="aKey">${String.fromCharCode(65 + index)}</span>${esc(choice)}</div>
+            <div class="aState">${esc(stateLine)}</div>
+          </div>
+          <div class="voteCloud">${visibleVoters}${overflow}</div>
+        </article>`;
+      }).join("");
+      ui.answers.className = `answers questionBoard${justRevealed ? " revealed" : ""}`;
+      ui.answers.innerHTML = cards || `<div class="empty" style="grid-column:1/-1">La pregunta aparecera aqui.</div>`;
+      if(question.revealed && isSpeed && Array.isArray(question.ranking) && question.ranking.length){
+        ui.fact.classList.remove("hidden");
+        ui.factKick.textContent = "Orden correcto";
+        ui.factText.textContent = question.ranking.map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" · ");
+      } else if(question.revealed && question.explanation){
+        ui.fact.classList.remove("hidden");
+        ui.factKick.textContent = "Fun fact";
+        ui.factText.textContent = question.explanation;
+      } else {
+        ui.fact.classList.add("hidden");
+      }
     }
 
     function render(){
