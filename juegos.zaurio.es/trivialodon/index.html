@@ -573,8 +573,8 @@
     const STORAGE_KEY = "trivialodon-session-v1";
     const SOUND_KEY = "trivialodon-sound-muted-v1";
     const SOUND_VOLUME_KEY = "trivialodon-sound-volume-v1";
-    const WAITING_AUDIO_SRC = "/trivialodon/assets/waiting.mp3";
-    const ANSWERING_AUDIO_SRC = "/trivialodon/assets/answering.mp3";
+    const WAITING_AUDIO_SRCS = ["/trivialodon/assets/waiting.mp3","/trivialodon/assets/waiting 2.mp3","/trivialodon/assets/waiting 3.mp3"];
+    const ANSWERING_AUDIO_SRCS = ["/trivialodon/assets/answering.mp3","/trivialodon/assets/answering 2.mp3","/trivialodon/assets/answering 3.mp3"];
     const WINNER_AUDIO_SRC = "/trivialodon/assets/winner.mp3";
     const LOSER_AUDIO_SRC = "/trivialodon/assets/loser.mp3";
     const CAST_APP_ID = "C5432B88";
@@ -677,14 +677,42 @@
       if(state.game.selectedDuration === "olympic") return "40 min";
       return "";
     };
-    function createLoopDeck(src, targetVolume){
-      const tracks = [new Audio(src), new Audio(src)];
+    function createLoopDeck(sources, targetVolume){
+      const tracks = [new Audio(), new Audio()];
       tracks.forEach(track => { track.preload = "auto"; track.loop = false; track.volume = 0; });
-      return {tracks, activeIndex:0, baseVolume:targetVolume, targetVolume:targetVolume, playing:false, transition:false, handoffSeconds:.45};
+      return {tracks, sources:[...(sources || [])], activeIndex:0, baseVolume:targetVolume, targetVolume:targetVolume, playing:false, transition:false, handoffSeconds:.45, lastSourceIndex:-1};
     }
-    audioState.decks.waiting = createLoopDeck(WAITING_AUDIO_SRC, .34);
-    audioState.decks.answering = createLoopDeck(ANSWERING_AUDIO_SRC, .38);
-    [audioState.winner,audioState.loser].forEach(track => { track.preload = "auto"; });
+    function pickDeckSourceIndex(deck, excludeIndex = -1){
+      const total = deck?.sources?.length || 0;
+      if(total <= 1) return 0;
+      const options = [];
+      for(let i = 0; i < total; i++){
+        if(i !== excludeIndex && i !== deck.lastSourceIndex) options.push(i);
+      }
+      if(!options.length){
+        for(let i = 0; i < total; i++){
+          if(i !== excludeIndex) options.push(i);
+        }
+      }
+      return options[Math.floor(Math.random() * options.length)];
+    }
+    function assignTrackSource(track, deck, sourceIndex){
+      const src = deck.sources[sourceIndex] || deck.sources[0] || "";
+      if(!src) return;
+      if(track.__trivialodonSrc !== src){
+        safePause(track);
+        safeRewind(track);
+        track.src = src;
+        track.__trivialodonSrc = src;
+        try{ track.load(); } catch(_){}
+      }
+      track.__trivialodonSourceIndex = sourceIndex;
+      deck.lastSourceIndex = sourceIndex;
+    }
+    audioState.decks.waiting = createLoopDeck(WAITING_AUDIO_SRCS, .34);
+    audioState.decks.answering = createLoopDeck(ANSWERING_AUDIO_SRCS, .38);
+    audioState.preloads = [...WAITING_AUDIO_SRCS, ...ANSWERING_AUDIO_SRCS].map(src => { const track = new Audio(src); track.preload = "auto"; return track; });
+    [audioState.winner,audioState.loser, ...(audioState.preloads || [])].forEach(track => { track.preload = "auto"; });
     function refreshAudioTargets(){
       audioState.decks.waiting.targetVolume = audioState.decks.waiting.baseVolume * audioState.volume;
       audioState.decks.answering.targetVolume = audioState.decks.answering.baseVolume * audioState.volume;
@@ -733,6 +761,7 @@
     function ensureDeckPlaying(deck){
       if(!deck || deck.playing) return;
       const track = activeTrack(deck);
+      assignTrackSource(track, deck, pickDeckSourceIndex(deck));
       safePause(track);
       safeRewind(track);
       track.volume = 0;
@@ -762,6 +791,7 @@
       const next = standbyTrack(deck);
       if(!current.duration || current.currentTime < Math.max(0, current.duration - deck.handoffSeconds)) return;
       deck.transition = true;
+      assignTrackSource(next, deck, pickDeckSourceIndex(deck, current.__trivialodonSourceIndex ?? -1));
       safePause(next);
       safeRewind(next);
       next.volume = 0;
@@ -780,7 +810,7 @@
     function primeAudio(){
       if(audioState.unlocked) return;
       audioState.unlocked = true;
-      [...audioState.decks.waiting.tracks, ...audioState.decks.answering.tracks, audioState.winner, audioState.loser].forEach(track => {
+      [...audioState.decks.waiting.tracks, ...audioState.decks.answering.tracks, ...(audioState.preloads || []), audioState.winner, audioState.loser].forEach(track => {
         try{ track.load(); } catch(_){}
       });
       syncAudio();

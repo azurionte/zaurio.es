@@ -403,8 +403,8 @@
   <script>
     const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
-    const WAITING_AUDIO_SRC = "/trivialodon/assets/waiting.mp3";
-    const ANSWERING_AUDIO_SRC = "/trivialodon/assets/answering.mp3";
+    const WAITING_AUDIO_SRCS = ["/trivialodon/assets/waiting.mp3","/trivialodon/assets/waiting 2.mp3","/trivialodon/assets/waiting 3.mp3"];
+    const ANSWERING_AUDIO_SRCS = ["/trivialodon/assets/answering.mp3","/trivialodon/assets/answering 2.mp3","/trivialodon/assets/answering 3.mp3"];
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
     const params = new URLSearchParams(location.search);
     const $ = id => document.getElementById(id);
@@ -447,14 +447,41 @@
     };
     const avatarBubble = player => player?.avatarSrc ? `<span class="voteAvatar"><img src="${player.avatarSrc}" alt="${esc(player.name || "Jugador")}"></span>` : `<span class="voteAvatar">🦖</span>`;
     const castBubble = player => player?.avatarSrc ? `<span class="castAvatar"><img src="${player.avatarSrc}" alt="${esc(player.name || "Jugador")}"></span>` : `<span class="castAvatar">🦖</span>`;
-    function createLoopDeck(src, targetVolume){
-      const tracks = [new Audio(src), new Audio(src)];
+    function createLoopDeck(sources, targetVolume){
+      const tracks = [new Audio(), new Audio()];
       tracks.forEach(track => { track.loop = false; track.preload = "auto"; track.volume = 0; });
-      return {tracks, activeIndex:0, targetVolume, playing:false, transition:false, handoffSeconds:.45};
+      return {tracks, sources:[...(sources || [])], activeIndex:0, targetVolume, playing:false, transition:false, handoffSeconds:.45, lastSourceIndex:-1};
+    }
+    function pickDeckSourceIndex(deck, excludeIndex = -1){
+      const total = deck?.sources?.length || 0;
+      if(total <= 1) return 0;
+      const options = [];
+      for(let i = 0; i < total; i++){
+        if(i !== excludeIndex && i !== deck.lastSourceIndex) options.push(i);
+      }
+      if(!options.length){
+        for(let i = 0; i < total; i++){
+          if(i !== excludeIndex) options.push(i);
+        }
+      }
+      return options[Math.floor(Math.random() * options.length)];
+    }
+    function assignTrackSource(track, deck, sourceIndex){
+      const src = deck.sources[sourceIndex] || deck.sources[0] || "";
+      if(!src) return;
+      if(track.__trivialodonSrc !== src){
+        try{ track.pause(); track.currentTime = 0; } catch(_){}
+        track.src = src;
+        track.__trivialodonSrc = src;
+        try{ track.load(); } catch(_){}
+      }
+      track.__trivialodonSourceIndex = sourceIndex;
+      deck.lastSourceIndex = sourceIndex;
     }
     if(soundEnabled){
-      liveAudio.decks.waiting = createLoopDeck(WAITING_AUDIO_SRC, .28);
-      liveAudio.decks.answering = createLoopDeck(ANSWERING_AUDIO_SRC, .34);
+      liveAudio.decks.waiting = createLoopDeck(WAITING_AUDIO_SRCS, .28);
+      liveAudio.decks.answering = createLoopDeck(ANSWERING_AUDIO_SRCS, .34);
+      liveAudio.preloads = [...WAITING_AUDIO_SRCS, ...ANSWERING_AUDIO_SRCS].map(src => { const track = new Audio(src); track.preload = "auto"; return track; });
     }
     function clearFade(track){
       const timer = liveAudio.fadeTimers.get(track);
@@ -483,6 +510,7 @@
     function ensureDeckPlaying(deck){
       if(!deck || deck.playing) return;
       const track = activeTrack(deck);
+      assignTrackSource(track, deck, pickDeckSourceIndex(deck));
       try{ track.pause(); track.currentTime = 0; } catch(_){}
       track.volume = 0;
       const attempt = track.play();
@@ -510,6 +538,7 @@
       const next = standbyTrack(deck);
       if(!current.duration || current.currentTime < Math.max(0, current.duration - deck.handoffSeconds)) return;
       deck.transition = true;
+      assignTrackSource(next, deck, pickDeckSourceIndex(deck, current.__trivialodonSourceIndex ?? -1));
       try{ next.pause(); next.currentTime = 0; } catch(_){}
       next.volume = 0;
       const attempt = next.play();
@@ -525,7 +554,7 @@
     function primeAudio(){
       if(!soundEnabled || liveAudio.unlocked) return;
       liveAudio.unlocked = true;
-      [...liveAudio.decks.waiting.tracks, ...liveAudio.decks.answering.tracks].forEach(track => {
+      [...liveAudio.decks.waiting.tracks, ...liveAudio.decks.answering.tracks, ...(liveAudio.preloads || [])].forEach(track => {
         try{ track.load(); } catch(_){}
       });
       syncAudio();
