@@ -365,6 +365,76 @@
     body.vertical.phase-question .voteCloud,body.vertical.phase-answer .voteCloud{gap:4px}
     body.vertical.phase-question .voteAvatar,body.vertical.phase-answer .voteAvatar{width:18px;height:18px}
     body.vertical.phase-question .voteMore,body.vertical.phase-answer .voteMore{height:18px;font-size:.58rem;padding:0 6px}
+    @media (max-width:480px) and (max-height:430px){
+      body.vertical{padding:6px}
+      body.vertical .app{height:calc(100dvh - 12px);gap:6px;grid-template-rows:auto minmax(0,1fr)}
+      body.vertical .top{padding:6px 8px;min-height:54px;border-radius:18px}
+      body.vertical .brand{width:min(84px,24vw)}
+      body.vertical .code{padding:6px 10px;font-size:.78rem}
+      body.vertical .card{padding:8px;gap:6px;border-radius:18px}
+      body.vertical .kick{padding:4px 8px;font-size:8px}
+      body.vertical .hero.center,
+      body.vertical .hero.lead,
+      body.vertical .hero.lobby,
+      body.vertical .hero.scores{min-height:0;gap:8px;align-content:start}
+      body.vertical .hero.compact{gap:4px}
+      body.vertical .titleWrap{gap:6px}
+      body.vertical .title{font-size:clamp(.94rem,4.8vw,1.32rem);line-height:.96}
+      body.vertical .copy{font-size:.62rem;line-height:1.16;max-width:100%}
+      body.vertical .timer{width:42px;height:42px;padding:3px;top:0;right:0}
+      body.vertical .timerInner{font-size:.72rem}
+      body.vertical .categorySplash{width:min(64px,18vw)}
+      body.vertical .countStage,
+      body.vertical .countStage.heroStage{min-height:0;width:min(100%,100%);padding:10px 10px;gap:6px;border-radius:18px}
+      body.vertical .countLabel{font-size:.56rem}
+      body.vertical .countCategory{font-size:clamp(.88rem,4.4vw,1.15rem);line-height:1}
+      body.vertical .countBig{font-size:clamp(2.2rem,12vw,3.2rem)}
+      body.vertical .countText{font-size:.62rem;line-height:1.12}
+      body.vertical .hero.compact .titleWrap{padding-right:46px;gap:4px}
+      body.vertical .hero.compact .title{font-size:clamp(.92rem,4.4vw,1.18rem);line-height:.96}
+      body.vertical .hero.compact .copy{display:none}
+      body.vertical .answers{grid-template-columns:1fr 1fr;gap:4px}
+      body.vertical .answers.questionBoard{grid-auto-rows:minmax(0,1fr)}
+      body.vertical .answer{padding:6px 7px;gap:3px;border-radius:14px}
+      body.vertical .answerTop{gap:6px;align-items:flex-start}
+      body.vertical .aKey{margin-right:4px}
+      body.vertical .aText{font-size:.62rem;line-height:1.08}
+      body.vertical .aState{font-size:.54rem}
+      body.vertical .voteCloud{gap:3px}
+      body.vertical .voteAvatar{width:14px;height:14px}
+      body.vertical .voteMore{height:14px;padding:0 4px;font-size:.5rem}
+      body.vertical .fact{padding:8px 10px;gap:4px;border-radius:16px}
+      body.vertical .fact p{font-size:.62rem;line-height:1.18}
+      body.vertical .hero.lobby .titleWrap{max-width:100%}
+      body.vertical .lobbyCast{gap:8px 6px}
+      body.vertical .castPlayer{min-width:52px;gap:4px}
+      body.vertical .castAvatar{width:40px;height:40px}
+      body.vertical .castName{font-size:.52rem;max-width:7ch}
+      body.vertical .castRole{font-size:.44rem}
+      body.vertical .roundBoard,
+      body.vertical .podiumBoard{gap:6px;width:100%}
+      body.vertical .roundHeadline{padding:8px 10px;border-radius:16px;gap:4px}
+      body.vertical .roundHeadline strong{font-size:.82rem}
+      body.vertical .roundHeadline span{font-size:.56rem}
+      body.vertical .roundGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+      body.vertical .roundRow{padding:6px 7px;grid-template-columns:16px 18px minmax(0,1fr) auto;gap:4px;border-radius:14px}
+      body.vertical .roundRow.leader{padding:7px 8px}
+      body.vertical .rank{width:16px;height:16px;font-size:.46rem}
+      body.vertical .avatar{width:18px;height:18px}
+      body.vertical .playerName{font-size:.58rem;line-height:1}
+      body.vertical .playerSub{font-size:.44rem;margin-top:1px}
+      body.vertical .points{font-size:.62rem}
+      body.vertical .podium{grid-template-columns:1fr 1fr;gap:6px;align-items:stretch}
+      body.vertical .podiumCard{padding:8px 8px;gap:4px;border-radius:16px}
+      body.vertical .podiumCard.first{grid-column:1/-1;order:-1}
+      body.vertical .podiumRank{font-size:.5rem}
+      body.vertical .podiumAvatar{width:38px;height:38px}
+      body.vertical .podiumName{font-size:.66rem}
+      body.vertical .podiumMeta{font-size:.48rem}
+      body.vertical .podiumPoints{font-size:.82rem}
+      body.vertical .restBoard{gap:4px}
+      body.vertical .moreLine{font-size:.52rem}
+    }
   </style>
 </head>
 <body>
