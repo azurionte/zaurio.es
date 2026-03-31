@@ -191,8 +191,10 @@
       .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(76px + var(--dif));width:50px}
     }
     @media (max-width:640px){
-      body{padding:8px}
-      .topbar{position:sticky;top:8px;z-index:20;padding:8px 10px;border-radius:22px;min-height:66px}
+      body{padding:8px;overflow:hidden}
+      .app,.shell{gap:10px}
+      .shell{min-height:calc(100dvh - 16px)}
+      .topbar{position:sticky;top:8px;z-index:20;padding:7px 10px;border-radius:22px;min-height:62px}
       .topCenter{top:50%}
       .topLeft,.topRight{gap:6px}
       .menuBtn,.identity,.soundChip{width:auto;justify-content:center;height:38px;padding:0 8px;border-radius:18px}
@@ -213,9 +215,24 @@
       .actions.center .btn{flex:1 1 100%}
       .actions.between .btn{flex:1 1 100%}
       .modalCard{max-height:calc(100vh - 20px);padding:16px;gap:14px;border-radius:22px}
-      .avatarCard img{max-width:70px}
-      .avatarCard span{font-size:.66rem}
-      .avatarNav{width:36px;height:36px;font-size:1.2rem}
+      .sceneWrap{min-height:calc(100dvh - 96px)}
+      .sceneStack{gap:12px}
+      .panel,.heroCard{padding:14px;border-radius:20px}
+      .kicker{padding:5px 10px;font-size:10px}
+      .subtitle{font-size:clamp(1.02rem,5vw,1.42rem)}
+      .field{gap:6px}
+      .field input{height:44px;padding:0 14px;border-radius:16px}
+      .codeBadge,.countPill{padding:8px 12px;border-radius:16px;font-size:1rem}
+      .avatarEditor{gap:8px;padding:10px;border-radius:22px}
+      .avatarCarousel{gap:4px}
+      .avatarViewport{padding:0}
+      .avatarRail{gap:4px;min-height:94px}
+      .avatarCard{min-height:92px;padding:6px 4px;border-radius:16px}
+      .avatarCard img{max-width:58px}
+      .avatarCard span{font-size:.64rem}
+      .avatarNav{width:34px;height:34px;font-size:1.05rem}
+      .avatarLegend{font-size:.84rem}
+      .avatarHint{display:none}
       .miniForm{gap:12px}
       .miniForm input,.miniForm textarea{padding:12px 14px}
       .choiceBlock{gap:8px}
@@ -238,7 +255,6 @@
       .categoryLead{grid-template-columns:1fr;justify-items:center;gap:14px}
       .categoryLead .categoryArt{width:min(180px,48vw)}
       .categoryLead .answerCard{min-height:0}
-      .sceneWrap{min-height:calc(100vh - 108px)}
       .versusHero img{height:140px}
       .versusOverlay{padding:16px}
       .versusOverlay .title{font-size:clamp(1.8rem,10vw,2.8rem)}
@@ -268,6 +284,37 @@
       .versusGlyph{font-size:1.5rem}
       .versusChampionFx{padding:10px 14px;font-size:.92rem}
       .versusSpectators{padding:10px 12px;font-size:.92rem}
+      #profileLayout{width:100% !important}
+      #profileLayout > article:first-child{gap:10px}
+      #profileLayout .subtitle{font-size:1.04rem}
+      #profileLayout .codeBadge{justify-self:stretch}
+      #profileLayout .actions.between{gap:8px}
+      #profileLayout .btn{height:40px;padding:0 14px}
+      #profileLayout .status{min-height:0}
+    }
+    @media (max-width:640px) and (max-height:920px){
+      .topbar{min-height:58px;padding:6px 9px}
+      .topCenter{width:138px;height:38px}
+      .logoMark{height:30px;transform:scale(1.16)}
+      .menuBtn,.identity,.soundChip{height:34px;border-radius:16px}
+      .identity{max-width:144px;padding:0 8px}
+      .miniAvatar{width:24px;height:24px;flex-basis:24px}
+      .identityName{font-size:.68rem}
+      .identityRole{font-size:.48rem}
+      .sceneWrap{min-height:calc(100dvh - 88px)}
+      .panel,.heroCard{padding:12px;border-radius:18px}
+      .sceneStack{gap:10px}
+      .subtitle{font-size:1rem}
+      .field input{height:40px}
+      .codeBadge{padding:7px 10px}
+      .avatarEditor{padding:8px;gap:6px}
+      .avatarRail{min-height:84px}
+      .avatarCard{min-height:82px;padding:5px 4px}
+      .avatarCard img{max-width:50px}
+      .avatarCard span{font-size:.6rem}
+      .avatarNav{width:32px;height:32px;font-size:1rem}
+      .avatarLegend{font-size:.78rem}
+      #profileLayout .btn{height:38px}
     }
     @media (max-height:520px){
       body{padding:6px}
