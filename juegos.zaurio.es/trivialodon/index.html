@@ -12,8 +12,8 @@
     .topbar,.panel,.playerCard,.answerCard,.scoreRow,.modeCard,.modalCard,.heroCard{border:1px solid var(--stroke);border-radius:30px;background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.24),0 0 32px rgba(255,0,170,.08);backdrop-filter:blur(14px)}
     .topbar{position:relative;z-index:120;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;min-height:86px}
     .topLeft,.topRight{display:flex;align-items:center;gap:12px;position:relative;z-index:2}
-    .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;pointer-events:none;width:220px;height:68px}
-    .logoMark{width:auto;height:54px;max-width:none;display:block;transform:scale(1.42);transform-origin:center center}
+    .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;pointer-events:none;width:220px;height:64px;overflow:visible}
+    .logoMark{display:block;width:auto;height:44px;max-width:none;object-fit:contain;transform:scale(1.22);transform-origin:center center}
     .menuWrap,.soundWrap{position:relative;z-index:121}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.soundChip{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn{padding:0 18px;gap:12px}.menuBtn img{width:22px;height:22px}
     .menuGlyph{font-size:1.7rem;line-height:1}
     .menuDrop{position:absolute;left:0;top:calc(100% + 10px);display:none;min-width:240px;padding:8px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}.menuDrop img{width:22px;height:22px;object-fit:contain}
@@ -49,8 +49,7 @@
     .scene{display:none;animation:sceneIn .42s ease both}.scene.on{display:grid}.sceneWrap{min-height:calc(100vh - 154px)}.sceneCenter{justify-items:center;align-content:start}.sceneSplit{display:grid;grid-template-columns:minmax(320px,440px) minmax(0,1fr);gap:18px;align-items:start}.sceneStack{display:grid;gap:18px}.panel{padding:28px}.panel.narrow{width:min(520px,100%)}.kicker{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
     h1,h2,h3,p{margin:0}p{color:var(--muted);line-height:1.55}.title{font-size:clamp(2rem,5vw,3.3rem);line-height:1.02;font-weight:1000}.subtitle{font-size:clamp(1.2rem,2.5vw,1.9rem);font-weight:900}.field{display:grid;gap:8px}.field label{font-weight:800}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}
     .codeBadge,.countPill{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:18px;background:rgba(255,216,58,.12);color:var(--yellow);font-weight:1000;letter-spacing:.08em}.status{min-height:20px;font-weight:700}.status.info{color:var(--cyan)}.status.ok{color:#c8ffab}.status.danger{color:var(--danger)}
-    .avatarEditor{display:grid;gap:14px;padding:18px;border-radius:28px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarStageWrap{display:grid;place-items:center;padding:16px;border-radius:26px;background:linear-gradient(135deg,rgba(47,211,255,.16),rgba(255,119,203,.16));border:1px solid rgba(255,255,255,.14)}.avatarStack{width:var(--frame);height:var(--frame);position:relative}
-    .avatarHole,.avatarStage{position:absolute;left:50%;top:50%;width:var(--avatar);height:var(--avatar);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translateY(-10px)}.avatarStage{background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.14),rgba(255,255,255,.03) 38%,rgba(0,0,0,.22) 100%);touch-action:none}.avatarStage.dragging{cursor:grabbing}.avatarImg{position:absolute;left:50%;top:50%;width:auto;height:auto;transform:translate(-50%,-50%) translate(var(--x,0px),var(--y,0px)) scale(var(--s,1));transform-origin:center center;user-select:none;-webkit-user-drag:none}.avatarPlaceholder{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:14px;font-weight:1000;color:rgba(255,255,255,.78);font-size:2.2rem;line-height:1}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{font-size:.92rem}
+    .avatarEditor{display:grid;gap:16px;padding:18px;border-radius:28px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarCarousel{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}.avatarViewport{overflow:hidden}.avatarRail{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:center}.avatarCard{border:1px solid rgba(255,255,255,.1);border-radius:24px;background:rgba(255,255,255,.05);padding:10px;display:grid;gap:8px;justify-items:center;transition:transform .18s ease,opacity .18s ease,border-color .18s ease,background .18s ease}.avatarCard img{width:100%;max-width:112px;height:auto;display:block;filter:drop-shadow(0 10px 18px rgba(0,0,0,.22))}.avatarCard span{font-size:.74rem;font-weight:900;color:var(--muted);text-align:center;text-transform:capitalize}.avatarCard.is-center{transform:scale(1.08);border-color:rgba(255,216,58,.48);background:linear-gradient(135deg,rgba(255,216,58,.14),rgba(255,119,203,.12))}.avatarCard.is-center span{color:#fff}.avatarCard.is-side{opacity:.78}.avatarNav{width:48px;height:48px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:1.5rem;font-weight:1000;display:grid;place-items:center}.avatarLegend{text-align:center;font-size:.92rem;color:var(--muted)}.avatarStack{width:var(--frame);height:var(--frame);position:relative}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{font-size:.92rem;text-align:center}
     .playersGrid{display:grid;gap:14px}.playerCard{padding:16px 18px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}.playerName{font-size:clamp(1rem,2vw,1.45rem);font-weight:1000;text-shadow:0 4px 0 rgba(0,0,0,.72),0 0 16px rgba(0,0,0,.45)}.playerSub{font-size:.96rem;color:var(--muted)}
     .dinoHole,.avatarShot{position:absolute;left:50%;top:50%;width:var(--avatar);height:var(--avatar);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translateY(-10px)}.dinoHole{display:grid;place-items:center;font-size:3rem;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,119,203,.16))}.avatarShot img{width:100%;height:100%;object-fit:cover}
     .heroCard{padding:32px;display:grid;gap:20px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));text-align:center}.bigCount{font-size:clamp(5rem,18vw,11rem);font-weight:1000;line-height:1}
@@ -131,8 +130,8 @@
       .topbar{padding:10px 14px;min-height:78px}
       .topLeft,.topRight{gap:8px}
       .topCenter{top:50%}
-      .topCenter{width:190px;height:62px}
-      .logoMark{width:auto;height:48px;max-width:none;transform:scale(1.34);transform-origin:center center}
+      .topCenter{width:188px;height:58px}
+      .logoMark{height:40px;transform:scale(1.18)}
       .menuBtn,.identity,.soundChip{height:46px;padding:0 12px;font-size:.92rem}
       .menuBtn{padding:0 14px}
       .soundPanel{min-width:min(320px,92vw)}
@@ -152,7 +151,11 @@
       .btn{padding:13px 16px}
       .field input{padding:13px 14px}
       .avatarEditor{padding:14px}
-      .avatarStageWrap{padding:12px}
+      .avatarCarousel{gap:8px}
+      .avatarRail{gap:8px}
+      .avatarCard{padding:8px;border-radius:20px}
+      .avatarCard img{max-width:90px}
+      .avatarNav{width:42px;height:42px}
       .avatarStack{width:148px;height:148px}
       .playerCard{grid-template-columns:88px minmax(0,1fr);gap:12px;padding:14px;align-items:center}
       .playerName,.playerSub{text-align:left}
@@ -203,13 +206,16 @@
       .identityName{font-size:.7rem;line-height:1.02;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
       .identityRole{font-size:.5rem;letter-spacing:.02em}
       .summaryScore{font-size:.74rem}
-      .topCenter{width:138px;height:48px}
-      .logoMark{width:auto;height:36px;max-width:none;transform:scale(1.26);transform-origin:center center}
+      .topCenter{width:150px;height:42px}
+      .logoMark{height:30px;transform:scale(1.16)}
       .menuDrop{left:0;right:auto;min-width:210px;max-width:min(240px,78vw)}
       .soundPanel{left:auto;right:0;min-width:min(280px,84vw);max-width:min(280px,84vw)}
       .actions.center .btn{flex:1 1 100%}
       .actions.between .btn{flex:1 1 100%}
       .modalCard{max-height:calc(100vh - 20px);padding:16px;gap:14px;border-radius:22px}
+      .avatarCard img{max-width:78px}
+      .avatarCard span{font-size:.66rem}
+      .avatarNav{width:36px;height:36px;font-size:1.2rem}
       .miniForm{gap:12px}
       .miniForm input,.miniForm textarea{padding:12px 14px}
       .choiceBlock{gap:8px}
@@ -268,7 +274,8 @@
       .app,.shell{gap:8px}
       .sceneWrap{min-height:calc(100vh - 108px)}
       .topbar{padding:8px 10px;border-radius:20px;min-height:58px}
-      .logoMark{width:min(84px,24vw)}
+      .topCenter{height:38px}
+      .logoMark{height:26px;transform:scale(1.12)}
       .menuBtn,.identity,.soundChip{padding:5px 7px}
       .miniAvatar{width:20px;height:20px}
       .identity{min-height:30px}
@@ -299,7 +306,8 @@
     }
     @media (max-width:520px) and (max-height:520px){
       .topbar{min-height:50px;padding:6px 8px}
-      .logoMark{width:min(70px,22vw)}
+      .topCenter{height:34px}
+      .logoMark{height:22px;transform:scale(1.08)}
       .menuBtn img{width:12px;height:12px}
       .soundChip{min-width:28px;min-height:28px;padding:4px 6px}
       .identity{max-width:106px;padding:4px 6px}
@@ -404,24 +412,18 @@
               <input id="nameInput" maxlength="26" placeholder="Ejemplo: Marta Rex" />
             </div>
             <div class="avatarEditor">
-              <div class="avatarStageWrap">
-                <div class="avatarStack">
-                  <div class="avatarStage" id="avatarStage">
-                    <img class="avatarImg" id="avatarImg" alt="" hidden />
-                    <div class="avatarPlaceholder" id="avatarPlaceholder">+</div>
-                  </div>
-                  <img class="avatarFrame" src="/shared/assets/brand/participantes-frame.png" alt="">
+              <span class="kicker">Avatar</span>
+              <div class="avatarCarousel">
+                <button class="avatarNav" id="btnAvatarPrev" type="button" aria-label="Avatar anterior">‹</button>
+                <div class="avatarViewport">
+                  <div class="avatarRail" id="avatarRail"></div>
                 </div>
+                <button class="avatarNav" id="btnAvatarNext" type="button" aria-label="Avatar siguiente">›</button>
               </div>
-              <div class="actions center">
-                <button class="btn btnPrimary" id="btnUpload" type="button">Subir foto</button>
-                <button class="btn btnGhost" id="btnEmoji" type="button">Avatar</button>
-                <button class="btn btnOk" id="btnUseAvatar" type="button">Usar avatar</button>
-              </div>
-              <p class="avatarHint">Arrastra con dedo o raton para mover. Usa la rueda o multitouch para hacer zoom.</p>
-              <input id="photoInput" type="file" accept="image/*" hidden />
+              <p class="avatarLegend" id="avatarLegend">El avatar del centro sera el elegido.</p>
+              <p class="avatarHint">Usa las flechas para recorrer los avatares. El del centro es el que llevaras a la partida.</p>
             </div>
-            <div class="status info" id="profileStatus">Todavia no has preparado tu avatar.</div>
+            <div class="status info" id="profileStatus">Elige tu avatar y pulsa listo.</div>
             <div class="actions between">
               <button class="btn btnGhost" id="btnBack" type="button">Volver</button>
               <button class="btn btnOk" id="btnReady" type="button">Listo</button>
@@ -630,17 +632,6 @@
       </section>
     </section>
   </main>
-  <div class="overlay" id="emojiModal">
-    <div class="modalCard">
-      <span class="kicker">Avatar</span>
-      <h2 class="subtitle">Elige tu dinosaurio</h2>
-      <div class="emojiGrid" id="emojiGrid"></div>
-      <div class="actions between">
-        <button class="btn btnGhost" id="btnCloseEmoji" type="button">Cancelar</button>
-        <button class="btn btnPrimary" id="btnAcceptEmoji" type="button">Usar avatar</button>
-      </div>
-    </div>
-  </div>
   <div class="overlay" id="scoreModal">
     <div class="modalCard">
       <span class="kicker">Marcador</span>
@@ -726,7 +717,16 @@
     const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
     const FRAME_SRC = "/shared/assets/brand/participantes-frame.png";
-    const EMOJIS = [["lava","#ff6b35"],["mint","#56d364"],["ocean","#38bdf8"],["sun","#facc15"],["orchid","#f472b6"],["jade","#22c55e"],["berry","#fb7185"],["sky","#60a5fa"]];
+    const AVATAR_OPTIONS = [
+      {id:"blue_black",label:"Azul y negro",src:"/trivialodon/assets/avatars/blue_black.png"},
+      {id:"blue_orange",label:"Azul y naranja",src:"/trivialodon/assets/avatars/blue_orange.png"},
+      {id:"green_red",label:"Verde y rojo",src:"/trivialodon/assets/avatars/green_red.png"},
+      {id:"orange_blue",label:"Naranja y azul",src:"/trivialodon/assets/avatars/orange_blue.png"},
+      {id:"pink_green",label:"Rosa y verde",src:"/trivialodon/assets/avatars/pink_green.png"},
+      {id:"purple_yellow",label:"Morado y amarillo",src:"/trivialodon/assets/avatars/purple_yellow.png"},
+      {id:"red_green",label:"Rojo y verde",src:"/trivialodon/assets/avatars/red_green.png"},
+      {id:"yellow_purple",label:"Amarillo y morado",src:"/trivialodon/assets/avatars/yellow_purple.png"}
+    ];
     const MODES = [
       {id:"classic",icon:"\uD83C\uDFA9",title:"Trivialodon classic",desc:"Rondas elegantes con ritmo de concurso clasico."},
       {id:"custom",icon:"\uD83D\uDEE0",title:"Personalizado",desc:"Ajusta el tono del juego y juega a tu manera."}
@@ -1003,15 +1003,14 @@
       scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene"), versusIntro:$("versusIntroScene"), versus:$("versusScene")},
       joinCodeOnlyInput:$("joinCodeOnlyInput"), joinStatus:$("joinStatus"), btnJoinBack:$("btnJoinBack"), btnJoinNext:$("btnJoinNext"),
       profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), lobbyLayout:$("lobbyLayout"), setupLayout:$("setupLayout"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"),
-      nameInput:$("nameInput"), avatarStage:$("avatarStage"), avatarImg:$("avatarImg"), avatarPlaceholder:$("avatarPlaceholder"), btnUpload:$("btnUpload"),
-      btnEmoji:$("btnEmoji"), btnUseAvatar:$("btnUseAvatar"), photoInput:$("photoInput"), profileStatus:$("profileStatus"), btnBack:$("btnBack"), btnReady:$("btnReady"),
+      nameInput:$("nameInput"), avatarRail:$("avatarRail"), avatarLegend:$("avatarLegend"), btnAvatarPrev:$("btnAvatarPrev"), btnAvatarNext:$("btnAvatarNext"), profileStatus:$("profileStatus"), btnBack:$("btnBack"), btnReady:$("btnReady"),
       profilePlayers:$("profilePlayers"), profileSideTitle:$("profileSideTitle"), profileSideText:$("profileSideText"), lobbySide:$("lobbySide"), lobbyTitle:$("lobbyTitle"),
       lobbyDesc:$("lobbyDesc"), lobbyPlayers:$("lobbyPlayers"), btnToSetup:$("btnToSetup"), setupSide:$("setupSide"), setupDesc:$("setupDesc"), hostVoteWrap:$("hostVoteWrap"),
       hostVoteCountdown:$("hostVoteCountdown"), voteToggle:$("voteToggle"), modeGrid:$("modeGrid"), durationGrid:$("durationGrid"), setupActions:$("setupActions"),
       generatingLine:$("generatingLine"), pausedTitle:$("pausedTitle"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
-      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), versusSpectators:$("versusSpectators"), emojiModal:$("emojiModal"), emojiGrid:$("emojiGrid"), scoreModal:$("scoreModal"), scoreModalRows:$("scoreModalRows"),
-      btnCloseEmoji:$("btnCloseEmoji"), btnAcceptEmoji:$("btnAcceptEmoji"), btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
+      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), versusSpectators:$("versusSpectators"), scoreModal:$("scoreModal"), scoreModalRows:$("scoreModalRows"),
+      btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
       durationModal:$("durationModal"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
       durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
       customModal:$("customModal"), customThemeInput:$("customThemeInput"), customToneChoices:$("customToneChoices"), customDifficultyChoices:$("customDifficultyChoices"), customPromptInput:$("customPromptInput"),
@@ -1020,8 +1019,8 @@
     };
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
     const state = {
-      playerId:crypto.randomUUID(), role:"", roomCode:"", name:"", ready:false, waitingLine:"", channel:null, players:[], selectedEmoji:"mint", localAnswer:null,
-      avatar:{kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"},
+      playerId:crypto.randomUUID(), role:"", roomCode:"", name:"", ready:false, waitingLine:"", channel:null, players:[], avatarIndex:0, localAnswer:null,
+      avatar:{kind:"preset",src:AVATAR_OPTIONS[0].src,rendered:AVATAR_OPTIONS[0].src,avatarId:AVATAR_OPTIONS[0].id},
       game:{phase:"lobby",allowVotes:false,voteDeadline:0,selectedMode:"",selectedDuration:"",selectedDurationValue:15,votes:{},question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,hostNotice:"",customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}}
     };
     const audioState = {
@@ -1674,7 +1673,7 @@
         state.name = saved.name || "";
         state.ready = !!saved.ready;
         state.waitingLine = lineFor(state.playerId);
-        state.avatar = saved.avatar || state.avatar;
+        state.avatar = normalizeSavedAvatar(saved.avatar);
         state.game = saved.game || state.game;
         ui.nameInput.value = state.name;
         applyAvatar();
@@ -1684,7 +1683,7 @@
         state.name = saved.name || "";
         state.ready = !!saved.ready;
         state.waitingLine = lineFor(state.playerId);
-        state.avatar = saved.avatar || state.avatar;
+        state.avatar = normalizeSavedAvatar(saved.avatar);
         state.game = saved.game || state.game;
         ui.nameInput.value = state.name;
         applyAvatar();
@@ -1700,14 +1699,26 @@
       }
     }
     function setStatus(text, tone){ ui.profileStatus.textContent = text; ui.profileStatus.className = `status ${tone || "info"}`; }
-    function renderEmojiChoices(){ ui.emojiGrid.innerHTML = EMOJIS.map(([id,color]) => `<button class="emojiChoice ${state.selectedEmoji === id ? "active" : ""}" data-emoji="${id}" type="button"><div class="emojiBall" style="background:${color}22;border:1px solid ${color}55">\uD83E\uDD96</div><strong>${esc(id)}</strong></button>`).join(""); ui.emojiGrid.querySelectorAll("[data-emoji]").forEach(btn => btn.onclick = () => { state.selectedEmoji = btn.dataset.emoji; renderEmojiChoices(); }); }
-    function emojiDataUrl(id){ const color = Object.fromEntries(EMOJIS)[id] || "#56d364"; const canvas = document.createElement("canvas"); canvas.width = 220; canvas.height = 220; const ctx = canvas.getContext("2d"); ctx.fillStyle = `${color}22`; ctx.beginPath(); ctx.arc(110,110,108,0,Math.PI * 2); ctx.fill(); ctx.font = "120px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("\uD83E\uDD96",110,118); return canvas.toDataURL("image/png"); }
+    function avatarOption(index){ return AVATAR_OPTIONS[((index % AVATAR_OPTIONS.length) + AVATAR_OPTIONS.length) % AVATAR_OPTIONS.length]; }
+    function normalizeSavedAvatar(avatar){
+      if(!avatar) return {kind:"preset",src:AVATAR_OPTIONS[0].src,rendered:AVATAR_OPTIONS[0].src,avatarId:AVATAR_OPTIONS[0].id};
+      const option = AVATAR_OPTIONS.find(item => item.id === avatar.avatarId || item.src === avatar.src || item.src === avatar.rendered);
+      return option ? {kind:"preset",src:option.src,rendered:option.src,avatarId:option.id} : {kind:"preset",src:AVATAR_OPTIONS[0].src,rendered:AVATAR_OPTIONS[0].src,avatarId:AVATAR_OPTIONS[0].id};
+    }
+    function syncAvatarIndex(){ const idx = AVATAR_OPTIONS.findIndex(item => item.id === state.avatar.avatarId || item.src === state.avatar.src || item.src === state.avatar.rendered); state.avatarIndex = idx >= 0 ? idx : 0; }
+    function setAvatarIndex(index){ const option = avatarOption(index); state.avatarIndex = AVATAR_OPTIONS.findIndex(item => item.id === option.id); state.avatar = {kind:"preset",src:option.src,rendered:option.src,avatarId:option.id}; renderAvatarCarousel(); updateIdentity(); }
+    function renderAvatarCarousel(){
+      if(!ui.avatarRail) return;
+      const picks = [state.avatarIndex - 1, state.avatarIndex, state.avatarIndex + 1].map(index => avatarOption(index));
+      ui.avatarRail.innerHTML = picks.map((option, slot) => `<button class="avatarCard ${slot === 1 ? "is-center" : "is-side"}" data-avatar="${option.id}" type="button"><img src="${option.src}" alt="${esc(option.label)}"><span>${esc(option.label)}</span></button>`).join("");
+      ui.avatarLegend.textContent = `Elegido: ${avatarOption(state.avatarIndex).label}`;
+      ui.avatarRail.querySelectorAll("[data-avatar]").forEach((btn, slot) => btn.onclick = () => {
+        if(slot === 0) setAvatarIndex(state.avatarIndex - 1);
+        else if(slot === 2) setAvatarIndex(state.avatarIndex + 1);
+      });
+    }
     function updateIdentity(){ ui.identity.hidden = !state.role; updateSoundChip(); ui.identityName.textContent = state.name || "Sin nombre"; ui.identityRole.textContent = state.role === "host" ? "Anfitrion" : "Invitado"; ui.roomBadge.textContent = state.roomCode || "------"; ui.scoreChipValue.textContent = String((state.game.scores && state.game.scores[state.playerId]) || 0); const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; ui.btnEndGame.hidden = state.role !== "host"; updateCastUi(); }
-    function applyAvatar(){ if(state.avatar.kind === "emoji"){ state.avatar.src = emojiDataUrl(state.avatar.emoji); state.avatar.rendered = state.avatar.src; } const src = state.avatar.src; ui.avatarImg.hidden = !src; ui.avatarPlaceholder.hidden = !!src; if(src){ ui.avatarImg.src = src; ui.avatarImg.style.setProperty("--x", `${state.avatar.x}px`); ui.avatarImg.style.setProperty("--y", `${state.avatar.y}px`); ui.avatarImg.style.setProperty("--s", `${state.avatar.s}`); } updateIdentity(); }
-    async function readSource(source){ return new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = source; }); }
-    async function compressPhoto(file){ const src = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = reject; reader.readAsDataURL(file); }); const img = await readSource(src); const max = 720; const ratio = Math.min(1, max / Math.max(img.width, img.height)); const canvas = document.createElement("canvas"); canvas.width = Math.round(img.width * ratio); canvas.height = Math.round(img.height * ratio); canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height); return canvas.toDataURL("image/jpeg", .9); }
-    async function initialPhotoScale(source){ const img = await readSource(source); const avatarSize = 110; return Math.min(1, Math.min(avatarSize / img.width, avatarSize / img.height)); }
-    async function exportAvatar(){ if(state.avatar.kind === "emoji") return emojiDataUrl(state.avatar.emoji); const img = await readSource(state.avatar.src); const size = 220; const canvas = document.createElement("canvas"); canvas.width = size; canvas.height = size; const ctx = canvas.getContext("2d"); ctx.save(); ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.clip(); ctx.translate(size / 2, size / 2); ctx.translate(state.avatar.x, state.avatar.y); ctx.scale(state.avatar.s, state.avatar.s); ctx.drawImage(img, -img.width / 2, -img.height / 2, img.width, img.height); ctx.restore(); return canvas.toDataURL("image/png"); }
+    function applyAvatar(){ syncAvatarIndex(); renderAvatarCarousel(); updateIdentity(); }
     function renderPlayerRows(players){ if(!players.length) return `<article class="playerCard"><div class="sceneStack"><div class="playerName">Nadie todavia</div><div class="playerSub">La sala espera al primer dino.</div></div></article>`; return players.map(player => `<article class="playerCard"><div class="avatarStack">${player.ready && player.avatarSrc ? `<div class="avatarShot"><img src="${player.avatarSrc}" alt=""></div>` : `<div class="dinoHole">\uD83E\uDD96</div>`}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="sceneStack" style="gap:6px"><div class="playerName">${esc(player.ready ? player.name : (player.waitingLine || lineFor(player.playerId)))}</div><div class="playerSub">${esc(player.ready ? (player.role === "host" ? "Anfitrion listo" : "Invitado listo") : "Aun no ha pulsado listo")}</div></div></article>`).join(""); }
     function dedupePlayers(raw){ const map = new Map(); raw.forEach(entry => { const prev = map.get(entry.playerId); if(!prev || entry.updatedAt > prev.updatedAt) map.set(entry.playerId, entry); }); return [...map.values()].sort((a,b) => { if(a.role !== b.role) return a.role === "host" ? -1 : 1; if(a.ready !== b.ready) return a.ready ? -1 : 1; return String(a.name || a.waitingLine).localeCompare(String(b.name || b.waitingLine), "es"); }); }
     function scoreEntries(){ return readyPlayers().map(player => ({playerId:player.playerId,name:player.name,avatarSrc:player.avatarSrc,score:(state.game.scores && state.game.scores[player.playerId]) || 0})).sort((a,b) => b.score - a.score || a.name.localeCompare(b.name, "es")); }
@@ -1726,7 +1737,6 @@
       ui.profileSideCard.style.display = guestDraft ? "none" : "grid";
       ui.profileLayout.style.gridTemplateColumns = guestDraft ? "minmax(320px,520px)" : "minmax(320px,440px) minmax(0,1fr)";
       ui.profileLayout.style.justifyContent = guestDraft ? "center" : "stretch";
-      ui.btnUpload.style.display = state.role === "guest" ? "none" : "inline-flex";
     }
     function renderLobbyScene(){ const notice = state.game.hostNotice || ""; ui.lobbyPlayers.innerHTML = renderPlayerRows(state.players); ui.btnToSetup.disabled = !hostCanContinue(); if(state.role === "host"){ ui.lobbyLayout.style.gridTemplateColumns = "minmax(320px,420px) minmax(0,1fr)"; ui.lobbyLayout.style.width = "min(1180px,100%)"; ui.lobbyLayout.style.justifyContent = "stretch"; ui.lobbySide.hidden = false; ui.lobbySide.style.display = "grid"; ui.lobbyTitle.textContent = "Preparando la sala"; ui.lobbyDesc.textContent = notice || "Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida."; ui.btnToSetup.style.display = "inline-flex"; ui.lobbySide.innerHTML = `<span class="kicker">Sala</span><h2 class="subtitle">${notice ? "Partida cerrada" : "Todos casi listos"}</h2><p>${notice ? esc(notice) : "Cuando todos hayan pulsado listo, puedes pasar a la configuracion del juego."}</p><div class="codeBadge">${esc(state.roomCode)}</div>`; } else { ui.lobbyLayout.style.gridTemplateColumns = "minmax(320px,760px)"; ui.lobbyLayout.style.width = "min(760px,100%)"; ui.lobbyLayout.style.justifyContent = "center"; ui.lobbySide.hidden = true; ui.lobbySide.style.display = "none"; ui.lobbyTitle.textContent = "Esperando en sala"; ui.lobbyDesc.textContent = notice || "Jugadores"; ui.btnToSetup.style.display = "none"; } }
     function renderSetupCards(items, kind, current){ return items.map(item => `<button class="modeCard ${current === item.id ? "active" : ""}" data-kind="${kind}" data-id="${item.id}" ${state.role === "guest" && !state.game.allowVotes ? "disabled" : ""}><div class="modeHead"><span class="modeIcon">${item.icon}</span><span class="modeVotes">${kind === "mode" ? modeVotes(item.id) : durationVotes(item.id)}</span></div><strong>${esc(item.title)}</strong><p>${esc(item.desc)}</p></button>`).join(""); }
@@ -2177,12 +2187,7 @@
     window.trivialodonDebug = debugApi;
     window.td = debugApi;
     function showShell(){ ui.introScene.classList.remove("on"); ui.introScene.classList.add("off"); ui.shell.classList.add("on"); }
-    function resetDraft(){ state.name = ""; state.ready = false; state.roomCode = ""; state.localAnswer = null; state.avatar = {kind:"photo",src:"",rendered:"",x:0,y:0,s:1,emoji:"mint"}; ui.nameInput.value = ""; if(ui.joinCodeOnlyInput) ui.joinCodeOnlyInput.value = ""; ui.joinCodeInput.value = ""; applyAvatar(); setStatus("Todavia no has preparado tu avatar.","info"); if(ui.joinStatus) ui.joinStatus.textContent = "Escribe el codigo tal como te lo haya dado el anfitrion."; }
-    function clampAvatar(){ state.avatar.s = Math.max(.35, Math.min(3, state.avatar.s || 1)); state.avatar.x = Math.max(-180, Math.min(180, state.avatar.x || 0)); state.avatar.y = Math.max(-180, Math.min(180, state.avatar.y || 0)); applyAvatar(); }
-    let drag = null, pinch = null; const touchDistance = (a,b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-    function startDrag(ev){ if(state.avatar.kind !== "photo" || !state.avatar.src) return; const point = "touches" in ev ? ev.touches[0] : ev; drag = {x:point.clientX,y:point.clientY,startX:state.avatar.x,startY:state.avatar.y}; ui.avatarStage.classList.add("dragging"); }
-    function moveDrag(ev){ if(!drag) return; const point = "touches" in ev ? ev.touches[0] : ev; state.avatar.x = drag.startX + (point.clientX - drag.x); state.avatar.y = drag.startY + (point.clientY - drag.y); clampAvatar(); }
-    function endDrag(){ drag = null; ui.avatarStage.classList.remove("dragging"); }
+    function resetDraft(){ state.name = ""; state.ready = false; state.roomCode = ""; state.localAnswer = null; state.avatarIndex = 0; state.avatar = {kind:"preset",src:AVATAR_OPTIONS[0].src,rendered:AVATAR_OPTIONS[0].src,avatarId:AVATAR_OPTIONS[0].id}; ui.nameInput.value = ""; if(ui.joinCodeOnlyInput) ui.joinCodeOnlyInput.value = ""; ui.joinCodeInput.value = ""; applyAvatar(); setStatus("Elige tu avatar y pulsa listo.","info"); if(ui.joinStatus) ui.joinStatus.textContent = "Escribe el codigo tal como te lo haya dado el anfitrion."; }
     ui.menuBtn.onclick = () => {
       ui.soundWrap.classList.remove("open");
       ui.menuWrap.classList.toggle("open");
@@ -2249,21 +2254,9 @@
     ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = "Necesito un codigo valido de 4 cifras."; return; } ui.joinStatus.textContent = "Entrando en la sala..."; ensureAudioReady(); await connectRoom("guest", code); renderCurrentScene(); };
     ui.joinCodeOnlyInput.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); ui.btnJoinNext.click(); } });
     ui.btnBack.onclick = () => location.reload();
-    ui.btnUpload.onclick = () => ui.photoInput.click();
-    ui.avatarStage.onclick = () => { if(!state.avatar.src) ui.photoInput.click(); };
-    ui.photoInput.onchange = async () => { const file = ui.photoInput.files && ui.photoInput.files[0]; if(!file) return; state.avatar.kind = "photo"; state.avatar.src = await compressPhoto(file); state.avatar.rendered = ""; state.avatar.x = 0; state.avatar.y = 0; state.avatar.s = await initialPhotoScale(state.avatar.src); applyAvatar(); setStatus("Foto cargada. Ajustala y pulsa usar avatar.","info"); };
-    ui.btnEmoji.onclick = () => { state.selectedEmoji = state.avatar.emoji || "mint"; renderEmojiChoices(); ui.emojiModal.classList.add("on"); };
-    ui.btnCloseEmoji.onclick = () => ui.emojiModal.classList.remove("on");
-    ui.btnAcceptEmoji.onclick = () => { state.avatar.kind = "emoji"; state.avatar.emoji = state.selectedEmoji; state.avatar.src = emojiDataUrl(state.selectedEmoji); state.avatar.rendered = state.avatar.src; applyAvatar(); ui.emojiModal.classList.remove("on"); setStatus("Avatar seleccionado.","ok"); };
-    ui.btnUseAvatar.onclick = async () => { if(state.avatar.kind === "photo" && !state.avatar.src){ ui.photoInput.click(); return; } state.avatar.rendered = await exportAvatar(); applyAvatar(); setStatus("Avatar preparado. La vista final usara este encuadre.","ok"); };
-    ui.avatarStage.addEventListener("mousedown", startDrag);
-    ui.avatarStage.addEventListener("touchstart", ev => { if(ev.touches.length === 2){ pinch = {distance:touchDistance(ev.touches[0], ev.touches[1]), startScale:state.avatar.s}; return; } startDrag(ev); }, {passive:false});
-    ui.avatarStage.addEventListener("wheel", ev => { if(state.avatar.kind !== "photo" || !state.avatar.src) return; ev.preventDefault(); state.avatar.s += ev.deltaY < 0 ? .07 : -.07; clampAvatar(); }, {passive:false});
-    window.addEventListener("mousemove", moveDrag, {passive:true});
-    window.addEventListener("touchmove", ev => { if(pinch && ev.touches.length === 2){ ev.preventDefault(); state.avatar.s = pinch.startScale * (touchDistance(ev.touches[0], ev.touches[1]) / pinch.distance); clampAvatar(); return; } moveDrag(ev); }, {passive:false});
-    window.addEventListener("mouseup", endDrag);
-    window.addEventListener("touchend", () => { pinch = null; endDrag(); });
-    ui.btnReady.onclick = async () => { ensureAudioReady(); const name = ui.nameInput.value.trim(); if(!name){ setStatus("Necesito tu nombre antes de continuar.","danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus("Prepara tu avatar antes de continuar.","danger"); return; } state.name = name; if(!state.avatar.rendered) state.avatar.rendered = await exportAvatar(); state.ready = true; await updatePresence(); syncPlayers(); setStatus("Tu ficha ya esta lista.","ok"); renderCurrentScene(); };
+    ui.btnAvatarPrev.onclick = () => { setAvatarIndex(state.avatarIndex - 1); setStatus("Avatar cambiado.","info"); };
+    ui.btnAvatarNext.onclick = () => { setAvatarIndex(state.avatarIndex + 1); setStatus("Avatar cambiado.","info"); };
+    ui.btnReady.onclick = async () => { ensureAudioReady(); const name = ui.nameInput.value.trim(); if(!name){ setStatus("Necesito tu nombre antes de continuar.","danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus("Elige un avatar antes de continuar.","danger"); return; } state.name = name; state.ready = true; await updatePresence(); syncPlayers(); setStatus("Tu ficha ya esta lista.","ok"); renderCurrentScene(); };
     ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.allowVotes = false; state.game.voteDeadline = 0; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.votes = {}; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; state.game.lastRoundScores = {}; state.game.tieTracker = {streak:0,pair:[]}; state.game.versus = null; state.game.hostNotice = ""; await broadcastGame(); renderCurrentScene(); };
     ui.voteToggle.onclick = async () => { if(state.role !== "host") return; state.game.allowVotes = !state.game.allowVotes; state.game.voteDeadline = state.game.allowVotes ? (Date.now() + 60000) : 0; await broadcastGame(); renderCurrentScene(); };
     function renderCountdownScene(){ const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - Date.now()) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `Modo Velociraptor! · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general"); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = next?.category || "Categoria"; ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">Pausar</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
@@ -2423,7 +2416,6 @@
     if(savedSession?.role && savedSession?.roomCode){ ui.btnContinue.hidden = false; }
     syncChoiceGroup(ui.customToneChoices, "tone", state.game.customConfig.tone);
     syncChoiceGroup(ui.customDifficultyChoices, "difficulty", state.game.customConfig.difficulty);
-    renderEmojiChoices();
     applyAvatar();
     renderCurrentScene();
     if(savedSession?.role && savedSession?.roomCode && !state.role){
