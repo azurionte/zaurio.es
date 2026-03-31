@@ -205,8 +205,8 @@
       .summaryScore{font-size:.74rem}
       .topCenter{width:138px;height:48px}
       .logoMark{width:auto;height:36px;max-width:none;transform:scale(1.26);transform-origin:center center}
-      .menuDrop{left:0;right:auto;min-width:210px}
-      .soundPanel{left:auto;right:0;min-width:min(300px,92vw)}
+      .menuDrop{left:0;right:auto;min-width:210px;max-width:min(240px,78vw)}
+      .soundPanel{left:auto;right:0;min-width:min(280px,84vw);max-width:min(280px,84vw)}
       .actions.center .btn{flex:1 1 100%}
       .actions.between .btn{flex:1 1 100%}
       .modalCard{max-height:calc(100vh - 20px);padding:16px;gap:14px;border-radius:22px}
@@ -2183,8 +2183,15 @@
     function startDrag(ev){ if(state.avatar.kind !== "photo" || !state.avatar.src) return; const point = "touches" in ev ? ev.touches[0] : ev; drag = {x:point.clientX,y:point.clientY,startX:state.avatar.x,startY:state.avatar.y}; ui.avatarStage.classList.add("dragging"); }
     function moveDrag(ev){ if(!drag) return; const point = "touches" in ev ? ev.touches[0] : ev; state.avatar.x = drag.startX + (point.clientX - drag.x); state.avatar.y = drag.startY + (point.clientY - drag.y); clampAvatar(); }
     function endDrag(){ drag = null; ui.avatarStage.classList.remove("dragging"); }
-    ui.menuBtn.onclick = () => ui.menuWrap.classList.toggle("open");
-    ui.soundChip.onclick = ev => { ev.stopPropagation(); ui.soundWrap.classList.toggle("open"); };
+    ui.menuBtn.onclick = () => {
+      ui.soundWrap.classList.remove("open");
+      ui.menuWrap.classList.toggle("open");
+    };
+    ui.soundChip.onclick = ev => {
+      ev.stopPropagation();
+      ui.menuWrap.classList.remove("open");
+      ui.soundWrap.classList.toggle("open");
+    };
     ui.identity.onclick = () => { renderScoresScene(); ui.scoreModal.classList.add("on"); };
     ui.btnToggleMute.onclick = ev => {
       ev.stopPropagation();
