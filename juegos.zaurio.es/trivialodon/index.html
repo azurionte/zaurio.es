@@ -1784,6 +1784,7 @@
     function syncAvatarIndex(){ const idx = AVATAR_OPTIONS.findIndex(item => item.id === state.avatar.avatarId || item.src === state.avatar.src || item.src === state.avatar.rendered); state.avatarIndex = idx >= 0 ? idx : 0; }
     let avatarScrollTimer = 0;
     let avatarIgnoreScroll = false;
+    const AVATAR_LOOP_COPIES = 3;
     function commitAvatarIndex(index, options = {}){
       const option = avatarOption(index);
       state.avatarIndex = AVATAR_OPTIONS.findIndex(item => item.id === option.id);
@@ -1794,36 +1795,52 @@
       if(options.scroll) scrollAvatarToCurrent(options.behavior || "smooth");
     }
     function setAvatarIndex(index){ commitAvatarIndex(index, {scroll:true, behavior:"smooth"}); }
-    function avatarCards(){ return ui.avatarRail ? [...ui.avatarRail.querySelectorAll("[data-avatar-index]")] : []; }
+    function avatarCards(){ return ui.avatarRail ? [...ui.avatarRail.querySelectorAll("[data-avatar-slot]")] : []; }
     function updateAvatarCarouselSelection(){
+      const nearest = nearestAvatarInfo();
       avatarCards().forEach(card => {
         const index = Number(card.dataset.avatarIndex || 0);
-        const isCenter = index === state.avatarIndex;
+        const slot = Number(card.dataset.avatarSlot || -1);
+        const isCenter = slot === nearest.slot;
         card.classList.toggle("is-center", isCenter);
-        card.classList.toggle("is-side", !isCenter);
+        card.classList.toggle("is-side", !isCenter && index !== state.avatarIndex);
       });
     }
     function ensureAvatarCarouselDom(){
       if(!ui.avatarRail) return;
-      if(ui.avatarRail.children.length === AVATAR_OPTIONS.length) return;
-      ui.avatarRail.innerHTML = AVATAR_OPTIONS.map((option, index) => `<button class="avatarCard" data-avatar-index="${index}" type="button"><img src="${option.src}" alt="${esc(option.label)}"><span>${esc(option.label)}</span></button>`).join("");
+      const expected = AVATAR_OPTIONS.length * AVATAR_LOOP_COPIES;
+      if(ui.avatarRail.children.length === expected) return;
+      const copies = Array.from({length:AVATAR_LOOP_COPIES}, (_, copy) =>
+        AVATAR_OPTIONS.map((option, index) => `<button class="avatarCard" data-avatar-index="${index}" data-avatar-slot="${copy * AVATAR_OPTIONS.length + index}" type="button"><img src="${option.src}" alt="${esc(option.label)}"><span>${esc(option.label)}</span></button>`).join("")
+      ).join("");
+      ui.avatarRail.innerHTML = copies;
       avatarCards().forEach(card => {
-        card.onclick = () => setAvatarIndex(Number(card.dataset.avatarIndex || 0));
+        card.onclick = () => scrollAvatarToSlot(Number(card.dataset.avatarSlot || 0), "smooth");
       });
     }
-    function scrollAvatarToCurrent(behavior = "smooth"){
+    function middleAvatarSlot(index = state.avatarIndex){
+      return AVATAR_OPTIONS.length + (((index % AVATAR_OPTIONS.length) + AVATAR_OPTIONS.length) % AVATAR_OPTIONS.length);
+    }
+    function avatarCardForSlot(slot){
+      return ui.avatarRail ? ui.avatarRail.querySelector(`[data-avatar-slot="${slot}"]`) : null;
+    }
+    function scrollAvatarToSlot(slot, behavior = "smooth"){
       if(!ui.avatarViewport) return;
-      const card = ui.avatarRail.querySelector(`[data-avatar-index="${state.avatarIndex}"]`);
+      const card = avatarCardForSlot(slot);
       if(!card) return;
       avatarIgnoreScroll = true;
       card.scrollIntoView({behavior, inline:"center", block:"nearest"});
       setTimeout(() => { avatarIgnoreScroll = false; }, behavior === "smooth" ? 260 : 40);
     }
-    function nearestAvatarIndex(){
-      if(!ui.avatarViewport) return state.avatarIndex;
+    function scrollAvatarToCurrent(behavior = "smooth"){
+      scrollAvatarToSlot(middleAvatarSlot(), behavior);
+    }
+    function nearestAvatarInfo(){
+      if(!ui.avatarViewport) return {index:state.avatarIndex, slot:middleAvatarSlot()};
       const viewportRect = ui.avatarViewport.getBoundingClientRect();
       const center = viewportRect.left + viewportRect.width / 2;
       let bestIndex = state.avatarIndex;
+      let bestSlot = middleAvatarSlot();
       let bestDistance = Infinity;
       avatarCards().forEach(card => {
         const rect = card.getBoundingClientRect();
@@ -1832,9 +1849,24 @@
         if(distance < bestDistance){
           bestDistance = distance;
           bestIndex = Number(card.dataset.avatarIndex || 0);
+          bestSlot = Number(card.dataset.avatarSlot || middleAvatarSlot(bestIndex));
         }
       });
-      return bestIndex;
+      return {index:bestIndex, slot:bestSlot};
+    }
+    function normalizeAvatarLoop(slot){
+      if(!ui.avatarViewport) return;
+      const count = AVATAR_OPTIONS.length;
+      if(!count) return;
+      let targetSlot = slot;
+      if(slot < count){
+        targetSlot = slot + count;
+      } else if(slot >= count * 2){
+        targetSlot = slot - count;
+      }
+      if(targetSlot !== slot){
+        scrollAvatarToSlot(targetSlot, "auto");
+      }
     }
     function bindAvatarScroll(){
       if(!ui.avatarViewport || ui.avatarViewport.__trivialodonBound) return;
@@ -1843,20 +1875,28 @@
         if(avatarIgnoreScroll) return;
         clearTimeout(avatarScrollTimer);
         avatarScrollTimer = setTimeout(() => {
-          const nearest = nearestAvatarIndex();
-          commitAvatarIndex(nearest, {scroll:false});
-          scrollAvatarToCurrent("smooth");
+          const nearest = nearestAvatarInfo();
+          commitAvatarIndex(nearest.index, {scroll:false});
+          normalizeAvatarLoop(nearest.slot);
         }, 90);
       }, {passive:true});
     }
-    function shiftAvatar(delta){ setAvatarIndex(state.avatarIndex + delta); }
+    function shiftAvatar(delta){
+      const nearest = nearestAvatarInfo();
+      const targetSlot = nearest.slot + delta;
+      const targetIndex = ((nearest.index + delta) % AVATAR_OPTIONS.length + AVATAR_OPTIONS.length) % AVATAR_OPTIONS.length;
+      commitAvatarIndex(targetIndex, {scroll:false});
+      scrollAvatarToSlot(targetSlot, "smooth");
+    }
     function renderAvatarCarousel(){
       if(!ui.avatarRail) return;
       ensureAvatarCarouselDom();
       ui.avatarLegend.textContent = avatarOption(state.avatarIndex).label;
-      updateAvatarCarouselSelection();
       bindAvatarScroll();
-      requestAnimationFrame(() => scrollAvatarToCurrent("auto"));
+      requestAnimationFrame(() => {
+        scrollAvatarToCurrent("auto");
+        updateAvatarCarouselSelection();
+      });
     }
     function updateIdentity(){ ui.identity.hidden = !state.role; updateSoundChip(); ui.identityName.textContent = state.name || "Sin nombre"; ui.identityRole.textContent = state.role === "host" ? "Anfitrion" : "Invitado"; ui.roomBadge.textContent = state.roomCode || "------"; ui.scoreChipValue.textContent = String((state.game.scores && state.game.scores[state.playerId]) || 0); const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; ui.btnEndGame.hidden = state.role !== "host"; updateCastUi(); }
     function applyAvatar(){ syncAvatarIndex(); renderAvatarCarousel(); updateIdentity(); }
