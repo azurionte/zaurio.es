@@ -208,8 +208,8 @@
       .summaryScore{font-size:.74rem}
       .topCenter{width:150px;height:42px}
       .logoMark{height:30px;transform:scale(1.16)}
-      .menuDrop{left:0;right:auto;min-width:210px;max-width:min(240px,78vw)}
-      .soundPanel{left:auto;right:0;min-width:min(280px,84vw);max-width:min(280px,84vw)}
+      .menuDrop{position:fixed;top:84px;left:8px;right:auto;min-width:210px;max-width:min(280px,calc(100vw - 16px));max-height:calc(100vh - 96px);overflow:auto;z-index:130}
+      .soundPanel{position:fixed;top:84px;left:8px;right:8px;min-width:0;max-width:none;width:auto;max-height:calc(100vh - 96px);overflow:auto;z-index:131}
       .actions.center .btn{flex:1 1 100%}
       .actions.between .btn{flex:1 1 100%}
       .modalCard{max-height:calc(100vh - 20px);padding:16px;gap:14px;border-radius:22px}
@@ -1505,12 +1505,13 @@
       if(typeof muted === "boolean") castState.muted = muted;
     }
     function updateCastUi(){
-      const hostReady = state.role === "host" && !!state.roomCode;
+      const roomReady = !!state.roomCode;
       if(ui.settingsCast) ui.settingsCast.hidden = isIosLike();
       refreshCastSessionData();
       ui.castDeviceName.textContent = castState.connected ? (castState.deviceName || "Chromecast conectado") : "Sin dispositivo conectado";
-      ui.castDeviceHint.textContent = castState.connected ? `Emitiendo la sala ${state.roomCode || "----"} en la TV.` : "Busca tu Chromecast y lanza la pantalla de TV de la sala actual.";
+      ui.castDeviceHint.textContent = castState.connected ? `Emitiendo la sala ${state.roomCode || "----"} en la TV.` : (roomReady ? "Busca tu Chromecast y lanza la pantalla de TV de la sala actual." : "Primero entra en una sala para poder enviarla a la TV.");
       ui.btnCastConnect.innerHTML = castState.connected ? `<span class="btnIcon">📺</span>Reconectar TV` : `<span class="btnIcon">📺</span>Enviar a TV`;
+      ui.btnCastConnect.disabled = !roomReady || isIosLike();
       ui.btnCastDisconnect.disabled = !castState.connected;
       ui.btnCastMute.disabled = !castState.connected;
       ui.castVolumeInput.disabled = !castState.connected;
@@ -1533,7 +1534,7 @@
       } catch(_){}
     }
     function syncCastSession(){
-      if(state.role !== "host" || !state.roomCode || !castState.connected) return;
+      if(!state.roomCode || !castState.connected) return;
       sendCastMessage(castPayload());
       updateCastUi();
     }
@@ -1607,8 +1608,8 @@
       });
     }
     async function connectCast(){
-      if(state.role !== "host" || !state.roomCode){
-        setCastStatus("Primero necesitamos una sala activa del anfitrion.", "danger");
+      if(!state.roomCode){
+        setCastStatus("Primero necesitamos una sala activa para poder enviarla a la TV.", "danger");
         return;
       }
       if(isIosLike()){
