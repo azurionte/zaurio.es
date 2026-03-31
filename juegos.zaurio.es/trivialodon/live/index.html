@@ -25,12 +25,28 @@
     .app{height:calc(100dvh - 28px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:14px}
     body.cast .app{height:calc(100dvh - 16px);gap:8px}
     .top,.card,.answer,.roundRow,.podiumCard,.joinCard{border:1px solid var(--stroke);background:var(--panel);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
-    .top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:14px 18px;gap:12px}
+    .top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;padding:14px 18px;gap:12px}
     body.cast .top{padding:8px 14px;border-radius:22px;min-height:92px}
+    .top.brand-center{grid-template-columns:1fr auto 1fr}
+    .top.brand-center .topBrand{grid-column:2;justify-self:center}
+    .top.brand-center .topCenter{display:none}
+    .top.brand-center .code{grid-column:3;justify-self:end}
+    .top.with-prompt{grid-template-columns:auto minmax(0,1fr) auto}
+    .top.with-prompt .topBrand{grid-column:1;justify-self:start}
+    .top.with-prompt .topCenter{display:grid}
+    .top.with-prompt .code{grid-column:3;justify-self:end}
     .brand{width:min(220px,22vw);display:block}
     body.cast .brand{width:min(136px,12vw)}
-    .topCenter{display:grid;place-items:start}
+    .topBrand{display:flex;align-items:center;min-width:0}
+    .topCenter{display:grid;min-width:0;justify-items:center;align-items:center}
     .code{padding:10px 16px;border-radius:999px;background:rgba(255,216,74,.12);color:var(--gold);font-weight:1000;letter-spacing:.08em}
+    .navPrompt{display:grid;gap:3px;justify-items:center;align-items:center;max-width:100%;text-align:center;padding:0 10px}
+    .navPromptKick{display:inline-flex;padding:4px 9px;border-radius:999px;background:rgba(56,220,255,.12);color:var(--cyan);font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .navPromptText{font-weight:1000;line-height:.92;text-wrap:balance;max-width:min(100%,860px)}
+    .navPrompt.size-xl .navPromptText{font-size:clamp(1.7rem,2.7vw,2.5rem)}
+    .navPrompt.size-lg .navPromptText{font-size:clamp(1.38rem,2.2vw,2rem)}
+    .navPrompt.size-md .navPromptText{font-size:clamp(1.08rem,1.8vw,1.56rem)}
+    .navPrompt.size-sm .navPromptText{font-size:clamp(.92rem,1.45vw,1.2rem)}
     .layout{display:grid;grid-template-columns:1fr;min-height:0}
     .card{padding:22px;display:grid;gap:16px;min-height:0}
     body.cast .card{padding:12px;gap:10px;border-radius:22px}
@@ -46,16 +62,25 @@
     .hero.compact .titleWrap{max-width:none}
     .hero.compact .title{font-size:clamp(1.8rem,3vw,3.4rem)}
     .hero.compact .titleWrap{padding-right:120px}
+    .hero.headerPrompt{min-height:54px;gap:0}
+    .hero.headerPrompt .titleWrap{display:none}
     body.cast .hero.compact{gap:3px}
     body.cast .hero.compact .title{font-size:clamp(.92rem,1.2vw,1.18rem);line-height:1}
     body.cast .hero.compact .copy{display:none}
     body.cast .hero.compact .titleWrap{padding-right:58px;gap:3px}
+    body.cast .hero.headerPrompt{min-height:42px}
     body.cast .hero.lead{min-height:min(42vh,340px)}
     body.cast .hero.lead .title{font-size:clamp(1.8rem,3vw,3rem)}
     body.cast .hero.lead .copy{font-size:.82rem}
     body.cast .hero.lobby{min-height:min(48vh,360px);gap:18px}
     body.cast .hero.lobby .title{font-size:clamp(2rem,3.4vw,3.4rem)}
     body.cast .hero.lobby .titleWrap{max-width:min(1100px,82%)}
+    body.cast .navPrompt{justify-items:start;text-align:left;padding:0}
+    body.cast .navPromptKick{justify-self:start}
+    body.cast .navPrompt.size-xl .navPromptText{font-size:clamp(1.25rem,1.8vw,1.65rem)}
+    body.cast .navPrompt.size-lg .navPromptText{font-size:clamp(1.02rem,1.45vw,1.34rem)}
+    body.cast .navPrompt.size-md .navPromptText{font-size:clamp(.84rem,1.14vw,1.06rem)}
+    body.cast .navPrompt.size-sm .navPromptText{font-size:clamp(.72rem,.98vw,.9rem)}
     .hero.scores{align-content:start;justify-items:center;text-align:center}
     .hero.scores .titleWrap{justify-items:center;text-align:center;max-width:min(980px,92%);margin:0 auto}
     .hero.scores.tvStage{align-content:center;gap:26px}
@@ -199,6 +224,10 @@
     .hidden{display:none!important}
     @keyframes answersIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
     body.vertical .top{padding:10px 12px;border-radius:22px;min-height:76px}
+    body.vertical .top.with-prompt{grid-template-columns:minmax(0,1fr) auto}
+    body.vertical .top.with-prompt .topBrand{display:none}
+    body.vertical .top.with-prompt .topCenter{grid-column:1;justify-items:start}
+    body.vertical .top.with-prompt .code{grid-column:2}
     body.vertical .app{grid-template-rows:auto minmax(0,1fr)}
     body.vertical .brand{width:min(118px,36vw)}
     body.vertical .code{display:inline-flex;padding:8px 12px;font-size:.92rem}
@@ -211,6 +240,7 @@
     body.vertical .hero.lead{min-height:min(62vh,560px)}
     body.vertical .hero.compact .title{font-size:clamp(1.35rem,5vw,2rem)}
     body.vertical .hero.compact .titleWrap{padding-right:72px;gap:8px}
+    body.vertical .hero.headerPrompt{min-height:36px}
     body.vertical .answers{grid-template-columns:1fr;gap:8px}
     body.vertical .answers.questionBoard{grid-auto-rows:minmax(0,auto)}
     body.vertical .countStage{min-height:min(52vh,560px);padding:24px 18px;gap:12px}
@@ -230,6 +260,12 @@
     body.vertical .castAvatar{width:60px;height:60px}
     body.vertical .castName{font-size:.7rem;max-width:8ch}
     body.vertical .castRole{font-size:.58rem}
+    body.vertical .navPrompt{padding:0 4px}
+    body.vertical .navPromptKick{font-size:8px;padding:3px 7px}
+    body.vertical .navPrompt.size-xl .navPromptText{font-size:clamp(1rem,4vw,1.3rem)}
+    body.vertical .navPrompt.size-lg .navPromptText{font-size:clamp(.9rem,3.5vw,1.12rem)}
+    body.vertical .navPrompt.size-md .navPromptText{font-size:clamp(.78rem,3vw,.98rem)}
+    body.vertical .navPrompt.size-sm .navPromptText{font-size:clamp(.66rem,2.6vw,.84rem)}
     body.vertical .roundBoard,.body.vertical .podiumBoard{gap:10px}
     body.vertical .roundHeadline{padding:12px 14px;border-radius:22px}
     body.vertical .roundHeadline strong{font-size:1.3rem}
@@ -439,11 +475,11 @@
 </head>
 <body>
   <main class="app hidden" id="app">
-    <header class="top">
-      <div class="topCenter">
+    <header class="top brand-center" id="topBar">
+      <div class="topBrand" id="topBrand">
         <img class="brand" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon">
       </div>
-      <div></div>
+      <div class="topCenter" id="topCenter"></div>
       <div class="code" id="roomCode">0000</div>
     </header>
     <section class="layout">
@@ -497,7 +533,8 @@
     const ui = {
       app:$("app"), join:$("join"), roomCode:$("roomCode"), category:$("category"), prompt:$("prompt"), copy:$("copy"),
       timer:$("timer"), timerRing:$("timerRing"), fact:$("fact"), factKick:$("factKick"), factText:$("factText"),
-      answers:$("answers"), codeInput:$("codeInput"), btnJoin:$("btnJoin"), hero:$("hero")
+      answers:$("answers"), codeInput:$("codeInput"), btnJoin:$("btnJoin"), hero:$("hero"),
+      topBar:$("topBar"), topBrand:$("topBrand"), topCenter:$("topCenter")
     };
     let channel = null;
     let game = {phase:"lobby",scores:{},questionSet:[]};
@@ -547,6 +584,29 @@
     };
     const avatarBubble = player => player?.avatarSrc ? `<span class="voteAvatar"><img src="${player.avatarSrc}" alt="${esc(player.name || "Jugador")}"></span>` : `<span class="voteAvatar">🦖</span>`;
     const castBubble = player => player?.avatarSrc ? `<span class="castAvatar"><img src="${player.avatarSrc}" alt="${esc(player.name || "Jugador")}"></span>` : `<span class="castAvatar">🦖</span>`;
+    function promptSizeClass(text){
+      const len = String(text || "").trim().length;
+      if(len <= 30) return "size-xl";
+      if(len <= 58) return "size-lg";
+      if(len <= 92) return "size-md";
+      return "size-sm";
+    }
+    function setHeaderPrompt({prompt = "", category = "", active = false} = {}){
+      if(!ui.topBar || !ui.topCenter || !ui.topBrand) return;
+      const vertical = document.body.classList.contains("vertical");
+      ui.topBar.classList.toggle("with-prompt", !!active);
+      ui.topBar.classList.toggle("brand-center", !active);
+      ui.topBrand.classList.toggle("hidden", vertical || !!active);
+      if(active && prompt){
+        const sizeClass = promptSizeClass(prompt);
+        ui.topCenter.innerHTML = `<div class="navPrompt ${sizeClass}">
+          <span class="navPromptKick">${esc(category || "Categoria")}</span>
+          <div class="navPromptText">${esc(prompt)}</div>
+        </div>`;
+      } else {
+        ui.topCenter.innerHTML = "";
+      }
+    }
     function createLoopDeck(sources, targetVolume){
       const tracks = [new Audio(), new Audio()];
       tracks.forEach(track => { track.loop = false; track.preload = "auto"; track.volume = 0; });
@@ -733,6 +793,7 @@
     }
 
     function renderPaused(){
+      setHeaderPrompt({active:false});
       ui.hero.className = "hero center";
       ui.hero.innerHTML = `<div class="titleWrap">
             <span class="kick" id="category">Sesion</span>
@@ -752,6 +813,7 @@
       const question = game.question || {};
       const isSpeed = question.type === "speed";
       const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt;
+      const headerPromptMode = answersVisible && (castMode || document.body.classList.contains("vertical"));
       const justRevealed = answersVisible && !lastAnswersVisible;
       lastAnswersVisible = answersVisible;
       const leadLeft = countSeconds(question.answersVisibleAt || Date.now());
@@ -812,6 +874,7 @@
     }
 
     function renderScoresPhase(){
+      setHeaderPrompt({active:false});
       ui.hero.className = "hero scores";
       lastAnswersVisible = false;
       ui.category.textContent = "Marcador";
@@ -1071,6 +1134,7 @@
     }
 
     function renderLobby(){
+      setHeaderPrompt({active:false});
       ui.hero.className = "hero lobby";
       lastAnswersVisible = false;
       const visible = players.slice(0, document.body.classList.contains("vertical") ? 8 : 12);
@@ -1096,6 +1160,7 @@
       const next = nextQuestion();
       const left = countSeconds(game.countdownEndAt || Date.now());
       const art = categoryArtFor(next?.category || "");
+      setHeaderPrompt({active:false});
       ui.hero.className = "hero center";
       ui.category.textContent = "";
       ui.prompt.textContent = "";
@@ -1118,6 +1183,7 @@
       const isSpeed = question.type === "speed";
       const art = categoryArtFor(question.category || "");
       const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt;
+      const headerPromptMode = answersVisible && (castMode || document.body.classList.contains("vertical"));
       const justRevealed = answersVisible && !lastAnswersVisible;
       lastAnswersVisible = answersVisible;
       const leadLeft = countSeconds(question.answersVisibleAt || Date.now());
@@ -1129,8 +1195,13 @@
       ui.category.textContent = categoryLabel;
       ui.prompt.textContent = question.prompt || "Esperando pregunta...";
       ui.copy.textContent = copyLabel;
+      setHeaderPrompt({
+        active: headerPromptMode,
+        prompt: question.prompt || "Esperando pregunta...",
+        category: categoryLabel
+      });
       setTimer(String(left), Math.max(0, Math.min(1, left / total)), true);
-      ui.hero.className = `hero ${answersVisible ? "compact" : "lead"}${justRevealed ? " revealed" : ""}`;
+      ui.hero.className = `hero ${answersVisible ? "compact" : "lead"}${justRevealed ? " revealed" : ""}${headerPromptMode ? " headerPrompt" : ""}`;
       ui.hero.innerHTML = `<div class="titleWrap">
             <span class="kick" id="category">${esc(categoryLabel)}</span>
             ${!answersVisible ? `<img class="categorySplash" src="${art.src}" alt="${esc(question.category || "Categoria")}">` : ""}
