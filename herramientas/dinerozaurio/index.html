@@ -347,6 +347,10 @@
     .monthHead h4{margin:0}
     .monthAlertBtn{min-width:40px;padding:8px 10px;font-size:18px;line-height:1}
     .monthAlertBtn.bad{box-shadow:0 0 0 1px rgba(255,91,127,.38) inset}
+    .currentMonthGrid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
+    .currentMonthStacks{display:flex;flex-direction:column;gap:16px}
+    .currentMonthSummary .value{font-size:24px}
+    .currentMonthHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
     .txList{display:flex;flex-direction:column;gap:10px;margin-top:14px}
     .txRow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px;border-radius:14px;background:#10193a;border:1px solid rgba(255,255,255,.06)}
     .txDate{font-size:12px;color:var(--muted);font-weight:700}
@@ -357,7 +361,7 @@
     .modalCard{width:min(760px,100%);max-height:88vh;overflow:auto;background:linear-gradient(180deg,#121933,#0f1630);border:1px solid var(--line);border-radius:20px;padding:18px}
     .modalHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .modalGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:1100px){.grid-2,.summary,.forecast-toolbar,.modalGrid{grid-template-columns:1fr}}
+    @media (max-width:1100px){.grid-2,.summary,.forecast-toolbar,.modalGrid,.currentMonthGrid{grid-template-columns:1fr}}
   </style>
 </head>
 <body data-zaurio-nav="herramientas">
@@ -467,6 +471,7 @@
 
       <div class="tabs">
         <div class="tab active" data-tab="config">Configuración</div>
+        <div class="tab" data-tab="current-month">Este mes</div>
         <div class="tab" data-tab="forecast">Previsión</div>
       </div>
 
@@ -565,6 +570,10 @@
           </div>
         </div>
       </section></section>
+
+      <section id="tab-current-month" class="stack hidden">
+        <div id="currentMonthPanel"></div>
+      </section>
 
       <section id="tab-forecast" class="stack hidden">
         <div class="panel">
@@ -2085,6 +2094,204 @@
         remainingAvailable -= amount;
       });
       return { income, expense, debt, savings, net: income - expense - debt - savings, expenseItems };
+    }
+    function buildReserveStateThroughMonth(ym){
+      let reserve = Number(state.reserveInitial || 0);
+      let cumulativeSavings = 0;
+      if(ym < state.defaultStartMonth){
+        const snapshot = buildForecastMonthSnapshot(ym);
+        reserve += Number(snapshot.net || 0);
+        cumulativeSavings += Number(snapshot.savings || 0);
+        return { reserve, cumulativeSavings };
+      }
+      monthsInRange(state.defaultStartMonth, ym).forEach(monthKey => {
+        const snapshot = buildForecastMonthSnapshot(monthKey);
+        reserve += Number(snapshot.net || 0);
+        cumulativeSavings += Number(snapshot.savings || 0);
+      });
+      return { reserve, cumulativeSavings };
+    }
+    function renderCurrentMonthPanel(){
+      const ym = todayMonth();
+      const root = document.getElementById('currentMonthPanel');
+      if(!root) return;
+      const snapshot = buildForecastMonthSnapshot(ym);
+      const current = monthlyActiveItems(ym);
+      const monthLabel = prettyMonthLabel(ym);
+      const adj = adjustmentForMonth(ym);
+      const transferEntries = monthCardTransfers(ym);
+      const oneOffEntries = monthOneOffExpenses(ym);
+      const recovered = state.debts.reduce((sum, item) => sum + getDebtRecoveredForMonth(item, ym), 0);
+      const { reserve, cumulativeSavings } = buildReserveStateThroughMonth(ym);
+      const hasNegative = Number(snapshot.net || 0) < 0;
+
+      const renderMiniItems = (items, emptyLabel) => items.length
+        ? `<div class="miniList">${items.join('')}</div>`
+        : `<div class="empty">${emptyLabel}</div>`;
+
+      const incomeItems = [
+        ...current.incomes.map(item => `
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(item.name || 'Ingreso')}</div>
+              <div class="miniSub">Ingreso base del mes</div>
+            </div>
+            <div class="money">${euros(item.monthAmount || 0)}</div>
+          </div>`),
+        ...transferEntries.map(entry => {
+          const card = (state.debts || []).find(item => item.id === entry.cardDebtId);
+          return `
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(entry.name || 'Ingreso extra por traspaso desde tarjeta')}</div>
+              <div class="miniSub">Ingreso extra desde ${escapeHtml(card ? debtDisplayName(card) : 'tarjeta')}</div>
+            </div>
+            <div class="money">${euros(entry.amount || 0)}</div>
+          </div>`;
+        }),
+        ...(Number(adj.extraIncomeAmount || 0) ? [`
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(adj.extraIncomeName || 'Ingreso puntual')}</div>
+              <div class="miniSub">Ingreso puntual de este mes</div>
+            </div>
+            <div class="money">${euros(adj.extraIncomeAmount || 0)}</div>
+          </div>`] : [])
+      ];
+
+      const expenseItems = [
+        ...current.expenses.map(item => `
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(item.name || 'Gasto')}</div>
+              <div class="miniSub">Gasto base del mes</div>
+            </div>
+            <div class="money">${euros(item.monthAmount || 0)}</div>
+          </div>`),
+        ...oneOffEntries.filter(entry => entry.paymentSource !== 'card').map(entry => `
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(entry.name || 'Gasto puntual')}</div>
+              <div class="miniSub">Gasto puntual pagado con sueldo</div>
+            </div>
+            <div class="money">${euros(entry.amount || 0)}</div>
+          </div>`),
+        ...(Number(adj.extraExpenseAmount || 0) ? [`
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(adj.extraExpenseName || 'Gasto puntual')}</div>
+              <div class="miniSub">Gasto puntual de este mes</div>
+            </div>
+            <div class="money">${euros(adj.extraExpenseAmount || 0)}</div>
+          </div>`] : [])
+      ];
+
+      const debtItems = current.debts.map(item => `
+        <div class="miniItem ${item.settled ? 'settledDebt' : ''}">
+          <div class="miniMeta">
+            <div class="miniName">${escapeHtml(debtDisplayName(item))}${item.settled ? ' · saldada' : ''}</div>
+            <div class="miniSub">${escapeHtml(item.settled ? 'Deuda ya liquidada' : debtDescription(item))}</div>
+          </div>
+          <div class="money">${euros(item.monthAmount || 0)}</div>
+        </div>`);
+
+      const savingItems = [
+        ...current.goals.map(item => `
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(item.name || 'Ahorro')}</div>
+              <div class="miniSub">${escapeHtml((item.goalType || 'fixed') === 'fixed' ? 'Ahorro fijo' : 'Objetivo de ahorro')}</div>
+            </div>
+            <div class="money">${euros(item.monthAmount || 0)}</div>
+          </div>`),
+        ...(Number(adj.extraSavingAmount || 0) ? [`
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(adj.extraSavingName || 'Ahorro puntual')}</div>
+              <div class="miniSub">Ahorro puntual de este mes</div>
+            </div>
+            <div class="money">${euros(adj.extraSavingAmount || 0)}</div>
+          </div>`] : [])
+      ];
+
+      root.innerHTML = `
+        <div class="panel currentMonthSummary">
+          <div class="currentMonthHeader">
+            <div>
+              <h2 style="margin:0">Este mes</h2>
+              <div class="sub">${escapeHtml(monthLabel)} · vista operativa del mes actual</div>
+            </div>
+            <div class="btnRow">
+              ${hasNegative ? `<button id="currentMonthAlertBtn" class="btn danger">Resolver negativo</button>` : ''}
+              <button id="openCurrentMonthModalBtn" class="btn primary">Abrir detalle del mes</button>
+            </div>
+          </div>
+          <div class="summary" style="margin-top:16px">
+            <div class="card">
+              <div class="label">Ingreso total</div>
+              <div class="value kpi-cyan">${euros(snapshot.income)}</div>
+            </div>
+            <div class="card">
+              <div class="label">Gasto total</div>
+              <div class="value kpi-red">${euros(snapshot.expense)}</div>
+            </div>
+            <div class="card">
+              <div class="label">Deuda del mes</div>
+              <div class="value kpi-yellow">${euros(snapshot.debt)}</div>
+            </div>
+            <div class="card">
+              <div class="label">Sobrante del mes</div>
+              <div class="value ${snapshot.net >= 0 ? 'kpi-green' : 'kpi-red'}">${euros(snapshot.net)}</div>
+            </div>
+          </div>
+          <div class="summary" style="margin-top:12px">
+            <div class="card">
+              <div class="label">Recuperado</div>
+              <div class="value kpi-green">${recovered ? `+ ${euros(recovered)}` : euros(0)}</div>
+            </div>
+            <div class="card">
+              <div class="label">Ahorro del mes</div>
+              <div class="value" style="color:var(--purple)">${euros(snapshot.savings)}</div>
+            </div>
+            <div class="card">
+              <div class="label">Ahorro acumulado</div>
+              <div class="value" style="color:var(--purple)">${euros(cumulativeSavings)}</div>
+            </div>
+            <div class="card">
+              <div class="label">Colchón</div>
+              <div class="value ${reserve >= 0 ? 'kpi-green' : 'kpi-red'}">${euros(reserve)}</div>
+            </div>
+          </div>
+          ${hasNegative ? `<div class="warnBox" style="margin-top:14px"><h4>Este mes está en negativo</h4><div class="muted">Faltan ${euros(Math.abs(snapshot.net))}. Puedes abrir el aviso para ver sugerencias o resolverlo con tarjeta.</div></div>` : ''}
+        </div>
+
+        <div class="currentMonthGrid" style="margin-top:16px">
+          <div class="currentMonthStacks">
+            <div class="panel">
+              <div class="section-title"><h3>Ingresos</h3></div>
+              ${renderMiniItems(incomeItems, 'No hay ingresos activos este mes.')}
+            </div>
+            <div class="panel">
+              <div class="section-title"><h3>Gastos</h3></div>
+              ${renderMiniItems(expenseItems, 'No hay gastos cargados este mes.')}
+            </div>
+          </div>
+          <div class="currentMonthStacks">
+            <div class="panel">
+              <div class="section-title"><h3>Deudas</h3></div>
+              ${renderMiniItems(debtItems, 'No hay deudas activas este mes.')}
+            </div>
+            <div class="panel">
+              <div class="section-title"><h3>Ahorro</h3></div>
+              ${renderMiniItems(savingItems, 'No hay ahorro activo este mes.')}
+            </div>
+          </div>
+        </div>`;
+
+      const openBtn = document.getElementById('openCurrentMonthModalBtn');
+      if(openBtn) openBtn.onclick = () => openMonthModal(ym);
+      const alertBtn = document.getElementById('currentMonthAlertBtn');
+      if(alertBtn) alertBtn.onclick = () => openNegativeMonthModal(ym);
     }
     function buildNegativeMonthSuggestions(ym){
       const snapshot = buildForecastMonthSnapshot(ym);
@@ -3890,6 +4097,7 @@
 
       document.getElementById('monthsGrid').innerHTML = visibleCards.join('');
       renderCardBalancesPanel();
+      renderCurrentMonthPanel();
 
       const warnEl = document.getElementById('forecastWarnings');
       if(warnings.length){
@@ -4174,9 +4382,11 @@
         tab.addEventListener('click', () => {
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
-          const isConfig = tab.dataset.tab === 'config';
-          document.getElementById('tab-config').classList.toggle('hidden', !isConfig);
-          document.getElementById('tab-forecast').classList.toggle('hidden', isConfig);
+          const activeTab = tab.dataset.tab;
+          ['config','current-month','forecast'].forEach(tabId => {
+            const section = document.getElementById(`tab-${tabId}`);
+            if(section) section.classList.toggle('hidden', activeTab !== tabId);
+          });
         });
       });
     }
