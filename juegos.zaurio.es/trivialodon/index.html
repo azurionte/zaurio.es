@@ -10,10 +10,10 @@
     *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,system-ui,sans-serif}body{padding:18px}button,input{font:inherit}button{cursor:pointer}
     .app{width:min(1320px,100%);margin:0 auto;display:grid;gap:18px}.shell{display:none;gap:18px}.shell.on{display:grid}
     .topbar,.panel,.playerCard,.answerCard,.scoreRow,.modeCard,.modalCard,.heroCard{border:1px solid var(--stroke);border-radius:30px;background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.24),0 0 32px rgba(255,0,170,.08);backdrop-filter:blur(14px)}
-    .topbar{position:relative;z-index:120;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;min-height:86px}
+    .topbar{position:relative;z-index:120;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;min-height:86px;overflow:hidden}
     .topLeft,.topRight{display:flex;align-items:center;gap:12px;position:relative;z-index:2}
-    .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;width:210px;height:54px;overflow:visible}
-    .logoMark{display:block;width:auto;height:100%;max-width:100%;max-height:100%;object-fit:contain;transform:none}
+    .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;width:210px;height:calc(100% - 16px);max-height:54px;overflow:hidden}
+    .logoMark{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;transform:none}
     .menuWrap,.soundWrap{position:relative;z-index:121}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.soundChip{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn{padding:0 18px;gap:12px;flex-direction:row}.menuBtn img{width:28px;height:28px}
     .menuGlyph{font-size:1.9rem;line-height:1}
     .menuDrop{position:absolute;left:0;top:calc(100% + 10px);display:none;min-width:240px;padding:8px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}.menuDrop img{width:22px;height:22px;object-fit:contain}
@@ -130,7 +130,7 @@
       .topbar{padding:10px 14px;min-height:78px}
       .topLeft,.topRight{gap:8px}
       .topCenter{top:50%}
-      .topCenter{width:196px;height:48px}
+      .topCenter{width:196px;height:calc(100% - 14px);max-height:48px}
       .menuBtn,.identity,.soundChip{height:46px;padding:0 12px;font-size:.92rem}
       .menuBtn{padding:0 14px}
       .soundPanel{min-width:min(320px,92vw)}
@@ -208,7 +208,7 @@
       .identityName{font-size:.72rem;line-height:1.02;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
       .identityRole{font-size:.5rem;letter-spacing:.02em}
       .summaryScore{font-size:.74rem}
-      .topCenter{width:168px;height:42px}
+      .topCenter{width:168px;height:calc(100% - 12px);max-height:42px}
         .menuDrop{position:fixed;top:84px;left:8px;right:auto;min-width:210px;max-width:min(280px,calc(100vw - 16px));max-height:calc(100vh - 96px);overflow:auto;z-index:130}
         .soundPanel{position:fixed;top:84px;left:50%;right:auto;transform:translateX(-50%);min-width:0;width:min(340px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100vh - 96px);overflow:auto;-webkit-overflow-scrolling:touch;z-index:131}
       .actions.center .btn{flex:1 1 100%}
@@ -294,7 +294,7 @@
     }
     @media (max-width:640px) and (max-height:920px){
       .topbar{min-height:58px;padding:6px 9px}
-      .topCenter{width:156px;height:38px}
+      .topCenter{width:156px;height:calc(100% - 10px);max-height:38px}
       .menuBtn,.identity,.soundChip{height:34px;border-radius:16px}
       .identity{max-width:160px;padding:0 8px}
       .miniAvatar{width:26px;height:26px;flex-basis:26px}
@@ -320,7 +320,7 @@
       .app,.shell{gap:8px}
       .sceneWrap{min-height:calc(100vh - 108px)}
       .topbar{padding:8px 10px;border-radius:20px;min-height:58px}
-      .topCenter{width:148px;height:36px}
+      .topCenter{width:148px;height:calc(100% - 10px);max-height:36px}
       .menuBtn,.identity,.soundChip{padding:5px 7px}
       .miniAvatar{width:22px;height:22px;flex-basis:22px}
       .identity{min-height:30px}
@@ -352,7 +352,7 @@
     }
     @media (max-width:520px) and (max-height:520px){
       .topbar{min-height:50px;padding:6px 8px}
-      .topCenter{width:138px;height:32px}
+      .topCenter{width:138px;height:calc(100% - 8px);max-height:32px}
       .menuBtn img{width:14px;height:14px}
         .soundChip{min-width:28px;min-height:28px;padding:4px 6px}
         .identity{max-width:118px;padding:4px 6px}
