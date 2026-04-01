@@ -730,13 +730,15 @@
     }
     function normalizeOneOffExpenseEntry(entry = {}, monthKey = ''){
       const resolvedMonth = entry.monthKey || monthKey || todayMonth();
+      const paymentSource = ['salary','card','reserve','savings'].includes(entry.paymentSource) ? entry.paymentSource : 'salary';
       return {
         id: entry.id || uid(),
         monthKey: resolvedMonth,
         name: String(entry.name || '').trim(),
         amount: Number(entry.amount || 0),
-        paymentSource: entry.paymentSource === 'card' ? 'card' : 'salary',
+        paymentSource,
         cardDebtId: String(entry.cardDebtId || '').trim(),
+        savingsGoalId: String(entry.savingsGoalId || '').trim(),
         cardUseMode: entry.cardUseMode || '',
         entryDate: entry.entryDate || `${resolvedMonth}-01`,
         installmentMonthlyPayment: Number(entry.installmentMonthlyPayment || 0),
@@ -798,7 +800,17 @@
     }
     function salaryOneOffExpensesTotal(ym){
       return monthOneOffExpenses(ym)
-        .filter(entry => entry.paymentSource !== 'card')
+        .filter(entry => entry.paymentSource === 'salary')
+        .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+    }
+    function reserveOneOffExpensesTotal(ym){
+      return monthOneOffExpenses(ym)
+        .filter(entry => entry.paymentSource === 'reserve')
+        .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+    }
+    function savingsOneOffExpensesTotal(ym){
+      return monthOneOffExpenses(ym)
+        .filter(entry => entry.paymentSource === 'savings')
         .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
     }
     function debtCardEntriesForMonth(debtId, ym){
@@ -1247,6 +1259,20 @@
       const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
       return `${months[(m || 1) - 1] || ym} ${y}`;
     }
+    function goalNameById(goalId){
+      if(!goalId) return '';
+      const goal = (state.goals || []).find(item => item.id === goalId);
+      return goal ? String(goal.name || 'Ahorro').trim() : '';
+    }
+    function spendingSourceLabel(source, goalId = ''){
+      if(source === 'card') return 'Pagado con tarjeta';
+      if(source === 'reserve') return 'Pagado con colchón';
+      if(source === 'savings'){
+        const goalName = goalNameById(goalId);
+        return goalName ? `Pagado con ahorro · ${goalName}` : 'Pagado con ahorro';
+      }
+      return 'Pagado con sueldo';
+    }
     function getItemDisplayName(item, collection){
       if(collection === 'debts') return debtDisplayName(item);
       return String(item?.name || `${collectionLabel(collection)} sin nombre`).trim();
@@ -1490,12 +1516,14 @@
           const afterMode = afterMap[id]?.mode || '';
           const beforeAmount = Number(beforeMap[id]?.amount || 0);
           const afterAmount = Number(afterMap[id]?.amount || 0);
+          const beforeSource = beforeMap[id]?.source || 'salary';
+          const afterSource = afterMap[id]?.source || 'salary';
           if(afterMode === 'custom' || beforeMode === 'custom'){
             title = `Se ha cambiado el pago de deuda en ${itemName} para ${prettyMonth}`;
-            desc = `Se ha cambiado de ${euros(beforeAmount)} a ${euros(afterAmount)}.`;
+            desc = `Se ha cambiado de ${euros(beforeAmount)} a ${euros(afterAmount)} y ahora ${spendingSourceLabel(afterSource, afterMap[id]?.savingsGoalId).toLowerCase()}.`;
           } else if(afterMode || beforeMode){
             title = `Se ha cambiado el estado de deuda en ${itemName} para ${prettyMonth}`;
-            desc = `Se ha cambiado de ${beforeMode || 'sin ajuste'} a ${afterMode || 'sin ajuste'}.`;
+            desc = `Se ha cambiado de ${beforeMode || 'sin ajuste'} a ${afterMode || 'sin ajuste'}${afterMode === 'paid' || afterMode === 'custom' ? ` y ahora ${spendingSourceLabel(afterSource, afterMap[id]?.savingsGoalId).toLowerCase()}` : ''}.`;
           }
         }
         changes.push(createMonthOpsChange(
@@ -1523,6 +1551,8 @@
         const entry = afterEntry || beforeEntry || {};
         const paymentDesc = (target) => {
           if(!target) return 'sin definir';
+          if(target.paymentSource === 'reserve') return 'pagado con colchón';
+          if(target.paymentSource === 'savings') return `pagado con ahorro${goalNameById(target.savingsGoalId) ? ` (${goalNameById(target.savingsGoalId)})` : ''}`;
           if(target.paymentSource !== 'card') return 'pagado con sueldo';
           const debt = (current.debts || []).find(item => item.id === target.cardDebtId);
           const debtName = debt ? debtDisplayName(debt) : 'tarjeta';
@@ -2082,6 +2112,8 @@
       const debt = state.debts.reduce((sum, item) => {
         return sum + Number(getDebtAmountForMonth(item, ym) || 0);
       }, 0);
+      const reserveUsage = reserveOneOffExpensesTotal(ym);
+      const savingsUsage = savingsOneOffExpensesTotal(ym);
       let remainingAvailable = income - expense - debt;
       let savings = Number(adj.extraSavingAmount || 0);
       state.goals.forEach(goal => {
@@ -2093,21 +2125,21 @@
         savings += amount;
         remainingAvailable -= amount;
       });
-      return { income, expense, debt, savings, net: income - expense - debt - savings, expenseItems };
+      return { income, expense, debt, savings, net: income - expense - debt - savings, expenseItems, reserveUsage, savingsUsage };
     }
     function buildReserveStateThroughMonth(ym){
       let reserve = Number(state.reserveInitial || 0);
       let cumulativeSavings = 0;
       if(ym < state.defaultStartMonth){
         const snapshot = buildForecastMonthSnapshot(ym);
-        reserve += Number(snapshot.net || 0);
-        cumulativeSavings += Number(snapshot.savings || 0);
+        reserve += Number(snapshot.net || 0) - Number(snapshot.reserveUsage || 0);
+        cumulativeSavings += Number(snapshot.savings || 0) - Number(snapshot.savingsUsage || 0);
         return { reserve, cumulativeSavings };
       }
       monthsInRange(state.defaultStartMonth, ym).forEach(monthKey => {
         const snapshot = buildForecastMonthSnapshot(monthKey);
-        reserve += Number(snapshot.net || 0);
-        cumulativeSavings += Number(snapshot.savings || 0);
+        reserve += Number(snapshot.net || 0) - Number(snapshot.reserveUsage || 0);
+        cumulativeSavings += Number(snapshot.savings || 0) - Number(snapshot.savingsUsage || 0);
       });
       return { reserve, cumulativeSavings };
     }
@@ -2172,7 +2204,7 @@
           <div class="miniItem">
             <div class="miniMeta">
               <div class="miniName">${escapeHtml(entry.name || 'Gasto puntual')}</div>
-              <div class="miniSub">Gasto puntual pagado con sueldo</div>
+              <div class="miniSub">${escapeHtml(spendingSourceLabel(entry.paymentSource, entry.savingsGoalId))}</div>
             </div>
             <div class="money">${euros(entry.amount || 0)}</div>
           </div>`),
@@ -3385,7 +3417,9 @@
       const current = monthlyActiveItems(ym);
       const root = document.getElementById('modalRoot');
       const availableCards = (state.debts || []).filter(item => (item.instrumentType || item.debtKind) === 'card');
+      const availableSavingsGoals = (state.goals || []).filter(item => String(item.name || '').trim());
       const cardOptions = availableCards.map(item => `<option value="${item.id}">${escapeHtml(debtDisplayName(item))}</option>`).join('');
+      const savingsOptions = availableSavingsGoals.map(item => `<option value="${item.id}">${escapeHtml(item.name || 'Ahorro')}</option>`).join('');
       const monthOneOffs = monthOneOffExpenses(ym);
 
       function monthAdjustmentHasData(target){
@@ -3417,11 +3451,17 @@
       }
 
       function oneOffExpenseLabel(entry){
-        if(entry.paymentSource !== 'card') return 'Pagado con sueldo';
+        if(entry.paymentSource === 'reserve') return spendingSourceLabel('reserve');
+        if(entry.paymentSource === 'savings') return spendingSourceLabel('savings', entry.savingsGoalId);
+        if(entry.paymentSource !== 'card') return spendingSourceLabel('salary');
         const debt = availableCards.find(item => item.id === entry.cardDebtId);
         const debtName = debt ? debtDisplayName(debt) : 'Tarjeta';
         const useMode = entry.cardUseMode || debt?.paymentMode || debt?.cardSubtype || 'tarjeta';
         return `Pagado con ${debtName} · ${debtPaymentModeLabel(useMode)}`;
+      }
+      function debtPaymentLabel(entry){
+        if(!entry?.source) return '';
+        return spendingSourceLabel(entry.source, entry.savingsGoalId);
       }
 
       function incomeListHtml(){
@@ -3487,7 +3527,7 @@
           <div class="miniItem ${it.settled ? 'settledDebt' : ''}">
             <div class="miniMeta">
               <div class="miniName" style="${it.settled ? 'color:#4ade80' : ''}">${escapeHtml(debtDisplayName(it))}${it.settled ? ' · saldada' : ''}</div>
-              <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it))}</div>
+              <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it))}${debtPaymentLabel(adjustmentForMonth(ym).debtOverrides?.[it.id]) ? ` · ${escapeHtml(debtPaymentLabel(adjustmentForMonth(ym).debtOverrides?.[it.id]))}` : ''}</div>
             </div>
             <div class="miniActions">
               ${it.settled ? '' : `
@@ -3575,6 +3615,8 @@
       }
       function openOneOffExpenseForm(entry = null){
         const currentEntry = entry ? normalizeOneOffExpenseEntry(entry, ym) : normalizeOneOffExpenseEntry({ monthKey: ym }, ym);
+        const shouldShowSavingsPicker = availableSavingsGoals.length > 1;
+        const defaultSavingsGoalId = currentEntry.savingsGoalId || (availableSavingsGoals.length === 1 ? availableSavingsGoals[0].id : '');
         mountInlineForm('monthExpenseForm', entry ? 'Editar gasto puntual' : 'Añadir gasto puntual', [
           { id:'ame_name', label:'Nombre', type:'text', value:currentEntry.name || '' },
           { id:'ame_amount', label:'Monto', type:'number', step:'0.01', value:currentEntry.amount || 0 },
@@ -3582,7 +3624,15 @@
           { id:'ame_source', label:'Como lo has pagado', type:'select', options:`
             <option value="salary" ${currentEntry.paymentSource === 'salary' ? 'selected' : ''}>Con sueldo</option>
             <option value="card" ${currentEntry.paymentSource === 'card' ? 'selected' : ''}>Con tarjeta de credito</option>
+            <option value="reserve" ${currentEntry.paymentSource === 'reserve' ? 'selected' : ''}>Con colchón</option>
+            <option value="savings" ${currentEntry.paymentSource === 'savings' ? 'selected' : ''}>Con ahorro</option>
           `},
+          ...(availableSavingsGoals.length ? [{
+            id:'ame_savings_goal',
+            label:'Qué ahorro usas',
+            type:'select',
+            options: savingsOptions || '<option value="">Ahorro</option>'
+          }] : []),
           { id:'ame_card', label:'Tarjeta', type:'select', options: cardOptions || '<option value="">No hay tarjetas disponibles</option>' },
           { id:'ame_card_mode', label:'Como entra en la tarjeta', type:'select', options:`
             <option value="">Segun esta tarjeta</option>
@@ -3609,6 +3659,9 @@
             paymentSource,
             entryDate: document.getElementById('ame_date').value || `${ym}-01`,
             cardDebtId: paymentSource === 'card' ? document.getElementById('ame_card').value : '',
+            savingsGoalId: paymentSource === 'savings'
+              ? (document.getElementById('ame_savings_goal')?.value || (availableSavingsGoals.length === 1 ? availableSavingsGoals[0].id : ''))
+              : '',
             cardUseMode: paymentSource === 'card' ? document.getElementById('ame_card_mode').value : '',
             installmentMonthlyPayment: Number(document.getElementById('ame_installment_payment').value || 0),
             installmentRemainingInstallments: Number(document.getElementById('ame_installment_remaining').value || 0),
@@ -3622,6 +3675,14 @@
             alert('Si la compra va aplazada, necesito ultima cuota o cuotas restantes.');
             return;
           }
+          if(paymentSource === 'savings' && !availableSavingsGoals.length){
+            alert('Antes necesito que exista al menos un ahorro para pagar desde ahorro.');
+            return;
+          }
+          if(paymentSource === 'savings' && shouldShowSavingsPicker && !nextEntry.savingsGoalId){
+            alert('Necesito saber desde qué ahorro sale este gasto puntual.');
+            return;
+          }
           commitMonthAdjustment(nextAdj => {
             const nextEntries = (nextAdj.oneOffExpenses || []).filter(item => item.id !== nextEntry.id);
             nextEntries.push(nextEntry);
@@ -3629,14 +3690,21 @@
           });
         });
         const sourceEl = document.getElementById('ame_source');
+        const savingsEl = document.getElementById('ame_savings_goal');
         const cardEl = document.getElementById('ame_card');
         const modeEl = document.getElementById('ame_card_mode');
         const installmentIds = ['ame_installment_payment','ame_installment_remaining','ame_installment_last_month'];
+        if(savingsEl){
+          savingsEl.value = defaultSavingsGoalId;
+        }
         if(cardEl && currentEntry.cardDebtId) cardEl.value = currentEntry.cardDebtId;
         function syncOneOffExpenseFields(){
           const isCard = sourceEl.value === 'card';
+          const isSavings = sourceEl.value === 'savings';
+          const savingsField = savingsEl?.closest('.field');
           const cardField = cardEl?.closest('.field');
           const modeField = modeEl?.closest('.field');
+          if(savingsField) savingsField.style.display = isSavings && shouldShowSavingsPicker ? '' : 'none';
           if(cardField) cardField.style.display = isCard ? '' : 'none';
           if(modeField) modeField.style.display = isCard ? '' : 'none';
           const useMode = modeEl?.value || '';
@@ -3703,14 +3771,50 @@
 
       root.querySelectorAll('[data-debt-custom]').forEach(btn => btn.onclick = () => {
         const debt = current.debts.find(x=>x.id===btn.dataset.debtCustom);
+        const currentOverride = adj.debtOverrides?.[debt.id] || {};
+        const shouldShowSavingsPicker = availableSavingsGoals.length > 1;
         mountInlineForm('monthDebtForm', 'Editar deuda de este mes', [
-          { id:'md_amount', label:'Monto', type:'number', step:'0.01', value:debt.monthAmount }
+          { id:'md_amount', label:'Monto', type:'number', step:'0.01', value:debt.monthAmount },
+          { id:'md_source', label:'Como lo pagas', type:'select', options:`
+            <option value="salary" ${(currentOverride.source || 'salary') === 'salary' ? 'selected' : ''}>Con sueldo</option>
+            <option value="reserve" ${currentOverride.source === 'reserve' ? 'selected' : ''}>Con colchón</option>
+            <option value="savings" ${currentOverride.source === 'savings' ? 'selected' : ''}>Con ahorro</option>
+          `},
+          ...(availableSavingsGoals.length ? [{
+            id:'md_savings_goal',
+            label:'Qué ahorro usas',
+            type:'select',
+            options: savingsOptions || '<option value="">Ahorro</option>'
+          }] : [])
         ], () => {
           const amount = Number(document.getElementById('md_amount').value||0);
+          const source = document.getElementById('md_source').value || 'salary';
+          const savingsGoalId = source === 'savings'
+            ? (document.getElementById('md_savings_goal')?.value || (availableSavingsGoals.length === 1 ? availableSavingsGoals[0].id : ''))
+            : '';
+          if(source === 'savings' && !availableSavingsGoals.length){
+            alert('Antes necesito que exista al menos un ahorro para pagar desde ahorro.');
+            return;
+          }
+          if(source === 'savings' && shouldShowSavingsPicker && !savingsGoalId){
+            alert('Necesito saber desde qué ahorro sale esta deuda de este mes.');
+            return;
+          }
           commitMonthAdjustment(nextAdj => {
-            nextAdj.debtOverrides[debt.id] = { mode:'custom', amount };
+            nextAdj.debtOverrides[debt.id] = { mode:'custom', amount, source, savingsGoalId };
           });
         });
+        const sourceEl = document.getElementById('md_source');
+        const savingsEl = document.getElementById('md_savings_goal');
+        if(savingsEl){
+          savingsEl.value = currentOverride.savingsGoalId || (availableSavingsGoals.length === 1 ? availableSavingsGoals[0].id : '');
+          const syncDebtSource = () => {
+            const savingsField = savingsEl.closest('.field');
+            if(savingsField) savingsField.style.display = sourceEl.value === 'savings' && shouldShowSavingsPicker ? '' : 'none';
+          };
+          sourceEl.onchange = syncDebtSource;
+          syncDebtSource();
+        }
       });
       root.querySelectorAll('[data-debt-skip]').forEach(btn => btn.onclick = () => {
         commitMonthAdjustment(nextAdj => {
@@ -3721,12 +3825,37 @@
         const debt = current.debts.find(x => x.id === btn.dataset.debtPaid);
         if(!debt) return;
         const payoffAmount = getDebtPayoffAmount(debt, ym);
+        const currentOverride = adj.debtOverrides?.[debt.id] || {};
+        const shouldShowSavingsPicker = availableSavingsGoals.length > 1;
         mountInlineForm('monthDebtForm', 'Pagar deuda completa', [
-          { id:'md_payoff_amount', label:'Monto total a liquidar este mes', type:'number', step:'0.01', value:payoffAmount }
+          { id:'md_payoff_amount', label:'Monto total a liquidar este mes', type:'number', step:'0.01', value:payoffAmount },
+          { id:'md_payoff_source', label:'Como lo pagas', type:'select', options:`
+            <option value="salary" ${(currentOverride.source || 'salary') === 'salary' ? 'selected' : ''}>Con sueldo</option>
+            <option value="reserve" ${currentOverride.source === 'reserve' ? 'selected' : ''}>Con colchón</option>
+            <option value="savings" ${currentOverride.source === 'savings' ? 'selected' : ''}>Con ahorro</option>
+          `},
+          ...(availableSavingsGoals.length ? [{
+            id:'md_payoff_savings_goal',
+            label:'Qué ahorro usas',
+            type:'select',
+            options: savingsOptions || '<option value="">Ahorro</option>'
+          }] : [])
         ], () => {
           const amount = Number(document.getElementById('md_payoff_amount').value || 0);
+          const source = document.getElementById('md_payoff_source').value || 'salary';
+          const savingsGoalId = source === 'savings'
+            ? (document.getElementById('md_payoff_savings_goal')?.value || (availableSavingsGoals.length === 1 ? availableSavingsGoals[0].id : ''))
+            : '';
           if(amount <= 0){
             alert('Necesito un monto mayor que 0 para registrar el pago completo.');
+            return;
+          }
+          if(source === 'savings' && !availableSavingsGoals.length){
+            alert('Antes necesito que exista al menos un ahorro para pagar desde ahorro.');
+            return;
+          }
+          if(source === 'savings' && shouldShowSavingsPicker && !savingsGoalId){
+            alert('Necesito saber desde qué ahorro sale el pago completo.');
             return;
           }
           const sourceDebt = state.debts.find(item => item.id === debt.id);
@@ -3734,9 +3863,20 @@
             sourceDebt.settledMonth = ym;
           }
           commitMonthAdjustment(nextAdj => {
-            nextAdj.debtOverrides[debt.id] = { mode:'paid', amount };
+            nextAdj.debtOverrides[debt.id] = { mode:'paid', amount, source, savingsGoalId };
           });
         });
+        const sourceEl = document.getElementById('md_payoff_source');
+        const savingsEl = document.getElementById('md_payoff_savings_goal');
+        if(savingsEl){
+          savingsEl.value = currentOverride.savingsGoalId || (availableSavingsGoals.length === 1 ? availableSavingsGoals[0].id : '');
+          const syncDebtPayoffSource = () => {
+            const savingsField = savingsEl.closest('.field');
+            if(savingsField) savingsField.style.display = sourceEl.value === 'savings' && shouldShowSavingsPicker ? '' : 'none';
+          };
+          sourceEl.onchange = syncDebtPayoffSource;
+          syncDebtPayoffSource();
+        }
       });
 
       root.querySelectorAll('[data-goal-edit]').forEach(btn => btn.onclick = () => {
@@ -4046,6 +4186,8 @@
         const debt = state.debts.reduce((a,b)=>{
           return a + Number(getDebtAmountForMonth(b, m) || 0);
         },0);
+        const reserveUsage = reserveOneOffExpensesTotal(m);
+        const savingsUsage = savingsOneOffExpensesTotal(m);
 
         const recovered = state.debts.reduce((a,b)=> a + getDebtRecoveredForMonth(b, m), 0);
 
@@ -4069,8 +4211,8 @@
         });
 
         const net = income - expense - debt - totalSaving;
-        reserve += net;
-        cumulativeSavings += totalSaving;
+        reserve += net - reserveUsage;
+        cumulativeSavings += totalSaving - savingsUsage;
         const monthRisk = net < 0 ? buildNegativeMonthSuggestions(m) : { deficit:0, suggestions:[] };
 
         if(m >= from && m <= to){
@@ -4085,6 +4227,8 @@
               <div class="lab">Gastos</div><div>${euros(expense)}</div>
               <div class="lab">Deuda</div><div>${euros(debt)}</div>
               <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
+              ${reserveUsage ? `<div class="lab">Pagado con colchón</div><div>${euros(reserveUsage)}</div>` : ''}
+              ${savingsUsage ? `<div class="lab">Pagado con ahorro</div><div>${euros(savingsUsage)}</div>` : ''}
               <div class="lab">Ahorro</div><div>${euros(totalSaving)}</div>
               <div class="lab">Ahorro acumulado</div><div class="monthAcc">${euros(cumulativeSavings)}</div>
               <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
