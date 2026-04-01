@@ -1965,6 +1965,19 @@
       }
       return amount;
     }
+    function getDebtFundingForMonth(d, ym){
+      const override = adjustmentForMonth(ym).debtOverrides?.[d.id];
+      const amount = Number(getDebtAmountForMonth(d, ym) || 0);
+      const source = override?.source || 'salary';
+      if(amount <= 0) return { salaryAmount:0, reserveAmount:0, savingsAmount:0, source:'salary', savingsGoalId:'' };
+      if(source === 'reserve'){
+        return { salaryAmount:0, reserveAmount:amount, savingsAmount:0, source, savingsGoalId:'' };
+      }
+      if(source === 'savings'){
+        return { salaryAmount:0, reserveAmount:0, savingsAmount:amount, source, savingsGoalId: override?.savingsGoalId || '' };
+      }
+      return { salaryAmount:amount, reserveAmount:0, savingsAmount:0, source:'salary', savingsGoalId:'' };
+    }
     function getDebtRecoveredForMonth(d, ym){
       const paidMonth = getDebtPaidMonth(d.id);
       if(paidMonth && ym === addMonthsStr(paidMonth, 1)){
@@ -2109,11 +2122,15 @@
         })
         .filter(item => item.monthAmount !== 0);
       const expense = expenseItems.reduce((sum, item) => sum + Number(item.monthAmount || 0), 0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(ym);
-      const debt = state.debts.reduce((sum, item) => {
-        return sum + Number(getDebtAmountForMonth(item, ym) || 0);
-      }, 0);
-      const reserveUsage = reserveOneOffExpensesTotal(ym);
-      const savingsUsage = savingsOneOffExpensesTotal(ym);
+      let debt = 0;
+      let reserveUsage = reserveOneOffExpensesTotal(ym);
+      let savingsUsage = savingsOneOffExpensesTotal(ym);
+      state.debts.forEach(item => {
+        const funding = getDebtFundingForMonth(item, ym);
+        debt += Number(funding.salaryAmount || 0);
+        reserveUsage += Number(funding.reserveAmount || 0);
+        savingsUsage += Number(funding.savingsAmount || 0);
+      });
       let remainingAvailable = income - expense - debt;
       let savings = Number(adj.extraSavingAmount || 0);
       state.goals.forEach(goal => {
@@ -2330,7 +2347,7 @@
       const deficit = Math.abs(Math.min(0, snapshot.net));
       if(deficit <= 0) return { deficit:0, suggestions:[] };
       const salaryOneOffs = monthOneOffExpenses(ym)
-        .filter(entry => entry.paymentSource !== 'card')
+        .filter(entry => entry.paymentSource === 'salary')
         .map(entry => ({
           id: entry.id,
           name: entry.name || 'Gasto puntual',
@@ -4015,7 +4032,7 @@
       const month = state.defaultStartMonth || todayMonth();
       const income = state.incomes.reduce((a,b)=>a + getIncomeMonthlyCharge(b, month), 0);
       const expense = state.expenses.reduce((a,b)=>a + getExpenseMonthlyCharge(b, month), 0);
-      const debt = state.debts.reduce((a,b)=>a + getDebtAmountForMonth(b, month), 0);
+      const debt = state.debts.reduce((sum, item) => sum + Number(getDebtFundingForMonth(item, month).salaryAmount || 0), 0);
       const savings = state.goals.reduce((a,g)=>a + getGoalMonthlyCharge(g, month, 999999999).amount, 0);
 
       const incomeEl = document.getElementById('kpiIncome');
@@ -4183,11 +4200,15 @@
           return a + (ov !== undefined ? Number(ov) : getExpenseMonthlyCharge(b, m));
         },0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(m);
 
-        const debt = state.debts.reduce((a,b)=>{
-          return a + Number(getDebtAmountForMonth(b, m) || 0);
-        },0);
-        const reserveUsage = reserveOneOffExpensesTotal(m);
-        const savingsUsage = savingsOneOffExpensesTotal(m);
+        let debt = 0;
+        let reserveUsage = reserveOneOffExpensesTotal(m);
+        let savingsUsage = savingsOneOffExpensesTotal(m);
+        state.debts.forEach(item => {
+          const funding = getDebtFundingForMonth(item, m);
+          debt += Number(funding.salaryAmount || 0);
+          reserveUsage += Number(funding.reserveAmount || 0);
+          savingsUsage += Number(funding.savingsAmount || 0);
+        });
 
         const recovered = state.debts.reduce((a,b)=> a + getDebtRecoveredForMonth(b, m), 0);
 
