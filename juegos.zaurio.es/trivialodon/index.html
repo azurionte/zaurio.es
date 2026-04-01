@@ -50,7 +50,7 @@
     #profileScene,#joinScene,#lobbyScene,#setupScene{align-content:start}
     h1,h2,h3,p{margin:0}p{color:var(--muted);line-height:1.55}.title{font-size:clamp(2rem,5vw,3.3rem);line-height:1.02;font-weight:1000}.subtitle{font-size:clamp(1.2rem,2.5vw,1.9rem);font-weight:900}.field{display:grid;gap:8px}.field label{font-weight:800}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}
     .codeBadge,.countPill{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:18px;background:rgba(255,216,58,.12);color:var(--yellow);font-weight:1000;letter-spacing:.08em}.status{min-height:20px;font-weight:700}.status.info{color:var(--cyan)}.status.ok{color:#c8ffab}.status.danger{color:var(--danger)}
-    .avatarEditor{--avatar-card-w:112px;--avatar-gap:12px;display:grid;gap:12px;padding:18px 12px 12px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarCarousel{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:10px;margin-top:8px}.avatarViewport{overflow-x:auto;overflow-y:hidden;padding:10px 0 0;touch-action:pan-x;width:calc((var(--avatar-card-w) * 3) + (var(--avatar-gap) * 2));justify-self:center;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none}.avatarViewport::-webkit-scrollbar{display:none}.avatarRail{display:flex;gap:var(--avatar-gap);align-items:stretch;justify-content:flex-start;min-height:112px;width:max-content;padding:0}.avatarCard{flex:0 0 var(--avatar-card-w);border:1px solid rgba(255,255,255,.1);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));padding:10px 6px 8px;display:grid;gap:6px;justify-items:center;align-content:center;min-height:110px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);scroll-snap-align:center;transition:transform .28s cubic-bezier(.22,.8,.18,1),border-color .28s ease,background .28s ease,box-shadow .28s ease,opacity .28s ease}.avatarCard img{width:100%;max-width:72px;height:auto;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.18));transition:transform .28s cubic-bezier(.22,.8,.18,1),filter .28s ease}.avatarCard span{display:none}.avatarCard.is-center{transform:translateY(-2px) scale(1.02);border-color:rgba(255,216,58,.52);background:linear-gradient(135deg,rgba(255,216,58,.16),rgba(255,119,203,.14));box-shadow:0 10px 18px rgba(0,0,0,.14),0 0 0 1px rgba(255,216,58,.08)}.avatarCard.is-center img{transform:scale(1.04)}.avatarCard.is-side{opacity:.92;transform:scale(.92)}.avatarCard.is-side img{filter:drop-shadow(0 5px 10px rgba(0,0,0,.16)) saturate(.98)}.avatarCard.is-far{opacity:.7;transform:scale(.86)}.avatarNav{width:40px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:1.25rem;font-weight:1000;display:grid;place-items:center;transition:transform .18s ease,background .18s ease}.avatarNav:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}.avatarLegend{text-align:center;font-size:1rem;color:#fff;font-weight:900;line-height:1.1}.avatarStack{width:var(--frame);height:var(--frame);position:relative}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{display:none}
+    .avatarEditor{--avatar-card-w:112px;--avatar-gap:12px;display:grid;gap:12px;padding:18px 12px 12px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarCarousel{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:10px;margin-top:8px}.avatarViewport{position:relative;overflow-x:auto;overflow-y:hidden;padding:10px 0 0;touch-action:pan-x;width:calc((var(--avatar-card-w) * 3) + (var(--avatar-gap) * 2));justify-self:center;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none}.avatarViewport::-webkit-scrollbar{display:none}.avatarRail{display:flex;gap:var(--avatar-gap);align-items:stretch;justify-content:flex-start;min-height:112px;width:max-content;padding:0}.avatarCenterFrame{position:absolute;left:50%;top:10px;transform:translateX(-50%);width:var(--avatar-card-w);height:110px;border-radius:18px;border:1px solid rgba(255,216,58,.68);box-shadow:0 0 0 1px rgba(255,216,58,.18),0 10px 18px rgba(0,0,0,.14),0 0 22px rgba(255,216,58,.12);background:linear-gradient(135deg,rgba(255,216,58,.08),rgba(255,119,203,.08));pointer-events:none;z-index:3}.avatarCard{flex:0 0 var(--avatar-card-w);border:1px solid rgba(255,255,255,.1);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));padding:10px 6px 8px;display:grid;gap:6px;justify-items:center;align-content:center;min-height:110px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);scroll-snap-align:center;transition:transform .28s cubic-bezier(.22,.8,.18,1),background .28s ease,box-shadow .28s ease,opacity .28s ease;border-color:rgba(255,255,255,.08)}.avatarCard img{width:100%;max-width:72px;height:auto;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.18));transition:transform .28s cubic-bezier(.22,.8,.18,1),filter .28s ease}.avatarCard span{display:none}.avatarCard.is-center{transform:translateY(-2px) scale(1.02);background:linear-gradient(135deg,rgba(255,216,58,.08),rgba(255,119,203,.08));box-shadow:0 10px 18px rgba(0,0,0,.14)}.avatarCard.is-center img{transform:scale(1.04)}.avatarCard.is-side{opacity:.92;transform:scale(.92)}.avatarCard.is-side img{filter:drop-shadow(0 5px 10px rgba(0,0,0,.16)) saturate(.98)}.avatarCard.is-far{opacity:.7;transform:scale(.86)}.avatarNav{width:40px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:1.25rem;font-weight:1000;display:grid;place-items:center;transition:transform .18s ease,background .18s ease}.avatarNav:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}.avatarLegend{text-align:center;font-size:1rem;color:#fff;font-weight:900;line-height:1.1}.avatarStack{width:var(--frame);height:var(--frame);position:relative}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{display:none}
     .playersGrid{display:grid;gap:14px}.playerCard{padding:16px 18px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}.playerName{font-size:clamp(1rem,2vw,1.45rem);font-weight:1000;text-shadow:0 4px 0 rgba(0,0,0,.72),0 0 16px rgba(0,0,0,.45)}.playerSub{font-size:.96rem;color:var(--muted)}
     .dinoHole,.avatarShot{position:absolute;left:50%;top:50%;width:var(--avatar);height:var(--avatar);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translateY(-10px)}.dinoHole{display:grid;place-items:center;font-size:3rem;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,119,203,.16))}.avatarShot img{width:100%;height:100%;object-fit:cover}
     .heroCard{padding:32px;display:grid;gap:20px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));text-align:center}.bigCount{font-size:clamp(5rem,18vw,11rem);font-weight:1000;line-height:1}
@@ -484,6 +484,7 @@
               <div class="avatarCarousel">
                 <button class="avatarNav" id="btnAvatarPrev" type="button" aria-label="Avatar anterior">‹</button>
                 <div class="avatarViewport">
+                  <div class="avatarCenterFrame" aria-hidden="true"></div>
                   <div class="avatarRail" id="avatarRail"></div>
                 </div>
                 <button class="avatarNav" id="btnAvatarNext" type="button" aria-label="Avatar siguiente">›</button>
@@ -1875,6 +1876,22 @@
         if(card) ui.avatarViewport.scrollLeft = avatarCenterLeft(card);
       }
     }
+    function currentCenteredAvatarVirtual(){
+      const cards = avatarCards();
+      if(!cards.length || !ui.avatarViewport) return avatarVirtualIndex;
+      const viewportCenter = ui.avatarViewport.scrollLeft + (ui.avatarViewport.clientWidth / 2);
+      let active = cards[0];
+      let best = Infinity;
+      cards.forEach(card => {
+        const center = card.offsetLeft + (card.offsetWidth / 2);
+        const distance = Math.abs(center - viewportCenter);
+        if(distance < best){
+          best = distance;
+          active = card;
+        }
+      });
+      return Number(active.dataset.avatarVirtual || avatarVirtualIndex || 0);
+    }
     function bindAvatarSwipe(){
       if(!ui.avatarViewport || avatarScrollBound) return;
       avatarScrollBound = true;
@@ -1917,7 +1934,7 @@
       updateAvatarCarouselSelection();
     }
     function shiftAvatar(delta){
-      const next = avatarVirtualIndex + delta;
+      const next = currentCenteredAvatarVirtual() + delta;
       scrollAvatarToVirtual(next, true);
     }
     function renderAvatarCarousel(){
