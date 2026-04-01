@@ -881,9 +881,21 @@
       const start = state.defaultStartMonth || throughYm;
       return monthsInRange(start, throughYm).flatMap(monthKey => cardTransactionsForMonth(cardId, monthKey));
     }
+    function getRevolvingHistoryStart(card, throughYm = ''){
+      const base = state.defaultStartMonth || card.startMonth || throughYm || todayMonth();
+      return base;
+    }
+    function getRevolvingPaymentStart(card, throughYm = ''){
+      return card.startMonth || state.defaultStartMonth || throughYm || todayMonth();
+    }
     function buildCardLedger(card, throughYm){
       const paymentMode = card.paymentMode || card.cardSubtype || 'revolving';
-      const start = state.defaultStartMonth || card.startMonth || throughYm;
+      const historyStart = paymentMode === 'revolving'
+        ? getRevolvingHistoryStart(card, throughYm)
+        : (state.defaultStartMonth || card.startMonth || throughYm);
+      const paymentStart = paymentMode === 'revolving'
+        ? getRevolvingPaymentStart(card, throughYm)
+        : historyStart;
       const paidInfo = getDebtPaidOverride(card.id);
       const ledger = [];
       let balance = 0;
@@ -892,7 +904,7 @@
         if(balance > 0){
           ledger.push({
             id:`${card.id}:initial`,
-            date: start,
+            date: paymentStart,
             name:'Saldo arrastrado',
             amount: balance,
             type:'initial',
@@ -900,10 +912,17 @@
           });
         }
       }
-      monthsInRange(start, throughYm).forEach(monthKey => {
+      monthsInRange(historyStart, throughYm).forEach(monthKey => {
         const monthTxs = cardTransactionsForMonth(card.id, monthKey).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
         if(paymentMode === 'revolving'){
           if(paidInfo && monthKey > paidInfo.monthKey) return;
+          if(monthKey < paymentStart){
+            monthTxs.forEach(tx => {
+              balance += Number(tx.amount || 0);
+              ledger.push({ ...tx, balanceAfter: balance });
+            });
+            return;
+          }
           const annual = Number(card.tin || card.tae || 0) / 100;
           const monthlyRate = annual / 12;
           const interest = balance > 0.01 ? balance * monthlyRate : 0;
@@ -987,21 +1006,24 @@
       return { balance: Math.max(0, balance), entries: ledger };
     }
     function getRevolvingBalanceAtMonth(card, ym){
-      const start = card.startMonth || state.defaultStartMonth;
+      const historyStart = getRevolvingHistoryStart(card, ym);
+      const paymentStart = getRevolvingPaymentStart(card, ym);
       let balance = Number(card.currentDebt || 0);
       const payment = Number(card.currentPayment || 0);
       const annual = Number(card.tin || card.tae || 0) / 100;
       const monthlyRate = annual / 12;
-      if(ym < start) return balance;
-      let cur = start;
+      if(ym < historyStart) return balance;
+      let cur = historyStart;
       let safe = 0;
       while(cur <= ym && safe < 240){
-        if(balance > 0.01 && payment > 0){
-          const interest = balance * monthlyRate;
-          const charge = Math.min(payment, balance + interest);
-          balance = Math.max(0, balance + interest - charge);
-        } else if(balance <= 0.01){
-          balance = 0;
+        if(cur >= paymentStart){
+          if(balance > 0.01 && payment > 0){
+            const interest = balance * monthlyRate;
+            const charge = Math.min(payment, balance + interest);
+            balance = Math.max(0, balance + interest - charge);
+          } else if(balance <= 0.01){
+            balance = 0;
+          }
         }
         const monthCharges = debtCardEntriesForMonth(card.id, cur)
           .filter(entry => (entry.cardUseMode || card.paymentMode || card.cardSubtype || 'revolving') === 'revolving')
@@ -2183,17 +2205,25 @@
         const annual = Number(d.tin || d.tae || 0) / 100;
         const monthlyRate = annual / 12;
         let balance = debt;
-        let cur = start;
+        const historyStart = getRevolvingHistoryStart(d, ym);
+        const paymentStart = getRevolvingPaymentStart(d, ym);
+        let cur = historyStart;
         let safe = 0;
         while(cur <= ym && safe < 240){
+          const entriesThisMonth = debtCardEntriesForMonth(d.id, cur)
+            .filter(entry => {
+              const useMode = entry.cardUseMode || d.paymentMode || d.cardSubtype || 'revolving';
+              return useMode === 'revolving';
+            });
+          const transferAmount = debtCardTransfersForMonth(d.id, cur).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+          if(cur < paymentStart){
+            balance += entriesThisMonth.reduce((sum, entry) => sum + Number(entry.amount || 0), 0) + transferAmount;
+            cur = addMonthsStr(cur, 1);
+            safe++;
+            continue;
+          }
           if(balance <= 0.01){
             if(cur === ym) return 0;
-            const entriesThisMonth = debtCardEntriesForMonth(d.id, cur)
-              .filter(entry => {
-                const useMode = entry.cardUseMode || d.paymentMode || d.cardSubtype || 'revolving';
-                return useMode === 'revolving';
-              });
-            const transferAmount = debtCardTransfersForMonth(d.id, cur).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
             balance += entriesThisMonth.reduce((sum, entry) => sum + Number(entry.amount || 0), 0) + transferAmount;
             cur = addMonthsStr(cur, 1);
             safe++;
@@ -2203,12 +2233,6 @@
           if(cur === ym) return charge > 0.01 ? charge : 0;
           const interest = balance * monthlyRate;
           balance = Math.max(0, balance + interest - charge);
-          const entriesThisMonth = debtCardEntriesForMonth(d.id, cur)
-            .filter(entry => {
-              const useMode = entry.cardUseMode || d.paymentMode || d.cardSubtype || 'revolving';
-              return useMode === 'revolving';
-            });
-          const transferAmount = debtCardTransfersForMonth(d.id, cur).reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
           balance += entriesThisMonth.reduce((sum, entry) => sum + Number(entry.amount || 0), 0) + transferAmount;
           cur = addMonthsStr(cur, 1);
           safe++;
