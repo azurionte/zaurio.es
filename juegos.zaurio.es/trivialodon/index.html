@@ -251,20 +251,21 @@
       .modeHead{align-items:flex-start}
       .scoreRow{grid-template-columns:1fr;justify-items:center;text-align:center}
       .scoreRow .sceneStack{justify-items:center}
-      .questionTitle{font-size:clamp(1.45rem,10vw,2.2rem);line-height:.98}
-      .questionTitle.compact{font-size:clamp(1.18rem,7.6vw,1.72rem);line-height:1.02}
-      .questionTitle.tight{font-size:clamp(1.02rem,6.6vw,1.42rem);line-height:1.04}
+      .questionTitle{font-size:clamp(1.34rem,8.8vw,2.02rem);line-height:1}
+      .questionTitle.compact{font-size:clamp(1.08rem,6.9vw,1.54rem);line-height:1.02}
+      .questionTitle.tight{font-size:clamp(.94rem,5.8vw,1.24rem);line-height:1.05}
+      .questionTitle.ultraTight{font-size:clamp(.84rem,5vw,1.06rem);line-height:1.07}
       .questionBox{gap:14px}
       .questionHeader{grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start}
       .questionHeader .sceneStack{min-width:0}
-      .timerRing{width:78px;height:78px;justify-self:end;align-self:start}
-      .timerInner{font-size:1.2rem}
-      .answerCard{padding:14px 16px}
-      .answerText{font-size:1rem}
-      .answers.twoCols{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-      .answers.twoCols .answerCard{min-height:88px;padding:12px 12px;gap:8px}
-      .answers.twoCols .answerText{font-size:.94rem;line-height:1.18}
-      .answers.twoCols .answerState{font-size:.82rem}
+      .timerRing{width:74px;height:74px;justify-self:end;align-self:start}
+      .timerInner{font-size:1.14rem}
+      .answerCard{padding:13px 15px}
+      .answerText{font-size:.98rem}
+      .answers.twoCols{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .answers.twoCols .answerCard{min-height:76px;padding:10px 11px;gap:7px}
+      .answers.twoCols .answerText{font-size:.88rem;line-height:1.14}
+      .answers.twoCols .answerState{font-size:.78rem}
       .answers.twoCols .answerCard:last-child:nth-child(odd){grid-column:1 / -1}
       .categoryLead{grid-template-columns:1fr;justify-items:center;gap:14px}
       .categoryLead .categoryArt{width:min(180px,48vw)}
@@ -2507,14 +2508,21 @@
       const isSpeed = question.type === "speed";
       const wasCorrect = isSpeed ? question.scores?.[state.localAnswer] > 0 : state.localAnswer === question.correct;
       const art = categoryArtFor(question.category || "");
-      const promptLength = String(question.prompt || "").trim().length;
+      const promptText = String(question.prompt || "").trim();
+      const promptLength = promptText.length;
+      const promptWordCount = promptText ? promptText.split(/\s+/).length : 0;
       const longestChoice = choices.reduce((max, item) => Math.max(max, String(item || "").trim().length), 0);
-      const canUseTwoCols = answersVisible && choices.length >= 4 && longestChoice <= 18;
+      const totalChoiceChars = choices.reduce((sum, item) => sum + String(item || "").trim().length, 0);
+      const canUseTwoCols = answersVisible
+        && choices.length >= 4
+        && longestChoice <= 22
+        && totalChoiceChars <= 88;
 
       ui.questionPrompt.textContent = question.prompt;
-      ui.questionPrompt.classList.remove("compact", "tight");
-      if(promptLength > 88) ui.questionPrompt.classList.add("compact");
-      if(promptLength > 138) ui.questionPrompt.classList.add("tight");
+      ui.questionPrompt.classList.remove("compact", "tight", "ultraTight");
+      if(promptLength > 72 || promptWordCount > 12) ui.questionPrompt.classList.add("compact");
+      if(promptLength > 112 || promptWordCount > 18) ui.questionPrompt.classList.add("tight");
+      if(promptLength > 148 || promptWordCount > 24) ui.questionPrompt.classList.add("ultraTight");
 
       ui.questionCopy.textContent = question.revealed
         ? (isSpeed ? "Tiempo. Mira el ranking completo del Modo Velociraptor!." : "Tiempo. Mira la correcta y quedate con el dato curioso.")
