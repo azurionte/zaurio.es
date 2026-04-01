@@ -212,13 +212,13 @@
       .identityName{font-size:.64rem;line-height:.94;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
       .identityRole{font-size:.48rem;line-height:.94}
       .summaryScore{font-size:.62rem}
-      .topCenter{width:118px;height:24px;max-height:24px}
+      .topCenter{width:126px;height:26px;max-height:26px}
         .menuDrop{position:fixed;top:84px;left:8px;right:auto;min-width:210px;max-width:min(280px,calc(100vw - 16px));max-height:calc(100vh - 96px);overflow:auto;z-index:130}
         .soundPanel{position:fixed;top:84px;left:50%;right:auto;transform:translateX(-50%);min-width:0;width:min(340px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100vh - 96px);overflow:auto;-webkit-overflow-scrolling:touch;z-index:131}
       .actions.center .btn{flex:1 1 100%}
-      .actions.between .btn{flex:1 1 100%}
+      .actions.between .btn{flex:1 1 calc(50% - 4px)}
       .modalCard{max-height:calc(100vh - 20px);padding:16px;gap:14px;border-radius:22px}
-      .sceneWrap{min-height:calc(100dvh - 96px)}
+      .sceneWrap{min-height:calc(100dvh - 84px)}
       .sceneStack{gap:12px}
       .panel,.heroCard{padding:14px;border-radius:20px}
       .kicker{padding:5px 10px;font-size:10px}
@@ -292,7 +292,7 @@
       #profileLayout > article:first-child{gap:10px}
       #profileLayout .subtitle{font-size:1.04rem}
       #profileLayout .codeBadge{justify-self:stretch}
-      #profileLayout .actions.between{gap:8px}
+      #profileLayout .actions.between{gap:8px;flex-wrap:nowrap}
       #profileLayout .btn{height:40px;padding:0 14px}
       #profileLayout .status{min-height:0}
       #setupLayout{width:100% !important}
@@ -309,13 +309,13 @@
       .topbar{height:42px;min-height:42px;padding:4px 7px}
       .topLeft{flex-basis:110px}
       .topRight{flex-basis:110px}
-      .topCenter{width:110px;height:22px;max-height:22px}
+      .topCenter{width:118px;height:24px;max-height:24px}
       .menuBtn,.identity,.soundChip{height:28px;border-radius:15px}
       .identity{max-width:108px;padding:0 7px}
       .miniAvatar{width:22px;height:22px;flex-basis:22px}
       .identityName{font-size:.62rem}
       .identityRole{font-size:.46rem}
-      .sceneWrap{min-height:calc(100dvh - 88px)}
+      .sceneWrap{min-height:calc(100dvh - 78px)}
       .panel,.heroCard{padding:12px;border-radius:18px}
       .sceneStack{gap:10px}
       .subtitle{font-size:1rem}
@@ -337,7 +337,7 @@
       .topbar{padding:8px 10px;border-radius:20px;min-height:58px}
       .topLeft{flex-basis:100px}
       .topRight{flex-basis:100px}
-      .topCenter{width:104px;height:20px;max-height:20px}
+      .topCenter{width:112px;height:22px;max-height:22px}
       .menuBtn,.identity,.soundChip{padding:4px 6px}
       .miniAvatar{width:20px;height:20px;flex-basis:20px}
       .identity{min-height:30px}
@@ -372,7 +372,7 @@
       .topLeft{flex-basis:92px}
       .topRight{flex-basis:92px}
       .topbar{height:38px;min-height:38px;padding:4px 6px}
-      .topCenter{width:96px;height:18px;max-height:18px}
+      .topCenter{width:102px;height:20px;max-height:20px}
       .menuBtn img{width:18px;height:18px}
       .menuGlyph{font-size:.96rem}
         .soundChip{min-width:26px;min-height:26px;padding:3px 5px}
@@ -465,8 +465,8 @@
       <section class="scene sceneCenter on" id="profileScene">
         <div class="sceneSplit" id="profileLayout" style="width:min(1160px,100%)">
           <article class="panel sceneStack">
-            <span class="kicker" id="profileKicker">Perfil</span>
-            <h2 class="subtitle" id="profileTitle">Configura tu ficha</h2>
+            <span class="kicker" id="profileKicker">Sala</span>
+            <h2 class="subtitle" id="profileTitle">Comparte el codigo de sala</h2>
             <div class="codeBadge" id="roomBadge">------</div>
             <div class="field" id="joinCodeField" hidden>
               <label for="joinCodeInput">Codigo de sala</label>
@@ -477,7 +477,7 @@
               <input id="nameInput" maxlength="26" placeholder="Ejemplo: Marta Rex" />
             </div>
             <div class="avatarEditor">
-              <span class="kicker">Avatar</span>
+              <span class="kicker">Escoge tu avatar</span>
               <div class="avatarCarousel">
                 <button class="avatarNav" id="btnAvatarPrev" type="button" aria-label="Avatar anterior">‹</button>
                 <div class="avatarViewport">
@@ -491,7 +491,7 @@
             <div class="status info" id="profileStatus"></div>
             <div class="actions between">
               <button class="btn btnGhost" id="btnBack" type="button">Volver</button>
-              <button class="btn btnOk" id="btnReady" type="button">Listo</button>
+              <button class="btn btnOk" id="btnReady" type="button">Siguiente</button>
             </div>
           </article>
           <article class="panel sceneStack" id="profileSideCard">
@@ -1893,8 +1893,8 @@
       const guestDraft = state.role === "guest" && !!state.roomCode;
       const soloProfileStep = state.role === "host" || guestDraft;
       if(!ui.profileStatus.classList.contains("danger")) setStatus("", "info");
-      ui.profileKicker.textContent = state.role === "host" ? "Perfil" : "Invitado";
-      ui.profileTitle.textContent = state.role === "host" ? "Configura al anfitrion" : "Prepara tu ficha";
+      ui.profileKicker.textContent = state.role === "host" ? "Sala" : "Invitado";
+      ui.profileTitle.textContent = state.role === "host" ? "Comparte el codigo de sala" : "Prepara tu ficha";
       ui.profileSideTitle.textContent = state.role === "host" ? "Preparando la sala" : "Sala encontrada";
       ui.profileSideText.textContent = state.role === "host" ? "Comparte el codigo de sala y espera a que entren los invitados." : "Ya estas dentro. Ahora solo falta tu nombre y tu avatar.";
       ui.roomBadge.hidden = state.role !== "host";
