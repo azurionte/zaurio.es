@@ -194,25 +194,25 @@
       body{padding:8px;overflow-x:hidden;overflow-y:auto}
       .app,.shell{gap:10px}
       .shell{min-height:calc(100dvh - 16px)}
-      .topbar{position:sticky;top:8px;z-index:20;padding:6px 8px;border-radius:22px;min-height:54px;display:flex;align-items:center;justify-content:space-between}
+      .topbar{position:sticky;top:8px;z-index:20;padding:4px 8px;border-radius:20px;height:46px;min-height:46px;display:flex;align-items:center;justify-content:space-between}
       .topLeft,.topRight{gap:6px;min-width:0;position:relative;z-index:2}
       .topLeft{flex:0 0 118px;justify-content:flex-start}
       .topRight{flex:0 0 118px;justify-content:flex-end}
       .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);justify-content:center;align-items:center;pointer-events:none;z-index:1}
-      .menuBtn,.identity,.soundChip{width:auto;justify-content:center;height:36px;padding:0 8px;border-radius:18px}
+      .menuBtn,.identity,.soundChip{width:auto;justify-content:center;height:30px;padding:0 8px;border-radius:16px}
       .menuBtn{min-width:0;font-size:0;padding:0 10px;gap:8px}
       .menuBtn span:not(.menuGlyph){display:none}
       .menuBtn img{width:22px;height:22px;margin:0}
       .menuGlyph{font-size:1.12rem}
-      .soundChip{min-width:36px;height:36px;font-size:.78rem;padding:0 8px;border-radius:999px}
+      .soundChip{min-width:30px;height:30px;font-size:.74rem;padding:0 7px;border-radius:999px}
       .soundChip .soundLabel{display:none}
-      .identity{max-width:118px;gap:6px;padding:0 8px;height:36px}
-      .miniAvatar{order:2;width:30px;height:30px;flex-basis:30px}
+      .identity{max-width:118px;gap:6px;padding:0 8px;height:30px}
+      .miniAvatar{order:2;width:24px;height:24px;flex-basis:24px}
       .identityMeta{order:1;gap:2px;min-width:0}
-      .identityName{font-size:.68rem;line-height:.98;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
-      .identityRole{font-size:.54rem;line-height:.98}
-      .summaryScore{font-size:.68rem}
-      .topCenter{width:124px;height:32px;max-height:32px}
+      .identityName{font-size:.64rem;line-height:.94;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
+      .identityRole{font-size:.48rem;line-height:.94}
+      .summaryScore{font-size:.62rem}
+      .topCenter{width:118px;height:24px;max-height:24px}
         .menuDrop{position:fixed;top:84px;left:8px;right:auto;min-width:210px;max-width:min(280px,calc(100vw - 16px));max-height:calc(100vh - 96px);overflow:auto;z-index:130}
         .soundPanel{position:fixed;top:84px;left:50%;right:auto;transform:translateX(-50%);min-width:0;width:min(340px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100vh - 96px);overflow:auto;-webkit-overflow-scrolling:touch;z-index:131}
       .actions.center .btn{flex:1 1 100%}
@@ -306,15 +306,15 @@
       #setupActions .btn{width:100%;justify-content:center}
     }
     @media (max-width:640px) and (max-height:920px){
-      .topbar{min-height:50px;padding:5px 8px}
+      .topbar{height:42px;min-height:42px;padding:4px 7px}
       .topLeft{flex-basis:110px}
       .topRight{flex-basis:110px}
-      .topCenter{width:116px;height:30px;max-height:30px}
-      .menuBtn,.identity,.soundChip{height:34px;border-radius:16px}
-      .identity{max-width:110px;padding:0 7px}
-      .miniAvatar{width:24px;height:24px;flex-basis:24px}
-      .identityName{font-size:.64rem}
-      .identityRole{font-size:.5rem}
+      .topCenter{width:110px;height:22px;max-height:22px}
+      .menuBtn,.identity,.soundChip{height:28px;border-radius:15px}
+      .identity{max-width:108px;padding:0 7px}
+      .miniAvatar{width:22px;height:22px;flex-basis:22px}
+      .identityName{font-size:.62rem}
+      .identityRole{font-size:.46rem}
       .sceneWrap{min-height:calc(100dvh - 88px)}
       .panel,.heroCard{padding:12px;border-radius:18px}
       .sceneStack{gap:10px}
@@ -337,9 +337,9 @@
       .topbar{padding:8px 10px;border-radius:20px;min-height:58px}
       .topLeft{flex-basis:100px}
       .topRight{flex-basis:100px}
-      .topCenter{width:108px;height:28px;max-height:28px}
-      .menuBtn,.identity,.soundChip{padding:5px 7px}
-      .miniAvatar{width:22px;height:22px;flex-basis:22px}
+      .topCenter{width:104px;height:20px;max-height:20px}
+      .menuBtn,.identity,.soundChip{padding:4px 6px}
+      .miniAvatar{width:20px;height:20px;flex-basis:20px}
       .identity{min-height:30px}
       .identityName{font-size:.66rem}
       .identityRole{font-size:.48rem}
@@ -371,11 +371,12 @@
       .topbar{min-height:50px;padding:6px 8px}
       .topLeft{flex-basis:92px}
       .topRight{flex-basis:92px}
-      .topCenter{width:98px;height:26px;max-height:26px}
-      .menuBtn img{width:20px;height:20px}
-      .menuGlyph{font-size:1.02rem}
-        .soundChip{min-width:28px;min-height:28px;padding:4px 6px}
-        .identity{max-width:92px;padding:4px 6px}
+      .topbar{height:38px;min-height:38px;padding:4px 6px}
+      .topCenter{width:96px;height:18px;max-height:18px}
+      .menuBtn img{width:18px;height:18px}
+      .menuGlyph{font-size:.96rem}
+        .soundChip{min-width:26px;min-height:26px;padding:3px 5px}
+        .identity{max-width:92px;padding:3px 5px}
         .panel,.heroCard{padding:12px}
         .introLogo{width:min(145px,50%)}
         .bigCount{font-size:clamp(2.7rem,14vw,4.2rem)}
