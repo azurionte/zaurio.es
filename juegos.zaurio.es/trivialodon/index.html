@@ -50,7 +50,7 @@
     #profileScene,#joinScene,#lobbyScene,#setupScene{align-content:start}
     h1,h2,h3,p{margin:0}p{color:var(--muted);line-height:1.55}.title{font-size:clamp(2rem,5vw,3.3rem);line-height:1.02;font-weight:1000}.subtitle{font-size:clamp(1.2rem,2.5vw,1.9rem);font-weight:900}.field{display:grid;gap:8px}.field label{font-weight:800}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}
     .codeBadge,.countPill{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:18px;background:rgba(255,216,58,.12);color:var(--yellow);font-weight:1000;letter-spacing:.08em}.status{min-height:20px;font-weight:700}.status.info{color:var(--cyan)}.status.ok{color:#c8ffab}.status.danger{color:var(--danger)}
-    .avatarEditor{--avatar-card-w:112px;--avatar-gap:10px;display:grid;gap:8px;padding:12px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarCarousel{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:8px}.avatarViewport{overflow:hidden;padding:0;touch-action:pan-y}.avatarRail{display:flex;gap:var(--avatar-gap);align-items:stretch;justify-content:flex-start;min-height:108px;will-change:transform;transform:translateX(calc(-1 * (var(--avatar-card-w) + var(--avatar-gap))));transition:transform .34s cubic-bezier(.22,.8,.18,1)}.avatarRail.is-shifting-next{transform:translateX(calc(-2 * (var(--avatar-card-w) + var(--avatar-gap))))}.avatarRail.is-shifting-prev{transform:translateX(0)}.avatarCard{flex:0 0 var(--avatar-card-w);border:1px solid rgba(255,255,255,.1);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));padding:8px 6px;display:grid;gap:4px;justify-items:center;align-content:start;min-height:104px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);transition:transform .28s ease,border-color .28s ease,background .28s ease,box-shadow .28s ease,opacity .28s ease}.avatarCard img{width:100%;max-width:72px;height:auto;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.18));transition:transform .28s ease,filter .28s ease}.avatarCard span{font-size:.72rem;font-weight:1000;color:var(--muted);text-align:center;line-height:1.08}.avatarCard.is-center{transform:translateY(-2px) scale(1.02);border-color:rgba(255,216,58,.52);background:linear-gradient(135deg,rgba(255,216,58,.16),rgba(255,119,203,.14));box-shadow:0 10px 18px rgba(0,0,0,.14),0 0 0 1px rgba(255,216,58,.08)}.avatarCard.is-center img{transform:scale(1.04)}.avatarCard.is-center span{color:#fff}.avatarCard.is-side{opacity:.92;transform:scale(.92)}.avatarCard.is-side img{filter:drop-shadow(0 5px 10px rgba(0,0,0,.16)) saturate(.98)}.avatarCard.is-outer{opacity:.001;pointer-events:none;transform:scale(.84)}.avatarCard.is-outer span{opacity:0}.avatarNav{width:40px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:1.25rem;font-weight:1000;display:grid;place-items:center;transition:transform .18s ease,background .18s ease}.avatarNav:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}.avatarLegend{text-align:center;font-size:.84rem;color:#fff;font-weight:900}.avatarStack{width:var(--frame);height:var(--frame);position:relative}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{display:none}
+    .avatarEditor{--avatar-card-w:112px;--avatar-gap:12px;display:grid;gap:12px;padding:16px 12px 12px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarCarousel{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:10px;margin-top:6px}.avatarViewport{overflow:hidden;padding:4px 0 0;touch-action:pan-y;width:calc((var(--avatar-card-w) * 3) + (var(--avatar-gap) * 2));justify-self:center}.avatarRail{display:flex;gap:var(--avatar-gap);align-items:stretch;justify-content:flex-start;min-height:112px;will-change:transform}.avatarCard{flex:0 0 var(--avatar-card-w);border:1px solid rgba(255,255,255,.1);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));padding:10px 6px 8px;display:grid;gap:8px;justify-items:center;align-content:start;min-height:110px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);transition:transform .34s cubic-bezier(.22,.8,.18,1),border-color .34s ease,background .34s ease,box-shadow .34s ease,opacity .34s ease}.avatarCard img{width:100%;max-width:72px;height:auto;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.18));transition:transform .34s cubic-bezier(.22,.8,.18,1),filter .34s ease}.avatarCard span{font-size:.74rem;font-weight:1000;color:var(--muted);text-align:center;line-height:1.08}.avatarCard.is-center{transform:translateY(-2px) scale(1.02);border-color:rgba(255,216,58,.52);background:linear-gradient(135deg,rgba(255,216,58,.16),rgba(255,119,203,.14));box-shadow:0 10px 18px rgba(0,0,0,.14),0 0 0 1px rgba(255,216,58,.08)}.avatarCard.is-center img{transform:scale(1.04)}.avatarCard.is-center span{color:#fff}.avatarCard.is-side{opacity:.92;transform:scale(.92)}.avatarCard.is-side img{filter:drop-shadow(0 5px 10px rgba(0,0,0,.16)) saturate(.98)}.avatarCard.is-outer{opacity:.001;pointer-events:none;transform:scale(.84)}.avatarCard.is-outer span{opacity:0}.avatarNav{width:40px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:1.25rem;font-weight:1000;display:grid;place-items:center;transition:transform .18s ease,background .18s ease}.avatarNav:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}.avatarLegend{display:none}.avatarStack{width:var(--frame);height:var(--frame);position:relative}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{display:none}
     .playersGrid{display:grid;gap:14px}.playerCard{padding:16px 18px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}.playerName{font-size:clamp(1rem,2vw,1.45rem);font-weight:1000;text-shadow:0 4px 0 rgba(0,0,0,.72),0 0 16px rgba(0,0,0,.45)}.playerSub{font-size:.96rem;color:var(--muted)}
     .dinoHole,.avatarShot{position:absolute;left:50%;top:50%;width:var(--avatar);height:var(--avatar);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translateY(-10px)}.dinoHole{display:grid;place-items:center;font-size:3rem;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,119,203,.16))}.avatarShot img{width:100%;height:100%;object-fit:cover}
     .heroCard{padding:32px;display:grid;gap:20px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));text-align:center}.bigCount{font-size:clamp(5rem,18vw,11rem);font-weight:1000;line-height:1}
@@ -150,10 +150,10 @@
       .actions.between .btn{flex:1 1 140px}
       .btn{padding:13px 16px}
       .field input{padding:13px 14px}
-      .avatarEditor{--avatar-card-w:100px;padding:11px}
+      .avatarEditor{--avatar-card-w:100px;padding:14px 11px 11px}
       .avatarCarousel{grid-template-columns:38px minmax(0,1fr) 38px;gap:6px}
       .avatarRail{gap:6px;min-height:98px}
-      .avatarCard{padding:7px 5px;border-radius:18px;min-height:96px}
+      .avatarCard{padding:8px 5px 7px;border-radius:18px;min-height:96px}
       .avatarCard img{max-width:64px}
       .avatarNav{width:38px;height:38px}
       .avatarStack{width:148px;height:148px}
@@ -227,15 +227,15 @@
       .field{gap:6px}
       .field input{height:44px;padding:0 14px;border-radius:16px}
       .codeBadge,.countPill{padding:8px 12px;border-radius:16px;font-size:1rem}
-      .avatarEditor{--avatar-card-w:92px;--avatar-gap:8px;gap:10px;padding:12px;border-radius:20px}
+      .avatarEditor{--avatar-card-w:92px;--avatar-gap:8px;gap:10px;padding:14px 12px 12px;border-radius:20px}
       .avatarCarousel{grid-template-columns:34px minmax(0,1fr) 34px;gap:4px}
-      .avatarViewport{padding:0}
+      .avatarViewport{padding:4px 0 0;width:calc((var(--avatar-card-w) * 3) + (var(--avatar-gap) * 2))}
       .avatarRail{min-height:96px}
-      .avatarCard{min-height:94px;padding:7px 5px;border-radius:16px}
+      .avatarCard{min-height:94px;padding:8px 5px 7px;border-radius:16px}
       .avatarCard img{max-width:54px}
       .avatarCard span{font-size:.64rem}
       .avatarNav{width:34px;height:34px;font-size:1.05rem}
-      .avatarLegend{font-size:.76rem}
+      .avatarLegend{display:none}
       .avatarHint{display:none}
       .miniForm{gap:12px}
       .miniForm input,.miniForm textarea{padding:12px 14px}
@@ -323,13 +323,13 @@
       .subtitle{font-size:1rem}
       .field input{height:40px}
       .codeBadge{padding:7px 10px}
-      .avatarEditor{--avatar-card-w:84px;--avatar-gap:6px;padding:8px;gap:6px}
+      .avatarEditor{--avatar-card-w:84px;--avatar-gap:6px;padding:12px 8px 8px;gap:6px}
       .avatarRail{min-height:84px}
-      .avatarCard{min-height:82px;padding:5px 4px}
+      .avatarCard{min-height:82px;padding:7px 4px 5px}
       .avatarCard img{max-width:48px}
       .avatarCard span{font-size:.62rem}
       .avatarNav{width:32px;height:32px;font-size:1rem}
-      .avatarLegend{font-size:.78rem}
+      .avatarLegend{display:none}
       #profileLayout .btn{height:38px}
       .menuDrop,.soundPanel{top:54px;max-height:calc(100vh - 62px)}
     }
@@ -1807,17 +1807,33 @@
     function syncAvatarIndex(){ const idx = AVATAR_OPTIONS.findIndex(item => item.id === state.avatar.avatarId || item.src === state.avatar.src || item.src === state.avatar.rendered); state.avatarIndex = idx >= 0 ? idx : 0; }
     let avatarAnimating = false;
     let avatarSwipeBound = false;
-    let avatarTouchX = 0;
+    let avatarTouchStartX = 0;
+    let avatarTouchDeltaX = 0;
+    let avatarTouchDragging = false;
+    let avatarShiftTimer = 0;
     function commitAvatarIndex(index, options = {}){
       const option = avatarOption(index);
       state.avatarIndex = AVATAR_OPTIONS.findIndex(item => item.id === option.id);
       state.avatar = {kind:"preset",src:option.src,rendered:option.src,avatarId:option.id};
-      ui.avatarLegend.textContent = option.label;
+      if(ui.avatarLegend) ui.avatarLegend.textContent = option.label;
       updateIdentity();
       if(options.scroll) renderAvatarCarousel();
     }
     function setAvatarIndex(index){ commitAvatarIndex(index, {scroll:true, behavior:"smooth"}); }
     function avatarCards(){ return ui.avatarRail ? [...ui.avatarRail.querySelectorAll("[data-avatar-offset]")] : []; }
+    function avatarStepPx(){
+      if(!ui.avatarRail) return 0;
+      const styles = getComputedStyle(ui.avatarRail);
+      const cardWidth = parseFloat(styles.getPropertyValue("--avatar-card-w")) || 0;
+      const gap = parseFloat(styles.getPropertyValue("--avatar-gap")) || 0;
+      return cardWidth + gap;
+    }
+    function avatarBaseX(){ return -avatarStepPx(); }
+    function setAvatarRailX(value, animated){
+      if(!ui.avatarRail) return;
+      ui.avatarRail.style.transition = animated ? "transform .34s cubic-bezier(.22,.8,.18,1)" : "none";
+      ui.avatarRail.style.transform = `translate3d(${value}px,0,0)`;
+    }
     function updateAvatarCarouselSelection(){
       avatarCards().forEach(card => {
         const offset = Number(card.dataset.avatarOffset || 0);
@@ -1834,25 +1850,41 @@
         const extra = offset === 0 ? " is-center" : Math.abs(offset) === 1 ? " is-side" : " is-outer";
         return `<button class="avatarCard${extra}" data-avatar-offset="${offset}" data-avatar-index="${AVATAR_OPTIONS.findIndex(item => item.id === option.id)}" type="button"><img src="${option.src}" alt="${esc(option.label)}"><span>${esc(option.label)}</span></button>`;
       }).join("");
-      avatarCards().forEach(card => {
-        const offset = Number(card.dataset.avatarOffset || 0);
-        card.onclick = () => {
-          if(offset === 0 || avatarAnimating) return;
-          shiftAvatar(offset > 0 ? 1 : -1);
-        };
-      });
+      setAvatarRailX(avatarBaseX(), false);
     }
     function bindAvatarSwipe(){
       if(!ui.avatarViewport || avatarSwipeBound) return;
       avatarSwipeBound = true;
       ui.avatarViewport.addEventListener("touchstart", event => {
-        avatarTouchX = event.touches[0]?.clientX || 0;
+        if(avatarAnimating) return;
+        avatarTouchStartX = event.touches[0]?.clientX || 0;
+        avatarTouchDeltaX = 0;
+        avatarTouchDragging = true;
+        setAvatarRailX(avatarBaseX(), false);
+      }, {passive:true});
+      ui.avatarViewport.addEventListener("touchmove", event => {
+        if(!avatarTouchDragging || avatarAnimating) return;
+        const x = event.touches[0]?.clientX || 0;
+        avatarTouchDeltaX = x - avatarTouchStartX;
+        setAvatarRailX(avatarBaseX() + avatarTouchDeltaX, false);
       }, {passive:true});
       ui.avatarViewport.addEventListener("touchend", event => {
+        if(!avatarTouchDragging || avatarAnimating) return;
+        avatarTouchDragging = false;
         const endX = event.changedTouches[0]?.clientX || 0;
-        const delta = endX - avatarTouchX;
-        if(Math.abs(delta) < 24 || avatarAnimating) return;
-        shiftAvatar(delta < 0 ? 1 : -1);
+        const delta = endX - avatarTouchStartX;
+        avatarTouchDeltaX = delta;
+        const threshold = Math.max(24, avatarStepPx() * 0.22);
+        if(Math.abs(delta) >= threshold){
+          shiftAvatar(delta < 0 ? 1 : -1);
+        } else {
+          setAvatarRailX(avatarBaseX(), true);
+        }
+      }, {passive:true});
+      ui.avatarViewport.addEventListener("touchcancel", () => {
+        avatarTouchDragging = false;
+        avatarTouchDeltaX = 0;
+        if(!avatarAnimating) setAvatarRailX(avatarBaseX(), true);
       }, {passive:true});
       ui.avatarViewport.addEventListener("wheel", event => {
         if(Math.abs(event.deltaX) < 22 && Math.abs(event.deltaY) < 22) return;
@@ -1863,27 +1895,34 @@
     }
     function shiftAvatar(delta){
       if(!ui.avatarRail || avatarAnimating || !delta) return;
+      clearTimeout(avatarShiftTimer);
       avatarAnimating = true;
-      const dirClass = delta > 0 ? "is-shifting-next" : "is-shifting-prev";
-      ui.avatarRail.classList.remove("is-shifting-next", "is-shifting-prev");
       requestAnimationFrame(() => {
-        ui.avatarRail.classList.add(dirClass);
+        setAvatarRailX(avatarBaseX() - (delta * avatarStepPx()), true);
       });
-      const finalize = event => {
-        if(event.target !== ui.avatarRail || event.propertyName !== "transform") return;
-        ui.avatarRail.removeEventListener("transitionend", finalize);
-        ui.avatarRail.classList.remove("is-shifting-next", "is-shifting-prev");
+      const finalize = () => {
         commitAvatarIndex(state.avatarIndex + delta, {scroll:false});
         ensureAvatarCarouselDom();
         updateAvatarCarouselSelection();
         avatarAnimating = false;
+        avatarTouchDeltaX = 0;
       };
-      ui.avatarRail.addEventListener("transitionend", finalize, {once:true});
+      const onEnd = event => {
+        if(event.target !== ui.avatarRail || event.propertyName !== "transform") return;
+        ui.avatarRail.removeEventListener("transitionend", onEnd);
+        clearTimeout(avatarShiftTimer);
+        finalize();
+      };
+      ui.avatarRail.addEventListener("transitionend", onEnd);
+      avatarShiftTimer = window.setTimeout(() => {
+        ui.avatarRail.removeEventListener("transitionend", onEnd);
+        finalize();
+      }, 420);
     }
     function renderAvatarCarousel(){
       if(!ui.avatarRail) return;
       ensureAvatarCarouselDom();
-      ui.avatarLegend.textContent = avatarOption(state.avatarIndex).label;
+      if(ui.avatarLegend) ui.avatarLegend.textContent = avatarOption(state.avatarIndex).label;
       bindAvatarSwipe();
       updateAvatarCarouselSelection();
     }
