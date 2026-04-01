@@ -469,6 +469,7 @@
             </button>
             <div id="saveStateText" class="saveState">Sin cambios pendientes</div>
           </div>
+          <button id="exportDebugJsonBtn" class="btn ghost hidden">Exportar JSON</button>
           <button id="resetToWizardBtn" class="btn ghost">Volver al wizard</button>
           <button id="logoutBtn" class="btn danger">Salir</button>
         </div>
@@ -609,6 +610,7 @@
       supabaseAnonKey: 'sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk',
       appBaseUrl: 'https://herramientas.zaurio.es/dinerozaurio/'
     };
+    const DEBUG_EXPORT_EMAIL = 'dmnrobles@gmail.com';
 
     const state = {
       session: null,
@@ -1230,6 +1232,89 @@
         debts: cloneData(state.debts || []),
         monthAdjustments: cloneData(state.monthAdjustments || {})
       };
+    }
+    function canUseDebugExport(){
+      return String(state.session?.user?.email || '').trim().toLowerCase() === DEBUG_EXPORT_EMAIL;
+    }
+    function updateDebugExportUi(){
+      const btn = document.getElementById('exportDebugJsonBtn');
+      if(!btn) return;
+      btn.classList.toggle('hidden', !canUseDebugExport());
+    }
+    function buildDebugExportPayload(){
+      const persistable = snapshotPersistableState();
+      const forecastFrom = state.forecast?.from || state.defaultStartMonth || todayMonth();
+      const forecastTo = state.forecast?.to || addMonthsStr(forecastFrom, 12);
+      const months = monthsInRange(state.defaultStartMonth || todayMonth(), forecastTo);
+      const monthSnapshots = months.map(monthKey => {
+        const snapshot = buildForecastMonthSnapshot(monthKey);
+        const reserveState = buildReserveStateThroughMonth(monthKey);
+        const current = monthlyActiveItems(monthKey);
+        return {
+          monthKey,
+          prettyMonth: prettyMonthLabel(monthKey),
+          snapshot,
+          reserveState,
+          oneOffExpenses: monthOneOffExpenses(monthKey),
+          cardTransfers: monthCardTransfers(monthKey),
+          activeItems: {
+            incomes: current.incomes,
+            expenses: current.expenses,
+            debts: current.debts,
+            goals: current.goals
+          }
+        };
+      });
+      const debtDiagnostics = (state.debts || []).map(item => ({
+        id: item.id,
+        name: debtDisplayName(item),
+        description: debtDescription(item),
+        estimatedEndMonth: getDebtEstimatedEndMonth(item, todayMonth()),
+        prepaymentPlan: buildDebtPrepaymentPlan(item),
+        savingPlan: buildDebtSavingStrategy(item),
+        paidOverride: getDebtPaidOverride(item.id)
+      }));
+      const cardDiagnostics = (state.debts || [])
+        .filter(item => (item.instrumentType || item.debtKind) === 'card')
+        .map(item => ({
+          id: item.id,
+          name: debtDisplayName(item),
+          throughMonth: forecastTo,
+          summary: getCardSummary(item, forecastTo),
+          ledger: buildCardLedger(item, forecastTo)
+        }));
+      return {
+        exportedAt: new Date().toISOString(),
+        exportedBy: state.session?.user?.email || '',
+        source: 'dinerozaurio-debug-export',
+        state: {
+          sessionEmail: state.session?.user?.email || '',
+          planId: state.planId || null,
+          reserveInitial: state.reserveInitial,
+          defaultStartMonth: state.defaultStartMonth,
+          forecast: cloneData(state.forecast || {}),
+          persistable
+        },
+        diagnostics: {
+          monthSnapshots,
+          debtDiagnostics,
+          cardDiagnostics
+        }
+      };
+    }
+    function downloadDebugExportJson(){
+      if(!canUseDebugExport()) return;
+      const payload = buildDebugExportPayload();
+      const monthLabel = todayMonth();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `dinerozaurio-debug-${monthLabel}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     function assignPersistableState(next){
       state.reserveInitial = Number(next.reserveInitial || 0);
@@ -4460,6 +4545,7 @@
       loadLocal();
       const client = await maybeSupabase();
       window.dzSupabase = client;
+      updateDebugExportUi();
 
       document.getElementById('defaultStart').value = state.defaultStartMonth;
       document.getElementById('forecastFrom').value = state.forecast.from;
@@ -4470,6 +4556,7 @@
       if(client){
         const { data: { session } } = await client.auth.getSession();
         state.session = session;
+        updateDebugExportUi();
         if(session){
           try{
             await loadFromSupabase();
@@ -4482,9 +4569,11 @@
         client.auth.onAuthStateChange(async (_event, sessionNow) => {
           if(sessionNow && state.session && state.session.user && sessionNow.user && state.session.user.id === sessionNow.user.id && flowStateGet()){
             state.session = sessionNow;
+            updateDebugExportUi();
             return;
           }
           state.session = sessionNow;
+          updateDebugExportUi();
           if(sessionNow){
             try{
               await loadFromSupabase();
@@ -4578,10 +4667,14 @@
       document.getElementById('saveChangesBtn').addEventListener('click', () => {
         openSaveModal();
       });
+      document.getElementById('exportDebugJsonBtn').addEventListener('click', () => {
+        downloadDebugExportJson();
+      });
 
       document.getElementById('logoutBtn').addEventListener('click', async () => {
         if(window.dzSupabase){ await window.dzSupabase.auth.signOut(); }
         state.session = null;
+        updateDebugExportUi();
         flowStateClear();
         hide('choiceGate'); hide('wizard'); hide('appShell'); show('authGate');
       });
