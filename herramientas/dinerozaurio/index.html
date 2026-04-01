@@ -295,6 +295,11 @@
     .money{font-weight:900}
     .empty{border:1px dashed var(--line);border-radius:14px;padding:18px;color:var(--muted);text-align:center}
     .inline-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .debtInsights{display:flex;flex-direction:column;gap:10px}
+    .debtPills{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .debtPlanCard{border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;background:#10193a;margin-top:12px}
+    .debtPlanTitle{font-weight:900;margin-bottom:6px}
+    .debtPlanText{font-size:13px;color:var(--muted);line-height:1.45}
     .forecast-toolbar{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
     .field{display:flex;flex-direction:column;gap:7px}
     .field label{font-size:12px;color:var(--muted)}
@@ -1991,6 +1996,96 @@
       }
       return getDebtMonthState(d, ym).recoveredAmount;
     }
+    function getDebtEstimatedEndMonth(d, fromYm = ''){
+      const settledMonth = getDebtPaidMonth(d.id);
+      if(settledMonth) return settledMonth;
+      const start = d.startMonth || state.defaultStartMonth;
+      const baseMonth = fromYm && fromYm > start ? fromYm : start;
+      const paymentMode = d.paymentMode || d.cardSubtype || '';
+      if((d.instrumentType || d.debtKind || 'loan') === 'loan' || paymentMode === 'installment'){
+        if(d.lastMonth) return d.lastMonth;
+        const monthly = Number(d.monthlyPayment || 0);
+        const remaining = Math.max(0, Number(d.remainingInstallments || 0));
+        if(monthly <= 0 || remaining <= 0) return '';
+        const monthsElapsed = Math.max(0, monthDiff(start, baseMonth));
+        const remainingFromBase = Math.max(0, remaining - monthsElapsed);
+        return remainingFromBase > 0 ? addMonthsStr(baseMonth, remainingFromBase - 1) : baseMonth;
+      }
+      if((d.instrumentType || d.debtKind) === 'card' && paymentMode === 'pay_end_month'){
+        if(d.periodicity === 'one_time') return d.startMonth || state.defaultStartMonth;
+        return '';
+      }
+      if((d.instrumentType || d.debtKind) === 'card' && paymentMode === 'revolving'){
+        const startMonth = baseMonth || todayMonth();
+        const creditHorizon = addMonthsStr(startMonth, 240);
+        let cur = startMonth;
+        let safe = 0;
+        while(cur <= creditHorizon && safe < 240){
+          const balance = getRevolvingBalanceAtMonth(d, cur);
+          if(balance <= 0.01) return cur;
+          cur = addMonthsStr(cur, 1);
+          safe++;
+        }
+        return '';
+      }
+      return '';
+    }
+    function buildDebtPrepaymentPlan(d){
+      const fromYm = todayMonth() > state.defaultStartMonth ? todayMonth() : state.defaultStartMonth;
+      const estimatedEnd = getDebtEstimatedEndMonth(d, fromYm);
+      const horizonEnd = estimatedEnd || state.forecast.to || addMonthsStr(fromYm, 24);
+      const months = monthsInRange(fromYm, horizonEnd > fromYm ? horizonEnd : fromYm);
+      let reservePlan = null;
+      let savingsPlan = null;
+      months.forEach(monthKey => {
+        const payoff = Number(getDebtPayoffAmount(d, monthKey) || 0);
+        const { reserve, cumulativeSavings } = buildReserveStateThroughMonth(monthKey);
+        if(!reservePlan && payoff > 0 && reserve >= payoff){
+          reservePlan = { monthKey, payoff, reserve };
+        }
+        if(!savingsPlan && payoff > 0 && cumulativeSavings >= payoff){
+          savingsPlan = { monthKey, payoff, cumulativeSavings };
+        }
+      });
+      return { reservePlan, savingsPlan, estimatedEnd, fromYm, horizonEnd };
+    }
+    function buildDebtSavingStrategy(d){
+      const fromYm = todayMonth() > state.defaultStartMonth ? todayMonth() : state.defaultStartMonth;
+      const estimatedEnd = getDebtEstimatedEndMonth(d, fromYm);
+      const horizonEnd = estimatedEnd || state.forecast.to || addMonthsStr(fromYm, 24);
+      const months = monthsInRange(fromYm, horizonEnd > fromYm ? horizonEnd : fromYm);
+      const positiveNetByMonth = new Map(months.map(monthKey => {
+        const snapshot = buildForecastMonthSnapshot(monthKey);
+        return [monthKey, Math.max(0, Number(snapshot.net || 0))];
+      }));
+      for(const targetMonth of months){
+        const payoff = Number(getDebtPayoffAmount(d, targetMonth) || 0);
+        if(payoff <= 0) continue;
+        let collected = 0;
+        let startMonth = targetMonth;
+        const usedMonths = [];
+        for(let idx = months.indexOf(targetMonth); idx >= 0; idx--){
+          const monthKey = months[idx];
+          const available = Number(positiveNetByMonth.get(monthKey) || 0);
+          if(available > 0){
+            collected += available;
+            startMonth = monthKey;
+            usedMonths.unshift(monthKey);
+          }
+          if(collected >= payoff) break;
+        }
+        if(collected >= payoff && usedMonths.length){
+          return {
+            targetMonth,
+            payoff,
+            startMonth,
+            monthsCount: usedMonths.length,
+            monthlyAmount: payoff / usedMonths.length
+          };
+        }
+      }
+      return null;
+    }
 
     function getDebtMonthlyCharge(d, ym){
       const start = d.startMonth || state.defaultStartMonth;
@@ -3428,6 +3523,40 @@
         openDebtEditor(item, fromWizard);
       };
     }
+    function openDebtPlannerModal(debtId, mode){
+      const debt = (state.debts || []).find(item => item.id === debtId);
+      if(!debt) return;
+      const root = document.getElementById('modalRoot');
+      const estimatedEnd = getDebtEstimatedEndMonth(debt, todayMonth());
+      const prepay = buildDebtPrepaymentPlan(debt);
+      const savingPlan = buildDebtSavingStrategy(debt);
+      const reserveText = prepay.reservePlan
+        ? `Con el colchón previsto podrías liquidarla en ${prettyMonthLabel(prepay.reservePlan.monthKey)} con un pago aproximado de ${euros(prepay.reservePlan.payoff)}.`
+        : 'Con el colchón previsto dentro del rango actual no veo un mes claro en el que llegue para liquidarla por adelantado.';
+      const savingsText = prepay.savingsPlan
+        ? `Con el ahorro acumulado previsto podrías liquidarla en ${prettyMonthLabel(prepay.savingsPlan.monthKey)} con un pago aproximado de ${euros(prepay.savingsPlan.payoff)}.`
+        : 'Con el ahorro acumulado previsto dentro del rango actual no veo un mes claro en el que llegue para liquidarla por adelantado.';
+      const savePlanText = savingPlan
+        ? `Podrías empezar en ${prettyMonthLabel(savingPlan.startMonth)} apartando ${euros(savingPlan.monthlyAmount)} al mes para intentar liquidarla en ${prettyMonthLabel(savingPlan.targetMonth)}.`
+        : 'Con el sobrante positivo previsto no veo todavía una senda clara para apartar ahorro suficiente antes del fin estimado.';
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead"><h3>${escapeHtml(debtDisplayName(debt))}</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+        <div class="debtPills">
+          <span class="pill">Fecha estimada de finalización: ${escapeHtml(estimatedEnd ? prettyMonthLabel(estimatedEnd) : 'No calculable todavía')}</span>
+        </div>
+        <div class="debtPlanCard">
+          <div class="debtPlanTitle">Calcular pago adelantado</div>
+          <div class="debtPlanText">${escapeHtml(reserveText)}</div>
+          <div class="debtPlanText" style="margin-top:8px">${escapeHtml(savingsText)}</div>
+        </div>
+        <div class="debtPlanCard">
+          <div class="debtPlanTitle">Calcular ahorro</div>
+          <div class="debtPlanText">${escapeHtml(savePlanText)}</div>
+        </div>
+      </div>`;
+      document.getElementById('closeModalBtn').onclick = closeModal;
+    }
 
     function openMonthModal(ym){
       const adj = adjustmentForMonth(ym);
@@ -4050,6 +4179,7 @@
       let desc = '';
       let money = Number(item.amount||0);
       let displayName = item.name || 'Sin nombre';
+      let extraHtml = '';
       if(type==='income'){
         desc = `Ingreso · ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' → ' + item.endMonth : ''}`;
         money = Number(item.amount||0);
@@ -4071,11 +4201,18 @@
         displayName = debtDisplayName(item);
         desc = debtDescription(item);
         money = debtBaseDisplayAmount(item);
+        const estimatedEnd = getDebtEstimatedEndMonth(item, todayMonth());
+        extraHtml = `<div class="debtInsights">
+          <div class="debtPills">
+            <span class="pill">Fecha estimada de finalización: ${escapeHtml(estimatedEnd ? prettyMonthLabel(estimatedEnd) : 'No calculable todavía')}</span>
+          </div>
+        </div>`;
       }
       return `<div class="item">
-        <div class="meta"><div class="name">${escapeHtml(displayName)}</div><div class="desc">${escapeHtml(desc)}</div></div>
+        <div class="meta"><div class="name">${escapeHtml(displayName)}</div><div class="desc">${escapeHtml(desc)}</div>${extraHtml}</div>
         <div class="money">${euros(money)}</div>
         <div class="inline-actions">
+          ${type==='debt' ? `<button class="btn ghost" data-debt-prepay="${item.id}">Calcular pago adelantado</button><button class="btn ghost" data-debt-saveplan="${item.id}">Calcular ahorro</button>` : ''}
           <button class="btn ghost" data-edit="${type}" data-id="${item.id}">Editar</button>
           <button class="btn danger" data-del="${type}" data-id="${item.id}">Eliminar</button>
         </div>
@@ -4139,6 +4276,12 @@
             const item = state.debts.find(x => x.id === btn.dataset.id);
             if(item) openDebtEditor(item, false);
           });
+        });
+        debtListEl.querySelectorAll('[data-debt-prepay]').forEach(btn => {
+          btn.addEventListener('click', () => openDebtPlannerModal(btn.dataset.debtPrepay, 'prepay'));
+        });
+        debtListEl.querySelectorAll('[data-debt-saveplan]').forEach(btn => {
+          btn.addEventListener('click', () => openDebtPlannerModal(btn.dataset.debtSaveplan, 'saveplan'));
         });
         debtListEl.querySelectorAll('[data-del]').forEach(btn => {
           btn.addEventListener('click', () => {
