@@ -537,6 +537,7 @@ const CONTACT_FIELDS = {
 };
 const INFO_SLOT_KEYS = ['info1','info2','info3','info4','info5','info6','info7'];
 const SIDEBAR_PAGE_HEIGHT_PX = Math.round((297 / 25.4) * 96);
+const SIDEBAR_LIMIT_SAFETY_PX = 96;
 
 function escapeSidebarLimitHtml(value){
   return String(value || '')
@@ -556,7 +557,7 @@ function ensureSidebarLimitMeasureRoot(){
   root.style.left = '-20000px';
   root.style.top = '0';
   root.style.width = '74mm';
-  root.style.height = `${SIDEBAR_PAGE_HEIGHT_PX}px`;
+  root.style.height = `${SIDEBAR_PAGE_HEIGHT_PX - SIDEBAR_LIMIT_SAFETY_PX}px`;
   root.style.visibility = 'hidden';
   root.style.pointerEvents = 'none';
   root.style.overflow = 'hidden';
@@ -708,7 +709,7 @@ function sidebarCandidateFits(candidate){
   root.innerHTML = renderSidebarCandidateMarkup(candidate);
   const shell = root.firstElementChild;
   if (!shell) return true;
-  return shell.scrollHeight <= SIDEBAR_PAGE_HEIGHT_PX;
+  return shell.scrollHeight <= (SIDEBAR_PAGE_HEIGHT_PX - SIDEBAR_LIMIT_SAFETY_PX);
 }
 
 function openSidebarLimitModal({ allowMoveSkills = true, onAccept, onMoveSkills } = {}){
