@@ -12,18 +12,18 @@
     .topbar,.panel,.playerCard,.answerCard,.scoreRow,.modeCard,.modalCard,.heroCard{border:1px solid var(--stroke);border-radius:30px;background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.24),0 0 32px rgba(255,0,170,.08);backdrop-filter:blur(14px)}
     .topbar{position:relative;z-index:120;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;min-height:86px;overflow:hidden}
     .topLeft,.topRight{display:flex;align-items:center;gap:12px;position:relative;z-index:2}
-    .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;width:236px;height:calc(100% - 16px);max-height:58px;overflow:hidden}
+    .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;width:250px;height:calc(100% - 12px);max-height:62px;overflow:hidden}
     .logoMark{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;transform:none}
     .menuWrap,.soundWrap{position:relative;z-index:121}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.soundChip{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn{padding:0 18px;gap:12px;flex-direction:row}.menuBtn img{width:34px;height:34px}
     .menuGlyph{font-size:1.6rem;line-height:1}
     .menuDrop{position:absolute;left:0;top:calc(100% + 10px);display:none;min-width:240px;padding:8px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}.menuDrop img{width:22px;height:22px;object-fit:contain}
-    .identity{max-width:100%;padding:0 14px 0 16px;gap:12px}
+    .identity{max-width:100%;padding:0 12px 0 16px;gap:12px;justify-content:space-between}
     .identity[hidden],.soundChip[hidden]{display:none}
-    .summaryScore{font-weight:1000;color:var(--yellow);white-space:nowrap}
+    .summaryScore{font-size:.78rem;font-weight:1000;color:var(--yellow);white-space:nowrap;line-height:1.02}
     .soundGlyph,.gearGlyph{font-size:1rem;line-height:1}
     .soundStack{display:inline-flex;align-items:center;gap:6px}
     .soundLabel{display:none}
-    .miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;display:grid;place-items:center;flex:0 0 42px;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18))}.miniAvatar img{width:100%;height:100%;object-fit:cover}.identityMeta{display:grid;gap:2px;min-width:0}.identityName{font-size:1rem;font-weight:900;max-width:14ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.identityRole{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;display:grid;place-items:center;flex:0 0 42px;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18))}.miniAvatar img{width:100%;height:100%;object-fit:cover}.identityMeta{display:grid;gap:3px;min-width:0;justify-items:start;flex:1 1 auto}.identityName{font-size:1rem;font-weight:900;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1}.identityRole{font-size:.74rem;color:var(--yellow);letter-spacing:0;line-height:1}
       .soundPanel{position:absolute;top:calc(100% + 10px);left:0;display:none;min-width:320px;padding:14px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20;gap:12px;overscroll-behavior:contain}
       .soundWrap.open .soundPanel{display:grid}
       .soundPanel label{font-size:.82rem;color:var(--muted);font-weight:800}
@@ -194,22 +194,23 @@
       body{padding:8px;overflow-x:hidden;overflow-y:auto}
       .app,.shell{gap:10px}
       .shell{min-height:calc(100dvh - 16px)}
-      .topbar{position:sticky;top:8px;z-index:20;padding:7px 10px;border-radius:22px;min-height:62px;display:grid;grid-template-columns:auto minmax(112px,156px) auto}
+      .topbar{position:sticky;top:8px;z-index:20;padding:6px 8px;border-radius:22px;min-height:54px;display:grid;grid-template-columns:auto minmax(108px,164px) auto}
       .topCenter{position:static;left:auto;top:auto;transform:none;justify-self:center;align-self:center;pointer-events:none}
       .topLeft,.topRight{gap:6px}
-      .menuBtn,.identity,.soundChip{width:auto;justify-content:center;height:38px;padding:0 8px;border-radius:18px}
+      .menuBtn,.identity,.soundChip{width:auto;justify-content:center;height:36px;padding:0 8px;border-radius:18px}
       .menuBtn{min-width:0;font-size:0;padding:0 10px;gap:8px}
       .menuBtn span:not(.menuGlyph){display:none}
       .menuBtn img{width:22px;height:22px;margin:0}
-      .menuGlyph{font-size:1.36rem}
-      .soundChip{min-width:38px;height:38px;font-size:.78rem;padding:0 8px;border-radius:999px}
+      .menuGlyph{font-size:1.12rem}
+      .soundChip{min-width:36px;height:36px;font-size:.78rem;padding:0 8px;border-radius:999px}
       .soundChip .soundLabel{display:none}
-      .identity{max-width:186px;gap:8px;padding:0 10px;height:38px}
-      .miniAvatar{width:30px;height:30px;flex-basis:30px}
-      .identityName{font-size:.72rem;line-height:1.02;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
-      .identityRole{font-size:.5rem;letter-spacing:.02em}
-      .summaryScore{font-size:.74rem}
-      .topCenter{width:188px;height:42px;max-height:42px}
+      .identity{max-width:170px;gap:8px;padding:0 8px;height:36px}
+      .miniAvatar{order:2;width:30px;height:30px;flex-basis:30px}
+      .identityMeta{order:1;gap:2px;min-width:0}
+      .identityName{font-size:.72rem;line-height:1;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
+      .identityRole{font-size:.56rem;line-height:1}
+      .summaryScore{font-size:.68rem}
+      .topCenter{width:170px;height:38px;max-height:38px}
         .menuDrop{position:fixed;top:84px;left:8px;right:auto;min-width:210px;max-width:min(280px,calc(100vw - 16px));max-height:calc(100vh - 96px);overflow:auto;z-index:130}
         .soundPanel{position:fixed;top:84px;left:50%;right:auto;transform:translateX(-50%);min-width:0;width:min(340px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100vh - 96px);overflow:auto;-webkit-overflow-scrolling:touch;z-index:131}
       .actions.center .btn{flex:1 1 100%}
@@ -223,12 +224,12 @@
       .field{gap:6px}
       .field input{height:44px;padding:0 14px;border-radius:16px}
       .codeBadge,.countPill{padding:8px 12px;border-radius:16px;font-size:1rem}
-      .avatarEditor{--avatar-card-w:92px;--avatar-gap:6px;gap:6px;padding:9px;border-radius:20px}
+      .avatarEditor{--avatar-card-w:92px;--avatar-gap:8px;gap:10px;padding:12px;border-radius:20px}
       .avatarCarousel{grid-template-columns:34px minmax(0,1fr) 34px;gap:4px}
       .avatarViewport{padding:0}
-      .avatarRail{min-height:92px}
-      .avatarCard{min-height:90px;padding:5px 4px;border-radius:15px}
-      .avatarCard img{max-width:52px}
+      .avatarRail{min-height:96px}
+      .avatarCard{min-height:94px;padding:7px 5px;border-radius:16px}
+      .avatarCard img{max-width:54px}
       .avatarCard span{font-size:.64rem}
       .avatarNav{width:34px;height:34px;font-size:1.05rem}
       .avatarLegend{font-size:.76rem}
@@ -303,13 +304,13 @@
       #setupActions .btn{width:100%;justify-content:center}
     }
     @media (max-width:640px) and (max-height:920px){
-      .topbar{min-height:58px;padding:6px 9px}
-      .topCenter{width:176px;height:40px;max-height:40px}
+      .topbar{min-height:52px;padding:6px 8px}
+      .topCenter{width:164px;height:36px;max-height:36px}
       .menuBtn,.identity,.soundChip{height:34px;border-radius:16px}
-      .identity{max-width:160px;padding:0 8px}
+      .identity{max-width:156px;padding:0 8px}
       .miniAvatar{width:26px;height:26px;flex-basis:26px}
-      .identityName{font-size:.7rem}
-      .identityRole{font-size:.48rem}
+      .identityName{font-size:.68rem}
+      .identityRole{font-size:.54rem}
       .sceneWrap{min-height:calc(100dvh - 88px)}
       .panel,.heroCard{padding:12px;border-radius:18px}
       .sceneStack{gap:10px}
@@ -330,7 +331,7 @@
       .app,.shell{gap:8px}
       .sceneWrap{min-height:calc(100vh - 108px)}
       .topbar{padding:8px 10px;border-radius:20px;min-height:58px}
-      .topCenter{width:166px;height:38px;max-height:38px}
+      .topCenter{width:156px;height:36px;max-height:36px}
       .menuBtn,.identity,.soundChip{padding:5px 7px}
       .miniAvatar{width:22px;height:22px;flex-basis:22px}
       .identity{min-height:30px}
@@ -362,11 +363,11 @@
     }
     @media (max-width:520px) and (max-height:520px){
       .topbar{min-height:50px;padding:6px 8px}
-      .topCenter{width:154px;height:34px;max-height:34px}
+      .topCenter{width:148px;height:32px;max-height:32px}
       .menuBtn img{width:20px;height:20px}
-      .menuGlyph{font-size:1.18rem}
+      .menuGlyph{font-size:1.02rem}
         .soundChip{min-width:28px;min-height:28px;padding:4px 6px}
-        .identity{max-width:118px;padding:4px 6px}
+        .identity{max-width:122px;padding:4px 6px}
         .panel,.heroCard{padding:12px}
         .introLogo{width:min(145px,50%)}
         .bigCount{font-size:clamp(2.7rem,14vw,4.2rem)}
@@ -443,12 +444,11 @@
         <div class="topCenter"><img class="logoMark" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon"></div>
         <div class="topRight">
           <button class="identity" id="identity" type="button" hidden>
-            <span class="summaryScore">Puntos <span class="scoreValue" id="scoreChipValue">0</span></span>
-            <div class="miniAvatar" id="identityAvatar"></div>
             <div class="identityMeta">
               <div class="identityName" id="identityName">Jugador</div>
-              <div class="identityRole" id="identityRole">Invitado</div>
+              <div class="identityRole">Puntos <span class="scoreValue" id="scoreChipValue">0</span></div>
             </div>
+            <div class="miniAvatar" id="identityAvatar"></div>
           </button>
         </div>
       </header>
@@ -1857,7 +1857,8 @@
       requestAnimationFrame(() => {
         ui.avatarRail.classList.add(dirClass);
       });
-      const finalize = () => {
+      const finalize = event => {
+        if(event.target !== ui.avatarRail || event.propertyName !== "transform") return;
         ui.avatarRail.removeEventListener("transitionend", finalize);
         ui.avatarRail.classList.remove("is-shifting-next", "is-shifting-prev");
         commitAvatarIndex(state.avatarIndex + delta, {scroll:false});
@@ -1874,7 +1875,7 @@
       bindAvatarSwipe();
       updateAvatarCarouselSelection();
     }
-    function updateIdentity(){ ui.identity.hidden = !state.role; updateSoundChip(); ui.identityName.textContent = state.name || "Sin nombre"; ui.identityRole.textContent = state.role === "host" ? "Anfitrion" : "Invitado"; ui.roomBadge.textContent = state.roomCode || "------"; ui.scoreChipValue.textContent = String((state.game.scores && state.game.scores[state.playerId]) || 0); const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; ui.btnEndGame.hidden = state.role !== "host"; updateCastUi(); }
+    function updateIdentity(){ ui.identity.hidden = !state.role; updateSoundChip(); ui.identityName.textContent = state.name || "Sin nombre"; ui.roomBadge.textContent = state.roomCode || "------"; ui.scoreChipValue.textContent = String((state.game.scores && state.game.scores[state.playerId]) || 0); const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; ui.btnEndGame.hidden = state.role !== "host"; updateCastUi(); }
     function applyAvatar(){ syncAvatarIndex(); renderAvatarCarousel(); updateIdentity(); }
     function renderPlayerRows(players){ if(!players.length) return `<article class="playerCard"><div class="sceneStack"><div class="playerName">Nadie todavia</div><div class="playerSub">La sala espera al primer dino.</div></div></article>`; return players.map(player => `<article class="playerCard"><div class="avatarStack">${player.ready && player.avatarSrc ? `<div class="avatarShot"><img src="${player.avatarSrc}" alt=""></div>` : `<div class="dinoHole">\uD83E\uDD96</div>`}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="sceneStack" style="gap:6px"><div class="playerName">${esc(player.ready ? player.name : (player.waitingLine || lineFor(player.playerId)))}</div><div class="playerSub">${esc(player.ready ? (player.role === "host" ? "Anfitrion listo" : "Invitado listo") : "Aun no ha pulsado listo")}</div></div></article>`).join(""); }
     function dedupePlayers(raw){ const map = new Map(); raw.forEach(entry => { const prev = map.get(entry.playerId); if(!prev || entry.updatedAt > prev.updatedAt) map.set(entry.playerId, entry); }); return [...map.values()].sort((a,b) => { if(a.role !== b.role) return a.role === "host" ? -1 : 1; if(a.ready !== b.ready) return a.ready ? -1 : 1; return String(a.name || a.waitingLine).localeCompare(String(b.name || b.waitingLine), "es"); }); }
