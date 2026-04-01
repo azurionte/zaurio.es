@@ -1650,7 +1650,7 @@ function buildAlternateExportDocument(){
         .alt-avatar img{width:100%;height:100%;object-fit:cover;display:block}
         .alt-avatar-empty::before{content:"";display:block;width:100%;height:100%;background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.75), rgba(255,255,255,.22))}
         .alt-chip{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:999px;background:rgba(255,255,255,.94);color:#1b1423;font-size:13px;line-height:1.2;min-width:0}
-        .alt-chip span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .alt-chip span{display:-webkit-box;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:normal;word-break:break-word;line-height:1.2;-webkit-box-orient:vertical;-webkit-line-clamp:2}
         .alt-hero{padding:18px 18px 0;background:var(--alt-paper)}
         .alt-hero-band{height:86px;border-radius:26px;background:linear-gradient(135deg,var(--alt-accent2),var(--alt-accent))}
         .alt-hero-content{display:grid;grid-template-columns:minmax(0,1fr) 132px;gap:18px;align-items:end;margin-top:-34px;padding:0 8px}
@@ -1672,7 +1672,7 @@ function buildAlternateExportDocument(){
         .alt-skills-list{display:grid;gap:10px}
         .alt-skill-row{display:grid;gap:7px;padding:12px;border-radius:16px;background:rgba(255,255,255,.92);color:#1b1423;border:1px solid rgba(0,0,0,.07)}
         .alt-main .alt-skill-row{background:var(--alt-card);color:var(--alt-ink);border-color:var(--alt-line)}
-        .alt-skill-name{font-size:14px;font-weight:700;line-height:1.3}
+        .alt-skill-name{display:-webkit-box;font-size:14px;font-weight:700;line-height:1.3;word-break:break-word;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
         .alt-skill-val{display:flex;justify-content:center}
         .alt-skill-meter{position:relative;width:100%;max-width:160px;height:8px;border-radius:999px;background:rgba(27,20,35,.14);overflow:hidden}
         .alt-skill-meter span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--alt-accent2),var(--alt-accent))}

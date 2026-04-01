@@ -3,7 +3,7 @@
 console.log('[modules.js] v2.9.4');
 
 import { S, save } from '../app/state.js';
-import { ensureCanvas, isSidebarActive, getRailHolder, getSideMain } from '../layouts/layouts.js';
+import { ensureCanvas, isSidebarActive, getRailHolder, getSideMain, attemptSidebarMutation } from '../layouts/layouts.js';
 
 const $  = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
@@ -408,7 +408,20 @@ export function renderSkills(list, opts = {}){
     }
 
     // name editing persists on blur
-    name.addEventListener('blur', ()=>{ try{ S.skills = (S.skills||[]).map(x=> x === it ? Object.assign({},x,{label: name.textContent.trim() || 'Skill'}) : x); save(); }catch(_){ } });
+    name.addEventListener('blur', ()=>{
+      try{
+        const nextLabel = name.textContent.trim() || 'Skill';
+        const nextSkills = (S.skills||[]).map(x=> x === it ? Object.assign({},x,{label: nextLabel}) : x);
+        attemptSidebarMutation({
+          overrides: { skills: nextSkills },
+          commit: () => { S.skills = nextSkills; it.label = nextLabel; save(); },
+          reject: () => {
+            name.textContent = it.label || 'Skill';
+            try { S.skills = (S.skills||[]).map(x=> x === it ? Object.assign({},x,{label: it.label || 'Skill'}) : x); save(); } catch(_){}
+          }
+        });
+      }catch(_){ }
+    });
 
     // assemble
     row.appendChild(handle);
@@ -443,13 +456,29 @@ export function renderSkills(list, opts = {}){
   const addSlider = document.createElement('button'); addSlider.className='ctrl-circle'; addSlider.title='Add slider skill'; addSlider.innerHTML = '<i class="fa-solid fa-sliders"></i>';
   addStar.addEventListener('click', ()=>{
     const it = { type:'star', label:'New skill', stars:3 };
-    S.skills = (S.skills||[]); S.skills.push(it); save();
-    const r = makeRow(it); wrap.appendChild(r); r.querySelector('.name').focus();
+    const nextSkills = [...(S.skills||[]), it];
+    attemptSidebarMutation({
+      overrides: { skills: nextSkills },
+      commit: (mode) => {
+        S.skills = nextSkills;
+        if (mode === 'move-skills') S.skillsInSidebar = false;
+        save();
+        const r = makeRow(it); wrap.appendChild(r); r.querySelector('.name').focus();
+      }
+    });
   });
   addSlider.addEventListener('click', ()=>{
     const it = { type:'slider', label:'New skill', value:60 };
-    S.skills = (S.skills||[]); S.skills.push(it); save();
-    const r = makeRow(it); wrap.appendChild(r); r.querySelector('.name').focus();
+    const nextSkills = [...(S.skills||[]), it];
+    attemptSidebarMutation({
+      overrides: { skills: nextSkills },
+      commit: (mode) => {
+        S.skills = nextSkills;
+        if (mode === 'move-skills') S.skillsInSidebar = false;
+        save();
+        const r = makeRow(it); wrap.appendChild(r); r.querySelector('.name').focus();
+      }
+    });
   });
   anchorWrap.appendChild(addStar); anchorWrap.appendChild(addSlider);
   body.appendChild(anchorWrap);
@@ -469,8 +498,17 @@ export function renderSkills(list, opts = {}){
           main.appendChild(wrapper);
           S.skillsInSidebar = false;
         } else if (rail){
-          rail.appendChild(wrapper);
-          S.skillsInSidebar = true;
+          attemptSidebarMutation({
+            overrides: { skillsInSidebar: true },
+            commit: () => {
+              rail.appendChild(wrapper);
+              S.skillsInSidebar = true;
+              syncSectionOrder();
+              save();
+              try{ refreshPlusVisibility(); }catch(_){ }
+            }
+          });
+          return;
         }
         syncSectionOrder();
         save();

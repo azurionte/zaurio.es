@@ -12,10 +12,10 @@
     .topbar,.panel,.playerCard,.answerCard,.scoreRow,.modeCard,.modalCard,.heroCard{border:1px solid var(--stroke);border-radius:30px;background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.24),0 0 32px rgba(255,0,170,.08);backdrop-filter:blur(14px)}
     .topbar{position:relative;z-index:120;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;min-height:86px;overflow:hidden}
     .topLeft,.topRight{display:flex;align-items:center;gap:12px;position:relative;z-index:2}
-    .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;width:224px;height:calc(100% - 16px);max-height:56px;overflow:hidden}
+    .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;width:236px;height:calc(100% - 16px);max-height:58px;overflow:hidden}
     .logoMark{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;transform:none}
-    .menuWrap,.soundWrap{position:relative;z-index:121}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.soundChip{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn{padding:0 18px;gap:12px;flex-direction:row}.menuBtn img{width:32px;height:32px}
-    .menuGlyph{font-size:1.9rem;line-height:1}
+    .menuWrap,.soundWrap{position:relative;z-index:121}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.soundChip{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn{padding:0 18px;gap:12px;flex-direction:row}.menuBtn img{width:34px;height:34px}
+    .menuGlyph{font-size:1.6rem;line-height:1}
     .menuDrop{position:absolute;left:0;top:calc(100% + 10px);display:none;min-width:240px;padding:8px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}.menuDrop img{width:22px;height:22px;object-fit:contain}
     .identity{max-width:100%;padding:0 14px 0 16px;gap:12px}
     .identity[hidden],.soundChip[hidden]{display:none}
@@ -49,7 +49,7 @@
     .scene{display:none;animation:sceneIn .42s ease both}.scene.on{display:grid}.sceneWrap{min-height:calc(100vh - 154px)}.sceneCenter{justify-items:center;align-content:start}.sceneSplit{display:grid;grid-template-columns:minmax(320px,440px) minmax(0,1fr);gap:18px;align-items:start}.sceneStack{display:grid;gap:18px}.panel{padding:28px}.panel.narrow{width:min(520px,100%)}.kicker{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
     h1,h2,h3,p{margin:0}p{color:var(--muted);line-height:1.55}.title{font-size:clamp(2rem,5vw,3.3rem);line-height:1.02;font-weight:1000}.subtitle{font-size:clamp(1.2rem,2.5vw,1.9rem);font-weight:900}.field{display:grid;gap:8px}.field label{font-weight:800}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}
     .codeBadge,.countPill{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:18px;background:rgba(255,216,58,.12);color:var(--yellow);font-weight:1000;letter-spacing:.08em}.status{min-height:20px;font-weight:700}.status.info{color:var(--cyan)}.status.ok{color:#c8ffab}.status.danger{color:var(--danger)}
-    .avatarEditor{--avatar-card-w:104px;display:grid;gap:8px;padding:12px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarCarousel{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:6px}.avatarViewport{overflow-x:auto;overflow-y:hidden;padding:0;scroll-snap-type:x mandatory;scroll-padding-inline:calc(50% - (var(--avatar-card-w) / 2));touch-action:pan-x pan-y;scrollbar-width:none;-ms-overflow-style:none}.avatarViewport::-webkit-scrollbar{display:none}.avatarRail{display:flex;gap:8px;align-items:stretch;min-height:104px;padding-inline:calc(50% - (var(--avatar-card-w) / 2));transition:none}.avatarCard{flex:0 0 var(--avatar-card-w);scroll-snap-align:center;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));padding:8px 6px;display:grid;gap:4px;justify-items:center;align-content:start;min-height:102px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);transition:transform .24s ease,border-color .24s ease,background .24s ease,box-shadow .24s ease,opacity .24s ease}.avatarCard img{width:100%;max-width:68px;height:auto;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.18));transition:transform .24s ease,filter .24s ease}.avatarCard span{font-size:.72rem;font-weight:1000;color:var(--muted);text-align:center;line-height:1.06}.avatarCard.is-center{transform:translateY(-1px) scale(1.02);border-color:rgba(255,216,58,.52);background:linear-gradient(135deg,rgba(255,216,58,.16),rgba(255,119,203,.14));box-shadow:0 6px 12px rgba(0,0,0,.12),0 0 0 1px rgba(255,216,58,.08)}.avatarCard.is-center img{transform:scale(1.02)}.avatarCard.is-center span{color:#fff}.avatarCard.is-side{opacity:.88;transform:scale(.94)}.avatarCard.is-side img{filter:drop-shadow(0 5px 10px rgba(0,0,0,.16)) saturate(.98)}.avatarNav{width:40px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:1.25rem;font-weight:1000;display:grid;place-items:center;transition:transform .18s ease,background .18s ease}.avatarNav:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}.avatarLegend{text-align:center;font-size:.84rem;color:#fff;font-weight:900}.avatarStack{width:var(--frame);height:var(--frame);position:relative}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{display:none}
+    .avatarEditor{--avatar-card-w:112px;--avatar-gap:10px;display:grid;gap:8px;padding:12px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarCarousel{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:8px}.avatarViewport{overflow:hidden;padding:0;touch-action:pan-y}.avatarRail{display:flex;gap:var(--avatar-gap);align-items:stretch;justify-content:flex-start;min-height:108px;will-change:transform;transform:translateX(calc(-1 * (var(--avatar-card-w) + var(--avatar-gap))));transition:transform .34s cubic-bezier(.22,.8,.18,1)}.avatarRail.is-shifting-next{transform:translateX(calc(-2 * (var(--avatar-card-w) + var(--avatar-gap))))}.avatarRail.is-shifting-prev{transform:translateX(0)}.avatarCard{flex:0 0 var(--avatar-card-w);border:1px solid rgba(255,255,255,.1);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));padding:8px 6px;display:grid;gap:4px;justify-items:center;align-content:start;min-height:104px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);transition:transform .28s ease,border-color .28s ease,background .28s ease,box-shadow .28s ease,opacity .28s ease}.avatarCard img{width:100%;max-width:72px;height:auto;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.18));transition:transform .28s ease,filter .28s ease}.avatarCard span{font-size:.72rem;font-weight:1000;color:var(--muted);text-align:center;line-height:1.08}.avatarCard.is-center{transform:translateY(-2px) scale(1.02);border-color:rgba(255,216,58,.52);background:linear-gradient(135deg,rgba(255,216,58,.16),rgba(255,119,203,.14));box-shadow:0 10px 18px rgba(0,0,0,.14),0 0 0 1px rgba(255,216,58,.08)}.avatarCard.is-center img{transform:scale(1.04)}.avatarCard.is-center span{color:#fff}.avatarCard.is-side{opacity:.92;transform:scale(.92)}.avatarCard.is-side img{filter:drop-shadow(0 5px 10px rgba(0,0,0,.16)) saturate(.98)}.avatarCard.is-outer{opacity:.001;pointer-events:none;transform:scale(.84)}.avatarCard.is-outer span{opacity:0}.avatarNav{width:40px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:1.25rem;font-weight:1000;display:grid;place-items:center;transition:transform .18s ease,background .18s ease}.avatarNav:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}.avatarLegend{text-align:center;font-size:.84rem;color:#fff;font-weight:900}.avatarStack{width:var(--frame);height:var(--frame);position:relative}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{display:none}
     .playersGrid{display:grid;gap:14px}.playerCard{padding:16px 18px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}.playerName{font-size:clamp(1rem,2vw,1.45rem);font-weight:1000;text-shadow:0 4px 0 rgba(0,0,0,.72),0 0 16px rgba(0,0,0,.45)}.playerSub{font-size:.96rem;color:var(--muted)}
     .dinoHole,.avatarShot{position:absolute;left:50%;top:50%;width:var(--avatar);height:var(--avatar);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translateY(-10px)}.dinoHole{display:grid;place-items:center;font-size:3rem;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,119,203,.16))}.avatarShot img{width:100%;height:100%;object-fit:cover}
     .heroCard{padding:32px;display:grid;gap:20px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));text-align:center}.bigCount{font-size:clamp(5rem,18vw,11rem);font-weight:1000;line-height:1}
@@ -191,24 +191,25 @@
       .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(76px + var(--dif));width:50px}
     }
     @media (max-width:640px){
-      body{padding:8px;overflow:hidden}
+      body{padding:8px;overflow-x:hidden;overflow-y:auto}
       .app,.shell{gap:10px}
       .shell{min-height:calc(100dvh - 16px)}
-      .topbar{position:sticky;top:8px;z-index:20;padding:7px 10px;border-radius:22px;min-height:62px}
-      .topCenter{top:50%}
+      .topbar{position:sticky;top:8px;z-index:20;padding:7px 10px;border-radius:22px;min-height:62px;display:grid;grid-template-columns:auto minmax(112px,156px) auto}
+      .topCenter{position:static;left:auto;top:auto;transform:none;justify-self:center;align-self:center;pointer-events:none}
       .topLeft,.topRight{gap:6px}
       .menuBtn,.identity,.soundChip{width:auto;justify-content:center;height:38px;padding:0 8px;border-radius:18px}
       .menuBtn{min-width:0;font-size:0;padding:0 10px;gap:8px}
       .menuBtn span:not(.menuGlyph){display:none}
-      .menuBtn img{width:19px;height:19px;margin:0}
+      .menuBtn img{width:22px;height:22px;margin:0}
+      .menuGlyph{font-size:1.36rem}
       .soundChip{min-width:38px;height:38px;font-size:.78rem;padding:0 8px;border-radius:999px}
       .soundChip .soundLabel{display:none}
-      .identity{max-width:172px;gap:8px;padding:0 10px;height:38px}
-      .miniAvatar{width:28px;height:28px;flex-basis:28px}
+      .identity{max-width:186px;gap:8px;padding:0 10px;height:38px}
+      .miniAvatar{width:30px;height:30px;flex-basis:30px}
       .identityName{font-size:.72rem;line-height:1.02;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
       .identityRole{font-size:.5rem;letter-spacing:.02em}
       .summaryScore{font-size:.74rem}
-      .topCenter{width:178px;height:calc(100% - 12px);max-height:44px}
+      .topCenter{width:188px;height:42px;max-height:42px}
         .menuDrop{position:fixed;top:84px;left:8px;right:auto;min-width:210px;max-width:min(280px,calc(100vw - 16px));max-height:calc(100vh - 96px);overflow:auto;z-index:130}
         .soundPanel{position:fixed;top:84px;left:50%;right:auto;transform:translateX(-50%);min-width:0;width:min(340px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100vh - 96px);overflow:auto;-webkit-overflow-scrolling:touch;z-index:131}
       .actions.center .btn{flex:1 1 100%}
@@ -222,13 +223,13 @@
       .field{gap:6px}
       .field input{height:44px;padding:0 14px;border-radius:16px}
       .codeBadge,.countPill{padding:8px 12px;border-radius:16px;font-size:1rem}
-      .avatarEditor{--avatar-card-w:88px;gap:6px;padding:9px;border-radius:20px}
+      .avatarEditor{--avatar-card-w:92px;--avatar-gap:6px;gap:6px;padding:9px;border-radius:20px}
       .avatarCarousel{grid-template-columns:34px minmax(0,1fr) 34px;gap:4px}
       .avatarViewport{padding:0}
-      .avatarRail{gap:4px;min-height:88px}
-      .avatarCard{min-height:84px;padding:5px 4px;border-radius:15px}
-      .avatarCard img{max-width:50px}
-      .avatarCard span{font-size:.62rem}
+      .avatarRail{min-height:92px}
+      .avatarCard{min-height:90px;padding:5px 4px;border-radius:15px}
+      .avatarCard img{max-width:52px}
+      .avatarCard span{font-size:.64rem}
       .avatarNav{width:34px;height:34px;font-size:1.05rem}
       .avatarLegend{font-size:.76rem}
       .avatarHint{display:none}
@@ -291,10 +292,19 @@
       #profileLayout .actions.between{gap:8px}
       #profileLayout .btn{height:40px;padding:0 14px}
       #profileLayout .status{min-height:0}
+      #setupLayout{width:100% !important}
+      #setupLayout .panel{padding:12px}
+      #setupLayout .modes{gap:10px}
+      #setupLayout .modeCard{padding:12px;gap:6px}
+      #setupLayout .modeCard strong{font-size:.95rem}
+      #setupLayout .modeCard p{font-size:.78rem;line-height:1.24}
+      #setupActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      #setupActions .field{min-width:0 !important}
+      #setupActions .btn{width:100%;justify-content:center}
     }
     @media (max-width:640px) and (max-height:920px){
       .topbar{min-height:58px;padding:6px 9px}
-      .topCenter{width:164px;height:calc(100% - 10px);max-height:40px}
+      .topCenter{width:176px;height:40px;max-height:40px}
       .menuBtn,.identity,.soundChip{height:34px;border-radius:16px}
       .identity{max-width:160px;padding:0 8px}
       .miniAvatar{width:26px;height:26px;flex-basis:26px}
@@ -306,11 +316,11 @@
       .subtitle{font-size:1rem}
       .field input{height:40px}
       .codeBadge{padding:7px 10px}
-      .avatarEditor{--avatar-card-w:80px;padding:8px;gap:6px}
-      .avatarRail{min-height:80px}
-      .avatarCard{min-height:78px;padding:5px 4px}
-      .avatarCard img{max-width:46px}
-      .avatarCard span{font-size:.6rem}
+      .avatarEditor{--avatar-card-w:84px;--avatar-gap:6px;padding:8px;gap:6px}
+      .avatarRail{min-height:84px}
+      .avatarCard{min-height:82px;padding:5px 4px}
+      .avatarCard img{max-width:48px}
+      .avatarCard span{font-size:.62rem}
       .avatarNav{width:32px;height:32px;font-size:1rem}
       .avatarLegend{font-size:.78rem}
       #profileLayout .btn{height:38px}
@@ -320,7 +330,7 @@
       .app,.shell{gap:8px}
       .sceneWrap{min-height:calc(100vh - 108px)}
       .topbar{padding:8px 10px;border-radius:20px;min-height:58px}
-      .topCenter{width:156px;height:calc(100% - 10px);max-height:38px}
+      .topCenter{width:166px;height:38px;max-height:38px}
       .menuBtn,.identity,.soundChip{padding:5px 7px}
       .miniAvatar{width:22px;height:22px;flex-basis:22px}
       .identity{min-height:30px}
@@ -352,8 +362,9 @@
     }
     @media (max-width:520px) and (max-height:520px){
       .topbar{min-height:50px;padding:6px 8px}
-      .topCenter{width:146px;height:calc(100% - 8px);max-height:34px}
-      .menuBtn img{width:18px;height:18px}
+      .topCenter{width:154px;height:34px;max-height:34px}
+      .menuBtn img{width:20px;height:20px}
+      .menuGlyph{font-size:1.18rem}
         .soundChip{min-width:28px;min-height:28px;padding:4px 6px}
         .identity{max-width:118px;padding:4px 6px}
         .panel,.heroCard{padding:12px}
@@ -1782,123 +1793,86 @@
       return option ? {kind:"preset",src:option.src,rendered:option.src,avatarId:option.id} : {kind:"preset",src:AVATAR_OPTIONS[0].src,rendered:AVATAR_OPTIONS[0].src,avatarId:AVATAR_OPTIONS[0].id};
     }
     function syncAvatarIndex(){ const idx = AVATAR_OPTIONS.findIndex(item => item.id === state.avatar.avatarId || item.src === state.avatar.src || item.src === state.avatar.rendered); state.avatarIndex = idx >= 0 ? idx : 0; }
-    let avatarScrollTimer = 0;
-    let avatarIgnoreScroll = false;
-    const AVATAR_LOOP_COPIES = 3;
+    let avatarAnimating = false;
+    let avatarSwipeBound = false;
+    let avatarTouchX = 0;
     function commitAvatarIndex(index, options = {}){
       const option = avatarOption(index);
       state.avatarIndex = AVATAR_OPTIONS.findIndex(item => item.id === option.id);
       state.avatar = {kind:"preset",src:option.src,rendered:option.src,avatarId:option.id};
       ui.avatarLegend.textContent = option.label;
-      updateAvatarCarouselSelection();
       updateIdentity();
-      if(options.scroll) scrollAvatarToCurrent(options.behavior || "smooth");
+      if(options.scroll) renderAvatarCarousel();
     }
     function setAvatarIndex(index){ commitAvatarIndex(index, {scroll:true, behavior:"smooth"}); }
-    function avatarCards(){ return ui.avatarRail ? [...ui.avatarRail.querySelectorAll("[data-avatar-slot]")] : []; }
+    function avatarCards(){ return ui.avatarRail ? [...ui.avatarRail.querySelectorAll("[data-avatar-offset]")] : []; }
     function updateAvatarCarouselSelection(){
-      const nearest = nearestAvatarInfo();
       avatarCards().forEach(card => {
-        const index = Number(card.dataset.avatarIndex || 0);
-        const slot = Number(card.dataset.avatarSlot || -1);
-        const isCenter = slot === nearest.slot;
-        card.classList.toggle("is-center", isCenter);
-        card.classList.toggle("is-side", !isCenter && index !== state.avatarIndex);
+        const offset = Number(card.dataset.avatarOffset || 0);
+        card.classList.toggle("is-center", offset === 0);
+        card.classList.toggle("is-side", Math.abs(offset) === 1);
+        card.classList.toggle("is-outer", Math.abs(offset) > 1);
       });
     }
     function ensureAvatarCarouselDom(){
       if(!ui.avatarRail) return;
-      const expected = AVATAR_OPTIONS.length * AVATAR_LOOP_COPIES;
-      if(ui.avatarRail.children.length === expected) return;
-      const copies = Array.from({length:AVATAR_LOOP_COPIES}, (_, copy) =>
-        AVATAR_OPTIONS.map((option, index) => `<button class="avatarCard" data-avatar-index="${index}" data-avatar-slot="${copy * AVATAR_OPTIONS.length + index}" type="button"><img src="${option.src}" alt="${esc(option.label)}"><span>${esc(option.label)}</span></button>`).join("")
-      ).join("");
-      ui.avatarRail.innerHTML = copies;
+      const offsets = [-2, -1, 0, 1, 2];
+      ui.avatarRail.innerHTML = offsets.map(offset => {
+        const option = avatarOption(state.avatarIndex + offset);
+        const extra = offset === 0 ? " is-center" : Math.abs(offset) === 1 ? " is-side" : " is-outer";
+        return `<button class="avatarCard${extra}" data-avatar-offset="${offset}" data-avatar-index="${AVATAR_OPTIONS.findIndex(item => item.id === option.id)}" type="button"><img src="${option.src}" alt="${esc(option.label)}"><span>${esc(option.label)}</span></button>`;
+      }).join("");
       avatarCards().forEach(card => {
-        card.onclick = () => scrollAvatarToSlot(Number(card.dataset.avatarSlot || 0), "smooth");
+        const offset = Number(card.dataset.avatarOffset || 0);
+        card.onclick = () => {
+          if(offset === 0 || avatarAnimating) return;
+          shiftAvatar(offset > 0 ? 1 : -1);
+        };
       });
     }
-    function middleAvatarSlot(index = state.avatarIndex){
-      return AVATAR_OPTIONS.length + (((index % AVATAR_OPTIONS.length) + AVATAR_OPTIONS.length) % AVATAR_OPTIONS.length);
-    }
-    function avatarCardForSlot(slot){
-      return ui.avatarRail ? ui.avatarRail.querySelector(`[data-avatar-slot="${slot}"]`) : null;
-    }
-    function scrollAvatarToSlot(slot, behavior = "smooth"){
-      if(!ui.avatarViewport) return;
-      const card = avatarCardForSlot(slot);
-      if(!card) return;
-      avatarIgnoreScroll = true;
-      const viewport = ui.avatarViewport;
-      const target = card.offsetLeft - Math.max(0, (viewport.clientWidth - card.offsetWidth) / 2);
-      viewport.scrollTo({left:target, behavior});
-      setTimeout(() => { avatarIgnoreScroll = false; }, behavior === "smooth" ? 320 : 60);
-    }
-    function scrollAvatarToCurrent(behavior = "smooth"){
-      scrollAvatarToSlot(middleAvatarSlot(), behavior);
-    }
-    function nearestAvatarInfo(){
-      if(!ui.avatarViewport) return {index:state.avatarIndex, slot:middleAvatarSlot()};
-      const viewportRect = ui.avatarViewport.getBoundingClientRect();
-      const center = viewportRect.left + viewportRect.width / 2;
-      let bestIndex = state.avatarIndex;
-      let bestSlot = middleAvatarSlot();
-      let bestDistance = Infinity;
-      avatarCards().forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const cardCenter = rect.left + rect.width / 2;
-        const distance = Math.abs(cardCenter - center);
-        if(distance < bestDistance){
-          bestDistance = distance;
-          bestIndex = Number(card.dataset.avatarIndex || 0);
-          bestSlot = Number(card.dataset.avatarSlot || middleAvatarSlot(bestIndex));
-        }
-      });
-      return {index:bestIndex, slot:bestSlot};
-    }
-    function normalizeAvatarLoop(slot){
-      if(!ui.avatarViewport) return;
-      const count = AVATAR_OPTIONS.length;
-      if(!count) return;
-      let targetSlot = slot;
-      if(slot < count){
-        targetSlot = slot + count;
-      } else if(slot >= count * 2){
-        targetSlot = slot - count;
-      }
-      if(targetSlot !== slot){
-        scrollAvatarToSlot(targetSlot, "auto");
-      }
-    }
-    function bindAvatarScroll(){
-      if(!ui.avatarViewport || ui.avatarViewport.__trivialodonBound) return;
-      ui.avatarViewport.__trivialodonBound = true;
-      ui.avatarViewport.addEventListener("scroll", () => {
-        if(avatarIgnoreScroll) return;
-        clearTimeout(avatarScrollTimer);
-        avatarScrollTimer = setTimeout(() => {
-          const nearest = nearestAvatarInfo();
-          commitAvatarIndex(nearest.index, {scroll:false});
-          normalizeAvatarLoop(nearest.slot);
-        }, 90);
+    function bindAvatarSwipe(){
+      if(!ui.avatarViewport || avatarSwipeBound) return;
+      avatarSwipeBound = true;
+      ui.avatarViewport.addEventListener("touchstart", event => {
+        avatarTouchX = event.touches[0]?.clientX || 0;
       }, {passive:true});
+      ui.avatarViewport.addEventListener("touchend", event => {
+        const endX = event.changedTouches[0]?.clientX || 0;
+        const delta = endX - avatarTouchX;
+        if(Math.abs(delta) < 24 || avatarAnimating) return;
+        shiftAvatar(delta < 0 ? 1 : -1);
+      }, {passive:true});
+      ui.avatarViewport.addEventListener("wheel", event => {
+        if(Math.abs(event.deltaX) < 22 && Math.abs(event.deltaY) < 22) return;
+        event.preventDefault();
+        if(avatarAnimating) return;
+        shiftAvatar((Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY) > 0 ? 1 : -1);
+      }, {passive:false});
     }
     function shiftAvatar(delta){
-      const nearest = nearestAvatarInfo();
-      const targetSlot = nearest.slot + delta;
-      const targetIndex = ((nearest.index + delta) % AVATAR_OPTIONS.length + AVATAR_OPTIONS.length) % AVATAR_OPTIONS.length;
-      commitAvatarIndex(targetIndex, {scroll:false});
-      scrollAvatarToSlot(targetSlot, "smooth");
+      if(!ui.avatarRail || avatarAnimating || !delta) return;
+      avatarAnimating = true;
+      const dirClass = delta > 0 ? "is-shifting-next" : "is-shifting-prev";
+      ui.avatarRail.classList.remove("is-shifting-next", "is-shifting-prev");
+      requestAnimationFrame(() => {
+        ui.avatarRail.classList.add(dirClass);
+      });
+      const finalize = () => {
+        ui.avatarRail.removeEventListener("transitionend", finalize);
+        ui.avatarRail.classList.remove("is-shifting-next", "is-shifting-prev");
+        commitAvatarIndex(state.avatarIndex + delta, {scroll:false});
+        ensureAvatarCarouselDom();
+        updateAvatarCarouselSelection();
+        avatarAnimating = false;
+      };
+      ui.avatarRail.addEventListener("transitionend", finalize, {once:true});
     }
     function renderAvatarCarousel(){
       if(!ui.avatarRail) return;
       ensureAvatarCarouselDom();
       ui.avatarLegend.textContent = avatarOption(state.avatarIndex).label;
-      bindAvatarScroll();
-      requestAnimationFrame(() => {
-        scrollAvatarToCurrent("auto");
-        updateAvatarCarouselSelection();
-      });
+      bindAvatarSwipe();
+      updateAvatarCarouselSelection();
     }
     function updateIdentity(){ ui.identity.hidden = !state.role; updateSoundChip(); ui.identityName.textContent = state.name || "Sin nombre"; ui.identityRole.textContent = state.role === "host" ? "Anfitrion" : "Invitado"; ui.roomBadge.textContent = state.roomCode || "------"; ui.scoreChipValue.textContent = String((state.game.scores && state.game.scores[state.playerId]) || 0); const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; ui.btnEndGame.hidden = state.role !== "host"; updateCastUi(); }
     function applyAvatar(){ syncAvatarIndex(); renderAvatarCarousel(); updateIdentity(); }

@@ -393,6 +393,63 @@ function getSectionWrappers(){
     .filter(w => !w.hasAttribute('data-locked'));
 }
 
+export function moveSkillsOutOfSidebar(){
+  const rail = getRailHolder();
+  const main = getSideMain();
+  const wrappers = getSectionWrappers();
+  const skillsWrap = wrappers.find(wrapper => wrapper.dataset.section === 'skills');
+  if (!skillsWrap || !main) {
+    S.skillsInSidebar = false;
+    save();
+    return;
+  }
+  const eduWrap = wrappers.find(wrapper => wrapper.dataset.section === 'edu' && wrapper !== skillsWrap);
+  if (skillsWrap.parentElement !== main) {
+    if (eduWrap && eduWrap.parentElement === main) main.insertBefore(skillsWrap, eduWrap);
+    else main.prepend(skillsWrap);
+  } else if (eduWrap && skillsWrap.compareDocumentPosition(eduWrap) & Node.DOCUMENT_POSITION_FOLLOWING) {
+    main.insertBefore(skillsWrap, eduWrap);
+  }
+  if (rail?.contains(skillsWrap)) {
+    if (eduWrap && eduWrap.parentElement === main) main.insertBefore(skillsWrap, eduWrap);
+    else main.prepend(skillsWrap);
+  }
+  const ordered = Array.isArray(S.sectionOrder) ? [...S.sectionOrder] : [];
+  const withoutSkills = ordered.filter(key => key !== 'skills');
+  const eduIndex = withoutSkills.indexOf('edu');
+  if (eduIndex >= 0) withoutSkills.splice(eduIndex, 0, 'skills');
+  else withoutSkills.unshift('skills');
+  S.sectionOrder = withoutSkills;
+  S.skillsInSidebar = false;
+  save();
+}
+
+export function attemptSidebarMutation({ overrides = {}, commit, reject } = {}){
+  const candidate = getSidebarCandidate(overrides);
+  if (sidebarCandidateFits(candidate)) {
+    commit?.('accept');
+    return true;
+  }
+  const canMoveSkills = candidate.layout === 'side' && candidate.skillsInSidebar && Array.isArray(candidate.skills) && candidate.skills.length > 0;
+  openSidebarLimitModal({
+    allowMoveSkills: canMoveSkills,
+    onAccept: () => reject?.(),
+    onMoveSkills: canMoveSkills ? () => {
+      const movedCandidate = getSidebarCandidate({
+        ...overrides,
+        skillsInSidebar: false
+      });
+      if (!sidebarCandidateFits(movedCandidate)) {
+        reject?.();
+        return;
+      }
+      moveSkillsOutOfSidebar();
+      commit?.('move-skills');
+    } : null
+  });
+  return false;
+}
+
 // Sanitize .node wrappers inside the main zone by removing inline width styles
 export function sanitizeMainNodes(){
   try{
@@ -479,6 +536,189 @@ const CONTACT_FIELDS = {
   info: { icon:'fa-solid fa-circle-info', placeholder:'Información extra', wrap:false }
 };
 const INFO_SLOT_KEYS = ['info1','info2','info3','info4','info5','info6','info7'];
+const SIDEBAR_PAGE_HEIGHT_PX = Math.round((297 / 25.4) * 96);
+
+function escapeSidebarLimitHtml(value){
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function ensureSidebarLimitMeasureRoot(){
+  let root = document.getElementById('sidebarLimitMeasureRoot');
+  if (root) return root;
+  root = document.createElement('div');
+  root.id = 'sidebarLimitMeasureRoot';
+  root.style.position = 'fixed';
+  root.style.left = '-20000px';
+  root.style.top = '0';
+  root.style.width = '74mm';
+  root.style.height = `${SIDEBAR_PAGE_HEIGHT_PX}px`;
+  root.style.visibility = 'hidden';
+  root.style.pointerEvents = 'none';
+  root.style.overflow = 'hidden';
+  root.style.zIndex = '-1';
+  document.body.appendChild(root);
+  return root;
+}
+
+function ensureSidebarLimitModal(){
+  let modal = document.getElementById('sidebarLimitModal');
+  if (modal) return modal;
+  modal = document.createElement('div');
+  modal.id = 'sidebarLimitModal';
+  modal.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'display:none',
+    'align-items:center',
+    'justify-content:center',
+    'padding:24px',
+    'background:rgba(9,7,14,.56)',
+    'backdrop-filter:blur(10px)',
+    'z-index:24000'
+  ].join(';');
+  modal.innerHTML = `
+    <div style="width:min(420px,92vw);display:grid;gap:16px;padding:22px;border-radius:24px;background:linear-gradient(180deg,rgba(31,10,42,.98),rgba(14,7,20,.98));border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 80px rgba(0,0,0,.34);color:#fff8fb">
+      <div style="display:grid;gap:8px">
+        <div style="font:900 1.35rem/1.05 Bricolage Grotesque, Trebuchet MS, sans-serif">La barra lateral alcanzó el límite.</div>
+        <div style="color:rgba(255,255,255,.72);line-height:1.5">Puedes aceptar para mantener el contenido actual o mover las habilidades fuera de la barra lateral.</div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+        <button type="button" data-role="accept" style="appearance:none;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff8fb;padding:11px 16px;border-radius:999px;font-weight:700;cursor:pointer">Aceptar</button>
+        <button type="button" data-role="move" style="appearance:none;border:1px solid rgba(255,255,255,.08);background:linear-gradient(135deg,#ffd447,#ffb87c);color:#240b18;padding:11px 16px;border-radius:999px;font-weight:800;cursor:pointer">Mover habilidades</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+      modal._onAccept?.();
+    }
+  });
+  modal.querySelector('[data-role="accept"]')?.addEventListener('click', () => {
+    modal.style.display = 'none';
+    modal._onAccept?.();
+  });
+  modal.querySelector('[data-role="move"]')?.addEventListener('click', () => {
+    modal.style.display = 'none';
+    modal._onMove?.();
+  });
+  return modal;
+}
+
+function getSidebarCandidate(overrides = {}){
+  const contact = Object.assign({}, S.contact || {}, overrides.contact || {});
+  return {
+    layout: overrides.layout ?? S.layout,
+    dark: typeof overrides.dark === 'boolean' ? overrides.dark : !!S.dark,
+    name: String(overrides.name ?? contact.name ?? S.project?.title ?? 'Mi CV').trim(),
+    contact,
+    contactOrder: Array.isArray(overrides.contactOrder) ? [...overrides.contactOrder] : [...(Array.isArray(S.contactOrder) ? S.contactOrder : [])],
+    skills: Array.isArray(overrides.skills) ? overrides.skills.map(item => ({ ...item })) : (Array.isArray(S.skills) ? S.skills.map(item => ({ ...item })) : []),
+    skillsInSidebar: typeof overrides.skillsInSidebar === 'boolean' ? overrides.skillsInSidebar : !!S.skillsInSidebar,
+    avatarSrc: overrides.avatarSrc ?? getAvatarSource(S.avatar)
+  };
+}
+
+function getSidebarCandidateContactKeys(candidate){
+  const fallback = ['phone','phone2','email','idDoc','address','linkedin', ...INFO_SLOT_KEYS];
+  const active = fallback.filter(key => sanitizeContactValue(key, candidate.contact?.[key]));
+  const ordered = [];
+  (Array.isArray(candidate.contactOrder) ? candidate.contactOrder : []).forEach(key => {
+    if (active.includes(key) && !ordered.includes(key)) ordered.push(key);
+  });
+  active.forEach(key => {
+    if (!ordered.includes(key)) ordered.push(key);
+  });
+  return ordered;
+}
+
+function renderSidebarCandidateMarkup(candidate){
+  const chipMarkup = getSidebarCandidateContactKeys(candidate).map(key => {
+    const value = sanitizeContactValue(key, candidate.contact?.[key]);
+    if (!value) return '';
+    return `
+      <div class="slm-chip">
+        <span class="slm-chip-icon"></span>
+        <span class="slm-chip-text">${escapeSidebarLimitHtml(getDisplayedContactValue(key, value))}</span>
+      </div>
+    `;
+  }).join('');
+  const skillsMarkup = candidate.skillsInSidebar && Array.isArray(candidate.skills) && candidate.skills.length
+    ? `
+      <section class="slm-section">
+        <div class="slm-section-head">
+          <div class="slm-section-title">Skills</div>
+          <div class="slm-section-line"></div>
+        </div>
+        <div class="slm-skills">
+          ${candidate.skills.map(skill => `
+            <div class="slm-skill-row">
+              <div class="slm-skill-name">${escapeSidebarLimitHtml(skill?.label || 'Skill')}</div>
+              <div class="slm-skill-val">${skill?.type === 'slider'
+                ? `<div class="slm-meter"><span style="width:${Math.max(0, Math.min(100, Number(skill?.value ?? 60)))}%"></span></div>`
+                : `<div class="slm-stars">${[1,2,3,4,5].map(i => `<span class="${(skill?.stars || 0) >= i ? 'on' : ''}">&#9733;</span>`).join('')}</div>`}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `
+    : '';
+  return `
+    <div class="slm-shell ${candidate.dark ? 'is-dark' : ''}">
+      <style>
+        .slm-shell{width:74mm;height:${SIDEBAR_PAGE_HEIGHT_PX}px;padding:24px 18px 28px;display:grid;align-content:start;gap:16px;background:linear-gradient(180deg,var(--accent2,#9333ea),var(--accent,#c026d3));color:#fff;box-sizing:border-box;overflow:hidden;font-family:"Segoe UI",sans-serif}
+        .slm-avatar{width:132px;height:132px;border-radius:50%;margin:0 auto;overflow:hidden;border:4px solid rgba(255,255,255,.88);background:rgba(255,255,255,.22)}
+        .slm-avatar img{width:100%;height:100%;display:block;object-fit:cover}
+        .slm-name{font:900 28px/1.02 Bricolage Grotesque, Trebuchet MS, sans-serif;text-align:center;word-break:break-word}
+        .slm-chips{display:grid;gap:10px}
+        .slm-chip{display:grid;grid-template-columns:14px minmax(0,1fr);gap:10px;align-items:start;padding:11px 13px;border-radius:999px;background:rgba(255,255,255,.94);color:#1b1423}
+        .slm-chip-icon{width:14px;height:14px;border-radius:999px;background:linear-gradient(180deg,var(--accent2,#9333ea),var(--accent,#c026d3));margin-top:2px}
+        .slm-chip-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.2;word-break:break-word}
+        .slm-section{display:grid;gap:12px;padding:16px;border-radius:22px;background:rgba(255,255,255,.92);color:#1b1423;border:1px solid rgba(0,0,0,.07)}
+        .slm-section-head{display:grid;gap:6px}
+        .slm-section-title{font:900 18px/1 Bricolage Grotesque, Trebuchet MS, sans-serif}
+        .slm-section-line{width:110px;height:4px;border-radius:999px;background:linear-gradient(90deg,var(--accent2,#9333ea),var(--accent,#c026d3))}
+        .slm-skills{display:grid;gap:10px}
+        .slm-skill-row{display:grid;gap:7px;padding:12px;border-radius:16px;background:rgba(255,255,255,.96);border:1px solid rgba(0,0,0,.07)}
+        .slm-skill-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:14px;font-weight:700;line-height:1.3;word-break:break-word}
+        .slm-skill-val{display:flex;justify-content:center}
+        .slm-meter{width:100%;max-width:160px;height:8px;border-radius:999px;background:rgba(27,20,35,.14);overflow:hidden}
+        .slm-meter span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent2,#9333ea),var(--accent,#c026d3))}
+        .slm-stars{display:flex;justify-content:center;gap:5px;font-size:15px;color:rgba(27,20,35,.22)}
+        .slm-stars .on{color:var(--accent,#c026d3)}
+      </style>
+      <div class="slm-avatar">${candidate.avatarSrc ? `<img src="${candidate.avatarSrc}" alt="">` : ''}</div>
+      <div class="slm-name">${escapeSidebarLimitHtml(candidate.name || 'Mi CV')}</div>
+      ${chipMarkup ? `<div class="slm-chips">${chipMarkup}</div>` : ''}
+      ${skillsMarkup}
+    </div>
+  `;
+}
+
+function sidebarCandidateFits(candidate){
+  if (candidate.layout !== 'side') return true;
+  const root = ensureSidebarLimitMeasureRoot();
+  root.innerHTML = renderSidebarCandidateMarkup(candidate);
+  const shell = root.firstElementChild;
+  if (!shell) return true;
+  return shell.scrollHeight <= SIDEBAR_PAGE_HEIGHT_PX;
+}
+
+function openSidebarLimitModal({ allowMoveSkills = true, onAccept, onMoveSkills } = {}){
+  const modal = ensureSidebarLimitModal();
+  const moveBtn = modal.querySelector('[data-role="move"]');
+  if (moveBtn) moveBtn.style.display = allowMoveSkills ? 'inline-flex' : 'none';
+  modal._onAccept = typeof onAccept === 'function' ? onAccept : null;
+  modal._onMove = typeof onMoveSkills === 'function' ? onMoveSkills : null;
+  modal.style.display = 'flex';
+}
 
 function fitAvatarPlacement(img, size, avatarState){
   const state = normalizeAvatarState(avatarState) || { zoom:1, panX:0, panY:0 };
@@ -827,12 +1067,35 @@ function chip(icon, text, key, { wrap = false } = {}){
 
   const span = el.querySelector('span');
   const maxLength = wrap ? 52 : 38;
+  let previousValue = String(text || '');
   let editable;
+  const readEditableValue = () => editable.tagName === 'INPUT' ? editable.value : editable.textContent;
+  const writeEditableValue = (value) => {
+    if (editable.tagName === 'INPUT') editable.value = value;
+    else editable.textContent = value;
+  };
   const persist = () => {
-    if (!S.contact) S.contact = {};
-    const raw = editable.tagName === 'INPUT' ? editable.value : editable.textContent;
-    S.contact[key] = sanitizeContactValue(key, raw);
-    save();
+    const raw = readEditableValue();
+    const nextValue = sanitizeContactValue(key, raw);
+    attemptSidebarMutation({
+      overrides: {
+        contact: { [key]: nextValue }
+      },
+      commit: () => {
+        if (!S.contact) S.contact = {};
+        S.contact[key] = nextValue;
+        previousValue = getDisplayedContactValue(key, nextValue) || '';
+        save();
+        if (!nextValue) applyContact();
+      },
+      reject: () => {
+        writeEditableValue(previousValue);
+        if (!S.contact) S.contact = {};
+        S.contact[key] = sanitizeContactValue(key, previousValue);
+        save();
+        applyContact();
+      }
+    });
   };
 
   if (wrap) {
@@ -853,9 +1116,9 @@ function chip(icon, text, key, { wrap = false } = {}){
     editable.style.textAlign = 'left';
     editable.style.lineHeight = '1.25';
     editable.style.minHeight = '40px';
+    editable.addEventListener('focus', ()=>{ previousValue = editable.value; });
     editable.addEventListener('focusout', ()=>{
       persist();
-      if (!sanitizeContactValue(key, editable.value)) applyContact();
     });
     editable.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
@@ -869,9 +1132,9 @@ function chip(icon, text, key, { wrap = false } = {}){
     editable.contentEditable = true;
     editable.spellcheck = false;
     editable.className = 'chip-text';
+    editable.addEventListener('focus', ()=>{ previousValue = editable.textContent; });
     editable.addEventListener('focusout', ()=>{
       persist();
-      if (!sanitizeContactValue(key, editable.textContent)) applyContact();
     });
     editable.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
@@ -1020,26 +1283,39 @@ function openChipMenu(anchor){
         return;
       }
       const fieldKey = INFO_SLOT_KEYS.includes(slotKey) ? 'info' : slotKey;
-      S.contact[slotKey] = CONTACT_FIELDS[fieldKey]?.placeholder || '';
-      S.contactOrder = Array.isArray(S.contactOrder) ? S.contactOrder.filter(key => key !== slotKey) : [];
-      S.contactOrder.push(slotKey);
-      save();
-      applyContact();
-      Promise.resolve().then(()=>{
-        const head=getHeaderNode(); if(!head) return;
-        const target = findChipEditableByKey(head, slotKey);
-        if(target){
-          target.focus();
-          if (target.tagName === 'INPUT') {
-            target.setSelectionRange?.(0, target.value.length);
-          } else {
-            const range = document.createRange();
-            range.selectNodeContents(target);
-            range.collapse(false);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
+      const placeholder = CONTACT_FIELDS[fieldKey]?.placeholder || '';
+      const nextOrder = Array.isArray(S.contactOrder) ? S.contactOrder.filter(key => key !== slotKey) : [];
+      nextOrder.push(slotKey);
+      attemptSidebarMutation({
+        overrides: {
+          contact: { [slotKey]: placeholder },
+          contactOrder: nextOrder
+        },
+        commit: () => {
+          S.contact[slotKey] = placeholder;
+          S.contactOrder = nextOrder;
+          save();
+          applyContact();
+          Promise.resolve().then(()=>{
+            const head=getHeaderNode(); if(!head) return;
+            const target = findChipEditableByKey(head, slotKey);
+            if(target){
+              target.focus();
+              if (target.tagName === 'INPUT') {
+                target.setSelectionRange?.(0, target.value.length);
+              } else {
+                const range = document.createRange();
+                range.selectNodeContents(target);
+                range.collapse(false);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            }
+          });
+        },
+        reject: () => {
+          applyContact();
         }
       });
       pop.classList.remove('open');
@@ -1215,14 +1491,29 @@ function buildHeader(kind){
     const nameNode = node.querySelector('.name');
     if (!nameNode || nameNode.dataset.boundName === '1') return;
     nameNode.dataset.boundName = '1';
+    let previousName = String(nameNode.textContent || '').trim();
     const commitName = () => {
       const value = String(nameNode.textContent || '').trim();
-      S.contact = S.contact || {};
-      S.contact.name = value;
-      if (!value) nameNode.textContent = 'YOUR NAME';
-      save();
+      attemptSidebarMutation({
+        overrides: { name: value, contact: { name: value } },
+        commit: () => {
+          S.contact = S.contact || {};
+          S.contact.name = value;
+          previousName = value || 'YOUR NAME';
+          if (!value) nameNode.textContent = 'YOUR NAME';
+          save();
+        },
+        reject: () => {
+          nameNode.textContent = previousName || 'YOUR NAME';
+          S.contact = S.contact || {};
+          S.contact.name = previousName === 'YOUR NAME' ? '' : previousName;
+          save();
+          applyContact();
+        }
+      });
     };
     nameNode.addEventListener('focus', () => {
+      previousName = String(nameNode.textContent || '').trim() || 'YOUR NAME';
       if (String(nameNode.textContent || '').trim() === 'YOUR NAME') {
         nameNode.textContent = '';
       }
@@ -1230,7 +1521,6 @@ function buildHeader(kind){
     nameNode.addEventListener('input', () => {
       S.contact = S.contact || {};
       S.contact.name = String(nameNode.textContent || '').trim();
-      save();
     });
     nameNode.addEventListener('blur', commitName);
   };
