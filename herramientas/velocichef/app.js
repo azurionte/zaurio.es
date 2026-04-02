@@ -4441,7 +4441,24 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-async function hydrateSession(session) {
+async function hydrateSession(session, options = {}) {
+  const preserveState = !!options.preserveState;
+  const sameUser = !!(session?.user?.id && state.session?.user?.id && session.user.id === state.session.user.id);
+  const hasLoadedUserState = !!(state.profile || state.week || state.feedback?.length);
+
+  if (preserveState && session?.user && sameUser && hasLoadedUserState) {
+    state.session = session;
+    if (state.profile?.notificationEnabled) {
+      try {
+        await ensurePushSubscription(("Notification" in window) && Notification.permission === "granted");
+      } catch (_error) {
+        // Si falla el push real, mantenemos el estado visible actual.
+      }
+    }
+    await refreshNotificationDeviceState();
+    return;
+  }
+
   clearReminderTimers();
   stopHandsFreeMode();
   stopCookingTimer();
@@ -4527,8 +4544,11 @@ async function init() {
   const { data } = await state.client.auth.getSession();
   await hydrateSession(data.session);
 
-  state.client.auth.onAuthStateChange((_event, session) => {
-    hydrateSession(session);
+  state.client.auth.onAuthStateChange((event, session) => {
+    const preserveState = event === "TOKEN_REFRESHED"
+      || event === "USER_UPDATED"
+      || (event === "SIGNED_IN" && session?.user?.id && session.user.id === state.session?.user?.id);
+    hydrateSession(session, { preserveState });
   });
 }
 

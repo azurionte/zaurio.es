@@ -108,6 +108,8 @@ a{
 }
 
 .vc-topbar-main{
+  position:relative;
+  z-index:3;
   display:grid;
   grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
   align-items:center;
@@ -151,6 +153,10 @@ a{
 
 .vc-menu-wrap{
   position:relative;
+}
+
+.vc-menu-wrap.open{
+  z-index:5;
 }
 
 .vc-menu-btn,
@@ -202,6 +208,7 @@ a{
   position:absolute;
   top:calc(100% + 10px);
   left:0;
+  z-index:6;
   min-width:236px;
   display:none;
   gap:4px;
@@ -327,6 +334,8 @@ a{
 }
 
 .vc-topbar-cookbar{
+  position:relative;
+  z-index:1;
   display:flex;
   justify-content:center;
 }
