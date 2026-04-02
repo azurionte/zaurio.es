@@ -1,4 +1,4 @@
-const CACHE_NAME = "velocichef-shell-v3";
+const CACHE_NAME = "velocichef-shell-v4";
 const APP_URL = "/velocichef/";
 const ASSETS = [
   APP_URL,
@@ -12,6 +12,13 @@ const ASSETS = [
   "/shared/css/zaurio-ui.css",
   "/shared/js/zaurio-nav.js",
 ];
+const NETWORK_FIRST_PATHS = new Set([
+  APP_URL,
+  `${APP_URL}index.html`,
+  `${APP_URL}app.css`,
+  `${APP_URL}app.js`,
+  `${APP_URL}manifest.webmanifest`,
+]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -45,18 +52,22 @@ self.addEventListener("fetch", (event) => {
   if (!shouldCache) return;
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const networkFetch = fetch(request)
-        .then((response) => {
-          if (response && response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone)).catch(() => null);
-          }
-          return response;
-        })
-        .catch(() => cached);
+    caches.open(CACHE_NAME).then((cache) => {
+      const requestPath = url.pathname;
+      const updateFromNetwork = () =>
+        fetch(request)
+          .then((response) => {
+            if (response && response.ok) {
+              cache.put(request, response.clone()).catch(() => null);
+            }
+            return response;
+          });
 
-      return cached || networkFetch;
+      if (NETWORK_FIRST_PATHS.has(requestPath)) {
+        return updateFromNetwork().catch(() => caches.match(request));
+      }
+
+      return caches.match(request).then((cached) => cached || updateFromNetwork().catch(() => cached));
     }),
   );
 });
