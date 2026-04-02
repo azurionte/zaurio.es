@@ -19,6 +19,8 @@
   --vc-radius-lg:24px;
   --vc-radius-md:18px;
   --vc-radius-sm:14px;
+  --vc-frame-gap:12px;
+  --vc-topbar-current-height:112px;
 }
 
 *{box-sizing:border-box}
@@ -82,6 +84,11 @@ a{
   background:
     linear-gradient(135deg, rgba(255,251,246,.96), rgba(255,237,213,.96)),
     linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,247,239,.92));
+}
+
+.vc-topbar-cooking{
+  min-height:0;
+  padding-bottom:10px;
 }
 
 .vc-topbar::before{
@@ -1042,6 +1049,39 @@ a{
   gap:18px;
 }
 
+.vc-cook-screen{
+  min-height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 3));
+}
+
+.vc-cook-screen .vc-cook-mode{
+  min-height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 3));
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.vc-cook-screen .vc-step-hero{
+  padding:14px 16px;
+  gap:12px;
+}
+
+.vc-cook-screen .vc-step-title{
+  font-size:clamp(1.85rem, 8vw, 3rem);
+}
+
+.vc-cook-screen .vc-step-copy{
+  font-size:1.02rem;
+}
+
+.vc-cook-screen .vc-cook-toolbar{
+  align-items:center;
+  gap:8px;
+}
+
+.vc-cook-screen .vc-cook-toolbar .vc-button{
+  min-height:50px;
+}
+
 .vc-cook-suggestion,
 .vc-cook-pick-card,
 .vc-cook-stage{
@@ -1059,6 +1099,59 @@ a{
   gap:12px;
 }
 
+.vc-cook-screen .vc-cook-stage{
+  flex:1 1 auto;
+  min-height:0;
+  height:100%;
+  overflow:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  align-content:start;
+  gap:16px;
+  padding:18px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,248,239,.96));
+}
+
+.vc-cook-screen .vc-cook-stage .vc-inline-title{
+  font-size:1.1rem;
+}
+
+.vc-cook-screen .vc-cook-step-copy{
+  font-size:clamp(1.14rem, 4.4vw, 1.42rem);
+  line-height:1.82;
+  color:var(--vc-ink);
+}
+
+.vc-cook-image-shell,
+.vc-cook-figure{
+  display:grid;
+  gap:10px;
+  margin:0;
+}
+
+.vc-cook-image-loading{
+  place-items:center;
+  padding:18px;
+  border-radius:22px;
+  background:rgba(255,248,240,.88);
+  border:1px solid rgba(80,29,10,.08);
+}
+
+.vc-cook-figure img{
+  width:100%;
+  max-height:32vh;
+  border-radius:22px;
+  border:1px solid rgba(80,29,10,.08);
+  box-shadow:0 18px 30px rgba(132,56,18,.12);
+  object-fit:cover;
+}
+
+.vc-cook-figure figcaption{
+  font-size:.84rem;
+  color:var(--vc-muted);
+}
+
 .vc-cook-ingredient{
   display:flex;
   align-items:center;
@@ -1071,7 +1164,29 @@ a{
 }
 
 .vc-cook-toolbar{
+  display:flex;
+  flex-wrap:wrap;
   align-items:center;
+}
+
+.vc-cook-screen .vc-cook-ingredients{
+  align-content:start;
+}
+
+.vc-cook-foot{
+  position:sticky;
+  bottom:0;
+  z-index:2;
+  padding-top:12px;
+  padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px));
+  margin-top:2px;
+  background:linear-gradient(180deg, rgba(255,246,234,0), rgba(255,246,234,.92) 22%, rgba(255,246,234,1) 100%);
+  border-top:1px solid rgba(80,29,10,.1);
+}
+
+.vc-cook-foot .vc-button{
+  min-height:58px;
+  font-size:1.02rem;
 }
 
 .vc-cook-step-copy{
@@ -1146,6 +1261,10 @@ a{
 }
 
 @media (min-width: 780px){
+  :root{
+    --vc-frame-gap:18px;
+  }
+
   .vc-app{
     padding:18px 18px 40px;
   }
@@ -1154,6 +1273,10 @@ a{
     top:18px;
     min-height:124px;
     padding:14px 18px;
+  }
+
+  .vc-topbar-cooking{
+    padding-bottom:14px;
   }
 
   .vc-topbar-center{
@@ -1195,6 +1318,19 @@ a{
 
   .vc-step-hero{
     padding:20px;
+  }
+
+  .vc-cook-screen .vc-cook-mode{
+    min-height:calc(100dvh - var(--vc-topbar-current-height, 124px) - (var(--vc-frame-gap) * 3));
+  }
+
+  .vc-cook-screen .vc-cook-stage{
+    grid-template-columns:minmax(0, 1fr);
+    padding:22px;
+  }
+
+  .vc-cook-figure img{
+    max-height:36vh;
   }
 
   .vc-grid.two,

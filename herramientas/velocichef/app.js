@@ -303,6 +303,14 @@ function toIsoDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+function isIOSDevice() {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function isStandaloneApp() {
+  return window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
+}
+
 function fromIsoDate(dateString) {
   const [year, month, day] = String(dateString).split("-").map(Number);
   return new Date(year, (month || 1) - 1, day || 1, 12, 0, 0, 0);
@@ -906,6 +914,7 @@ function normalizeCookingStep(step, index) {
     title,
     text,
     timerMinutes: Number(step?.timerMinutes || step?.timer_minutes || extractTimerMinutes(text)) || 0,
+    imagePrompt: typeof step === "string" ? "" : String(step?.imagePrompt || step?.image_prompt || "").trim(),
   };
 }
 
@@ -1207,6 +1216,8 @@ function createCookingState(mode = "suggest", mealId = null) {
     recognitionState: "idle",
     transcript: "",
     activeTimer: null,
+    guidanceStatus: "idle",
+    stepImages: {},
   };
 }
 
@@ -1250,6 +1261,115 @@ function getCookingStage(target) {
     stepIndex,
     current: stages[stepIndex] || null,
   };
+}
+
+function getCookingImageState(step) {
+  if (!step || !state.cooking?.stepImages) return null;
+  return state.cooking.stepImages[step.id] || null;
+}
+
+async function ensureCookingGuidance(mealId) {
+  const target = getMealById(mealId);
+  if (!target || !state.week) return;
+
+  const currentSteps = target.meal.cookingSteps || [];
+  const hasSpecificSteps = currentSteps.some((step) => step.imagePrompt || step.text.length > 80);
+  if (hasSpecificSteps && state.cooking?.guidanceStatus === "done") return;
+
+  ensureCookingState();
+  state.cooking.guidanceStatus = "loading";
+  state.busy = true;
+  state.busyLabel = "Afinando la receta paso a paso...";
+  render();
+
+  try {
+    const data = await invokePlannerStable({
+      action: "cook_guidance",
+      profile: plannerProfilePayload(),
+      mealKey: target.mealKey,
+      meal: {
+        title: target.meal.title,
+        summary: target.meal.summary,
+        prep_minutes: target.meal.prepMinutes,
+        difficulty: target.meal.difficulty,
+        servings: target.meal.servings,
+        ingredients: target.meal.ingredients,
+      },
+    });
+
+    const nextSteps = Array.isArray(data.steps) ? data.steps.map(normalizeCookingStep).filter((step) => step.text) : [];
+    if (nextSteps.length) {
+      updateMeal(mealId, (meal) => ({
+        ...meal,
+        cookingSteps: nextSteps,
+      }));
+      await saveWeek();
+    }
+    state.cooking.guidanceStatus = "done";
+    state.notice = "";
+    state.error = "";
+  } catch (_error) {
+    state.cooking.guidanceStatus = "error";
+    state.notice = "Voy a usar una guía rápida para esta receta mientras afino los pasos.";
+  } finally {
+    state.busy = false;
+    state.busyLabel = "";
+    render();
+  }
+}
+
+async function ensureStepIllustration(mealId, step) {
+  if (!step || step.kind !== "instruction" || !step.imagePrompt || !state.cooking) return;
+  if (state.cooking.stepImages?.[step.id]?.status === "ready" || state.cooking.stepImages?.[step.id]?.status === "loading") return;
+
+  state.cooking.stepImages[step.id] = { status: "loading" };
+  render();
+
+  try {
+    const target = getMealById(mealId);
+    if (!target) return;
+
+    const data = await invokePlannerStable({
+      action: "generate_step_image",
+      meal: {
+        title: target.meal.title,
+        summary: target.meal.summary,
+      },
+      step: {
+        text: step.text,
+        image_prompt: step.imagePrompt,
+      },
+    });
+
+    if (data?.image?.data) {
+      state.cooking.stepImages[step.id] = {
+        status: "ready",
+        src: `data:${data.image.mimeType || "image/png"};base64,${data.image.data}`,
+      };
+    } else {
+      state.cooking.stepImages[step.id] = { status: "error" };
+    }
+  } catch (_error) {
+    state.cooking.stepImages[step.id] = { status: "error" };
+  } finally {
+    render();
+  }
+}
+
+async function startCookingFlow(mealId, mode = "active") {
+  stopHandsFreeMode();
+  stopCookingTimer();
+  state.cooking = createCookingState(mode, mealId);
+  state.currentView = "cook";
+  render();
+  window.scrollTo(0, 0);
+
+  await ensureCookingGuidance(mealId);
+
+  const target = getMealById(mealId);
+  if (!target) return;
+  const currentStep = getCookingStage(target).current;
+  await ensureStepIllustration(mealId, currentStep);
 }
 
 function updateMeal(mealId, updater) {
@@ -1436,6 +1556,12 @@ async function requestNotifications() {
     render();
     return false;
   }
+  if (isIOSDevice() && !isStandaloneApp()) {
+    state.notice = "En iPhone, los avisos solo se pueden activar desde la app instalada en la pantalla de inicio. Ábrela desde allí y vuelve a intentarlo.";
+    state.error = "";
+    render();
+    return false;
+  }
   const permission = await Notification.requestPermission();
   if (permission === "granted") {
     try {
@@ -1448,15 +1574,15 @@ async function requestNotifications() {
         scheduleReminders();
       }
       state.notice = push.supported
-        ? "Notificaciones push activadas. Te avisaré aunque la app no esté abierta."
-        : "Las notificaciones del navegador están activadas, pero este dispositivo no expone Push API. Mantengo el recordatorio local cuando la app esté abierta.";
+        ? "Notificaciones activadas. Te avisaré aunque la app no esté abierta."
+        : "Los avisos están activados mientras la app siga abierta en este dispositivo.";
       state.error = "";
       return true;
     } catch (error) {
       state.profile.notificationEnabled = true;
       await saveProfile();
-      state.notice = "Permiso concedido, pero no pude completar la suscripción push. Te dejo el sistema local activo y podrás reintentar desde el perfil.";
-      state.error = error instanceof Error ? error.message : "No pude registrar la suscripción push.";
+      state.notice = "He dejado los avisos listos en este dispositivo, pero aún no he cerrado la activación completa.";
+      state.error = "No pude completar la activación de avisos ahora mismo.";
       render();
       return false;
     }
@@ -1545,13 +1671,17 @@ function stopCookingTimer() {
   }
 }
 
-function moveCookingStep(delta) {
+async function moveCookingStep(delta) {
   const target = getCookingTarget();
   if (!target) return;
   const { stages } = getCookingStage(target);
   ensureCookingState();
   state.cooking.stepIndex = Math.max(0, Math.min((state.cooking.stepIndex || 0) + delta, Math.max(0, stages.length - 1)));
   render();
+  window.scrollTo(0, 0);
+  const nextTarget = getCookingTarget();
+  const currentStep = nextTarget ? getCookingStage(nextTarget).current : null;
+  await ensureStepIllustration(nextTarget?.meal?.id, currentStep);
 }
 
 function getSpeechRecognitionCtor() {
@@ -1577,14 +1707,14 @@ function stopHandsFreeMode() {
   }
 }
 
-function handleVoiceNavigation(transcript) {
+async function handleVoiceNavigation(transcript) {
   const normalized = String(transcript || "").toLowerCase();
   if (/siguiente/.test(normalized)) {
-    moveCookingStep(1);
+    await moveCookingStep(1);
     return true;
   }
   if (/atr[aá]s/.test(normalized)) {
-    moveCookingStep(-1);
+    await moveCookingStep(-1);
     return true;
   }
 
@@ -1624,8 +1754,7 @@ function startHandsFreeMode() {
 
     if (!transcript) return;
     state.cooking.transcript = transcript;
-    handleVoiceNavigation(transcript);
-    render();
+    handleVoiceNavigation(transcript).finally(() => render());
   };
 
   recognition.onerror = () => {
@@ -1951,7 +2080,7 @@ function plannerProfilePayload() {
 
 async function invokePlanner(body) {
   if (!state.client) {
-    throw new Error("Supabase no está disponible.");
+    throw new Error("La cocina no está disponible ahora mismo.");
   }
   const { data, error } = await state.client.functions.invoke("velocichef-plan-week", {
     body,
@@ -1982,7 +2111,7 @@ async function invokePlannerDirect(body) {
 
 async function invokePlannerStable(body) {
   if (!state.client) {
-    throw new Error("Supabase no esta disponible.");
+    throw new Error("La cocina no está disponible ahora mismo.");
   }
 
   const sessionResult = await state.client.auth.getSession();
@@ -2065,9 +2194,8 @@ async function generateWeek(startDate = getTomorrowIso()) {
   } catch (_error) {
     const error = _error;
     state.week = buildWeekFromPlan(createSampleWeekPlan(startDate));
-    state.notice = "No pude alcanzar Gemini ahora mismo, así que he dejado una semana de muestra editable para que la app siga funcionando.";
-    state.notice = "No pude cerrar la generacion real en este intento, asi que he dejado una semana de muestra editable para que sigas avanzando.";
-    state.error = `Detalle tecnico: ${_error instanceof Error ? _error.message : "No he podido generar el menu real."}`;
+    state.notice = "No pude cerrar la generación real en este intento, así que he dejado una semana de muestra editable para que sigas avanzando.";
+    state.error = "Ahora mismo no he podido generar el menú real.";
   } finally {
     state.week.reminders = composeReminders();
     await saveWeek();
@@ -2127,9 +2255,8 @@ async function swapMeal(target, reasons) {
     state.error = "";
   } catch (_error) {
     replacement = createFallbackSwapMeal(target, original);
-    state.notice = "Gemini no respondió a tiempo y te he puesto una alternativa local para no frenarte.";
-    state.notice = "No he podido traer una alternativa real ahora mismo y te he puesto una opcion local para no frenarte.";
-    state.error = `Detalle tecnico: ${_error instanceof Error ? _error.message : "No he podido sustituir el plato con Gemini."}`;
+    state.notice = "No he podido traer una alternativa real ahora mismo y te he puesto una opción de apoyo para no frenarte.";
+    state.error = "No he podido sustituir el plato ahora mismo.";
   } finally {
     updateMeal(target.meal.id, () => replacement);
     state.week.reminders = composeReminders();
@@ -2156,7 +2283,7 @@ function renderLoading() {
         <div class="vc-spinner" aria-hidden="true"></div>
         <div>
           <h1 class="vc-title">VelociChef está arrancando la cocina.</h1>
-          <p class="vc-muted">Estoy preparando tu perfil, tus menús y la conexión con Supabase.</p>
+          <p class="vc-muted">Estoy preparando tu perfil, tus menús y tu cocina semanal.</p>
         </div>
       </article>
     </section>
@@ -2190,6 +2317,7 @@ function renderUserAvatar(user) {
 
 function renderTopbar() {
   const user = state.session?.user || null;
+  const isCookView = state.currentView === "cook";
   const zaurioMenuOpen = state.activeMenu === "zaurio";
   const userMenuOpen = state.activeMenu === "user";
   const displayName = state.profile?.displayName || getUserLabel(user);
@@ -2199,7 +2327,7 @@ function renderTopbar() {
     : "Sin semana activa";
 
   return `
-    <header class="vc-topbar vc-card">
+    <header class="vc-topbar vc-card ${isCookView ? "vc-topbar-cooking" : ""}">
       <div class="vc-topbar-main">
         <div class="vc-topbar-side vc-topbar-left">
           <div class="vc-menu-wrap ${zaurioMenuOpen ? "open" : ""}">
@@ -2268,7 +2396,7 @@ function renderTopbar() {
         </div>
       </div>
 
-      ${user ? `
+      ${user && !isCookView ? `
         <div class="vc-topbar-cookbar">
           <button class="vc-cook-launch" type="button" data-action="open-cook">
             Cocinar!
@@ -2418,7 +2546,7 @@ function renderOnboarding() {
     {
       kicker: "Alergias",
       title: "Comienza a preparar tu perfil",
-      copy: "Primero vamos con alergias y límites claros. Puedes marcar varias y dejar notas concretas para Gemini.",
+      copy: "Primero vamos con alergias y límites claros. Puedes marcar varias y dejar notas concretas para afinar tus platos.",
       content: `
         <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Alergias o ingredientes que deben quedar fuera</label>
@@ -2525,7 +2653,7 @@ function renderOnboarding() {
         <div class="vc-step-section vc-fieldset">
           <label class="vc-label" for="onboarding-lunch-time">¿A qué hora te gusta comer regularmente?</label>
           <input id="onboarding-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
-          <span class="vc-helper">Esto se usará para ajustar recordatorios y para que Gemini tenga en cuenta tu ritmo real.</span>
+          <span class="vc-helper">Esto se usará para ajustar recordatorios y encajar el plan con tu ritmo real.</span>
         </div>
         <div class="vc-note vc-note-strong">
           Se generará una semana empezando mañana, con porciones adaptadas a ${state.profile.householdCount} ${state.profile.householdCount === 1 ? "persona" : "personas"}, intentando reutilizar ingredientes y midiendo calorías aproximadas por plato.
@@ -2863,6 +2991,9 @@ function renderRecipesView() {
         <span class="vc-eyebrow">Mis recetas de esta semana</span>
         <h2 class="vc-title">Recetario semanal</h2>
         <p class="vc-copy">Aquí tienes todos los platos reunidos para revisar detalles o volver a una receta concreta.</p>
+        <div class="vc-inline-actions">
+          <button class="vc-button secondary" data-action="redo-current-week">Rehacer planificación</button>
+        </div>
       </article>
       <div class="vc-recipe-grid">
         ${flattenMeals(state.week).map(({ day, mealKey, meal }) => `
@@ -3031,6 +3162,7 @@ function renderProfileView() {
             <span class="vc-eyebrow">Avisos y ayuda</span>
             <h3 class="vc-inline-title">Mantén la app a tu ritmo</h3>
           </div>
+          ${isIOSDevice() && !isStandaloneApp() ? `<div class="vc-note">En iPhone, abre VelociChef desde la pantalla de inicio para poder activar avisos.</div>` : ""}
           <p class="vc-copy">${state.profile.notificationEnabled ? "Tus avisos están activos." : "Todavía no has activado avisos en este dispositivo."} ${state.profile.freezeNotificationsEnabled ? "También recordaré los ingredientes que convenga descongelar." : "Los recordatorios de congelado siguen apagados por ahora."}</p>
           <div class="vc-chip-row">
             <span class="vc-meta-pill">${pushCapable ? "Avisos también fuera de la app" : "Avisos mientras la app está abierta"}</span>
@@ -3186,9 +3318,10 @@ function renderCookView() {
   const activeTimer = state.cooking?.activeTimer;
   const isIngredientsStep = current?.kind === "ingredients";
   const isLastStep = stepIndex === stages.length - 1;
+  const currentImage = getCookingImageState(current);
 
   return `
-    <section class="vc-grid">
+    <section class="vc-grid vc-cook-screen">
       <article class="vc-card vc-step vc-cook-mode">
         <div class="vc-step-progress-head">
           <span class="vc-eyebrow">Cocinar</span>
@@ -3217,6 +3350,8 @@ function renderCookView() {
           </div>
         ` : ""}
 
+        ${state.cooking?.guidanceStatus === "loading" ? `<div class="vc-note">Estoy afinando los pasos de esta receta para que queden bien claros.</div>` : ""}
+
         ${isIngredientsStep ? `
           <article class="vc-cook-stage">
             <h3 class="vc-inline-title">Paso 1 - PreparaciÃ³n</h3>
@@ -3233,6 +3368,9 @@ function renderCookView() {
         ` : `
           <article class="vc-cook-stage">
             <h3 class="vc-inline-title">${escapeHtml(current.title)}</h3>
+            ${currentImage?.status === "loading" ? `<div class="vc-cook-image-shell vc-cook-image-loading"><div class="vc-spinner" aria-hidden="true"></div><span>Ilustrando este paso...</span></div>` : ""}
+            ${currentImage?.status === "ready" ? `<figure class="vc-cook-figure"><img src="${currentImage.src}" alt="${escapeHtml(current.title)}"><figcaption>${escapeHtml(current.title)}</figcaption></figure>` : ""}
+            ${currentImage?.status === "error" ? `<div class="vc-note">La ilustración de este paso no está disponible ahora mismo.</div>` : ""}
             <p class="vc-copy vc-cook-step-copy">${renderTechniqueText(current.text)}</p>
             ${current.timerMinutes ? `
               <div class="vc-inline-actions">
@@ -3242,7 +3380,7 @@ function renderCookView() {
           </article>
         `}
 
-        <div class="vc-step-foot">
+        <div class="vc-step-foot vc-cook-foot">
           <button class="vc-button secondary" data-action="cook-stage-prev" ${stepIndex === 0 ? "disabled" : ""}>AtrÃ¡s</button>
           ${isLastStep
             ? `<button class="vc-button primary" data-action="finish-cooking-session">Terminar</button>`
@@ -3473,10 +3611,17 @@ function renderModal() {
   return renderBusyOverlay();
 }
 
+function syncLayoutMetrics() {
+  const topbar = root.querySelector(".vc-topbar");
+  const topbarHeight = topbar ? Math.ceil(topbar.getBoundingClientRect().height) : 0;
+  document.documentElement.style.setProperty("--vc-topbar-current-height", `${topbarHeight}px`);
+}
+
 function render() {
   if (state.loading) {
-    root.innerHTML = sanitizeUiCopy(`${renderTopbar()}${renderLoading()}`);
-    modalRoot.innerHTML = sanitizeUiCopy(renderModal());
+    root.innerHTML = `${renderTopbar()}${renderLoading()}`;
+    modalRoot.innerHTML = renderModal();
+    window.requestAnimationFrame(syncLayoutMetrics);
     return;
   }
 
@@ -3491,8 +3636,9 @@ function render() {
       ? renderOnboarding()
       : renderWorkspace();
 
-  root.innerHTML = sanitizeUiCopy(`${renderTopbar()}${notices ? `<section class="vc-shell">${notices}</section>` : ""}${content}`);
-  modalRoot.innerHTML = sanitizeUiCopy(renderModal());
+  root.innerHTML = `${renderTopbar()}${notices ? `<section class="vc-shell">${notices}</section>` : ""}${content}`;
+  modalRoot.innerHTML = renderModal();
+  window.requestAnimationFrame(syncLayoutMetrics);
 }
 
 function toggleFromArray(list, value) {
@@ -3707,9 +3853,7 @@ async function handleAction(action, trigger) {
 
     case "cook-suggest-yes":
       ensureCookingState();
-      state.cooking.mode = "active";
-      state.cooking.stepIndex = 0;
-      render();
+      await startCookingFlow(state.cooking.mealId, "active");
       break;
 
     case "cook-suggest-no":
@@ -3728,19 +3872,15 @@ async function handleAction(action, trigger) {
       break;
 
     case "cook-meal":
-      stopHandsFreeMode();
-      stopCookingTimer();
-      state.cooking = createCookingState("active", trigger.dataset.mealId);
-      state.currentView = "cook";
-      render();
+      await startCookingFlow(trigger.dataset.mealId, "active");
       break;
 
     case "cook-stage-prev":
-      moveCookingStep(-1);
+      await moveCookingStep(-1);
       break;
 
     case "cook-stage-next":
-      moveCookingStep(1);
+      await moveCookingStep(1);
       break;
 
     case "finish-cooking-session":
@@ -3935,6 +4075,13 @@ async function handleAction(action, trigger) {
       await generateWeek(addDays(state.week.endDate, 1));
       break;
 
+    case "redo-current-week":
+      if (!state.week?.startDate) return;
+      await generateWeek(state.week.startDate);
+      state.currentView = "recipes";
+      render();
+      break;
+
     case "logout":
       if (!state.client) return;
       stopHandsFreeMode();
@@ -4125,7 +4272,7 @@ async function init() {
 
   if (!state.client) {
     state.loading = false;
-    state.error = "No pude inicializar Supabase en esta sesión.";
+    state.error = "No pude abrir tu cocina ahora mismo.";
     render();
     return;
   }
@@ -4137,5 +4284,8 @@ async function init() {
     hydrateSession(session);
   });
 }
+
+window.addEventListener("resize", syncLayoutMetrics);
+window.addEventListener("orientationchange", syncLayoutMetrics);
 
 init();

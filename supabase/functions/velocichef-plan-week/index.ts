@@ -6,6 +6,7 @@ const corsHeaders = {
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
+const GEMINI_IMAGE_MODEL = Deno.env.get("GEMINI_IMAGE_MODEL") || "gemini-2.5-flash-image";
 
 const mealLabels: Record<string, string> = {
   breakfast: "desayuno",
@@ -106,7 +107,8 @@ function buildWeekPrompt(input: Record<string, unknown>) {
     "- Prioriza reutilizar ingredientes entre dias para simplificar la compra.",
     "- Ajusta las porciones al numero de personas indicado.",
     "- Cada plato debe incluir calorias aproximadas, tiempo de preparacion, dificultad y lista de ingredientes.",
-    "- Cada plato debe incluir un array steps con instrucciones cortas, claras y en orden.",
+    "- Cada plato debe incluir un array steps con objetos de pasos concretos, claros y en orden.",
+    "- En cada paso no asumas ingredientes no listados ni utensilios especiales.",
     "- Si un ingrediente seria razonable congelarlo, marca freezable true y un thaw_lead_hours aproximado.",
     "- Los platos deben sonar apetecibles, caseros y factibles entre semana.",
     "",
@@ -117,7 +119,7 @@ function buildWeekPrompt(input: Record<string, unknown>) {
     mealList,
     "",
     "La forma JSON exacta debe ser:",
-    '{"strategy":"...","batchingTips":["..."],"days":[{"date":"YYYY-MM-DD","meals":{"breakfast":{"title":"...","summary":"...","prep_minutes":15,"difficulty":"facil","calories":420,"servings":2,"nutrition":{"protein_g":25,"carbs_g":40,"fats_g":14,"fiber_g":7},"ingredients":[{"name":"...","quantity":300,"unit":"g","category":"Verduras","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"steps":["...","..."]}}}],"freezerItems":[{"ingredient":"...","quantity":400,"unit":"g","mealDate":"YYYY-MM-DD","mealKey":"dinner","mealTitle":"...","thawLeadHours":12}]}',
+    '{"strategy":"...","batchingTips":["..."],"days":[{"date":"YYYY-MM-DD","meals":{"breakfast":{"title":"...","summary":"...","prep_minutes":15,"difficulty":"facil","calories":420,"servings":2,"nutrition":{"protein_g":25,"carbs_g":40,"fats_g":14,"fiber_g":7},"ingredients":[{"name":"...","quantity":300,"unit":"g","category":"Verduras","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"steps":[{"title":"Preparar","text":"...","timer_minutes":0,"image_prompt":"..."}]}}}],"freezerItems":[{"ingredient":"...","quantity":400,"unit":"g","mealDate":"YYYY-MM-DD","mealKey":"dinner","mealTitle":"...","thawLeadHours":12}]}',
     "",
     "Cada day.meals solo debe contener las comidas seleccionadas en el perfil.",
   ].join("\n");
@@ -147,8 +149,58 @@ function buildSwapPrompt(input: Record<string, unknown>) {
     input.existingWeek ? `Resumen de la semana actual: ${JSON.stringify(input.existingWeek)}` : "",
     "",
     "Forma JSON exacta:",
-    '{"title":"...","summary":"...","prep_minutes":18,"difficulty":"facil","calories":510,"servings":2,"nutrition":{"protein_g":30,"carbs_g":45,"fats_g":18,"fiber_g":8},"ingredients":[{"name":"...","quantity":250,"unit":"g","category":"Despensa","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"steps":["...","..."],"tags":["..."]}',
+    '{"title":"...","summary":"...","prep_minutes":18,"difficulty":"facil","calories":510,"servings":2,"nutrition":{"protein_g":30,"carbs_g":45,"fats_g":18,"fiber_g":8},"ingredients":[{"name":"...","quantity":250,"unit":"g","category":"Despensa","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"steps":[{"title":"Preparar","text":"...","timer_minutes":0,"image_prompt":"..."}],"tags":["..."]}',
   ].filter(Boolean).join("\n");
+}
+
+function buildCookingGuidancePrompt(input: Record<string, unknown>) {
+  const profile = (input.profile || {}) as Record<string, unknown>;
+  const meal = (input.meal || {}) as Record<string, unknown>;
+  const ingredients = Array.isArray(meal.ingredients) ? meal.ingredients : [];
+
+  return [
+    "Genera una guia de cocina paso a paso en espanol para una sola receta.",
+    "Devuelve solo JSON valido, sin markdown ni texto adicional.",
+    "Reglas importantes:",
+    "- Devuelve entre 3 y 6 pasos.",
+    "- Cada paso debe ser concreto, corto y accionable.",
+    "- No asumas preferencias personales del usuario.",
+    "- No inventes ingredientes, salsas, guarniciones ni utensilios especiales que no esten en la receta.",
+    "- Usa solo los ingredientes listados y tecnicas razonables para ese plato.",
+    "- No uses frases vagas como 'ajusta a tu gusto' salvo que sea imprescindible.",
+    "- Si un paso requiere espera o coccion, indica timer_minutes.",
+    "- Cada paso debe incluir image_prompt para ilustrarlo visualmente sin texto en pantalla.",
+    "",
+    "Contexto del perfil:",
+    buildProfileSummary(profile),
+    "",
+    `Receta: ${meal.title || "sin titulo"}.`,
+    `Tipo de comida: ${mealLabels[String(input.mealKey || meal.mealKey || "meal")] || input.mealKey || meal.mealKey || "comida"}.`,
+    `Resumen: ${meal.summary || "sin resumen"}.`,
+    `Tiempo total estimado: ${meal.prep_minutes || meal.prepMinutes || 20} minutos.`,
+    `Dificultad: ${meal.difficulty || "media"}.`,
+    `Raciones: ${meal.servings || 1}.`,
+    `Ingredientes: ${JSON.stringify(ingredients)}.`,
+    "",
+    "Forma JSON exacta:",
+    '{"steps":[{"title":"Preparar verduras","text":"Lava el calabacin y corta en juliana el pimiento rojo.","timer_minutes":0,"image_prompt":"Realistic home kitchen scene showing sliced zucchini and red pepper cut into thin strips on a wooden board, clean overhead food photography, no text."}]}',
+  ].join("\n");
+}
+
+function buildStepImagePrompt(input: Record<string, unknown>) {
+  const meal = (input.meal || {}) as Record<string, unknown>;
+  const step = (input.step || {}) as Record<string, unknown>;
+  const fallbackPrompt = String(step.image_prompt || "").trim();
+  if (fallbackPrompt) return fallbackPrompt;
+
+  return [
+    "Create a realistic cooking illustration for a recipe step.",
+    `Dish: ${meal.title || "Weekly dish"}.`,
+    `Meal summary: ${meal.summary || ""}`,
+    `Current step: ${step.text || "Cooking step"}.`,
+    "Style: natural home kitchen, appetizing, mobile-friendly, no labels, no captions, no UI, no watermarks.",
+    "Focus only on the action and ingredients needed for this step.",
+  ].filter(Boolean).join(" ");
 }
 
 async function callGemini(prompt: string) {
@@ -190,6 +242,59 @@ async function callGemini(prompt: string) {
   return JSON.parse(text);
 }
 
+async function callGeminiImage(prompt: string) {
+  if (!GEMINI_API_KEY) {
+    throw new Error("Falta GEMINI_API_KEY en los secrets de Supabase.");
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          responseModalities: ["TEXT", "IMAGE"],
+        },
+      }),
+    },
+  );
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload?.error?.message || "No he podido generar la ilustracion.");
+  }
+
+  const parts = payload?.candidates?.[0]?.content?.parts || [];
+  const imagePart = parts.find((part: Record<string, unknown>) => (part.inlineData || part.inline_data));
+  const inlineData = imagePart?.inlineData || imagePart?.inline_data;
+  if (!inlineData?.data || !inlineData?.mimeType && !inlineData?.mime_type) {
+    throw new Error("No he recibido una imagen util para este paso.");
+  }
+
+  return {
+    mimeType: inlineData.mimeType || inlineData.mime_type || "image/png",
+    data: inlineData.data,
+  };
+}
+
+function normalizeStepPayload(raw: Record<string, unknown>, index: number) {
+  return {
+    title: String(raw.title || `Paso ${index + 1}`).trim(),
+    text: String(raw.text || raw.description || "").trim(),
+    timer_minutes: Number(raw.timer_minutes || 0) || 0,
+    image_prompt: String(raw.image_prompt || "").trim(),
+  };
+}
+
 function normalizeMealPayload(raw: Record<string, unknown>) {
   const ingredients = Array.isArray(raw.ingredients)
     ? raw.ingredients.map((ingredient) => ({
@@ -218,7 +323,11 @@ function normalizeMealPayload(raw: Record<string, unknown>) {
       fiber_g: Number((raw.nutrition as Record<string, unknown>)?.fiber_g || 0) || 0,
     },
     ingredients,
-    steps: Array.isArray(raw.steps) ? raw.steps.map(String).filter(Boolean) : [],
+    steps: Array.isArray(raw.steps)
+      ? raw.steps.map((step, index) => typeof step === "string"
+        ? { title: `Paso ${index + 1}`, text: step, timer_minutes: 0, image_prompt: "" }
+        : normalizeStepPayload(step as Record<string, unknown>, index)).filter((step) => step.text)
+      : [],
     tags: Array.isArray(raw.tags) ? raw.tags.map(String) : [],
   };
 }
@@ -331,6 +440,19 @@ Deno.serve(async (request) => {
     const body = await request.json().catch(() => ({}));
     const action = String(body.action || "generate_week");
     const startDate = String(body.startDate || new Date().toISOString().slice(0, 10));
+
+    if (action === "cook_guidance") {
+      const rawGuidance = await callGemini(buildCookingGuidancePrompt(body));
+      const steps = Array.isArray(rawGuidance.steps)
+        ? rawGuidance.steps.map((step, index) => normalizeStepPayload(step as Record<string, unknown>, index)).filter((step) => step.text)
+        : [];
+      return json({ ok: true, steps });
+    }
+
+    if (action === "generate_step_image") {
+      const image = await callGeminiImage(buildStepImagePrompt(body));
+      return json({ ok: true, image });
+    }
 
     if (action === "swap_meal") {
       const rawMeal = await callGemini(buildSwapPrompt(body));
