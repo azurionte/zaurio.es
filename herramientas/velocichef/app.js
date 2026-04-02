@@ -190,7 +190,7 @@ const state = {
   week: null,
   feedback: [],
   onboardingStep: 0,
-  currentView: normalizeView(urlParams.get("view") || "week"),
+  currentView: normalizeView(urlParams.get("view") || "home"),
   loading: true,
   busy: false,
   busyLabel: "",
@@ -205,11 +205,13 @@ const state = {
   speechRecognition: null,
   timerTicker: null,
   notificationDevice: null,
+  notificationTab: urlParams.get("tab") === "pending" ? "pending" : "future",
+  pendingReminderLink: null,
 };
 
 function normalizeView(view) {
-  const valid = new Set(["week", "schedule", "shopping", "recipes", "profile", "onboarding", "cook"]);
-  return valid.has(view) ? view : "week";
+  const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
+  return valid.has(view) ? view : "home";
 }
 
 function createId() {
@@ -386,6 +388,33 @@ function friendlyDayLabel(isoDate, startDate) {
 
 function formatTime(time) {
   return time || "--:--";
+}
+
+function formatDateTimeLong(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleDateString("es-ES", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatInputTimeFromIso(isoString) {
+  const date = new Date(isoString);
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function slugify(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "item";
 }
 
 function buildDefaultProfile(user) {
@@ -750,6 +779,12 @@ async function syncRemoteReminders() {
       badge: APP_STORE_ICON_PATH,
       tag: reminder.id,
       kind: reminder.kind,
+      groupKey: reminder.groupKey,
+      mealId: reminder.mealId,
+      mealDate: reminder.mealDate,
+      mealKey: reminder.mealKey,
+      mealTitle: reminder.mealTitle,
+      ingredient: reminder.ingredient,
     },
   }));
 
@@ -1290,7 +1325,7 @@ function normalizeWeek(rawWeek) {
     freezePromptAnswered: !!rawWeek.freezePromptAnswered,
     freezerOptIn: !!rawWeek.freezerOptIn,
     freezerItems: buildFreezerItems(normalizedDays, rawWeek.freezerItems),
-    reminders: Array.isArray(rawWeek.reminders) ? rawWeek.reminders : [],
+    reminders: Array.isArray(rawWeek.reminders) ? rawWeek.reminders.map(normalizeReminder).filter(Boolean) : [],
     lastReminderSyncAt: rawWeek.lastReminderSyncAt || null,
   };
 }
@@ -1609,11 +1644,99 @@ function combineDateAndTime(isoDate, time) {
   return date;
 }
 
+function buildReminderUrl(reminder) {
+  const params = new URLSearchParams({
+    view: "notifications",
+    reminder: reminder.id,
+  });
+  if (reminder.kind === "meal") {
+    params.set("intent", "cook");
+  }
+  return `${APP_BASE_URL}?${params.toString()}`;
+}
+
+function normalizeReminder(rawReminder) {
+  if (!rawReminder) return null;
+  const reminder = {
+    id: rawReminder.id || rawReminder.key || createId(),
+    key: rawReminder.key || rawReminder.id || createId(),
+    kind: rawReminder.kind || rawReminder.reminder_kind || "meal",
+    groupKey: rawReminder.groupKey || rawReminder.group_key || rawReminder.kind || "meal",
+    title: String(rawReminder.title || "").trim(),
+    body: String(rawReminder.body || "").trim(),
+    triggerAt: rawReminder.triggerAt || rawReminder.trigger_at || new Date().toISOString(),
+    customTriggerAt: rawReminder.customTriggerAt || rawReminder.custom_trigger_at || null,
+    deliveredAt: rawReminder.deliveredAt || rawReminder.delivered_at || null,
+    skippedAt: rawReminder.skippedAt || rawReminder.skipped_at || null,
+    mealId: rawReminder.mealId || rawReminder.meal_id || null,
+    mealDate: rawReminder.mealDate || rawReminder.meal_date || null,
+    mealKey: rawReminder.mealKey || rawReminder.meal_key || null,
+    mealTitle: rawReminder.mealTitle || rawReminder.meal_title || null,
+    ingredient: rawReminder.ingredient || null,
+    dateLabel: rawReminder.dateLabel || rawReminder.date_label || null,
+    url: rawReminder.url || "",
+  };
+  reminder.url = reminder.url || buildReminderUrl(reminder);
+  return reminder;
+}
+
+function finalizeReminder(baseReminder, previousReminder = null) {
+  const existing = previousReminder ? normalizeReminder(previousReminder) : null;
+  const normalized = normalizeReminder({
+    ...baseReminder,
+    id: existing?.id || baseReminder.id || baseReminder.key,
+    triggerAt: existing?.customTriggerAt || baseReminder.triggerAt,
+    customTriggerAt: existing?.customTriggerAt || null,
+    deliveredAt: existing?.deliveredAt || null,
+    skippedAt: existing?.skippedAt || null,
+  });
+  normalized.url = buildReminderUrl(normalized);
+  return normalized;
+}
+
+function getReminderById(reminderId) {
+  return (state.week?.reminders || []).find((reminder) => reminder.id === reminderId) || null;
+}
+
+function getReminderBucket(reminder, now = new Date()) {
+  if (!reminder) return "future";
+  return new Date(reminder.triggerAt).getTime() <= now.getTime() ? "pending" : "future";
+}
+
+function getReminderKindLabel(reminder) {
+  if (reminder.kind === "meal") return "Hora de cocinar";
+  if (reminder.kind === "thaw") return "Descongelar";
+  if (reminder.kind === "replan") return "Nueva semana";
+  return "Aviso";
+}
+
+function getReminderMomentLabel(reminder) {
+  return formatDateTimeLong(reminder.triggerAt);
+}
+
+function getReminderTypeDescription(reminder) {
+  if (reminder.kind === "meal") {
+    return reminder.mealKey ? MEAL_LABELS[reminder.mealKey] || "Comida" : "Comida";
+  }
+  if (reminder.kind === "thaw") return "Congelador";
+  if (reminder.kind === "replan") return "Plan semanal";
+  return "Aviso";
+}
+
 function composeReminders() {
   if (!state.week || !state.profile) return [];
 
+  const previousByKey = new Map(
+    (state.week.reminders || [])
+      .map((reminder) => normalizeReminder(reminder))
+      .filter(Boolean)
+      .map((reminder) => [reminder.key, reminder]),
+  );
   const reminders = [];
   const leadMinutes = Number(state.profile.reminderLeadMinutes || DEFAULT_REMINDER_LEAD_MINUTES);
+  const pushReminder = (baseReminder) => {
+    reminders.push(finalizeReminder(baseReminder, previousByKey.get(baseReminder.key)));
+  };
 
   state.week.days.forEach((day, index) => {
     Object.entries(day.meals || {}).forEach(([mealKey, meal]) => {
@@ -1641,13 +1764,18 @@ function composeReminders() {
 
       const mealDate = combineDateAndTime(date, time);
       const triggerAt = new Date(mealDate.getTime() - leadMinutes * 60000);
-      reminders.push({
-        id: createId(),
+      pushReminder({
+        key: `meal:${day.date}:${mealKey}`,
         kind: "meal",
+        groupKey: `meal:${mealKey}`,
         title,
         body: `Empieza a organizarte para ${MEAL_LABELS[mealKey].toLowerCase()} y cocina con margen.`,
         triggerAt: triggerAt.toISOString(),
-        url: `${APP_BASE_URL}?view=week&day=${day.date}&meal=${mealKey}`,
+        mealId: meal.id,
+        mealDate: day.date,
+        mealKey,
+        mealTitle: meal.title,
+        dateLabel: day.label,
       });
     });
   });
@@ -1659,30 +1787,176 @@ function composeReminders() {
         item.mealKey === "dinner" ? state.profile.dinnerTime || "21:00" : state.profile.lunchTime || "14:30",
       );
       const triggerAt = new Date(mealDate.getTime() - (Number(item.thawLeadHours || 12) * 3600000));
-      reminders.push({
-        id: createId(),
+      pushReminder({
+        key: `thaw:${item.mealDate}:${item.mealKey}:${slugify(item.ingredient)}`,
         kind: "thaw",
+        groupKey: "thaw",
         title: `Pon a descongelar ${item.ingredient}`,
         body: `Lo necesitas para "${item.mealTitle}" del ${formatDateLong(item.mealDate)}.`,
         triggerAt: triggerAt.toISOString(),
-        url: `${APP_BASE_URL}?view=week&day=${item.mealDate}&meal=${item.mealKey}`,
+        mealDate: item.mealDate,
+        mealKey: item.mealKey,
+        mealTitle: item.mealTitle,
+        ingredient: item.ingredient,
       });
     });
   }
 
   if (state.week.endDate) {
     const replanDate = combineDateAndTime(addDays(state.week.endDate, -2), "10:00");
-    reminders.push({
-      id: createId(),
+    pushReminder({
+      key: `replan:${state.week.endDate}`,
       kind: "replan",
+      groupKey: "replan",
       title: "Tu semana de VelociChef se acaba pronto",
       body: "Entra y programa la siguiente semana sin volver a pasar por todo el onboarding.",
       triggerAt: replanDate.toISOString(),
-      url: `${APP_BASE_URL}?view=week&replan=1`,
+      mealDate: state.week.endDate,
     });
   }
 
-  return reminders;
+  return reminders.sort((a, b) => new Date(a.triggerAt).getTime() - new Date(b.triggerAt).getTime());
+}
+
+function formatClockFromDate(date) {
+  return date.toLocaleTimeString("es-ES", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getScheduledCookingEntries() {
+  if (!state.week) return [];
+  return flattenMeals(state.week)
+    .map((entry) => ({
+      ...entry,
+      cookAt: getCookMoment(entry.day, entry.mealKey),
+    }))
+    .sort((a, b) => a.cookAt.getTime() - b.cookAt.getTime());
+}
+
+function getRemainingCookingEntriesToday(now = new Date()) {
+  const todayIso = toIsoDate(now);
+  const graceMs = 45 * 60000;
+  return getScheduledCookingEntries().filter((entry) =>
+    toIsoDate(entry.cookAt) === todayIso && entry.cookAt.getTime() >= now.getTime() - graceMs);
+}
+
+function getNextCookingEntry(now = new Date()) {
+  const graceMs = 45 * 60000;
+  return getScheduledCookingEntries().find((entry) => entry.cookAt.getTime() >= now.getTime() - graceMs) || null;
+}
+
+function getRelevantShoppingItemsForEntries(entries, options = {}) {
+  const onlyMissing = options.onlyMissing !== false;
+  const refs = new Set(entries.map((entry) => `${entry.day.date}__${entry.mealKey}`));
+  return (state.week?.shoppingList || [])
+    .filter((item) => !onlyMissing || item.pantryStatus !== "have")
+    .map((item) => ({
+      ...item,
+      relevantRefs: (item.refs || []).filter((ref) => refs.has(`${ref.date}__${ref.mealKey}`)),
+    }))
+    .filter((item) => item.relevantRefs.length)
+    .sort((a, b) => a.name.localeCompare(b.name, "es"));
+}
+
+function getTodayMissingShoppingItems(now = new Date()) {
+  return getRelevantShoppingItemsForEntries(getRemainingCookingEntriesToday(now), { onlyMissing: true });
+}
+
+function getTodayMealLabel(entry) {
+  if (!entry) return "";
+  const cookTime = formatClockFromDate(entry.cookAt);
+  if (entry.mealKey === "lunch" && toIsoDate(entry.cookAt) !== entry.day.date) {
+    return `Hoy dejas listo el almuerzo de manana · ${cookTime}`;
+  }
+  return `${MEAL_LABELS[entry.mealKey] || "Comida"} · ${cookTime}`;
+}
+
+function getWeekTopIngredients(limit = 3) {
+  return (state.week?.shoppingList || [])
+    .filter((item) => item.name)
+    .filter((item) => !item.spice && !item.pantry)
+    .sort((a, b) => {
+      const refDiff = (b.refs?.length || 0) - (a.refs?.length || 0);
+      if (refDiff) return refDiff;
+      return (b.quantity || 0) - (a.quantity || 0);
+    })
+    .slice(0, limit)
+    .map((item) => item.name.toLowerCase());
+}
+
+function buildWeekSummaryText() {
+  if (!state.week) return "";
+  const strategy = String(state.week.strategy || "").trim();
+  const topIngredients = getWeekTopIngredients();
+  const ingredientCopy = topIngredients.length
+    ? `Aprovechamos especialmente ${formatNaturalList(topIngredients)} para comprar con mas cabeza.`
+    : "La compra esta pensada para reutilizar ingredientes con mas cabeza.";
+
+  if (strategy) {
+    return `${strategy} ${ingredientCopy}`.trim();
+  }
+
+  const mealCount = flattenMeals(state.week).length;
+  return `Esta semana tienes ${mealCount} platos pensados para que la cocina vaya suave, con sabores variados y una compra mas facil de sostener. ${ingredientCopy}`;
+}
+
+function parseAppUrl(url) {
+  const next = new URL(url, window.location.origin);
+  return {
+    view: normalizeView(next.searchParams.get("view") || "home"),
+    tab: next.searchParams.get("tab") === "pending" ? "pending" : "future",
+    reminderId: next.searchParams.get("reminder") || "",
+    intent: next.searchParams.get("intent") || "",
+  };
+}
+
+function applyIncomingUrl(url) {
+  const parsed = parseAppUrl(url);
+  state.currentView = parsed.view;
+  state.notificationTab = parsed.tab;
+  state.pendingReminderLink = parsed.reminderId
+    ? {
+        reminderId: parsed.reminderId,
+        intent: parsed.intent,
+      }
+    : null;
+}
+
+function openReminderModal(reminder, options = {}) {
+  if (!reminder) return;
+  const forceCookPrompt = !!options.forceCookPrompt;
+  const isPending = getReminderBucket(reminder) === "pending";
+  if (reminder.kind === "meal" && (forceCookPrompt || isPending)) {
+    state.modal = {
+      type: "cook-reminder",
+      reminderId: reminder.id,
+      postponeExpanded: false,
+      postponeChoice: "",
+      editedTime: formatInputTimeFromIso(new Date(Date.now() + 60 * 60000).toISOString()),
+      inlineError: "",
+    };
+    return;
+  }
+  state.modal = {
+    type: "reminder-detail",
+    reminderId: reminder.id,
+    editedTime: formatInputTimeFromIso(reminder.triggerAt),
+    readOnly: isPending,
+  };
+}
+
+function resolvePendingReminderLink() {
+  if (!state.pendingReminderLink?.reminderId || !state.week) return;
+  const pendingLink = { ...state.pendingReminderLink };
+  const reminder = getReminderById(state.pendingReminderLink.reminderId);
+  state.pendingReminderLink = null;
+  if (!reminder) return;
+  state.currentView = "notifications";
+  state.notificationTab = getReminderBucket(reminder);
+  openReminderModal(reminder, { forceCookPrompt: pendingLink.intent === "cook" });
+  window.history.replaceState({}, "", `${APP_BASE_URL}?view=notifications`);
 }
 
 function clearReminderTimers() {
@@ -1808,8 +2082,10 @@ async function registerServiceWorker() {
     navigator.serviceWorker.addEventListener("message", (event) => {
       const url = event.data?.url;
       if (!url) return;
-      const next = new URL(url, window.location.origin);
-      state.currentView = normalizeView(next.searchParams.get("view") || "week");
+      applyIncomingUrl(url);
+      if (state.week) {
+        resolvePendingReminderLink();
+      }
       render();
     });
   } catch (_error) {
@@ -2573,7 +2849,7 @@ function renderTopbar() {
         </div>
 
         <div class="vc-topbar-center">
-          <a class="vc-topbar-logo" href="${APP_BASE_URL}" aria-label="Ir al inicio de VelociChef">
+          <a class="vc-topbar-logo" href="${APP_BASE_URL}?view=home" aria-label="Ir al inicio de VelociChef">
             <img src="${APP_LOGO_PATH}" alt="VelociChef">
           </a>
         </div>
@@ -2601,6 +2877,7 @@ function renderTopbar() {
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
                 <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
+                <button class="vc-menu-action" type="button" data-action="open-view" data-view="notifications" role="menuitem">Notificaciones</button>
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Perfil</button>
                 <div class="vc-menu-meta">
                   <span class="vc-meta-pill">${escapeHtml(notificationState)}</span>
@@ -2950,18 +3227,24 @@ function renderWorkspaceHeader() {
   const mealsCount = flattenMeals(state.week).length;
   const shoppingItems = state.week?.shoppingList?.length || 0;
   const reminderCount = state.week?.reminders?.filter((item) => !item.deliveredAt).length || 0;
+  const weekSummary = buildWeekSummaryText();
 
   return `
     <section class="vc-workspace-head">
-      <article class="vc-brand-card vc-card">
+      <article class="vc-hero vc-home-hero">
         <div class="vc-header-copy">
-          <span class="vc-eyebrow">Tu cocina semanal</span>
+          <span class="vc-eyebrow">Tu semana actual</span>
           <h1 class="vc-title">Hola, ${escapeHtml(userName)}.</h1>
-          <p class="vc-copy">Tu menu, tu lista de la compra y tus avisos estan organizados para que la semana vaya suave de verdad.</p>
+          <p class="vc-copy vc-home-summary-copy">${escapeHtml(weekSummary)}</p>
         </div>
         <div class="vc-chip-row">
-          <span class="vc-meta-pill">${escapeHtml(state.profile?.timezone || getTimezone())}</span>
+          <span class="vc-meta-pill">${escapeHtml(formatDateLong(state.week?.startDate || getTomorrowIso()))}</span>
           <span class="vc-meta-pill">${state.week?.shoppingCompleted ? "Compra cerrada" : "Compra pendiente"}</span>
+          <span class="vc-meta-pill">${escapeHtml(state.profile?.timezone || getTimezone())}</span>
+        </div>
+        <div class="vc-inline-actions">
+          <button class="vc-button primary" data-action="open-view" data-view="week">Ver calendario</button>
+          <button class="vc-button secondary" data-action="open-view" data-view="shopping">Abrir compra</button>
         </div>
       </article>
 
@@ -2982,6 +3265,109 @@ function renderWorkspaceHeader() {
           <span class="vc-muted">avisos pendientes</span>
         </article>
       </div>
+    </section>
+  `;
+}
+
+function renderHomeMealCard(entry) {
+  return `
+    <article class="vc-home-meal-card">
+      <small class="vc-muted">${escapeHtml(getTodayMealLabel(entry))}</small>
+      <h3 class="vc-inline-title">${escapeHtml(entry.meal.title)}</h3>
+      <p class="vc-copy">${escapeHtml(entry.meal.summary)}</p>
+      <div class="vc-meta">
+        <span class="vc-meta-pill">${entry.meal.prepMinutes} min</span>
+        <span class="vc-meta-pill">${entry.meal.calories} kcal</span>
+        <span class="vc-meta-pill">${escapeHtml(entry.meal.difficulty)}</span>
+      </div>
+      <div class="vc-inline-actions">
+        <button class="vc-button primary" data-action="cook-meal" data-meal-id="${entry.meal.id}">Cocinar</button>
+        <button class="vc-button ghost" data-action="open-details" data-meal-id="${entry.meal.id}">Ver detalles</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderHomeView() {
+  if (!state.week) return renderWeekView();
+  const todayEntries = getRemainingCookingEntriesToday();
+  const nextEntry = getNextCookingEntry();
+  const missingTodayItems = getTodayMissingShoppingItems();
+  const futureReminderCount = (state.week.reminders || []).filter((reminder) => getReminderBucket(reminder) === "future").length;
+  const batchingTips = (state.week.batchingTips || []).slice(0, 3);
+
+  return `
+    <section class="vc-grid">
+      <div class="vc-grid two vc-home-grid">
+        <article class="vc-panel vc-home-section">
+          <span class="vc-eyebrow">Hoy</span>
+          <h2 class="vc-title">Lo que queda por cocinar</h2>
+          <p class="vc-copy">VelociChef mira la hora actual y te ensena solo los platos que todavia entran en juego hoy.</p>
+          ${todayEntries.length ? `
+            <div class="vc-home-meal-list">
+              ${todayEntries.map(renderHomeMealCard).join("")}
+            </div>
+          ` : `
+            <article class="vc-card vc-empty vc-home-empty">
+              <h3 class="vc-inline-title">Hoy ya no queda nada pendiente.</h3>
+              <p class="vc-copy">${nextEntry
+                ? `Lo siguiente que viene es ${nextEntry.meal.title} para ${formatDateLong(nextEntry.day.date)}.`
+                : "Cuando tengas un plato activo aqui te mostrare el siguiente paso de la semana."}</p>
+              <div class="vc-inline-actions" style="justify-content:center">
+                <button class="vc-button primary" data-action="open-view" data-view="week">Abrir calendario</button>
+              </div>
+            </article>
+          `}
+        </article>
+
+        <article class="vc-panel vc-home-section">
+          <span class="vc-eyebrow">Semana</span>
+          <h2 class="vc-title">Resumen rapido</h2>
+          <p class="vc-copy">Tus avisos, la compra y las recetas de esta semana quedan aqui a mano para moverte rapido entre lo importante.</p>
+          <div class="vc-home-side-stack">
+            <article class="vc-summary-card">
+              <small class="vc-muted">Avisos por delante</small>
+              <strong>${futureReminderCount}</strong>
+              <p class="vc-copy">recordatorios futuros entre cocina, congelador y replanificacion.</p>
+            </article>
+            <article class="vc-summary-card">
+              <small class="vc-muted">Compra de hoy</small>
+              <strong>${missingTodayItems.length}</strong>
+              <p class="vc-copy">${missingTodayItems.length ? "ingredientes pendientes para los platos de hoy." : "No hay ingredientes pendientes para hoy."}</p>
+            </article>
+          </div>
+          <div class="vc-inline-actions">
+            <button class="vc-button secondary" data-action="open-view" data-view="notifications">Notificaciones</button>
+            <button class="vc-button ghost" data-action="open-view" data-view="recipes">Mis recetas</button>
+          </div>
+        </article>
+      </div>
+
+      ${missingTodayItems.length ? `
+        <article class="vc-banner vc-home-warning">
+          <strong>Puede que no tengas todos los ingredientes para hoy.</strong>
+          <p class="vc-copy">Faltan ${missingTodayItems.length} ingrediente${missingTodayItems.length === 1 ? "" : "s"} por revisar para los platos que aun quedan por cocinar.</p>
+          <div class="vc-inline-actions">
+            <button class="vc-button primary" data-action="open-view" data-view="today-shopping">Revisar</button>
+          </div>
+        </article>
+      ` : `
+        <article class="vc-summary-card vc-home-ok">
+          <strong>Hoy lo tienes controlado.</strong>
+          <p class="vc-copy">Todo lo que necesitas para los platos pendientes de hoy ya esta marcado como resuelto.</p>
+        </article>
+      `}
+
+      ${batchingTips.length ? `
+        <article class="vc-panel">
+          <span class="vc-eyebrow">Para que vaya suave</span>
+          <h2 class="vc-title">Pequenos atajos de la semana</h2>
+          <ul class="vc-list">
+            ${batchingTips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join("")}
+          </ul>
+        </article>
+      ` : ""}
+
       ${renderBanner()}
     </section>
   `;
@@ -3201,6 +3587,70 @@ function renderShoppingView() {
   `;
 }
 
+function renderTodayShoppingView() {
+  if (!state.week) return renderShoppingView();
+  const todayEntries = getRemainingCookingEntriesToday();
+  const todayItems = getTodayMissingShoppingItems();
+  const grouped = groupByCategory(todayItems);
+
+  return `
+    <section class="vc-grid">
+      <article class="vc-panel">
+        <span class="vc-eyebrow">Lo que falta para hoy</span>
+        <h2 class="vc-title">Ingredientes necesarios para los platos pendientes de hoy</h2>
+        <p class="vc-copy">${todayEntries.length
+          ? "Aqui solo te enseno lo que aun necesitas para las recetas que siguen vivas hoy segun la hora actual."
+          : "Ahora mismo no hay platos pendientes para hoy, asi que no hace falta revisar ingredientes."}</p>
+        ${todayEntries.length ? `
+          <div class="vc-chip-row">
+            ${todayEntries.map((entry) => `<span class="vc-meta-pill">${escapeHtml(getTodayMealLabel(entry))}: ${escapeHtml(entry.meal.title)}</span>`).join("")}
+          </div>
+        ` : ""}
+      </article>
+
+      ${todayItems.length ? Object.entries(grouped).map(([category, items]) => `
+        <article class="vc-list-card">
+          <div class="vc-shopping-head">
+            <div>
+              <h3 class="vc-title">${escapeHtml(category)}</h3>
+              <p class="vc-copy">${items.length} ingrediente${items.length === 1 ? "" : "s"} pendiente${items.length === 1 ? "" : "s"}</p>
+            </div>
+          </div>
+          <div class="vc-shopping-items">
+            ${items.map((item) => `
+              <article class="vc-shopping-item">
+                <div class="vc-shopping-top">
+                  <div>
+                    <span class="vc-shopping-name">${escapeHtml(item.name)}</span>
+                    <span class="vc-muted">${escapeHtml(item.displayQuantity)}</span>
+                  </div>
+                  <div class="vc-segmented">
+                    <button class="vc-toggle ${item.pantryStatus === "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="have">Ya lo tengo</button>
+                    <button class="vc-toggle ${item.pantryStatus !== "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="need">Comprar</button>
+                  </div>
+                </div>
+                <div class="vc-tag-row">
+                  ${item.relevantRefs.map((ref) => `<span class="vc-meta-pill">${escapeHtml(MEAL_LABELS[ref.mealKey] || ref.mealKey)}: ${escapeHtml(ref.mealTitle)}</span>`).join("")}
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </article>
+      `).join("") : `
+        <article class="vc-card vc-empty">
+          <h3 class="vc-inline-title">Hoy no te falta nada.</h3>
+          <p class="vc-copy">Todo lo necesario para los platos que quedan por cocinar hoy ya esta marcado como resuelto.</p>
+        </article>
+      `}
+
+      <div class="vc-step-foot">
+        <button class="vc-button secondary" data-action="open-view" data-view="home">Volver al inicio</button>
+        <button class="vc-button primary" data-action="open-view" data-view="shopping">Ver lista completa</button>
+      </div>
+    </section>
+  `;
+}
+
 function renderRecipesView() {
   if (!state.week) return renderWeekView();
   return `
@@ -3232,6 +3682,73 @@ function renderRecipesView() {
           </article>
         `).join("")}
       </div>
+    </section>
+  `;
+}
+
+function renderReminderCard(reminder, bucket) {
+  const isPending = bucket === "pending";
+  return `
+    <article class="vc-reminder-card ${isPending ? "is-pending" : ""}">
+      <div class="vc-reminder-head">
+        <div>
+          <small class="vc-muted">${escapeHtml(getReminderKindLabel(reminder))}</small>
+          <h3 class="vc-inline-title">${escapeHtml(reminder.title)}</h3>
+        </div>
+        ${isPending
+          ? `<button class="vc-reminder-delete" type="button" data-action="delete-reminder" data-reminder-id="${reminder.id}" aria-label="Borrar aviso">X</button>`
+          : `<span class="vc-meta-pill">${escapeHtml(getReminderMomentLabel(reminder))}</span>`}
+      </div>
+      <p class="vc-copy">${escapeHtml(reminder.body)}</p>
+      <div class="vc-meta">
+        <span class="vc-meta-pill">${escapeHtml(getReminderTypeDescription(reminder))}</span>
+        <span class="vc-meta-pill">${escapeHtml(getReminderMomentLabel(reminder))}</span>
+        ${reminder.mealTitle ? `<span class="vc-meta-pill">${escapeHtml(reminder.mealTitle)}</span>` : ""}
+      </div>
+      <div class="vc-inline-actions">
+        <button class="vc-button ${isPending ? "primary" : "secondary"}" type="button" data-action="open-reminder" data-reminder-id="${reminder.id}">${isPending ? "Abrir aviso" : "Ver detalle"}</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderNotificationsView() {
+  if (!state.week) return renderWeekView();
+  const reminders = (state.week.reminders || []).map(normalizeReminder).filter(Boolean);
+  const now = new Date();
+  const pending = reminders
+    .filter((reminder) => getReminderBucket(reminder, now) === "pending")
+    .sort((a, b) => new Date(b.triggerAt).getTime() - new Date(a.triggerAt).getTime());
+  const future = reminders
+    .filter((reminder) => getReminderBucket(reminder, now) === "future")
+    .sort((a, b) => new Date(a.triggerAt).getTime() - new Date(b.triggerAt).getTime());
+  const activeTab = state.notificationTab === "pending" ? "pending" : "future";
+  const list = activeTab === "pending" ? pending : future;
+
+  return `
+    <section class="vc-grid">
+      <article class="vc-panel">
+        <span class="vc-eyebrow">Notificaciones</span>
+        <h2 class="vc-title">Tus avisos de cocina</h2>
+        <p class="vc-copy">Revisa lo que ya paso y lo que esta por venir, y ajusta la hora de los avisos futuros sin tocar el resto de la app.</p>
+        <div class="vc-segmented vc-reminder-tabs" role="tablist" aria-label="Pestanas de avisos">
+          <button class="vc-toggle ${activeTab === "pending" ? "active" : ""}" type="button" data-action="set-notification-tab" data-tab="pending">Pendientes</button>
+          <button class="vc-toggle ${activeTab === "future" ? "active" : ""}" type="button" data-action="set-notification-tab" data-tab="future">Futuras</button>
+        </div>
+      </article>
+
+      ${list.length ? `
+        <div class="vc-reminder-list">
+          ${list.map((reminder) => renderReminderCard(reminder, activeTab)).join("")}
+        </div>
+      ` : `
+        <article class="vc-card vc-empty">
+          <h3 class="vc-inline-title">${activeTab === "pending" ? "No tienes avisos pendientes." : "No tienes avisos futuros ahora mismo."}</h3>
+          <p class="vc-copy">${activeTab === "pending"
+            ? "Cuando vaya pasando la semana aqui veras el historial de avisos que ya quedaron atras."
+            : "Los proximos avisos de cocinar, descongelar o replanificar apareceran aqui en cuanto existan."}</p>
+        </article>
+      `}
     </section>
   `;
 }
@@ -3622,18 +4139,21 @@ function renderCookView() {
 
 function renderWorkspace() {
   const views = {
+    home: renderHomeView(),
     week: renderWeekView(),
     schedule: renderScheduleView(),
     shopping: renderShoppingView(),
+    "today-shopping": renderTodayShoppingView(),
     recipes: renderRecipesView(),
     profile: renderProfileView(),
+    notifications: renderNotificationsView(),
     cook: renderCookView(),
   };
 
   return `
     <section class="vc-workspace">
-      ${state.currentView === "cook" ? "" : renderWorkspaceHeader()}
-      ${views[state.currentView] || views.week}
+      ${state.currentView === "home" ? renderWorkspaceHeader() : ""}
+      ${views[state.currentView] || views.home}
     </section>
   `;
 }
@@ -3818,6 +4338,118 @@ function renderFreezerPromptModal() {
   `;
 }
 
+function renderReminderDetailModal(reminder) {
+  const isReadOnly = !!state.modal?.readOnly;
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-reminder-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">${escapeHtml(getReminderKindLabel(reminder))}</small>
+            <h2 class="vc-modal-title">${escapeHtml(reminder.title)}</h2>
+            <p class="vc-copy">${escapeHtml(reminder.body)}</p>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">X</button>
+        </div>
+
+        <article class="vc-profile-card">
+          <div class="vc-grid two">
+            <div>
+              <small class="vc-muted">Fecha</small>
+              <p class="vc-copy">${escapeHtml(formatDateLong(toIsoDate(new Date(reminder.triggerAt))))}</p>
+            </div>
+            <div>
+              <small class="vc-muted">Hora</small>
+              ${isReadOnly
+                ? `<p class="vc-copy">${escapeHtml(formatInputTimeFromIso(reminder.triggerAt))}</p>`
+                : `<input class="vc-time" type="time" data-modal-field="editedTime" value="${escapeHtml(state.modal?.editedTime || formatInputTimeFromIso(reminder.triggerAt))}">`}
+            </div>
+          </div>
+        </article>
+
+        <div class="vc-step-foot">
+          <button class="vc-button secondary" data-action="close-modal">Cerrar</button>
+          ${isReadOnly ? "" : `<button class="vc-button primary" data-action="save-reminder-time" data-reminder-id="${reminder.id}">Guardar hora</button>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderReminderApplyAllModal(reminder) {
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-reminder-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">Cambio guardado</small>
+            <h2 class="vc-modal-title">Quieres aplicar esta hora al resto?</h2>
+            <p class="vc-copy">He preparado el cambio para "${escapeHtml(reminder.title)}". Quieres mover tambien los otros avisos de este tipo a las ${escapeHtml(state.modal?.editedTime || "--:--")}?</p>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">X</button>
+        </div>
+        <div class="vc-step-foot">
+          <button class="vc-button secondary" data-action="apply-reminder-time" data-scope="single" data-reminder-id="${reminder.id}">No</button>
+          <button class="vc-button primary" data-action="apply-reminder-time" data-scope="group" data-reminder-id="${reminder.id}">Si</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCookReminderModal(reminder) {
+  const meal = reminder.mealId ? getMealById(reminder.mealId) : null;
+  const postponeExpanded = !!state.modal?.postponeExpanded;
+  const postponeChoice = state.modal?.postponeChoice || "";
+  const editedTime = state.modal?.editedTime || formatInputTimeFromIso(new Date(Date.now() + 60 * 60000).toISOString());
+  const inlineError = state.modal?.inlineError || "";
+
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-reminder-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">${escapeHtml(getReminderKindLabel(reminder))}</small>
+            <h2 class="vc-modal-title">Comenzamos a cocinar ${escapeHtml((MEAL_LABELS[reminder.mealKey] || "este plato").toLowerCase())} de hoy?</h2>
+            <p class="vc-copy">${escapeHtml(reminder.mealTitle || meal?.meal?.title || reminder.title)}</p>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">X</button>
+        </div>
+
+        ${!postponeExpanded ? `
+          <div class="vc-step-foot">
+            <button class="vc-button secondary" data-action="open-cook-postpone" data-reminder-id="${reminder.id}">Aplazar</button>
+            <button class="vc-button primary" data-action="start-cook-from-reminder" data-reminder-id="${reminder.id}">Comenzar!</button>
+          </div>
+        ` : `
+          <article class="vc-profile-card">
+            <h3 class="vc-inline-title">Que hacemos con este aviso?</h3>
+            <div class="vc-choice-grid">
+              <button class="vc-pill ${postponeChoice === "skip" ? "active" : ""}" type="button" data-action="set-cook-postpone-choice" data-value="skip">
+                <span>Hoy no cocino</span>
+              </button>
+              <button class="vc-pill ${postponeChoice === "later" ? "active" : ""}" type="button" data-action="set-cook-postpone-choice" data-value="later">
+                <span>Cocinare mas tarde</span>
+              </button>
+            </div>
+            ${postponeChoice === "later" ? `
+              <div class="vc-field">
+                <label class="vc-label" for="postpone-time">Nueva hora para el recordatorio de hoy</label>
+                <input id="postpone-time" class="vc-time" type="time" data-modal-field="editedTime" value="${escapeHtml(editedTime)}">
+              </div>
+            ` : ""}
+            ${inlineError ? `<div class="vc-error">${escapeHtml(inlineError)}</div>` : ""}
+          </article>
+          <div class="vc-step-foot">
+            <button class="vc-button secondary" data-action="close-modal">Cancelar</button>
+            <button class="vc-button primary" data-action="save-cook-postpone" data-reminder-id="${reminder.id}">Guardar cambio</button>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
 function renderModal() {
   if (!state.modal) return renderBusyOverlay();
   if (state.modal.type === "details") {
@@ -3836,6 +4468,18 @@ function renderModal() {
   }
   if (state.modal.type === "timer") {
     return `${renderTimerModal()}${renderBusyOverlay()}`;
+  }
+  if (state.modal.type === "reminder-detail") {
+    const reminder = getReminderById(state.modal.reminderId);
+    return `${reminder ? renderReminderDetailModal(reminder) : ""}${renderBusyOverlay()}`;
+  }
+  if (state.modal.type === "reminder-apply-all") {
+    const reminder = getReminderById(state.modal.reminderId);
+    return `${reminder ? renderReminderApplyAllModal(reminder) : ""}${renderBusyOverlay()}`;
+  }
+  if (state.modal.type === "cook-reminder") {
+    const reminder = getReminderById(state.modal.reminderId);
+    return `${reminder ? renderCookReminderModal(reminder) : ""}${renderBusyOverlay()}`;
   }
   return renderBusyOverlay();
 }
@@ -4071,8 +4715,11 @@ async function handleAction(action, trigger) {
         stopHandsFreeMode();
       }
       state.currentView = nextView;
+      if (nextView === "notifications" && !["pending", "future"].includes(state.notificationTab)) {
+        state.notificationTab = "future";
+      }
       render();
-      if (nextView === "profile") {
+      if (nextView === "profile" || nextView === "notifications") {
         refreshNotificationDeviceState().then(() => {
           render();
         }).catch(() => {});
@@ -4162,6 +4809,159 @@ async function handleAction(action, trigger) {
       state.modal = { type: "details", mealId: trigger.dataset.mealId };
       render();
       break;
+
+    case "set-notification-tab":
+      state.notificationTab = trigger.dataset.tab === "pending" ? "pending" : "future";
+      render();
+      break;
+
+    case "open-reminder": {
+      const reminder = getReminderById(trigger.dataset.reminderId);
+      if (!reminder) return;
+      openReminderModal(reminder);
+      render();
+      break;
+    }
+
+    case "delete-reminder":
+      state.week.reminders = (state.week.reminders || []).filter((reminder) => reminder.id !== trigger.dataset.reminderId);
+      await saveWeek();
+      scheduleReminders();
+      render();
+      break;
+
+    case "save-reminder-time": {
+      const reminder = getReminderById(trigger.dataset.reminderId || state.modal?.reminderId);
+      const editedTime = state.modal?.editedTime || "";
+      if (!reminder || !editedTime) return;
+      state.modal = {
+        type: "reminder-apply-all",
+        reminderId: reminder.id,
+        editedTime,
+      };
+      render();
+      break;
+    }
+
+    case "apply-reminder-time": {
+      const reminder = getReminderById(trigger.dataset.reminderId || state.modal?.reminderId);
+      const editedTime = state.modal?.editedTime || "";
+      const scope = trigger.dataset.scope || "single";
+      if (!reminder || !editedTime) return;
+
+      state.week.reminders = (state.week.reminders || []).map((item) => {
+        const sameTarget = item.id === reminder.id;
+        const sameGroup = scope === "group" && item.groupKey === reminder.groupKey && getReminderBucket(item) === "future";
+        if (!sameTarget && !sameGroup) return item;
+        const triggerDate = toIsoDate(new Date(item.triggerAt));
+        const nextTrigger = combineDateAndTime(triggerDate, editedTime).toISOString();
+        return normalizeReminder({
+          ...item,
+          triggerAt: nextTrigger,
+          customTriggerAt: nextTrigger,
+        });
+      });
+      await saveWeek();
+      scheduleReminders();
+      state.modal = null;
+      state.notice = scope === "group"
+        ? "He actualizado todos los avisos de este tipo a esa hora."
+        : "He guardado la nueva hora del aviso.";
+      state.error = "";
+      render();
+      break;
+    }
+
+    case "open-cook-postpone":
+      state.modal = {
+        ...(state.modal || {}),
+        type: "cook-reminder",
+        reminderId: trigger.dataset.reminderId || state.modal?.reminderId,
+        postponeExpanded: true,
+        inlineError: "",
+      };
+      render();
+      break;
+
+    case "set-cook-postpone-choice":
+      state.modal = {
+        ...(state.modal || {}),
+        postponeChoice: trigger.dataset.value || "",
+        inlineError: "",
+      };
+      render();
+      break;
+
+    case "save-cook-postpone": {
+      const reminder = getReminderById(trigger.dataset.reminderId || state.modal?.reminderId);
+      const choice = state.modal?.postponeChoice || "";
+      if (!reminder || !choice) {
+        state.modal = {
+          ...(state.modal || {}),
+          inlineError: "Elige una opcion antes de guardar.",
+        };
+        render();
+        break;
+      }
+
+      if (choice === "skip") {
+        const nowIso = new Date().toISOString();
+        state.week.reminders = (state.week.reminders || []).map((item) =>
+          item.id === reminder.id
+            ? normalizeReminder({
+                ...item,
+                deliveredAt: item.deliveredAt || nowIso,
+                skippedAt: nowIso,
+              })
+            : item);
+        await saveWeek();
+        scheduleReminders();
+        state.modal = null;
+        state.notice = "Vale, hoy no te volvere a avisar de esa comida.";
+        state.error = "";
+        render();
+        break;
+      }
+
+      const editedTime = state.modal?.editedTime || "";
+      const nextTrigger = combineDateAndTime(toIsoDate(new Date()), editedTime);
+      if (!editedTime || nextTrigger.getTime() <= Date.now()) {
+        state.modal = {
+          ...(state.modal || {}),
+          inlineError: "Necesito una hora futura para poder avisarte mas tarde hoy.",
+        };
+        render();
+        break;
+      }
+
+      const nextIso = nextTrigger.toISOString();
+      state.week.reminders = (state.week.reminders || []).map((item) =>
+        item.id === reminder.id
+          ? normalizeReminder({
+              ...item,
+              triggerAt: nextIso,
+              customTriggerAt: nextIso,
+              deliveredAt: null,
+              skippedAt: null,
+            })
+          : item);
+      await saveWeek();
+      scheduleReminders();
+      state.modal = null;
+      state.notificationTab = "future";
+      state.notice = "Perfecto, te lo recordare mas tarde hoy.";
+      state.error = "";
+      render();
+      break;
+    }
+
+    case "start-cook-from-reminder": {
+      const reminder = getReminderById(trigger.dataset.reminderId || state.modal?.reminderId);
+      if (!reminder?.mealId) return;
+      state.modal = null;
+      await startCookingFlow(reminder.mealId, "active");
+      break;
+    }
 
     case "close-modal":
       state.modal = null;
@@ -4393,6 +5193,15 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("input", (event) => {
+  const modalField = event.target.dataset.modalField;
+  if (modalField && state.modal) {
+    state.modal[modalField] = event.target.value;
+    if (modalField === "editedTime" || modalField === "postponeChoice") {
+      state.modal.inlineError = "";
+    }
+    return;
+  }
+
   const field = event.target.dataset.field;
   if (field && state.profile) {
     if (field === "householdCount") {
@@ -4415,6 +5224,16 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("change", (event) => {
+  const modalField = event.target.dataset.modalField;
+  if (modalField && state.modal) {
+    state.modal[modalField] = event.target.value;
+    if (modalField === "editedTime" || modalField === "postponeChoice") {
+      state.modal.inlineError = "";
+    }
+    render();
+    return;
+  }
+
   const field = event.target.dataset.field;
   if (field && state.profile) {
     state.profile[field] = event.target.type === "checkbox" ? event.target.checked : event.target.value;
@@ -4470,7 +5289,7 @@ async function hydrateSession(session, options = {}) {
     state.profile = null;
     state.week = null;
     state.feedback = [];
-    state.currentView = "week";
+    state.currentView = "home";
     state.loading = false;
     render();
     return;
@@ -4506,6 +5325,7 @@ async function hydrateSession(session, options = {}) {
     await saveWeek();
     await flushDueReminders();
     scheduleReminders();
+    resolvePendingReminderLink();
   }
 
   if (state.profile.notificationEnabled) {
@@ -4523,6 +5343,7 @@ async function hydrateSession(session, options = {}) {
 }
 
 async function init() {
+  applyIncomingUrl(window.location.href);
   state.client = window.supabase?.createClient?.(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       persistSession: true,

@@ -801,6 +801,95 @@ a{
   gap:18px;
 }
 
+.vc-home-hero{
+  display:grid;
+  gap:16px;
+  padding:22px;
+}
+
+.vc-home-summary-copy{
+  max-width:62ch;
+  font-size:1.04rem;
+}
+
+.vc-home-grid{
+  align-items:start;
+}
+
+.vc-home-section,
+.vc-home-meal-list,
+.vc-home-side-stack,
+.vc-reminder-list{
+  display:grid;
+  gap:14px;
+}
+
+.vc-home-meal-card{
+  display:grid;
+  gap:12px;
+  padding:16px;
+  border-radius:24px;
+  background:rgba(255,255,255,.76);
+  border:1px solid rgba(80,29,10,.1);
+}
+
+.vc-home-empty{
+  background:rgba(255,251,246,.8);
+}
+
+.vc-home-warning{
+  display:grid;
+  gap:12px;
+}
+
+.vc-home-ok{
+  border-color:rgba(47,143,88,.2);
+  background:linear-gradient(135deg, rgba(223,247,231,.76), rgba(255,255,255,.9));
+}
+
+.vc-reminder-tabs{
+  width:fit-content;
+}
+
+.vc-reminder-list{
+  gap:14px;
+}
+
+.vc-reminder-card{
+  display:grid;
+  gap:12px;
+}
+
+.vc-reminder-card.is-pending{
+  background:linear-gradient(135deg, rgba(255,236,214,.78), rgba(255,250,244,.92));
+}
+
+.vc-reminder-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.vc-reminder-delete{
+  width:40px;
+  height:40px;
+  border:none;
+  border-radius:999px;
+  background:rgba(232,90,79,.12);
+  color:#a33b32;
+  font-weight:900;
+}
+
+.vc-reminder-modal{
+  gap:18px;
+}
+
+.vc-choice-grid{
+  display:grid;
+  gap:12px;
+}
+
 .vc-brand-card{
   display:grid;
   gap:14px;
@@ -1441,6 +1530,10 @@ a{
   .vc-grid.two,
   .vc-support-grid,
   .vc-shopping-summary{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .vc-choice-grid{
     grid-template-columns:repeat(2, minmax(0, 1fr));
   }
 
