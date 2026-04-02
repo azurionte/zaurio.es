@@ -3,6 +3,12 @@ const VELOCICHEF_PUSH_KEY_PATH = "/api/velocichef/push-public-key";
 const VELOCICHEF_PUSH_SEND_PATH = "/api/velocichef/push/send-due";
 const VELOCICHEF_STEP_IMAGE_PATH = "/api/velocichef/step-image";
 const VELOCICHEF_DEFAULT_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+const VELOCICHEF_FORBIDDEN_IMAGE_TERMS = [
+  "hand", "hands", "finger", "fingers", "arm", "arms", "body", "bodies", "person", "people",
+  "human", "humans", "face", "faces", "chef", "cook", "woman", "women", "man", "men",
+  "child", "children", "portrait", "selfie", "text", "words", "letters", "caption", "captions",
+  "label", "labels", "typography", "watermark", "signature",
+];
 
 function rewriteEmprezaurioHtml(html) {
   const version = Date.now().toString();
@@ -437,10 +443,34 @@ function sanitizeVelocichefSearchQuery(value) {
     .join(" ");
 }
 
+function stripForbiddenImageTerms(value) {
+  let sanitized = String(value || "");
+  VELOCICHEF_FORBIDDEN_IMAGE_TERMS.forEach((term) => {
+    const pattern = new RegExp(`\\b${term}\\b`, "gi");
+    sanitized = sanitized.replace(pattern, " ");
+  });
+  return sanitized.replace(/\s+/g, " ").trim();
+}
+
+function buildSafeSceneGoal(step) {
+  const raw = String(step?.image_prompt || step?.imagePrompt || step?.text || "").trim();
+  const withoutMentions = stripForbiddenImageTerms(raw);
+  return withoutMentions || "food ingredients and cookware arranged for this recipe step";
+}
+
+function looksUnsafePublicImage(photo) {
+  const description = [
+    photo?.alt || "",
+    photo?.photographer || "",
+    photo?.url || "",
+  ].join(" ").toLowerCase();
+  return VELOCICHEF_FORBIDDEN_IMAGE_TERMS.some((term) => description.includes(term));
+}
+
 function buildVelocichefStepImagePrompt(body) {
   const meal = body?.meal || {};
   const step = body?.step || {};
-  const sceneGoal = String(step.image_prompt || step.imagePrompt || step.text || "").trim();
+  const sceneGoal = buildSafeSceneGoal(step);
 
   return [
     "Warm editorial cookbook illustration.",
@@ -451,21 +481,21 @@ function buildVelocichefStepImagePrompt(body) {
     "Show only food, ingredients, cookware, trays, bowls, pans or boards that belong to this step.",
     "No humans, no hands, no fingers, no arms, no faces, no body parts, no chef.",
     "Prefer overhead or three-quarter angle, clean composition, cookbook style, softly stylized illustration.",
-    "No text, no labels, no UI, no watermark.",
+    "No text, no words, no labels, no typography, no captions, no UI, no watermark.",
   ].filter(Boolean).join(" ");
 }
 
 function buildVelocichefStepSearchQuery(body) {
   const meal = body?.meal || {};
   const step = body?.step || {};
-  const explicit = String(step.image_search_query || step.imageSearchQuery || body?.searchQuery || "").trim();
+  const explicit = stripForbiddenImageTerms(String(step.image_search_query || step.imageSearchQuery || body?.searchQuery || "").trim());
   if (explicit) return `${sanitizeVelocichefSearchQuery(explicit)} food overhead`.trim();
 
   const combined = [
     meal.title || "",
     step.title || "",
     step.text || "",
-    step.image_prompt || step.imagePrompt || "",
+    buildSafeSceneGoal(step),
   ].filter(Boolean).join(" ");
 
   const sanitized = sanitizeVelocichefSearchQuery(combined);
@@ -560,7 +590,7 @@ async function searchPexelsStepImage(env, searchQuery) {
 
   try {
     const response = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchQuery)}&per_page=1&orientation=portrait&size=medium`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchQuery)}&per_page=6&orientation=portrait&size=medium`,
       {
         headers: {
           Authorization: env.PEXELS_API_KEY,
@@ -578,12 +608,14 @@ async function searchPexelsStepImage(env, searchQuery) {
     }
 
     const payload = await response.json().catch(() => ({}));
-    const photo = Array.isArray(payload?.photos) ? payload.photos[0] : null;
+    const photo = Array.isArray(payload?.photos)
+      ? payload.photos.find((candidate) => candidate?.src && !looksUnsafePublicImage(candidate))
+      : null;
     if (!photo?.src) {
       return {
         image: null,
         configured: true,
-        error: "Pexels no encontro una foto para esta busqueda.",
+        error: "Pexels no encontro una foto segura sin personas ni texto para esta busqueda.",
       };
     }
 

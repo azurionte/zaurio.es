@@ -204,6 +204,7 @@ const state = {
   cooking: null,
   speechRecognition: null,
   timerTicker: null,
+  notificationDevice: null,
 };
 
 function normalizeView(view) {
@@ -826,6 +827,82 @@ async function ensurePushSubscription(forceSubscribe = false) {
   }
 
   return { supported: true, subscription };
+}
+
+function createNotificationDeviceState(overrides = {}) {
+  return {
+    supported: "Notification" in window,
+    pushSupported: ("PushManager" in window) && !!state.workerRegistration,
+    needsInstall: isIOSDevice() && !isStandaloneApp(),
+    permission: "Notification" in window ? Notification.permission : "unsupported",
+    hasSubscription: false,
+    ...overrides,
+  };
+}
+
+async function refreshNotificationDeviceState() {
+  const nextState = createNotificationDeviceState();
+
+  if (nextState.pushSupported) {
+    try {
+      const registration = state.workerRegistration || await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      nextState.hasSubscription = !!subscription;
+    } catch (_error) {
+      nextState.hasSubscription = false;
+    }
+  }
+
+  state.notificationDevice = nextState;
+  return nextState;
+}
+
+function getNotificationDeviceState() {
+  return state.notificationDevice || createNotificationDeviceState();
+}
+
+function isNotificationActiveOnCurrentDevice(deviceState = getNotificationDeviceState()) {
+  if (!deviceState.supported || deviceState.needsInstall) return false;
+  if (deviceState.permission !== "granted") return false;
+  return deviceState.hasSubscription || !deviceState.pushSupported;
+}
+
+function getNotificationCtaLabel() {
+  const deviceState = getNotificationDeviceState();
+  if (isNotificationActiveOnCurrentDevice(deviceState)) return "Revisar en este dispositivo";
+  if (deviceState.needsInstall) return "Activar en este iPhone";
+  if (state.profile?.notificationEnabled) return "Activar también aquí";
+  return "Activar en este dispositivo";
+}
+
+function getNotificationStatusCopy() {
+  const deviceState = getNotificationDeviceState();
+
+  if (!deviceState.supported) {
+    return "Este navegador no permite avisos web en este dispositivo.";
+  }
+  if (deviceState.needsInstall) {
+    return "Tus avisos pueden seguir activos en otro dispositivo, pero en iPhone necesitas abrir VelociChef desde la pantalla de inicio para activarlos aquí.";
+  }
+  if (isNotificationActiveOnCurrentDevice(deviceState)) {
+    return "Los avisos están activos en este dispositivo y también podré usarlos para recordatorios de cocina y compra.";
+  }
+  if (deviceState.permission === "denied") {
+    return "Los avisos están bloqueados en este dispositivo. Tendrás que volver a permitirlos desde los ajustes del navegador o del sistema.";
+  }
+  if (state.profile?.notificationEnabled) {
+    return "Tus avisos ya están activos en otro dispositivo, pero todavía no en este. Puedes activarlos también aquí.";
+  }
+  return "Todavía no has activado avisos en este dispositivo.";
+}
+
+function getNotificationDeviceChip() {
+  const deviceState = getNotificationDeviceState();
+  if (isNotificationActiveOnCurrentDevice(deviceState)) return "Avisos activos en este dispositivo";
+  if (deviceState.needsInstall) return "Actívalo desde pantalla de inicio";
+  if (deviceState.permission === "denied") return "Avisos bloqueados aquí";
+  if (state.profile?.notificationEnabled) return "Activos en otro dispositivo";
+  return "Avisos pendientes en este dispositivo";
 }
 
 function normalizeDifficulty(level) {
@@ -1674,42 +1751,50 @@ async function flushDueReminders() {
 }
 
 async function requestNotifications() {
+  const previousGlobalState = !!state.profile?.notificationEnabled;
+  const currentDevice = await refreshNotificationDeviceState();
+
   if (!("Notification" in window)) {
     state.error = "Este navegador no soporta notificaciones web.";
     render();
     return false;
   }
-  if (isIOSDevice() && !isStandaloneApp()) {
+  if (currentDevice.needsInstall) {
     state.notice = "En iPhone, los avisos solo se pueden activar desde la app instalada en la pantalla de inicio. Ábrela desde allí y vuelve a intentarlo.";
     state.error = "";
     render();
     return false;
   }
-  const permission = await Notification.requestPermission();
+  const permission = currentDevice.permission === "granted"
+    ? "granted"
+    : await Notification.requestPermission();
   if (permission === "granted") {
     try {
       const push = await ensurePushSubscription(true);
       state.profile.notificationEnabled = true;
       await saveProfile();
+      await refreshNotificationDeviceState();
       if (state.week) {
         state.week.reminders = composeReminders();
         await saveWeek();
         scheduleReminders();
       }
-      state.notice = push.supported
-        ? "Notificaciones activadas. Te avisaré aunque la app no esté abierta."
+      state.notice = isNotificationActiveOnCurrentDevice()
+        ? "Avisos activados en este dispositivo. Te avisaré también aunque la app no esté abierta."
         : "Los avisos están activados mientras la app siga abierta en este dispositivo.";
       state.error = "";
       return true;
-    } catch (error) {
-      state.profile.notificationEnabled = true;
+    } catch (_error) {
+      state.profile.notificationEnabled = previousGlobalState || Notification.permission === "granted";
       await saveProfile();
-      state.notice = "He dejado los avisos listos en este dispositivo, pero aún no he cerrado la activación completa.";
+      await refreshNotificationDeviceState();
+      state.notice = "He dejado los avisos preparados para este dispositivo, pero aún no he cerrado la activación completa.";
       state.error = "No pude completar la activación de avisos ahora mismo.";
       render();
       return false;
     }
   }
+  await refreshNotificationDeviceState();
   state.notice = "Las notificaciones siguen desactivadas. Puedes volver a activarlas más tarde desde tu perfil.";
   return false;
 }
@@ -1719,6 +1804,7 @@ async function registerServiceWorker() {
   try {
     await navigator.serviceWorker.register("./sw.js", { scope: "./" });
     state.workerRegistration = await navigator.serviceWorker.ready;
+    await refreshNotificationDeviceState();
     navigator.serviceWorker.addEventListener("message", (event) => {
       const url = event.data?.url;
       if (!url) return;
@@ -2450,7 +2536,9 @@ function renderTopbar() {
   const zaurioMenuOpen = state.activeMenu === "zaurio";
   const userMenuOpen = state.activeMenu === "user";
   const displayName = state.profile?.displayName || getUserLabel(user);
-  const notificationState = state.profile?.notificationEnabled ? "Avisos activos" : "Avisos pendientes";
+  const notificationState = isNotificationActiveOnCurrentDevice()
+    ? "Avisos aquí activos"
+    : (state.profile?.notificationEnabled ? "Avisos en otro dispositivo" : "Avisos pendientes");
   const shoppingState = state.week
     ? (state.week.shoppingCompleted ? "Compra cerrada" : "Compra pendiente")
     : "Sin semana activa";
@@ -3151,6 +3239,7 @@ function renderRecipesView() {
 function renderProfileView() {
   const pushCapable = "PushManager" in window;
   const speechCapable = !!getSpeechRecognitionCtor();
+  const deviceNotification = getNotificationDeviceState();
   return `
     <section class="vc-grid">
       <article class="vc-panel">
@@ -3293,13 +3382,15 @@ function renderProfileView() {
             <h3 class="vc-inline-title">Mantén la app a tu ritmo</h3>
           </div>
           ${isIOSDevice() && !isStandaloneApp() ? `<div class="vc-note">En iPhone, abre VelociChef desde la pantalla de inicio para poder activar avisos.</div>` : ""}
-          <p class="vc-copy">${state.profile.notificationEnabled ? "Tus avisos están activos." : "Todavía no has activado avisos en este dispositivo."} ${state.profile.freezeNotificationsEnabled ? "También recordaré los ingredientes que convenga descongelar." : "Los recordatorios de congelado siguen apagados por ahora."}</p>
+          <p class="vc-copy">${escapeHtml(getNotificationStatusCopy())} ${state.profile.freezeNotificationsEnabled ? "También recordaré los ingredientes que convenga descongelar." : "Los recordatorios de congelado siguen apagados por ahora."}</p>
           <div class="vc-chip-row">
+            <span class="vc-meta-pill">${escapeHtml(getNotificationDeviceChip())}</span>
             <span class="vc-meta-pill">${pushCapable ? "Avisos también fuera de la app" : "Avisos mientras la app está abierta"}</span>
             <span class="vc-meta-pill">${speechCapable ? "Modo manos libres disponible" : "Modo manos libres limitado en este navegador"}</span>
+            <span class="vc-meta-pill">${deviceNotification.permission === "granted" ? "Permiso concedido" : deviceNotification.permission === "denied" ? "Permiso bloqueado" : "Permiso pendiente"}</span>
           </div>
           <div class="vc-inline-actions">
-            <button class="vc-button secondary" data-action="request-notifications">${state.profile.notificationEnabled ? "Revisar avisos" : "Activar avisos"}</button>
+            <button class="vc-button secondary" data-action="request-notifications">${escapeHtml(getNotificationCtaLabel())}</button>
             <button class="vc-button ghost" data-action="test-notification">Probar aviso</button>
           </div>
         </section>
@@ -3898,9 +3989,10 @@ function applyRefinementPreferences(modalState, mealTarget) {
 }
 
 async function sendTestNotification() {
-  if (!state.profile?.notificationEnabled || !("Notification" in window) || Notification.permission !== "granted") {
+  const deviceState = await refreshNotificationDeviceState();
+  if (!deviceState.supported || deviceState.needsInstall || deviceState.permission !== "granted") {
     state.notice = "";
-    state.error = "Activa antes las notificaciones para poder probar un aviso.";
+    state.error = "Activa antes los avisos en este dispositivo para poder probar uno.";
     render();
     return;
   }
@@ -3980,6 +4072,11 @@ async function handleAction(action, trigger) {
       }
       state.currentView = nextView;
       render();
+      if (nextView === "profile") {
+        refreshNotificationDeviceState().then(() => {
+          render();
+        }).catch(() => {});
+      }
       break;
     }
 
@@ -4402,6 +4499,8 @@ async function hydrateSession(session) {
     }
   }
 
+  await refreshNotificationDeviceState();
+
   state.loading = false;
   render();
 }
@@ -4416,6 +4515,7 @@ async function init() {
   }) || null;
 
   await registerServiceWorker();
+  await refreshNotificationDeviceState();
 
   if (!state.client) {
     state.loading = false;
