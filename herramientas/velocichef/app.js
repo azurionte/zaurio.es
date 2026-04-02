@@ -1469,6 +1469,69 @@ async function invokePlannerDirect(body) {
   return payload;
 }
 
+async function invokePlannerStable(body) {
+  if (!state.client) {
+    throw new Error("Supabase no esta disponible.");
+  }
+
+  const sessionResult = await state.client.auth.getSession();
+  if (sessionResult.error) {
+    throw sessionResult.error;
+  }
+
+  let activeSession = sessionResult.data?.session || state.session || null;
+  let accessToken = activeSession?.access_token || "";
+
+  if (!accessToken) {
+    throw new Error("No hay una sesion activa para llamar a VelociChef.");
+  }
+
+  state.session = activeSession;
+
+  const callEndpoint = async (token) => {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/velocichef-plan-week`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        apikey: SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => ({}));
+    return { response, payload };
+  };
+
+  let { response, payload } = await callEndpoint(accessToken);
+
+  if (response.status === 401) {
+    const refreshResult = await state.client.auth.refreshSession();
+    const refreshedSession = refreshResult.data?.session || null;
+    if (refreshedSession?.access_token) {
+      state.session = refreshedSession;
+      accessToken = refreshedSession.access_token;
+      ({ response, payload } = await callEndpoint(accessToken));
+    }
+  }
+
+  if (!response.ok || payload?.ok === false) {
+    const { data, error } = await state.client.functions.invoke("velocichef-plan-week", {
+      body,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!error && data?.ok !== false) {
+      return data;
+    }
+
+    throw new Error(payload?.error || error?.message || `La funcion respondio con ${response.status}.`);
+  }
+
+  return payload;
+}
+
 async function generateWeek(startDate = getTomorrowIso()) {
   state.busy = true;
   state.busyLabel = "Preparando tu menú semanal...";
@@ -1476,7 +1539,7 @@ async function generateWeek(startDate = getTomorrowIso()) {
   render();
 
   try {
-    const data = await invokePlannerDirect({
+    const data = await invokePlannerStable({
       action: "generate_week",
       startDate,
       profile: plannerProfilePayload(),
@@ -1509,7 +1572,7 @@ async function swapMeal(target, reasons) {
 
   let replacement = null;
   try {
-    const data = await invokePlannerDirect({
+    const data = await invokePlannerStable({
       action: "swap_meal",
       startDate: state.week?.startDate,
       profile: plannerProfilePayload(),
