@@ -1,2 +1,5 @@
 [functions.trivialodon-generate-question]
 verify_jwt = false
+
+[functions.velocichef-plan-week]
+verify_jwt = false

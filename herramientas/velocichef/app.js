@@ -1488,14 +1488,17 @@ async function invokePlannerStable(body) {
 
   state.session = activeSession;
 
-  const callEndpoint = async (token) => {
+  const callEndpoint = async (token, includeAuthorization = true) => {
+    const headers = {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_ANON_KEY,
+    };
+    if (includeAuthorization && token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
     const response = await fetch(`${SUPABASE_URL}/functions/v1/velocichef-plan-week`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        apikey: SUPABASE_ANON_KEY,
-      },
+      headers,
       body: JSON.stringify(body),
     });
     const payload = await response.json().catch(() => ({}));
@@ -1514,12 +1517,13 @@ async function invokePlannerStable(body) {
     }
   }
 
+  if (response.status === 401) {
+    ({ response, payload } = await callEndpoint("", false));
+  }
+
   if (!response.ok || payload?.ok === false) {
     const { data, error } = await state.client.functions.invoke("velocichef-plan-week", {
       body,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
     });
 
     if (!error && data?.ok !== false) {
