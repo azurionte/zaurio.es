@@ -1213,6 +1213,17 @@ a{
   color:var(--vc-muted);
 }
 
+.vc-cook-image-credit{
+  font-size:.84rem;
+  color:#8f4b16;
+  text-decoration:none;
+  width:fit-content;
+}
+
+.vc-cook-image-credit:hover{
+  text-decoration:underline;
+}
+
 .vc-cook-ingredient{
   display:flex;
   align-items:center;

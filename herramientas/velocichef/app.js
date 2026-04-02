@@ -7,6 +7,7 @@ const APP_LOGO_PATH = `${APP_ASSET_PATH}/logo.png`;
 const APP_STORE_ICON_PATH = `${APP_ASSET_PATH}/store_icon.png`;
 const ZAURIO_MENU_LOGO_PATH = "/shared/assets/brand/favicon-32x32.png";
 const PUSH_PUBLIC_KEY_ENDPOINT = "/api/velocichef/push-public-key";
+const STEP_IMAGE_ENDPOINT = "/api/velocichef/step-image";
 const DEFAULT_REMINDER_LEAD_MINUTES = 75;
 const ZAURIO_DESTINATIONS = [
   {
@@ -547,6 +548,22 @@ async function fetchPushPublicKey() {
   return String(payload.publicKey);
 }
 
+async function fetchStepIllustration(payload) {
+  const response = await fetch(STEP_IMAGE_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || body?.ok === false) {
+    throw new Error(body?.error || "No pude preparar la ilustracion del paso.");
+  }
+  return body;
+}
+
 async function loadProfile(user) {
   const fallback = readLocal("profile", null);
   if (!state.client || !user) {
@@ -964,6 +981,7 @@ function normalizeCookingStep(step, index) {
     text,
     timerMinutes: Number(step?.timerMinutes || step?.timer_minutes || extractTimerMinutes(text)) || 0,
     imagePrompt: typeof step === "string" ? "" : String(step?.imagePrompt || step?.image_prompt || "").trim(),
+    imageSearchQuery: typeof step === "string" ? "" : String(step?.imageSearchQuery || step?.image_search_query || "").trim(),
   };
 }
 
@@ -1369,7 +1387,7 @@ async function ensureCookingGuidance(mealId) {
 }
 
 async function ensureStepIllustration(mealId, step) {
-  if (!step || step.kind !== "instruction" || !step.imagePrompt || !state.cooking) return;
+  if (!step || step.kind !== "instruction" || (!step.imagePrompt && !step.imageSearchQuery && !step.text) || !state.cooking) return;
   if (state.cooking.imageSupport === "unavailable") {
     state.cooking.stepImages[step.id] = { status: "error" };
     render();
@@ -1384,25 +1402,29 @@ async function ensureStepIllustration(mealId, step) {
     const target = getMealById(mealId);
     if (!target) return;
 
-    const data = await invokePlannerStable({
-      action: "generate_step_image",
+    const data = await fetchStepIllustration({
       meal: {
         title: target.meal.title,
         summary: target.meal.summary,
       },
       step: {
+        title: step.title,
         text: step.text,
         image_prompt: step.imagePrompt,
+        image_search_query: step.imageSearchQuery,
       },
     });
 
-    if (data?.image?.data) {
+    if (data?.image?.src || data?.image?.data) {
       state.cooking.imageSupport = "ready";
       state.cooking.stepImages[step.id] = {
         status: "ready",
-        src: `data:${data.image.mimeType || "image/png"};base64,${data.image.data}`,
+        src: data.image.src || `data:${data.image.mimeType || "image/png"};base64,${data.image.data}`,
+        provider: data.image.provider || "",
+        attributionLabel: data.image.attributionLabel || "",
+        attributionUrl: data.image.attributionUrl || "",
       };
-    } else if (data?.imageAvailable === false) {
+    } else if (data?.supportAvailable === false) {
       state.cooking.imageSupport = "unavailable";
       state.cooking.stepImages[step.id] = { status: "error" };
     } else {
@@ -3433,7 +3455,15 @@ function renderCookView() {
           <article class="vc-cook-stage">
             <h3 class="vc-inline-title">${escapeHtml(current.title)}</h3>
             ${currentImage?.status === "loading" ? `<div class="vc-cook-image-shell vc-cook-image-loading"><div class="vc-spinner" aria-hidden="true"></div><span>Ilustrando este paso...</span></div>` : ""}
-            ${currentImage?.status === "ready" ? `<figure class="vc-cook-figure"><img src="${currentImage.src}" alt="${escapeHtml(current.title)}"><figcaption>${escapeHtml(current.title)}</figcaption></figure>` : ""}
+            ${currentImage?.status === "ready" ? `
+              <figure class="vc-cook-figure">
+                <img src="${currentImage.src}" alt="${escapeHtml(current.title)}">
+                <figcaption>${escapeHtml(current.title)}</figcaption>
+                ${currentImage.attributionLabel
+                  ? `<a class="vc-cook-image-credit" href="${escapeHtml(currentImage.attributionUrl || "#")}" target="_blank" rel="noreferrer">${escapeHtml(currentImage.attributionLabel)}</a>`
+                  : ""}
+              </figure>
+            ` : ""}
             ${currentImage?.status === "error" ? `<div class="vc-note">La ilustración de este paso no está disponible ahora mismo.</div>` : ""}
             <p class="vc-copy vc-cook-step-copy">${renderTechniqueText(current.text)}</p>
             ${current.timerMinutes ? `

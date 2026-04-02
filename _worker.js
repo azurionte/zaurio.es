@@ -1,6 +1,8 @@
 const DEFAULT_SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
 const VELOCICHEF_PUSH_KEY_PATH = "/api/velocichef/push-public-key";
 const VELOCICHEF_PUSH_SEND_PATH = "/api/velocichef/push/send-due";
+const VELOCICHEF_STEP_IMAGE_PATH = "/api/velocichef/step-image";
+const VELOCICHEF_DEFAULT_IMAGE_MODEL = "@cf/bytedance/stable-diffusion-xl-lightning";
 
 function rewriteEmprezaurioHtml(html) {
   const version = Date.now().toString();
@@ -14,7 +16,9 @@ function rewriteEmprezaurioHtml(html) {
 function jsonResponse(body, init = {}) {
   const headers = new Headers(init.headers || {});
   headers.set("Content-Type", "application/json; charset=utf-8");
-  headers.set("Cache-Control", "no-store");
+  if (!headers.has("Cache-Control")) {
+    headers.set("Cache-Control", "no-store");
+  }
   return new Response(JSON.stringify(body), {
     ...init,
     headers,
@@ -49,6 +53,16 @@ function uint8ArrayToBase64Url(bytes) {
     binary += String.fromCharCode(byte);
   });
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function uint8ArrayToBase64(bytes) {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.slice(index, index + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
 }
 
 function uint32ToBytes(value) {
@@ -397,6 +411,250 @@ async function processDueVelocichefNotifications(env, limit = 50) {
   return stats;
 }
 
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest("SHA-256", encodeUtf8(String(value || "")));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function sanitizeVelocichefSearchQuery(value) {
+  const stopWords = new Set([
+    "de", "la", "el", "los", "las", "del", "con", "sin", "para", "por", "una", "un",
+    "unos", "unas", "que", "este", "esta", "estos", "estas", "realistic", "realistico",
+    "kitchen", "home", "scene", "clean", "close", "closeup", "overhead", "mobile",
+    "friendly", "showing", "show", "step", "current", "dish", "meal", "style", "text",
+    "labels", "captions", "watermarks", "focus", "only", "action", "ingredients", "needed",
+    "this", "recipe", "no", "and", "the", "a", "an",
+  ]);
+
+  return String(value || "")
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/[^0-9A-Za-zÀ-ÿ\s-]/g, " ")
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 1)
+    .filter((part) => !stopWords.has(part.toLowerCase()))
+    .slice(0, 10)
+    .join(" ");
+}
+
+function buildVelocichefStepImagePrompt(body) {
+  const meal = body?.meal || {};
+  const step = body?.step || {};
+  const fallbackPrompt = String(step.image_prompt || step.imagePrompt || "").trim();
+  if (fallbackPrompt) return fallbackPrompt;
+
+  return [
+    "Realistic home cooking scene.",
+    meal.title ? `Dish: ${meal.title}.` : "",
+    meal.summary ? `Summary: ${meal.summary}.` : "",
+    step.title ? `Step title: ${step.title}.` : "",
+    step.text ? `Current step: ${step.text}.` : "",
+    "Focus on the action and the ingredients of this step only.",
+    "No text, no labels, no UI, no watermark.",
+  ].filter(Boolean).join(" ");
+}
+
+function buildVelocichefStepSearchQuery(body) {
+  const meal = body?.meal || {};
+  const step = body?.step || {};
+  const explicit = String(step.image_search_query || step.imageSearchQuery || body?.searchQuery || "").trim();
+  if (explicit) return sanitizeVelocichefSearchQuery(explicit);
+
+  const combined = [
+    meal.title || "",
+    step.title || "",
+    step.text || "",
+    step.image_prompt || step.imagePrompt || "",
+  ].filter(Boolean).join(" ");
+
+  const sanitized = sanitizeVelocichefSearchQuery(combined);
+  return sanitized || sanitizeVelocichefSearchQuery(meal.title || "cocina casera");
+}
+
+function getVelocichefImageCacheKey(prompt, searchQuery) {
+  return `${prompt}__${searchQuery}`;
+}
+
+async function readVelocichefCachedImage(prompt, searchQuery) {
+  const cacheKey = await sha256Hex(getVelocichefImageCacheKey(prompt, searchQuery));
+  return caches.default.match(new Request(`https://zaurio.es${VELOCICHEF_STEP_IMAGE_PATH}?cache=${cacheKey}`));
+}
+
+async function writeVelocichefCachedImage(prompt, searchQuery, response) {
+  const cacheKey = await sha256Hex(getVelocichefImageCacheKey(prompt, searchQuery));
+  await caches.default.put(
+    new Request(`https://zaurio.es${VELOCICHEF_STEP_IMAGE_PATH}?cache=${cacheKey}`),
+    response,
+  );
+}
+
+async function normalizeWorkersAiImagePayload(aiResult) {
+  if (!aiResult) return null;
+
+  if (typeof aiResult === "object" && typeof aiResult.image === "string") {
+    return {
+      data: aiResult.image,
+      mimeType: aiResult.mimeType || "image/png",
+    };
+  }
+
+  const response = aiResult instanceof Response ? aiResult : new Response(aiResult);
+  const buffer = await response.arrayBuffer();
+  if (!buffer.byteLength) return null;
+
+  return {
+    data: uint8ArrayToBase64(new Uint8Array(buffer)),
+    mimeType: response.headers.get("content-type") || "image/png",
+  };
+}
+
+async function generateWorkersAiStepImage(env, prompt) {
+  if (!env.AI || typeof env.AI.run !== "function") {
+    return {
+      image: null,
+      configured: false,
+      error: "Workers AI no esta configurado en este worker.",
+    };
+  }
+
+  try {
+    const aiResult = await env.AI.run(
+      env.VELOCICHEF_IMAGE_MODEL || VELOCICHEF_DEFAULT_IMAGE_MODEL,
+      { prompt },
+    );
+    const image = await normalizeWorkersAiImagePayload(aiResult);
+    if (!image?.data) {
+      return {
+        image: null,
+        configured: true,
+        error: "Workers AI no devolvio una imagen util.",
+      };
+    }
+    return {
+      image: {
+        src: `data:${image.mimeType || "image/png"};base64,${image.data}`,
+        mimeType: image.mimeType || "image/png",
+        provider: "workers-ai",
+      },
+      configured: true,
+      error: "",
+    };
+  } catch (error) {
+    return {
+      image: null,
+      configured: true,
+      error: error instanceof Error ? error.message : "Workers AI no pudo generar la imagen.",
+    };
+  }
+}
+
+async function searchPexelsStepImage(env, searchQuery) {
+  if (!env.PEXELS_API_KEY) {
+    return {
+      image: null,
+      configured: false,
+      error: "Pexels no esta configurado en este worker.",
+    };
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchQuery)}&per_page=1&orientation=portrait&size=medium`,
+      {
+        headers: {
+          Authorization: env.PEXELS_API_KEY,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      const message = await response.text().catch(() => "");
+      return {
+        image: null,
+        configured: true,
+        error: `Pexels devolvio ${response.status}${message ? `: ${message}` : ""}`,
+      };
+    }
+
+    const payload = await response.json().catch(() => ({}));
+    const photo = Array.isArray(payload?.photos) ? payload.photos[0] : null;
+    if (!photo?.src) {
+      return {
+        image: null,
+        configured: true,
+        error: "Pexels no encontro una foto para esta busqueda.",
+      };
+    }
+
+    return {
+      image: {
+        src: photo.src.large || photo.src.large2x || photo.src.portrait || photo.src.medium,
+        mimeType: "image/jpeg",
+        provider: "pexels",
+        attributionLabel: photo.photographer
+          ? `Foto de ${photo.photographer} en Pexels`
+          : "Foto de apoyo en Pexels",
+        attributionUrl: photo.url || "https://www.pexels.com",
+      },
+      configured: true,
+      error: "",
+    };
+  } catch (error) {
+    return {
+      image: null,
+      configured: true,
+      error: error instanceof Error ? error.message : "Pexels no pudo devolver una foto.",
+    };
+  }
+}
+
+async function resolveVelocichefStepImage(env, body) {
+  const prompt = buildVelocichefStepImagePrompt(body);
+  const searchQuery = buildVelocichefStepSearchQuery(body);
+  const providerErrors = [];
+
+  const aiAttempt = await generateWorkersAiStepImage(env, prompt);
+  if (aiAttempt.image) {
+    return {
+      ok: true,
+      imageAvailable: true,
+      supportAvailable: true,
+      image: aiAttempt.image,
+      provider: aiAttempt.image.provider,
+      prompt,
+      searchQuery,
+      providerErrors,
+    };
+  }
+  if (aiAttempt.error) providerErrors.push(aiAttempt.error);
+
+  const pexelsAttempt = await searchPexelsStepImage(env, searchQuery);
+  if (pexelsAttempt.image) {
+    return {
+      ok: true,
+      imageAvailable: true,
+      supportAvailable: true,
+      image: pexelsAttempt.image,
+      provider: pexelsAttempt.image.provider,
+      prompt,
+      searchQuery,
+      providerErrors,
+    };
+  }
+  if (pexelsAttempt.error) providerErrors.push(pexelsAttempt.error);
+
+  return {
+    ok: true,
+    imageAvailable: false,
+    supportAvailable: Boolean(aiAttempt.configured || pexelsAttempt.configured),
+    image: null,
+    prompt,
+    searchQuery,
+    providerErrors,
+    error: providerErrors[providerErrors.length - 1] || "No pude conseguir una imagen para este paso.",
+  };
+}
+
 async function handleVelocichefApi(request, env, path) {
   if (path === VELOCICHEF_PUSH_KEY_PATH) {
     return jsonResponse({
@@ -424,6 +682,39 @@ async function handleVelocichefApi(request, env, path) {
     } catch (error) {
       return jsonResponse(
         { ok: false, error: error instanceof Error ? error.message : "No pude despachar avisos." },
+        { status: 500 },
+      );
+    }
+  }
+
+  if (path === VELOCICHEF_STEP_IMAGE_PATH) {
+    if (request.method === "OPTIONS") {
+      return new Response("ok");
+    }
+    if (request.method !== "POST") {
+      return jsonResponse({ ok: false, error: "Method not allowed" }, { status: 405 });
+    }
+
+    try {
+      const body = await request.json().catch(() => ({}));
+      const prompt = buildVelocichefStepImagePrompt(body);
+      const searchQuery = buildVelocichefStepSearchQuery(body);
+      const cached = await readVelocichefCachedImage(prompt, searchQuery);
+      if (cached) return cached;
+
+      const result = await resolveVelocichefStepImage(env, body);
+      const response = jsonResponse(result, {
+        headers: {
+          "Cache-Control": result.imageAvailable
+            ? "public, max-age=604800, s-maxage=604800"
+            : "public, max-age=1800, s-maxage=1800",
+        },
+      });
+      await writeVelocichefCachedImage(prompt, searchQuery, response.clone());
+      return response;
+    } catch (error) {
+      return jsonResponse(
+        { ok: false, error: error instanceof Error ? error.message : "No pude preparar la imagen del paso." },
         { status: 500 },
       );
     }

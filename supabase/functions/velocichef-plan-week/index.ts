@@ -170,6 +170,7 @@ function buildCookingGuidancePrompt(input: Record<string, unknown>) {
     "- No uses frases vagas como 'ajusta a tu gusto' salvo que sea imprescindible.",
     "- Si un paso requiere espera o coccion, indica timer_minutes.",
     "- Cada paso debe incluir image_prompt para ilustrarlo visualmente sin texto en pantalla.",
+    "- Cada paso debe incluir image_search_query con 3 a 8 palabras utiles para buscar una foto publica muy parecida.",
     "",
     "Contexto del perfil:",
     buildProfileSummary(profile),
@@ -317,6 +318,7 @@ function buildCookingGuidancePromptV2(input: Record<string, unknown>) {
     "- No uses frases vagas como 'ajusta a tu gusto' salvo que sea imprescindible.",
     "- Si un paso requiere espera o coccion, indica timer_minutes.",
     "- Cada paso debe incluir image_prompt para ilustrarlo visualmente sin texto en pantalla.",
+    "- Cada paso debe incluir image_search_query con 3 a 8 palabras utiles para buscar una foto publica muy parecida.",
     "",
     "Contexto del perfil:",
     buildProfileSummaryClean(profile),
@@ -330,7 +332,7 @@ function buildCookingGuidancePromptV2(input: Record<string, unknown>) {
     `Ingredientes: ${JSON.stringify(ingredients)}.`,
     "",
     "Forma JSON exacta:",
-    '{"steps":[{"title":"Preparar bandeja","text":"Forra una bandeja con papel de horno, pon unas gotas de aceite y dejala lista.","timer_minutes":0,"image_prompt":"Realistic home kitchen scene showing a baking tray lined with parchment paper and a little olive oil, no text."},{"title":"Preparar patatas","text":"Lava y pela las patatas. Cortalas en gajos y dejalas en la bandeja preparada.","timer_minutes":0,"image_prompt":"Realistic close-up of peeled potato wedges being placed on a prepared oven tray, no text."}]}',
+    '{"steps":[{"title":"Preparar bandeja","text":"Forra una bandeja con papel de horno, pon unas gotas de aceite y dejala lista.","timer_minutes":0,"image_prompt":"Realistic home kitchen scene showing a baking tray lined with parchment paper and a little olive oil, no text.","image_search_query":"bandeja horno papel aceite"},{"title":"Preparar patatas","text":"Lava y pela las patatas. Cortalas en gajos y dejalas en la bandeja preparada.","timer_minutes":0,"image_prompt":"Realistic close-up of peeled potato wedges being placed on a prepared oven tray, no text.","image_search_query":"patatas gajos bandeja horno"}]}',
   ].join("\n");
 }
 
@@ -353,6 +355,7 @@ function splitVerboseStep(step: Record<string, unknown>, index: number) {
     text: sentence,
     timer_minutes: sentenceIndex === sentences.length - 1 ? normalized.timer_minutes : 0,
     image_prompt: normalized.image_prompt,
+    image_search_query: normalized.image_search_query,
   }));
 }
 
@@ -456,6 +459,7 @@ function normalizeStepPayload(raw: Record<string, unknown>, index: number) {
     text: String(raw.text || raw.description || "").trim(),
     timer_minutes: Number(raw.timer_minutes || 0) || 0,
     image_prompt: String(raw.image_prompt || "").trim(),
+    image_search_query: String(raw.image_search_query || raw.imageSearchQuery || "").trim(),
   };
 }
 
