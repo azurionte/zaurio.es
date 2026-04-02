@@ -1395,7 +1395,7 @@ function createCookingState(mode = "suggest", mealId = null) {
     stepIndex: 0,
     handsFree: false,
     recognitionState: "idle",
-    transcript: "",
+    lastCommand: "",
     activeTimer: null,
     guidanceStatus: "idle",
     stepImages: {},
@@ -1599,6 +1599,7 @@ async function prefetchCookingIllustrations(mealId, sessionId = state.cooking?.s
 async function startCookingFlow(mealId, mode = "active") {
   stopHandsFreeMode();
   stopCookingTimer();
+  state.notice = "";
   state.cooking = createCookingState(mode, mealId);
   const sessionId = state.cooking.sessionId;
   state.currentView = "cook";
@@ -2195,7 +2196,6 @@ function stopHandsFreeMode() {
   if (state.cooking) {
     state.cooking.handsFree = false;
     state.cooking.recognitionState = "idle";
-    state.cooking.transcript = "";
   }
 }
 
@@ -2203,20 +2203,20 @@ async function handleVoiceNavigation(transcript) {
   const normalized = String(transcript || "").toLowerCase();
   if (/siguiente/.test(normalized)) {
     await moveCookingStep(1);
-    return true;
+    return "siguiente";
   }
   if (/atr[aÃ¡]s/.test(normalized)) {
     await moveCookingStep(-1);
-    return true;
+    return "atras";
   }
 
   const target = getCookingTarget();
   const currentStage = target ? getCookingStage(target).current : null;
   if (/temporizador|cuenta regresiva/.test(normalized) && currentStage?.timerMinutes) {
     startCookingTimer(currentStage.title, currentStage.timerMinutes);
-    return true;
+    return "temporizador";
   }
-  return false;
+  return "";
 }
 
 function startHandsFreeMode() {
@@ -2227,6 +2227,7 @@ function startHandsFreeMode() {
     return;
   }
 
+  state.notice = "";
   stopHandsFreeMode();
   ensureCookingState();
 
@@ -2245,12 +2246,15 @@ function startHandsFreeMode() {
       .trim();
 
     if (!transcript) return;
-    state.cooking.transcript = transcript;
-    handleVoiceNavigation(transcript).finally(() => render());
+    handleVoiceNavigation(transcript).then((command) => {
+      if (state.cooking) {
+        state.cooking.lastCommand = command || "";
+      }
+      render();
+    });
   };
 
   recognition.onerror = () => {
-    state.notice = "No he podido mantener activo el modo manos libres.";
     stopHandsFreeMode();
     render();
   };
@@ -2262,7 +2266,6 @@ function startHandsFreeMode() {
       state.cooking.recognitionState = "listening";
       render();
     } catch (_error) {
-      state.notice = "He pausado el modo manos libres. Puedes volver a activarlo cuando quieras.";
       stopHandsFreeMode();
       render();
     }
@@ -2275,7 +2278,6 @@ function startHandsFreeMode() {
   try {
     recognition.start();
   } catch (_error) {
-    state.notice = "No he podido arrancar el modo manos libres.";
     stopHandsFreeMode();
   }
 }
@@ -4139,8 +4141,8 @@ function renderCookView() {
             <p class="vc-copy vc-cook-step-copy">${isIngredientsStep
               ? "Coge estos ingredientes, dejalos a mano y preparalos para arrancar sin interrupciones."
               : renderTechniqueText(current.text)}</p>
-            ${state.cooking?.handsFree && state.cooking.transcript
-              ? `<div class="vc-cook-status-pill">Ultimo comando: "${escapeHtml(state.cooking.transcript)}"</div>`
+            ${state.cooking?.handsFree && state.cooking.lastCommand
+              ? `<div class="vc-cook-status-pill">Comando escuchado: ${escapeHtml(state.cooking.lastCommand)}</div>`
               : ""}
             ${current?.timerMinutes ? `
               <div class="vc-inline-actions vc-cook-inline-tools">

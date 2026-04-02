@@ -7,7 +7,9 @@ const VELOCICHEF_FORBIDDEN_IMAGE_TERMS = [
   "hand", "hands", "finger", "fingers", "arm", "arms", "body", "bodies", "person", "people",
   "human", "humans", "face", "faces", "chef", "cook", "woman", "women", "man", "men",
   "child", "children", "portrait", "selfie", "text", "words", "letters", "caption", "captions",
-  "label", "labels", "typography", "watermark", "signature",
+  "label", "labels", "typography", "watermark", "signature", "title", "titles", "number",
+  "numbers", "step", "steps", "banner", "banners", "badge", "badges", "ribbon", "ribbons",
+  "overlay", "overlays", "sticker", "stickers", "poster", "posters", "card", "cards",
 ];
 
 function rewriteEmprezaurioHtml(html) {
@@ -454,7 +456,8 @@ function stripForbiddenImageTerms(value) {
 
 function buildSafeSceneGoal(step) {
   const raw = String(step?.image_prompt || step?.imagePrompt || step?.text || "").trim();
-  const withoutMentions = stripForbiddenImageTerms(raw);
+  const withoutStepBadges = raw.replace(/\bstep\s*[-:]?\s*\d+\b/gi, " ");
+  const withoutMentions = stripForbiddenImageTerms(withoutStepBadges);
   return withoutMentions || "food ingredients and cookware arranged for this recipe step";
 }
 
@@ -479,9 +482,12 @@ function buildVelocichefStepImagePrompt(body) {
     step.title ? `Step title: ${step.title}.` : "",
     sceneGoal ? `Scene goal: ${sceneGoal}.` : "",
     "Show only food, ingredients, cookware, trays, bowls, pans or boards that belong to this step.",
+    "Depict the result of the preparation, not a person performing the action.",
+    "If the step is about cutting or mixing, show the ingredients already arranged on the board, tray, bowl or pan after that action.",
     "No humans, no hands, no fingers, no arms, no faces, no body parts, no chef.",
     "Prefer overhead or three-quarter angle, clean composition, cookbook style, softly stylized illustration.",
     "No text, no words, no labels, no typography, no captions, no UI, no watermark.",
+    "No step badges, no titles, no numbers, no stickers, no banners, no recipe card framing.",
   ].filter(Boolean).join(" ");
 }
 
@@ -489,7 +495,7 @@ function buildVelocichefStepSearchQuery(body) {
   const meal = body?.meal || {};
   const step = body?.step || {};
   const explicit = stripForbiddenImageTerms(String(step.image_search_query || step.imageSearchQuery || body?.searchQuery || "").trim());
-  if (explicit) return `${sanitizeVelocichefSearchQuery(explicit)} food overhead`.trim();
+  if (explicit) return `${sanitizeVelocichefSearchQuery(explicit)} food ingredients overhead no people`.trim();
 
   const combined = [
     meal.title || "",
@@ -499,7 +505,7 @@ function buildVelocichefStepSearchQuery(body) {
   ].filter(Boolean).join(" ");
 
   const sanitized = sanitizeVelocichefSearchQuery(combined);
-  return `${sanitized || sanitizeVelocichefSearchQuery(meal.title || "home cooking")} food overhead`.trim();
+  return `${sanitized || sanitizeVelocichefSearchQuery(meal.title || "home cooking")} food ingredients overhead no people`.trim();
 }
 
 function getVelocichefImageCacheKey(prompt, searchQuery) {
@@ -646,21 +652,6 @@ async function resolveVelocichefStepImage(env, body) {
   const searchQuery = buildVelocichefStepSearchQuery(body);
   const providerErrors = [];
 
-  const aiAttempt = await generateWorkersAiStepImage(env, prompt);
-  if (aiAttempt.image) {
-    return {
-      ok: true,
-      imageAvailable: true,
-      supportAvailable: true,
-      image: aiAttempt.image,
-      provider: aiAttempt.image.provider,
-      prompt,
-      searchQuery,
-      providerErrors,
-    };
-  }
-  if (aiAttempt.error) providerErrors.push(aiAttempt.error);
-
   const pexelsAttempt = await searchPexelsStepImage(env, searchQuery);
   if (pexelsAttempt.image) {
     return {
@@ -675,6 +666,21 @@ async function resolveVelocichefStepImage(env, body) {
     };
   }
   if (pexelsAttempt.error) providerErrors.push(pexelsAttempt.error);
+
+  const aiAttempt = await generateWorkersAiStepImage(env, prompt);
+  if (aiAttempt.image) {
+    return {
+      ok: true,
+      imageAvailable: true,
+      supportAvailable: true,
+      image: aiAttempt.image,
+      provider: aiAttempt.image.provider,
+      prompt,
+      searchQuery,
+      providerErrors,
+    };
+  }
+  if (aiAttempt.error) providerErrors.push(aiAttempt.error);
 
   return {
     ok: true,

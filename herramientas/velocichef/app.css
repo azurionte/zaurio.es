@@ -1423,12 +1423,14 @@ body.vc-cook-immersive-body .vc-app{
 .vc-cook-visual{
   min-height:0;
   display:grid;
-  align-items:center;
+  align-items:start;
+  align-content:start;
 }
 
 .vc-cook-figure-immersive{
   min-height:0;
   align-content:start;
+  align-self:start;
 }
 
 .vc-cook-figure-immersive img{
@@ -1489,6 +1491,7 @@ body.vc-cook-immersive-body .vc-app{
   display:grid;
   gap:10px;
   margin:0;
+  align-self:start;
 }
 
 .vc-cook-image-loading{
