@@ -1224,6 +1224,36 @@ body.vc-cook-immersive-body .vc-app{
   border:1px solid rgba(232,90,79,.14);
 }
 
+.vc-toast-stack{
+  position:fixed;
+  left:12px;
+  right:12px;
+  top:calc(var(--vc-topbar-current-height, 112px) + 14px);
+  z-index:120;
+  display:grid;
+  gap:10px;
+  pointer-events:none;
+}
+
+.vc-toast{
+  padding:12px 14px;
+  border-radius:18px;
+  box-shadow:0 18px 36px rgba(49,18,11,.12);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(80,29,10,.1);
+}
+
+.vc-toast-note{
+  background:rgba(255,248,236,.96);
+  color:#6d431d;
+}
+
+.vc-toast-error{
+  background:rgba(255,242,241,.97);
+  color:#9c2c23;
+  border-color:rgba(232,90,79,.18);
+}
+
 .vc-hero-art{
   width:min(100%, 280px);
   justify-self:end;
@@ -1420,6 +1450,11 @@ body.vc-cook-immersive-body .vc-app{
   padding:14px;
 }
 
+.vc-cook-stage-immersive.is-ingredients{
+  grid-template-rows:auto auto;
+  align-content:start;
+}
+
 .vc-cook-visual{
   min-height:0;
   display:grid;
@@ -1450,6 +1485,10 @@ body.vc-cook-immersive-body .vc-app{
   display:grid;
   gap:10px;
   align-content:end;
+}
+
+.vc-cook-stage-immersive.is-ingredients .vc-cook-copy-panel{
+  align-content:start;
 }
 
 .vc-cook-copy-meta{

@@ -273,13 +273,13 @@ function uniqueValues(values) {
 
 function decodeMojibakeText(value) {
   const source = String(value || "");
-  if (!/[ÃƒÃ‚Ã¢]/.test(source)) return source;
+  if (!/[ÃƒÃ‚Ã¢Â]/.test(source)) return source;
   try {
     const bytes = Uint8Array.from(Array.from(source, (character) => character.charCodeAt(0) & 255));
     const decoded = new TextDecoder("utf-8").decode(bytes);
-    return decoded && !/\uFFFD/.test(decoded) ? decoded : source.replace(/Ã‚/g, "");
+    return decoded && !/\uFFFD/.test(decoded) ? decoded.replace(/Â/g, "") : source.replace(/Ã‚/g, "").replace(/Â/g, "");
   } catch (_error) {
-    return source.replace(/Ã‚/g, "");
+    return source.replace(/Ã‚/g, "").replace(/Â/g, "");
   }
 }
 
@@ -1471,8 +1471,6 @@ async function ensureCookingGuidance(mealId) {
 
   ensureCookingState();
   state.cooking.guidanceStatus = "loading";
-  state.busy = true;
-  state.busyLabel = "Afinando la receta paso a paso...";
   render();
 
   try {
@@ -1503,10 +1501,7 @@ async function ensureCookingGuidance(mealId) {
     state.error = "";
   } catch (_error) {
     state.cooking.guidanceStatus = "error";
-    state.notice = "Voy a usar una guÃ­a rÃ¡pida para esta receta mientras afino los pasos.";
   } finally {
-    state.busy = false;
-    state.busyLabel = "";
     render();
   }
 }
@@ -2801,6 +2796,25 @@ function renderBusyOverlay() {
           </div>
         </div>
       </div>
+    </div>
+  `;
+}
+
+function renderToastStack() {
+  const items = [
+    state.notice ? { kind: "note", text: sanitizeUiCopy(state.notice) } : null,
+    state.error ? { kind: "error", text: sanitizeUiCopy(state.error) } : null,
+  ].filter(Boolean);
+
+  if (!items.length) return "";
+
+  return `
+    <div class="vc-toast-stack" aria-live="polite" aria-atomic="true">
+      ${items.map((item) => `
+        <div class="vc-toast vc-toast-${item.kind}">
+          ${escapeHtml(item.text)}
+        </div>
+      `).join("")}
     </div>
   `;
 }
@@ -4137,7 +4151,6 @@ function renderCookView() {
               <small class="vc-muted">${escapeHtml(target.day.label)} Â· ${escapeHtml(MEAL_LABELS[target.mealKey])}</small>
               <small class="vc-muted">${escapeHtml(stepMeta)}</small>
             </div>
-            ${state.cooking?.guidanceStatus === "loading" ? `<div class="vc-cook-status-pill">Afinando la receta...</div>` : ""}
             <p class="vc-copy vc-cook-step-copy">${isIngredientsStep
               ? "Coge estos ingredientes, dejalos a mano y preparalos para arrancar sin interrupciones."
               : renderTechniqueText(current.text)}</p>
@@ -4535,18 +4548,13 @@ function render() {
     return;
   }
 
-  const notices = [
-    state.notice ? `<div class="vc-note">${escapeHtml(sanitizeUiCopy(state.notice))}</div>` : "",
-    state.error ? `<div class="vc-error">${escapeHtml(sanitizeUiCopy(state.error))}</div>` : "",
-  ].filter(Boolean).join("");
-
   const content = !state.session
     ? renderLanding()
     : (!state.profile?.onboardingCompleted || state.currentView === "onboarding")
       ? renderOnboarding()
       : renderWorkspace();
 
-  root.innerHTML = `${renderTopbar()}${notices ? `<section class="vc-shell">${notices}</section>` : ""}${content}`;
+  root.innerHTML = `${renderTopbar()}${renderToastStack()}${content}`;
   modalRoot.innerHTML = renderModal();
   repairVisibleText(root);
   repairVisibleText(modalRoot);
