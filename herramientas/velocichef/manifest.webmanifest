@@ -1,0 +1,24 @@
+{
+  "name": "VelociChef",
+  "short_name": "VelociChef",
+  "description": "Planifica menus, recetas y tu lista de la compra semanal con ayuda de VelociChef.",
+  "start_url": "/velocichef/",
+  "display": "standalone",
+  "background_color": "#fff6ea",
+  "theme_color": "#ef7b2d",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/velocichef/assets/store_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/velocichef/assets/store_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

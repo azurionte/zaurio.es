@@ -75,13 +75,16 @@
     .versusOverlay p{max-width:34ch}
     .versusIntroNames{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
     .versusIntroCount{justify-self:center;min-width:74px;font-size:1.65rem;padding:10px 16px;border-radius:22px;background:rgba(255,216,58,.16);border:1px solid rgba(255,216,58,.32);color:var(--yellow);font-weight:1000}
-    .versusDuel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .versusPlayer{padding:14px;border-radius:22px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);display:grid;justify-items:center;gap:8px;text-align:center}
-    .versusPlayer.active{box-shadow:0 0 0 1px rgba(255,216,58,.28),0 0 30px rgba(255,119,203,.16)}
-    .versusPlayer.champion{border-color:rgba(255,216,58,.58);background:linear-gradient(135deg,rgba(255,216,58,.18),rgba(136,225,110,.12));box-shadow:0 0 0 1px rgba(255,216,58,.28),0 0 38px rgba(255,216,58,.18),0 0 68px rgba(136,225,110,.12)}
-    .versusAvatar{width:72px;height:72px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18));display:grid;place-items:center}
+    .versusArena{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr) minmax(0,220px);align-items:center;gap:18px;padding:16px 18px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at top,rgba(57,219,255,.09),rgba(255,255,255,.02) 38%,rgba(0,0,0,.16) 100%)}
+    .versusCenter{display:grid;gap:12px;justify-items:center;min-width:0}
+    .versusPlayer{display:grid;justify-items:center;align-content:center;gap:8px;min-height:180px;text-align:center}
+    .versusPlayer.active .versusAvatar{box-shadow:0 0 0 2px rgba(255,216,58,.28),0 0 30px rgba(255,119,203,.16)}
+    .versusPlayer.champion .versusAvatar{box-shadow:0 0 0 2px rgba(255,216,58,.42),0 0 38px rgba(255,216,58,.18),0 0 68px rgba(136,225,110,.12)}
+    .versusAvatar{width:78px;height:78px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18));display:grid;place-items:center;transition:box-shadow .18s ease,transform .18s ease}
     .versusAvatar img{width:100%;height:100%;object-fit:cover}
-    .versusChoice{font-size:1rem;font-weight:1000;color:var(--yellow)}
+    .versusPlayerName{font-size:1.18rem;font-weight:1000;line-height:1.05}
+    .versusPlayerSub{font-size:.86rem;color:var(--muted);line-height:1.18}
+    .versusChoice{font-size:1rem;font-weight:1000;color:var(--yellow);line-height:1.1}
     .versusRoundGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
     .versusMove{padding:14px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);display:grid;gap:6px;justify-items:center;text-align:center;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
     .versusMove:hover{transform:translateY(-2px)}
@@ -94,9 +97,6 @@
     .versusScoreline{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
     .versusPill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);font-weight:900}
     .versusPill strong{font-size:1.15rem;color:var(--yellow)}
-    .versusSpectators{padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);text-align:center}
-    .versusSpectators strong{color:var(--yellow)}
-    .versusArena{display:grid;gap:12px;padding:14px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at top,rgba(57,219,255,.09),rgba(255,255,255,.02) 38%,rgba(0,0,0,.16) 100%)}
     .versusHands{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
     .versusHandWrap{display:grid;justify-items:center;gap:8px}
     .versusHand{margin:6px;width:150px;height:150px;position:relative;display:inline-block;transform:rotate(10deg);animation:handShake 1s infinite}
@@ -276,7 +276,8 @@
       .versusIntroCount{font-size:1.45rem;min-width:64px;padding:8px 14px}
       .versusMeta{gap:8px}
       .versusRoundBadge,.versusPill{padding:8px 12px;font-size:.92rem}
-      .versusArena{padding:10px}
+      .versusArena{grid-template-columns:minmax(0,148px) minmax(0,1fr) minmax(0,148px);gap:10px;padding:12px}
+      .versusCenter{gap:8px}
       .versusHands{gap:4px}
       .versusHand{width:94px;height:94px;margin:2px}
       .versusHand .fist{height:52px;left:18px;top:24px;width:42px;border-radius:14px 0 0 14px}
@@ -290,15 +291,15 @@
       .versusHand[data-move="scissors"] .finger-1,.versusHand[data-move="scissors"] .finger-2{width:58px}
       .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(58px + var(--dif));width:36px}
       .versusBurst{width:48px;height:48px;font-size:.9rem}
-      .versusDuel{gap:8px}
-      .versusPlayer{padding:10px;gap:6px}
+      .versusPlayer{min-height:138px;gap:6px}
       .versusAvatar{width:56px;height:56px}
+      .versusPlayerName{font-size:1rem}
+      .versusPlayerSub{font-size:.76rem}
       .versusChoice{font-size:.92rem}
       .versusRoundGrid{gap:8px}
       .versusMove{padding:10px 6px;border-radius:18px}
       .versusGlyph{font-size:1.5rem}
       .versusChampionFx{padding:10px 14px;font-size:.92rem}
-      .versusSpectators{padding:10px 12px;font-size:.92rem}
       #profileLayout{width:100% !important}
       #profileScene{margin-top:0}
       #profileLayout > article:first-child{gap:10px}
@@ -383,9 +384,12 @@
       .countPill,.codeBadge{padding:8px 12px}
       .versusCard,.versusIntroCard{gap:10px;padding:12px}
       .versusHero img{height:120px}
+      .versusArena{grid-template-columns:minmax(0,112px) minmax(0,1fr) minmax(0,112px);gap:8px;padding:10px}
       .versusHand{width:86px;height:86px}
       .versusBurst{width:42px;height:42px}
-      .versusPlayer{padding:8px;gap:5px}
+      .versusPlayer{min-height:126px;gap:5px}
+      .versusPlayerName{font-size:.92rem}
+      .versusPlayerSub{font-size:.72rem}
       .versusRoundGrid{gap:6px}
       .versusMove{padding:8px 6px}
     }
@@ -681,44 +685,43 @@
             <div class="versusRoundBadge" id="versusRoundBadge">Ronda 1</div>
           </div>
           <div class="versusArena">
-            <div class="versusHands">
-              <div class="versusHandWrap">
-                <div class="versusHand" id="versusHandA" data-move="rock">
-                  <div class="fist"></div>
-                  <div class="finger finger-1"></div>
-                  <div class="finger finger-2"></div>
-                  <div class="finger finger-3"></div>
-                  <div class="finger finger-4"></div>
-                  <div class="thumb"></div>
-                  <div class="arm"></div>
+            <article class="versusPlayer" id="versusPlayerA"></article>
+            <div class="versusCenter">
+              <div class="versusHands">
+                <div class="versusHandWrap">
+                  <div class="versusHand" id="versusHandA" data-move="rock">
+                    <div class="fist"></div>
+                    <div class="finger finger-1"></div>
+                    <div class="finger finger-2"></div>
+                    <div class="finger finger-3"></div>
+                    <div class="finger finger-4"></div>
+                    <div class="thumb"></div>
+                    <div class="arm"></div>
+                  </div>
                 </div>
-              </div>
-              <div class="versusBurst" id="versusBurst">VS</div>
-              <div class="versusHandWrap">
-                <div class="versusHand right" id="versusHandB" data-move="rock">
-                  <div class="fist"></div>
-                  <div class="finger finger-1"></div>
-                  <div class="finger finger-2"></div>
-                  <div class="finger finger-3"></div>
-                  <div class="finger finger-4"></div>
-                  <div class="thumb"></div>
-                  <div class="arm"></div>
+                <div class="versusBurst" id="versusBurst">VS</div>
+                <div class="versusHandWrap">
+                  <div class="versusHand right" id="versusHandB" data-move="rock">
+                    <div class="fist"></div>
+                    <div class="finger finger-1"></div>
+                    <div class="finger finger-2"></div>
+                    <div class="finger finger-3"></div>
+                    <div class="finger finger-4"></div>
+                    <div class="thumb"></div>
+                    <div class="arm"></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="versusChampionFx" id="versusChampionFx"><span class="versusCrown">👑</span><span id="versusChampionText">Victoria jurasica</span></div>
-          <div class="versusDuel">
-            <article class="versusPlayer" id="versusPlayerA"></article>
             <article class="versusPlayer" id="versusPlayerB"></article>
           </div>
+          <div class="versusChampionFx" id="versusChampionFx"><span class="versusCrown">👑</span><span id="versusChampionText">Victoria jurasica</span></div>
           <div class="versusMeta">
             <div class="versusScoreline" id="versusScoreline"></div>
             <div class="countPill" style="justify-self:center" id="versusTimer">5</div>
             <p id="versusRoundCopy">Teneis 5 segundos para marcar.</p>
           </div>
           <div class="versusRoundGrid" id="versusButtons"></div>
-          <div class="versusSpectators" id="versusSpectators">El resto mira el duelo desde la grada.</div>
         </article>
       </section>
     </section>
@@ -1100,7 +1103,7 @@
       hostVoteCountdown:$("hostVoteCountdown"), voteToggle:$("voteToggle"), modeGrid:$("modeGrid"), durationGrid:$("durationGrid"), setupActions:$("setupActions"),
       generatingLine:$("generatingLine"), pausedTitle:$("pausedTitle"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
-      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), versusSpectators:$("versusSpectators"), scoreModal:$("scoreModal"), scoreModalRows:$("scoreModalRows"),
+      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalRows:$("scoreModalRows"),
       btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
       durationModal:$("durationModal"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
       durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
@@ -2089,7 +2092,7 @@
       const player = findPlayer(playerId);
       const choice = visibleChoiceId ? versusMoveById(visibleChoiceId) : null;
       const waitingText = playerId === state.playerId ? "Esperando tu marca" : "Eleccion oculta";
-      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong>${esc(player?.name || "Jugador")}</strong><span class="playerSub">${playerId === state.playerId ? "Tu duelo" : "Duelo en curso"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Esperando tu marca" : waitingText)}</div>`;
+      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong class="versusPlayerName">${esc(player?.name || "Jugador")}</strong><span class="versusPlayerSub">${playerId === state.playerId ? "Tu duelo" : "En duelo"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Marca ya" : waitingText)}</div>`;
     }
     function renderVersusIntroScene(){
       const versus = state.game.versus || {};
@@ -2156,13 +2159,11 @@
       } else {
         ui.versusRoundCopy.textContent = "Solo los duelistas pueden marcar. El resto observa.";
       }
-      ui.versusButtons.innerHTML = VERSUS_MOVES.map(move => {
+      ui.versusButtons.innerHTML = canPick ? VERSUS_MOVES.map(move => {
         const mine = (versus.choices || {})[state.playerId] === move.id;
         const winningMove = versus.roundWinnerId && Object.entries(versus.revealChoices || {}).some(([playerId, value]) => playerId === versus.roundWinnerId && value === move.id);
-        return `<button class="versusMove ${mine ? "active" : ""} ${winningMove ? "win" : ""}" data-versus-move="${move.id}" type="button" ${canPick ? "" : "disabled"}><span class="versusGlyph">${move.glyph}</span><strong>${move.label}</strong></button>`;
-      }).join("");
-      const spectators = (versus.spectatorIds || []).map(playerId => findPlayer(playerId)?.name).filter(Boolean);
-      ui.versusSpectators.innerHTML = spectators.length ? `<strong>Mirando el duelo:</strong> ${spectators.map(name => esc(name)).join(" · ")}` : "No hay espectadores en este VS.";
+        return `<button class="versusMove ${mine ? "active" : ""} ${winningMove ? "win" : ""}" data-versus-move="${move.id}" type="button"><span class="versusGlyph">${move.glyph}</span><strong>${move.label}</strong></button>`;
+      }).join("") : "";
       ui.versusButtons.querySelectorAll("[data-versus-move]").forEach(btn => {
         btn.onclick = async () => {
           if(!canPick) return;

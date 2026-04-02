@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>VelociChef · Zaurio</title>
+  <meta
+    name="description"
+    content="VelociChef te ayuda a planificar menus semanales, recetas y lista de la compra segun tus gustos, objetivos y tu alacena."
+  />
+  <link rel="icon" type="image/png" href="./assets/store_icon.png" />
+  <link rel="apple-touch-icon" href="./assets/store_icon.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="theme-color" content="#ef7b2d" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="/shared/css/zaurio-ui.css" />
+  <link rel="stylesheet" href="./app.css" />
+</head>
+<body data-zaurio-nav="herramientas">
+  <div data-zaurio-nav data-active="herramientas"></div>
+  <main id="app" class="vc-app" aria-live="polite"></main>
+  <div id="modal-root"></div>
+  <script src="/shared/js/zaurio-nav.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

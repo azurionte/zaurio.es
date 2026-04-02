@@ -53,6 +53,13 @@
           icon: `${sharedBase}/assets/brand/emprezaurio-icono.png`,
           tag: "beta",
         },
+        {
+          type: "link",
+          href: "https://herramientas.zaurio.es/velocichef/",
+          label: "VelociChef",
+          icon: "https://herramientas.zaurio.es/velocichef/assets/store_icon.png",
+          tag: "beta",
+        },
       ],
     },
     {

@@ -219,6 +219,28 @@
     .castAvatar img{width:100%;height:100%;object-fit:cover}
     .castName{font-size:.9rem;font-weight:1000;line-height:1.08;text-align:center;max-width:10ch;text-wrap:balance}
     .castRole{font-size:.68rem;color:var(--muted);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+    .versusLiveIntro,.versusLiveStage{display:grid;gap:18px;width:min(1180px,100%);margin:0 auto}
+    .versusLiveHead{display:grid;gap:10px;justify-items:center;text-align:center}
+    .versusLiveHead .title{font-size:clamp(2.2rem,4.2vw,4.4rem);line-height:.94}
+    .versusLiveHead .copy{max-width:30ch}
+    .versusLiveIntroNames,.versusLiveScoreline{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+    .versusLivePill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);font-weight:900}
+    .versusLivePill strong{color:var(--gold);font-size:1.1rem}
+    .versusLiveCount{justify-self:center;min-width:84px;padding:12px 18px;border-radius:24px;background:linear-gradient(135deg,rgba(255,216,74,.18),rgba(255,125,207,.16));border:1px solid rgba(255,216,74,.3);font-size:2rem;font-weight:1000;color:var(--gold);text-align:center}
+    .versusLiveArena{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr) minmax(0,220px);align-items:center;gap:18px;padding:18px 20px;border-radius:30px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at top,rgba(56,220,255,.08),rgba(255,255,255,.02) 38%,rgba(0,0,0,.14) 100%)}
+    .versusLivePlayer{display:grid;gap:8px;justify-items:center;text-align:center;align-content:center}
+    .versusLiveAvatar{width:92px;height:92px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);box-shadow:0 12px 30px rgba(0,0,0,.2);transition:box-shadow .18s ease,transform .18s ease}
+    .versusLiveAvatar img{width:100%;height:100%;object-fit:cover}
+    .versusLivePlayer.active .versusLiveAvatar{box-shadow:0 0 0 2px rgba(255,216,74,.3),0 0 26px rgba(255,125,207,.18)}
+    .versusLivePlayer.champion .versusLiveAvatar{box-shadow:0 0 0 2px rgba(255,216,74,.44),0 0 36px rgba(255,216,74,.2)}
+    .versusLiveName{font-size:1.24rem;font-weight:1000;line-height:1.02}
+    .versusLiveSub{font-size:.88rem;color:var(--muted);font-weight:800}
+    .versusLiveChoice{font-size:1rem;font-weight:1000;color:var(--gold)}
+    .versusLiveCenter{display:grid;gap:14px;justify-items:center;align-content:center}
+    .versusLiveHands{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px}
+    .versusLiveMove{width:138px;height:138px;border-radius:999px;display:grid;place-items:center;background:radial-gradient(circle at top,rgba(255,216,74,.16),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.12);font-size:4rem;box-shadow:0 16px 36px rgba(0,0,0,.18)}
+    .versusLiveBurst{width:72px;height:72px;border-radius:999px;display:grid;place-items:center;background:radial-gradient(circle,rgba(255,216,74,.26),rgba(255,125,207,.08));border:1px solid rgba(255,216,74,.22);font-weight:1000;color:var(--gold);font-size:1.15rem}
+    .versusLiveCopy{margin:0;color:var(--muted);font-size:1rem;line-height:1.45;text-align:center;max-width:42ch}
     input{width:100%;padding:15px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;font:inherit}
     button{padding:14px 18px;border:0;border-radius:999px;background:linear-gradient(135deg,var(--gold),var(--pink));font:inherit;font-weight:1000;color:#240433;cursor:pointer}
     .hidden{display:none!important}
@@ -258,6 +280,22 @@
     body.vertical .lobbyCast{gap:14px 12px}
     body.vertical .castPlayer{min-width:68px}
     body.vertical .castAvatar{width:60px;height:60px}
+    body.vertical .versusLiveIntro,body.vertical .versusLiveStage{gap:12px;width:min(100%,96%)}
+    body.vertical .versusLiveHead .title{font-size:clamp(1.45rem,6.4vw,2.25rem)}
+    body.vertical .versusLiveHead .copy{font-size:.82rem}
+    body.vertical .versusLivePill{padding:7px 10px;font-size:.74rem}
+    body.vertical .versusLivePill strong{font-size:.92rem}
+    body.vertical .versusLiveCount{min-width:62px;padding:8px 12px;font-size:1.45rem}
+    body.vertical .versusLiveArena{grid-template-columns:minmax(0,96px) minmax(0,1fr) minmax(0,96px);gap:8px;padding:12px}
+    body.vertical .versusLiveAvatar{width:56px;height:56px}
+    body.vertical .versusLiveName{font-size:.84rem}
+    body.vertical .versusLiveSub{font-size:.62rem}
+    body.vertical .versusLiveChoice{font-size:.72rem}
+    body.vertical .versusLiveCenter{gap:10px}
+    body.vertical .versusLiveHands{gap:8px}
+    body.vertical .versusLiveMove{width:72px;height:72px;font-size:2.2rem}
+    body.vertical .versusLiveBurst{width:42px;height:42px;font-size:.84rem}
+    body.vertical .versusLiveCopy{font-size:.8rem}
     body.vertical .castName{font-size:.7rem;max-width:8ch}
     body.vertical .castRole{font-size:.58rem}
     body.vertical .navPrompt{padding:0 4px}
@@ -536,6 +574,11 @@
       answers:$("answers"), codeInput:$("codeInput"), btnJoin:$("btnJoin"), hero:$("hero"),
       topBar:$("topBar"), topBrand:$("topBrand"), topCenter:$("topCenter")
     };
+    const VERSUS_MOVES = [
+      {id:"rock", label:"Piedra", glyph:"✊"},
+      {id:"paper", label:"Papel", glyph:"✋"},
+      {id:"scissors", label:"Tijera", glyph:"✌️"}
+    ];
     let channel = null;
     let game = {phase:"lobby",scores:{},questionSet:[]};
     let players = [];
@@ -565,6 +608,7 @@
       return match || CATEGORY_ARTS.otros;
     }
     const countSeconds = ts => Math.max(0, Math.ceil((Number(ts || 0) - Date.now()) / 1000));
+    const versusMoveById = id => VERSUS_MOVES.find(move => move.id === id) || VERSUS_MOVES[0];
     const nextQuestion = () => Array.isArray(game.questionSet) ? game.questionSet[game.questionIndex || 0] : null;
     const scoreRows = () => players
       .filter(player => player.ready)
@@ -1156,6 +1200,102 @@
       ui.answers.innerHTML = "";
     }
 
+    function renderVersusIntro(){
+      const versus = game.versus || {};
+      const names = (versus.pair || [])
+        .map(playerId => players.find(player => player.playerId === playerId)?.name)
+        .filter(Boolean);
+      const left = Math.max(1, countSeconds(versus.introEndsAt || Date.now()));
+      setHeaderPrompt({active:false});
+      ui.hero.className = "hero center";
+      ui.category.textContent = "";
+      ui.prompt.textContent = "";
+      ui.copy.textContent = "";
+      setTimer("", 0, false);
+      ui.fact.classList.add("hidden");
+      ui.answers.className = "answers";
+      ui.answers.innerHTML = "";
+      ui.hero.innerHTML = `<div class="versusLiveIntro">
+        <div class="versusLiveHead">
+          <span class="kick">Desempate jurasico</span>
+          <h1 class="title">VERSUS!</h1>
+          <p class="copy">${esc(names.length === 2 ? `${names[0]} y ${names[1]} no pueden seguir empatando.` : "Dos dinos no pueden seguir empatando.")}</p>
+        </div>
+        ${names.length ? `<div class="versusLiveIntroNames">${names.map(name => `<span class="versusLivePill">${esc(name)}</span>`).join("")}</div>` : ""}
+        <div class="versusLiveCount">${left}</div>
+      </div>`;
+    }
+
+    function renderVersusLivePlayer(playerId, activeId, visibleChoiceId, championId){
+      const player = players.find(item => item.playerId === playerId);
+      const choice = visibleChoiceId ? versusMoveById(visibleChoiceId) : null;
+      const status = choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Marcando..." : "Eleccion oculta");
+      return `<article class="versusLivePlayer ${activeId === playerId ? "active" : ""} ${championId === playerId ? "champion" : ""}">
+        <div class="versusLiveAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div>
+        <strong class="versusLiveName">${esc(player?.name || "Jugador")}</strong>
+        <span class="versusLiveSub">${esc(player?.role === "host" ? "Anfitrion" : "Invitado")}</span>
+        <span class="versusLiveChoice">${esc(status)}</span>
+      </article>`;
+    }
+
+    function renderVersus(){
+      const versus = game.versus || {};
+      const [playerA, playerB] = versus.pair || [];
+      const now = Date.now();
+      const revealActive = Number(versus.revealUntil || 0) > now || !!versus.roundWinnerId || !!versus.finalWinnerId;
+      const visibleChoiceA = revealActive ? ((versus.revealChoices || {})[playerA] || "") : "";
+      const visibleChoiceB = revealActive ? ((versus.revealChoices || {})[playerB] || "") : "";
+      const winsA = Number(versus.wins?.[playerA] || 0);
+      const winsB = Number(versus.wins?.[playerB] || 0);
+      const neededWins = Math.ceil(Number(versus.bestOf || 3) / 2);
+      const roundLeft = Math.max(0, countSeconds(versus.roundDeadline || Date.now()));
+      const championId = versus.finalWinnerId || "";
+      const roundWinnerId = versus.roundWinnerId || "";
+      const playerAData = players.find(player => player.playerId === playerA);
+      const playerBData = players.find(player => player.playerId === playerB);
+      let copy = "Solo observando. Los duelistas estan eligiendo.";
+      if(championId){
+        copy = `${players.find(player => player.playerId === championId)?.name || "Ganador"} gana el duelo.`;
+      } else if(roundWinnerId){
+        copy = `${players.find(player => player.playerId === roundWinnerId)?.name || "Ganador"} gana esta mano.`;
+      } else if(revealActive){
+        copy = "Empate. Otra vez a las manos.";
+      }
+      setHeaderPrompt({active:false});
+      ui.hero.className = "hero center";
+      ui.category.textContent = "";
+      ui.prompt.textContent = "";
+      ui.copy.textContent = "";
+      setTimer("", 0, false);
+      ui.fact.classList.add("hidden");
+      ui.answers.className = "answers";
+      ui.answers.innerHTML = "";
+      ui.hero.innerHTML = `<div class="versusLiveStage">
+        <div class="versusLiveHead">
+          <span class="kick">Combate</span>
+          <h1 class="title">Decidid con las manos</h1>
+          <p class="copy">${esc(playerAData?.name || "Jugador 1")} vs ${esc(playerBData?.name || "Jugador 2")}</p>
+        </div>
+        <div class="versusLiveScoreline">
+          <span class="versusLivePill">${esc(playerAData?.name || "Jugador")} <strong>${winsA}</strong> <span>${"●".repeat(winsA)}${"○".repeat(Math.max(0, neededWins - winsA))}</span></span>
+          <span class="versusLivePill">${esc(playerBData?.name || "Jugador")} <strong>${winsB}</strong> <span>${"●".repeat(winsB)}${"○".repeat(Math.max(0, neededWins - winsB))}</span></span>
+        </div>
+        <div class="versusLiveArena">
+          ${renderVersusLivePlayer(playerA, roundWinnerId, visibleChoiceA, championId)}
+          <div class="versusLiveCenter">
+            <div class="versusLiveHands">
+              <div class="versusLiveMove">${visibleChoiceA ? versusMoveById(visibleChoiceA).glyph : "✊"}</div>
+              <div class="versusLiveBurst">VS</div>
+              <div class="versusLiveMove">${visibleChoiceB ? versusMoveById(visibleChoiceB).glyph : "✊"}</div>
+            </div>
+            <div class="versusLiveCount">${championId ? "🏆" : roundLeft}</div>
+            <p class="versusLiveCopy">${esc(copy)}</p>
+          </div>
+          ${renderVersusLivePlayer(playerB, roundWinnerId, visibleChoiceB, championId)}
+        </div>
+      </div>`;
+    }
+
     function renderCountdown(){
       const next = nextQuestion();
       const left = countSeconds(game.countdownEndAt || Date.now());
@@ -1252,7 +1392,7 @@
     }
 
     function render(){
-      const waitingPhase = !["paused","countdown","question","answer","scores"].includes(game.phase);
+      const waitingPhase = !["paused","countdown","question","answer","scores","versus_intro","versus"].includes(game.phase);
       document.body.classList.toggle("cast", castMode);
       document.body.classList.toggle("phase-lobby", waitingPhase);
       document.body.classList.toggle("phase-question", game.phase === "question");
@@ -1263,6 +1403,8 @@
       ui.roomCode.textContent = channel ? channel.topic.split(":").pop() : "0000";
       if(game.phase === "paused") renderPaused();
       else if(game.phase === "countdown") renderCountdown();
+      else if(game.phase === "versus_intro") renderVersusIntro();
+      else if(game.phase === "versus") renderVersus();
       else if(game.phase === "question" || game.phase === "answer") renderQuestion();
       else if(game.phase === "scores") renderScoresPhase();
       else renderLobby();

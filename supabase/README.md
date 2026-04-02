@@ -21,6 +21,7 @@ Si prefieres hacerlo desde el panel:
 
 ```bash
 supabase functions deploy trivialodon-generate-question
+supabase functions deploy velocichef-plan-week
 ```
 
 ## 3. Invocarla desde el frontend
@@ -61,3 +62,23 @@ La respuesta esperada:
 ## 4. Nota de seguridad
 
 Como la clave ya se ha pegado en el chat, te recomiendo rotarla cuando terminemos la integracion.
+
+## 5. VelociChef
+
+La app `herramientas/velocichef` usa:
+
+- Google login con Supabase Auth desde el frontend.
+- La funcion edge `velocichef-plan-week` para generar o sustituir platos con Gemini.
+- Tablas propias para perfil, semanas, feedback, suscripciones push y recordatorios.
+
+Aplica primero la migracion:
+
+```bash
+supabase db push
+```
+
+Y luego despliega la funcion:
+
+```bash
+supabase functions deploy velocichef-plan-week
+```
