@@ -203,6 +203,170 @@ function buildStepImagePrompt(input: Record<string, unknown>) {
   ].filter(Boolean).join(" ");
 }
 
+function buildProfileSummaryClean(profile: Record<string, unknown>) {
+  const meals = Array.isArray(profile.plannedMeals) ? profile.plannedMeals : ["breakfast", "lunch", "dinner"];
+  const household = Array.isArray(profile.householdMembers) ? profile.householdMembers : [];
+
+  return [
+    `Alergias y limites: ${(profile.allergies as string[] || []).join(", ") || "ninguno concreto"}${profile.allergyNotes ? `. Notas: ${profile.allergyNotes}` : ""}.`,
+    `Cosas que le gustan: ${(profile.likes as string[] || []).join(", ") || "sin preferencias marcadas"}.`,
+    `Cosas que no le gustan: ${(profile.dislikes as string[] || []).join(", ") || "sin descartes concretos"}${profile.dietaryNotes ? `. Notas extra: ${profile.dietaryNotes}` : ""}.`,
+    `Nivel de cocina deseado: ${profile.cookingStyle || "balanced"}.`,
+    `Objetivos alimentarios: ${(profile.goalTags as string[] || []).join(", ") || "comer balanceado y variado"}.`,
+    `Comidas a planificar: ${meals.map((meal) => mealLabels[String(meal)] || meal).join(", ")}.`,
+    `Personas para cocinar: ${profile.householdCount || 1}.`,
+    household.length
+      ? `Miembros del hogar: ${household.map((member: Record<string, unknown>) => `${member.name || "Persona"} (${member.sameAsMe ? "mismas reglas" : member.notes || "reglas propias"})`).join("; ")}.`
+      : "",
+    `Horario de almuerzo: ${profile.lunchTime || "14:30"}.`,
+    `Horario de cena: ${profile.dinnerTime || "21:00"}.`,
+    profile.lunchPrepNightBefore ? "Prefiere cocinar el almuerzo la noche anterior." : "El almuerzo se cocina el mismo dia.",
+  ].filter(Boolean).join("\n");
+}
+
+function buildWeekPromptV2(input: Record<string, unknown>) {
+  const profile = (input.profile || {}) as Record<string, unknown>;
+  const meals = Array.isArray(profile.plannedMeals) ? profile.plannedMeals.map(String) : ["breakfast", "lunch", "dinner"];
+  const mealList = meals.map((meal) => `- ${meal}: ${mealLabels[meal] || meal}`).join("\n");
+
+  return [
+    "Genera un menu semanal realista en espanol para una app de planificacion de cocina.",
+    `La semana debe empezar en la fecha ${input.startDate}.`,
+    "Reglas importantes:",
+    "- Devuelve solo JSON valido, sin markdown ni texto adicional.",
+    "- Deben ser exactamente 7 dias consecutivos.",
+    "- Usa cantidades metricas y unidades de este conjunto: g, kg, ml, l, unit.",
+    "- Para especias o condimentos no hace falta exactitud; puedes usar quantity 1, unit 'unit' y spice true.",
+    "- Prioriza reutilizar ingredientes entre dias para simplificar la compra.",
+    "- Ajusta las porciones al numero de personas indicado.",
+    "- Cada plato debe incluir calorias aproximadas, tiempo de preparacion, dificultad y lista de ingredientes.",
+    "- Cada plato debe incluir un array steps con entre 7 y 10 pasos pequenos y concretos.",
+    "- Cada paso debe tener una sola accion principal o una pareja minima de acciones inseparables.",
+    "- Cada paso debe indicar donde queda lo preparado al terminar: bandeja, bol, olla, sarten, tabla o plato.",
+    "- Si la receta usa horno, intenta preparar antes la bandeja o recipiente donde iran los ingredientes.",
+    "- No asumas ingredientes no listados ni utensilios especiales.",
+    "- Si un ingrediente seria razonable congelarlo, marca freezable true y un thaw_lead_hours aproximado.",
+    "- Los platos deben sonar apetecibles, caseros y factibles entre semana.",
+    "",
+    "Contexto del perfil:",
+    buildProfileSummaryClean(profile),
+    "",
+    "Comidas a devolver en cada dia:",
+    mealList,
+    "",
+    "La forma JSON exacta debe ser:",
+    '{"strategy":"...","batchingTips":["..."],"days":[{"date":"YYYY-MM-DD","meals":{"breakfast":{"title":"...","summary":"...","prep_minutes":15,"difficulty":"facil","calories":420,"servings":2,"nutrition":{"protein_g":25,"carbs_g":40,"fats_g":14,"fiber_g":7},"ingredients":[{"name":"...","quantity":300,"unit":"g","category":"Verduras","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"steps":[{"title":"Preparar bandeja","text":"Forra una bandeja con papel de horno, pon unas gotas de aceite y dejala lista.","timer_minutes":0,"image_prompt":"..."}]}}}],"freezerItems":[{"ingredient":"...","quantity":400,"unit":"g","mealDate":"YYYY-MM-DD","mealKey":"dinner","mealTitle":"...","thawLeadHours":12}]}',
+    "",
+    "Cada day.meals solo debe contener las comidas seleccionadas en el perfil.",
+  ].join("\n");
+}
+
+function buildSwapPromptV2(input: Record<string, unknown>) {
+  const profile = (input.profile || {}) as Record<string, unknown>;
+  const target = (input.target || {}) as Record<string, unknown>;
+  const targetReasons = (target.reasons || {}) as Record<string, unknown>;
+  const currentMeal = (target.currentMeal || {}) as Record<string, unknown>;
+  const reasons = Array.isArray(targetReasons.reasons) ? targetReasons.reasons.map(String).join(", ") : "cambio general";
+  const ingredients = Array.isArray(targetReasons.ingredients) ? targetReasons.ingredients.map(String).join(", ") : "ninguno";
+
+  return [
+    "Genera una alternativa de plato en espanol para sustituir una receta de una semana de menu.",
+    "Devuelve solo JSON valido, sin markdown ni texto adicional.",
+    "Debe mantener el mismo mealKey, respetar alergias y objetivos, y seguir intentando reutilizar ingredientes del resto de la semana si encaja.",
+    "Evita repetir el plato original y evita los ingredientes marcados como problema.",
+    "Incluye entre 7 y 10 pasos pequenos y concretos, con una sola accion principal por paso cuando sea posible.",
+    "Cada paso debe indicar donde queda lo preparado al terminar.",
+    "",
+    "Contexto del perfil:",
+    buildProfileSummaryClean(profile),
+    "",
+    `Comida a sustituir: ${target.mealKey} en fecha ${target.date}.`,
+    `Plato actual: ${currentMeal.title || "sin titulo"}.`,
+    `Ingredientes a evitar si es posible: ${ingredients}.`,
+    `Motivo del cambio: ${reasons}.`,
+    input.existingWeek ? `Resumen de la semana actual: ${JSON.stringify(input.existingWeek)}` : "",
+    "",
+    "Forma JSON exacta:",
+    '{"title":"...","summary":"...","prep_minutes":18,"difficulty":"facil","calories":510,"servings":2,"nutrition":{"protein_g":30,"carbs_g":45,"fats_g":18,"fiber_g":8},"ingredients":[{"name":"...","quantity":250,"unit":"g","category":"Despensa","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"steps":[{"title":"Preparar base","text":"Coloca un bol grande en la encimera y dejalo listo para mezclar.","timer_minutes":0,"image_prompt":"..."}],"tags":["..."]}',
+  ].filter(Boolean).join("\n");
+}
+
+function buildCookingGuidancePromptV2(input: Record<string, unknown>) {
+  const profile = (input.profile || {}) as Record<string, unknown>;
+  const meal = (input.meal || {}) as Record<string, unknown>;
+  const ingredients = Array.isArray(meal.ingredients) ? meal.ingredients : [];
+
+  return [
+    "Genera una guia de cocina paso a paso en espanol para una sola receta.",
+    "Devuelve solo JSON valido, sin markdown ni texto adicional.",
+    "Reglas importantes:",
+    "- Devuelve entre 8 y 10 pasos.",
+    "- Cada paso debe ser concreto, corto y accionable.",
+    "- Cada paso debe contener una sola accion principal o una pareja minima de acciones inseparables.",
+    "- Cada paso debe poder leerse bien desde lejos en una pantalla de movil.",
+    "- Usa una sola frase corta por paso siempre que sea posible.",
+    "- Maximo orientativo: 22 palabras por paso.",
+    "- No metas varios ingredientes distintos en un mismo paso si se pueden separar.",
+    "- Si cortas, lavas o pelas ingredientes diferentes, separalos en pasos distintos cuando sea razonable.",
+    "- Despues de cada accion indica donde queda ese ingrediente o mezcla: bandeja, bol, olla, sarten, tabla o plato.",
+    "- Si la receta usa horno, el primer paso debe preparar la bandeja o recipiente.",
+    "- Si la receta usa olla o sarten, prepara antes el recipiente donde iras reservando ingredientes.",
+    "- No asumas preferencias personales del usuario.",
+    "- No inventes ingredientes, salsas, guarniciones ni utensilios especiales que no esten en la receta.",
+    "- Usa solo los ingredientes listados y tecnicas razonables para ese plato.",
+    "- No uses frases vagas como 'ajusta a tu gusto' salvo que sea imprescindible.",
+    "- Si un paso requiere espera o coccion, indica timer_minutes.",
+    "- Cada paso debe incluir image_prompt para ilustrarlo visualmente sin texto en pantalla.",
+    "",
+    "Contexto del perfil:",
+    buildProfileSummaryClean(profile),
+    "",
+    `Receta: ${meal.title || "sin titulo"}.`,
+    `Tipo de comida: ${mealLabels[String(input.mealKey || meal.mealKey || "meal")] || input.mealKey || meal.mealKey || "comida"}.`,
+    `Resumen: ${meal.summary || "sin resumen"}.`,
+    `Tiempo total estimado: ${meal.prep_minutes || meal.prepMinutes || 20} minutos.`,
+    `Dificultad: ${meal.difficulty || "media"}.`,
+    `Raciones: ${meal.servings || 1}.`,
+    `Ingredientes: ${JSON.stringify(ingredients)}.`,
+    "",
+    "Forma JSON exacta:",
+    '{"steps":[{"title":"Preparar bandeja","text":"Forra una bandeja con papel de horno, pon unas gotas de aceite y dejala lista.","timer_minutes":0,"image_prompt":"Realistic home kitchen scene showing a baking tray lined with parchment paper and a little olive oil, no text."},{"title":"Preparar patatas","text":"Lava y pela las patatas. Cortalas en gajos y dejalas en la bandeja preparada.","timer_minutes":0,"image_prompt":"Realistic close-up of peeled potato wedges being placed on a prepared oven tray, no text."}]}',
+  ].join("\n");
+}
+
+function splitVerboseStep(step: Record<string, unknown>, index: number) {
+  const normalized = normalizeStepPayload(step, index);
+  const sourceText = String(normalized.text || "").trim();
+  if (!sourceText) return [];
+
+  const sentences = sourceText
+    .split(/(?<=[.!?])\s+|;\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (sentences.length <= 1 && sourceText.length <= 120) {
+    return [normalized];
+  }
+
+  return sentences.map((sentence, sentenceIndex) => ({
+    title: sentenceIndex === 0 ? normalized.title : `${normalized.title} ${sentenceIndex + 1}`,
+    text: sentence,
+    timer_minutes: sentenceIndex === sentences.length - 1 ? normalized.timer_minutes : 0,
+    image_prompt: normalized.image_prompt,
+  }));
+}
+
+function expandAtomicSteps(rawSteps: Array<Record<string, unknown>>) {
+  const normalized = rawSteps
+    .map((step, index) => normalizeStepPayload(step, index))
+    .filter((step) => step.text);
+  const exploded = rawSteps
+    .flatMap((step, index) => splitVerboseStep(step, index))
+    .map((step, index) => normalizeStepPayload(step, index))
+    .filter((step) => step.text);
+  return exploded.length > 10 ? normalized : exploded;
+}
+
 async function callGemini(prompt: string) {
   if (!GEMINI_API_KEY) {
     throw new Error("Falta GEMINI_API_KEY en los secrets de Supabase.");
@@ -442,24 +606,33 @@ Deno.serve(async (request) => {
     const startDate = String(body.startDate || new Date().toISOString().slice(0, 10));
 
     if (action === "cook_guidance") {
-      const rawGuidance = await callGemini(buildCookingGuidancePrompt(body));
+      const rawGuidance = await callGemini(buildCookingGuidancePromptV2(body));
       const steps = Array.isArray(rawGuidance.steps)
-        ? rawGuidance.steps.map((step, index) => normalizeStepPayload(step as Record<string, unknown>, index)).filter((step) => step.text)
+        ? expandAtomicSteps(rawGuidance.steps as Array<Record<string, unknown>>)
         : [];
       return json({ ok: true, steps });
     }
 
     if (action === "generate_step_image") {
-      const image = await callGeminiImage(buildStepImagePrompt(body));
-      return json({ ok: true, image });
+      try {
+        const image = await callGeminiImage(buildStepImagePrompt(body));
+        return json({ ok: true, image, imageAvailable: true });
+      } catch (error) {
+        return json({
+          ok: true,
+          image: null,
+          imageAvailable: false,
+          imageError: error instanceof Error ? error.message : "No he podido generar la ilustracion.",
+        });
+      }
     }
 
     if (action === "swap_meal") {
-      const rawMeal = await callGemini(buildSwapPrompt(body));
+      const rawMeal = await callGemini(buildSwapPromptV2(body));
       return json({ ok: true, meal: normalizeMealPayload(rawMeal) });
     }
 
-    const rawPlan = await callGemini(buildWeekPrompt(body));
+    const rawPlan = await callGemini(buildWeekPromptV2(body));
     return json({ ok: true, plan: normalizeWeekPlan(rawPlan, startDate) });
   } catch (error) {
     return json(

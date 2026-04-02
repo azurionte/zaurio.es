@@ -5,6 +5,7 @@ const APP_BASE_URL = `${window.location.origin}${APP_PATH}/`;
 const APP_ASSET_PATH = `${APP_PATH}/assets`;
 const APP_LOGO_PATH = `${APP_ASSET_PATH}/logo.png`;
 const APP_STORE_ICON_PATH = `${APP_ASSET_PATH}/store_icon.png`;
+const ZAURIO_MENU_LOGO_PATH = "/shared/assets/brand/favicon-32x32.png";
 const PUSH_PUBLIC_KEY_ENDPOINT = "/api/velocichef/push-public-key";
 const DEFAULT_REMINDER_LEAD_MINUTES = 75;
 const ZAURIO_DESTINATIONS = [
@@ -265,6 +266,31 @@ function uniqueValues(values) {
   return Array.from(new Set((values || []).filter(Boolean).map((item) => String(item).trim()).filter(Boolean)));
 }
 
+function decodeMojibakeText(value) {
+  const source = String(value || "");
+  if (!/[ÃÂâ]/.test(source)) return source;
+  try {
+    const bytes = Uint8Array.from(Array.from(source, (character) => character.charCodeAt(0) & 255));
+    const decoded = new TextDecoder("utf-8").decode(bytes);
+    return decoded && !/\uFFFD/.test(decoded) ? decoded : source.replace(/Â/g, "");
+  } catch (_error) {
+    return source.replace(/Â/g, "");
+  }
+}
+
+function repairVisibleText(container) {
+  if (!container) return;
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  let current = walker.nextNode();
+  while (current) {
+    const nextValue = decodeMojibakeText(current.textContent || "");
+    if (nextValue !== current.textContent) {
+      current.textContent = nextValue;
+    }
+    current = walker.nextNode();
+  }
+}
+
 function getUserLabel(user) {
   const meta = user?.user_metadata || {};
   const full = meta.full_name || meta.name || user?.email || "Chef";
@@ -324,6 +350,20 @@ function addDays(isoDate, amount) {
 
 function compareIsoDate(a, b) {
   return new Date(`${a}T12:00:00`).getTime() - new Date(`${b}T12:00:00`).getTime();
+}
+
+function getActivePlanningStartIso() {
+  return getTomorrowIso();
+}
+
+function isIsoDateWithinRange(targetDate, startDate, endDate) {
+  return compareIsoDate(targetDate, startDate) >= 0 && compareIsoDate(targetDate, endDate) <= 0;
+}
+
+function isCurrentPlanningWeek(week) {
+  if (!week?.startDate || !week?.endDate) return false;
+  const activeStart = getActivePlanningStartIso();
+  return compareIsoDate(week.startDate, activeStart) === 0 || isIsoDateWithinRange(activeStart, week.startDate, week.endDate);
 }
 
 function formatDateLong(isoDate) {
@@ -557,10 +597,10 @@ async function saveProfile() {
 }
 
 async function loadWeek() {
-  const fallback = readLocal("week", null);
+  const fallback = normalizeWeek(readLocal("week", null));
   if (!state.client || !state.session?.user) {
     state.storageMode = "local";
-    return fallback;
+    return isCurrentPlanningWeek(fallback) ? fallback : null;
   }
 
   try {
@@ -569,20 +609,29 @@ async function loadWeek() {
       .select("*")
       .eq("user_id", state.session.user.id)
       .order("start_date", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(12);
 
     if (error) throw error;
-    if (data?.week_payload) {
+    if (Array.isArray(data) && data.length) {
+      const normalizedWeeks = data
+        .map((row) => normalizeWeek(row.week_payload))
+        .filter(Boolean);
+      const activeWeek = normalizedWeeks.find((week) => isCurrentPlanningWeek(week));
+      if (activeWeek) {
+        state.storageMode = "supabase";
+        writeLocal("week", activeWeek);
+        return activeWeek;
+      }
+    }
+    if (fallback && isCurrentPlanningWeek(fallback)) {
       state.storageMode = "supabase";
-      writeLocal("week", data.week_payload);
-      return normalizeWeek(data.week_payload);
+      return fallback;
     }
   } catch (_error) {
     state.storageMode = "local";
   }
 
-  return fallback ? normalizeWeek(fallback) : null;
+  return isCurrentPlanningWeek(fallback) ? fallback : null;
 }
 
 async function saveWeek() {
@@ -1218,6 +1267,7 @@ function createCookingState(mode = "suggest", mealId = null) {
     activeTimer: null,
     guidanceStatus: "idle",
     stepImages: {},
+    imageSupport: "unknown",
   };
 }
 
@@ -1320,6 +1370,11 @@ async function ensureCookingGuidance(mealId) {
 
 async function ensureStepIllustration(mealId, step) {
   if (!step || step.kind !== "instruction" || !step.imagePrompt || !state.cooking) return;
+  if (state.cooking.imageSupport === "unavailable") {
+    state.cooking.stepImages[step.id] = { status: "error" };
+    render();
+    return;
+  }
   if (state.cooking.stepImages?.[step.id]?.status === "ready" || state.cooking.stepImages?.[step.id]?.status === "loading") return;
 
   state.cooking.stepImages[step.id] = { status: "loading" };
@@ -1342,10 +1397,14 @@ async function ensureStepIllustration(mealId, step) {
     });
 
     if (data?.image?.data) {
+      state.cooking.imageSupport = "ready";
       state.cooking.stepImages[step.id] = {
         status: "ready",
         src: `data:${data.image.mimeType || "image/png"};base64,${data.image.data}`,
       };
+    } else if (data?.imageAvailable === false) {
+      state.cooking.imageSupport = "unavailable";
+      state.cooking.stepImages[step.id] = { status: "error" };
     } else {
       state.cooking.stepImages[step.id] = { status: "error" };
     }
@@ -2113,6 +2172,7 @@ async function invokePlannerStable(body) {
   if (!state.client) {
     throw new Error("La cocina no está disponible ahora mismo.");
   }
+  const skipSdkFallback = body?.action === "generate_step_image";
 
   const sessionResult = await state.client.auth.getSession();
   if (sessionResult.error) {
@@ -2162,21 +2222,24 @@ async function invokePlannerStable(body) {
   }
 
   if (!response.ok || payload?.ok === false) {
-    const { data, error } = await state.client.functions.invoke("velocichef-plan-week", {
-      body,
-    });
+    if (!skipSdkFallback) {
+      const { data, error } = await state.client.functions.invoke("velocichef-plan-week", {
+        body,
+      });
 
-    if (!error && data?.ok !== false) {
-      return data;
+      if (!error && data?.ok !== false) {
+        return data;
+      }
+
+      throw new Error(payload?.error || error?.message || `La funcion respondio con ${response.status}.`);
     }
-
-    throw new Error(payload?.error || error?.message || `La funcion respondio con ${response.status}.`);
+    throw new Error(payload?.error || `La funcion respondio con ${response.status}.`);
   }
 
   return payload;
 }
 
-async function generateWeek(startDate = getTomorrowIso()) {
+async function generateWeek(startDate = getActivePlanningStartIso()) {
   state.busy = true;
   state.busyLabel = "Preparando tu menú semanal...";
   state.error = "";
@@ -2340,7 +2403,8 @@ function renderTopbar() {
               aria-haspopup="true"
               aria-expanded="${zaurioMenuOpen ? "true" : "false"}"
             >
-              <span class="vc-z-mark">Z</span>
+              <span class="vc-menu-glyph" aria-hidden="true">☰</span>
+              <span class="vc-z-mark"><img src="${ZAURIO_MENU_LOGO_PATH}" alt=""></span>
               <span class="vc-menu-text">Zaurio</span>
             </button>
             <nav class="vc-menu-drop" aria-label="Menu de Zaurio">
@@ -3338,7 +3402,7 @@ function renderCookView() {
         </div>
 
         <div class="vc-inline-actions vc-cook-toolbar">
-          <button class="vc-button secondary" data-action="toggle-hands-free">${state.cooking?.handsFree ? "Desactivar manos libres" : "Modo manos libres"}</button>
+          <button class="vc-button secondary vc-handsfree-toggle ${state.cooking?.handsFree ? "active" : ""}" data-action="toggle-hands-free" aria-pressed="${state.cooking?.handsFree ? "true" : "false"}">Manos libres</button>
           <button class="vc-button ghost" data-action="cook-back-to-picker">Cambiar de plato</button>
           ${activeTimer ? `<span class="vc-meta-pill">Temporizador: ${formatCountdown(activeTimer.remainingMs)}</span>` : ""}
         </div>
@@ -3621,6 +3685,8 @@ function render() {
   if (state.loading) {
     root.innerHTML = `${renderTopbar()}${renderLoading()}`;
     modalRoot.innerHTML = renderModal();
+    repairVisibleText(root);
+    repairVisibleText(modalRoot);
     window.requestAnimationFrame(syncLayoutMetrics);
     return;
   }
@@ -3638,6 +3704,8 @@ function render() {
 
   root.innerHTML = `${renderTopbar()}${notices ? `<section class="vc-shell">${notices}</section>` : ""}${content}`;
   modalRoot.innerHTML = renderModal();
+  repairVisibleText(root);
+  repairVisibleText(modalRoot);
   window.requestAnimationFrame(syncLayoutMetrics);
 }
 
@@ -3673,7 +3741,7 @@ async function finishOnboarding() {
   state.profile.onboardingCompleted = true;
   state.profile.timezone = getTimezone();
   await saveProfile();
-  await generateWeek(getTomorrowIso());
+  await generateWeek(getActivePlanningStartIso());
 }
 
 async function completeShoppingList() {
@@ -3716,7 +3784,7 @@ async function saveProfileSettings() {
     await saveWeek();
   }
 
-  state.notice = "Perfil guardado.";
+  state.notice = "Guardado!";
   state.error = "";
   render();
   return true;
@@ -3818,7 +3886,7 @@ async function handleAction(action, trigger) {
       break;
 
     case "generate-first-week":
-      await generateWeek(getTomorrowIso());
+      await generateWeek(getActivePlanningStartIso());
       break;
 
     case "plan-new-week":
@@ -3828,7 +3896,7 @@ async function handleAction(action, trigger) {
         render();
         break;
       }
-      await generateWeek(state.week ? addDays(state.week.endDate, 1) : getTomorrowIso());
+      await generateWeek(getActivePlanningStartIso());
       break;
 
     case "open-view": {
@@ -4072,7 +4140,7 @@ async function handleAction(action, trigger) {
       break;
 
     case "replan-next-week":
-      await generateWeek(addDays(state.week.endDate, 1));
+      await generateWeek(getActivePlanningStartIso());
       break;
 
     case "redo-current-week":
@@ -4233,6 +4301,11 @@ async function hydrateSession(session) {
   state.week = week ? normalizeWeek(week) : null;
   state.feedback = feedback || [];
   state.onboardingStep = 0;
+
+  if (state.profile.onboardingCompleted && !state.week) {
+    await generateWeek(getActivePlanningStartIso());
+    state.week = state.week ? normalizeWeek(state.week) : null;
+  }
 
   if (!state.profile.onboardingCompleted) {
     state.currentView = "onboarding";
