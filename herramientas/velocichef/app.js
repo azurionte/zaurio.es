@@ -4,6 +4,7 @@ const APP_PATH = "/velocichef";
 const APP_BASE_URL = `${window.location.origin}${APP_PATH}/`;
 const APP_ASSET_PATH = `${APP_PATH}/assets`;
 const APP_LOGO_PATH = `${APP_ASSET_PATH}/logo.png`;
+const APP_MINI_LOGO_PATH = `${APP_ASSET_PATH}/mini_logo.png`;
 const APP_STORE_ICON_PATH = `${APP_ASSET_PATH}/store_icon.png`;
 const ZAURIO_MENU_LOGO_PATH = "/shared/assets/brand/favicon-32x32.png";
 const PUSH_PUBLIC_KEY_ENDPOINT = "/api/velocichef/push-public-key";
@@ -1442,6 +1443,10 @@ function getCookingStage(target) {
     stepIndex,
     current: stages[stepIndex] || null,
   };
+}
+
+function isImmersiveCookMode() {
+  return state.currentView === "cook" && state.cooking?.mode === "active" && !!getCookingTarget();
 }
 
 function getCookingImageState(step) {
@@ -2902,6 +2907,140 @@ function renderTopbar() {
   `;
 }
 
+function renderTopbar() {
+  const user = state.session?.user || null;
+  const isCookView = state.currentView === "cook";
+  const isImmersiveCook = isImmersiveCookMode();
+  const zaurioMenuOpen = state.activeMenu === "zaurio";
+  const userMenuOpen = state.activeMenu === "user";
+  const displayName = state.profile?.displayName || getUserLabel(user);
+  const notificationState = isNotificationActiveOnCurrentDevice()
+    ? "Avisos aqui activos"
+    : (state.profile?.notificationEnabled ? "Avisos en otro dispositivo" : "Avisos pendientes");
+  const shoppingState = state.week
+    ? (state.week.shoppingCompleted ? "Compra cerrada" : "Compra pendiente")
+    : "Sin semana activa";
+  const cookingTarget = isImmersiveCook ? getCookingTarget() : null;
+  const cookingStage = cookingTarget ? getCookingStage(cookingTarget) : null;
+  const cookingStepLabel = cookingStage
+    ? `${String(cookingStage.stepIndex + 1).padStart(2, "0")} / ${String(cookingStage.stages.length).padStart(2, "0")}`
+    : "";
+
+  return `
+    <header class="vc-topbar ${isImmersiveCook ? "vc-topbar-immersive" : "vc-card"} ${isCookView ? "vc-topbar-cooking" : ""}">
+      <div class="vc-topbar-main">
+        <div class="vc-topbar-side vc-topbar-left">
+          <div class="vc-menu-wrap ${zaurioMenuOpen ? "open" : ""}">
+            <button
+              class="vc-menu-btn ${isImmersiveCook ? "vc-menu-btn-bubble" : ""}"
+              type="button"
+              data-action="toggle-menu"
+              data-menu="zaurio"
+              aria-label="Abrir menu de Zaurio"
+              aria-haspopup="true"
+              aria-expanded="${zaurioMenuOpen ? "true" : "false"}"
+            >
+              ${isImmersiveCook ? `
+                <span class="vc-cook-bubble-logo"><img src="${APP_MINI_LOGO_PATH}" alt=""></span>
+              ` : `
+                <span class="vc-menu-glyph" aria-hidden="true">☰</span>
+                <span class="vc-z-mark"><img src="${ZAURIO_MENU_LOGO_PATH}" alt=""></span>
+                <span class="vc-menu-text">Zaurio</span>
+              `}
+            </button>
+            <nav class="vc-menu-drop" aria-label="Menu de Zaurio">
+              ${ZAURIO_DESTINATIONS.map((item) => `
+                <a class="vc-menu-link" href="${item.href}">
+                  <img src="${item.icon}" alt="">
+                  <span>${escapeHtml(item.label)}</span>
+                </a>
+              `).join("")}
+            </nav>
+          </div>
+        </div>
+
+        <div class="vc-topbar-center">
+          ${isImmersiveCook ? `
+            <div class="vc-cook-step-indicator" aria-label="Paso actual">
+              <small>Paso</small>
+              <strong>${escapeHtml(cookingStepLabel)}</strong>
+            </div>
+          ` : `
+            <a class="vc-topbar-logo" href="${APP_BASE_URL}?view=home" aria-label="Ir al inicio de VelociChef">
+              <img src="${APP_LOGO_PATH}" alt="VelociChef">
+            </a>
+          `}
+        </div>
+
+        <div class="vc-topbar-side vc-topbar-right ${isImmersiveCook ? "vc-topbar-right-immersive" : ""}">
+          ${user ? `
+            <div class="vc-menu-wrap vc-user-wrap ${userMenuOpen ? "open" : ""}">
+              <button
+                class="vc-user-pill ${isImmersiveCook ? "vc-user-pill-avatar" : ""}"
+                type="button"
+                data-action="toggle-menu"
+                data-menu="user"
+                aria-label="Abrir menu del usuario"
+                aria-haspopup="true"
+                aria-expanded="${userMenuOpen ? "true" : "false"}"
+              >
+                ${renderUserAvatar(user)}
+                ${isImmersiveCook ? "" : `
+                  <span class="vc-user-copy">
+                    <strong>${escapeHtml(displayName)}</strong>
+                    <small>${escapeHtml(shoppingState)}</small>
+                  </span>
+                  <span class="vc-user-caret" aria-hidden="true"></span>
+                `}
+              </button>
+              <div class="vc-menu-drop vc-user-menu" role="menu" aria-label="Menu del usuario">
+                <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
+                <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
+                <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
+                <button class="vc-menu-action" type="button" data-action="open-view" data-view="notifications" role="menuitem">Notificaciones</button>
+                <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Perfil</button>
+                <div class="vc-menu-meta">
+                  <span class="vc-meta-pill">${escapeHtml(notificationState)}</span>
+                </div>
+                <button class="vc-menu-action vc-menu-action-danger" type="button" data-action="logout" role="menuitem">Salir</button>
+              </div>
+            </div>
+            ${isImmersiveCook ? `
+              <button
+                class="vc-cook-mic-bubble ${state.cooking?.handsFree ? "active" : ""}"
+                type="button"
+                data-action="toggle-hands-free"
+                aria-label="${state.cooking?.handsFree ? "Desactivar manos libres" : "Activar manos libres"}"
+                aria-pressed="${state.cooking?.handsFree ? "true" : "false"}"
+              >
+                <span class="vc-cook-mic-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                    <rect x="9" y="3.5" width="6" height="10" rx="3"></rect>
+                    <path d="M6.5 10.5a5.5 5.5 0 0 0 11 0"></path>
+                    <path d="M12 16v4"></path>
+                    <path d="M9 20h6"></path>
+                    ${state.cooking?.handsFree ? "" : '<path d="M5 5L19 19"></path>'}
+                  </svg>
+                </span>
+              </button>
+            ` : ""}
+          ` : `
+            <button class="vc-button secondary vc-nav-login" type="button" data-action="login-google">Entrar con Google</button>
+          `}
+        </div>
+      </div>
+
+      ${user && !isCookView ? `
+        <div class="vc-topbar-cookbar">
+          <button class="vc-cook-launch" type="button" data-action="open-cook">
+            Cocinar!
+          </button>
+        </div>
+      ` : ""}
+    </header>
+  `;
+}
+
 function renderLanding() {
   return `
     <section class="vc-shell">
@@ -4137,6 +4276,167 @@ function renderCookView() {
   `;
 }
 
+function renderCookView() {
+  if (!state.week) {
+    return `
+      <article class="vc-card vc-empty">
+        <h2 class="vc-title">Todavia no hay ningun plato listo para cocinar.</h2>
+        <p class="vc-copy">Prepara una semana primero y volveras aqui con un modo paso a paso.</p>
+        <div class="vc-inline-actions" style="justify-content:center">
+          <button class="vc-button primary" data-action="generate-first-week">Preparar mi menu de la semana</button>
+        </div>
+      </article>
+    `;
+  }
+
+  const cooking = ensureCookingState();
+  const suggestedTarget = cooking.mealId ? getMealById(cooking.mealId) : getSuggestedCookingTarget();
+
+  if (!cooking.mealId || cooking.mode === "suggest") {
+    return `
+      <section class="vc-grid">
+        <article class="vc-card vc-step vc-cook-entry">
+          <div>
+            <span class="vc-eyebrow">Cocinar</span>
+            <h2 class="vc-step-title">Vamos a ponernos con ello</h2>
+            <p class="vc-step-copy">VelociChef intenta adelantarse al plato que probablemente quieras preparar ahora mismo.</p>
+          </div>
+
+          ${suggestedTarget ? `
+            <article class="vc-cook-suggestion">
+              <small class="vc-muted">${escapeHtml(suggestedTarget.day.label)} · ${escapeHtml(MEAL_LABELS[suggestedTarget.mealKey])}</small>
+              <h3 class="vc-inline-title">Estas queriendo cocinar el plato "${escapeHtml(suggestedTarget.meal.title)}" del ${escapeHtml((MEAL_LABELS[suggestedTarget.mealKey] || "").toLowerCase())} del dia ${escapeHtml(formatDateLong(suggestedTarget.day.date))}?</h3>
+              <p class="vc-copy">${escapeHtml(suggestedTarget.meal.summary)}</p>
+              <div class="vc-inline-actions">
+                <button class="vc-button primary" data-action="cook-suggest-yes">Si</button>
+                <button class="vc-button secondary" data-action="cook-suggest-no">No</button>
+              </div>
+            </article>
+          ` : `
+            <article class="vc-cook-suggestion">
+              <h3 class="vc-inline-title">No he encontrado un plato claro para este momento.</h3>
+              <p class="vc-copy">Elige tu mismo que receta quieres cocinar ahora.</p>
+              <div class="vc-inline-actions">
+                <button class="vc-button primary" data-action="cook-suggest-no">Elegir receta</button>
+              </div>
+            </article>
+          `}
+        </article>
+      </section>
+    `;
+  }
+
+  if (cooking.mode === "picker") {
+    return `
+      <section class="vc-grid">
+        <article class="vc-panel">
+          <span class="vc-eyebrow">Cocinar</span>
+          <h2 class="vc-title">Elige tu plato</h2>
+          <p class="vc-copy">Selecciona el dia y la comida que quieres preparar ahora mismo.</p>
+        </article>
+        <div class="vc-week-grid">
+          ${state.week.days.map((day) => `
+            <article class="vc-week-card vc-card">
+              <div class="vc-weekday-head">
+                <div>
+                  <h3 class="vc-weekday-title">${escapeHtml(day.label)}</h3>
+                  <p class="vc-weekday-date">${escapeHtml(formatDateLong(day.date))}</p>
+                </div>
+              </div>
+              <div class="vc-cook-pick-list">
+                ${Object.entries(day.meals || {}).map(([mealKey, meal]) => `
+                  <article class="vc-cook-pick-card">
+                    <small class="vc-muted">${escapeHtml(MEAL_LABELS[mealKey])}</small>
+                    <strong>${escapeHtml(meal.title)}</strong>
+                    <p class="vc-copy">${escapeHtml(meal.summary)}</p>
+                    <button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>
+                  </article>
+                `).join("")}
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  const target = getCookingTarget();
+  if (!target) {
+    state.cooking = createCookingState("picker", null);
+    return renderCookView();
+  }
+
+  const { stages, stepIndex, current } = getCookingStage(target);
+  const activeTimer = state.cooking?.activeTimer;
+  const isIngredientsStep = current?.kind === "ingredients";
+  const isLastStep = stepIndex === stages.length - 1;
+  const currentImage = getCookingImageState(current);
+  const stepMeta = isIngredientsStep ? "Preparacion" : current.title;
+
+  return `
+    <section class="vc-grid vc-cook-screen vc-cook-screen-immersive">
+      <article class="vc-cook-mode vc-cook-mode-immersive">
+        <article class="vc-cook-stage vc-cook-stage-immersive ${isIngredientsStep ? "is-ingredients" : ""}">
+          <div class="vc-cook-visual">
+            ${isIngredientsStep ? `
+              <div class="vc-cook-ingredient-board">
+                ${(current.ingredients || []).map((ingredient) => `
+                  <article class="vc-cook-ingredient">
+                    <strong>${escapeHtml(ingredient.name)}</strong>
+                    <span class="vc-muted">${escapeHtml(formatQuantity(ingredient.quantity, ingredient.unit))}</span>
+                  </article>
+                `).join("")}
+              </div>
+            ` : `
+              ${!currentImage || currentImage?.status === "loading" ? `<div class="vc-cook-image-shell vc-cook-image-loading" aria-hidden="true"><span class="vc-cook-image-glow"></span></div>` : ""}
+              ${currentImage?.status === "ready" ? `
+                <figure class="vc-cook-figure vc-cook-figure-immersive">
+                  <img src="${currentImage.src}" alt="${escapeHtml(stepMeta)}">
+                  ${currentImage.attributionLabel
+                    ? `<a class="vc-cook-image-credit" href="${escapeHtml(currentImage.attributionUrl || "#")}" target="_blank" rel="noreferrer">${escapeHtml(currentImage.attributionLabel)}</a>`
+                    : ""}
+                </figure>
+              ` : ""}
+              ${currentImage?.status === "error" ? `<div class="vc-note vc-cook-image-fallback">Ilustracion no disponible ahora mismo.</div>` : ""}
+            `}
+          </div>
+
+          <div class="vc-cook-copy-panel">
+            <div class="vc-cook-copy-meta">
+              <small class="vc-muted">${escapeHtml(target.day.label)} · ${escapeHtml(MEAL_LABELS[target.mealKey])}</small>
+              <small class="vc-muted">${escapeHtml(stepMeta)}</small>
+            </div>
+            ${state.cooking?.guidanceStatus === "loading" ? `<div class="vc-cook-status-pill">Afinando la receta...</div>` : ""}
+            <p class="vc-copy vc-cook-step-copy">${isIngredientsStep
+              ? "Coge estos ingredientes, dejalos a mano y preparalos para arrancar sin interrupciones."
+              : renderTechniqueText(current.text)}</p>
+            ${state.cooking?.handsFree && state.cooking.transcript
+              ? `<div class="vc-cook-status-pill">Ultimo comando: "${escapeHtml(state.cooking.transcript)}"</div>`
+              : ""}
+            ${current?.timerMinutes ? `
+              <div class="vc-inline-actions vc-cook-inline-tools">
+                <button class="vc-button secondary" data-action="start-step-timer">Comenzar cuenta regresiva</button>
+                ${activeTimer ? `<span class="vc-meta-pill">Temporizador ${formatCountdown(activeTimer.remainingMs)}</span>` : ""}
+              </div>
+            ` : activeTimer ? `
+              <div class="vc-inline-actions vc-cook-inline-tools">
+                <span class="vc-meta-pill">Temporizador ${formatCountdown(activeTimer.remainingMs)}</span>
+              </div>
+            ` : ""}
+          </div>
+        </article>
+
+        <div class="vc-step-foot vc-cook-foot vc-cook-foot-immersive">
+          <button class="vc-button secondary" data-action="cook-stage-prev" ${stepIndex === 0 ? "disabled" : ""}>Atras</button>
+          ${isLastStep
+            ? `<button class="vc-button primary" data-action="finish-cooking-session">Terminar</button>`
+            : `<button class="vc-button primary" data-action="cook-stage-next">Siguiente</button>`}
+        </div>
+      </article>
+    </section>
+  `;
+}
+
 function renderWorkspace() {
   const views = {
     home: renderHomeView(),
@@ -4491,6 +4791,10 @@ function syncLayoutMetrics() {
 }
 
 function render() {
+  const immersiveCook = isImmersiveCookMode();
+  document.documentElement.classList.toggle("vc-cook-immersive-page", immersiveCook);
+  document.body.classList.toggle("vc-cook-immersive-body", immersiveCook);
+
   if (state.loading) {
     root.innerHTML = `${renderTopbar()}${renderLoading()}`;
     modalRoot.innerHTML = renderModal();

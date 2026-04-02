@@ -36,6 +36,12 @@ html,body{
   font-family:"Trebuchet MS","Segoe UI",sans-serif;
 }
 
+html.vc-cook-immersive-page,
+body.vc-cook-immersive-body{
+  overflow:hidden;
+  overscroll-behavior:none;
+}
+
 body::before{
   content:"";
   position:fixed;
@@ -66,6 +72,10 @@ a{
   padding:12px 12px 48px;
 }
 
+body.vc-cook-immersive-body .vc-app{
+  padding:10px 10px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
 .vc-shell{
   display:grid;
   gap:16px;
@@ -89,6 +99,22 @@ a{
 .vc-topbar-cooking{
   min-height:0;
   padding-bottom:10px;
+}
+
+.vc-topbar-immersive{
+  position:sticky;
+  top:10px;
+  z-index:95;
+  margin-bottom:10px;
+  padding:0;
+  min-height:0;
+  background:transparent;
+  box-shadow:none;
+  border:none;
+}
+
+.vc-topbar-immersive::before{
+  display:none;
 }
 
 .vc-topbar::before{
@@ -137,6 +163,10 @@ a{
   justify-self:center;
 }
 
+.vc-topbar-immersive .vc-topbar-center{
+  width:auto;
+}
+
 .vc-topbar-logo{
   display:flex;
   align-items:center;
@@ -177,6 +207,14 @@ a{
   font-weight:900;
 }
 
+.vc-menu-btn-bubble{
+  width:58px;
+  min-width:58px;
+  min-height:58px;
+  padding:0;
+  justify-content:center;
+}
+
 .vc-menu-glyph{
   font-size:1.2rem;
   line-height:1;
@@ -198,6 +236,19 @@ a{
   height:100%;
   object-fit:contain;
   border-radius:999px;
+}
+
+.vc-cook-bubble-logo{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+}
+
+.vc-cook-bubble-logo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
 }
 
 .vc-menu-text{
@@ -227,6 +278,83 @@ a{
   left:auto;
   right:0;
   min-width:min(320px, calc(100vw - 24px));
+}
+
+.vc-topbar-right-immersive{
+  flex-direction:column;
+  align-items:flex-end;
+  gap:8px;
+}
+
+.vc-user-pill-avatar{
+  width:58px;
+  min-width:58px;
+  min-height:58px;
+  padding:0;
+  justify-content:center;
+}
+
+.vc-user-pill-avatar .vc-user-avatar{
+  width:42px;
+  height:42px;
+}
+
+.vc-cook-step-indicator{
+  min-width:92px;
+  min-height:58px;
+  padding:8px 14px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  gap:2px;
+  background:rgba(255,255,255,.82);
+  border:1px solid rgba(80,29,10,.1);
+  box-shadow:0 10px 24px rgba(132,56,18,.08);
+}
+
+.vc-cook-step-indicator small{
+  font-size:.72rem;
+  color:var(--vc-muted);
+}
+
+.vc-cook-step-indicator strong{
+  font-size:1rem;
+  letter-spacing:.06em;
+}
+
+.vc-cook-mic-bubble{
+  width:50px;
+  height:50px;
+  border:none;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.88);
+  color:#7c7c7c;
+  box-shadow:0 10px 24px rgba(132,56,18,.12);
+  border:1px solid rgba(80,29,10,.08);
+}
+
+.vc-cook-mic-bubble.active{
+  background:rgba(47,143,88,.14);
+  color:#1f7c4a;
+  border-color:rgba(47,143,88,.24);
+}
+
+.vc-cook-mic-icon{
+  display:grid;
+  width:24px;
+  height:24px;
+}
+
+.vc-cook-mic-icon svg{
+  width:100%;
+  height:100%;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
 }
 
 .vc-menu-link,
@@ -1161,11 +1289,24 @@ a{
   min-height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 3));
 }
 
+.vc-cook-screen-immersive{
+  height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 2));
+  min-height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 2));
+}
+
 .vc-cook-screen .vc-cook-mode{
   min-height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 3));
   display:flex;
   flex-direction:column;
   gap:14px;
+}
+
+.vc-cook-mode-immersive{
+  min-height:0;
+  height:100%;
+  display:grid;
+  grid-template-rows:minmax(0, 1fr) auto;
+  gap:12px;
 }
 
 .vc-cook-screen .vc-step-hero{
@@ -1271,6 +1412,61 @@ a{
     linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,248,239,.96));
 }
 
+.vc-cook-stage-immersive{
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:minmax(0, 1fr) auto;
+  gap:14px;
+  padding:14px;
+}
+
+.vc-cook-visual{
+  min-height:0;
+  display:grid;
+  align-items:center;
+}
+
+.vc-cook-figure-immersive{
+  min-height:0;
+  align-content:start;
+}
+
+.vc-cook-figure-immersive img{
+  width:100%;
+  max-height:34dvh;
+  object-fit:contain;
+  background:rgba(255,252,248,.9);
+}
+
+.vc-cook-ingredient-board{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px;
+}
+
+.vc-cook-copy-panel{
+  display:grid;
+  gap:10px;
+  align-content:end;
+}
+
+.vc-cook-copy-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.vc-cook-status-pill{
+  width:fit-content;
+  padding:7px 12px;
+  border-radius:999px;
+  background:rgba(25,123,119,.08);
+  color:#155d59;
+  font-size:.84rem;
+  font-weight:700;
+}
+
 .vc-cook-screen .vc-cook-stage .vc-inline-title{
   font-size:1.1rem;
 }
@@ -1280,6 +1476,12 @@ a{
   line-height:1.52;
   color:var(--vc-ink);
   letter-spacing:-.02em;
+}
+
+.vc-cook-mode-immersive .vc-cook-step-copy{
+  font-size:clamp(1.35rem, 5.5vw, 2rem);
+  line-height:1.34;
+  margin:0;
 }
 
 .vc-cook-image-shell,
@@ -1298,6 +1500,13 @@ a{
   border:1px solid rgba(80,29,10,.08);
   overflow:hidden;
   position:relative;
+}
+
+.vc-cook-image-fallback{
+  min-height:160px;
+  display:grid;
+  place-items:center;
+  text-align:center;
 }
 
 .vc-cook-image-glow{
@@ -1363,6 +1572,11 @@ a{
   align-items:center;
 }
 
+.vc-cook-inline-tools{
+  align-items:center;
+  gap:8px;
+}
+
 .vc-cook-screen .vc-cook-ingredients{
   align-content:start;
 }
@@ -1376,6 +1590,15 @@ a{
   margin-top:2px;
   background:linear-gradient(180deg, rgba(255,246,234,0), rgba(255,246,234,.92) 22%, rgba(255,246,234,1) 100%);
   border-top:1px solid rgba(80,29,10,.1);
+}
+
+.vc-cook-foot-immersive{
+  position:static;
+  margin-top:0;
+  padding-top:0;
+  padding-bottom:calc(4px + env(safe-area-inset-bottom, 0px));
+  background:none;
+  border-top:none;
 }
 
 .vc-cook-foot .vc-button{
@@ -1452,6 +1675,10 @@ a{
   .vc-cook-launch{
     min-height:48px;
   }
+
+  .vc-cook-ingredient-board{
+    grid-template-columns:1fr;
+  }
 }
 
 @media (min-width: 780px){
@@ -1467,6 +1694,10 @@ a{
     top:18px;
     min-height:124px;
     padding:14px 18px;
+  }
+
+  .vc-topbar-immersive{
+    top:14px;
   }
 
   .vc-topbar-cooking{
@@ -1518,6 +1749,11 @@ a{
     min-height:calc(100dvh - var(--vc-topbar-current-height, 124px) - (var(--vc-frame-gap) * 3));
   }
 
+  .vc-cook-screen-immersive{
+    height:calc(100dvh - var(--vc-topbar-current-height, 124px) - (var(--vc-frame-gap) * 2));
+    min-height:calc(100dvh - var(--vc-topbar-current-height, 124px) - (var(--vc-frame-gap) * 2));
+  }
+
   .vc-cook-screen .vc-cook-stage{
     grid-template-columns:minmax(0, 1fr);
     padding:22px;
@@ -1525,6 +1761,10 @@ a{
 
   .vc-cook-figure img{
     max-height:36vh;
+  }
+
+  .vc-cook-figure-immersive img{
+    max-height:38dvh;
   }
 
   .vc-grid.two,
