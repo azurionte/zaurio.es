@@ -169,8 +169,9 @@ function buildCookingGuidancePrompt(input: Record<string, unknown>) {
     "- Usa solo los ingredientes listados y tecnicas razonables para ese plato.",
     "- No uses frases vagas como 'ajusta a tu gusto' salvo que sea imprescindible.",
     "- Si un paso requiere espera o coccion, indica timer_minutes.",
-    "- Cada paso debe incluir image_prompt para ilustrarlo visualmente sin texto en pantalla.",
-    "- Cada paso debe incluir image_search_query con 3 a 8 palabras utiles para buscar una foto publica muy parecida.",
+    "- Cada paso debe incluir image_prompt para una ilustracion tipo libro de cocina, sin personas, sin manos y sin texto en pantalla.",
+    "- El image_prompt debe centrarse en alimentos y utensilios, no en acciones hechas por una mano humana.",
+    "- Cada paso debe incluir image_search_query en ingles, de 3 a 8 palabras, pensada para buscar una foto de stock parecida sin personas.",
     "",
     "Contexto del perfil:",
     buildProfileSummary(profile),
@@ -191,16 +192,15 @@ function buildCookingGuidancePrompt(input: Record<string, unknown>) {
 function buildStepImagePrompt(input: Record<string, unknown>) {
   const meal = (input.meal || {}) as Record<string, unknown>;
   const step = (input.step || {}) as Record<string, unknown>;
-  const fallbackPrompt = String(step.image_prompt || "").trim();
-  if (fallbackPrompt) return fallbackPrompt;
+  const sceneGoal = String(step.image_prompt || step.text || "").trim();
 
   return [
-    "Create a realistic cooking illustration for a recipe step.",
+    "Create a warm cookbook style cooking illustration for a recipe step.",
     `Dish: ${meal.title || "Weekly dish"}.`,
     `Meal summary: ${meal.summary || ""}`,
-    `Current step: ${step.text || "Cooking step"}.`,
-    "Style: natural home kitchen, appetizing, mobile-friendly, no labels, no captions, no UI, no watermarks.",
-    "Focus only on the action and ingredients needed for this step.",
+    `Current step: ${sceneGoal || step.text || "Cooking step"}.`,
+    "Style: editorial food illustration, appetizing, mobile-friendly, no labels, no captions, no UI, no watermarks.",
+    "Show only food, ingredients and cookware from this step. No people, no hands, no arms, no faces, no body parts.",
   ].filter(Boolean).join(" ");
 }
 
@@ -332,7 +332,7 @@ function buildCookingGuidancePromptV2(input: Record<string, unknown>) {
     `Ingredientes: ${JSON.stringify(ingredients)}.`,
     "",
     "Forma JSON exacta:",
-    '{"steps":[{"title":"Preparar bandeja","text":"Forra una bandeja con papel de horno, pon unas gotas de aceite y dejala lista.","timer_minutes":0,"image_prompt":"Realistic home kitchen scene showing a baking tray lined with parchment paper and a little olive oil, no text.","image_search_query":"bandeja horno papel aceite"},{"title":"Preparar patatas","text":"Lava y pela las patatas. Cortalas en gajos y dejalas en la bandeja preparada.","timer_minutes":0,"image_prompt":"Realistic close-up of peeled potato wedges being placed on a prepared oven tray, no text.","image_search_query":"patatas gajos bandeja horno"}]}',
+    '{"steps":[{"title":"Preparar bandeja","text":"Forra una bandeja con papel de horno, pon unas gotas de aceite y dejala lista.","timer_minutes":0,"image_prompt":"Cookbook style illustration of an oven tray lined with parchment paper and a little olive oil, food and cookware only, no people, no hands, no text.","image_search_query":"oven tray parchment oil"},{"title":"Preparar patatas","text":"Lava y pela las patatas. Cortalas en gajos y dejalas en la bandeja preparada.","timer_minutes":0,"image_prompt":"Cookbook style illustration of potato wedges resting on a prepared oven tray, food and cookware only, no people, no hands, no text.","image_search_query":"potato wedges baking tray"}]}',
   ].join("\n");
 }
 

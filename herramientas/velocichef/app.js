@@ -1276,6 +1276,7 @@ function getSuggestedCookingTarget() {
 
 function createCookingState(mode = "suggest", mealId = null) {
   return {
+    sessionId: createId(),
     mode,
     mealId,
     stepIndex: 0,
@@ -1336,6 +1337,13 @@ function getCookingImageState(step) {
   return state.cooking.stepImages[step.id] || null;
 }
 
+function isVisibleCookingStep(mealId, stepId) {
+  if (state.currentView !== "cook" || !mealId || !stepId) return false;
+  const target = getCookingTarget();
+  if (!target || target.meal.id !== mealId) return false;
+  return getCookingStage(target).current?.id === stepId;
+}
+
 async function ensureCookingGuidance(mealId) {
   const target = getMealById(mealId);
   if (!target || !state.week) return;
@@ -1386,17 +1394,19 @@ async function ensureCookingGuidance(mealId) {
   }
 }
 
-async function ensureStepIllustration(mealId, step) {
+async function ensureStepIllustration(mealId, step, options = {}) {
   if (!step || step.kind !== "instruction" || (!step.imagePrompt && !step.imageSearchQuery && !step.text) || !state.cooking) return;
+  const sessionId = options.sessionId || state.cooking?.sessionId || "";
+  const renderWhileLoading = options.renderWhileLoading !== false;
   if (state.cooking.imageSupport === "unavailable") {
     state.cooking.stepImages[step.id] = { status: "error" };
-    render();
+    if (renderWhileLoading && isVisibleCookingStep(mealId, step.id)) render();
     return;
   }
   if (state.cooking.stepImages?.[step.id]?.status === "ready" || state.cooking.stepImages?.[step.id]?.status === "loading") return;
 
   state.cooking.stepImages[step.id] = { status: "loading" };
-  render();
+  if (renderWhileLoading && isVisibleCookingStep(mealId, step.id)) render();
 
   try {
     const target = getMealById(mealId);
@@ -1415,6 +1425,10 @@ async function ensureStepIllustration(mealId, step) {
       },
     });
 
+    if (!state.cooking || state.cooking.sessionId !== sessionId) {
+      return;
+    }
+
     if (data?.image?.src || data?.image?.data) {
       state.cooking.imageSupport = "ready";
       state.cooking.stepImages[step.id] = {
@@ -1431,16 +1445,45 @@ async function ensureStepIllustration(mealId, step) {
       state.cooking.stepImages[step.id] = { status: "error" };
     }
   } catch (_error) {
+    if (!state.cooking || state.cooking.sessionId !== sessionId) {
+      return;
+    }
     state.cooking.stepImages[step.id] = { status: "error" };
   } finally {
-    render();
+    if (renderWhileLoading && isVisibleCookingStep(mealId, step.id)) render();
   }
+}
+
+async function prefetchCookingIllustrations(mealId, sessionId = state.cooking?.sessionId || "") {
+  const target = getMealById(mealId);
+  if (!target || !state.cooking || state.cooking.sessionId !== sessionId) return;
+
+  const instructionSteps = getCookingStageList(target).filter((step) => step.kind === "instruction");
+  if (!instructionSteps.length) return;
+
+  let cursor = 0;
+  const parallel = Math.min(2, instructionSteps.length);
+
+  const workers = Array.from({ length: parallel }, async () => {
+    while (cursor < instructionSteps.length && state.cooking?.sessionId === sessionId) {
+      const nextStep = instructionSteps[cursor];
+      cursor += 1;
+      if (!nextStep) return;
+      await ensureStepIllustration(mealId, nextStep, {
+        sessionId,
+        renderWhileLoading: false,
+      });
+    }
+  });
+
+  await Promise.allSettled(workers);
 }
 
 async function startCookingFlow(mealId, mode = "active") {
   stopHandsFreeMode();
   stopCookingTimer();
   state.cooking = createCookingState(mode, mealId);
+  const sessionId = state.cooking.sessionId;
   state.currentView = "cook";
   render();
   window.scrollTo(0, 0);
@@ -1449,8 +1492,7 @@ async function startCookingFlow(mealId, mode = "active") {
 
   const target = getMealById(mealId);
   if (!target) return;
-  const currentStep = getCookingStage(target).current;
-  await ensureStepIllustration(mealId, currentStep);
+  void prefetchCookingIllustrations(mealId, sessionId);
 }
 
 function updateMeal(mealId, updater) {
@@ -1757,12 +1799,14 @@ async function moveCookingStep(delta) {
   if (!target) return;
   const { stages } = getCookingStage(target);
   ensureCookingState();
+  const sessionId = state.cooking.sessionId;
   state.cooking.stepIndex = Math.max(0, Math.min((state.cooking.stepIndex || 0) + delta, Math.max(0, stages.length - 1)));
   render();
   window.scrollTo(0, 0);
   const nextTarget = getCookingTarget();
   const currentStep = nextTarget ? getCookingStage(nextTarget).current : null;
-  await ensureStepIllustration(nextTarget?.meal?.id, currentStep);
+  void ensureStepIllustration(nextTarget?.meal?.id, currentStep, { sessionId });
+  void prefetchCookingIllustrations(nextTarget?.meal?.id, sessionId);
 }
 
 function getSpeechRecognitionCtor() {
@@ -3454,7 +3498,7 @@ function renderCookView() {
         ` : `
           <article class="vc-cook-stage">
             <h3 class="vc-inline-title">${escapeHtml(current.title)}</h3>
-            ${currentImage?.status === "loading" ? `<div class="vc-cook-image-shell vc-cook-image-loading"><div class="vc-spinner" aria-hidden="true"></div><span>Ilustrando este paso...</span></div>` : ""}
+            ${currentImage?.status === "loading" ? `<div class="vc-cook-image-shell vc-cook-image-loading" aria-hidden="true"><span class="vc-cook-image-glow"></span></div>` : ""}
             ${currentImage?.status === "ready" ? `
               <figure class="vc-cook-figure">
                 <img src="${currentImage.src}" alt="${escapeHtml(current.title)}">

@@ -2,7 +2,7 @@ const DEFAULT_SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
 const VELOCICHEF_PUSH_KEY_PATH = "/api/velocichef/push-public-key";
 const VELOCICHEF_PUSH_SEND_PATH = "/api/velocichef/push/send-due";
 const VELOCICHEF_STEP_IMAGE_PATH = "/api/velocichef/step-image";
-const VELOCICHEF_DEFAULT_IMAGE_MODEL = "@cf/bytedance/stable-diffusion-xl-lightning";
+const VELOCICHEF_DEFAULT_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 
 function rewriteEmprezaurioHtml(html) {
   const version = Date.now().toString();
@@ -440,16 +440,17 @@ function sanitizeVelocichefSearchQuery(value) {
 function buildVelocichefStepImagePrompt(body) {
   const meal = body?.meal || {};
   const step = body?.step || {};
-  const fallbackPrompt = String(step.image_prompt || step.imagePrompt || "").trim();
-  if (fallbackPrompt) return fallbackPrompt;
+  const sceneGoal = String(step.image_prompt || step.imagePrompt || step.text || "").trim();
 
   return [
-    "Realistic home cooking scene.",
+    "Warm editorial cookbook illustration.",
     meal.title ? `Dish: ${meal.title}.` : "",
     meal.summary ? `Summary: ${meal.summary}.` : "",
     step.title ? `Step title: ${step.title}.` : "",
-    step.text ? `Current step: ${step.text}.` : "",
-    "Focus on the action and the ingredients of this step only.",
+    sceneGoal ? `Scene goal: ${sceneGoal}.` : "",
+    "Show only food, ingredients, cookware, trays, bowls, pans or boards that belong to this step.",
+    "No humans, no hands, no fingers, no arms, no faces, no body parts, no chef.",
+    "Prefer overhead or three-quarter angle, clean composition, cookbook style, softly stylized illustration.",
     "No text, no labels, no UI, no watermark.",
   ].filter(Boolean).join(" ");
 }
@@ -458,7 +459,7 @@ function buildVelocichefStepSearchQuery(body) {
   const meal = body?.meal || {};
   const step = body?.step || {};
   const explicit = String(step.image_search_query || step.imageSearchQuery || body?.searchQuery || "").trim();
-  if (explicit) return sanitizeVelocichefSearchQuery(explicit);
+  if (explicit) return `${sanitizeVelocichefSearchQuery(explicit)} food overhead`.trim();
 
   const combined = [
     meal.title || "",
@@ -468,7 +469,7 @@ function buildVelocichefStepSearchQuery(body) {
   ].filter(Boolean).join(" ");
 
   const sanitized = sanitizeVelocichefSearchQuery(combined);
-  return sanitized || sanitizeVelocichefSearchQuery(meal.title || "cocina casera");
+  return `${sanitized || sanitizeVelocichefSearchQuery(meal.title || "home cooking")} food overhead`.trim();
 }
 
 function getVelocichefImageCacheKey(prompt, searchQuery) {
