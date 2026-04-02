@@ -130,6 +130,53 @@ const REFINEMENT_REASON_OPTIONS = [
   { key: "time", label: "Lleva demasiado tiempo" },
 ];
 
+const DEFAULT_MEAL_CLOCK = {
+  breakfast: "08:00",
+  bites: "11:30",
+  lunch: "14:30",
+  snack: "17:30",
+  dinner: "21:00",
+};
+
+const COOKING_GLOSSARY = [
+  {
+    key: "juliana",
+    phrase: "corta en juliana",
+    title: "Cortar en juliana",
+    body: "Significa hacer tiras finas y alargadas. Piensa en bastoncitos delgados para que el ingrediente se cocine rÃ¡pido y quede uniforme.",
+  },
+  {
+    key: "picar-fino",
+    phrase: "pica fino",
+    title: "Picar fino",
+    body: "Es cortar en trozos pequeÃ±os y regulares. Va bien cuando quieres que el ingrediente se reparta por todo el plato sin dominar cada bocado.",
+  },
+  {
+    key: "sofreir",
+    phrase: "sofrÃ­e",
+    title: "SofreÃ­r",
+    body: "Es cocinar a fuego medio con un poco de grasa hasta que el ingrediente se ablande y gane sabor sin llegar a quemarse.",
+  },
+  {
+    key: "fuego-lento",
+    phrase: "a fuego lento",
+    title: "Cocinar a fuego lento",
+    body: "Es mantener una cocciÃ³n suave, con burbujas pequeÃ±as. Sirve para que el sabor se concentre sin que el fondo se agarre.",
+  },
+  {
+    key: "dorar",
+    phrase: "dora",
+    title: "Dorar",
+    body: "Es cocinar lo justo para que la superficie tome color tostado. Ese color aporta aroma y un sabor mÃ¡s profundo.",
+  },
+  {
+    key: "reservar",
+    phrase: "reserva",
+    title: "Reservar",
+    body: "Solo significa apartar ese ingrediente por un momento para usarlo despuÃ©s, sin seguir cocinÃ¡ndolo.",
+  },
+];
+
 const root = document.getElementById("app");
 const modalRoot = document.getElementById("modal-root");
 const urlParams = new URLSearchParams(window.location.search);
@@ -152,10 +199,13 @@ const state = {
   modal: null,
   workerRegistration: null,
   reminderTimers: [],
+  cooking: null,
+  speechRecognition: null,
+  timerTicker: null,
 };
 
 function normalizeView(view) {
-  const valid = new Set(["week", "schedule", "shopping", "recipes", "profile", "onboarding"]);
+  const valid = new Set(["week", "schedule", "shopping", "recipes", "profile", "onboarding", "cook"]);
   return valid.has(view) ? view : "week";
 }
 
@@ -170,6 +220,45 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function sanitizeUiCopy(value) {
+  return String(value || "")
+    .replace(/ÃƒÂ¡|Ã¡/g, "a")
+    .replace(/ÃƒÂ©|Ã©/g, "e")
+    .replace(/ÃƒÂ­|Ã­/g, "i")
+    .replace(/ÃƒÂ³|Ã³/g, "o")
+    .replace(/ÃƒÂº|Ãº/g, "u")
+    .replace(/ÃƒÂ±|Ã±/g, "n")
+    .replace(/ÃƒÂ|Ã/g, "A")
+    .replace(/ÃƒÂ‰|Ã‰/g, "E")
+    .replace(/ÃƒÂ|Ã/g, "I")
+    .replace(/ÃƒÂ“|Ã“/g, "O")
+    .replace(/ÃƒÂš|Ãš/g, "U")
+    .replace(/ÃƒÂ‘|Ã‘/g, "N")
+    .replace(/Â¿/g, "¿")
+    .replace(/Â¡/g, "¡")
+    .replace(/Â/g, "")
+    .replace(/Ã‚/g, "")
+    .replace(/â˜€ï¸/g, "D")
+    .replace(/ðŸ²/g, "A")
+    .replace(/ðŸŽ/g, "M")
+    .replace(/ðŸŒ™/g, "C")
+    .replace(/ðŸ¥œ/g, "+")
+    .replace(/Ã‚Â·|Â·/g, " · ")
+    .replace(/â€œ|â€/g, "\"")
+    .replace(/â€™/g, "'")
+    .replace(/âœ•/g, "✕")
+    .replace(/Google login/gi, "Acceso seguro")
+    .replace(/Gemini/gi, "VelociChef")
+    .replace(/Supabase/gi, "tu cocina")
+    .replace(/Push API/gi, "avisos del dispositivo")
+    .replace(/Detalle tecnico:\s*/gi, "")
+    .replace(/Push activo/gi, "Avisos activos")
+    .replace(/push real/gi, "avisos del dispositivo")
+    .replace(/opción local/gi, "opción de apoyo")
+    .replace(/sistema local/gi, "sistema de apoyo")
+    .replace(/recordatorio local/gi, "recordatorio de apoyo");
 }
 
 function uniqueValues(values) {
@@ -742,9 +831,171 @@ function normalizeIngredient(ingredient) {
   };
 }
 
+function formatNaturalList(items) {
+  const clean = uniqueValues(items);
+  if (!clean.length) return "";
+  if (clean.length === 1) return clean[0];
+  if (clean.length === 2) return `${clean[0]} y ${clean[1]}`;
+  return `${clean.slice(0, -1).join(", ")} y ${clean[clean.length - 1]}`;
+}
+
+function getPrimaryIngredients(ingredients, limit = 3) {
+  return (ingredients || [])
+    .filter((ingredient) => ingredient?.name)
+    .filter((ingredient) => !ingredient.spice && !ingredient.pantry)
+    .slice(0, limit)
+    .map((ingredient) => ingredient.name);
+}
+
+function getCuttableIngredients(ingredients, limit = 2) {
+  return (ingredients || [])
+    .filter((ingredient) => ingredient?.name)
+    .filter((ingredient) => /cebolla|pimiento|zanahoria|calabac|pepino|puerro|col|repollo|jud[ií]a|lechuga|tomate|berenjena|patata/i.test(ingredient.name))
+    .slice(0, limit)
+    .map((ingredient) => ingredient.name);
+}
+
+function getProteinIngredient(ingredients) {
+  return (ingredients || []).find((ingredient) => /pollo|pavo|carne|huevo|salm|at[uú]n|garbanzo|lenteja|jud[ií]a|gamba|tofu|queso|yogur/i.test(ingredient.name)) || null;
+}
+
+function getBaseIngredient(ingredients) {
+  return (ingredients || []).find((ingredient) => /pasta|arroz|cusc[uú]s|patata|pan|avena|quinoa/i.test(ingredient.name)) || null;
+}
+
+function inferCookingMethod(mealKey, meal) {
+  const title = String(meal?.title || "").toLowerCase();
+  const prepMinutes = Number(meal?.prepMinutes || meal?.prep_minutes || 20) || 20;
+
+  if (/ensalada|yogur|batido|tostada|wrap fr[ií]o|bowl fr[ií]o/.test(title)) {
+    return { type: "cold", timerMinutes: 0 };
+  }
+  if (/horno|asad|lasa|gratin|bake/.test(title)) {
+    return { type: "oven", timerMinutes: Math.max(10, Math.round(prepMinutes * 0.65)) };
+  }
+  if (/sopa|crema|lenteja|curry|guiso/.test(title)) {
+    return { type: "simmer", timerMinutes: Math.max(10, Math.round(prepMinutes * 0.55)) };
+  }
+  if (/pasta|arroz|cusc[uú]s/.test(title)) {
+    return { type: "boil", timerMinutes: Math.max(8, Math.round(prepMinutes * 0.45)) };
+  }
+  if (mealKey === "breakfast" || mealKey === "snack" || mealKey === "bites") {
+    return { type: "quick", timerMinutes: 0 };
+  }
+  return { type: "pan", timerMinutes: Math.max(6, Math.round(prepMinutes * 0.4)) };
+}
+
+function extractTimerMinutes(text) {
+  const minuteMatch = String(text || "").match(/(\d+)\s*(?:min|minutos)/i);
+  if (minuteMatch) return Number(minuteMatch[1]) || 0;
+  const hourMatch = String(text || "").match(/(\d+)\s*(?:hora|horas)/i);
+  if (hourMatch) return (Number(hourMatch[1]) || 0) * 60;
+  return 0;
+}
+
+function normalizeCookingStep(step, index) {
+  const text = typeof step === "string"
+    ? step
+    : String(step?.text || step?.instruction || step?.description || "").trim();
+  const title = typeof step === "string"
+    ? `Paso ${index + 1}`
+    : String(step?.title || `Paso ${index + 1}`).trim();
+
+  return {
+    id: step?.id || createId(),
+    title,
+    text,
+    timerMinutes: Number(step?.timerMinutes || step?.timer_minutes || extractTimerMinutes(text)) || 0,
+  };
+}
+
+function buildFallbackCookingSteps(mealKey, meal, ingredients) {
+  const primaryIngredients = getPrimaryIngredients(ingredients, 3);
+  const cuttableIngredients = getCuttableIngredients(ingredients, 2);
+  const protein = getProteinIngredient(ingredients);
+  const base = getBaseIngredient(ingredients);
+  const method = inferCookingMethod(mealKey, meal);
+  const steps = [];
+
+  if (cuttableIngredients.length) {
+    steps.push({
+      title: "Prepara la base",
+      text: `Lava bien ${formatNaturalList(cuttableIngredients)} y corta en juliana ${formatNaturalList(cuttableIngredients)}. Deja el resto de ingredientes medidos y a mano.`,
+    });
+  } else {
+    steps.push({
+      title: "Ordena tu encimera",
+      text: `Saca ${formatNaturalList(primaryIngredients) || "los ingredientes principales"} y colÃ³calos ya medidos para cocinar sin prisas.`,
+    });
+  }
+
+  if (method.type === "cold") {
+    steps.push({
+      title: "Mezcla y monta",
+      text: `Combina ${formatNaturalList(primaryIngredients) || "los ingredientes"} en un bol, aliÃ±a al gusto y reserva el plato listo para servir.`,
+    });
+  } else if (method.type === "oven") {
+    steps.push({
+      title: "Da sabor",
+      text: `AliÃ±a ${formatNaturalList(primaryIngredients) || "la mezcla"} con aceite y condimentos. Si usas proteÃ­na, dora ligeramente ${protein?.name || "la parte principal"} antes de meterla al horno.`,
+    });
+    steps.push({
+      title: "Cocina principal",
+      text: `Lleva la bandeja al horno y cocina durante ${method.timerMinutes} minutos, hasta que quede bien hecho y con color.`,
+      timerMinutes: method.timerMinutes,
+    });
+  } else if (method.type === "simmer") {
+    steps.push({
+      title: "SofrÃ­e",
+      text: `Pon una olla con un poco de aceite y sofrÃ­e la base aromÃ¡tica un par de minutos para arrancar con sabor.`,
+    });
+    steps.push({
+      title: "Cuece suave",
+      text: `AÃ±ade ${formatNaturalList(primaryIngredients) || "el resto de ingredientes"}, cubre lo necesario y cocina a fuego lento durante ${method.timerMinutes} minutos.`,
+      timerMinutes: method.timerMinutes,
+    });
+  } else if (method.type === "boil") {
+    steps.push({
+      title: "Pon la base en marcha",
+      text: `Hierve agua o caldo y cocina ${base?.name || "la base del plato"} durante ${method.timerMinutes} minutos hasta que quede en su punto.`,
+      timerMinutes: method.timerMinutes,
+    });
+    steps.push({
+      title: "Saltea y une",
+      text: `Mientras tanto, pica fino lo que falte, saltea ${protein?.name || "el ingrediente principal"} y mezcla todo al final para que quede jugoso.`,
+    });
+  } else if (method.type === "quick") {
+    steps.push({
+      title: "Monta el plato",
+      text: `Une ${formatNaturalList(primaryIngredients) || "los ingredientes"}, ajusta textura o temperatura y deja el plato listo para comer.`,
+    });
+  } else {
+    steps.push({
+      title: "Pon calor",
+      text: `Calienta una sartÃ©n con un poco de aceite y dora ${protein?.name || "el ingrediente principal"} para que coja color y sabor.`,
+    });
+    steps.push({
+      title: "Termina la cocciÃ³n",
+      text: `AÃ±ade ${formatNaturalList(primaryIngredients) || "el resto de ingredientes"} y cocina a fuego lento durante ${method.timerMinutes} minutos, removiendo de vez en cuando.`,
+      timerMinutes: method.timerMinutes,
+    });
+  }
+
+  steps.push({
+    title: "Acabado",
+    text: "Prueba, ajusta de sal si hace falta, emplata y reserva un minuto antes de servir.",
+  });
+
+  return steps.map(normalizeCookingStep);
+}
+
 function normalizeMeal(mealKey, meal, dayDate) {
   const fallbackTitle = `${MEAL_LABELS[mealKey] || "Comida"} sugerida`;
   const ingredients = Array.isArray(meal?.ingredients) ? meal.ingredients.map(normalizeIngredient).filter((item) => item.name) : [];
+  const sourceSteps = Array.isArray(meal?.cookingSteps)
+    ? meal.cookingSteps
+    : (Array.isArray(meal?.steps) ? meal.steps : (Array.isArray(meal?.instructions) ? meal.instructions : []));
+
   return {
     id: meal?.id || createId(),
     mealKey,
@@ -762,6 +1013,7 @@ function normalizeMeal(mealKey, meal, dayDate) {
       fiber: Number(meal?.nutrition?.fiber || meal?.nutrition?.fiber_g || 0) || 0,
     },
     ingredients,
+    cookingSteps: (sourceSteps.length ? sourceSteps.map(normalizeCookingStep) : buildFallbackCookingSteps(mealKey, meal, ingredients)).filter((step) => step.text),
     tags: uniqueValues(meal?.tags || []),
     feedback: meal?.feedback || { liked: false, disliked: false, reasons: null },
   };
@@ -915,6 +1167,89 @@ function flattenMeals(week) {
 
 function getMealById(mealId) {
   return flattenMeals(state.week).find((item) => item.meal.id === mealId) || null;
+}
+
+function getMealClock(mealKey) {
+  if (mealKey === "lunch") return state.profile?.lunchTime || DEFAULT_MEAL_CLOCK.lunch;
+  if (mealKey === "dinner") return state.profile?.dinnerTime || DEFAULT_MEAL_CLOCK.dinner;
+  return DEFAULT_MEAL_CLOCK[mealKey] || "12:00";
+}
+
+function getCookMoment(day, mealKey) {
+  const date = combineDateAndTime(day.date, getMealClock(mealKey));
+  if (mealKey === "lunch" && state.profile?.lunchPrepNightBefore) {
+    date.setDate(date.getDate() - 1);
+    date.setHours(...String(state.profile?.dinnerTime || DEFAULT_MEAL_CLOCK.dinner).split(":").map(Number), 0, 0);
+  }
+  return date;
+}
+
+function getSuggestedCookingTarget() {
+  if (!state.week) return null;
+  const now = new Date();
+  const meals = flattenMeals(state.week)
+    .map((entry) => ({
+      ...entry,
+      cookAt: getCookMoment(entry.day, entry.mealKey),
+    }))
+    .sort((a, b) => a.cookAt.getTime() - b.cookAt.getTime());
+
+  const upcoming = meals.find((entry) => entry.cookAt.getTime() >= now.getTime() - 90 * 60000);
+  return upcoming || meals[0] || null;
+}
+
+function createCookingState(mode = "suggest", mealId = null) {
+  return {
+    mode,
+    mealId,
+    stepIndex: 0,
+    handsFree: false,
+    recognitionState: "idle",
+    transcript: "",
+    activeTimer: null,
+  };
+}
+
+function ensureCookingState() {
+  if (!state.cooking) {
+    const suggested = getSuggestedCookingTarget();
+    state.cooking = createCookingState(suggested ? "suggest" : "picker", suggested?.meal.id || null);
+  }
+  return state.cooking;
+}
+
+function getCookingTarget() {
+  const mealId = state.cooking?.mealId;
+  return mealId ? getMealById(mealId) : null;
+}
+
+function getCookingStageList(target) {
+  if (!target) return [];
+  const ingredientStep = {
+    id: `${target.meal.id}-ingredients`,
+    kind: "ingredients",
+    title: "Paso 1 - PreparaciÃ³n",
+    copy: "Coge los ingredientes necesarios para esta receta.",
+    ingredients: target.meal.ingredients || [],
+  };
+
+  const recipeSteps = (target.meal.cookingSteps || []).map((step, index) => ({
+    ...step,
+    kind: "instruction",
+    title: `Paso ${index + 2} - ${step.title}`,
+  }));
+
+  return [ingredientStep, ...recipeSteps];
+}
+
+function getCookingStage(target) {
+  const stages = getCookingStageList(target);
+  const stepIndex = Math.max(0, Math.min(state.cooking?.stepIndex || 0, Math.max(0, stages.length - 1)));
+  return {
+    stages,
+    stepIndex,
+    current: stages[stepIndex] || null,
+  };
 }
 
 function updateMeal(mealId, updater) {
@@ -1146,6 +1481,182 @@ async function registerServiceWorker() {
     state.workerRegistration = null;
   }
   return state.workerRegistration;
+}
+
+function clearTimerTicker() {
+  if (!state.timerTicker) return;
+  clearInterval(state.timerTicker);
+  state.timerTicker = null;
+}
+
+function formatCountdown(remainingMs) {
+  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function syncCookingTimer() {
+  if (!state.cooking?.activeTimer) {
+    clearTimerTicker();
+    return;
+  }
+
+  const remainingMs = state.cooking.activeTimer.endsAt - Date.now();
+  state.cooking.activeTimer.remainingMs = remainingMs;
+
+  if (remainingMs <= 0) {
+    clearTimerTicker();
+    const finishedLabel = state.cooking.activeTimer.label;
+    state.cooking.activeTimer.remainingMs = 0;
+    state.notice = `${finishedLabel} ya estÃ¡ listo.`;
+    if ("Notification" in window && Notification.permission === "granted") {
+      showBrowserNotification({
+        id: `cook-timer-${Date.now()}`,
+        title: "Tiempo cumplido",
+        body: `${finishedLabel} ya puede pasar al siguiente paso.`,
+        url: `${APP_BASE_URL}?view=cook`,
+      }).catch(() => {});
+    }
+  }
+
+  render();
+}
+
+function startCookingTimer(label, minutes) {
+  ensureCookingState();
+  state.cooking.activeTimer = {
+    id: createId(),
+    label,
+    durationMinutes: minutes,
+    endsAt: Date.now() + minutes * 60000,
+    remainingMs: minutes * 60000,
+  };
+  state.modal = { type: "timer" };
+  clearTimerTicker();
+  state.timerTicker = window.setInterval(syncCookingTimer, 1000);
+  syncCookingTimer();
+}
+
+function stopCookingTimer() {
+  clearTimerTicker();
+  if (state.cooking) {
+    state.cooking.activeTimer = null;
+  }
+}
+
+function moveCookingStep(delta) {
+  const target = getCookingTarget();
+  if (!target) return;
+  const { stages } = getCookingStage(target);
+  ensureCookingState();
+  state.cooking.stepIndex = Math.max(0, Math.min((state.cooking.stepIndex || 0) + delta, Math.max(0, stages.length - 1)));
+  render();
+}
+
+function getSpeechRecognitionCtor() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function stopHandsFreeMode() {
+  if (state.speechRecognition) {
+    state.speechRecognition.onend = null;
+    state.speechRecognition.onresult = null;
+    state.speechRecognition.onerror = null;
+    try {
+      state.speechRecognition.stop();
+    } catch (_error) {
+      // Si ya estÃ¡ detenido, no hace falta hacer nada.
+    }
+  }
+  state.speechRecognition = null;
+  if (state.cooking) {
+    state.cooking.handsFree = false;
+    state.cooking.recognitionState = "idle";
+    state.cooking.transcript = "";
+  }
+}
+
+function handleVoiceNavigation(transcript) {
+  const normalized = String(transcript || "").toLowerCase();
+  if (/siguiente/.test(normalized)) {
+    moveCookingStep(1);
+    return true;
+  }
+  if (/atr[aá]s/.test(normalized)) {
+    moveCookingStep(-1);
+    return true;
+  }
+
+  const target = getCookingTarget();
+  const currentStage = target ? getCookingStage(target).current : null;
+  if (/temporizador|cuenta regresiva/.test(normalized) && currentStage?.timerMinutes) {
+    startCookingTimer(currentStage.title, currentStage.timerMinutes);
+    return true;
+  }
+  return false;
+}
+
+function startHandsFreeMode() {
+  const RecognitionCtor = getSpeechRecognitionCtor();
+  if (!RecognitionCtor) {
+    state.notice = "El modo manos libres todavÃ­a no estÃ¡ disponible en este navegador.";
+    render();
+    return;
+  }
+
+  stopHandsFreeMode();
+  ensureCookingState();
+
+  const recognition = new RecognitionCtor();
+  recognition.lang = "es-ES";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = (event) => {
+    const transcript = Array.from(event.results)
+      .slice(event.resultIndex)
+      .filter((result) => result.isFinal)
+      .map((result) => result[0]?.transcript || "")
+      .join(" ")
+      .trim();
+
+    if (!transcript) return;
+    state.cooking.transcript = transcript;
+    handleVoiceNavigation(transcript);
+    render();
+  };
+
+  recognition.onerror = () => {
+    state.notice = "No he podido mantener activo el modo manos libres.";
+    stopHandsFreeMode();
+    render();
+  };
+
+  recognition.onend = () => {
+    if (!state.cooking?.handsFree) return;
+    try {
+      recognition.start();
+      state.cooking.recognitionState = "listening";
+      render();
+    } catch (_error) {
+      state.notice = "He pausado el modo manos libres. Puedes volver a activarlo cuando quieras.";
+      stopHandsFreeMode();
+      render();
+    }
+  };
+
+  state.speechRecognition = recognition;
+  state.cooking.handsFree = true;
+  state.cooking.recognitionState = "listening";
+
+  try {
+    recognition.start();
+  } catch (_error) {
+    state.notice = "No he podido arrancar el modo manos libres.";
+    stopHandsFreeMode();
+  }
 }
 
 function createSampleMeal(mealKey, title, summary, calories, prepMinutes, difficulty, ingredients, tags = []) {
@@ -1682,79 +2193,88 @@ function renderTopbar() {
   const zaurioMenuOpen = state.activeMenu === "zaurio";
   const userMenuOpen = state.activeMenu === "user";
   const displayName = state.profile?.displayName || getUserLabel(user);
-  const notificationState = state.profile?.notificationEnabled ? "Push activo" : "Avisos pendientes";
+  const notificationState = state.profile?.notificationEnabled ? "Avisos activos" : "Avisos pendientes";
   const shoppingState = state.week
     ? (state.week.shoppingCompleted ? "Compra cerrada" : "Compra pendiente")
     : "Sin semana activa";
 
   return `
     <header class="vc-topbar vc-card">
-      <div class="vc-topbar-side vc-topbar-left">
-        <div class="vc-menu-wrap ${zaurioMenuOpen ? "open" : ""}">
-          <button
-            class="vc-menu-btn"
-            type="button"
-            data-action="toggle-menu"
-            data-menu="zaurio"
-            aria-label="Abrir menu de Zaurio"
-            aria-haspopup="true"
-            aria-expanded="${zaurioMenuOpen ? "true" : "false"}"
-          >
-            <span class="vc-z-mark">Z</span>
-            <span class="vc-menu-text">Zaurio</span>
-          </button>
-          <nav class="vc-menu-drop" aria-label="Menu de Zaurio">
-            ${ZAURIO_DESTINATIONS.map((item) => `
-              <a class="vc-menu-link" href="${item.href}">
-                <img src="${item.icon}" alt="">
-                <span>${escapeHtml(item.label)}</span>
-              </a>
-            `).join("")}
-          </nav>
+      <div class="vc-topbar-main">
+        <div class="vc-topbar-side vc-topbar-left">
+          <div class="vc-menu-wrap ${zaurioMenuOpen ? "open" : ""}">
+            <button
+              class="vc-menu-btn"
+              type="button"
+              data-action="toggle-menu"
+              data-menu="zaurio"
+              aria-label="Abrir menu de Zaurio"
+              aria-haspopup="true"
+              aria-expanded="${zaurioMenuOpen ? "true" : "false"}"
+            >
+              <span class="vc-z-mark">Z</span>
+              <span class="vc-menu-text">Zaurio</span>
+            </button>
+            <nav class="vc-menu-drop" aria-label="Menu de Zaurio">
+              ${ZAURIO_DESTINATIONS.map((item) => `
+                <a class="vc-menu-link" href="${item.href}">
+                  <img src="${item.icon}" alt="">
+                  <span>${escapeHtml(item.label)}</span>
+                </a>
+              `).join("")}
+            </nav>
+          </div>
+        </div>
+
+        <div class="vc-topbar-center">
+          <a class="vc-topbar-logo" href="${APP_BASE_URL}" aria-label="Ir al inicio de VelociChef">
+            <img src="${APP_LOGO_PATH}" alt="VelociChef">
+          </a>
+        </div>
+
+        <div class="vc-topbar-side vc-topbar-right">
+          ${user ? `
+            <div class="vc-menu-wrap vc-user-wrap ${userMenuOpen ? "open" : ""}">
+              <button
+                class="vc-user-pill"
+                type="button"
+                data-action="toggle-menu"
+                data-menu="user"
+                aria-label="Abrir menu del usuario"
+                aria-haspopup="true"
+                aria-expanded="${userMenuOpen ? "true" : "false"}"
+              >
+                ${renderUserAvatar(user)}
+                <span class="vc-user-copy">
+                  <strong>${escapeHtml(displayName)}</strong>
+                  <small>${escapeHtml(shoppingState)}</small>
+                </span>
+                <span class="vc-user-caret" aria-hidden="true"></span>
+              </button>
+              <div class="vc-menu-drop vc-user-menu" role="menu" aria-label="Menu del usuario">
+                <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
+                <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
+                <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
+                <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Perfil</button>
+                <div class="vc-menu-meta">
+                  <span class="vc-meta-pill">${escapeHtml(notificationState)}</span>
+                </div>
+                <button class="vc-menu-action vc-menu-action-danger" type="button" data-action="logout" role="menuitem">Salir</button>
+              </div>
+            </div>
+          ` : `
+            <button class="vc-button secondary vc-nav-login" type="button" data-action="login-google">Entrar con Google</button>
+          `}
         </div>
       </div>
 
-      <div class="vc-topbar-center">
-        <a class="vc-topbar-logo" href="${APP_BASE_URL}" aria-label="Ir al inicio de VelociChef">
-          <img src="${APP_LOGO_PATH}" alt="VelociChef">
-        </a>
-      </div>
-
-      <div class="vc-topbar-side vc-topbar-right">
-        ${user ? `
-          <div class="vc-menu-wrap vc-user-wrap ${userMenuOpen ? "open" : ""}">
-            <button
-              class="vc-user-pill"
-              type="button"
-              data-action="toggle-menu"
-              data-menu="user"
-              aria-label="Abrir menu del usuario"
-              aria-haspopup="true"
-              aria-expanded="${userMenuOpen ? "true" : "false"}"
-            >
-              ${renderUserAvatar(user)}
-              <span class="vc-user-copy">
-                <strong>${escapeHtml(displayName)}</strong>
-                <small>${escapeHtml(shoppingState)}</small>
-              </span>
-              <span class="vc-user-caret" aria-hidden="true"></span>
-            </button>
-            <div class="vc-menu-drop vc-user-menu" role="menu" aria-label="Menu del usuario">
-              <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
-              <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
-              <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
-              <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Notificaciones</button>
-              <div class="vc-menu-meta">
-                ${getStorageBadge()}
-                <span class="vc-meta-pill">${escapeHtml(notificationState)}</span>
-              </div>
-              <button class="vc-menu-action vc-menu-action-danger" type="button" data-action="logout" role="menuitem">Salir</button>
-            </div>
-          </div>
-        ` : `
-          <button class="vc-button secondary vc-nav-login" type="button" data-action="login-google">Entrar con Google</button>
-        `}
-      </div>
+      ${user ? `
+        <div class="vc-topbar-cookbar">
+          <button class="vc-cook-launch" type="button" data-action="open-cook">
+            Cocinar!
+          </button>
+        </div>
+      ` : ""}
     </header>
   `;
 }
@@ -1771,10 +2291,10 @@ function renderLanding() {
               <p class="vc-lead">VelociChef planifica menús realistas, reutiliza ingredientes, calcula calorías aproximadas y te acompaña desde el “qué cenamos” hasta la lista del súper.</p>
             </div>
             <div class="vc-chip-row">
-              <span class="vc-meta-pill">Google login</span>
-              <span class="vc-meta-pill">Gemini</span>
-              <span class="vc-meta-pill">Supabase</span>
-              <span class="vc-meta-pill">Mobile first</span>
+              <span class="vc-meta-pill">Perfil a medida</span>
+              <span class="vc-meta-pill">Semana organizada</span>
+              <span class="vc-meta-pill">Compra clara</span>
+              <span class="vc-meta-pill">Hecho para móvil</span>
             </div>
             <div class="vc-toolbar">
               <button class="vc-button primary" data-action="login-google">Registrarme / iniciar sesión con Google</button>
@@ -1816,7 +2336,7 @@ function renderLanding() {
             <div class="vc-stat">
               <small class="vc-muted">2. Menú</small>
               <strong>Semana útil</strong>
-              <span class="vc-muted">Gemini arma platos con calorías y reutilización de ingredientes.</span>
+              <span class="vc-muted">Recibes platos con calorías aproximadas y una compra pensada con cabeza.</span>
             </div>
             <div class="vc-stat">
               <small class="vc-muted">3. Compra</small>
@@ -2079,12 +2599,6 @@ function renderBanner() {
   return banners.join("");
 }
 
-function getStorageBadge() {
-  return state.storageMode === "local"
-    ? `<span class="vc-meta-pill">Guardado local</span>`
-    : `<span class="vc-meta-pill">Supabase</span>`;
-}
-
 function renderWorkspaceHeader() {
   const userName = state.profile?.displayName?.split(" ")[0] || "Chef";
   const mealsCount = flattenMeals(state.week).length;
@@ -2100,7 +2614,6 @@ function renderWorkspaceHeader() {
           <p class="vc-copy">Tu menu, tu lista de la compra y tus avisos estan organizados para que la semana vaya suave de verdad.</p>
         </div>
         <div class="vc-chip-row">
-          ${getStorageBadge()}
           <span class="vc-meta-pill">${escapeHtml(state.profile?.timezone || getTimezone())}</span>
           <span class="vc-meta-pill">${state.week?.shoppingCompleted ? "Compra cerrada" : "Compra pendiente"}</span>
         </div>
@@ -2147,6 +2660,7 @@ function renderMealCard(day, mealKey, meal) {
         ${feedback.liked ? `<span class="vc-meta-pill">Te gusta</span>` : ""}
       </div>
       <div class="vc-meal-actions">
+        <button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>
         <button class="vc-button subtle" data-action="toggle-like" data-meal-id="${meal.id}">Me gusta</button>
         <button class="vc-button secondary" data-action="open-refine" data-meal-id="${meal.id}">No me gusta</button>
         <button class="vc-button secondary" data-action="swap-meal" data-meal-id="${meal.id}">Cambiar por otro plato</button>
@@ -2362,6 +2876,7 @@ function renderRecipesView() {
               <span class="vc-meta-pill">${escapeHtml(meal.difficulty)}</span>
             </div>
             <div class="vc-inline-actions">
+              <button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>
               <button class="vc-button ghost" data-action="open-details" data-meal-id="${meal.id}">Ver detalles</button>
               <button class="vc-button secondary" data-action="swap-meal" data-meal-id="${meal.id}">Cambiar</button>
             </div>
@@ -2373,53 +2888,367 @@ function renderRecipesView() {
 }
 
 function renderProfileView() {
-  const memberNotes = state.profile.householdMembers.filter((member) => !member.sameAsMe && member.notes);
   const pushCapable = "PushManager" in window;
+  const speechCapable = !!getSpeechRecognitionCtor();
   return `
     <section class="vc-grid">
       <article class="vc-panel">
-        <span class="vc-eyebrow">Perfil y preferencias</span>
-        <h2 class="vc-title">Lo que VelociChef sabe de tu cocina</h2>
-        <p class="vc-copy">Tus ajustes guardados se reutilizan cuando programes la siguiente semana.</p>
+        <span class="vc-eyebrow">Perfil</span>
+        <h2 class="vc-title">Ajusta tu cocina a tu gusto</h2>
+        <p class="vc-copy">Todo lo que cambies aquí se guardará para las próximas semanas y para el modo cocinar.</p>
       </article>
 
-      <div class="vc-profile-grid">
-        <article class="vc-profile-card">
-          <small class="vc-muted">Alergias</small>
-          <h3 class="vc-inline-title">${state.profile.allergies.length ? escapeHtml(state.profile.allergies.join(", ")) : "Sin alergias marcadas"}</h3>
-          <p class="vc-copy">${escapeHtml(state.profile.allergyNotes || "No hay notas extra.")}</p>
-        </article>
-        <article class="vc-profile-card">
-          <small class="vc-muted">Gustos</small>
-          <h3 class="vc-inline-title">${state.profile.likes.length ? escapeHtml(state.profile.likes.slice(0, 4).join(", ")) : "Todavía sin favoritos"}</h3>
-          <p class="vc-copy">${escapeHtml(state.profile.dietaryNotes || "Sin notas extra de textura o estilo.")}</p>
-        </article>
-        <article class="vc-profile-card">
-          <small class="vc-muted">Objetivos</small>
-          <h3 class="vc-inline-title">${state.profile.goalTags.length ? escapeHtml(state.profile.goalTags.join(", ")) : "Sin objetivos concretos"}</h3>
-          <p class="vc-copy">Nivel de cocina: ${escapeHtml(COOKING_STYLE_OPTIONS.find((item) => item.key === state.profile.cookingStyle)?.label || "Equilibrado")}</p>
-        </article>
-        <article class="vc-profile-card">
-          <small class="vc-muted">Hogar</small>
-          <h3 class="vc-inline-title">${state.profile.householdCount} ${state.profile.householdCount === 1 ? "persona" : "personas"}</h3>
-          <p class="vc-copy">${memberNotes.length ? escapeHtml(memberNotes.map((member) => `${member.name}: ${member.notes}`).join(" · ")) : "El resto de personas comparten tus preferencias."}</p>
-        </article>
-        <article class="vc-profile-card">
-          <small class="vc-muted">Horarios</small>
-          <h3 class="vc-inline-title">Almuerzo ${escapeHtml(formatTime(state.profile.lunchTime))} · Cena ${escapeHtml(formatTime(state.profile.dinnerTime))}</h3>
-          <p class="vc-copy">Recordatorio ${state.profile.reminderLeadMinutes} minutos antes. ${state.profile.lunchPrepNightBefore ? "El almuerzo se cocina la noche anterior." : "El almuerzo se prepara el mismo día."}</p>
-        </article>
-        <article class="vc-profile-card">
-          <small class="vc-muted">Avisos</small>
-          <h3 class="vc-inline-title">${state.profile.notificationEnabled ? "Notificaciones activadas" : "Notificaciones pendientes"}</h3>
-          <p class="vc-copy">${state.profile.freezeNotificationsEnabled ? "También se usarán para recordar descongelados." : "Los avisos de congelado siguen desactivados."} ${pushCapable ? "Este dispositivo soporta push real." : "Este dispositivo solo permite el recordatorio local cuando la app está abierta."}</p>
-          <div class="vc-inline-actions">
-            <button class="vc-button secondary" data-action="request-notifications">${state.profile.notificationEnabled ? "Reactivar push" : "Activar avisos"}</button>
-            <button class="vc-button ghost" data-action="test-notification">Probar aviso</button>
-            <button class="vc-button ghost" data-action="restart-onboarding">Editar perfil</button>
+      <article class="vc-card vc-step vc-profile-editor">
+        <div class="vc-grid two">
+          <div class="vc-field">
+            <label class="vc-label" for="profile-name">Cómo quieres que te llame VelociChef</label>
+            <input id="profile-name" class="vc-input" type="text" data-field="displayName" value="${escapeHtml(state.profile.displayName || "")}">
           </div>
+          <div class="vc-field">
+            <label class="vc-label" for="profile-household-count">Personas que comen regularmente contigo</label>
+            <input id="profile-household-count" class="vc-input" type="number" min="1" max="8" data-field="householdCount" value="${state.profile.householdCount}">
+          </div>
+        </div>
+
+        <section class="vc-editor-section">
+          <div>
+            <span class="vc-eyebrow">Alergias</span>
+            <h3 class="vc-inline-title">Ingredientes que deben quedar fuera</h3>
+          </div>
+          <div class="vc-pill-grid">${ALLERGY_OPTIONS.map((option) => renderPill(option, "allergies", state.profile.allergies)).join("")}</div>
+          <div class="vc-field">
+            <label class="vc-label" for="profile-allergy-notes">Otros detalles importantes</label>
+            <textarea id="profile-allergy-notes" class="vc-textarea" data-field="allergyNotes" placeholder="Ejemplo: el pescado blanco me va bien, pero el marisco no.">${escapeHtml(state.profile.allergyNotes)}</textarea>
+          </div>
+        </section>
+
+        <section class="vc-editor-section">
+          <div>
+            <span class="vc-eyebrow">Gustos</span>
+            <h3 class="vc-inline-title">Lo que sí y lo que no</h3>
+          </div>
+          <div class="vc-fieldset">
+            <label class="vc-label">Cosas que me gustan</label>
+            <div class="vc-pill-grid">${LIKE_OPTIONS.map((option) => renderPill(option, "likes", state.profile.likes)).join("")}</div>
+          </div>
+          <div class="vc-fieldset">
+            <label class="vc-label">Cosas que no me gustan</label>
+            <div class="vc-pill-grid">${DISLIKE_OPTIONS.map((option) => renderPill(option, "dislikes", state.profile.dislikes)).join("")}</div>
+          </div>
+          <div class="vc-field">
+            <label class="vc-label" for="profile-dietary-notes">Cuéntamelo con tus palabras</label>
+            <textarea id="profile-dietary-notes" class="vc-textarea" data-field="dietaryNotes" placeholder="Ejemplo: prefiero platos jugosos y cenas suaves.">${escapeHtml(state.profile.dietaryNotes)}</textarea>
+          </div>
+        </section>
+
+        <section class="vc-editor-section">
+          <div>
+            <span class="vc-eyebrow">Objetivos</span>
+            <h3 class="vc-inline-title">Cómo quieres comer esta semana</h3>
+          </div>
+          <div class="vc-fieldset">
+            <label class="vc-label">Nivel de cocina</label>
+            <div class="vc-pill-grid">${COOKING_STYLE_OPTIONS.map((option) => renderCookingChoice(option, state.profile.cookingStyle)).join("")}</div>
+          </div>
+          <div class="vc-fieldset">
+            <label class="vc-label">Objetivos alimentarios</label>
+            <div class="vc-pill-grid">${GOAL_OPTIONS.map((option) => renderPill(option, "goalTags", state.profile.goalTags)).join("")}</div>
+          </div>
+        </section>
+
+        <section class="vc-editor-section">
+          <div>
+            <span class="vc-eyebrow">Hogar</span>
+            <h3 class="vc-inline-title">Reglas por persona</h3>
+          </div>
+          <div class="vc-member-list">
+            ${state.profile.householdMembers.map((member, index) => `
+              <article class="vc-member-card">
+                <div class="vc-field">
+                  <label class="vc-label">Persona ${index + 1}</label>
+                  <input
+                    class="vc-input"
+                    type="text"
+                    value="${escapeHtml(member.name)}"
+                    data-member-field="name"
+                    data-member-id="${member.id}"
+                  >
+                </div>
+                <label class="vc-switch">
+                  <span>
+                    <strong>Lo mismo que yo</strong>
+                    <small class="vc-helper">Usa tus mismas reglas alimentarias.</small>
+                  </span>
+                  <input type="checkbox" ${member.sameAsMe ? "checked" : ""} data-member-field="sameAsMe" data-member-id="${member.id}">
+                </label>
+                ${member.sameAsMe ? "" : `
+                  <div class="vc-field">
+                    <label class="vc-label">Reglas especiales o preferencias</label>
+                    <textarea class="vc-textarea" data-member-field="notes" data-member-id="${member.id}" placeholder="Ejemplo: prefiere cenas suaves y sin pescado azul.">${escapeHtml(member.notes)}</textarea>
+                  </div>
+                `}
+              </article>
+            `).join("")}
+          </div>
+        </section>
+
+        <section class="vc-editor-section">
+          <div>
+            <span class="vc-eyebrow">Plan</span>
+            <h3 class="vc-inline-title">Comidas, horarios y avisos</h3>
+          </div>
+          <div class="vc-fieldset">
+            <label class="vc-label">Comidas a planificar</label>
+            <div class="vc-pill-grid">${MEAL_OPTIONS.map((option) => renderMealChoice(option, state.profile.plannedMeals)).join("")}</div>
+          </div>
+          <label class="vc-switch vc-switch-card">
+            <span>
+              <strong>¿Preparas el almuerzo la noche anterior?</strong>
+              <small class="vc-helper">Así podré organizar mejor el momento de cocinar.</small>
+            </span>
+            <input type="checkbox" data-field="lunchPrepNightBefore" ${state.profile.lunchPrepNightBefore ? "checked" : ""}>
+          </label>
+          <div class="vc-grid two">
+            <div class="vc-field">
+              <label class="vc-label" for="profile-lunch-time">¿A qué hora sueles comer?</label>
+              <input id="profile-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
+            </div>
+            <div class="vc-field">
+              <label class="vc-label" for="profile-dinner-time">¿A qué hora sueles cenar?</label>
+              <input id="profile-dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}">
+            </div>
+          </div>
+          <div class="vc-field">
+            <label class="vc-label" for="profile-lead-time">¿Con cuánto margen quieres que te avise?</label>
+            <select id="profile-lead-time" class="vc-select" data-field="reminderLeadMinutes">
+              ${[45, 60, 75, 90, 120].map((value) => `<option value="${value}" ${Number(state.profile.reminderLeadMinutes) === value ? "selected" : ""}>${value} minutos antes</option>`).join("")}
+            </select>
+          </div>
+        </section>
+
+        <section class="vc-editor-section">
+          <div>
+            <span class="vc-eyebrow">Avisos y ayuda</span>
+            <h3 class="vc-inline-title">Mantén la app a tu ritmo</h3>
+          </div>
+          <p class="vc-copy">${state.profile.notificationEnabled ? "Tus avisos están activos." : "Todavía no has activado avisos en este dispositivo."} ${state.profile.freezeNotificationsEnabled ? "También recordaré los ingredientes que convenga descongelar." : "Los recordatorios de congelado siguen apagados por ahora."}</p>
+          <div class="vc-chip-row">
+            <span class="vc-meta-pill">${pushCapable ? "Avisos también fuera de la app" : "Avisos mientras la app está abierta"}</span>
+            <span class="vc-meta-pill">${speechCapable ? "Modo manos libres disponible" : "Modo manos libres limitado en este navegador"}</span>
+          </div>
+          <div class="vc-inline-actions">
+            <button class="vc-button secondary" data-action="request-notifications">${state.profile.notificationEnabled ? "Revisar avisos" : "Activar avisos"}</button>
+            <button class="vc-button ghost" data-action="test-notification">Probar aviso</button>
+          </div>
+        </section>
+
+        <div class="vc-step-foot">
+          <button class="vc-button secondary" data-action="plan-new-week">Planificar nueva semana</button>
+          <button class="vc-button primary" data-action="save-profile-settings">Guardar cambios del perfil</button>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function getTechniqueMatches(text) {
+  const source = String(text || "");
+  const normalized = source.toLowerCase();
+  const matches = [];
+
+  COOKING_GLOSSARY.forEach((technique) => {
+    const phrase = technique.phrase.toLowerCase();
+    let index = normalized.indexOf(phrase);
+    while (index !== -1) {
+      matches.push({
+        key: technique.key,
+        start: index,
+        end: index + phrase.length,
+      });
+      index = normalized.indexOf(phrase, index + phrase.length);
+    }
+  });
+
+  return matches
+    .sort((a, b) => a.start - b.start)
+    .filter((match, index, collection) => index === 0 || match.start >= collection[index - 1].end);
+}
+
+function renderTechniqueText(text) {
+  const source = String(text || "");
+  const matches = getTechniqueMatches(source);
+  if (!matches.length) return escapeHtml(source);
+
+  let cursor = 0;
+  let html = "";
+
+  matches.forEach((match) => {
+    html += escapeHtml(source.slice(cursor, match.start));
+    html += `<button class="vc-inline-term" type="button" data-action="open-technique" data-technique="${match.key}">${escapeHtml(source.slice(match.start, match.end))}</button>`;
+    cursor = match.end;
+  });
+
+  html += escapeHtml(source.slice(cursor));
+  return html;
+}
+
+function renderCookView() {
+  if (!state.week) {
+    return `
+      <article class="vc-card vc-empty">
+        <h2 class="vc-title">TodavÃ­a no hay ningÃºn plato listo para cocinar.</h2>
+        <p class="vc-copy">Prepara una semana primero y volverÃ¡s aquÃ­ con un modo paso a paso.</p>
+        <div class="vc-inline-actions" style="justify-content:center">
+          <button class="vc-button primary" data-action="generate-first-week">Preparar mi menÃº de la semana</button>
+        </div>
+      </article>
+    `;
+  }
+
+  const cooking = ensureCookingState();
+  const suggestedTarget = cooking.mealId ? getMealById(cooking.mealId) : getSuggestedCookingTarget();
+
+  if (!cooking.mealId || cooking.mode === "suggest") {
+    return `
+      <section class="vc-grid">
+        <article class="vc-card vc-step vc-cook-entry">
+          <div>
+            <span class="vc-eyebrow">Cocinar</span>
+            <h2 class="vc-step-title">Vamos a ponernos con ello</h2>
+            <p class="vc-step-copy">VelociChef intenta adelantarse al plato que probablemente quieras preparar ahora mismo.</p>
+          </div>
+
+          ${suggestedTarget ? `
+            <article class="vc-cook-suggestion">
+              <small class="vc-muted">${escapeHtml(suggestedTarget.day.label)} Â· ${escapeHtml(MEAL_LABELS[suggestedTarget.mealKey])}</small>
+              <h3 class="vc-inline-title">Â¿EstÃ¡s queriendo cocinar el plato "${escapeHtml(suggestedTarget.meal.title)}" del ${escapeHtml((MEAL_LABELS[suggestedTarget.mealKey] || "").toLowerCase())} del dÃ­a ${escapeHtml(formatDateLong(suggestedTarget.day.date))}?</h3>
+              <p class="vc-copy">${escapeHtml(suggestedTarget.meal.summary)}</p>
+              <div class="vc-inline-actions">
+                <button class="vc-button primary" data-action="cook-suggest-yes">SÃ­</button>
+                <button class="vc-button secondary" data-action="cook-suggest-no">No</button>
+              </div>
+            </article>
+          ` : `
+            <article class="vc-cook-suggestion">
+              <h3 class="vc-inline-title">No he encontrado un plato claro para este momento.</h3>
+              <p class="vc-copy">Elige tÃº mismo quÃ© receta quieres cocinar ahora.</p>
+              <div class="vc-inline-actions">
+                <button class="vc-button primary" data-action="cook-suggest-no">Elegir receta</button>
+              </div>
+            </article>
+          `}
         </article>
-      </div>
+      </section>
+    `;
+  }
+
+  if (cooking.mode === "picker") {
+    return `
+      <section class="vc-grid">
+        <article class="vc-panel">
+          <span class="vc-eyebrow">Cocinar</span>
+          <h2 class="vc-title">Elige tu plato</h2>
+          <p class="vc-copy">Selecciona el dÃ­a y la comida que quieres preparar ahora mismo.</p>
+        </article>
+        <div class="vc-week-grid">
+          ${state.week.days.map((day) => `
+            <article class="vc-week-card vc-card">
+              <div class="vc-weekday-head">
+                <div>
+                  <h3 class="vc-weekday-title">${escapeHtml(day.label)}</h3>
+                  <p class="vc-weekday-date">${escapeHtml(formatDateLong(day.date))}</p>
+                </div>
+              </div>
+              <div class="vc-cook-pick-list">
+                ${Object.entries(day.meals || {}).map(([mealKey, meal]) => `
+                  <article class="vc-cook-pick-card">
+                    <small class="vc-muted">${escapeHtml(MEAL_LABELS[mealKey])}</small>
+                    <strong>${escapeHtml(meal.title)}</strong>
+                    <p class="vc-copy">${escapeHtml(meal.summary)}</p>
+                    <button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>
+                  </article>
+                `).join("")}
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  const target = getCookingTarget();
+  if (!target) {
+    state.cooking = createCookingState("picker", null);
+    return renderCookView();
+  }
+
+  const { stages, stepIndex, current } = getCookingStage(target);
+  const activeTimer = state.cooking?.activeTimer;
+  const isIngredientsStep = current?.kind === "ingredients";
+  const isLastStep = stepIndex === stages.length - 1;
+
+  return `
+    <section class="vc-grid">
+      <article class="vc-card vc-step vc-cook-mode">
+        <div class="vc-step-progress-head">
+          <span class="vc-eyebrow">Cocinar</span>
+          <span class="vc-helper">Paso ${stepIndex + 1} de ${stages.length}</span>
+        </div>
+
+        <div class="vc-step-hero vc-cook-hero">
+          <div class="vc-step-badge">${String(stepIndex + 1).padStart(2, "0")}</div>
+          <div class="vc-step-intro">
+            <span class="vc-step-kicker">${escapeHtml(target.day.label)} Â· ${escapeHtml(MEAL_LABELS[target.mealKey])}</span>
+            <h1 class="vc-step-title">${escapeHtml(target.meal.title)}</h1>
+            <p class="vc-step-copy">${isIngredientsStep ? "Prepara todo antes de empezar para cocinar con calma." : escapeHtml(current.title)}</p>
+          </div>
+        </div>
+
+        <div class="vc-inline-actions vc-cook-toolbar">
+          <button class="vc-button secondary" data-action="toggle-hands-free">${state.cooking?.handsFree ? "Desactivar manos libres" : "Modo manos libres"}</button>
+          <button class="vc-button ghost" data-action="cook-back-to-picker">Cambiar de plato</button>
+          ${activeTimer ? `<span class="vc-meta-pill">Temporizador: ${formatCountdown(activeTimer.remainingMs)}</span>` : ""}
+        </div>
+
+        ${state.cooking?.handsFree ? `
+          <div class="vc-note">
+            Comandos disponibles: "siguiente" y "atrÃ¡s". ${current?.timerMinutes ? 'TambiÃ©n puedes decir "temporizador".' : ""}
+            ${state.cooking.transcript ? `ÂÚltimo comando: "${escapeHtml(state.cooking.transcript)}".` : ""}
+          </div>
+        ` : ""}
+
+        ${isIngredientsStep ? `
+          <article class="vc-cook-stage">
+            <h3 class="vc-inline-title">Paso 1 - PreparaciÃ³n</h3>
+            <p class="vc-copy">Coge los ingredientes necesarios para esta receta.</p>
+            <div class="vc-cook-ingredients">
+              ${(current.ingredients || []).map((ingredient) => `
+                <article class="vc-cook-ingredient">
+                  <strong>${escapeHtml(ingredient.name)}</strong>
+                  <span class="vc-muted">${escapeHtml(formatQuantity(ingredient.quantity, ingredient.unit))}</span>
+                </article>
+              `).join("")}
+            </div>
+          </article>
+        ` : `
+          <article class="vc-cook-stage">
+            <h3 class="vc-inline-title">${escapeHtml(current.title)}</h3>
+            <p class="vc-copy vc-cook-step-copy">${renderTechniqueText(current.text)}</p>
+            ${current.timerMinutes ? `
+              <div class="vc-inline-actions">
+                <button class="vc-button primary" data-action="start-step-timer">Comenzar cuenta regresiva</button>
+              </div>
+            ` : ""}
+          </article>
+        `}
+
+        <div class="vc-step-foot">
+          <button class="vc-button secondary" data-action="cook-stage-prev" ${stepIndex === 0 ? "disabled" : ""}>AtrÃ¡s</button>
+          ${isLastStep
+            ? `<button class="vc-button primary" data-action="finish-cooking-session">Terminar</button>`
+            : `<button class="vc-button primary" data-action="cook-stage-next">Siguiente</button>`}
+        </div>
+      </article>
     </section>
   `;
 }
@@ -2431,11 +3260,12 @@ function renderWorkspace() {
     shopping: renderShoppingView(),
     recipes: renderRecipesView(),
     profile: renderProfileView(),
+    cook: renderCookView(),
   };
 
   return `
     <section class="vc-workspace">
-      ${renderWorkspaceHeader()}
+      ${state.currentView === "cook" ? "" : renderWorkspaceHeader()}
       ${views[state.currentView] || views.week}
     </section>
   `;
@@ -2476,6 +3306,63 @@ function renderMealDetailModal(target) {
               <li>Fibra: ${meal.nutrition.fiber} g</li>
             </ul>
           </article>
+        </div>
+        ${(meal.cookingSteps || []).length ? `
+          <article class="vc-profile-card">
+            <h3 class="vc-inline-title">Cómo se hace</h3>
+            <ol class="vc-list vc-list-ordered">
+              ${meal.cookingSteps.map((step) => `<li>${escapeHtml(step.text)}</li>`).join("")}
+            </ol>
+          </article>
+        ` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderTechniqueModal() {
+  const technique = COOKING_GLOSSARY.find((item) => item.key === state.modal?.techniqueKey);
+  if (!technique) return "";
+
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">Ayuda de cocina</small>
+            <h2 class="vc-modal-title">${escapeHtml(technique.title)}</h2>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">✕</button>
+        </div>
+        <article class="vc-profile-card">
+          <p class="vc-copy">${escapeHtml(technique.body)}</p>
+        </article>
+      </div>
+    </div>
+  `;
+}
+
+function renderTimerModal() {
+  const timer = state.cooking?.activeTimer;
+  if (!timer) return "";
+
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-timer-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">Cuenta regresiva</small>
+            <h2 class="vc-modal-title">${escapeHtml(timer.label)}</h2>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="vc-timer-face">
+          <strong>${formatCountdown(timer.remainingMs)}</strong>
+          <span>${timer.durationMinutes} min</span>
+        </div>
+        <div class="vc-inline-actions" style="justify-content:center">
+          <button class="vc-button secondary" data-action="stop-cooking-timer">Detener</button>
+          <button class="vc-button primary" data-action="close-modal">Seguir cocinando</button>
         </div>
       </div>
     </div>
@@ -2577,19 +3464,25 @@ function renderModal() {
   if (state.modal.type === "freezer") {
     return `${renderFreezerPromptModal()}${renderBusyOverlay()}`;
   }
+  if (state.modal.type === "technique") {
+    return `${renderTechniqueModal()}${renderBusyOverlay()}`;
+  }
+  if (state.modal.type === "timer") {
+    return `${renderTimerModal()}${renderBusyOverlay()}`;
+  }
   return renderBusyOverlay();
 }
 
 function render() {
   if (state.loading) {
-    root.innerHTML = `${renderTopbar()}${renderLoading()}`;
-    modalRoot.innerHTML = renderModal();
+    root.innerHTML = sanitizeUiCopy(`${renderTopbar()}${renderLoading()}`);
+    modalRoot.innerHTML = sanitizeUiCopy(renderModal());
     return;
   }
 
   const notices = [
-    state.notice ? `<div class="vc-note">${escapeHtml(state.notice)}</div>` : "",
-    state.error ? `<div class="vc-error">${escapeHtml(state.error)}</div>` : "",
+    state.notice ? `<div class="vc-note">${escapeHtml(sanitizeUiCopy(state.notice))}</div>` : "",
+    state.error ? `<div class="vc-error">${escapeHtml(sanitizeUiCopy(state.error))}</div>` : "",
   ].filter(Boolean).join("");
 
   const content = !state.session
@@ -2598,8 +3491,8 @@ function render() {
       ? renderOnboarding()
       : renderWorkspace();
 
-  root.innerHTML = `${renderTopbar()}${notices ? `<section class="vc-shell">${notices}</section>` : ""}${content}`;
-  modalRoot.innerHTML = renderModal();
+  root.innerHTML = sanitizeUiCopy(`${renderTopbar()}${notices ? `<section class="vc-shell">${notices}</section>` : ""}${content}`);
+  modalRoot.innerHTML = sanitizeUiCopy(renderModal());
 }
 
 function toggleFromArray(list, value) {
@@ -2654,6 +3547,33 @@ async function saveScheduleAndContinue() {
   await saveWeek();
   state.currentView = "shopping";
   render();
+}
+
+async function saveProfileSettings() {
+  if (!(state.profile.plannedMeals || []).length) {
+    state.error = "Marca al menos una comida para poder guardar el perfil.";
+    render();
+    return false;
+  }
+  if (!state.profile.lunchTime || !state.profile.dinnerTime) {
+    state.error = "Necesito una hora de almuerzo y una hora de cena para guardar el perfil.";
+    render();
+    return false;
+  }
+
+  state.profile.timezone = getTimezone();
+  state.profile.onboardingCompleted = true;
+  await saveProfile();
+
+  if (state.week) {
+    state.week.reminders = composeReminders();
+    await saveWeek();
+  }
+
+  state.notice = "Perfil guardado.";
+  state.error = "";
+  render();
+  return true;
 }
 
 function applyRefinementPreferences(modalState, mealTarget) {
@@ -2756,6 +3676,7 @@ async function handleAction(action, trigger) {
       break;
 
     case "plan-new-week":
+      stopHandsFreeMode();
       if (!state.profile?.onboardingCompleted) {
         state.currentView = "onboarding";
         render();
@@ -2764,8 +3685,97 @@ async function handleAction(action, trigger) {
       await generateWeek(state.week ? addDays(state.week.endDate, 1) : getTomorrowIso());
       break;
 
-    case "open-view":
-      state.currentView = normalizeView(trigger.dataset.view || "week");
+    case "open-view": {
+      const nextView = normalizeView(trigger.dataset.view || "week");
+      if (nextView !== "cook") {
+        stopHandsFreeMode();
+      }
+      state.currentView = nextView;
+      render();
+      break;
+    }
+
+    case "open-cook": {
+      const suggested = getSuggestedCookingTarget();
+      stopHandsFreeMode();
+      stopCookingTimer();
+      state.cooking = createCookingState(suggested ? "suggest" : "picker", suggested?.meal.id || null);
+      state.currentView = "cook";
+      render();
+      break;
+    }
+
+    case "cook-suggest-yes":
+      ensureCookingState();
+      state.cooking.mode = "active";
+      state.cooking.stepIndex = 0;
+      render();
+      break;
+
+    case "cook-suggest-no":
+      ensureCookingState();
+      state.cooking.mode = "picker";
+      render();
+      break;
+
+    case "cook-back-to-picker":
+      stopHandsFreeMode();
+      stopCookingTimer();
+      ensureCookingState();
+      state.cooking.mode = "picker";
+      state.cooking.stepIndex = 0;
+      render();
+      break;
+
+    case "cook-meal":
+      stopHandsFreeMode();
+      stopCookingTimer();
+      state.cooking = createCookingState("active", trigger.dataset.mealId);
+      state.currentView = "cook";
+      render();
+      break;
+
+    case "cook-stage-prev":
+      moveCookingStep(-1);
+      break;
+
+    case "cook-stage-next":
+      moveCookingStep(1);
+      break;
+
+    case "finish-cooking-session":
+      stopHandsFreeMode();
+      stopCookingTimer();
+      state.notice = "Receta terminada. Ya puedes servir el plato.";
+      state.currentView = "week";
+      render();
+      break;
+
+    case "toggle-hands-free":
+      if (state.cooking?.handsFree) {
+        stopHandsFreeMode();
+        render();
+      } else {
+        startHandsFreeMode();
+      }
+      break;
+
+    case "open-technique":
+      state.modal = { type: "technique", techniqueKey: trigger.dataset.technique };
+      render();
+      break;
+
+    case "start-step-timer": {
+      const target = getCookingTarget();
+      const current = target ? getCookingStage(target).current : null;
+      if (!current?.timerMinutes) return;
+      startCookingTimer(current.title, current.timerMinutes);
+      break;
+    }
+
+    case "stop-cooking-timer":
+      stopCookingTimer();
+      state.modal = null;
       render();
       break;
 
@@ -2906,6 +3916,10 @@ async function handleAction(action, trigger) {
       render();
       break;
 
+    case "save-profile-settings":
+      await saveProfileSettings();
+      break;
+
     case "test-notification":
       await sendTestNotification();
       break;
@@ -2923,6 +3937,8 @@ async function handleAction(action, trigger) {
 
     case "logout":
       if (!state.client) return;
+      stopHandsFreeMode();
+      stopCookingTimer();
       state.notice = "";
       state.error = "";
       await state.client.auth.signOut();
@@ -2969,13 +3985,25 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape") return;
-  if (!state.activeMenu && !state.modal) return;
-  state.activeMenu = null;
-  if (state.modal) {
-    state.modal = null;
+  if (state.currentView === "cook" && !state.modal) {
+    if (event.key === "ArrowRight") {
+      moveCookingStep(1);
+      return;
+    }
+    if (event.key === "ArrowLeft") {
+      moveCookingStep(-1);
+      return;
+    }
   }
-  render();
+
+  if (event.key === "Escape") {
+    if (!state.activeMenu && !state.modal) return;
+    state.activeMenu = null;
+    if (state.modal) {
+      state.modal = null;
+    }
+    render();
+  }
 });
 
 document.addEventListener("input", (event) => {
@@ -3029,8 +4057,11 @@ document.addEventListener("visibilitychange", () => {
 
 async function hydrateSession(session) {
   clearReminderTimers();
+  stopHandsFreeMode();
+  stopCookingTimer();
   state.session = session;
   state.activeMenu = null;
+  state.cooking = null;
 
   if (!session?.user) {
     state.profile = null;

@@ -106,6 +106,7 @@ function buildWeekPrompt(input: Record<string, unknown>) {
     "- Prioriza reutilizar ingredientes entre dias para simplificar la compra.",
     "- Ajusta las porciones al numero de personas indicado.",
     "- Cada plato debe incluir calorias aproximadas, tiempo de preparacion, dificultad y lista de ingredientes.",
+    "- Cada plato debe incluir un array steps con instrucciones cortas, claras y en orden.",
     "- Si un ingrediente seria razonable congelarlo, marca freezable true y un thaw_lead_hours aproximado.",
     "- Los platos deben sonar apetecibles, caseros y factibles entre semana.",
     "",
@@ -116,7 +117,7 @@ function buildWeekPrompt(input: Record<string, unknown>) {
     mealList,
     "",
     "La forma JSON exacta debe ser:",
-    '{"strategy":"...","batchingTips":["..."],"days":[{"date":"YYYY-MM-DD","meals":{"breakfast":{"title":"...","summary":"...","prep_minutes":15,"difficulty":"facil","calories":420,"servings":2,"nutrition":{"protein_g":25,"carbs_g":40,"fats_g":14,"fiber_g":7},"ingredients":[{"name":"...","quantity":300,"unit":"g","category":"Verduras","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}]}}}],"freezerItems":[{"ingredient":"...","quantity":400,"unit":"g","mealDate":"YYYY-MM-DD","mealKey":"dinner","mealTitle":"...","thawLeadHours":12}]}',
+    '{"strategy":"...","batchingTips":["..."],"days":[{"date":"YYYY-MM-DD","meals":{"breakfast":{"title":"...","summary":"...","prep_minutes":15,"difficulty":"facil","calories":420,"servings":2,"nutrition":{"protein_g":25,"carbs_g":40,"fats_g":14,"fiber_g":7},"ingredients":[{"name":"...","quantity":300,"unit":"g","category":"Verduras","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"steps":["...","..."]}}}],"freezerItems":[{"ingredient":"...","quantity":400,"unit":"g","mealDate":"YYYY-MM-DD","mealKey":"dinner","mealTitle":"...","thawLeadHours":12}]}',
     "",
     "Cada day.meals solo debe contener las comidas seleccionadas en el perfil.",
   ].join("\n");
@@ -146,7 +147,7 @@ function buildSwapPrompt(input: Record<string, unknown>) {
     input.existingWeek ? `Resumen de la semana actual: ${JSON.stringify(input.existingWeek)}` : "",
     "",
     "Forma JSON exacta:",
-    '{"title":"...","summary":"...","prep_minutes":18,"difficulty":"facil","calories":510,"servings":2,"nutrition":{"protein_g":30,"carbs_g":45,"fats_g":18,"fiber_g":8},"ingredients":[{"name":"...","quantity":250,"unit":"g","category":"Despensa","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"tags":["..."]}',
+    '{"title":"...","summary":"...","prep_minutes":18,"difficulty":"facil","calories":510,"servings":2,"nutrition":{"protein_g":30,"carbs_g":45,"fats_g":18,"fiber_g":8},"ingredients":[{"name":"...","quantity":250,"unit":"g","category":"Despensa","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"steps":["...","..."],"tags":["..."]}',
   ].filter(Boolean).join("\n");
 }
 
@@ -217,6 +218,7 @@ function normalizeMealPayload(raw: Record<string, unknown>) {
       fiber_g: Number((raw.nutrition as Record<string, unknown>)?.fiber_g || 0) || 0,
     },
     ingredients,
+    steps: Array.isArray(raw.steps) ? raw.steps.map(String).filter(Boolean) : [],
     tags: Array.isArray(raw.tags) ? raw.tags.map(String) : [],
   };
 }

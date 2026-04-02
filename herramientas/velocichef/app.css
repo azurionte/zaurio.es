@@ -73,12 +73,10 @@ a{
   position:sticky;
   top:12px;
   z-index:90;
-  min-height:78px;
+  min-height:112px;
   margin-bottom:16px;
   padding:12px 14px;
   display:grid;
-  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
-  align-items:center;
   gap:10px;
   overflow:visible;
   background:
@@ -102,6 +100,13 @@ a{
   z-index:1;
 }
 
+.vc-topbar-main{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+}
+
 .vc-topbar-side{
   display:flex;
   align-items:center;
@@ -117,18 +122,13 @@ a{
 }
 
 .vc-topbar-center{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%, -50%);
   width:min(220px, 40vw);
   display:flex;
   justify-content:center;
-  pointer-events:none;
+  justify-self:center;
 }
 
 .vc-topbar-logo{
-  pointer-events:auto;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -307,6 +307,23 @@ a{
 .vc-nav-login{
   min-width:0;
   padding-inline:14px;
+}
+
+.vc-topbar-cookbar{
+  display:flex;
+  justify-content:center;
+}
+
+.vc-cook-launch{
+  width:100%;
+  min-height:50px;
+  border:none;
+  border-radius:999px;
+  padding:0 18px;
+  background:linear-gradient(135deg, var(--vc-orange), #ffb15c);
+  color:#fffdf8;
+  font-weight:900;
+  box-shadow:0 16px 28px rgba(239,123,45,.24);
 }
 
 .vc-card,
@@ -672,6 +689,7 @@ a{
   color:var(--vc-orange-deep);
   flex:0 0 34px;
   font-size:1rem;
+  font-weight:900;
 }
 
 .vc-pill-check{
@@ -915,6 +933,10 @@ a{
   gap:8px;
 }
 
+.vc-list-ordered{
+  padding-left:22px;
+}
+
 .vc-empty,
 .vc-loader{
   padding:24px;
@@ -990,6 +1012,98 @@ a{
   border:1px solid rgba(80,29,10,.1);
 }
 
+.vc-profile-editor{
+  gap:18px;
+}
+
+.vc-editor-section{
+  display:grid;
+  gap:14px;
+  padding:16px;
+  border-radius:24px;
+  background:rgba(255,255,255,.64);
+  border:1px solid rgba(80,29,10,.09);
+}
+
+.vc-inline-term{
+  padding:0;
+  border:none;
+  background:transparent;
+  color:var(--vc-orange-deep);
+  font:inherit;
+  font-weight:800;
+  text-decoration:underline;
+  text-decoration-thickness:2px;
+  text-underline-offset:3px;
+}
+
+.vc-cook-entry,
+.vc-cook-mode{
+  gap:18px;
+}
+
+.vc-cook-suggestion,
+.vc-cook-pick-card,
+.vc-cook-stage{
+  display:grid;
+  gap:12px;
+  padding:16px;
+  border-radius:24px;
+  background:rgba(255,255,255,.7);
+  border:1px solid rgba(80,29,10,.1);
+}
+
+.vc-cook-pick-list,
+.vc-cook-ingredients{
+  display:grid;
+  gap:12px;
+}
+
+.vc-cook-ingredient{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:rgba(255,248,240,.9);
+  border:1px solid rgba(80,29,10,.08);
+}
+
+.vc-cook-toolbar{
+  align-items:center;
+}
+
+.vc-cook-step-copy{
+  font-size:1.05rem;
+  line-height:1.7;
+}
+
+.vc-timer-modal{
+  justify-items:center;
+  text-align:center;
+}
+
+.vc-timer-face{
+  width:min(100%, 320px);
+  aspect-ratio:1;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  gap:8px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,212,91,.48), transparent 30%),
+    linear-gradient(180deg, rgba(255,248,240,.98), rgba(255,228,195,.96));
+  border:1px solid rgba(80,29,10,.1);
+  box-shadow:inset 0 0 0 10px rgba(255,255,255,.55), 0 24px 44px rgba(132,56,18,.14);
+}
+
+.vc-timer-face strong{
+  font-family:"Georgia","Times New Roman",serif;
+  font-size:3rem;
+  line-height:1;
+}
+
 .vc-inline-title{
   margin:0 0 4px;
   font-size:1rem;
@@ -1017,6 +1131,18 @@ a{
     width:48px;
     height:48px;
   }
+
+  .vc-topbar-main{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+  }
+
+  .vc-user-pill{
+    width:100%;
+  }
+
+  .vc-cook-launch{
+    min-height:48px;
+  }
 }
 
 @media (min-width: 780px){
@@ -1026,7 +1152,7 @@ a{
 
   .vc-topbar{
     top:18px;
-    min-height:88px;
+    min-height:124px;
     padding:14px 18px;
   }
 
@@ -1052,6 +1178,15 @@ a{
 
   .vc-menu-btn{
     padding-inline:12px 18px;
+  }
+
+  .vc-topbar-cookbar{
+    justify-content:flex-end;
+  }
+
+  .vc-cook-launch{
+    width:auto;
+    min-width:180px;
   }
 
   .vc-step{
@@ -1096,11 +1231,12 @@ a{
   }
 
   .vc-meal-actions{
-    grid-template-columns:repeat(4, minmax(0, 1fr));
+    grid-template-columns:repeat(2, minmax(0, 1fr));
   }
 
-  .vc-meal-actions .vc-button:last-child{
-    grid-column:auto;
+  .vc-cook-ingredients,
+  .vc-cook-pick-list{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
   }
 }
 
