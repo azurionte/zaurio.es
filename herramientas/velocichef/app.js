@@ -4,10 +4,36 @@ const APP_PATH = "/velocichef";
 const APP_BASE_URL = `${window.location.origin}${APP_PATH}/`;
 const APP_ASSET_PATH = `${APP_PATH}/assets`;
 const APP_LOGO_PATH = `${APP_ASSET_PATH}/logo.png`;
-const APP_MINI_LOGO_PATH = `${APP_ASSET_PATH}/mini_logo.png`;
 const APP_STORE_ICON_PATH = `${APP_ASSET_PATH}/store_icon.png`;
 const PUSH_PUBLIC_KEY_ENDPOINT = "/api/velocichef/push-public-key";
 const DEFAULT_REMINDER_LEAD_MINUTES = 75;
+const ZAURIO_DESTINATIONS = [
+  {
+    href: "https://zaurio.es",
+    label: "Inicio",
+    icon: "/shared/assets/brand/favicon-32x32.png",
+  },
+  {
+    href: "https://miercoles.zaurio.es",
+    label: "Miercoles",
+    icon: "/shared/assets/brand/miercoles.png",
+  },
+  {
+    href: "https://secretos.zaurio.es",
+    label: "Secretos",
+    icon: "/shared/assets/brand/confesion.png",
+  },
+  {
+    href: "https://herramientas.zaurio.es",
+    label: "Herramientas",
+    icon: "/shared/assets/brand/emprezaurio-icono.png",
+  },
+  {
+    href: "https://juegos.zaurio.es",
+    label: "Juegos",
+    icon: "/shared/assets/brand/trivialodon-icono.png",
+  },
+];
 
 const ALLERGY_OPTIONS = [
   "Gluten",
@@ -121,6 +147,7 @@ const state = {
   busyLabel: "",
   notice: "",
   error: "",
+  activeMenu: null,
   storageMode: "supabase",
   modal: null,
   workerRegistration: null,
@@ -153,6 +180,20 @@ function getUserLabel(user) {
   const meta = user?.user_metadata || {};
   const full = meta.full_name || meta.name || user?.email || "Chef";
   return String(full).trim();
+}
+
+function getUserShortLabel(user) {
+  const source = state.profile?.displayName || getUserLabel(user);
+  return String(source || "Chef").trim().split(/\s+/)[0] || "Chef";
+}
+
+function getUserAvatarUrl(user) {
+  const meta = user?.user_metadata || {};
+  return meta.avatar_url || meta.picture || meta.photo_url || "";
+}
+
+function getUserInitial(user) {
+  return getUserShortLabel(user).slice(0, 1).toUpperCase() || "C";
 }
 
 function getTimezone() {
@@ -331,7 +372,7 @@ function readLocal(kind, fallback = null) {
   try {
     const raw = localStorage.getItem(getLocalKey(kind));
     return raw ? JSON.parse(raw) : fallback;
-  } catch (_error) {
+  } catch (error) {
     return fallback;
   }
 }
@@ -339,7 +380,7 @@ function readLocal(kind, fallback = null) {
 function writeLocal(kind, value) {
   try {
     localStorage.setItem(getLocalKey(kind), JSON.stringify(value));
-  } catch (_error) {
+  } catch (error) {
     // Ignoramos errores de almacenamiento local.
   }
 }
@@ -389,7 +430,7 @@ async function loadProfile(user) {
       writeLocal("profile", data);
       return deserializeProfile(user, data);
     }
-  } catch (_error) {
+  } catch (error) {
     state.storageMode = "local";
   }
 
@@ -413,7 +454,7 @@ async function saveProfile() {
     });
     if (error) throw error;
     state.storageMode = "supabase";
-  } catch (_error) {
+  } catch (error) {
     state.storageMode = "local";
   }
 }
@@ -1408,6 +1449,26 @@ async function invokePlanner(body) {
   return data;
 }
 
+async function invokePlannerDirect(body) {
+  if (!state.session?.access_token) {
+    throw new Error("No hay una sesiÃ³n activa para llamar a VelociChef.");
+  }
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/velocichef-plan-week`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${state.session.access_token}`,
+      apikey: SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload?.ok === false) {
+    throw new Error(payload?.error || `La funciÃ³n respondiÃ³ con ${response.status}.`);
+  }
+  return payload;
+}
+
 async function generateWeek(startDate = getTomorrowIso()) {
   state.busy = true;
   state.busyLabel = "Preparando tu menú semanal...";
@@ -1415,16 +1476,20 @@ async function generateWeek(startDate = getTomorrowIso()) {
   render();
 
   try {
-    const data = await invokePlanner({
+    const data = await invokePlannerDirect({
       action: "generate_week",
       startDate,
       profile: plannerProfilePayload(),
     });
     state.week = buildWeekFromPlan(data.plan || data);
     state.notice = "";
+    state.error = "";
   } catch (_error) {
+    const error = _error;
     state.week = buildWeekFromPlan(createSampleWeekPlan(startDate));
     state.notice = "No pude alcanzar Gemini ahora mismo, así que he dejado una semana de muestra editable para que la app siga funcionando.";
+    state.notice = "No pude cerrar la generacion real en este intento, asi que he dejado una semana de muestra editable para que sigas avanzando.";
+    state.error = `Detalle tecnico: ${_error instanceof Error ? _error.message : "No he podido generar el menu real."}`;
   } finally {
     state.week.reminders = composeReminders();
     await saveWeek();
@@ -1444,7 +1509,7 @@ async function swapMeal(target, reasons) {
 
   let replacement = null;
   try {
-    const data = await invokePlanner({
+    const data = await invokePlannerDirect({
       action: "swap_meal",
       startDate: state.week?.startDate,
       profile: plannerProfilePayload(),
@@ -1481,9 +1546,12 @@ async function swapMeal(target, reasons) {
     });
     replacement = normalizeMeal(target.mealKey, data.meal || data, target.day.date);
     state.notice = "";
+    state.error = "";
   } catch (_error) {
     replacement = createFallbackSwapMeal(target, original);
     state.notice = "Gemini no respondió a tiempo y te he puesto una alternativa local para no frenarte.";
+    state.notice = "No he podido traer una alternativa real ahora mismo y te he puesto una opcion local para no frenarte.";
+    state.error = `Detalle tecnico: ${_error instanceof Error ? _error.message : "No he podido sustituir el plato con Gemini."}`;
   } finally {
     updateMeal(target.meal.id, () => replacement);
     state.week.reminders = composeReminders();
@@ -1531,6 +1599,96 @@ function renderBusyOverlay() {
         </div>
       </div>
     </div>
+  `;
+}
+
+function renderUserAvatar(user) {
+  const avatarUrl = getUserAvatarUrl(user);
+  if (avatarUrl) {
+    return `<span class="vc-user-avatar"><img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(getUserLabel(user))}"></span>`;
+  }
+  return `<span class="vc-user-avatar vc-user-avatar-fallback">${escapeHtml(getUserInitial(user))}</span>`;
+}
+
+function renderTopbar() {
+  const user = state.session?.user || null;
+  const zaurioMenuOpen = state.activeMenu === "zaurio";
+  const userMenuOpen = state.activeMenu === "user";
+  const displayName = state.profile?.displayName || getUserLabel(user);
+  const notificationState = state.profile?.notificationEnabled ? "Push activo" : "Avisos pendientes";
+  const shoppingState = state.week
+    ? (state.week.shoppingCompleted ? "Compra cerrada" : "Compra pendiente")
+    : "Sin semana activa";
+
+  return `
+    <header class="vc-topbar vc-card">
+      <div class="vc-topbar-side vc-topbar-left">
+        <div class="vc-menu-wrap ${zaurioMenuOpen ? "open" : ""}">
+          <button
+            class="vc-menu-btn"
+            type="button"
+            data-action="toggle-menu"
+            data-menu="zaurio"
+            aria-label="Abrir menu de Zaurio"
+            aria-haspopup="true"
+            aria-expanded="${zaurioMenuOpen ? "true" : "false"}"
+          >
+            <span class="vc-z-mark">Z</span>
+            <span class="vc-menu-text">Zaurio</span>
+          </button>
+          <nav class="vc-menu-drop" aria-label="Menu de Zaurio">
+            ${ZAURIO_DESTINATIONS.map((item) => `
+              <a class="vc-menu-link" href="${item.href}">
+                <img src="${item.icon}" alt="">
+                <span>${escapeHtml(item.label)}</span>
+              </a>
+            `).join("")}
+          </nav>
+        </div>
+      </div>
+
+      <div class="vc-topbar-center">
+        <a class="vc-topbar-logo" href="${APP_BASE_URL}" aria-label="Ir al inicio de VelociChef">
+          <img src="${APP_LOGO_PATH}" alt="VelociChef">
+        </a>
+      </div>
+
+      <div class="vc-topbar-side vc-topbar-right">
+        ${user ? `
+          <div class="vc-menu-wrap vc-user-wrap ${userMenuOpen ? "open" : ""}">
+            <button
+              class="vc-user-pill"
+              type="button"
+              data-action="toggle-menu"
+              data-menu="user"
+              aria-label="Abrir menu del usuario"
+              aria-haspopup="true"
+              aria-expanded="${userMenuOpen ? "true" : "false"}"
+            >
+              ${renderUserAvatar(user)}
+              <span class="vc-user-copy">
+                <strong>${escapeHtml(displayName)}</strong>
+                <small>${escapeHtml(shoppingState)}</small>
+              </span>
+              <span class="vc-user-caret" aria-hidden="true"></span>
+            </button>
+            <div class="vc-menu-drop vc-user-menu" role="menu" aria-label="Menu del usuario">
+              <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
+              <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
+              <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
+              <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Notificaciones</button>
+              <div class="vc-menu-meta">
+                ${getStorageBadge()}
+                <span class="vc-meta-pill">${escapeHtml(notificationState)}</span>
+              </div>
+              <button class="vc-menu-action vc-menu-action-danger" type="button" data-action="logout" role="menuitem">Salir</button>
+            </div>
+          </div>
+        ` : `
+          <button class="vc-button secondary vc-nav-login" type="button" data-action="login-google">Entrar con Google</button>
+        `}
+      </div>
+    </header>
   `;
 }
 
@@ -1615,8 +1773,13 @@ function renderPill(option, group, activeValues, helper = "") {
       data-group="${group}"
       data-value="${escapeHtml(option)}"
     >
-      <span>${escapeHtml(option)}</span>
-      ${helper ? `<small>${escapeHtml(helper)}</small>` : ""}
+      <span class="vc-pill-content">
+        <span class="vc-pill-copy">
+          <strong class="vc-pill-label">${escapeHtml(option)}</strong>
+          ${helper ? `<small>${escapeHtml(helper)}</small>` : ""}
+        </span>
+      </span>
+      <span class="vc-pill-check" aria-hidden="true"></span>
     </button>
   `;
 }
@@ -1631,8 +1794,14 @@ function renderMealChoice(option, activeValues) {
       data-group="plannedMeals"
       data-value="${option.key}"
     >
-      <span>${option.icon} ${escapeHtml(option.label)}</span>
-      <small>${escapeHtml(option.hint)}</small>
+      <span class="vc-pill-content">
+        <span class="vc-pill-icon" aria-hidden="true">${option.icon}</span>
+        <span class="vc-pill-copy">
+          <strong class="vc-pill-label">${escapeHtml(option.label)}</strong>
+          <small>${escapeHtml(option.hint)}</small>
+        </span>
+      </span>
+      <span class="vc-pill-check" aria-hidden="true"></span>
     </button>
   `;
 }
@@ -1646,8 +1815,13 @@ function renderCookingChoice(option, current) {
       data-action="set-cooking-style"
       data-value="${option.key}"
     >
-      <span>${escapeHtml(option.label)}</span>
-      <small>${escapeHtml(option.hint)}</small>
+      <span class="vc-pill-content">
+        <span class="vc-pill-copy">
+          <strong class="vc-pill-label">${escapeHtml(option.label)}</strong>
+          <small>${escapeHtml(option.hint)}</small>
+        </span>
+      </span>
+      <span class="vc-pill-check" aria-hidden="true"></span>
     </button>
   `;
 }
@@ -1655,60 +1829,66 @@ function renderCookingChoice(option, current) {
 function renderOnboarding() {
   const steps = [
     {
+      kicker: "Alergias",
       title: "Comienza a preparar tu perfil",
       copy: "Primero vamos con alergias y límites claros. Puedes marcar varias y dejar notas concretas para Gemini.",
       content: `
-        <div class="vc-fieldset">
+        <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Alergias o ingredientes que deben quedar fuera</label>
           <div class="vc-pill-grid">${ALLERGY_OPTIONS.map((option) => renderPill(option, "allergies", state.profile.allergies)).join("")}</div>
         </div>
-        <div class="vc-field">
+        <div class="vc-field vc-step-section">
           <label class="vc-label" for="allergy-notes">Otros o matices</label>
           <textarea id="allergy-notes" class="vc-textarea" data-field="allergyNotes" placeholder="Ejemplo: el marisco me sienta mal, pero el pescado blanco me va bien.">${escapeHtml(state.profile.allergyNotes)}</textarea>
+          <span class="vc-helper">Si hay excepciones o matices, este campo manda sobre las opciones rápidas.</span>
         </div>
       `,
     },
     {
+      kicker: "Gustos",
       title: "Tus gustos de verdad",
       copy: "Ahora toca decirle a VelociChef qué te gusta encontrar en la cocina y qué preferirías esquivar.",
       content: `
-        <div class="vc-fieldset">
+        <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Cosas que me gustan</label>
           <div class="vc-pill-grid">${LIKE_OPTIONS.map((option) => renderPill(option, "likes", state.profile.likes)).join("")}</div>
         </div>
-        <div class="vc-fieldset">
+        <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Cosas que no me gustan</label>
           <div class="vc-pill-grid">${DISLIKE_OPTIONS.map((option) => renderPill(option, "dislikes", state.profile.dislikes)).join("")}</div>
         </div>
-        <div class="vc-field">
+        <div class="vc-field vc-step-section">
           <label class="vc-label" for="dietary-notes">Explícamelo mejor</label>
           <textarea id="dietary-notes" class="vc-textarea" data-field="dietaryNotes" placeholder="Ejemplo: no me van bien las salsas muy pesadas y prefiero platos jugosos.">${escapeHtml(state.profile.dietaryNotes)}</textarea>
+          <span class="vc-helper">Aquí puedes contar texturas, sabores o combinaciones que prefieres evitar.</span>
         </div>
       `,
     },
     {
+      kicker: "Objetivos",
       title: "Estilo de cocina y objetivos",
       copy: "Aquí definimos qué tanto quieres complicarte entre semana y qué quieres conseguir con tu alimentación.",
       content: `
-        <div class="vc-fieldset">
+        <div class="vc-step-section vc-fieldset">
           <label class="vc-label">¿Qué nivel de cocina quieres esta semana?</label>
           <div class="vc-pill-grid">${COOKING_STYLE_OPTIONS.map((option) => renderCookingChoice(option, state.profile.cookingStyle)).join("")}</div>
         </div>
-        <div class="vc-fieldset">
+        <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Objetivos alimentarios</label>
           <div class="vc-pill-grid">${GOAL_OPTIONS.map((option) => renderPill(option, "goalTags", state.profile.goalTags)).join("")}</div>
         </div>
       `,
     },
     {
+      kicker: "Hogar",
       title: "¿Para cuántas personas cocinamos?",
       copy: "Puedes decirle a cada persona si come lo mismo que tú o si tiene reglas especiales.",
       content: `
-        <div class="vc-field">
+        <div class="vc-field vc-step-section">
           <label class="vc-label" for="householdCount">Personas que comen regularmente contigo</label>
           <input id="householdCount" class="vc-input" type="number" min="1" max="8" data-field="householdCount" value="${state.profile.householdCount}">
         </div>
-        <div class="vc-member-list">
+        <div class="vc-member-list vc-step-section">
           ${state.profile.householdMembers.map((member, index) => `
             <article class="vc-member-card">
               <div class="vc-field">
@@ -1740,14 +1920,27 @@ function renderOnboarding() {
       `,
     },
     {
+      kicker: "Plan",
       title: "¿Qué comidas quieres planificar?",
-      copy: "Marca las franjas de comida que quieres que VelociChef incluya. Al terminar te preparo la semana.",
+      copy: "Marca las franjas de comida que quieres planificar y cuéntame cómo encaja el almuerzo en tu día.",
       content: `
-        <div class="vc-fieldset">
+        <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Comidas a planificar</label>
           <div class="vc-pill-grid">${MEAL_OPTIONS.map((option) => renderMealChoice(option, state.profile.plannedMeals)).join("")}</div>
         </div>
-        <div class="vc-note">
+        <label class="vc-switch vc-switch-card vc-step-section">
+          <span>
+            <strong>¿Preparas el almuerzo la noche anterior?</strong>
+            <small class="vc-helper">Así puedo proponerte platos que funcionen mejor recalentados o listos para llevar.</small>
+          </span>
+          <input type="checkbox" data-field="lunchPrepNightBefore" ${state.profile.lunchPrepNightBefore ? "checked" : ""}>
+        </label>
+        <div class="vc-step-section vc-fieldset">
+          <label class="vc-label" for="onboarding-lunch-time">¿A qué hora te gusta comer regularmente?</label>
+          <input id="onboarding-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
+          <span class="vc-helper">Esto se usará para ajustar recordatorios y para que Gemini tenga en cuenta tu ritmo real.</span>
+        </div>
+        <div class="vc-note vc-note-strong">
           Se generará una semana empezando mañana, con porciones adaptadas a ${state.profile.householdCount} ${state.profile.householdCount === 1 ? "persona" : "personas"}, intentando reutilizar ingredientes y midiendo calorías aproximadas por plato.
         </div>
       `,
@@ -1761,16 +1954,21 @@ function renderOnboarding() {
     <section class="vc-shell">
       <article class="vc-card vc-step">
         <div class="vc-progress">
-          <div>
+          <div class="vc-step-progress-head">
             <span class="vc-eyebrow">Paso ${state.onboardingStep + 1} de ${steps.length}</span>
+            <span class="vc-helper">${Math.round(progress)}% completado</span>
           </div>
           <div class="vc-progress-bar"><div class="vc-progress-fill" style="width:${progress}%"></div></div>
         </div>
-        <div>
-          <h1 class="vc-step-title">${escapeHtml(step.title)}</h1>
-          <p class="vc-step-copy">${escapeHtml(step.copy)}</p>
+        <div class="vc-step-hero">
+          <div class="vc-step-badge">${String(state.onboardingStep + 1).padStart(2, "0")}</div>
+          <div class="vc-step-intro">
+            <span class="vc-step-kicker">${escapeHtml(step.kicker)}</span>
+            <h1 class="vc-step-title">${escapeHtml(step.title)}</h1>
+            <p class="vc-step-copy">${escapeHtml(step.copy)}</p>
+          </div>
         </div>
-        <div class="vc-form">${step.content}</div>
+        <div class="vc-form vc-onboarding-form">${step.content}</div>
         <div class="vc-step-foot">
           ${state.onboardingStep > 0 ? `<button class="vc-button secondary" data-action="onboarding-back">Volver</button>` : `<span></span>`}
           ${state.onboardingStep === steps.length - 1
@@ -1829,14 +2027,10 @@ function renderWorkspaceHeader() {
   return `
     <section class="vc-workspace-head">
       <article class="vc-brand-card vc-card">
-        <div class="vc-brand-row">
-          <div class="vc-brand-mark">
-            <img src="${APP_MINI_LOGO_PATH}" alt="VelociChef">
-          </div>
-          <div class="vc-brand-copy">
-            <h1>VelociChef</h1>
-            <p class="vc-copy">Hola, ${escapeHtml(userName)}. Aquí tienes tu cocina semanal organizada.</p>
-          </div>
+        <div class="vc-header-copy">
+          <span class="vc-eyebrow">Tu cocina semanal</span>
+          <h1 class="vc-title">Hola, ${escapeHtml(userName)}.</h1>
+          <p class="vc-copy">Tu menu, tu lista de la compra y tus avisos estan organizados para que la semana vaya suave de verdad.</p>
         </div>
         <div class="vc-chip-row">
           ${getStorageBadge()}
@@ -1971,7 +2165,7 @@ function renderScheduleView() {
         <div>
           <span class="vc-eyebrow">Ajustes finales</span>
           <h2 class="vc-step-title">Encajemos la semana con tu ritmo real</h2>
-          <p class="vc-step-copy">Estos horarios sirven para recordatorios, descongelado y para que la cocina se adapte mejor a tu día.</p>
+          <p class="vc-step-copy">Aquí puedes revisar lo que ya marcaste en el onboarding y afinar los avisos antes de ir a la compra.</p>
         </div>
 
         <div class="vc-fieldset">
@@ -1985,12 +2179,10 @@ function renderScheduleView() {
         </div>
 
         <div class="vc-grid two">
-          ${state.profile.lunchPrepNightBefore ? "" : `
-            <div class="vc-field">
-              <label class="vc-label" for="lunch-time">¿A qué hora te gustaría almorzar regularmente?</label>
-              <input id="lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
-            </div>
-          `}
+          <div class="vc-field">
+            <label class="vc-label" for="lunch-time">¿A qué hora te gustaría almorzar regularmente?</label>
+            <input id="lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
+          </div>
           <div class="vc-field">
             <label class="vc-label" for="dinner-time">¿A qué hora te gustaría cenar regularmente?</label>
             <input id="dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}">
@@ -2177,19 +2369,6 @@ function renderWorkspace() {
   return `
     <section class="vc-workspace">
       ${renderWorkspaceHeader()}
-      <nav class="vc-tabbar" aria-label="Navegación interna de VelociChef">
-        ${[
-          { key: "week", icon: "📅", label: "Semana" },
-          { key: "shopping", icon: "🛒", label: "Lista" },
-          { key: "recipes", icon: "📖", label: "Recetas" },
-          { key: "profile", icon: "⚙️", label: "Perfil" },
-        ].map((tab) => `
-          <button class="vc-tab ${state.currentView === tab.key ? "active" : ""}" data-action="open-view" data-view="${tab.key}">
-            <span class="vc-tab-icon">${tab.icon}</span>
-            <span>${tab.label}</span>
-          </button>
-        `).join("")}
-      </nav>
       ${views[state.currentView] || views.week}
     </section>
   `;
@@ -2336,7 +2515,7 @@ function renderModal() {
 
 function render() {
   if (state.loading) {
-    root.innerHTML = renderLoading();
+    root.innerHTML = `${renderTopbar()}${renderLoading()}`;
     modalRoot.innerHTML = renderModal();
     return;
   }
@@ -2352,7 +2531,7 @@ function render() {
       ? renderOnboarding()
       : renderWorkspace();
 
-  root.innerHTML = `<section class="vc-shell">${notices}${content}</section>`;
+  root.innerHTML = `${renderTopbar()}${notices ? `<section class="vc-shell">${notices}</section>` : ""}${content}`;
   modalRoot.innerHTML = renderModal();
 }
 
@@ -2366,6 +2545,11 @@ function toggleFromArray(list, value) {
 function validateOnboardingStep() {
   if (state.onboardingStep === 4 && !(state.profile.plannedMeals || []).length) {
     state.error = "Marca al menos una comida para poder generar el menú.";
+    render();
+    return false;
+  }
+  if (state.onboardingStep === 4 && !state.profile.lunchTime) {
+    state.error = "Necesito una hora de almuerzo para ajustar bien el plan semanal.";
     render();
     return false;
   }
@@ -2458,7 +2642,16 @@ async function sendTestNotification() {
 }
 
 async function handleAction(action, trigger) {
+  if (action !== "toggle-menu") {
+    state.activeMenu = null;
+  }
+
   switch (action) {
+    case "toggle-menu":
+      state.activeMenu = state.activeMenu === trigger.dataset.menu ? null : trigger.dataset.menu;
+      render();
+      break;
+
     case "login-google": {
       state.error = "";
       try {
@@ -2493,6 +2686,15 @@ async function handleAction(action, trigger) {
 
     case "generate-first-week":
       await generateWeek(getTomorrowIso());
+      break;
+
+    case "plan-new-week":
+      if (!state.profile?.onboardingCompleted) {
+        state.currentView = "onboarding";
+        render();
+        break;
+      }
+      await generateWeek(state.week ? addDays(state.week.endDate, 1) : getTomorrowIso());
       break;
 
     case "open-view":
@@ -2652,6 +2854,14 @@ async function handleAction(action, trigger) {
       await generateWeek(addDays(state.week.endDate, 1));
       break;
 
+    case "logout":
+      if (!state.client) return;
+      state.notice = "";
+      state.error = "";
+      await state.client.auth.signOut();
+      window.history.replaceState({}, "", APP_BASE_URL);
+      break;
+
     case "toggle-pill": {
       const group = trigger.dataset.group;
       const value = trigger.dataset.value;
@@ -2682,6 +2892,23 @@ document.addEventListener("click", async (event) => {
   }
 
   await handleAction(trigger.dataset.action, trigger);
+});
+
+document.addEventListener("click", (event) => {
+  if (!state.activeMenu) return;
+  if (event.target.closest(".vc-menu-wrap")) return;
+  state.activeMenu = null;
+  render();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (!state.activeMenu && !state.modal) return;
+  state.activeMenu = null;
+  if (state.modal) {
+    state.modal = null;
+  }
+  render();
 });
 
 document.addEventListener("input", (event) => {
@@ -2736,6 +2963,7 @@ document.addEventListener("visibilitychange", () => {
 async function hydrateSession(session) {
   clearReminderTimers();
   state.session = session;
+  state.activeMenu = null;
 
   if (!session?.user) {
     state.profile = null;
