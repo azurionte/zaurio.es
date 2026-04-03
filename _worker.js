@@ -476,7 +476,7 @@ function buildVelocichefStepImagePrompt(body) {
   const sceneGoal = buildSafeSceneGoal(step);
 
   return [
-    "Warm editorial cookbook illustration.",
+    "Top-down view of a cooking pan or cooking surface with food, illustrated in a clean, modern, semi-flat digital illustration style.",
     meal.title ? `Dish: ${meal.title}.` : "",
     meal.summary ? `Summary: ${meal.summary}.` : "",
     step.title ? `Step title: ${step.title}.` : "",
@@ -484,8 +484,11 @@ function buildVelocichefStepImagePrompt(body) {
     "Show only food, ingredients, cookware, trays, bowls, pans or boards that belong to this step.",
     "Depict the result of the preparation, not a person performing the action.",
     "If the step is about cutting or mixing, show the ingredients already arranged on the board, tray, bowl or pan after that action.",
+    "Soft gradients, smooth shading, slightly rounded stylized shapes, vibrant but natural colors, warm lighting and subtle highlights.",
+    "Minimal texture, matte surfaces with gentle gloss on ingredients, centered and balanced composition, wooden surface background in soft tones.",
+    "Ingredients clearly separated and visually readable, slightly idealized for clarity, cozy friendly cookbook aesthetic, high detail but not photorealistic, vector-like finish.",
     "No humans, no hands, no fingers, no arms, no faces, no body parts, no chef.",
-    "Prefer overhead or three-quarter angle, clean composition, cookbook style, softly stylized illustration.",
+    "Prefer overhead or slightly angled top-down perspective, clean composition, cookbook style, softly stylized illustration.",
     "No text, no words, no labels, no typography, no captions, no UI, no watermark.",
     "No step badges, no titles, no numbers, no stickers, no banners, no recipe card framing.",
   ].filter(Boolean).join(" ");

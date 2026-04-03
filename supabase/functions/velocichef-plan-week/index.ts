@@ -197,11 +197,11 @@ function buildStepImagePrompt(input: Record<string, unknown>) {
   const sceneGoal = String(step.image_prompt || step.text || "").trim();
 
   return [
-    "Create a warm cookbook style cooking illustration for a recipe step.",
+    "Create a top-down cooking illustration in a clean, modern, semi-flat digital cookbook style.",
     `Dish: ${meal.title || "Weekly dish"}.`,
     `Meal summary: ${meal.summary || ""}`,
     `Current step: ${sceneGoal || step.text || "Cooking step"}.`,
-    "Style: editorial food illustration, appetizing, mobile-friendly, no labels, no captions, no UI, no watermarks.",
+    "Style: soft gradients, smooth shading, slightly rounded stylized shapes, warm lighting, subtle highlights, minimal texture, vector-like finish, wooden surface background, ingredients clearly separated, not photorealistic.",
     "Show only food, ingredients and cookware from this step.",
     "Never include people, hands, fingers, arms, faces or any human body part.",
     "Never include text, words, letters, labels, menu cards, captions or package text.",
@@ -321,9 +321,11 @@ function buildCookingGuidancePromptV2(input: Record<string, unknown>) {
     "- Usa solo los ingredientes listados y tecnicas razonables para ese plato.",
     "- No uses frases vagas como 'ajusta a tu gusto' salvo que sea imprescindible.",
     "- Si un paso requiere espera o coccion, indica timer_minutes.",
+    "- Si un paso requiere espera o coccion, indica tambien timer_label con una accion corta y util para el aviso, por ejemplo: 'Retirar del horno', 'Escurrir arroz' o 'Dar la vuelta al pollo'.",
     "- Cada paso debe incluir image_prompt para una ilustracion tipo libro de cocina.",
     "- El image_prompt nunca debe pedir personas, manos, dedos, brazos, caras ni ninguna parte del cuerpo humano.",
     "- El image_prompt nunca debe pedir letras, palabras, etiquetas, envases con texto, UI ni carteles.",
+    "- El image_prompt debe seguir este estilo: vista cenital o casi cenital, ilustracion digital semi-plana, moderna y limpia, gradientes suaves, sombreado liso, formas ligeramente redondeadas, colores vivos pero naturales, luz calida, textura minima, acabado casi vectorial, fondo de madera suave, ingredientes bien separados y faciles de leer, estetica acogedora de libro de cocina, nada fotorealista.",
     "- Cada paso debe incluir image_search_query con 3 a 8 palabras utiles para buscar una foto publica parecida sin personas y sin texto.",
     "",
     "Contexto del perfil:",
@@ -338,7 +340,7 @@ function buildCookingGuidancePromptV2(input: Record<string, unknown>) {
     `Ingredientes: ${JSON.stringify(ingredients)}.`,
     "",
     "Forma JSON exacta:",
-    '{"steps":[{"title":"Preparar bandeja","text":"Forra una bandeja con papel de horno, pon unas gotas de aceite y dejala lista.","timer_minutes":0,"image_prompt":"Cookbook style illustration of an oven tray lined with parchment paper and a little olive oil, food and cookware only, no people, no hands, no text.","image_search_query":"oven tray parchment oil"},{"title":"Preparar patatas","text":"Lava y pela las patatas. Cortalas en gajos y dejalas en la bandeja preparada.","timer_minutes":0,"image_prompt":"Cookbook style illustration of potato wedges resting on a prepared oven tray, food and cookware only, no people, no hands, no text.","image_search_query":"potato wedges baking tray"}]}',
+    '{"steps":[{"title":"Preparar bandeja","text":"Forra una bandeja con papel de horno, pon unas gotas de aceite y dejala lista.","timer_minutes":0,"timer_label":"","image_prompt":"Top-down semi-flat digital illustration of an oven tray lined with parchment paper and a little olive oil, clean modern cookbook style, warm light, soft gradients, no people, no hands, no text.","image_search_query":"oven tray parchment oil"},{"title":"Preparar patatas","text":"Lava y pela las patatas. Cortalas en gajos y dejalas en la bandeja preparada.","timer_minutes":0,"timer_label":"","image_prompt":"Top-down semi-flat digital illustration of potato wedges resting on a prepared oven tray, clean modern cookbook style, warm light, soft gradients, no people, no hands, no text.","image_search_query":"potato wedges baking tray"}]}',
   ].join("\n");
 }
 
@@ -360,6 +362,7 @@ function splitVerboseStep(step: Record<string, unknown>, index: number) {
     title: sentenceIndex === 0 ? normalized.title : `${normalized.title} ${sentenceIndex + 1}`,
     text: sentence,
     timer_minutes: sentenceIndex === sentences.length - 1 ? normalized.timer_minutes : 0,
+    timer_label: sentenceIndex === sentences.length - 1 ? normalized.timer_label : "",
     image_prompt: normalized.image_prompt,
     image_search_query: normalized.image_search_query,
   }));
@@ -464,6 +467,7 @@ function normalizeStepPayload(raw: Record<string, unknown>, index: number) {
     title: String(raw.title || `Paso ${index + 1}`).trim(),
     text: String(raw.text || raw.description || "").trim(),
     timer_minutes: Number(raw.timer_minutes || 0) || 0,
+    timer_label: String(raw.timer_label || raw.timerLabel || "").trim(),
     image_prompt: String(raw.image_prompt || "").trim(),
     image_search_query: String(raw.image_search_query || raw.imageSearchQuery || "").trim(),
   };
@@ -499,7 +503,7 @@ function normalizeMealPayload(raw: Record<string, unknown>) {
     ingredients,
     steps: Array.isArray(raw.steps)
       ? raw.steps.map((step, index) => typeof step === "string"
-        ? { title: `Paso ${index + 1}`, text: step, timer_minutes: 0, image_prompt: "" }
+        ? { title: `Paso ${index + 1}`, text: step, timer_minutes: 0, timer_label: "", image_prompt: "" }
         : normalizeStepPayload(step as Record<string, unknown>, index)).filter((step) => step.text)
       : [],
     tags: Array.isArray(raw.tags) ? raw.tags.map(String) : [],

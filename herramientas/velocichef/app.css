@@ -299,6 +299,22 @@ body.vc-cook-immersive-body .vc-app{
   height:42px;
 }
 
+.vc-user-pill{
+  position:relative;
+}
+
+.vc-user-avatar-dot{
+  position:absolute;
+  right:4px;
+  bottom:4px;
+  width:12px;
+  height:12px;
+  border-radius:999px;
+  background:#e23d34;
+  border:2px solid #fff;
+  box-shadow:0 0 0 2px rgba(255,248,240,.7);
+}
+
 .vc-cook-step-indicator{
   min-width:92px;
   min-height:58px;
@@ -338,6 +354,7 @@ body.vc-cook-immersive-body .vc-app{
   min-width:94px;
   min-height:58px;
   padding:8px 12px;
+  position:relative;
   border-radius:999px;
   display:grid;
   place-items:center;
@@ -368,6 +385,22 @@ body.vc-cook-immersive-body .vc-app{
   letter-spacing:.05em;
 }
 
+.vc-cook-top-timer-extra{
+  position:absolute;
+  top:4px;
+  right:6px;
+  min-width:18px;
+  height:18px;
+  padding:0 4px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:rgba(239,123,45,.14);
+  color:var(--vc-orange-deep);
+  font-size:.68rem;
+  font-weight:800;
+}
+
 .vc-cook-timer-popover{
   position:absolute;
   top:calc(100% + 10px);
@@ -381,6 +414,34 @@ body.vc-cook-immersive-body .vc-app{
   background:rgba(255,250,244,.98);
   box-shadow:0 20px 40px rgba(80,29,10,.16);
   z-index:15;
+}
+
+.vc-cook-timer-item{
+  display:grid;
+  gap:8px;
+  padding:8px;
+  border-radius:14px;
+  background:rgba(255,247,239,.72);
+}
+
+.vc-cook-timer-copy{
+  display:grid;
+  gap:2px;
+}
+
+.vc-cook-timer-copy strong{
+  font-size:.94rem;
+}
+
+.vc-cook-timer-copy span{
+  font-size:.82rem;
+  color:var(--vc-muted);
+}
+
+.vc-cook-timer-item-actions{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:6px;
 }
 
 .vc-cook-timer-popover-action{
@@ -529,6 +590,19 @@ body.vc-cook-immersive-body .vc-app{
   display:grid;
   gap:2px;
   text-align:left;
+}
+
+.vc-menu-action-with-dot{
+  position:relative;
+  justify-content:space-between;
+}
+
+.vc-menu-action-dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:#e23d34;
+  box-shadow:0 0 0 2px rgba(255,248,240,.88);
 }
 
 .vc-user-copy strong,
@@ -1275,6 +1349,11 @@ body.vc-cook-immersive-body .vc-app{
 .vc-close{
   width:42px;
   height:42px;
+  display:grid;
+  place-items:center;
+  font-size:1.65rem;
+  line-height:1;
+  font-weight:500;
   border-radius:999px;
   border:1px solid rgba(80,29,10,.14);
   background:#fff;
@@ -1344,6 +1423,69 @@ body.vc-cook-immersive-body .vc-app{
   display:grid;
   gap:10px;
   pointer-events:none;
+}
+
+.vc-notification-banner{
+  position:fixed;
+  top:calc(var(--vc-topbar-current-height, 112px) + 10px);
+  right:12px;
+  left:12px;
+  z-index:121;
+  display:flex;
+  justify-content:flex-end;
+  pointer-events:none;
+}
+
+.vc-notification-banner-bubble{
+  width:min(100%, 560px);
+  display:grid;
+  gap:12px;
+  padding:16px 16px 14px;
+  border-radius:26px;
+  background:rgba(255,250,244,.98);
+  border:1px solid rgba(80,29,10,.12);
+  box-shadow:0 24px 48px rgba(80,29,10,.16);
+  position:relative;
+  pointer-events:auto;
+}
+
+.vc-notification-banner-bubble::after{
+  content:"";
+  position:absolute;
+  top:-10px;
+  right:34px;
+  width:20px;
+  height:20px;
+  background:rgba(255,250,244,.98);
+  border-left:1px solid rgba(80,29,10,.12);
+  border-top:1px solid rgba(80,29,10,.12);
+  transform:rotate(45deg);
+}
+
+.vc-notification-banner-copy{
+  display:grid;
+  gap:6px;
+}
+
+.vc-notification-banner-copy small{
+  font-size:.78rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--vc-orange-deep);
+}
+
+.vc-notification-banner-copy strong{
+  font-size:1.08rem;
+}
+
+.vc-notification-banner-copy p{
+  margin:0;
+  color:var(--vc-muted);
+}
+
+.vc-notification-banner-action{
+  justify-self:start;
 }
 
 .vc-toast{
@@ -1416,6 +1558,10 @@ body.vc-cook-immersive-body .vc-app{
   color:var(--vc-orange-deep);
   font:inherit;
   font-weight:800;
+  white-space:nowrap;
+  word-break:normal;
+  overflow-wrap:normal;
+  hyphens:none;
   text-decoration:underline;
   text-decoration-thickness:2px;
   text-underline-offset:3px;
@@ -1815,6 +1961,10 @@ body.vc-cook-immersive-body .vc-app{
 .vc-cook-step-copy{
   font-size:1.05rem;
   line-height:1.7;
+  word-break:normal;
+  overflow-wrap:normal;
+  hyphens:none;
+  text-wrap:pretty;
 }
 
 .vc-timer-modal{

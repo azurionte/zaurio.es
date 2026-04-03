@@ -146,37 +146,37 @@ const COOKING_GLOSSARY = [
     key: "juliana",
     phrase: "corta en juliana",
     title: "Cortar en juliana",
-    body: "Significa hacer tiras finas y alargadas. Piensa en bastoncitos delgados para que el ingrediente se cocine rÃƒÂ¡pido y quede uniforme.",
+    body: "Significa hacer tiras finas y alargadas. Piensa en bastoncitos delgados para que el ingrediente se cocine rápido y quede uniforme.",
   },
   {
     key: "picar-fino",
     phrase: "pica fino",
     title: "Picar fino",
-    body: "Es cortar en trozos pequeÃƒÂ±os y regulares. Va bien cuando quieres que el ingrediente se reparta por todo el plato sin dominar cada bocado.",
+    body: "Es cortar en trozos pequeños y regulares. Va bien cuando quieres que el ingrediente se reparta por todo el plato sin dominar cada bocado.",
   },
   {
     key: "sofreir",
-    phrase: "sofrÃƒÂ­e",
-    title: "SofreÃƒÂ­r",
+    phrase: "sofríe",
+    title: "Sofreír",
     body: "Es cocinar a fuego medio con un poco de grasa hasta que el ingrediente se ablande y gane sabor sin llegar a quemarse.",
   },
   {
     key: "fuego-lento",
     phrase: "a fuego lento",
     title: "Cocinar a fuego lento",
-    body: "Es mantener una cocciÃƒÂ³n suave, con burbujas pequeÃƒÂ±as. Sirve para que el sabor se concentre sin que el fondo se agarre.",
+    body: "Es mantener una cocción suave, con burbujas pequeñas. Sirve para que el sabor se concentre sin que el fondo se agarre.",
   },
   {
     key: "dorar",
     phrase: "dora",
     title: "Dorar",
-    body: "Es cocinar lo justo para que la superficie tome color tostado. Ese color aporta aroma y un sabor mÃƒÂ¡s profundo.",
+    body: "Es cocinar lo justo para que la superficie tome color tostado. Ese color aporta aroma y un sabor más profundo.",
   },
   {
     key: "reservar",
     phrase: "reserva",
     title: "Reservar",
-    body: "Solo significa apartar ese ingrediente por un momento para usarlo despuÃƒÂ©s, sin seguir cocinÃƒÂ¡ndolo.",
+    body: "Solo significa apartar ese ingrediente por un momento para usarlo después, sin seguir cocinándolo.",
   },
 ];
 
@@ -208,8 +208,10 @@ const state = {
   notificationDevice: null,
   notificationTab: urlParams.get("tab") === "pending" ? "pending" : "future",
   pendingReminderLink: null,
+  activeNotificationBannerId: null,
 };
 let cookingMicHintTimer = null;
+let notificationBannerTimer = null;
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
@@ -231,31 +233,31 @@ function escapeHtml(value) {
 
 function sanitizeUiCopy(value) {
   return String(value || "")
-    .replace(/ÃƒÆ’Ã‚Â¡|ÃƒÂ¡/g, "a")
-    .replace(/ÃƒÆ’Ã‚Â©|ÃƒÂ©/g, "e")
-    .replace(/ÃƒÆ’Ã‚Â­|ÃƒÂ­/g, "i")
-    .replace(/ÃƒÆ’Ã‚Â³|ÃƒÂ³/g, "o")
-    .replace(/ÃƒÆ’Ã‚Âº|ÃƒÂº/g, "u")
-    .replace(/ÃƒÆ’Ã‚Â±|ÃƒÂ±/g, "n")
-    .replace(/ÃƒÆ’Ã‚Â|ÃƒÂ/g, "A")
-    .replace(/ÃƒÆ’Ã‚â€°|Ãƒâ€°/g, "E")
-    .replace(/ÃƒÆ’Ã‚Â|ÃƒÂ/g, "I")
-    .replace(/ÃƒÆ’Ã‚â€œ|Ãƒâ€œ/g, "O")
-    .replace(/ÃƒÆ’Ã‚Å¡|ÃƒÅ¡/g, "U")
-    .replace(/ÃƒÆ’Ã‚â€˜|Ãƒâ€˜/g, "N")
-    .replace(/Ã‚Â¿/g, "Â¿")
-    .replace(/Ã‚Â¡/g, "Â¡")
+    .replace(/ÃƒÆ’Ã‚Â¡|ÃƒÂ¡/g, "á")
+    .replace(/ÃƒÆ’Ã‚Â©|ÃƒÂ©/g, "é")
+    .replace(/ÃƒÆ’Ã‚Â­|ÃƒÂ­/g, "í")
+    .replace(/ÃƒÆ’Ã‚Â³|ÃƒÂ³/g, "ó")
+    .replace(/ÃƒÆ’Ã‚Âº|ÃƒÂº/g, "ú")
+    .replace(/ÃƒÆ’Ã‚Â±|ÃƒÂ±/g, "ñ")
+    .replace(/ÃƒÆ’Ã‚Â|ÃƒÂ/g, "Á")
+    .replace(/ÃƒÆ’Ã‚â€°|Ãƒâ€°/g, "É")
+    .replace(/ÃƒÆ’Ã‚Â|ÃƒÂ/g, "Í")
+    .replace(/ÃƒÆ’Ã‚â€œ|Ãƒâ€œ/g, "Ó")
+    .replace(/ÃƒÆ’Ã‚Å¡|ÃƒÅ¡/g, "Ú")
+    .replace(/ÃƒÆ’Ã‚â€˜|Ãƒâ€˜/g, "Ñ")
+    .replace(/Ã‚Â¿/g, "¿")
+    .replace(/Ã‚Â¡/g, "¡")
     .replace(/Ã‚/g, "")
     .replace(/Ãƒâ€š/g, "")
-    .replace(/Ã¢Ëœâ‚¬Ã¯Â¸Â/g, "D")
-    .replace(/Ã°Å¸ÂÂ²/g, "A")
-    .replace(/Ã°Å¸ÂÅ½/g, "M")
-    .replace(/Ã°Å¸Å’â„¢/g, "C")
-    .replace(/Ã°Å¸Â¥Å“/g, "+")
+    .replace(/Ã¢Ëœâ‚¬Ã¯Â¸Â/g, "☀️")
+    .replace(/Ã°Å¸ÂÂ²/g, "🍲")
+    .replace(/Ã°Å¸ÂÅ½/g, "🍎")
+    .replace(/Ã°Å¸Å’â„¢/g, "🌙")
+    .replace(/Ã°Å¸Â¥Å“/g, "🥜")
     .replace(/Ãƒâ€šÃ‚Â·|Ã‚Â·/g, " Â· ")
     .replace(/Ã¢â‚¬Å“|Ã¢â‚¬Â/g, "\"")
     .replace(/Ã¢â‚¬â„¢/g, "'")
-    .replace(/Ã¢Å“â€¢/g, "âœ•")
+    .replace(/Ã¢Å“â€¢|âœ•|✖|✕/g, "×")
     .replace(/Google login/gi, "Acceso seguro")
     .replace(/Gemini/gi, "VelociChef")
     .replace(/Supabase/gi, "tu cocina")
@@ -273,15 +275,31 @@ function uniqueValues(values) {
 }
 
 function decodeMojibakeText(value) {
-  const source = String(value || "");
-  if (!/[ÃƒÃ‚Ã¢Â]/.test(source)) return source;
-  try {
-    const bytes = Uint8Array.from(Array.from(source, (character) => character.charCodeAt(0) & 255));
-    const decoded = new TextDecoder("utf-8").decode(bytes);
-    return decoded && !/\uFFFD/.test(decoded) ? decoded.replace(/Â/g, "") : source.replace(/Ã‚/g, "").replace(/Â/g, "");
-  } catch (_error) {
-    return source.replace(/Ã‚/g, "").replace(/Â/g, "");
+  let current = String(value || "");
+  if (!/[ÃƒÃ‚Ã¢ÂÕ]/.test(current)) {
+    return current.replace(/âœ•|✖|✕/g, "×");
   }
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const cleaned = current.replace(/Ã‚/g, "").replace(/Â/g, "");
+    try {
+      const bytes = Uint8Array.from(Array.from(cleaned, (character) => character.charCodeAt(0) & 255));
+      const decoded = new TextDecoder("utf-8").decode(bytes);
+      if (decoded && !/\uFFFD/.test(decoded) && decoded !== current) {
+        current = decoded;
+        continue;
+      }
+      current = cleaned;
+      break;
+    } catch (_error) {
+      current = cleaned;
+      break;
+    }
+  }
+
+  return sanitizeUiCopy(current)
+    .replace(/Õ¿/g, "á")
+    .replace(/âœ•|✖|✕/g, "×");
 }
 
 function repairVisibleText(container) {
@@ -1088,12 +1106,16 @@ function normalizeCookingStep(step, index) {
   const title = typeof step === "string"
     ? `Paso ${index + 1}`
     : String(step?.title || `Paso ${index + 1}`).trim();
+  const timerLabel = typeof step === "string"
+    ? ""
+    : String(step?.timerLabel || step?.timer_label || "").trim();
 
   return {
     id: step?.id || createId(),
     title,
     text,
     timerMinutes: Number(step?.timerMinutes || step?.timer_minutes || extractTimerMinutes(text)) || 0,
+    timerLabel,
     imagePrompt: typeof step === "string" ? "" : String(step?.imagePrompt || step?.image_prompt || "").trim(),
     imageSearchQuery: typeof step === "string" ? "" : String(step?.imageSearchQuery || step?.image_search_query || "").trim(),
   };
@@ -1133,6 +1155,7 @@ function buildFallbackCookingSteps(mealKey, meal, ingredients) {
       title: "Cocina principal",
       text: `Lleva la bandeja al horno y cocina durante ${method.timerMinutes} minutos, hasta que quede bien hecho y con color.`,
       timerMinutes: method.timerMinutes,
+      timerLabel: "Retirar del horno",
     });
   } else if (method.type === "simmer") {
     steps.push({
@@ -1143,12 +1166,14 @@ function buildFallbackCookingSteps(mealKey, meal, ingredients) {
       title: "Cuece suave",
       text: `AÃƒÂ±ade ${formatNaturalList(primaryIngredients) || "el resto de ingredientes"}, cubre lo necesario y cocina a fuego lento durante ${method.timerMinutes} minutos.`,
       timerMinutes: method.timerMinutes,
+      timerLabel: "Revisar la olla",
     });
   } else if (method.type === "boil") {
     steps.push({
       title: "Pon la base en marcha",
       text: `Hierve agua o caldo y cocina ${base?.name || "la base del plato"} durante ${method.timerMinutes} minutos hasta que quede en su punto.`,
       timerMinutes: method.timerMinutes,
+      timerLabel: base?.name ? `Escurrir ${base.name}` : "Escurrir la base",
     });
     steps.push({
       title: "Saltea y une",
@@ -1168,6 +1193,7 @@ function buildFallbackCookingSteps(mealKey, meal, ingredients) {
       title: "Termina la cocciÃƒÂ³n",
       text: `AÃƒÂ±ade ${formatNaturalList(primaryIngredients) || "el resto de ingredientes"} y cocina a fuego lento durante ${method.timerMinutes} minutos, removiendo de vez en cuando.`,
       timerMinutes: method.timerMinutes,
+      timerLabel: "Retirar la sartén",
     });
   }
 
@@ -1328,6 +1354,7 @@ function normalizeWeek(rawWeek) {
     freezerOptIn: !!rawWeek.freezerOptIn,
     freezerItems: buildFreezerItems(normalizedDays, rawWeek.freezerItems),
     reminders: Array.isArray(rawWeek.reminders) ? rawWeek.reminders.map(normalizeReminder).filter(Boolean) : [],
+    activityNotifications: Array.isArray(rawWeek.activityNotifications) ? rawWeek.activityNotifications.map(normalizeActivityNotification).filter(Boolean) : [],
     lastReminderSyncAt: rawWeek.lastReminderSyncAt || null,
   };
 }
@@ -1341,6 +1368,7 @@ function buildWeekFromPlan(plan) {
     freezerOptIn: false,
   });
   normalized.reminders = [];
+  normalized.activityNotifications = [];
   return normalized;
 }
 
@@ -1398,6 +1426,7 @@ function createCookingState(mode = "suggest", mealId = null) {
     showMicHint: false,
     recognitionState: "idle",
     lastCommand: "",
+    activeTimers: [],
     activeTimer: null,
     timerMenuOpen: false,
     guidanceStatus: "idle",
@@ -1458,12 +1487,38 @@ function getCookCopyDensityClass(text, options = {}) {
   return "vc-cook-density-sm";
 }
 
+function sortCookingTimers(timers = []) {
+  return [...timers].sort((left, right) => {
+    if (!!left?.paused !== !!right?.paused) {
+      return left?.paused ? 1 : -1;
+    }
+    const leftRemaining = Number(left?.remainingMs ?? 0);
+    const rightRemaining = Number(right?.remainingMs ?? 0);
+    if (leftRemaining !== rightRemaining) return leftRemaining - rightRemaining;
+    return String(left?.id || "").localeCompare(String(right?.id || ""));
+  });
+}
+
+function syncPrimaryCookingTimer() {
+  if (!state.cooking) return;
+  state.cooking.activeTimers = sortCookingTimers((state.cooking.activeTimers || []).filter(Boolean));
+  state.cooking.activeTimer = state.cooking.activeTimers[0] || null;
+}
+
+function getActiveCookingTimers() {
+  return sortCookingTimers(state.cooking?.activeTimers || []);
+}
+
+function getPrimaryCookingTimer() {
+  return getActiveCookingTimers()[0] || null;
+}
+
 function getCookingStageList(target) {
   if (!target) return [];
   const ingredientStep = {
     id: `${target.meal.id}-ingredients`,
     kind: "ingredients",
-    title: "Paso 1 - PreparaciÃƒÂ³n",
+    title: "Paso 1 - Preparación",
     copy: "Coge los ingredientes necesarios para esta receta.",
     ingredients: target.meal.ingredients || [],
   };
@@ -1723,6 +1778,134 @@ function normalizeReminder(rawReminder) {
   };
   reminder.url = reminder.url || buildReminderUrl(reminder);
   return reminder;
+}
+
+function normalizeActivityNotification(rawNotification) {
+  if (!rawNotification) return null;
+  return {
+    id: rawNotification.id || createId(),
+    sourceKey: rawNotification.sourceKey || rawNotification.source_key || "",
+    kind: String(rawNotification.kind || "info"),
+    title: String(rawNotification.title || "").trim(),
+    body: String(rawNotification.body || "").trim(),
+    createdAt: rawNotification.createdAt || rawNotification.created_at || new Date().toISOString(),
+    readAt: rawNotification.readAt || rawNotification.read_at || null,
+    actionLabel: String(rawNotification.actionLabel || rawNotification.action_label || "").trim(),
+    actionType: String(rawNotification.actionType || rawNotification.action_type || "").trim(),
+    reminderId: rawNotification.reminderId || rawNotification.reminder_id || null,
+    mealId: rawNotification.mealId || rawNotification.meal_id || null,
+    url: rawNotification.url || "",
+  };
+}
+
+function getActivityNotifications() {
+  return (state.week?.activityNotifications || []).map(normalizeActivityNotification).filter(Boolean);
+}
+
+function getUnreadActivityNotifications() {
+  return getActivityNotifications().filter((item) => !item.readAt);
+}
+
+function clearNotificationBannerTimer() {
+  if (!notificationBannerTimer) return;
+  window.clearTimeout(notificationBannerTimer);
+  notificationBannerTimer = null;
+}
+
+function showNotificationBanner(notificationId) {
+  clearNotificationBannerTimer();
+  state.activeNotificationBannerId = notificationId;
+  notificationBannerTimer = window.setTimeout(() => {
+    state.activeNotificationBannerId = null;
+    notificationBannerTimer = null;
+    render();
+  }, 5000);
+}
+
+function pushActivityNotification(rawNotification, options = {}) {
+  if (!state.week) return null;
+  const notification = normalizeActivityNotification(rawNotification);
+  if (!notification) return null;
+
+  const current = getActivityNotifications();
+  const index = notification.sourceKey
+    ? current.findIndex((item) => item.sourceKey && item.sourceKey === notification.sourceKey)
+    : -1;
+
+  if (index >= 0) {
+    current.splice(index, 1);
+  }
+
+  current.unshift(notification);
+  state.week.activityNotifications = current.slice(0, 40);
+
+  if (options.showBanner !== false) {
+    showNotificationBanner(notification.id);
+  }
+
+  if (options.persist !== false) {
+    void saveWeek();
+  }
+
+  render();
+  return notification;
+}
+
+function markAllActivityNotificationsRead() {
+  if (!state.week?.activityNotifications?.length) return false;
+  let changed = false;
+  state.week.activityNotifications = state.week.activityNotifications.map((item) => {
+    const normalized = normalizeActivityNotification(item);
+    if (!normalized || normalized.readAt) return normalized;
+    changed = true;
+    return {
+      ...normalized,
+      readAt: new Date().toISOString(),
+    };
+  }).filter(Boolean);
+  return changed;
+}
+
+function markActivityNotificationRead(notificationId) {
+  if (!state.week?.activityNotifications?.length) return false;
+  let changed = false;
+  state.week.activityNotifications = state.week.activityNotifications.map((item) => {
+    const normalized = normalizeActivityNotification(item);
+    if (!normalized || normalized.id !== notificationId || normalized.readAt) return normalized;
+    changed = true;
+    return {
+      ...normalized,
+      readAt: new Date().toISOString(),
+    };
+  }).filter(Boolean);
+  return changed;
+}
+
+function getActivityNotificationById(notificationId) {
+  return getActivityNotifications().find((item) => item.id === notificationId) || null;
+}
+
+function buildActivityNotificationFromReminder(reminder) {
+  if (!reminder) return null;
+  const actionLabel = reminder.kind === "meal"
+    ? "Comenzar"
+    : reminder.kind === "thaw"
+      ? "Revisar"
+      : "Abrir";
+  return {
+    id: createId(),
+    sourceKey: `reminder:${reminder.id}`,
+    kind: reminder.kind || "reminder",
+    title: reminder.title,
+    body: reminder.body,
+    createdAt: new Date().toISOString(),
+    readAt: null,
+    actionLabel,
+    actionType: "reminder",
+    reminderId: reminder.id,
+    mealId: reminder.mealId || null,
+    url: reminder.url || "",
+  };
 }
 
 function finalizeReminder(baseReminder, previousReminder = null) {
@@ -2033,12 +2216,9 @@ async function maybeFireReminder(reminder) {
   if (!state.week || !state.profile?.notificationEnabled) return;
   if (reminder.deliveredAt) return;
   reminder.deliveredAt = new Date().toISOString();
-  try {
-    await showBrowserNotification(reminder);
-    await saveWeek();
-  } catch (_error) {
-    reminder.deliveredAt = null;
-  }
+  pushActivityNotification(buildActivityNotificationFromReminder(reminder), { persist: false, showBanner: true });
+  await showBrowserNotification(reminder).catch(() => {});
+  await saveWeek();
 }
 
 function scheduleReminders() {
@@ -2153,76 +2333,126 @@ function formatCountdown(remainingMs) {
 }
 
 function syncCookingTimer() {
-  if (!state.cooking?.activeTimer) {
+  if (!state.cooking) {
     clearTimerTicker();
     return;
   }
-  if (state.cooking.activeTimer.paused) {
+
+  const timers = [...(state.cooking.activeTimers || [])];
+  if (!timers.length) {
     clearTimerTicker();
-    render();
     return;
   }
 
-  const remainingMs = state.cooking.activeTimer.endsAt - Date.now();
-  state.cooking.activeTimer.remainingMs = remainingMs;
-
-  if (remainingMs <= 0) {
-    clearTimerTicker();
-    const finishedLabel = state.cooking.activeTimer.label;
-    state.cooking.activeTimer.remainingMs = 0;
-    state.notice = `${finishedLabel} ya estÃƒÂ¡ listo.`;
-    if ("Notification" in window && Notification.permission === "granted") {
-      showBrowserNotification({
-        id: `cook-timer-${Date.now()}`,
-        title: "Tiempo cumplido",
-        body: `${finishedLabel} ya puede pasar al siguiente paso.`,
-        url: `${APP_BASE_URL}?view=cook`,
-      }).catch(() => {});
+  const now = Date.now();
+  const finished = [];
+  const nextTimers = timers.filter((timer) => {
+    if (timer.paused) return true;
+    const remainingMs = timer.endsAt - now;
+    timer.remainingMs = remainingMs;
+    if (remainingMs <= 0) {
+      timer.remainingMs = 0;
+      finished.push(timer);
+      return false;
     }
+    return true;
+  });
+
+  state.cooking.activeTimers = nextTimers;
+  syncPrimaryCookingTimer();
+
+  if (finished.length) {
+    const finishedLabel = finished[0].label;
+    finished.forEach((timer) => {
+      pushActivityNotification({
+        id: createId(),
+        sourceKey: `timer:${timer.id}`,
+        kind: "timer",
+        title: `${timer.label} listo`,
+        body: `${timer.label} ya está listo.`,
+        createdAt: new Date().toISOString(),
+        readAt: null,
+        actionLabel: "Seguir",
+        actionType: "cook",
+        mealId: timer.mealId || null,
+      }, { persist: true, showBanner: true });
+    });
+    if ("Notification" in window && Notification.permission === "granted") {
+      finished.forEach((timer) => {
+        showBrowserNotification({
+          id: `cook-timer-${timer.id}`,
+          title: "Tiempo cumplido",
+          body: `${timer.label} ya puede pasar al siguiente paso.`,
+          url: `${APP_BASE_URL}?view=cook`,
+        }).catch(() => {});
+      });
+    }
+  }
+
+  const hasRunningTimers = (state.cooking.activeTimers || []).some((timer) => !timer.paused);
+  if (!hasRunningTimers) {
+    clearTimerTicker();
   }
 
   render();
 }
 
-function startCookingTimer(label, minutes) {
+function startCookingTimer(label, minutes, options = {}) {
   ensureCookingState();
-  state.cooking.activeTimer = {
-    id: createId(),
+  const timer = {
+    id: options.timerId || createId(),
     label,
     durationMinutes: minutes,
     endsAt: Date.now() + minutes * 60000,
     remainingMs: minutes * 60000,
     paused: false,
+    stepId: options.stepId || "",
+    mealId: options.mealId || "",
   };
+  state.cooking.activeTimers = (state.cooking.activeTimers || []).filter((entry) => entry.stepId !== timer.stepId || entry.mealId !== timer.mealId);
+  state.cooking.activeTimers.push(timer);
+  syncPrimaryCookingTimer();
   state.cooking.timerMenuOpen = false;
-  clearTimerTicker();
-  state.timerTicker = window.setInterval(syncCookingTimer, 1000);
+  if (!state.timerTicker) {
+    state.timerTicker = window.setInterval(syncCookingTimer, 1000);
+  }
   syncCookingTimer();
 }
 
-function toggleCookingTimerPause() {
-  if (!state.cooking?.activeTimer) return;
-  const timer = state.cooking.activeTimer;
+function toggleCookingTimerPause(timerId = "") {
+  if (!state.cooking?.activeTimers?.length) return;
+  const timer = (state.cooking.activeTimers || []).find((entry) => entry.id === timerId) || getPrimaryCookingTimer();
+  if (!timer) return;
   if (timer.paused) {
     timer.paused = false;
     timer.endsAt = Date.now() + Math.max(0, timer.remainingMs || 0);
-    clearTimerTicker();
-    state.timerTicker = window.setInterval(syncCookingTimer, 1000);
+    if (!state.timerTicker) {
+      state.timerTicker = window.setInterval(syncCookingTimer, 1000);
+    }
     syncCookingTimer();
   } else {
     timer.remainingMs = Math.max(0, timer.endsAt - Date.now());
     timer.paused = true;
-    clearTimerTicker();
+    syncPrimaryCookingTimer();
+    if (!(state.cooking.activeTimers || []).some((entry) => !entry.paused)) {
+      clearTimerTicker();
+    }
     render();
   }
 }
 
-function stopCookingTimer() {
-  clearTimerTicker();
-  if (state.cooking) {
-    state.cooking.activeTimer = null;
-    state.cooking.timerMenuOpen = false;
+function stopCookingTimer(timerId = "") {
+  if (!state.cooking) return;
+  if (!timerId) {
+    state.cooking.activeTimers = [];
+  } else {
+    state.cooking.activeTimers = (state.cooking.activeTimers || []).filter((timer) => timer.id !== timerId);
   }
+  syncPrimaryCookingTimer();
+  if (!(state.cooking.activeTimers || []).some((timer) => !timer.paused)) {
+    clearTimerTicker();
+  }
+  state.cooking.timerMenuOpen = false;
 }
 
 async function moveCookingStep(delta) {
@@ -2232,6 +2462,7 @@ async function moveCookingStep(delta) {
   ensureCookingState();
   const sessionId = state.cooking.sessionId;
   state.cooking.stepIndex = Math.max(0, Math.min((state.cooking.stepIndex || 0) + delta, Math.max(0, stages.length - 1)));
+  state.cooking.timerMenuOpen = false;
   render();
   window.scrollTo(0, 0);
   const nextTarget = getCookingTarget();
@@ -2276,7 +2507,10 @@ async function handleVoiceNavigation(transcript) {
   const target = getCookingTarget();
   const currentStage = target ? getCookingStage(target).current : null;
   if (/temporizador|cuenta regresiva/.test(normalized) && currentStage?.timerMinutes) {
-    startCookingTimer(currentStage.title, currentStage.timerMinutes);
+    startCookingTimer(currentStage.timerLabel || currentStage.title, currentStage.timerMinutes, {
+      stepId: currentStage.id,
+      mealId: target?.meal?.id || "",
+    });
     return "temporizador";
   }
   return "";
@@ -2888,6 +3122,28 @@ function renderToastStack() {
   `;
 }
 
+function renderNotificationBanner() {
+  const notification = getActivityNotificationById(state.activeNotificationBannerId);
+  if (!notification) return "";
+
+  return `
+    <div class="vc-notification-banner" role="status" aria-live="polite">
+      <div class="vc-notification-banner-bubble">
+        <div class="vc-notification-banner-copy">
+          <small>${escapeHtml(notification.kind === "timer" ? "Temporizador" : notification.kind === "meal" ? "Hora de cocinar" : notification.kind === "thaw" ? "Descongelar" : "Notificación")}</small>
+          <strong>${escapeHtml(notification.title)}</strong>
+          <p>${escapeHtml(notification.body)}</p>
+        </div>
+        ${notification.actionLabel ? `
+          <button class="vc-button primary vc-notification-banner-action" type="button" data-action="open-activity-notification" data-notification-id="${notification.id}">
+            ${escapeHtml(notification.actionLabel)}
+          </button>
+        ` : ""}
+      </div>
+    </div>
+  `;
+}
+
 function renderUserAvatar(user) {
   const avatarUrl = getUserAvatarUrl(user);
   if (avatarUrl) {
@@ -2909,9 +3165,12 @@ function renderTopbar() {
   const shoppingState = state.week
     ? (state.week.shoppingCompleted ? "Compra cerrada" : "Compra pendiente")
     : "Sin semana activa";
+  const unreadActivityCount = getUnreadActivityNotifications().length;
   const cookingTarget = isImmersiveCook ? getCookingTarget() : null;
   const cookingStage = cookingTarget ? getCookingStage(cookingTarget) : null;
-  const activeTimer = isImmersiveCook ? state.cooking?.activeTimer : null;
+  const activeTimers = isImmersiveCook ? getActiveCookingTimers() : [];
+  const activeTimer = activeTimers[0] || null;
+  const extraTimerCount = Math.max(0, activeTimers.length - 1);
   const cookingStepLabel = cookingStage
     ? `${String(cookingStage.stepIndex + 1).padStart(2, "0")} / ${String(cookingStage.stages.length).padStart(2, "0")}`
     : "";
@@ -2967,15 +3226,26 @@ function renderTopbar() {
                   >
                     <span class="vc-cook-top-timer-label">${activeTimer.paused ? "Pausado" : "Tiempo"}</span>
                     <strong>${formatCountdown(activeTimer.remainingMs)}</strong>
+                    ${extraTimerCount ? `<span class="vc-cook-top-timer-extra">+${extraTimerCount}</span>` : ""}
                   </button>
                   ${state.cooking?.timerMenuOpen ? `
                     <div class="vc-cook-timer-popover" role="dialog" aria-label="Opciones del temporizador">
-                      <button class="vc-cook-timer-popover-action" type="button" data-action="toggle-cooking-timer-pause">
-                        ${activeTimer.paused ? "Reanudar" : "Pausar"}
-                      </button>
-                      <button class="vc-cook-timer-popover-action danger" type="button" data-action="stop-cooking-timer">
-                        Detener
-                      </button>
+                      ${activeTimers.map((timer) => `
+                        <article class="vc-cook-timer-item">
+                          <div class="vc-cook-timer-copy">
+                            <strong>${escapeHtml(timer.label)}</strong>
+                            <span>${formatCountdown(timer.remainingMs)}${timer.paused ? " · Pausado" : ""}</span>
+                          </div>
+                          <div class="vc-cook-timer-item-actions">
+                            <button class="vc-cook-timer-popover-action" type="button" data-action="toggle-cooking-timer-pause" data-timer-id="${timer.id}">
+                              ${timer.paused ? "Reanudar" : "Pausar"}
+                            </button>
+                            <button class="vc-cook-timer-popover-action danger" type="button" data-action="stop-cooking-timer" data-timer-id="${timer.id}">
+                              Detener
+                            </button>
+                          </div>
+                        </article>
+                      `).join("")}
                     </div>
                   ` : ""}
                 </div>
@@ -3001,6 +3271,7 @@ function renderTopbar() {
                 aria-expanded="${userMenuOpen ? "true" : "false"}"
               >
                 ${renderUserAvatar(user)}
+                ${unreadActivityCount && !state.activeNotificationBannerId ? `<span class="vc-user-avatar-dot" aria-hidden="true"></span>` : ""}
                 ${isImmersiveCook ? "" : `
                   <span class="vc-user-copy">
                     <strong>${escapeHtml(displayName)}</strong>
@@ -3013,7 +3284,7 @@ function renderTopbar() {
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
                 <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
-                <button class="vc-menu-action" type="button" data-action="open-view" data-view="notifications" role="menuitem">Notificaciones</button>
+                <button class="vc-menu-action vc-menu-action-with-dot" type="button" data-action="open-view" data-view="notifications" role="menuitem">Notificaciones${unreadActivityCount ? '<span class="vc-menu-action-dot" aria-hidden="true"></span>' : ""}</button>
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Perfil</button>
                 <div class="vc-menu-meta">
                   <span class="vc-meta-pill">${escapeHtml(notificationState)}</span>
@@ -3874,18 +4145,48 @@ function renderReminderCard(reminder, bucket) {
   `;
 }
 
+function renderActivityNotificationCard(notification) {
+  const kindLabel = notification.kind === "timer"
+    ? "Temporizador"
+    : notification.kind === "meal"
+      ? "Hora de cocinar"
+      : notification.kind === "thaw"
+        ? "Descongelar"
+        : "Aviso";
+
+  return `
+    <article class="vc-reminder-card is-pending">
+      <div class="vc-reminder-head">
+        <div>
+          <small class="vc-muted">${escapeHtml(kindLabel)}</small>
+          <h3 class="vc-inline-title">${escapeHtml(notification.title)}</h3>
+        </div>
+        <button class="vc-reminder-delete" type="button" data-action="delete-activity-notification" data-notification-id="${notification.id}" aria-label="Borrar aviso">&times;</button>
+      </div>
+      <p class="vc-copy">${escapeHtml(notification.body)}</p>
+      <div class="vc-meta">
+        <span class="vc-meta-pill">${escapeHtml(formatDateTimeLong(notification.createdAt))}</span>
+      </div>
+      <div class="vc-inline-actions">
+        ${notification.actionLabel
+          ? `<button class="vc-button primary" type="button" data-action="open-activity-notification" data-notification-id="${notification.id}">${escapeHtml(notification.actionLabel)}</button>`
+          : ""}
+      </div>
+    </article>
+  `;
+}
+
 function renderNotificationsView() {
   if (!state.week) return renderWeekView();
   const reminders = (state.week.reminders || []).map(normalizeReminder).filter(Boolean);
+  const activityNotifications = getActivityNotifications()
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const now = new Date();
-  const pending = reminders
-    .filter((reminder) => getReminderBucket(reminder, now) === "pending")
-    .sort((a, b) => new Date(b.triggerAt).getTime() - new Date(a.triggerAt).getTime());
   const future = reminders
     .filter((reminder) => getReminderBucket(reminder, now) === "future")
     .sort((a, b) => new Date(a.triggerAt).getTime() - new Date(b.triggerAt).getTime());
   const activeTab = state.notificationTab === "pending" ? "pending" : "future";
-  const list = activeTab === "pending" ? pending : future;
+  const list = activeTab === "pending" ? activityNotifications : future;
 
   return `
     <section class="vc-grid">
@@ -3901,13 +4202,15 @@ function renderNotificationsView() {
 
       ${list.length ? `
         <div class="vc-reminder-list">
-          ${list.map((reminder) => renderReminderCard(reminder, activeTab)).join("")}
+          ${activeTab === "pending"
+            ? list.map((notification) => renderActivityNotificationCard(notification)).join("")
+            : list.map((reminder) => renderReminderCard(reminder, activeTab)).join("")}
         </div>
       ` : `
         <article class="vc-card vc-empty">
           <h3 class="vc-inline-title">${activeTab === "pending" ? "No tienes avisos pendientes." : "No tienes avisos futuros ahora mismo."}</h3>
           <p class="vc-copy">${activeTab === "pending"
-            ? "Cuando vaya pasando la semana aqui veras el historial de avisos que ya quedaron atras."
+            ? "Aqui iras viendo las notificaciones recientes de temporizador, descongelado y hora de cocinar."
             : "Los proximos avisos de cocinar, descongelar o replanificar apareceran aqui en cuanto existan."}</p>
         </article>
       `}
@@ -4215,11 +4518,11 @@ function renderCookView() {
   }
 
   const { stages, stepIndex, current } = getCookingStage(target);
-  const activeTimer = state.cooking?.activeTimer;
+  const activeTimer = getPrimaryCookingTimer();
   const isIngredientsStep = current?.kind === "ingredients";
   const isLastStep = stepIndex === stages.length - 1;
   const currentImage = getCookingImageState(current);
-  const stepMeta = isIngredientsStep ? "Preparacion" : current.title;
+  const stepMeta = isIngredientsStep ? "Preparación" : current.title;
   const stepCopyText = isIngredientsStep
     ? "Coge estos ingredientes, dejalos a mano y preparalos para arrancar sin interrupciones."
     : (current.text || "");
@@ -4320,7 +4623,7 @@ function renderMealDetailModal(target) {
             <h2 class="vc-modal-title">${escapeHtml(meal.title)}</h2>
             <p class="vc-copy">${escapeHtml(meal.summary)}</p>
           </div>
-          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">âœ•</button>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
         </div>
         <div class="vc-meta">
           <span class="vc-meta-pill">Tiempo: ${meal.prepMinutes} min</span>
@@ -4361,6 +4664,8 @@ function renderMealDetailModal(target) {
 function renderTechniqueModal() {
   const technique = COOKING_GLOSSARY.find((item) => item.key === state.modal?.techniqueKey);
   if (!technique) return "";
+  const techniqueTitle = sanitizeUiCopy(technique.title);
+  const techniqueBody = sanitizeUiCopy(technique.body);
 
   return `
     <div class="vc-modal-layer" data-action="close-modal">
@@ -4368,12 +4673,12 @@ function renderTechniqueModal() {
         <div class="vc-modal-head">
           <div>
             <small class="vc-muted">Ayuda de cocina</small>
-            <h2 class="vc-modal-title">${escapeHtml(technique.title)}</h2>
+            <h2 class="vc-modal-title">${escapeHtml(techniqueTitle)}</h2>
           </div>
-          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">âœ•</button>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
         </div>
         <article class="vc-profile-card">
-          <p class="vc-copy">${escapeHtml(technique.body)}</p>
+          <p class="vc-copy">${escapeHtml(techniqueBody)}</p>
         </article>
       </div>
     </div>
@@ -4394,7 +4699,7 @@ function renderRefineModal(target) {
             <h2 class="vc-modal-title">Afinar gustos</h2>
             <p class="vc-copy">CuÃ©ntame quÃ© ha fallado en "${escapeHtml(target.meal.title)}" y te busco algo mejor.</p>
           </div>
-          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">âœ•</button>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
         </div>
 
         <div class="vc-fieldset">
@@ -4473,7 +4778,7 @@ function renderReminderDetailModal(reminder) {
             <h2 class="vc-modal-title">${escapeHtml(reminder.title)}</h2>
             <p class="vc-copy">${escapeHtml(reminder.body)}</p>
           </div>
-          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">X</button>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
         </div>
 
         <article class="vc-profile-card">
@@ -4510,7 +4815,7 @@ function renderReminderApplyAllModal(reminder) {
             <h2 class="vc-modal-title">Quieres aplicar esta hora al resto?</h2>
             <p class="vc-copy">He preparado el cambio para "${escapeHtml(reminder.title)}". Quieres mover tambien los otros avisos de este tipo a las ${escapeHtml(state.modal?.editedTime || "--:--")}?</p>
           </div>
-          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">X</button>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
         </div>
         <div class="vc-step-foot">
           <button class="vc-button secondary" data-action="apply-reminder-time" data-scope="single" data-reminder-id="${reminder.id}">No</button>
@@ -4537,7 +4842,7 @@ function renderCookReminderModal(reminder) {
             <h2 class="vc-modal-title">Comenzamos a cocinar ${escapeHtml((MEAL_LABELS[reminder.mealKey] || "este plato").toLowerCase())} de hoy?</h2>
             <p class="vc-copy">${escapeHtml(reminder.mealTitle || meal?.meal?.title || reminder.title)}</p>
           </div>
-          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">X</button>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
         </div>
 
         ${!postponeExpanded ? `
@@ -4631,7 +4936,7 @@ function render() {
       ? renderOnboarding()
       : renderWorkspace();
 
-  root.innerHTML = `${renderTopbar()}${renderToastStack()}${content}`;
+  root.innerHTML = `${renderTopbar()}${renderNotificationBanner()}${renderToastStack()}${content}`;
   modalRoot.innerHTML = renderModal();
   repairVisibleText(root);
   repairVisibleText(modalRoot);
@@ -4767,7 +5072,18 @@ async function sendTestNotification() {
     body: "Este es un aviso de prueba para confirmar que las notificaciones funcionan.",
     url: `${APP_BASE_URL}?view=profile`,
   });
-  state.notice = "Aviso de prueba enviado.";
+  pushActivityNotification({
+    id: createId(),
+    sourceKey: `test:${Date.now()}`,
+    kind: "info",
+    title: "Aviso de prueba enviado",
+    body: "Este es un aviso de prueba para confirmar que las notificaciones funcionan.",
+    createdAt: new Date().toISOString(),
+    readAt: null,
+    actionLabel: "Notificaciones",
+    actionType: "view",
+  }, { persist: false, showBanner: true });
+  state.notice = "";
   state.error = "";
   render();
 }
@@ -4842,6 +5158,13 @@ async function handleAction(action, trigger) {
       state.currentView = nextView;
       if (nextView === "notifications" && !["pending", "future"].includes(state.notificationTab)) {
         state.notificationTab = "future";
+      }
+      if (nextView === "notifications") {
+        clearNotificationBannerTimer();
+        state.activeNotificationBannerId = null;
+        if (markAllActivityNotificationsRead()) {
+          await saveWeek();
+        }
       }
       render();
       if (nextView === "profile" || nextView === "notifications") {
@@ -4923,25 +5246,28 @@ async function handleAction(action, trigger) {
       const target = getCookingTarget();
       const current = target ? getCookingStage(target).current : null;
       if (!current?.timerMinutes) return;
-      startCookingTimer(current.title, current.timerMinutes);
+      startCookingTimer(current.timerLabel || current.title, current.timerMinutes, {
+        stepId: current.id,
+        mealId: target?.meal?.id || "",
+      });
       break;
     }
 
     case "toggle-cooking-timer-menu":
-      if (!state.cooking?.activeTimer) return;
+      if (!getPrimaryCookingTimer()) return;
       state.cooking.timerMenuOpen = !state.cooking.timerMenuOpen;
       render();
       break;
 
     case "toggle-cooking-timer-pause":
-      if (!state.cooking?.activeTimer) return;
-      toggleCookingTimerPause();
+      if (!getPrimaryCookingTimer()) return;
+      toggleCookingTimerPause(trigger.dataset.timerId || "");
       state.cooking.timerMenuOpen = false;
       render();
       break;
 
     case "stop-cooking-timer":
-      stopCookingTimer();
+      stopCookingTimer(trigger.dataset.timerId || "");
       render();
       break;
 
@@ -4962,6 +5288,48 @@ async function handleAction(action, trigger) {
       render();
       break;
     }
+
+    case "open-activity-notification": {
+      const notification = getActivityNotificationById(trigger.dataset.notificationId);
+      if (!notification) return;
+      clearNotificationBannerTimer();
+      state.activeNotificationBannerId = null;
+      const changed = markActivityNotificationRead(notification.id);
+
+      if (notification.actionType === "reminder" && notification.reminderId) {
+        const reminder = getReminderById(notification.reminderId);
+        if (reminder) {
+          state.currentView = "notifications";
+          state.notificationTab = "pending";
+          openReminderModal(reminder, { forceCookPrompt: reminder.kind === "meal" });
+        }
+      } else if (notification.actionType === "cook") {
+        if (notification.mealId) {
+          await startCookingFlow(notification.mealId, "active");
+        } else {
+          state.currentView = "cook";
+        }
+      } else {
+        state.currentView = "notifications";
+      }
+
+      if (changed) {
+        await saveWeek();
+      }
+      render();
+      break;
+    }
+
+    case "delete-activity-notification":
+      if (!state.week) return;
+      state.week.activityNotifications = getActivityNotifications().filter((item) => item.id !== trigger.dataset.notificationId);
+      if (state.activeNotificationBannerId === trigger.dataset.notificationId) {
+        clearNotificationBannerTimer();
+        state.activeNotificationBannerId = null;
+      }
+      await saveWeek();
+      render();
+      break;
 
     case "delete-reminder":
       state.week.reminders = (state.week.reminders || []).filter((reminder) => reminder.id !== trigger.dataset.reminderId);
@@ -5263,6 +5631,8 @@ async function handleAction(action, trigger) {
 
     case "logout":
       if (!state.client) return;
+      clearNotificationBannerTimer();
+      state.activeNotificationBannerId = null;
       clearCookingMicHintTimer();
       stopHandsFreeMode();
       stopCookingTimer();
@@ -5434,11 +5804,13 @@ async function hydrateSession(session, options = {}) {
   }
 
   clearReminderTimers();
+  clearNotificationBannerTimer();
   stopHandsFreeMode();
   stopCookingTimer();
   state.session = session;
   state.activeMenu = null;
   state.cooking = null;
+  state.activeNotificationBannerId = null;
 
   if (!session?.user) {
     state.profile = null;
