@@ -614,7 +614,22 @@ async function fetchStepIllustration(payload) {
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok || body?.ok === false) {
+    console.error("[VelociChef] Fallo al preparar la ilustracion del paso", {
+      status: response.status,
+      payload,
+      body,
+    });
     throw new Error(body?.error || "No pude preparar la ilustracion del paso.");
+  }
+  if (body?.imageAvailable === false) {
+    console.warn("[VelociChef] No se pudo ilustrar este paso", {
+      payload,
+      error: body?.error || "",
+      providerErrors: Array.isArray(body?.providerErrors) ? body.providerErrors : [],
+      provider: body?.provider || "",
+      promptLength: String(body?.prompt || "").length,
+      searchQuery: body?.searchQuery || "",
+    });
   }
   return body;
 }
@@ -1663,15 +1678,29 @@ async function ensureStepIllustration(mealId, step, options = {}) {
       };
     } else if (data?.supportAvailable === false) {
       state.cooking.imageSupport = "unavailable";
-      state.cooking.stepImages[step.id] = { status: "error" };
+      state.cooking.stepImages[step.id] = {
+        status: "error",
+        reason: data?.error || "",
+      };
     } else {
-      state.cooking.stepImages[step.id] = { status: "error" };
+      state.cooking.stepImages[step.id] = {
+        status: "error",
+        reason: data?.error || "",
+      };
     }
   } catch (_error) {
     if (!state.cooking || state.cooking.sessionId !== sessionId) {
       return;
     }
-    state.cooking.stepImages[step.id] = { status: "error" };
+    console.error("[VelociChef] Error preparando la ilustracion del paso", {
+      mealId,
+      stepId: step.id,
+      error: _error instanceof Error ? _error.message : _error,
+    });
+    state.cooking.stepImages[step.id] = {
+      status: "error",
+      reason: _error instanceof Error ? _error.message : "",
+    };
   } finally {
     if (renderWhileLoading && isVisibleCookingStep(mealId, step.id)) render();
   }

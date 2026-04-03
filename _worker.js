@@ -3,6 +3,9 @@ const VELOCICHEF_PUSH_KEY_PATH = "/api/velocichef/push-public-key";
 const VELOCICHEF_PUSH_SEND_PATH = "/api/velocichef/push/send-due";
 const VELOCICHEF_STEP_IMAGE_PATH = "/api/velocichef/step-image";
 const VELOCICHEF_DEFAULT_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+const VELOCICHEF_MAX_IMAGE_PROMPT_LENGTH = 1600;
+const VELOCICHEF_MAX_SCENE_GOAL_LENGTH = 260;
+const VELOCICHEF_MAX_SEARCH_QUERY_LENGTH = 120;
 const VELOCICHEF_FORBIDDEN_IMAGE_TERMS = [
   "hand", "hands", "finger", "fingers", "arm", "arms", "body", "bodies", "person", "people",
   "human", "humans", "face", "faces", "chef", "cook", "woman", "women", "man", "men",
@@ -455,10 +458,15 @@ function stripForbiddenImageTerms(value) {
 }
 
 function buildSafeSceneGoal(step) {
-  const raw = String(step?.image_prompt || step?.imagePrompt || step?.text || "").trim();
+  const explicitQuery = String(step?.image_search_query || step?.imageSearchQuery || "").trim();
+  const raw = explicitQuery || String(step?.image_prompt || step?.imagePrompt || step?.text || "").trim();
   const withoutStepBadges = raw.replace(/\bstep\s*[-:]?\s*\d+\b/gi, " ");
   const withoutMentions = stripForbiddenImageTerms(withoutStepBadges);
-  return withoutMentions || "food ingredients and cookware arranged for this recipe step";
+  const cleaned = withoutMentions
+    .replace(/\b(food|ingredients|overhead|top[\s-]?down|no people|no person|illustration|digital|semi[\s-]?flat|cookbook)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return shortenVelocichefText(cleaned || "food ingredients and cookware arranged for this recipe step", VELOCICHEF_MAX_SCENE_GOAL_LENGTH);
 }
 
 function looksUnsafePublicImage(photo) {
@@ -470,38 +478,59 @@ function looksUnsafePublicImage(photo) {
   return VELOCICHEF_FORBIDDEN_IMAGE_TERMS.some((term) => description.includes(term));
 }
 
+function shortenVelocichefText(value, maxLength) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (!normalized || normalized.length <= maxLength) return normalized;
+  const shortened = normalized.slice(0, Math.max(0, maxLength - 1));
+  const boundary = Math.max(
+    shortened.lastIndexOf(". "),
+    shortened.lastIndexOf(", "),
+    shortened.lastIndexOf(" "),
+  );
+  const compact = (boundary > Math.floor(maxLength * 0.55) ? shortened.slice(0, boundary) : shortened).trim();
+  return `${compact}.`;
+}
+
+function shortenVelocichefQuery(value, maxLength) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (!normalized || normalized.length <= maxLength) return normalized;
+  const shortened = normalized.slice(0, maxLength);
+  const boundary = shortened.lastIndexOf(" ");
+  return (boundary > Math.floor(maxLength * 0.55) ? shortened.slice(0, boundary) : shortened).trim();
+}
+
 function buildVelocichefStepImagePrompt(body) {
   const meal = body?.meal || {};
   const step = body?.step || {};
   const sceneGoal = buildSafeSceneGoal(step);
 
-  return [
-    "Top-down view of a cooking setup with ingredients and cookware, illustrated in a clean, modern, semi-flat digital illustration style.",
-    meal.title ? `Dish: ${meal.title}.` : "",
-    meal.summary ? `Summary: ${meal.summary}.` : "",
-    step.title ? `Step title: ${step.title}.` : "",
-    sceneGoal ? `Scene goal: ${sceneGoal}.` : "",
-    "Show only the exact state of the current step, not a future step and not the final plated dish.",
-    "Show only food, ingredients, cookware, trays, bowls, pans or boards that belong to this step.",
-    "If the step prepares an empty bowl, tray, pan or pot for later, show it empty or only with what this step has already added.",
-    "If the step is about cutting or peeling, show the raw ingredient plus some cut pieces and a knife resting on the board, with no human hand.",
-    "Never introduce cooked rice, pasta, sauces, garnishes or finished elements unless the current step explicitly says they are already there.",
-    "Depict the result of the preparation, not a person performing the action.",
-    "Soft gradients, smooth shading, slightly rounded stylized shapes, vibrant but natural colors, warm lighting and subtle highlights.",
-    "Minimal texture, matte surfaces with gentle gloss on ingredients, centered and balanced composition, wooden surface background in soft tones.",
-    "Ingredients clearly separated and visually readable, slightly idealized for clarity, cozy friendly cookbook aesthetic, high detail but not photorealistic, vector-like finish.",
-    "No humans, no hands, no fingers, no arms, no faces, no body parts, no chef.",
-    "Prefer overhead or slightly angled top-down perspective, clean composition, cookbook style, softly stylized illustration.",
-    "No text, no words, no labels, no typography, no captions, no UI, no watermark.",
-    "No step badges, no titles, no numbers, no stickers, no banners, no recipe card framing.",
+  const prompt = [
+    "Top-down cookbook illustration of a cooking step.",
+    meal.title ? `Recipe: ${shortenVelocichefText(meal.title, 90)}` : "",
+    step.title ? `Step: ${shortenVelocichefText(stripForbiddenImageTerms(step.title), 90)}` : "",
+    sceneGoal ? `Scene: ${sceneGoal}` : "",
+    "Show only the exact current-step state, never a future step and never the finished plated dish.",
+    "Use only the ingredients and cookware that belong to this step.",
+    "If this step prepares an empty bowl, tray, pan or pot for later, keep it empty or only with what this step has already added.",
+    "If this step is cutting or peeling, show the whole ingredient, some cut pieces and a resting knife, never a hand.",
+    "Warm light, natural vibrant colors, gentle shading, rounded clean shapes, vector-like semi-flat style, soft wooden background.",
+    "No people, no hands, no fingers, no arms, no faces, no body parts.",
+    "No text, no labels, no numbers, no captions, no watermark, no UI, no badges or banners.",
   ].filter(Boolean).join(" ");
+
+  return shortenVelocichefText(prompt, VELOCICHEF_MAX_IMAGE_PROMPT_LENGTH);
 }
 
 function buildVelocichefStepSearchQuery(body) {
   const meal = body?.meal || {};
   const step = body?.step || {};
   const explicit = stripForbiddenImageTerms(String(step.image_search_query || step.imageSearchQuery || body?.searchQuery || "").trim());
-  if (explicit) return `${sanitizeVelocichefSearchQuery(explicit)} food ingredients overhead no people`.trim();
+  if (explicit) {
+    return shortenVelocichefQuery(
+      `${sanitizeVelocichefSearchQuery(explicit)} food overhead no people`.trim(),
+      VELOCICHEF_MAX_SEARCH_QUERY_LENGTH,
+    );
+  }
 
   const combined = [
     step.title || "",
@@ -510,7 +539,10 @@ function buildVelocichefStepSearchQuery(body) {
   ].filter(Boolean).join(" ");
 
   const sanitized = sanitizeVelocichefSearchQuery(combined);
-  return `${sanitized || sanitizeVelocichefSearchQuery(meal.title || "home cooking step")} food ingredients overhead no people`.trim();
+  return shortenVelocichefQuery(
+    `${sanitized || sanitizeVelocichefSearchQuery(meal.title || "home cooking step")} food overhead no people`.trim(),
+    VELOCICHEF_MAX_SEARCH_QUERY_LENGTH,
+  );
 }
 
 function getVelocichefImageCacheKey(prompt, searchQuery) {
@@ -657,21 +689,6 @@ async function resolveVelocichefStepImage(env, body) {
   const searchQuery = buildVelocichefStepSearchQuery(body);
   const providerErrors = [];
 
-  const pexelsAttempt = await searchPexelsStepImage(env, searchQuery);
-  if (pexelsAttempt.image) {
-    return {
-      ok: true,
-      imageAvailable: true,
-      supportAvailable: true,
-      image: pexelsAttempt.image,
-      provider: pexelsAttempt.image.provider,
-      prompt,
-      searchQuery,
-      providerErrors,
-    };
-  }
-  if (pexelsAttempt.error) providerErrors.push(pexelsAttempt.error);
-
   const aiAttempt = await generateWorkersAiStepImage(env, prompt);
   if (aiAttempt.image) {
     return {
@@ -685,17 +702,36 @@ async function resolveVelocichefStepImage(env, body) {
       providerErrors,
     };
   }
-  if (aiAttempt.error) providerErrors.push(aiAttempt.error);
+  if (aiAttempt.configured && aiAttempt.error) providerErrors.push(aiAttempt.error);
+
+  const pexelsAttempt = await searchPexelsStepImage(env, searchQuery);
+  if (pexelsAttempt.image) {
+    return {
+      ok: true,
+      imageAvailable: true,
+      supportAvailable: true,
+      image: pexelsAttempt.image,
+      provider: pexelsAttempt.image.provider,
+      prompt,
+      searchQuery,
+      providerErrors,
+    };
+  }
+  if (pexelsAttempt.configured && pexelsAttempt.error) providerErrors.push(pexelsAttempt.error);
+
+  const supportAvailable = Boolean(aiAttempt.configured || pexelsAttempt.configured);
 
   return {
     ok: true,
     imageAvailable: false,
-    supportAvailable: Boolean(aiAttempt.configured || pexelsAttempt.configured),
+    supportAvailable,
     image: null,
     prompt,
     searchQuery,
     providerErrors,
-    error: providerErrors[providerErrors.length - 1] || "No pude conseguir una imagen para este paso.",
+    error: supportAvailable
+      ? (providerErrors[providerErrors.length - 1] || "No pude conseguir una imagen para este paso.")
+      : "No hay un proveedor de ilustraciones configurado ahora mismo.",
   };
 }
 
