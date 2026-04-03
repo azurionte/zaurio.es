@@ -209,6 +209,7 @@ const state = {
   notificationTab: urlParams.get("tab") === "pending" ? "pending" : "future",
   pendingReminderLink: null,
 };
+let cookingMicHintTimer = null;
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
@@ -1394,6 +1395,7 @@ function createCookingState(mode = "suggest", mealId = null) {
     mealId,
     stepIndex: 0,
     handsFree: false,
+    showMicHint: false,
     recognitionState: "idle",
     lastCommand: "",
     activeTimer: null,
@@ -1411,9 +1413,48 @@ function ensureCookingState() {
   return state.cooking;
 }
 
+function clearCookingMicHintTimer() {
+  if (cookingMicHintTimer) {
+    window.clearTimeout(cookingMicHintTimer);
+    cookingMicHintTimer = null;
+  }
+}
+
+function dismissCookingMicHint() {
+  clearCookingMicHintTimer();
+  if (state.cooking?.showMicHint) {
+    state.cooking.showMicHint = false;
+  }
+}
+
+function scheduleCookingMicHint(sessionId = state.cooking?.sessionId || "") {
+  clearCookingMicHintTimer();
+  if (!state.cooking || state.cooking.sessionId !== sessionId) return;
+  state.cooking.showMicHint = true;
+  render();
+  cookingMicHintTimer = window.setTimeout(() => {
+    if (!state.cooking || state.cooking.sessionId !== sessionId) return;
+    state.cooking.showMicHint = false;
+    cookingMicHintTimer = null;
+    render();
+  }, 10000);
+}
+
 function getCookingTarget() {
   const mealId = state.cooking?.mealId;
   return mealId ? getMealById(mealId) : null;
+}
+
+function getCookCopyDensityClass(text, options = {}) {
+  const source = String(text || "").trim();
+  const ingredientBoost = options.isIngredientsStep ? 25 : 0;
+  const timerBoost = options.hasTimer ? 35 : 0;
+  const lengthScore = source.length + ingredientBoost + timerBoost;
+
+  if (lengthScore <= 80) return "vc-cook-density-xl";
+  if (lengthScore <= 140) return "vc-cook-density-lg";
+  if (lengthScore <= 210) return "vc-cook-density-md";
+  return "vc-cook-density-sm";
 }
 
 function getCookingStageList(target) {
@@ -1594,12 +1635,14 @@ async function prefetchCookingIllustrations(mealId, sessionId = state.cooking?.s
 async function startCookingFlow(mealId, mode = "active") {
   stopHandsFreeMode();
   stopCookingTimer();
+  clearCookingMicHintTimer();
   state.notice = "";
   state.cooking = createCookingState(mode, mealId);
   const sessionId = state.cooking.sessionId;
   state.currentView = "cook";
   render();
   window.scrollTo(0, 0);
+  scheduleCookingMicHint(sessionId);
 
   await ensureCookingGuidance(mealId);
 
@@ -2223,6 +2266,7 @@ function startHandsFreeMode() {
   }
 
   state.notice = "";
+  dismissCookingMicHint();
   stopHandsFreeMode();
   ensureCookingState();
 
@@ -2926,23 +2970,30 @@ function renderTopbar() {
               </div>
             </div>
             ${isImmersiveCook ? `
-              <button
-                class="vc-cook-mic-bubble ${state.cooking?.handsFree ? "active" : ""}"
-                type="button"
-                data-action="toggle-hands-free"
-                aria-label="${state.cooking?.handsFree ? "Desactivar manos libres" : "Activar manos libres"}"
-                aria-pressed="${state.cooking?.handsFree ? "true" : "false"}"
-              >
-                <span class="vc-cook-mic-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                    <rect x="9" y="3.5" width="6" height="10" rx="3"></rect>
-                    <path d="M6.5 10.5a5.5 5.5 0 0 0 11 0"></path>
-                    <path d="M12 16v4"></path>
-                    <path d="M9 20h6"></path>
-                    ${state.cooking?.handsFree ? "" : '<path d="M5 5L19 19"></path>'}
-                  </svg>
-                </span>
-              </button>
+              <div class="vc-cook-mic-wrap">
+                <button
+                  class="vc-cook-mic-bubble ${state.cooking?.handsFree ? "active" : ""}"
+                  type="button"
+                  data-action="toggle-hands-free"
+                  aria-label="${state.cooking?.handsFree ? "Desactivar manos libres" : "Activar manos libres"}"
+                  aria-pressed="${state.cooking?.handsFree ? "true" : "false"}"
+                >
+                  <span class="vc-cook-mic-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                      <rect x="9" y="3.5" width="6" height="10" rx="3"></rect>
+                      <path d="M6.5 10.5a5.5 5.5 0 0 0 11 0"></path>
+                      <path d="M12 16v4"></path>
+                      <path d="M9 20h6"></path>
+                      ${state.cooking?.handsFree ? "" : '<path d="M5 5L19 19"></path>'}
+                    </svg>
+                  </span>
+                </button>
+                ${state.cooking?.showMicHint ? `
+                  <div class="vc-cook-mic-tooltip" role="status">
+                    Activa el modo manos libres para navegar los pasos con la voz.
+                  </div>
+                ` : ""}
+              </div>
             ` : ""}
           ` : `
             <button class="vc-button secondary vc-nav-login" type="button" data-action="login-google">Entrar con Google</button>
@@ -4117,11 +4168,18 @@ function renderCookView() {
   const isLastStep = stepIndex === stages.length - 1;
   const currentImage = getCookingImageState(current);
   const stepMeta = isIngredientsStep ? "Preparacion" : current.title;
+  const stepCopyText = isIngredientsStep
+    ? "Coge estos ingredientes, dejalos a mano y preparalos para arrancar sin interrupciones."
+    : (current.text || "");
+  const cookDensityClass = getCookCopyDensityClass(stepCopyText, {
+    isIngredientsStep,
+    hasTimer: !!current?.timerMinutes,
+  });
 
   return `
     <section class="vc-grid vc-cook-screen vc-cook-screen-immersive">
       <article class="vc-cook-mode vc-cook-mode-immersive">
-        <article class="vc-cook-stage vc-cook-stage-immersive ${isIngredientsStep ? "is-ingredients" : ""}">
+        <article class="vc-cook-stage vc-cook-stage-immersive ${isIngredientsStep ? "is-ingredients" : ""} ${cookDensityClass}">
           <div class="vc-cook-visual">
             ${isIngredientsStep ? `
               <div class="vc-cook-ingredient-board">
@@ -4152,8 +4210,8 @@ function renderCookView() {
               <small class="vc-muted">${escapeHtml(stepMeta)}</small>
             </div>
             <p class="vc-copy vc-cook-step-copy">${isIngredientsStep
-              ? "Coge estos ingredientes, dejalos a mano y preparalos para arrancar sin interrupciones."
-              : renderTechniqueText(current.text)}</p>
+              ? escapeHtml(stepCopyText)
+              : renderTechniqueText(stepCopyText)}</p>
             ${state.cooking?.handsFree && state.cooking.lastCommand
               ? `<div class="vc-cook-status-pill">Comando escuchado: ${escapeHtml(state.cooking.lastCommand)}</div>`
               : ""}
@@ -4743,6 +4801,7 @@ async function handleAction(action, trigger) {
       break;
 
     case "plan-new-week":
+      clearCookingMicHintTimer();
       stopHandsFreeMode();
       if (!state.profile?.onboardingCompleted) {
         state.currentView = "onboarding";
@@ -4755,6 +4814,7 @@ async function handleAction(action, trigger) {
     case "open-view": {
       const nextView = normalizeView(trigger.dataset.view || "week");
       if (nextView !== "cook") {
+        clearCookingMicHintTimer();
         stopHandsFreeMode();
       }
       state.currentView = nextView;
@@ -4772,6 +4832,7 @@ async function handleAction(action, trigger) {
 
     case "open-cook": {
       const suggested = getSuggestedCookingTarget();
+      clearCookingMicHintTimer();
       stopHandsFreeMode();
       stopCookingTimer();
       state.cooking = createCookingState(suggested ? "suggest" : "picker", suggested?.meal.id || null);
@@ -4792,6 +4853,7 @@ async function handleAction(action, trigger) {
       break;
 
     case "cook-back-to-picker":
+      clearCookingMicHintTimer();
       stopHandsFreeMode();
       stopCookingTimer();
       ensureCookingState();
@@ -4813,6 +4875,7 @@ async function handleAction(action, trigger) {
       break;
 
     case "finish-cooking-session":
+      clearCookingMicHintTimer();
       stopHandsFreeMode();
       stopCookingTimer();
       state.notice = "Receta terminada. Ya puedes servir el plato.";
@@ -5166,6 +5229,7 @@ async function handleAction(action, trigger) {
 
     case "logout":
       if (!state.client) return;
+      clearCookingMicHintTimer();
       stopHandsFreeMode();
       stopCookingTimer();
       state.notice = "";
