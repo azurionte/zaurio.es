@@ -476,14 +476,17 @@ function buildVelocichefStepImagePrompt(body) {
   const sceneGoal = buildSafeSceneGoal(step);
 
   return [
-    "Top-down view of a cooking pan or cooking surface with food, illustrated in a clean, modern, semi-flat digital illustration style.",
+    "Top-down view of a cooking setup with ingredients and cookware, illustrated in a clean, modern, semi-flat digital illustration style.",
     meal.title ? `Dish: ${meal.title}.` : "",
     meal.summary ? `Summary: ${meal.summary}.` : "",
     step.title ? `Step title: ${step.title}.` : "",
     sceneGoal ? `Scene goal: ${sceneGoal}.` : "",
+    "Show only the exact state of the current step, not a future step and not the final plated dish.",
     "Show only food, ingredients, cookware, trays, bowls, pans or boards that belong to this step.",
+    "If the step prepares an empty bowl, tray, pan or pot for later, show it empty or only with what this step has already added.",
+    "If the step is about cutting or peeling, show the raw ingredient plus some cut pieces and a knife resting on the board, with no human hand.",
+    "Never introduce cooked rice, pasta, sauces, garnishes or finished elements unless the current step explicitly says they are already there.",
     "Depict the result of the preparation, not a person performing the action.",
-    "If the step is about cutting or mixing, show the ingredients already arranged on the board, tray, bowl or pan after that action.",
     "Soft gradients, smooth shading, slightly rounded stylized shapes, vibrant but natural colors, warm lighting and subtle highlights.",
     "Minimal texture, matte surfaces with gentle gloss on ingredients, centered and balanced composition, wooden surface background in soft tones.",
     "Ingredients clearly separated and visually readable, slightly idealized for clarity, cozy friendly cookbook aesthetic, high detail but not photorealistic, vector-like finish.",
@@ -501,14 +504,13 @@ function buildVelocichefStepSearchQuery(body) {
   if (explicit) return `${sanitizeVelocichefSearchQuery(explicit)} food ingredients overhead no people`.trim();
 
   const combined = [
-    meal.title || "",
     step.title || "",
     step.text || "",
     buildSafeSceneGoal(step),
   ].filter(Boolean).join(" ");
 
   const sanitized = sanitizeVelocichefSearchQuery(combined);
-  return `${sanitized || sanitizeVelocichefSearchQuery(meal.title || "home cooking")} food ingredients overhead no people`.trim();
+  return `${sanitized || sanitizeVelocichefSearchQuery(meal.title || "home cooking step")} food ingredients overhead no people`.trim();
 }
 
 function getVelocichefImageCacheKey(prompt, searchQuery) {

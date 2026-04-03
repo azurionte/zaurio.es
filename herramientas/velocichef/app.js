@@ -1211,6 +1211,9 @@ function normalizeMeal(mealKey, meal, dayDate) {
   const sourceSteps = Array.isArray(meal?.cookingSteps)
     ? meal.cookingSteps
     : (Array.isArray(meal?.steps) ? meal.steps : (Array.isArray(meal?.instructions) ? meal.instructions : []));
+  const normalizedSteps = (sourceSteps.length ? sourceSteps.map(normalizeCookingStep) : buildFallbackCookingSteps(mealKey, meal, ingredients))
+    .filter((step) => step.text);
+  const hasStoredGuidance = !!meal?.guidanceRefined || !!meal?.guidance_refined;
 
   return {
     id: meal?.id || createId(),
@@ -1229,7 +1232,8 @@ function normalizeMeal(mealKey, meal, dayDate) {
       fiber: Number(meal?.nutrition?.fiber || meal?.nutrition?.fiber_g || 0) || 0,
     },
     ingredients,
-    cookingSteps: (sourceSteps.length ? sourceSteps.map(normalizeCookingStep) : buildFallbackCookingSteps(mealKey, meal, ingredients)).filter((step) => step.text),
+    cookingSteps: normalizedSteps,
+    guidanceRefined: hasStoredGuidance,
     tags: uniqueValues(meal?.tags || []),
     feedback: meal?.feedback || { liked: false, disliked: false, reasons: null },
   };
@@ -1563,8 +1567,12 @@ async function ensureCookingGuidance(mealId) {
   if (!target || !state.week) return;
 
   const currentSteps = target.meal.cookingSteps || [];
-  const hasSpecificSteps = currentSteps.some((step) => step.imagePrompt || step.text.length > 80);
-  if (hasSpecificSteps && state.cooking?.guidanceStatus === "done") return;
+  const hasSavedGuidance = !!target.meal.guidanceRefined && currentSteps.length;
+  if (hasSavedGuidance || state.cooking?.guidanceStatus === "done") {
+    state.cooking.guidanceStatus = "done";
+    render();
+    return;
+  }
 
   ensureCookingState();
   state.cooking.guidanceStatus = "loading";
@@ -1590,6 +1598,7 @@ async function ensureCookingGuidance(mealId) {
       updateMeal(mealId, (meal) => ({
         ...meal,
         cookingSteps: nextSteps,
+        guidanceRefined: true,
       }));
       await saveWeek();
     }
@@ -1688,12 +1697,18 @@ async function prefetchCookingIllustrations(mealId, sessionId = state.cooking?.s
   await Promise.allSettled(workers);
 }
 
-async function startCookingFlow(mealId, mode = "active") {
+async function startCookingFlow(mealId, mode = "active", options = {}) {
   stopHandsFreeMode();
-  stopCookingTimer();
+  if (!options.preserveTimers) {
+    stopCookingTimer();
+  }
   clearCookingMicHintTimer();
   state.notice = "";
   state.cooking = createCookingState(mode, mealId);
+  if (options.preserveTimers && Array.isArray(options.activeTimers) && options.activeTimers.length) {
+    state.cooking.activeTimers = options.activeTimers.map((timer) => ({ ...timer }));
+    syncPrimaryCookingTimer();
+  }
   const sessionId = state.cooking.sessionId;
   state.currentView = "cook";
   render();
@@ -1705,6 +1720,36 @@ async function startCookingFlow(mealId, mode = "active") {
   const target = getMealById(mealId);
   if (!target) return;
   void prefetchCookingIllustrations(mealId, sessionId);
+}
+
+function focusCookingStep(mealId, stepId = "") {
+  if (!stepId || !state.cooking || state.cooking.mealId !== mealId) return false;
+  const target = getMealById(mealId);
+  if (!target) return false;
+  const { stages } = getCookingStage(target);
+  const nextIndex = stages.findIndex((step) => step.id === stepId);
+  if (nextIndex < 0) return false;
+  state.cooking.stepIndex = nextIndex;
+  state.cooking.timerMenuOpen = false;
+  window.scrollTo(0, 0);
+  return true;
+}
+
+async function openCookingSession(mealId, options = {}) {
+  const mode = options.mode || "active";
+  const stepId = options.stepId || "";
+  await startCookingFlow(mealId, mode, {
+    preserveTimers: !!options.preserveTimers,
+    activeTimers: options.activeTimers || [],
+  });
+  if (focusCookingStep(mealId, stepId)) {
+    const target = getMealById(mealId);
+    const currentStep = target ? getCookingStage(target).current : null;
+    if (currentStep?.kind === "instruction") {
+      void ensureStepIllustration(mealId, currentStep, { sessionId: state.cooking?.sessionId || "" });
+    }
+    render();
+  }
 }
 
 function updateMeal(mealId, updater) {
@@ -1755,6 +1800,17 @@ function buildReminderUrl(reminder) {
   return `${APP_BASE_URL}?${params.toString()}`;
 }
 
+function buildCookSessionUrl(mealId, stepId = "") {
+  const params = new URLSearchParams({
+    view: "cook",
+    meal: mealId,
+  });
+  if (stepId) {
+    params.set("step", stepId);
+  }
+  return `${APP_BASE_URL}?${params.toString()}`;
+}
+
 function normalizeReminder(rawReminder) {
   if (!rawReminder) return null;
   const reminder = {
@@ -1794,6 +1850,7 @@ function normalizeActivityNotification(rawNotification) {
     actionType: String(rawNotification.actionType || rawNotification.action_type || "").trim(),
     reminderId: rawNotification.reminderId || rawNotification.reminder_id || null,
     mealId: rawNotification.mealId || rawNotification.meal_id || null,
+    stepId: rawNotification.stepId || rawNotification.step_id || null,
     url: rawNotification.url || "",
   };
 }
@@ -2137,6 +2194,8 @@ function parseAppUrl(url) {
     tab: next.searchParams.get("tab") === "pending" ? "pending" : "future",
     reminderId: next.searchParams.get("reminder") || "",
     intent: next.searchParams.get("intent") || "",
+    mealId: next.searchParams.get("meal") || "",
+    stepId: next.searchParams.get("step") || "",
   };
 }
 
@@ -2144,10 +2203,12 @@ function applyIncomingUrl(url) {
   const parsed = parseAppUrl(url);
   state.currentView = parsed.view;
   state.notificationTab = parsed.tab;
-  state.pendingReminderLink = parsed.reminderId
+  state.pendingReminderLink = parsed.reminderId || parsed.mealId
     ? {
         reminderId: parsed.reminderId,
         intent: parsed.intent,
+        mealId: parsed.mealId,
+        stepId: parsed.stepId,
       }
     : null;
 }
@@ -2175,11 +2236,22 @@ function openReminderModal(reminder, options = {}) {
   };
 }
 
-function resolvePendingReminderLink() {
-  if (!state.pendingReminderLink?.reminderId || !state.week) return;
+async function resolvePendingReminderLink() {
+  if (!state.pendingReminderLink || !state.week) return;
   const pendingLink = { ...state.pendingReminderLink };
-  const reminder = getReminderById(state.pendingReminderLink.reminderId);
   state.pendingReminderLink = null;
+
+  if (pendingLink.mealId) {
+    await openCookingSession(pendingLink.mealId, {
+      mode: "active",
+      stepId: pendingLink.stepId || "",
+    });
+    window.history.replaceState({}, "", `${APP_BASE_URL}?view=cook`);
+    return;
+  }
+
+  if (!pendingLink.reminderId) return;
+  const reminder = getReminderById(pendingLink.reminderId);
   if (!reminder) return;
   state.currentView = "notifications";
   state.notificationTab = getReminderBucket(reminder);
@@ -2309,7 +2381,7 @@ async function registerServiceWorker() {
       if (!url) return;
       applyIncomingUrl(url);
       if (state.week) {
-        resolvePendingReminderLink();
+        void resolvePendingReminderLink();
       }
       render();
     });
@@ -2362,7 +2434,6 @@ function syncCookingTimer() {
   syncPrimaryCookingTimer();
 
   if (finished.length) {
-    const finishedLabel = finished[0].label;
     finished.forEach((timer) => {
       pushActivityNotification({
         id: createId(),
@@ -2375,6 +2446,8 @@ function syncCookingTimer() {
         actionLabel: "Seguir",
         actionType: "cook",
         mealId: timer.mealId || null,
+        stepId: timer.stepId || null,
+        url: timer.mealId ? buildCookSessionUrl(timer.mealId, timer.stepId || "") : `${APP_BASE_URL}?view=cook`,
       }, { persist: true, showBanner: true });
     });
     if ("Notification" in window && Notification.permission === "granted") {
@@ -2383,7 +2456,7 @@ function syncCookingTimer() {
           id: `cook-timer-${timer.id}`,
           title: "Tiempo cumplido",
           body: `${timer.label} ya puede pasar al siguiente paso.`,
-          url: `${APP_BASE_URL}?view=cook`,
+          url: timer.mealId ? buildCookSessionUrl(timer.mealId, timer.stepId || "") : `${APP_BASE_URL}?view=cook`,
         }).catch(() => {});
       });
     }
@@ -2475,11 +2548,14 @@ function getSpeechRecognitionCtor() {
   return window.SpeechRecognition || window.webkitSpeechRecognition || null;
 }
 
-function stopHandsFreeMode() {
+function stopHandsFreeMode(options = {}) {
+  const notify = !!options.notify;
+  const message = options.message || "El modo manos libres se ha desactivado.";
   if (state.speechRecognition) {
     state.speechRecognition.onend = null;
     state.speechRecognition.onresult = null;
     state.speechRecognition.onerror = null;
+    state.speechRecognition.onstart = null;
     try {
       state.speechRecognition.stop();
     } catch (_error) {
@@ -2490,6 +2566,11 @@ function stopHandsFreeMode() {
   if (state.cooking) {
     state.cooking.handsFree = false;
     state.cooking.recognitionState = "idle";
+    state.cooking.lastCommand = "";
+  }
+  if (notify) {
+    state.notice = message;
+    state.error = "";
   }
 }
 
@@ -2535,6 +2616,13 @@ function startHandsFreeMode() {
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
+  recognition.onstart = () => {
+    if (!state.cooking) return;
+    state.cooking.handsFree = true;
+    state.cooking.recognitionState = "listening";
+    render();
+  };
+
   recognition.onresult = (event) => {
     const transcript = Array.from(event.results)
       .slice(event.resultIndex)
@@ -2548,12 +2636,17 @@ function startHandsFreeMode() {
       if (state.cooking) {
         state.cooking.lastCommand = command || "";
       }
-      render();
+      if (command) {
+        render();
+      }
     });
   };
 
   recognition.onerror = () => {
-    stopHandsFreeMode();
+    stopHandsFreeMode({
+      notify: true,
+      message: "El modo manos libres se ha detenido. Puedes activarlo de nuevo cuando quieras.",
+    });
     render();
   };
 
@@ -2564,7 +2657,10 @@ function startHandsFreeMode() {
       state.cooking.recognitionState = "listening";
       render();
     } catch (_error) {
-      stopHandsFreeMode();
+      stopHandsFreeMode({
+        notify: true,
+        message: "El modo manos libres se ha desactivado al perder el microfono.",
+      });
       render();
     }
   };
@@ -2572,11 +2668,16 @@ function startHandsFreeMode() {
   state.speechRecognition = recognition;
   state.cooking.handsFree = true;
   state.cooking.recognitionState = "listening";
+  render();
 
   try {
     recognition.start();
   } catch (_error) {
-    stopHandsFreeMode();
+    stopHandsFreeMode({
+      notify: true,
+      message: "No he podido activar el modo manos libres ahora mismo.",
+    });
+    render();
   }
 }
 
@@ -3128,7 +3229,7 @@ function renderNotificationBanner() {
 
   return `
     <div class="vc-notification-banner" role="status" aria-live="polite">
-      <div class="vc-notification-banner-bubble">
+      <div class="vc-notification-banner-bubble vc-notification-banner-${escapeHtml(notification.kind || "info")}">
         <div class="vc-notification-banner-copy">
           <small>${escapeHtml(notification.kind === "timer" ? "Temporizador" : notification.kind === "meal" ? "Hora de cocinar" : notification.kind === "thaw" ? "Descongelar" : "Notificación")}</small>
           <strong>${escapeHtml(notification.title)}</strong>
@@ -3171,6 +3272,7 @@ function renderTopbar() {
   const activeTimers = isImmersiveCook ? getActiveCookingTimers() : [];
   const activeTimer = activeTimers[0] || null;
   const extraTimerCount = Math.max(0, activeTimers.length - 1);
+  const handsFreeActive = !!(state.cooking?.handsFree && state.cooking?.recognitionState === "listening");
   const cookingStepLabel = cookingStage
     ? `${String(cookingStage.stepIndex + 1).padStart(2, "0")} / ${String(cookingStage.stages.length).padStart(2, "0")}`
     : "";
@@ -3233,8 +3335,11 @@ function renderTopbar() {
                       ${activeTimers.map((timer) => `
                         <article class="vc-cook-timer-item">
                           <div class="vc-cook-timer-copy">
-                            <strong>${escapeHtml(timer.label)}</strong>
-                            <span>${formatCountdown(timer.remainingMs)}${timer.paused ? " · Pausado" : ""}</span>
+                            <span class="vc-cook-timer-title">${escapeHtml(timer.label)}</span>
+                            <div class="vc-cook-timer-meta">
+                              <strong class="vc-cook-timer-value">${formatCountdown(timer.remainingMs)}</strong>
+                              ${timer.paused ? '<span class="vc-cook-timer-state">Pausado</span>' : ""}
+                            </div>
                           </div>
                           <div class="vc-cook-timer-item-actions">
                             <button class="vc-cook-timer-popover-action" type="button" data-action="toggle-cooking-timer-pause" data-timer-id="${timer.id}">
@@ -3295,11 +3400,11 @@ function renderTopbar() {
             ${isImmersiveCook ? `
               <div class="vc-cook-mic-wrap">
                 <button
-                  class="vc-cook-mic-bubble ${state.cooking?.handsFree ? "active" : ""}"
+                  class="vc-cook-mic-bubble ${handsFreeActive ? "active" : ""}"
                   type="button"
                   data-action="toggle-hands-free"
-                  aria-label="${state.cooking?.handsFree ? "Desactivar manos libres" : "Activar manos libres"}"
-                  aria-pressed="${state.cooking?.handsFree ? "true" : "false"}"
+                  aria-label="${handsFreeActive ? "Desactivar manos libres" : "Activar manos libres"}"
+                  aria-pressed="${handsFreeActive ? "true" : "false"}"
                 >
                   <span class="vc-cook-mic-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
@@ -3307,7 +3412,7 @@ function renderTopbar() {
                       <path d="M6.5 10.5a5.5 5.5 0 0 0 11 0"></path>
                       <path d="M12 16v4"></path>
                       <path d="M9 20h6"></path>
-                      ${state.cooking?.handsFree ? "" : '<path d="M5 5L19 19"></path>'}
+                      ${handsFreeActive ? "" : '<path d="M5 5L19 19"></path>'}
                     </svg>
                   </span>
                 </button>
@@ -4522,10 +4627,16 @@ function renderCookView() {
   const isIngredientsStep = current?.kind === "ingredients";
   const isLastStep = stepIndex === stages.length - 1;
   const currentImage = getCookingImageState(current);
+  const currentStepTimer = current?.id
+    ? (state.cooking?.activeTimers || []).find((timer) => timer.stepId === current.id && timer.mealId === target.meal.id) || null
+    : null;
   const stepMeta = isIngredientsStep ? "Preparación" : current.title;
   const stepCopyText = isIngredientsStep
     ? "Coge estos ingredientes, dejalos a mano y preparalos para arrancar sin interrupciones."
     : (current.text || "");
+  const timerButtonLabel = currentStepTimer
+    ? "Volver a empezar este temporizador"
+    : (activeTimer ? "Añadir otra cuenta regresiva" : "Comenzar cuenta regresiva");
   const cookDensityClass = getCookCopyDensityClass(stepCopyText, {
     isIngredientsStep,
     hasTimer: !!current?.timerMinutes,
@@ -4567,13 +4678,10 @@ function renderCookView() {
             <p class="vc-copy vc-cook-step-copy">${isIngredientsStep
               ? escapeHtml(stepCopyText)
               : renderTechniqueText(stepCopyText)}</p>
-            ${state.cooking?.handsFree && state.cooking.lastCommand
-              ? `<div class="vc-cook-status-pill">Comando escuchado: ${escapeHtml(state.cooking.lastCommand)}</div>`
-              : ""}
             ${current?.timerMinutes ? `
               <div class="vc-inline-actions vc-cook-inline-tools">
                 <button class="vc-button secondary" data-action="start-step-timer">
-                  ${activeTimer ? "Reiniciar cuenta regresiva" : "Comenzar cuenta regresiva"}
+                  ${escapeHtml(timerButtonLabel)}
                 </button>
               </div>
             ` : ""}
@@ -5305,7 +5413,13 @@ async function handleAction(action, trigger) {
         }
       } else if (notification.actionType === "cook") {
         if (notification.mealId) {
-          await startCookingFlow(notification.mealId, "active");
+          const preservedTimers = getActiveCookingTimers();
+          await openCookingSession(notification.mealId, {
+            mode: "active",
+            stepId: notification.stepId || "",
+            preserveTimers: preservedTimers.length > 0,
+            activeTimers: preservedTimers,
+          });
         } else {
           state.currentView = "cook";
         }
@@ -5467,7 +5581,7 @@ async function handleAction(action, trigger) {
       const reminder = getReminderById(trigger.dataset.reminderId || state.modal?.reminderId);
       if (!reminder?.mealId) return;
       state.modal = null;
-      await startCookingFlow(reminder.mealId, "active");
+      await openCookingSession(reminder.mealId, { mode: "active" });
       break;
     }
 
@@ -5852,7 +5966,7 @@ async function hydrateSession(session, options = {}) {
     await saveWeek();
     await flushDueReminders();
     scheduleReminders();
-    resolvePendingReminderLink();
+    await resolvePendingReminderLink();
   }
 
   if (state.profile.notificationEnabled) {
