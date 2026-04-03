@@ -222,6 +222,10 @@ function createId() {
   return crypto.randomUUID();
 }
 
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+}
+
 function escapeHtml(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -1813,9 +1817,13 @@ function buildCookSessionUrl(mealId, stepId = "") {
 
 function normalizeReminder(rawReminder) {
   if (!rawReminder) return null;
+  const stableKey = String(rawReminder.key || rawReminder.id || createId()).trim();
+  const safeId = isUuid(rawReminder.id)
+    ? String(rawReminder.id).trim()
+    : (isUuid(rawReminder.reminder_id) ? String(rawReminder.reminder_id).trim() : createId());
   const reminder = {
-    id: rawReminder.id || rawReminder.key || createId(),
-    key: rawReminder.key || rawReminder.id || createId(),
+    id: safeId,
+    key: stableKey,
     kind: rawReminder.kind || rawReminder.reminder_kind || "meal",
     groupKey: rawReminder.groupKey || rawReminder.group_key || rawReminder.kind || "meal",
     title: String(rawReminder.title || "").trim(),
@@ -1969,7 +1977,8 @@ function finalizeReminder(baseReminder, previousReminder = null) {
   const existing = previousReminder ? normalizeReminder(previousReminder) : null;
   const normalized = normalizeReminder({
     ...baseReminder,
-    id: existing?.id || baseReminder.id || baseReminder.key,
+    id: existing?.id || (isUuid(baseReminder.id) ? baseReminder.id : createId()),
+    key: baseReminder.key || existing?.key || baseReminder.id || createId(),
     triggerAt: existing?.customTriggerAt || baseReminder.triggerAt,
     customTriggerAt: existing?.customTriggerAt || null,
     deliveredAt: existing?.deliveredAt || null,
