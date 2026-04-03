@@ -259,6 +259,7 @@ function sanitizeUiCopy(value) {
     .replace(/Ã°Å¸Å’â„¢/g, "🌙")
     .replace(/Ã°Å¸Â¥Å“/g, "🥜")
     .replace(/Ãƒâ€šÃ‚Â·|Ã‚Â·/g, " Â· ")
+    .replace(/â˜°/g, "☰")
     .replace(/Ã¢â‚¬Å“|Ã¢â‚¬Â/g, "\"")
     .replace(/Ã¢â‚¬â„¢/g, "'")
     .replace(/Ã¢Å“â€¢|âœ•|✖|✕/g, "×")
@@ -3303,7 +3304,7 @@ function renderTopbar() {
               ${isImmersiveCook ? `
                 <span class="vc-cook-bubble-logo"><img src="${APP_MINI_LOGO_PATH}" alt=""></span>
               ` : `
-                <span class="vc-menu-glyph" aria-hidden="true">â˜°</span>
+                <span class="vc-menu-glyph" aria-hidden="true">&#9776;</span>
                 <span class="vc-z-mark"><img src="${ZAURIO_MENU_LOGO_PATH}" alt=""></span>
                 <span class="vc-menu-text">Zaurio</span>
               `}
