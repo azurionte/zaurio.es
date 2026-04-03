@@ -1399,6 +1399,7 @@ function createCookingState(mode = "suggest", mealId = null) {
     recognitionState: "idle",
     lastCommand: "",
     activeTimer: null,
+    timerMenuOpen: false,
     guidanceStatus: "idle",
     stepImages: {},
     imageSupport: "unknown",
@@ -1447,13 +1448,13 @@ function getCookingTarget() {
 
 function getCookCopyDensityClass(text, options = {}) {
   const source = String(text || "").trim();
-  const ingredientBoost = options.isIngredientsStep ? 25 : 0;
-  const timerBoost = options.hasTimer ? 35 : 0;
+  const ingredientBoost = options.isIngredientsStep ? 18 : 0;
+  const timerBoost = options.hasTimer ? 28 : 0;
   const lengthScore = source.length + ingredientBoost + timerBoost;
 
-  if (lengthScore <= 80) return "vc-cook-density-xl";
-  if (lengthScore <= 140) return "vc-cook-density-lg";
-  if (lengthScore <= 210) return "vc-cook-density-md";
+  if (lengthScore <= 95) return "vc-cook-density-xl";
+  if (lengthScore <= 165) return "vc-cook-density-lg";
+  if (lengthScore <= 245) return "vc-cook-density-md";
   return "vc-cook-density-sm";
 }
 
@@ -2156,6 +2157,11 @@ function syncCookingTimer() {
     clearTimerTicker();
     return;
   }
+  if (state.cooking.activeTimer.paused) {
+    clearTimerTicker();
+    render();
+    return;
+  }
 
   const remainingMs = state.cooking.activeTimer.endsAt - Date.now();
   state.cooking.activeTimer.remainingMs = remainingMs;
@@ -2186,17 +2192,36 @@ function startCookingTimer(label, minutes) {
     durationMinutes: minutes,
     endsAt: Date.now() + minutes * 60000,
     remainingMs: minutes * 60000,
+    paused: false,
   };
-  state.modal = { type: "timer" };
+  state.cooking.timerMenuOpen = false;
   clearTimerTicker();
   state.timerTicker = window.setInterval(syncCookingTimer, 1000);
   syncCookingTimer();
+}
+
+function toggleCookingTimerPause() {
+  if (!state.cooking?.activeTimer) return;
+  const timer = state.cooking.activeTimer;
+  if (timer.paused) {
+    timer.paused = false;
+    timer.endsAt = Date.now() + Math.max(0, timer.remainingMs || 0);
+    clearTimerTicker();
+    state.timerTicker = window.setInterval(syncCookingTimer, 1000);
+    syncCookingTimer();
+  } else {
+    timer.remainingMs = Math.max(0, timer.endsAt - Date.now());
+    timer.paused = true;
+    clearTimerTicker();
+    render();
+  }
 }
 
 function stopCookingTimer() {
   clearTimerTicker();
   if (state.cooking) {
     state.cooking.activeTimer = null;
+    state.cooking.timerMenuOpen = false;
   }
 }
 
@@ -2886,6 +2911,7 @@ function renderTopbar() {
     : "Sin semana activa";
   const cookingTarget = isImmersiveCook ? getCookingTarget() : null;
   const cookingStage = cookingTarget ? getCookingStage(cookingTarget) : null;
+  const activeTimer = isImmersiveCook ? state.cooking?.activeTimer : null;
   const cookingStepLabel = cookingStage
     ? `${String(cookingStage.stepIndex + 1).padStart(2, "0")} / ${String(cookingStage.stages.length).padStart(2, "0")}`
     : "";
@@ -2925,9 +2951,35 @@ function renderTopbar() {
 
         <div class="vc-topbar-center">
           ${isImmersiveCook ? `
-            <div class="vc-cook-step-indicator" aria-label="Paso actual">
-              <small>Paso</small>
-              <strong>${escapeHtml(cookingStepLabel)}</strong>
+            <div class="vc-cook-step-cluster">
+              <div class="vc-cook-step-indicator" aria-label="Paso actual">
+                <small>Paso</small>
+                <strong>${escapeHtml(cookingStepLabel)}</strong>
+              </div>
+              ${activeTimer ? `
+                <div class="vc-cook-timer-wrap ${state.cooking?.timerMenuOpen ? "open" : ""}">
+                  <button
+                    class="vc-cook-top-timer ${activeTimer.paused ? "paused" : "running"}"
+                    type="button"
+                    data-action="toggle-cooking-timer-menu"
+                    aria-label="Gestionar temporizador"
+                    aria-expanded="${state.cooking?.timerMenuOpen ? "true" : "false"}"
+                  >
+                    <span class="vc-cook-top-timer-label">${activeTimer.paused ? "Pausado" : "Tiempo"}</span>
+                    <strong>${formatCountdown(activeTimer.remainingMs)}</strong>
+                  </button>
+                  ${state.cooking?.timerMenuOpen ? `
+                    <div class="vc-cook-timer-popover" role="dialog" aria-label="Opciones del temporizador">
+                      <button class="vc-cook-timer-popover-action" type="button" data-action="toggle-cooking-timer-pause">
+                        ${activeTimer.paused ? "Reanudar" : "Pausar"}
+                      </button>
+                      <button class="vc-cook-timer-popover-action danger" type="button" data-action="stop-cooking-timer">
+                        Detener
+                      </button>
+                    </div>
+                  ` : ""}
+                </div>
+              ` : ""}
             </div>
           ` : `
             <a class="vc-topbar-logo" href="${APP_BASE_URL}?view=home" aria-label="Ir al inicio de VelociChef">
@@ -4217,12 +4269,9 @@ function renderCookView() {
               : ""}
             ${current?.timerMinutes ? `
               <div class="vc-inline-actions vc-cook-inline-tools">
-                <button class="vc-button secondary" data-action="start-step-timer">Comenzar cuenta regresiva</button>
-                ${activeTimer ? `<span class="vc-meta-pill">Temporizador ${formatCountdown(activeTimer.remainingMs)}</span>` : ""}
-              </div>
-            ` : activeTimer ? `
-              <div class="vc-inline-actions vc-cook-inline-tools">
-                <span class="vc-meta-pill">Temporizador ${formatCountdown(activeTimer.remainingMs)}</span>
+                <button class="vc-button secondary" data-action="start-step-timer">
+                  ${activeTimer ? "Reiniciar cuenta regresiva" : "Comenzar cuenta regresiva"}
+                </button>
               </div>
             ` : ""}
           </div>
@@ -4326,33 +4375,6 @@ function renderTechniqueModal() {
         <article class="vc-profile-card">
           <p class="vc-copy">${escapeHtml(technique.body)}</p>
         </article>
-      </div>
-    </div>
-  `;
-}
-
-function renderTimerModal() {
-  const timer = state.cooking?.activeTimer;
-  if (!timer) return "";
-
-  return `
-    <div class="vc-modal-layer" data-action="close-modal">
-      <div class="vc-modal vc-timer-modal" role="dialog" aria-modal="true">
-        <div class="vc-modal-head">
-          <div>
-            <small class="vc-muted">Cuenta regresiva</small>
-            <h2 class="vc-modal-title">${escapeHtml(timer.label)}</h2>
-          </div>
-          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">âœ•</button>
-        </div>
-        <div class="vc-timer-face">
-          <strong>${formatCountdown(timer.remainingMs)}</strong>
-          <span>${timer.durationMinutes} min</span>
-        </div>
-        <div class="vc-inline-actions" style="justify-content:center">
-          <button class="vc-button secondary" data-action="stop-cooking-timer">Detener</button>
-          <button class="vc-button primary" data-action="close-modal">Seguir cocinando</button>
-        </div>
       </div>
     </div>
   `;
@@ -4568,9 +4590,6 @@ function renderModal() {
   if (state.modal.type === "technique") {
     return `${renderTechniqueModal()}${renderBusyOverlay()}`;
   }
-  if (state.modal.type === "timer") {
-    return `${renderTimerModal()}${renderBusyOverlay()}`;
-  }
   if (state.modal.type === "reminder-detail") {
     const reminder = getReminderById(state.modal.reminderId);
     return `${reminder ? renderReminderDetailModal(reminder) : ""}${renderBusyOverlay()}`;
@@ -4760,6 +4779,9 @@ async function handleAction(action, trigger) {
 
   switch (action) {
     case "toggle-menu":
+      if (state.cooking) {
+        state.cooking.timerMenuOpen = false;
+      }
       state.activeMenu = state.activeMenu === trigger.dataset.menu ? null : trigger.dataset.menu;
       render();
       break;
@@ -4905,9 +4927,21 @@ async function handleAction(action, trigger) {
       break;
     }
 
+    case "toggle-cooking-timer-menu":
+      if (!state.cooking?.activeTimer) return;
+      state.cooking.timerMenuOpen = !state.cooking.timerMenuOpen;
+      render();
+      break;
+
+    case "toggle-cooking-timer-pause":
+      if (!state.cooking?.activeTimer) return;
+      toggleCookingTimerPause();
+      state.cooking.timerMenuOpen = false;
+      render();
+      break;
+
     case "stop-cooking-timer":
       stopCookingTimer();
-      state.modal = null;
       render();
       break;
 
@@ -5271,10 +5305,21 @@ document.addEventListener("click", async (event) => {
 });
 
 document.addEventListener("click", (event) => {
-  if (!state.activeMenu) return;
-  if (event.target.closest(".vc-menu-wrap")) return;
-  state.activeMenu = null;
-  render();
+  let shouldRender = false;
+
+  if (state.activeMenu && !event.target.closest(".vc-menu-wrap")) {
+    state.activeMenu = null;
+    shouldRender = true;
+  }
+
+  if (state.cooking?.timerMenuOpen && !event.target.closest(".vc-cook-timer-wrap")) {
+    state.cooking.timerMenuOpen = false;
+    shouldRender = true;
+  }
+
+  if (shouldRender) {
+    render();
+  }
 });
 
 document.addEventListener("keydown", (event) => {
@@ -5290,8 +5335,11 @@ document.addEventListener("keydown", (event) => {
   }
 
   if (event.key === "Escape") {
-    if (!state.activeMenu && !state.modal) return;
+    if (!state.activeMenu && !state.modal && !state.cooking?.timerMenuOpen) return;
     state.activeMenu = null;
+    if (state.cooking?.timerMenuOpen) {
+      state.cooking.timerMenuOpen = false;
+    }
     if (state.modal) {
       state.modal = null;
     }
