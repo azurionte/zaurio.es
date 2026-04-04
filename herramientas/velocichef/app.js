@@ -1329,21 +1329,39 @@ function renderShoppingStatusBadge(status) {
 
 function renderShoppingStatusAction(item) {
   const status = normalizeShoppingStatus(item?.pantryStatus);
-  const nextStatus = status === "bought" ? "pending" : "bought";
-  const meta = getShoppingStatusMeta(nextStatus);
-  const label = nextStatus === "bought" ? "Marcar como comprado" : "Volver a pendiente";
+  const pendingMeta = getShoppingStatusMeta("pending");
+  const boughtMeta = getShoppingStatusMeta("bought");
+  const pendingActive = status !== "bought";
+  const boughtActive = status === "bought";
   return `
-    <button
-      class="vc-shopping-status-action vc-shopping-status-action-${meta.key}"
-      type="button"
-      data-action="set-shopping-state"
-      data-item-id="${item.id}"
-      data-status="${nextStatus}"
-      aria-label="${escapeHtml(label)}"
-      title="${escapeHtml(label)}"
-    >
-      <span class="vc-shopping-status-icon" aria-hidden="true">${meta.icon}</span>
-    </button>
+    <div class="vc-shopping-status-action" role="group" aria-label="Estado de compra">
+      <button
+        class="vc-shopping-state vc-shopping-state-pending ${pendingActive ? "is-active" : "is-inactive"}"
+        type="button"
+        data-action="set-shopping-state"
+        data-item-id="${item.id}"
+        data-status="pending"
+        aria-label="${escapeHtml(pendingActive ? "Pendiente" : "Marcar como pendiente")}"
+        aria-pressed="${pendingActive ? "true" : "false"}"
+        title="${escapeHtml(pendingActive ? "Pendiente" : "Marcar como pendiente")}"
+      >
+        <span class="vc-shopping-status-icon" aria-hidden="true">${pendingMeta.icon}</span>
+        ${pendingActive ? '<span class="vc-shopping-state-label">Pendiente</span>' : ""}
+      </button>
+      <button
+        class="vc-shopping-state vc-shopping-state-bought ${boughtActive ? "is-active" : "is-inactive"}"
+        type="button"
+        data-action="set-shopping-state"
+        data-item-id="${item.id}"
+        data-status="bought"
+        aria-label="${escapeHtml(boughtActive ? "Comprado" : "Marcar como comprado")}"
+        aria-pressed="${boughtActive ? "true" : "false"}"
+        title="${escapeHtml(boughtActive ? "Comprado" : "Marcar como comprado")}"
+      >
+        <span class="vc-shopping-status-icon" aria-hidden="true">${boughtMeta.icon}</span>
+        ${boughtActive ? '<span class="vc-shopping-state-label">Comprado</span>' : ""}
+      </button>
+    </div>
   `;
 }
 
@@ -2058,7 +2076,11 @@ function readPersistedCookingState() {
   const requestedStepIndex = Math.max(0, Number(stored.stepIndex || 0));
   const safeStepIndex = stageCount ? Math.min(requestedStepIndex, stageCount - 1) : requestedStepIndex;
   const requestedStepId = String(stored.stepId || "").trim();
-  const safeStep = stages.find((step) => step.id === requestedStepId) || stages[safeStepIndex] || null;
+  const requestedStepTitle = String(stored.stepTitle || "").trim().toLowerCase();
+  const safeStep = stages.find((step) => step.id === requestedStepId)
+    || stages.find((step) => String(step.title || "").trim().toLowerCase() === requestedStepTitle)
+    || stages[safeStepIndex]
+    || null;
   const activeTimers = (Array.isArray(stored.activeTimers) ? stored.activeTimers : [])
     .map(serializeCookingTimer)
     .filter((timer) => timer && (!timer.mealId || !!getMealById(timer.mealId)));
@@ -5266,13 +5288,13 @@ function renderShoppingView() {
       </div>
 
       <article class="vc-panel">
-        <div class="vc-shopping-head">
-          <div>
-            <span class="vc-eyebrow">Mi lista de la compra</span>
-            <h2 class="vc-title">Todo lo que necesitarÃ¡s esta semana</h2>
-            <p class="vc-copy">Todo empieza en pendiente. Marca cada ingrediente como comprado cuando ya lo tengas resuelto.</p>
+          <div class="vc-shopping-head">
+            <div>
+              <span class="vc-eyebrow">Mi lista de la compra</span>
+              <h2 class="vc-title">Todo lo que necesitarás esta semana</h2>
+              <p class="vc-copy">Todo empieza en pendiente. Marca cada ingrediente como comprado cuando ya lo tengas resuelto.</p>
+            </div>
           </div>
-        </div>
       </article>
 
       ${Object.entries(grouped).map(([category, items]) => `
@@ -5306,7 +5328,7 @@ function renderShoppingView() {
       `).join("")}
 
       <div class="vc-step-foot">
-        <button class="vc-button secondary" data-action="open-view" data-view="week">Volver al menÃº</button>
+        <button class="vc-button secondary" data-action="open-view" data-view="week">Volver al menú</button>
         <button class="vc-button primary" data-action="complete-shopping">Marcar lista como completada</button>
       </div>
     </section>
@@ -7487,9 +7509,18 @@ window.addEventListener("focus", () => {
 });
 
 document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && state.currentView === "cook" && state.cooking?.mealId) {
+    persistCookingState();
+  }
   if (document.visibilityState === "visible") {
     flushDueReminders();
     void refreshRemoteReminderActivity({ showBanner: true });
+  }
+});
+
+window.addEventListener("pagehide", () => {
+  if (state.currentView === "cook" && state.cooking?.mealId) {
+    persistCookingState();
   }
 });
 

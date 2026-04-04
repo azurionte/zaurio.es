@@ -1401,7 +1401,7 @@ body.vc-cook-immersive-body .vc-app{
 }
 
 .vc-shopping-status-line{
-  display:flex;
+  display:inline-flex;
   align-items:center;
   justify-content:flex-end;
   gap:10px;
@@ -1450,34 +1450,95 @@ body.vc-cook-immersive-body .vc-app{
 }
 
 .vc-shopping-status-action{
-  width:44px;
-  min-width:44px;
-  height:44px;
-  border:none;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.vc-shopping-state{
+  min-height:46px;
   border-radius:999px;
+  border:1.5px solid rgba(80,29,10,.12);
+  background:rgba(255,255,255,.9);
+  color:rgba(98,75,64,.52);
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  background:rgba(255,255,255,.84);
-  border:1px solid rgba(80,29,10,.12);
-  color:var(--vc-orange-deep);
-  box-shadow:0 12px 24px rgba(49,18,11,.08);
+  gap:8px;
+  padding:0 15px;
+  box-shadow:0 10px 20px rgba(49,18,11,.06);
+  transition:border-color .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
-.vc-shopping-status-action-pending{
-  color:#8a532b;
+.vc-shopping-state:focus-visible{
+  outline:2px solid rgba(239,123,45,.34);
+  outline-offset:2px;
 }
 
-.vc-shopping-status-action-bought{
-  color:#2f6a48;
-  background:rgba(231,246,236,.94);
-  border-color:rgba(47,143,88,.2);
+.vc-shopping-state.is-inactive{
+  width:46px;
+  min-width:46px;
+  padding:0;
+  background:rgba(255,255,255,.72);
+  box-shadow:none;
+}
+
+.vc-shopping-state.is-active{
+  font-weight:800;
+  transform:translateY(-1px);
+}
+
+.vc-shopping-state-label{
+  white-space:nowrap;
+  font-size:.92rem;
+  letter-spacing:.01em;
+}
+
+.vc-shopping-state-pending.is-active{
+  color:#8d5c12;
+  border-color:rgba(234,173,34,.78);
+  background:linear-gradient(135deg, rgba(255,243,193,.98), rgba(255,250,234,.96));
+  box-shadow:0 0 0 3px rgba(246,209,96,.22), 0 14px 28px rgba(204,145,30,.14);
+  animation:vc-shopping-pending-glow 1.8s ease-in-out infinite;
+}
+
+.vc-shopping-state-bought.is-active{
+  color:#28714b;
+  border-color:rgba(54,164,103,.58);
+  background:linear-gradient(135deg, rgba(228,247,235,.98), rgba(245,255,248,.96));
+  box-shadow:0 0 0 3px rgba(90,196,132,.18), 0 14px 28px rgba(47,143,88,.14);
+  animation:vc-shopping-bought-glow 1.8s ease-in-out infinite;
+}
+
+.vc-shopping-state-pending.is-inactive,
+.vc-shopping-state-bought.is-inactive{
+  color:rgba(98,75,64,.4);
+  border-color:rgba(80,29,10,.1);
 }
 
 .vc-shopping-summary-head{
   display:flex;
   align-items:center;
   margin:4px 0 2px;
+}
+
+@keyframes vc-shopping-pending-glow{
+  0%, 100%{
+    box-shadow:0 0 0 3px rgba(246,209,96,.18), 0 14px 28px rgba(204,145,30,.12);
+  }
+  50%{
+    box-shadow:0 0 0 5px rgba(246,209,96,.26), 0 18px 34px rgba(204,145,30,.18);
+  }
+}
+
+@keyframes vc-shopping-bought-glow{
+  0%, 100%{
+    box-shadow:0 0 0 3px rgba(90,196,132,.16), 0 14px 28px rgba(47,143,88,.12);
+  }
+  50%{
+    box-shadow:0 0 0 5px rgba(90,196,132,.24), 0 18px 34px rgba(47,143,88,.18);
+  }
 }
 
 .vc-summary-card{
