@@ -237,6 +237,7 @@ function buildWeekPromptV2(input: Record<string, unknown>) {
   const profile = (input.profile || {}) as Record<string, unknown>;
   const meals = Array.isArray(profile.plannedMeals) ? profile.plannedMeals.map(String) : ["breakfast", "lunch", "dinner"];
   const mealList = meals.map((meal) => `- ${meal}: ${mealLabels[meal] || meal}`).join("\n");
+  const carryover = Array.isArray(profile.carryoverIngredients) ? profile.carryoverIngredients as Array<Record<string, unknown>> : [];
 
   return [
     "Genera un menu semanal realista en espanol para una app de planificacion de cocina.",
@@ -247,6 +248,7 @@ function buildWeekPromptV2(input: Record<string, unknown>) {
     "- Usa cantidades metricas y unidades de este conjunto: g, kg, ml, l, unit.",
     "- Para especias o condimentos no hace falta exactitud; puedes usar quantity 1, unit 'unit' y spice true.",
     "- Prioriza reutilizar ingredientes entre dias para simplificar la compra.",
+    "- Si el perfil incluye ingredientes disponibles de semanas anteriores, intenta reaprovecharlos de forma natural cuando encajen.",
     "- Ajusta las porciones al numero de personas indicado.",
     "- Cada plato debe incluir calorias aproximadas, tiempo de preparacion, dificultad y lista de ingredientes.",
     "- Cada plato debe incluir un array steps con entre 7 y 10 pasos pequenos y concretos.",
@@ -259,6 +261,9 @@ function buildWeekPromptV2(input: Record<string, unknown>) {
     "",
     "Contexto del perfil:",
     buildProfileSummaryClean(profile),
+    carryover.length
+      ? `Ingredientes disponibles para reaprovechar: ${carryover.map((item) => `${item.name || "ingrediente"} ${item.quantity || 0}${item.unit || ""}`).join(", ")}.`
+      : "",
     "",
     "Comidas a devolver en cada dia:",
     mealList,
@@ -277,17 +282,22 @@ function buildSwapPromptV2(input: Record<string, unknown>) {
   const currentMeal = (target.currentMeal || {}) as Record<string, unknown>;
   const reasons = Array.isArray(targetReasons.reasons) ? targetReasons.reasons.map(String).join(", ") : "cambio general";
   const ingredients = Array.isArray(targetReasons.ingredients) ? targetReasons.ingredients.map(String).join(", ") : "ninguno";
+  const carryover = Array.isArray(profile.carryoverIngredients) ? profile.carryoverIngredients as Array<Record<string, unknown>> : [];
 
   return [
     "Genera una alternativa de plato en espanol para sustituir una receta de una semana de menu.",
     "Devuelve solo JSON valido, sin markdown ni texto adicional.",
     "Debe mantener el mismo mealKey, respetar alergias y objetivos, y seguir intentando reutilizar ingredientes del resto de la semana si encaja.",
+    "Si el perfil incluye ingredientes disponibles de semanas anteriores, intenta aprovecharlos si ayudan a la compra.",
     "Evita repetir el plato original y evita los ingredientes marcados como problema.",
     "Incluye entre 7 y 10 pasos pequenos y concretos, con una sola accion principal por paso cuando sea posible.",
     "Cada paso debe indicar donde queda lo preparado al terminar.",
     "",
     "Contexto del perfil:",
     buildProfileSummaryClean(profile),
+    carryover.length
+      ? `Ingredientes disponibles para reaprovechar: ${carryover.map((item) => `${item.name || "ingrediente"} ${item.quantity || 0}${item.unit || ""}`).join(", ")}.`
+      : "",
     "",
     `Comida a sustituir: ${target.mealKey} en fecha ${target.date}.`,
     `Plato actual: ${currentMeal.title || "sin titulo"}.`,

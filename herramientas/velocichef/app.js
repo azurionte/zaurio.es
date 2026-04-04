@@ -206,7 +206,7 @@ const state = {
   speechRecognition: null,
   timerTicker: null,
   notificationDevice: null,
-  notificationTab: urlParams.get("tab") === "pending" ? "pending" : "future",
+  notificationTab: urlParams.get("tab") === "future" ? "future" : "pending",
   pendingReminderLink: null,
   pendingCookingRecovery: null,
   activeNotificationBannerId: null,
@@ -1557,10 +1557,13 @@ function buildFallbackCookingSteps(mealKey, meal, ingredients) {
 function normalizeMeal(mealKey, meal, dayDate) {
   const fallbackTitle = `${MEAL_LABELS[mealKey] || "Comida"} sugerida`;
   const ingredients = Array.isArray(meal?.ingredients) ? meal.ingredients.map(normalizeIngredient).filter((item) => item.name) : [];
+  const skipCooking = !!meal?.skipCooking || !!meal?.skip_cooking;
   const sourceSteps = Array.isArray(meal?.cookingSteps)
     ? meal.cookingSteps
     : (Array.isArray(meal?.steps) ? meal.steps : (Array.isArray(meal?.instructions) ? meal.instructions : []));
-  const normalizedSteps = (sourceSteps.length ? sourceSteps.map(normalizeCookingStep) : buildFallbackCookingSteps(mealKey, meal, ingredients))
+  const normalizedSteps = (skipCooking
+    ? []
+    : (sourceSteps.length ? sourceSteps.map(normalizeCookingStep) : buildFallbackCookingSteps(mealKey, meal, ingredients)))
     .filter((step) => step.text);
   const hasStoredGuidance = !!meal?.guidanceRefined || !!meal?.guidance_refined;
 
@@ -1585,6 +1588,7 @@ function normalizeMeal(mealKey, meal, dayDate) {
     guidanceRefined: hasStoredGuidance,
     tags: uniqueValues(meal?.tags || []),
     feedback: meal?.feedback || { liked: false, disliked: false, reasons: null },
+    skipCooking,
   };
 }
 
@@ -1628,6 +1632,49 @@ function aggregateShopping(days) {
       const categoryCompare = a.category.localeCompare(b.category, "es");
       return categoryCompare || a.name.localeCompare(b.name, "es");
     });
+}
+
+function normalizeCarryoverIngredient(item) {
+  if (!item?.name) return null;
+  return {
+    id: item.id || createId(),
+    name: String(item.name || "").trim(),
+    quantity: Number(item.quantity || 0) || 0,
+    unit: normalizeUnit(item.unit || "unit"),
+    category: String(item.category || "Otros").trim(),
+    sourceMealId: item.sourceMealId || item.source_meal_id || null,
+    sourceMealTitle: item.sourceMealTitle || item.source_meal_title || "",
+    sourceMealDate: item.sourceMealDate || item.source_meal_date || null,
+    sourceReason: item.sourceReason || item.source_reason || "carryover",
+  };
+}
+
+function mergeCarryoverIngredients(existing = [], next = []) {
+  const bucket = new Map();
+  [...existing, ...next]
+    .map(normalizeCarryoverIngredient)
+    .filter(Boolean)
+    .forEach((item) => {
+      const base = unitToBase(item.quantity || 0, item.unit);
+      const key = `${String(item.name || "").toLowerCase()}__${base.unit}__${String(item.sourceReason || "carryover")}`;
+      const current = bucket.get(key) || {
+        ...item,
+        id: item.id || createId(),
+        quantity: 0,
+        unit: base.unit,
+      };
+      current.quantity += base.amount || 0;
+      current.sourceMealId = current.sourceMealId || item.sourceMealId || null;
+      current.sourceMealTitle = current.sourceMealTitle || item.sourceMealTitle || "";
+      current.sourceMealDate = current.sourceMealDate || item.sourceMealDate || null;
+      bucket.set(key, current);
+    });
+
+  return [...bucket.values()].map((item) => ({
+    ...item,
+    quantity: Number(item.quantity || 0),
+    unit: normalizeUnit(item.unit || "unit"),
+  }));
 }
 
 function buildFreezerItems(days, existingFreezerItems = []) {
@@ -1706,6 +1753,7 @@ function normalizeWeek(rawWeek) {
     freezePromptAnswered: !!rawWeek.freezePromptAnswered,
     freezerOptIn: !!rawWeek.freezerOptIn,
     freezerItems: buildFreezerItems(normalizedDays, rawWeek.freezerItems),
+    carryoverIngredients: mergeCarryoverIngredients(rawWeek.carryoverIngredients || rawWeek.carryover_ingredients || []),
     reminders: Array.isArray(rawWeek.reminders) ? rawWeek.reminders.map(normalizeReminder).filter(Boolean) : [],
     activityNotifications: Array.isArray(rawWeek.activityNotifications) ? rawWeek.activityNotifications.map(normalizeActivityNotification).filter(Boolean) : [],
     lastReminderSyncAt: rawWeek.lastReminderSyncAt || null,
@@ -1719,6 +1767,7 @@ function buildWeekFromPlan(plan) {
     scheduleStepComplete: false,
     freezePromptAnswered: false,
     freezerOptIn: false,
+    carryoverIngredients: [],
   });
   normalized.reminders = [];
   normalized.activityNotifications = [];
@@ -1740,6 +1789,90 @@ function getMealById(mealId) {
   return flattenMeals(state.week).find((item) => item.meal.id === mealId) || null;
 }
 
+function isMealCookable(meal) {
+  return !!meal && !meal.skipCooking;
+}
+
+function buildCarryoverIngredientsFromMeal(entry, sourceReason = "carryover") {
+  if (!entry?.meal?.ingredients?.length) return [];
+  return entry.meal.ingredients
+    .filter((ingredient) => ingredient?.name)
+    .filter((ingredient) => !ingredient.spice && !ingredient.pantry)
+    .map((ingredient) => normalizeCarryoverIngredient({
+      name: ingredient.name,
+      quantity: ingredient.quantity,
+      unit: ingredient.unit,
+      category: ingredient.category,
+      sourceMealId: entry.meal.id,
+      sourceMealTitle: entry.meal.title,
+      sourceMealDate: entry.day?.date || null,
+      sourceReason,
+    }))
+    .filter(Boolean);
+}
+
+function buildSkippedMealPlaceholder(mealKey, dayDate, reason = "outside") {
+  const title = reason === "moved"
+    ? "Comida libre"
+    : "Comida fuera o delivery";
+  const summary = reason === "moved"
+    ? "Este hueco queda libre porque has movido este plato a otro momento de la semana."
+    : "Has marcado que aqui no cocinaras. VelociChef tendra en cuenta esos ingredientes en la proxima planificacion.";
+  return normalizeMeal(mealKey, {
+    id: createId(),
+    title,
+    summary,
+    prep_minutes: 0,
+    difficulty: "facil",
+    calories: 0,
+    servings: Number(state.profile?.householdCount || 1) || 1,
+    nutrition: { protein_g: 0, carbs_g: 0, fats_g: 0, fiber_g: 0 },
+    ingredients: [],
+    steps: [],
+    tags: ["descanso"],
+    skipCooking: true,
+  }, dayDate);
+}
+
+function replaceMealEntry(mealId, nextMealFactory) {
+  if (!state.week) return false;
+  let changed = false;
+  state.week.days = state.week.days.map((day) => ({
+    ...day,
+    meals: Object.fromEntries(
+      Object.entries(day.meals || {}).map(([mealKey, meal]) => {
+        if (meal.id !== mealId) return [mealKey, meal];
+        changed = true;
+        return [mealKey, nextMealFactory(meal, day, mealKey)];
+      }),
+    ),
+  }));
+  return changed;
+}
+
+function finalizeWeekMealsMutation() {
+  if (!state.week) return;
+  state.week.shoppingList = aggregateShopping(state.week.days).map((item) => {
+    const existing = state.week.shoppingList.find((current) => current.name === item.name && current.unit === item.unit);
+    return {
+      ...item,
+      pantryStatus: normalizeShoppingStatus(existing?.pantryStatus),
+    };
+  });
+  state.week.freezerItems = buildFreezerItems(state.week.days);
+  state.week.reminders = composeReminders();
+}
+
+function getFutureReplacementEntries(reminder) {
+  if (!state.week || !reminder?.mealId) return [];
+  const sourceTime = new Date(reminder.triggerAt).getTime();
+  return getScheduledCookingEntries()
+    .filter((entry) => entry.meal.id !== reminder.mealId)
+    .filter((entry) => isMealCookable(entry.meal))
+    .filter((entry) => entry.cookAt.getTime() > sourceTime)
+    .sort((a, b) => a.cookAt.getTime() - b.cookAt.getTime());
+}
+
 function getMealClock(mealKey) {
   if (mealKey === "lunch") return state.profile?.lunchTime || DEFAULT_MEAL_CLOCK.lunch;
   if (mealKey === "dinner") return state.profile?.dinnerTime || DEFAULT_MEAL_CLOCK.dinner;
@@ -1759,6 +1892,7 @@ function getSuggestedCookingTarget() {
   if (!state.week) return null;
   const now = new Date();
   const meals = flattenMeals(state.week)
+    .filter((entry) => isMealCookable(entry.meal))
     .map((entry) => ({
       ...entry,
       cookAt: getCookMoment(entry.day, entry.mealKey),
@@ -2288,7 +2422,7 @@ function buildAppUrlFromState(overrides = {}) {
   }
 
   if (requestedView === "notifications") {
-    params.set("tab", overrides.tab || state.notificationTab || "future");
+    params.set("tab", overrides.tab || state.notificationTab || "pending");
   }
 
   if (requestedView === "cook") {
@@ -2880,6 +3014,7 @@ function composeReminders() {
 
   state.week.days.forEach((day, index) => {
     Object.entries(day.meals || {}).forEach(([mealKey, meal]) => {
+      if (!isMealCookable(meal)) return;
       let date = day.date;
       let time = "12:00";
       let title = `Es hora de empezar con ${meal.title}`;
@@ -2970,6 +3105,7 @@ function formatClockFromDate(date) {
 function getScheduledCookingEntries() {
   if (!state.week) return [];
   return flattenMeals(state.week)
+    .filter((entry) => isMealCookable(entry.meal))
     .map((entry) => ({
       ...entry,
       cookAt: getCookMoment(entry.day, entry.mealKey),
@@ -3048,7 +3184,7 @@ function parseAppUrl(url) {
   const next = new URL(url, window.location.origin);
   return {
     view: normalizeView(next.searchParams.get("view") || "home"),
-    tab: next.searchParams.get("tab") === "pending" ? "pending" : "future",
+    tab: next.searchParams.get("tab") === "future" ? "future" : "pending",
     reminderId: next.searchParams.get("reminder") || "",
     intent: next.searchParams.get("intent") || "",
     mealId: next.searchParams.get("meal") || "",
@@ -3977,6 +4113,7 @@ function plannerProfilePayload() {
     lunchPrepNightBefore: !!state.profile?.lunchPrepNightBefore,
     lunchTime: state.profile?.lunchTime || null,
     dinnerTime: state.profile?.dinnerTime || null,
+    carryoverIngredients: mergeCarryoverIngredients(state.week?.carryoverIngredients || []),
     timezone: state.profile?.timezone || getTimezone(),
   };
 }
@@ -4087,6 +4224,7 @@ async function generateWeek(startDate = getActivePlanningStartIso()) {
   state.busy = true;
   state.busyLabel = "Preparando tu menÃº semanal...";
   state.error = "";
+  const previousWeek = state.week ? normalizeWeek(state.week) : null;
   render();
 
   try {
@@ -4096,11 +4234,13 @@ async function generateWeek(startDate = getActivePlanningStartIso()) {
       profile: plannerProfilePayload(),
     });
     state.week = buildWeekFromPlan(data.plan || data);
+    state.week.carryoverIngredients = [];
     state.notice = "";
     state.error = "";
   } catch (_error) {
     const error = _error;
     state.week = buildWeekFromPlan(createSampleWeekPlan(startDate));
+    state.week.carryoverIngredients = mergeCarryoverIngredients(previousWeek?.carryoverIngredients || [], state.week.carryoverIngredients || []);
     state.notice = "No pude cerrar la generaciÃ³n real en este intento, asÃ­ que he dejado una semana de muestra editable para que sigas avanzando.";
     state.error = "Ahora mismo no he podido generar el menÃº real.";
   } finally {
@@ -4819,6 +4959,7 @@ function renderWorkspaceHeader() {
 }
 
 function renderHomeMealCard(entry) {
+  const cookable = isMealCookable(entry.meal);
   return `
     <article class="vc-home-meal-card">
       <small class="vc-muted">${escapeHtml(getTodayMealLabel(entry))}</small>
@@ -4830,7 +4971,7 @@ function renderHomeMealCard(entry) {
         <span class="vc-meta-pill">${escapeHtml(entry.meal.difficulty)}</span>
       </div>
       <div class="vc-inline-actions">
-        <button class="vc-button primary" data-action="cook-meal" data-meal-id="${entry.meal.id}">Cocinar</button>
+        ${cookable ? `<button class="vc-button primary" data-action="cook-meal" data-meal-id="${entry.meal.id}">Cocinar</button>` : ""}
         <button class="vc-button ghost" data-action="open-details" data-meal-id="${entry.meal.id}">Ver detalles</button>
       </div>
     </article>
@@ -4924,6 +5065,7 @@ function renderHomeView() {
 
 function renderMealCard(day, mealKey, meal) {
   const feedback = meal.feedback || {};
+  const cookable = isMealCookable(meal);
   return `
     <article class="vc-meal-card">
       <div class="vc-meal-head">
@@ -4941,10 +5083,10 @@ function renderMealCard(day, mealKey, meal) {
         ${feedback.liked ? `<span class="vc-meta-pill">Te gusta</span>` : ""}
       </div>
       <div class="vc-meal-actions">
-        <button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>
-        <button class="vc-button subtle" data-action="toggle-like" data-meal-id="${meal.id}">Me gusta</button>
-        <button class="vc-button secondary" data-action="open-refine" data-meal-id="${meal.id}">No me gusta</button>
-        <button class="vc-button secondary" data-action="swap-meal" data-meal-id="${meal.id}">Cambiar por otro plato</button>
+        ${cookable ? `<button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>` : ""}
+        ${cookable ? `<button class="vc-button subtle" data-action="toggle-like" data-meal-id="${meal.id}">Me gusta</button>` : ""}
+        ${cookable ? `<button class="vc-button secondary" data-action="open-refine" data-meal-id="${meal.id}">No me gusta</button>` : ""}
+        ${cookable ? `<button class="vc-button secondary" data-action="swap-meal" data-meal-id="${meal.id}">Cambiar por otro plato</button>` : ""}
         <button class="vc-button ghost" data-action="open-details" data-meal-id="${meal.id}">Ver detalles</button>
       </div>
     </article>
@@ -5238,9 +5380,9 @@ function renderRecipesView() {
               <span class="vc-meta-pill">${escapeHtml(meal.difficulty)}</span>
             </div>
             <div class="vc-inline-actions">
-              <button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>
+              ${isMealCookable(meal) ? `<button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>` : ""}
               <button class="vc-button ghost" data-action="open-details" data-meal-id="${meal.id}">Ver detalles</button>
-              <button class="vc-button secondary" data-action="swap-meal" data-meal-id="${meal.id}">Cambiar</button>
+              ${isMealCookable(meal) ? `<button class="vc-button secondary" data-action="swap-meal" data-meal-id="${meal.id}">Cambiar</button>` : ""}
             </div>
           </article>
         `).join("")}
@@ -5734,7 +5876,7 @@ function renderCookView() {
                     <small class="vc-muted">${escapeHtml(MEAL_LABELS[mealKey])}</small>
                     <strong>${escapeHtml(meal.title)}</strong>
                     <p class="vc-copy">${escapeHtml(meal.summary)}</p>
-                    <button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>
+                    ${isMealCookable(meal) ? `<button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>` : `<span class="vc-meta-pill">Sin cocina</span>`}
                   </article>
                 `).join("")}
               </div>
@@ -6013,6 +6155,7 @@ function renderFreezerPromptModal() {
 
 function renderReminderDetailModal(reminder) {
   const isReadOnly = !!state.modal?.readOnly;
+  const canSkipFutureMeal = !isReadOnly && reminder.kind === "meal";
   return `
     <div class="vc-modal-layer" data-action="close-modal">
       <div class="vc-modal vc-reminder-modal" role="dialog" aria-modal="true">
@@ -6042,7 +6185,95 @@ function renderReminderDetailModal(reminder) {
 
         <div class="vc-step-foot">
           <button class="vc-button secondary" data-action="close-modal">Cerrar</button>
+          ${canSkipFutureMeal ? `<button class="vc-button secondary" data-action="open-future-no-cook" data-reminder-id="${reminder.id}">No cocinare</button>` : ""}
           ${isReadOnly ? "" : `<button class="vc-button primary" data-action="save-reminder-time" data-reminder-id="${reminder.id}">Guardar hora</button>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderFutureNoCookModal(reminder) {
+  const sourceEntry = reminder.mealId ? getMealById(reminder.mealId) : null;
+  const choice = state.modal?.futureNoCookChoice || "";
+  const replacementMealId = state.modal?.replacementMealId || "";
+  const inlineError = state.modal?.inlineError || "";
+  const replacementOptions = getFutureReplacementEntries(reminder);
+
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-reminder-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">No cocinare este plato</small>
+            <h2 class="vc-modal-title">Que quieres hacer con ${escapeHtml(reminder.mealTitle || sourceEntry?.meal?.title || "esta comida")}?</h2>
+            <p class="vc-copy">Si vas a comer fuera o pedir delivery, puedo guardar sus ingredientes como disponibles para la proxima planificacion. Si prefieres mover este plato a otro hueco, te dejo elegir que comida futura quieres reemplazar.</p>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
+        </div>
+
+        <article class="vc-profile-card">
+          <div class="vc-choice-grid">
+            <button class="vc-pill ${choice === "carryover" ? "active" : ""}" type="button" data-action="set-future-no-cook-choice" data-value="carryover">
+              <span>Comere fuera o pedire delivery</span>
+            </button>
+            <button class="vc-pill ${choice === "replace" ? "active" : ""}" type="button" data-action="set-future-no-cook-choice" data-value="replace">
+              <span>Mover este plato a otra comida</span>
+            </button>
+          </div>
+
+          ${choice === "replace" ? `
+            <div class="vc-field">
+              <label class="vc-label" for="future-replacement">Que comida quieres reemplazar con este plato?</label>
+              <select id="future-replacement" class="vc-select" data-modal-field="replacementMealId">
+                <option value="">Elige una comida futura</option>
+                ${replacementOptions.map((entry) => `
+                  <option value="${escapeHtml(entry.meal.id)}" ${replacementMealId === entry.meal.id ? "selected" : ""}>
+                    ${escapeHtml(`${entry.day.label} · ${MEAL_LABELS[entry.mealKey] || entry.mealKey} · ${entry.meal.title}`)}
+                  </option>
+                `).join("")}
+              </select>
+              <small class="vc-helper">La comida que reemplaces saldra de esta semana y sus ingredientes quedaran guardados para el siguiente plan.</small>
+            </div>
+          ` : ""}
+
+          ${inlineError ? `<div class="vc-error">${escapeHtml(inlineError)}</div>` : ""}
+        </article>
+
+        <div class="vc-step-foot">
+          <button class="vc-button secondary" data-action="close-modal">Cancelar</button>
+          <button class="vc-button primary" data-action="confirm-future-no-cook" data-reminder-id="${reminder.id}">Guardar cambio</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderFutureNoCookResultModal() {
+  const ingredients = Array.isArray(state.modal?.carryoverIngredients) ? state.modal.carryoverIngredients.map(normalizeCarryoverIngredient).filter(Boolean) : [];
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-reminder-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">Cambio guardado</small>
+            <h2 class="vc-modal-title">${escapeHtml(state.modal?.title || "He actualizado tu semana")}</h2>
+            <p class="vc-copy">${escapeHtml(state.modal?.body || "Tendre esto en cuenta en el siguiente plan semanal.")}</p>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
+        </div>
+
+        ${ingredients.length ? `
+          <article class="vc-profile-card">
+            <small class="vc-muted">Ingredientes que guardare como disponibles para la siguiente planificacion</small>
+            <ul class="vc-list">
+              ${ingredients.map((item) => `<li>${escapeHtml(`${item.name} · ${formatQuantity(item.quantity, item.unit)}`)}</li>`).join("")}
+            </ul>
+          </article>
+        ` : ""}
+
+        <div class="vc-step-foot">
+          <button class="vc-button primary" data-action="close-modal">Entendido</button>
         </div>
       </div>
     </div>
@@ -6201,6 +6432,13 @@ function renderModal() {
   if (state.modal.type === "cook-reminder") {
     const reminder = getReminderById(state.modal.reminderId);
     return `${reminder ? renderCookReminderModal(reminder) : ""}${renderBusyOverlay()}`;
+  }
+  if (state.modal.type === "future-no-cook") {
+    const reminder = getReminderById(state.modal.reminderId);
+    return `${reminder ? renderFutureNoCookModal(reminder) : ""}${renderBusyOverlay()}`;
+  }
+  if (state.modal.type === "future-no-cook-result") {
+    return `${renderFutureNoCookResultModal()}${renderBusyOverlay()}`;
   }
   if (state.modal.type === "cook-recovery") {
     return `${renderCookRecoveryModal()}${renderBusyOverlay()}`;
@@ -6476,10 +6714,8 @@ async function handleAction(action, trigger) {
         stopHandsFreeMode();
       }
       state.currentView = nextView;
-      if (nextView === "notifications" && !["pending", "future"].includes(state.notificationTab)) {
-        state.notificationTab = "future";
-      }
       if (nextView === "notifications") {
+        state.notificationTab = "pending";
         clearNotificationBannerTimer();
         state.activeNotificationBannerId = null;
         if (markAllActivityNotificationsRead()) {
@@ -6685,6 +6921,94 @@ async function handleAction(action, trigger) {
         reminderId: reminder.id,
         editedTime,
       };
+      render();
+      break;
+    }
+
+    case "open-future-no-cook":
+      state.modal = {
+        type: "future-no-cook",
+        reminderId: trigger.dataset.reminderId || state.modal?.reminderId,
+        futureNoCookChoice: "",
+        replacementMealId: "",
+        inlineError: "",
+      };
+      render();
+      break;
+
+    case "set-future-no-cook-choice":
+      state.modal = {
+        ...(state.modal || {}),
+        futureNoCookChoice: trigger.dataset.value || "",
+        replacementMealId: trigger.dataset.value === "replace" ? (state.modal?.replacementMealId || "") : "",
+        inlineError: "",
+      };
+      render();
+      break;
+
+    case "confirm-future-no-cook": {
+      const reminder = getReminderById(trigger.dataset.reminderId || state.modal?.reminderId);
+      const sourceEntry = reminder?.mealId ? getMealById(reminder.mealId) : null;
+      const choice = state.modal?.futureNoCookChoice || "";
+      if (!reminder || !sourceEntry || !choice) {
+        state.modal = {
+          ...(state.modal || {}),
+          inlineError: "Elige como quieres gestionar esta comida.",
+        };
+        render();
+        break;
+      }
+
+      let carryoverIngredients = [];
+      let resultTitle = "He actualizado esta comida";
+      let resultBody = "";
+
+      if (choice === "carryover") {
+        carryoverIngredients = buildCarryoverIngredientsFromMeal(sourceEntry, "skip_future_meal");
+        replaceMealEntry(sourceEntry.meal.id, (_meal, day, mealKey) => buildSkippedMealPlaceholder(mealKey, day.date, "outside"));
+        state.week.carryoverIngredients = mergeCarryoverIngredients(state.week.carryoverIngredients || [], carryoverIngredients);
+        resultTitle = "He dejado este hueco como comida libre";
+        resultBody = "Guardare estos ingredientes como disponibles para la siguiente planificacion semanal.";
+      } else if (choice === "replace") {
+        const replacementMealId = state.modal?.replacementMealId || "";
+        const targetEntry = replacementMealId ? getMealById(replacementMealId) : null;
+        if (!targetEntry) {
+          state.modal = {
+            ...(state.modal || {}),
+            inlineError: "Elige la comida futura que quieres reemplazar.",
+          };
+          render();
+          break;
+        }
+
+        carryoverIngredients = buildCarryoverIngredientsFromMeal(targetEntry, "replaced_future_meal");
+        const movedMeal = normalizeMeal(targetEntry.mealKey, {
+          ...sourceEntry.meal,
+          id: sourceEntry.meal.id,
+          mealKey: targetEntry.mealKey,
+          date: targetEntry.day.date,
+          skipCooking: false,
+        }, targetEntry.day.date);
+
+        replaceMealEntry(sourceEntry.meal.id, (_meal, day, mealKey) => buildSkippedMealPlaceholder(mealKey, day.date, "moved"));
+        replaceMealEntry(targetEntry.meal.id, () => movedMeal);
+        state.week.carryoverIngredients = mergeCarryoverIngredients(state.week.carryoverIngredients || [], carryoverIngredients);
+        resultTitle = "He movido el plato a otra comida";
+        resultBody = `La comida reemplazada era "${targetEntry.meal.title}". Sus ingredientes quedaran guardados para el siguiente plan semanal.`;
+      }
+
+      finalizeWeekMealsMutation();
+      await saveWeek();
+      scheduleReminders();
+      state.notificationTab = "future";
+      state.modal = {
+        type: "future-no-cook-result",
+        title: resultTitle,
+        body: resultBody,
+        carryoverIngredients,
+      };
+      state.notice = "";
+      state.error = "";
       render();
       break;
     }
@@ -7027,7 +7351,7 @@ document.addEventListener("click", async (event) => {
   if (!trigger) return;
   event.preventDefault();
 
-  if (trigger.classList.contains("vc-modal-layer") && trigger.dataset.action === "close-modal") {
+  if (trigger.classList.contains("vc-modal-layer") && trigger.dataset.action === "close-modal" && event.target === trigger) {
     state.modal = null;
     render();
     return;
@@ -7114,10 +7438,9 @@ document.addEventListener("change", (event) => {
   const modalField = event.target.dataset.modalField;
   if (modalField && state.modal) {
     state.modal[modalField] = event.target.value;
-    if (modalField === "editedTime" || modalField === "postponeChoice") {
+    if (modalField === "editedTime" || modalField === "postponeChoice" || modalField === "replacementMealId") {
       state.modal.inlineError = "";
     }
-    render();
     return;
   }
 
