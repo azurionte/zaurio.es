@@ -47,7 +47,7 @@ const ALLERGY_OPTIONS = [
   "Pescado",
   "Huevo",
   "Soja",
-  "SÃ©samo",
+  "Sésamo",
 ];
 
 const LIKE_OPTIONS = [
@@ -60,16 +60,16 @@ const LIKE_OPTIONS = [
   "Huevos",
   "Cremas y sopas",
   "Bocadillos potentes",
-  "Cocina mediterrÃ¡nea",
-  "Sabores asiÃ¡ticos suaves",
+  "Cocina mediterránea",
+  "Sabores asiáticos suaves",
   "Picoteo saludable",
 ];
 
 const DISLIKE_OPTIONS = [
-  "BrÃ³coli",
+  "Brócoli",
   "Coliflor",
   "Remolacha",
-  "HÃ­gado",
+  "Hígado",
   "Setas",
   "Berenjena",
   "Pepino",
@@ -86,16 +86,16 @@ const GOAL_OPTIONS = [
   "Mantenerme en peso",
   "Bajar de peso",
   "Subir de peso",
-  "AÃ±adir mÃ¡s verduras",
-  "AÃ±adir mÃ¡s proteÃ­na",
+  "Añadir más verduras",
+  "Añadir más proteína",
   "Comer con menos sal",
-  "Reducir azÃºcares",
+  "Reducir azúcares",
   "Evitar gluten",
   "Evitar semillas",
-  "Evitar lÃ¡cteos",
-  "Comer mÃ¡s fibra",
-  "Tener mÃ¡s energÃ­a",
-  "Gastar menos en el sÃºper",
+  "Evitar lácteos",
+  "Comer más fibra",
+  "Tener más energía",
+  "Gastar menos en el súper",
   "Aprovechar sobras",
 ];
 
@@ -107,8 +107,8 @@ const COOKING_STYLE_OPTIONS = [
   },
   {
     key: "balanced",
-    label: "Me apaÃ±o con nivel medio",
-    hint: "La mayorÃ­a fÃ¡cil, pero algÃºn plato con un poco mÃ¡s de gracia.",
+    label: "Me apaño con nivel medio",
+    hint: "La mayoría fácil, pero algún plato con un poco más de gracia.",
   },
   {
     key: "challenging",
@@ -118,18 +118,18 @@ const COOKING_STYLE_OPTIONS = [
 ];
 
 const MEAL_OPTIONS = [
-  { key: "breakfast", label: "Desayuno", icon: "â˜€ï¸", hint: "Algo prÃ¡ctico para empezar con buen pie." },
-  { key: "lunch", label: "Almuerzo", icon: "ðŸ²", hint: "El plato fuerte del mediodÃ­a." },
-  { key: "snack", label: "Merienda", icon: "ðŸŽ", hint: "Un apoyo entre horas." },
-  { key: "dinner", label: "Cena", icon: "ðŸŒ™", hint: "Algo rico y asumible al final del dÃ­a." },
-  { key: "bites", label: "Colaciones", icon: "ðŸ¥œ", hint: "PequeÃ±as opciones para picar entre comidas." },
+  { key: "breakfast", label: "Desayuno", icon: "\u2600\uFE0F", hint: "Algo práctico para empezar con buen pie." },
+  { key: "lunch", label: "Almuerzo", icon: "\uD83C\uDF72", hint: "El plato fuerte del mediodía." },
+  { key: "snack", label: "Merienda", icon: "\uD83C\uDF4E", hint: "Un apoyo entre horas." },
+  { key: "dinner", label: "Cena", icon: "\uD83C\uDF19", hint: "Algo rico y asumible al final del día." },
+  { key: "bites", label: "Colaciones", icon: "\uD83E\uDD5C", hint: "Pequeñas opciones para picar entre comidas." },
 ];
 
 const MEAL_LABELS = Object.fromEntries(MEAL_OPTIONS.map((item) => [item.key, item.label]));
 
 const REFINEMENT_REASON_OPTIONS = [
   { key: "ingredients", label: "No me gustan algunos ingredientes" },
-  { key: "difficulty", label: "Es muy difÃ­cil" },
+  { key: "difficulty", label: "Es muy difícil" },
   { key: "time", label: "Lleva demasiado tiempo" },
 ];
 
@@ -237,6 +237,26 @@ function escapeHtml(value) {
 
 function sanitizeUiCopy(value) {
   return String(value || "")
+    .replace(/Ã¡/g, "á")
+    .replace(/Ã©/g, "é")
+    .replace(/Ã­/g, "í")
+    .replace(/Ã³/g, "ó")
+    .replace(/Ãº/g, "ú")
+    .replace(/Ã±/g, "ñ")
+    .replace(/Ã/g, "Á")
+    .replace(/Ã‰/g, "É")
+    .replace(/Ã/g, "Í")
+    .replace(/Ã“/g, "Ó")
+    .replace(/Ãš/g, "Ú")
+    .replace(/Ã‘/g, "Ñ")
+    .replace(/Â¿/g, "¿")
+    .replace(/Â¡/g, "¡")
+    .replace(/Â·/g, " · ")
+    .replace(/â˜€ï¸/g, "☀️")
+    .replace(/ðŸ²/g, "🍲")
+    .replace(/ðŸŽ/g, "🍎")
+    .replace(/ðŸŒ™/g, "🌙")
+    .replace(/ðŸ¥œ/g, "🥜")
     .replace(/ÃƒÆ’Ã‚Â¡|ÃƒÂ¡/g, "á")
     .replace(/ÃƒÆ’Ã‚Â©|ÃƒÂ©/g, "é")
     .replace(/ÃƒÆ’Ã‚Â­|ÃƒÂ­/g, "í")
@@ -281,7 +301,7 @@ function uniqueValues(values) {
 
 function decodeMojibakeText(value) {
   let current = String(value || "");
-  if (!/[ÃƒÃ‚Ã¢ÂÕ]/.test(current)) {
+  if (!/[ÃÂâðïÕ]/.test(current)) {
     return current.replace(/âœ•|✖|✕/g, "×");
   }
 
@@ -404,9 +424,9 @@ function formatDateLong(isoDate) {
 }
 
 function friendlyDayLabel(isoDate, startDate) {
-  if (isoDate === startDate) return "MaÃ±ana";
+  if (isoDate === startDate) return "Mañana";
   const diff = Math.round((fromIsoDate(isoDate) - fromIsoDate(startDate)) / 86400000);
-  if (diff === 1) return "Pasado maÃ±ana";
+  if (diff === 1) return "Pasado mañana";
   const formatted = formatDateLong(isoDate);
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
@@ -946,7 +966,7 @@ function getNotificationCtaLabel() {
   const deviceState = getNotificationDeviceState();
   if (isNotificationActiveOnCurrentDevice(deviceState)) return "Revisar en este dispositivo";
   if (deviceState.needsInstall) return "Activar en este iPhone";
-  if (state.profile?.notificationEnabled) return "Activar tambiÃ©n aquÃ­";
+  if (state.profile?.notificationEnabled) return "Activar también aquí";
   return "Activar en este dispositivo";
 }
 
@@ -957,39 +977,39 @@ function getNotificationStatusCopy() {
     return "Este navegador no permite avisos web en este dispositivo.";
   }
   if (deviceState.needsInstall) {
-    return "Tus avisos pueden seguir activos en otro dispositivo, pero en iPhone necesitas abrir VelociChef desde la pantalla de inicio para activarlos aquÃ­.";
+    return "Tus avisos pueden seguir activos en otro dispositivo, pero en iPhone necesitas abrir VelociChef desde la pantalla de inicio para activarlos aquí.";
   }
   if (isNotificationActiveOnCurrentDevice(deviceState)) {
-    return "Los avisos estÃ¡n activos en este dispositivo y tambiÃ©n podrÃ© usarlos para recordatorios de cocina y compra.";
+    return "Los avisos están activos en este dispositivo y también podré usarlos para recordatorios de cocina y compra.";
   }
   if (deviceState.permission === "denied") {
-    return "Los avisos estÃ¡n bloqueados en este dispositivo. TendrÃ¡s que volver a permitirlos desde los ajustes del navegador o del sistema.";
+    return "Los avisos están bloqueados en este dispositivo. Tendrás que volver a permitirlos desde los ajustes del navegador o del sistema.";
   }
   if (state.profile?.notificationEnabled) {
-    return "Tus avisos ya estÃ¡n activos en otro dispositivo, pero todavÃ­a no en este. Puedes activarlos tambiÃ©n aquÃ­.";
+    return "Tus avisos ya están activos en otro dispositivo, pero todavía no en este. Puedes activarlos también aquí.";
   }
-  return "TodavÃ­a no has activado avisos en este dispositivo.";
+  return "Todavía no has activado avisos en este dispositivo.";
 }
 
 function getNotificationDeviceChip() {
   const deviceState = getNotificationDeviceState();
   if (isNotificationActiveOnCurrentDevice(deviceState)) return "Avisos activos en este dispositivo";
-  if (deviceState.needsInstall) return "ActÃ­valo desde pantalla de inicio";
-  if (deviceState.permission === "denied") return "Avisos bloqueados aquÃ­";
+  if (deviceState.needsInstall) return "Actívalo desde pantalla de inicio";
+  if (deviceState.permission === "denied") return "Avisos bloqueados aquí";
   if (state.profile?.notificationEnabled) return "Activos en otro dispositivo";
   return "Avisos pendientes en este dispositivo";
 }
 
 function normalizeDifficulty(level) {
   const map = {
-    facil: "FÃ¡cil",
-    easy: "FÃ¡cil",
+    facil: "Fácil",
+    easy: "Fácil",
     medio: "Media",
     media: "Media",
     medium: "Media",
-    dificil: "DifÃ­cil",
-    difficult: "DifÃ­cil",
-    hard: "DifÃ­cil",
+    dificil: "Difícil",
+    difficult: "Difícil",
+    hard: "Difícil",
   };
   return map[String(level || "").toLowerCase()] || "Media";
 }
@@ -2370,7 +2390,7 @@ async function requestNotifications() {
     return false;
   }
   if (currentDevice.needsInstall) {
-    state.notice = "En iPhone, los avisos solo se pueden activar desde la app instalada en la pantalla de inicio. Ãbrela desde allÃ­ y vuelve a intentarlo.";
+    state.notice = "En iPhone, los avisos solo se pueden activar desde la app instalada en la pantalla de inicio. Ábrela desde allí y vuelve a intentarlo.";
     state.error = "";
     render();
     return false;
@@ -2390,22 +2410,22 @@ async function requestNotifications() {
         scheduleReminders();
       }
       state.notice = isNotificationActiveOnCurrentDevice()
-        ? "Avisos activados en este dispositivo. Te avisarÃ© tambiÃ©n aunque la app no estÃ© abierta."
-        : "Los avisos estÃ¡n activados mientras la app siga abierta en este dispositivo.";
+        ? "Avisos activados en este dispositivo. Te avisaré también aunque la app no esté abierta."
+        : "Los avisos están activados mientras la app siga abierta en este dispositivo.";
       state.error = "";
       return true;
     } catch (_error) {
       state.profile.notificationEnabled = previousGlobalState || Notification.permission === "granted";
       await saveProfile();
       await refreshNotificationDeviceState();
-      state.notice = "He dejado los avisos preparados para este dispositivo, pero aÃºn no he cerrado la activaciÃ³n completa.";
-      state.error = "No pude completar la activaciÃ³n de avisos ahora mismo.";
+      state.notice = "He dejado los avisos preparados para este dispositivo, pero aún no he cerrado la activación completa.";
+      state.error = "No pude completar la activación de avisos ahora mismo.";
       render();
       return false;
     }
   }
   await refreshNotificationDeviceState();
-  state.notice = "Las notificaciones siguen desactivadas. Puedes volver a activarlas mÃ¡s tarde desde tu perfil.";
+  state.notice = "Las notificaciones siguen desactivadas. Puedes volver a activarlas más tarde desde tu perfil.";
   return false;
 }
 
@@ -3191,7 +3211,7 @@ async function swapMeal(target, reasons) {
     state.error = "";
   } catch (_error) {
     replacement = createFallbackSwapMeal(target, original);
-    state.notice = "No he podido traer una alternativa real ahora mismo y te he puesto una opciÃ³n de apoyo para no frenarte.";
+    state.notice = "No he podido traer una alternativa real ahora mismo y te he puesto una opción de apoyo para no frenarte.";
     state.error = "No he podido sustituir el plato ahora mismo.";
   } finally {
     updateMeal(target.meal.id, () => replacement);
@@ -3218,8 +3238,8 @@ function renderLoading() {
       <article class="vc-card vc-loader">
         <div class="vc-spinner" aria-hidden="true"></div>
         <div>
-          <h1 class="vc-title">VelociChef estÃ¡ arrancando la cocina.</h1>
-          <p class="vc-muted">Estoy preparando tu perfil, tus menÃºs y tu cocina semanal.</p>
+          <h1 class="vc-title">VelociChef está arrancando la cocina.</h1>
+          <p class="vc-muted">Estoy preparando tu perfil, tus menús y tu cocina semanal.</p>
         </div>
       </article>
     </section>
@@ -3235,7 +3255,7 @@ function renderBusyOverlay() {
           <div class="vc-spinner" aria-hidden="true"></div>
           <div>
             <h2 class="vc-modal-title">${escapeHtml(state.busyLabel || "Procesando...")}</h2>
-            <p class="vc-muted">VelociChef estÃ¡ cocinando la siguiente respuesta.</p>
+            <p class="vc-muted">VelociChef está cocinando la siguiente respuesta.</p>
           </div>
         </div>
       </div>
@@ -3488,16 +3508,16 @@ function renderLanding() {
           <div class="vc-grid">
             <div>
               <h1 class="vc-hero-title">Tu cocina semanal, la alacena y la compra en una sola app.</h1>
-              <p class="vc-lead">VelociChef planifica menÃºs realistas, reutiliza ingredientes, calcula calorÃ­as aproximadas y te acompaÃ±a desde el â€œquÃ© cenamosâ€ hasta la lista del sÃºper.</p>
+              <p class="vc-lead">VelociChef planifica menús realistas, reutiliza ingredientes, calcula calorías aproximadas y te acompaña desde el “qué cenamos” hasta la lista del súper.</p>
             </div>
             <div class="vc-chip-row">
               <span class="vc-meta-pill">Perfil a medida</span>
               <span class="vc-meta-pill">Semana organizada</span>
               <span class="vc-meta-pill">Compra clara</span>
-              <span class="vc-meta-pill">Hecho para mÃ³vil</span>
+              <span class="vc-meta-pill">Hecho para móvil</span>
             </div>
             <div class="vc-toolbar">
-              <button class="vc-button primary" data-action="login-google">Registrarme / iniciar sesiÃ³n con Google</button>
+              <button class="vc-button primary" data-action="login-google">Registrarme / iniciar sesión con Google</button>
             </div>
           </div>
           <div class="vc-hero-art">
@@ -3508,25 +3528,25 @@ function renderLanding() {
 
       <section class="vc-support-grid">
         <article class="vc-panel">
-          <h2 class="vc-title">Lo que podrÃ¡s hacer</h2>
+          <h2 class="vc-title">Lo que podrás hacer</h2>
           <div class="vc-kitchen-points">
             <div class="vc-kitchen-point">
               <h3 class="vc-inline-title">Perfilar tus gustos reales</h3>
-              <p class="vc-copy">Alergias, cosas que te gustan, lo que no quieres volver a ver en el plato, nivel de cocina, objetivos y reglas por persona si cocinas para mÃ¡s gente.</p>
+              <p class="vc-copy">Alergias, cosas que te gustan, lo que no quieres volver a ver en el plato, nivel de cocina, objetivos y reglas por persona si cocinas para más gente.</p>
             </div>
             <div class="vc-kitchen-point">
               <h3 class="vc-inline-title">Recibir una semana completa</h3>
-              <p class="vc-copy">Desayuno, almuerzo, merienda, cena y colaciones segÃºn lo que quieras planificar, con porciones adaptadas y detalles por receta.</p>
+              <p class="vc-copy">Desayuno, almuerzo, merienda, cena y colaciones según lo que quieras planificar, con porciones adaptadas y detalles por receta.</p>
             </div>
             <div class="vc-kitchen-point">
-              <h3 class="vc-inline-title">Transformar el menÃº en compra Ãºtil</h3>
+              <h3 class="vc-inline-title">Transformar el menú en compra útil</h3>
               <p class="vc-copy">Lista total por cantidades, control de lo que ya tienes y recordatorios para cocinar, descongelar y replanificar la siguiente semana.</p>
             </div>
           </div>
         </article>
 
         <article class="vc-login-card vc-card">
-          <span class="vc-eyebrow">CÃ³mo funciona</span>
+          <span class="vc-eyebrow">Cómo funciona</span>
           <div class="vc-stat-grid">
             <div class="vc-stat">
               <small class="vc-muted">1. Perfil</small>
@@ -3618,7 +3638,7 @@ function renderOnboarding() {
     {
       kicker: "Alergias",
       title: "Comienza a preparar tu perfil",
-      copy: "Primero vamos con alergias y lÃ­mites claros. Puedes marcar varias y dejar notas concretas para afinar tus platos.",
+      copy: "Primero vamos con alergias y límites claros. Puedes marcar varias y dejar notas concretas para afinar tus platos.",
       content: `
         <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Alergias o ingredientes que deben quedar fuera</label>
@@ -3627,14 +3647,14 @@ function renderOnboarding() {
         <div class="vc-field vc-step-section">
           <label class="vc-label" for="allergy-notes">Otros o matices</label>
           <textarea id="allergy-notes" class="vc-textarea" data-field="allergyNotes" placeholder="Ejemplo: el marisco me sienta mal, pero el pescado blanco me va bien.">${escapeHtml(state.profile.allergyNotes)}</textarea>
-          <span class="vc-helper">Si hay excepciones o matices, este campo manda sobre las opciones rÃ¡pidas.</span>
+          <span class="vc-helper">Si hay excepciones o matices, este campo manda sobre las opciones rápidas.</span>
         </div>
       `,
     },
     {
       kicker: "Gustos",
       title: "Tus gustos de verdad",
-      copy: "Ahora toca decirle a VelociChef quÃ© te gusta encontrar en la cocina y quÃ© preferirÃ­as esquivar.",
+      copy: "Ahora toca decirle a VelociChef qué te gusta encontrar en la cocina y qué preferirías esquivar.",
       content: `
         <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Cosas que me gustan</label>
@@ -3645,19 +3665,19 @@ function renderOnboarding() {
           <div class="vc-pill-grid">${DISLIKE_OPTIONS.map((option) => renderPill(option, "dislikes", state.profile.dislikes)).join("")}</div>
         </div>
         <div class="vc-field vc-step-section">
-          <label class="vc-label" for="dietary-notes">ExplÃ­camelo mejor</label>
+          <label class="vc-label" for="dietary-notes">Explícamelo mejor</label>
           <textarea id="dietary-notes" class="vc-textarea" data-field="dietaryNotes" placeholder="Ejemplo: no me van bien las salsas muy pesadas y prefiero platos jugosos.">${escapeHtml(state.profile.dietaryNotes)}</textarea>
-          <span class="vc-helper">AquÃ­ puedes contar texturas, sabores o combinaciones que prefieres evitar.</span>
+          <span class="vc-helper">Aquí puedes contar texturas, sabores o combinaciones que prefieres evitar.</span>
         </div>
       `,
     },
     {
       kicker: "Objetivos",
       title: "Estilo de cocina y objetivos",
-      copy: "AquÃ­ definimos quÃ© tanto quieres complicarte entre semana y quÃ© quieres conseguir con tu alimentaciÃ³n.",
+      copy: "Aquí definimos qué tanto quieres complicarte entre semana y qué quieres conseguir con tu alimentación.",
       content: `
         <div class="vc-step-section vc-fieldset">
-          <label class="vc-label">Â¿QuÃ© nivel de cocina quieres esta semana?</label>
+          <label class="vc-label">¿Qué nivel de cocina quieres esta semana?</label>
           <div class="vc-pill-grid">${COOKING_STYLE_OPTIONS.map((option) => renderCookingChoice(option, state.profile.cookingStyle)).join("")}</div>
         </div>
         <div class="vc-step-section vc-fieldset">
@@ -3668,8 +3688,8 @@ function renderOnboarding() {
     },
     {
       kicker: "Hogar",
-      title: "Â¿Para cuÃ¡ntas personas cocinamos?",
-      copy: "Puedes decirle a cada persona si come lo mismo que tÃº o si tiene reglas especiales.",
+      title: "¿Para cuántas personas cocinamos?",
+      copy: "Puedes decirle a cada persona si come lo mismo que tú o si tiene reglas especiales.",
       content: `
         <div class="vc-field vc-step-section">
           <label class="vc-label" for="householdCount">Personas que comen regularmente contigo</label>
@@ -3708,8 +3728,8 @@ function renderOnboarding() {
     },
     {
       kicker: "Plan",
-      title: "Â¿QuÃ© comidas quieres planificar?",
-      copy: "Marca las franjas de comida que quieres planificar y cuÃ©ntame cÃ³mo encaja el almuerzo en tu dÃ­a.",
+      title: "¿Qué comidas quieres planificar?",
+      copy: "Marca las franjas de comida que quieres planificar y cuéntame cómo encaja el almuerzo en tu día.",
       content: `
         <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Comidas a planificar</label>
@@ -3717,18 +3737,18 @@ function renderOnboarding() {
         </div>
         <label class="vc-switch vc-switch-card vc-step-section">
           <span>
-            <strong>Â¿Preparas el almuerzo la noche anterior?</strong>
-            <small class="vc-helper">AsÃ­ puedo proponerte platos que funcionen mejor recalentados o listos para llevar.</small>
+            <strong>¿Preparas el almuerzo la noche anterior?</strong>
+            <small class="vc-helper">Así puedo proponerte platos que funcionen mejor recalentados o listos para llevar.</small>
           </span>
           <input type="checkbox" data-field="lunchPrepNightBefore" ${state.profile.lunchPrepNightBefore ? "checked" : ""}>
         </label>
         <div class="vc-step-section vc-fieldset">
-          <label class="vc-label" for="onboarding-lunch-time">Â¿A quÃ© hora te gusta comer regularmente?</label>
+          <label class="vc-label" for="onboarding-lunch-time">¿A qué hora te gusta comer regularmente?</label>
           <input id="onboarding-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
-          <span class="vc-helper">Esto se usarÃ¡ para ajustar recordatorios y encajar el plan con tu ritmo real.</span>
+          <span class="vc-helper">Esto se usará para ajustar recordatorios y encajar el plan con tu ritmo real.</span>
         </div>
         <div class="vc-note vc-note-strong">
-          Se generarÃ¡ una semana empezando maÃ±ana, con porciones adaptadas a ${state.profile.householdCount} ${state.profile.householdCount === 1 ? "persona" : "personas"}, intentando reutilizar ingredientes y midiendo calorÃ­as aproximadas por plato.
+          Se generará una semana empezando mañana, con porciones adaptadas a ${state.profile.householdCount} ${state.profile.householdCount === 1 ? "persona" : "personas"}, intentando reutilizar ingredientes y midiendo calorías aproximadas por plato.
         </div>
       `,
     },
@@ -3983,10 +4003,10 @@ function renderWeekView() {
   if (!state.week) {
     return `
       <article class="vc-card vc-empty">
-        <h2 class="vc-title">TodavÃ­a no hay semana cocinada.</h2>
-        <p class="vc-copy">Lanza tu primer menÃº semanal y VelociChef te prepararÃ¡ recetas, compra y recordatorios.</p>
+        <h2 class="vc-title">Todavía no hay semana cocinada.</h2>
+        <p class="vc-copy">Lanza tu primer menú semanal y VelociChef te preparará recetas, compra y recordatorios.</p>
         <div class="vc-inline-actions" style="justify-content:center">
-          <button class="vc-button primary" data-action="generate-first-week">Preparar mi menÃº de la semana</button>
+          <button class="vc-button primary" data-action="generate-first-week">Preparar mi menú de la semana</button>
         </div>
       </article>
     `;
@@ -4055,13 +4075,13 @@ function renderScheduleView() {
         <div>
           <span class="vc-eyebrow">Ajustes finales</span>
           <h2 class="vc-step-title">Encajemos la semana con tu ritmo real</h2>
-          <p class="vc-step-copy">AquÃ­ puedes revisar lo que ya marcaste en el onboarding y afinar los avisos antes de ir a la compra.</p>
+          <p class="vc-step-copy">Aquí puedes revisar lo que ya marcaste en el onboarding y afinar los avisos antes de ir a la compra.</p>
         </div>
 
         <div class="vc-fieldset">
           <label class="vc-switch">
             <span>
-              <strong>Â¿Prefieres cocinar el almuerzo la noche anterior?</strong>
+              <strong>¿Prefieres cocinar el almuerzo la noche anterior?</strong>
               <small class="vc-helper">Si activas esto, te avisaremos la tarde anterior para dejarlo listo.</small>
             </span>
             <input type="checkbox" data-field="lunchPrepNightBefore" ${state.profile.lunchPrepNightBefore ? "checked" : ""}>
@@ -4070,17 +4090,17 @@ function renderScheduleView() {
 
         <div class="vc-grid two">
           <div class="vc-field">
-            <label class="vc-label" for="lunch-time">Â¿A quÃ© hora te gustarÃ­a almorzar regularmente?</label>
+            <label class="vc-label" for="lunch-time">¿A qué hora te gustaría almorzar regularmente?</label>
             <input id="lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
           </div>
           <div class="vc-field">
-            <label class="vc-label" for="dinner-time">Â¿A quÃ© hora te gustarÃ­a cenar regularmente?</label>
+            <label class="vc-label" for="dinner-time">¿A qué hora te gustaría cenar regularmente?</label>
             <input id="dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}">
           </div>
         </div>
 
         <div class="vc-field">
-          <label class="vc-label" for="lead-time">Â¿Con cuÃ¡nto margen quieres el recordatorio de cocina?</label>
+          <label class="vc-label" for="lead-time">¿Con cuánto margen quieres el recordatorio de cocina?</label>
           <select id="lead-time" class="vc-select" data-field="reminderLeadMinutes">
             ${[45, 60, 75, 90, 120].map((value) => `<option value="${value}" ${Number(state.profile.reminderLeadMinutes) === value ? "selected" : ""}>${value} minutos antes</option>`).join("")}
           </select>
@@ -4401,7 +4421,7 @@ function renderProfileView() {
         <section class="vc-editor-section">
           <div>
             <span class="vc-eyebrow">Gustos</span>
-            <h3 class="vc-inline-title">Lo que sÃ­ y lo que no</h3>
+            <h3 class="vc-inline-title">Lo que sí y lo que no</h3>
           </div>
           <div class="vc-fieldset">
             <label class="vc-label">Cosas que me gustan</label>
@@ -4412,7 +4432,7 @@ function renderProfileView() {
             <div class="vc-pill-grid">${DISLIKE_OPTIONS.map((option) => renderPill(option, "dislikes", state.profile.dislikes)).join("")}</div>
           </div>
           <div class="vc-field">
-            <label class="vc-label" for="profile-dietary-notes">CuÃ©ntamelo con tus palabras</label>
+            <label class="vc-label" for="profile-dietary-notes">Cuéntamelo con tus palabras</label>
             <textarea id="profile-dietary-notes" class="vc-textarea" data-field="dietaryNotes" placeholder="Ejemplo: prefiero platos jugosos y cenas suaves.">${escapeHtml(state.profile.dietaryNotes)}</textarea>
           </div>
         </section>
@@ -4420,7 +4440,7 @@ function renderProfileView() {
         <section class="vc-editor-section">
           <div>
             <span class="vc-eyebrow">Objetivos</span>
-            <h3 class="vc-inline-title">CÃ³mo quieres comer esta semana</h3>
+            <h3 class="vc-inline-title">Cómo quieres comer esta semana</h3>
           </div>
           <div class="vc-fieldset">
             <label class="vc-label">Nivel de cocina</label>
@@ -4479,23 +4499,23 @@ function renderProfileView() {
           </div>
           <label class="vc-switch vc-switch-card">
             <span>
-              <strong>Â¿Preparas el almuerzo la noche anterior?</strong>
-              <small class="vc-helper">AsÃ­ podrÃ© organizar mejor el momento de cocinar.</small>
+              <strong>¿Preparas el almuerzo la noche anterior?</strong>
+              <small class="vc-helper">Así podré organizar mejor el momento de cocinar.</small>
             </span>
             <input type="checkbox" data-field="lunchPrepNightBefore" ${state.profile.lunchPrepNightBefore ? "checked" : ""}>
           </label>
           <div class="vc-grid two">
             <div class="vc-field">
-              <label class="vc-label" for="profile-lunch-time">Â¿A quÃ© hora sueles comer?</label>
+              <label class="vc-label" for="profile-lunch-time">¿A qué hora sueles comer?</label>
               <input id="profile-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
             </div>
             <div class="vc-field">
-              <label class="vc-label" for="profile-dinner-time">Â¿A quÃ© hora sueles cenar?</label>
+              <label class="vc-label" for="profile-dinner-time">¿A qué hora sueles cenar?</label>
               <input id="profile-dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}">
             </div>
           </div>
           <div class="vc-field">
-            <label class="vc-label" for="profile-lead-time">Â¿Con cuÃ¡nto margen quieres que te avise?</label>
+            <label class="vc-label" for="profile-lead-time">¿Con cuánto margen quieres que te avise?</label>
             <select id="profile-lead-time" class="vc-select" data-field="reminderLeadMinutes">
               ${[45, 60, 75, 90, 120].map((value) => `<option value="${value}" ${Number(state.profile.reminderLeadMinutes) === value ? "selected" : ""}>${value} minutos antes</option>`).join("")}
             </select>
@@ -4505,13 +4525,13 @@ function renderProfileView() {
         <section class="vc-editor-section">
           <div>
             <span class="vc-eyebrow">Avisos y ayuda</span>
-            <h3 class="vc-inline-title">MantÃ©n la app a tu ritmo</h3>
+            <h3 class="vc-inline-title">Mantén la app a tu ritmo</h3>
           </div>
           ${isIOSDevice() && !isStandaloneApp() ? `<div class="vc-note">En iPhone, abre VelociChef desde la pantalla de inicio para poder activar avisos.</div>` : ""}
-          <p class="vc-copy">${escapeHtml(getNotificationStatusCopy())} ${state.profile.freezeNotificationsEnabled ? "TambiÃ©n recordarÃ© los ingredientes que convenga descongelar." : "Los recordatorios de congelado siguen apagados por ahora."}</p>
+          <p class="vc-copy">${escapeHtml(getNotificationStatusCopy())} ${state.profile.freezeNotificationsEnabled ? "También recordaré los ingredientes que convenga descongelar." : "Los recordatorios de congelado siguen apagados por ahora."}</p>
           <div class="vc-chip-row">
             <span class="vc-meta-pill">${escapeHtml(getNotificationDeviceChip())}</span>
-            <span class="vc-meta-pill">${pushCapable ? "Avisos tambiÃ©n fuera de la app" : "Avisos mientras la app estÃ¡ abierta"}</span>
+            <span class="vc-meta-pill">${pushCapable ? "Avisos también fuera de la app" : "Avisos mientras la app está abierta"}</span>
             <span class="vc-meta-pill">${speechCapable ? "Modo manos libres disponible" : "Modo manos libres limitado en este navegador"}</span>
             <span class="vc-meta-pill">${deviceNotification.permission === "granted" ? "Permiso concedido" : deviceNotification.permission === "denied" ? "Permiso bloqueado" : "Permiso pendiente"}</span>
           </div>
