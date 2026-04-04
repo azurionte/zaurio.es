@@ -230,6 +230,9 @@ let lastHistoryUrl = "";
 let isRestoringHistory = false;
 let remoteReminderRefreshPromise = null;
 let lastRemoteReminderRefreshAt = 0;
+let wakeLockSentinel = null;
+let wakeLockRequestPromise = null;
+let lastWakeLockErrorAt = 0;
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
@@ -642,6 +645,68 @@ function removeLocal(kind) {
   } catch (error) {
     // Ignoramos errores de almacenamiento local.
   }
+}
+
+function canUseWakeLock() {
+  return !!(typeof navigator !== "undefined" && navigator.wakeLock && typeof navigator.wakeLock.request === "function");
+}
+
+function shouldKeepScreenAwake() {
+  if (typeof document === "undefined" || document.visibilityState !== "visible") return false;
+  if (state.busy) return true;
+  return state.currentView === "cook" && state.cooking?.mode === "active" && !!getCookingTarget();
+}
+
+async function requestScreenWakeLock() {
+  if (!canUseWakeLock() || wakeLockSentinel || wakeLockRequestPromise || !shouldKeepScreenAwake()) {
+    return !!wakeLockSentinel;
+  }
+
+  wakeLockRequestPromise = navigator.wakeLock.request("screen")
+    .then((sentinel) => {
+      wakeLockSentinel = sentinel;
+      sentinel.addEventListener("release", () => {
+        if (wakeLockSentinel === sentinel) {
+          wakeLockSentinel = null;
+        }
+        if (shouldKeepScreenAwake()) {
+          void requestScreenWakeLock();
+        }
+      }, { once: true });
+      return true;
+    })
+    .catch((error) => {
+      const now = Date.now();
+      if (now - lastWakeLockErrorAt > 60000) {
+        console.warn("[VelociChef] No pude mantener la pantalla activa.", error);
+        lastWakeLockErrorAt = now;
+      }
+      return false;
+    })
+    .finally(() => {
+      wakeLockRequestPromise = null;
+    });
+
+  return wakeLockRequestPromise;
+}
+
+async function releaseScreenWakeLock() {
+  const sentinel = wakeLockSentinel;
+  wakeLockSentinel = null;
+  if (!sentinel) return;
+  try {
+    await sentinel.release();
+  } catch (_error) {
+    // Si el sistema ya lo liberó, no necesitamos hacer nada más.
+  }
+}
+
+function syncScreenWakeLock() {
+  if (shouldKeepScreenAwake()) {
+    void requestScreenWakeLock();
+    return;
+  }
+  void releaseScreenWakeLock();
 }
 
 function bytesToBase64Url(bytes) {
@@ -6561,6 +6626,7 @@ function render() {
     repairVisibleText(root);
     repairVisibleText(modalRoot);
     syncSystemBannerTimer();
+    syncScreenWakeLock();
     window.requestAnimationFrame(() => {
       syncLayoutMetrics();
       if (didPageChange) {
@@ -6581,6 +6647,7 @@ function render() {
   repairVisibleText(root);
   repairVisibleText(modalRoot);
   syncSystemBannerTimer();
+  syncScreenWakeLock();
   window.requestAnimationFrame(() => {
     syncLayoutMetrics();
     if (didPageChange) {
@@ -7553,6 +7620,7 @@ document.addEventListener("change", (event) => {
 });
 
 window.addEventListener("focus", () => {
+  syncScreenWakeLock();
   flushDueReminders();
   void refreshRemoteReminderActivity({ showBanner: true });
 });
@@ -7562,8 +7630,11 @@ document.addEventListener("visibilitychange", () => {
     persistCookingState();
   }
   if (document.visibilityState === "visible") {
+    syncScreenWakeLock();
     flushDueReminders();
     void refreshRemoteReminderActivity({ showBanner: true });
+  } else {
+    void releaseScreenWakeLock();
   }
 });
 
@@ -7571,6 +7642,7 @@ window.addEventListener("pagehide", () => {
   if (state.currentView === "cook" && state.cooking?.mealId) {
     persistCookingState();
   }
+  void releaseScreenWakeLock();
 });
 
 async function hydrateSession(session, options = {}) {
@@ -7589,6 +7661,7 @@ async function hydrateSession(session, options = {}) {
     }
     await refreshNotificationDeviceState();
     void syncAppBadgeCount();
+    syncScreenWakeLock();
     return;
   }
 
@@ -7596,6 +7669,7 @@ async function hydrateSession(session, options = {}) {
   clearNotificationBannerTimer();
   stopHandsFreeMode();
   stopCookingTimer();
+  void releaseScreenWakeLock();
   state.session = session;
   state.activeMenu = null;
   state.cooking = null;
