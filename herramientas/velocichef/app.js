@@ -5363,7 +5363,6 @@ function renderShoppingView() {
                     <span class="vc-muted">${escapeHtml(item.displayQuantity)}</span>
                   </div>
                   <div class="vc-shopping-status-line">
-                    ${renderShoppingStatusBadge(item.pantryStatus)}
                     ${renderShoppingStatusAction(item)}
                   </div>
                 </div>
@@ -5422,7 +5421,6 @@ function renderTodayShoppingView() {
                     <span class="vc-muted">${escapeHtml(item.displayQuantity)}</span>
                   </div>
                   <div class="vc-shopping-status-line">
-                    ${renderShoppingStatusBadge(item.pantryStatus)}
                     ${renderShoppingStatusAction(item)}
                   </div>
                 </div>
