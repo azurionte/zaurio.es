@@ -612,6 +612,7 @@ function deserializeProfile(user, row) {
 }
 
 function serializeWeek(userId, week) {
+  const { cookingSnapshot: _cookingSnapshot, ...persistedWeek } = week || {};
   return {
     id: week.id,
     user_id: userId,
@@ -620,7 +621,7 @@ function serializeWeek(userId, week) {
     status: week.status || "draft",
     shopping_completed: !!week.shoppingCompleted,
     freeze_prompt_answered: !!week.freezePromptAnswered,
-    week_payload: week,
+    week_payload: persistedWeek,
     updated_at: new Date().toISOString(),
   };
 }
@@ -844,8 +845,14 @@ async function loadWeek() {
       const activeWeek = normalizedWeeks.find((week) => isCurrentPlanningWeek(week));
       if (activeWeek) {
         state.storageMode = "supabase";
-        writeLocal("week", activeWeek);
-        return activeWeek;
+        const mergedWeek = fallback?.cookingSnapshot
+          ? normalizeWeek({
+              ...activeWeek,
+              cookingSnapshot: fallback.cookingSnapshot,
+            })
+          : activeWeek;
+        writeLocal("week", mergedWeek);
+        return mergedWeek;
       }
     }
     if (fallback && isCurrentPlanningWeek(fallback)) {
@@ -1846,6 +1853,7 @@ function normalizeWeek(rawWeek) {
     carryoverIngredients: mergeCarryoverIngredients(rawWeek.carryoverIngredients || rawWeek.carryover_ingredients || []),
     reminders: Array.isArray(rawWeek.reminders) ? rawWeek.reminders.map(normalizeReminder).filter(Boolean) : [],
     activityNotifications: Array.isArray(rawWeek.activityNotifications) ? rawWeek.activityNotifications.map(normalizeActivityNotification).filter(Boolean) : [],
+    cookingSnapshot: rawWeek.cookingSnapshot && typeof rawWeek.cookingSnapshot === "object" ? { ...rawWeek.cookingSnapshot } : null,
     lastReminderSyncAt: rawWeek.lastReminderSyncAt || null,
   };
 }
@@ -2122,10 +2130,11 @@ function persistCookingState() {
 
   if (!shouldPersist) {
     removeLocal("cooking");
+    syncWeekCookingSnapshot(null);
     return;
   }
 
-  writeLocal("cooking", {
+  const snapshot = {
     mode: hasRecoverableMeal ? currentMode : "picker",
     mealId: currentMealId || null,
     stepIndex: safeStepIndex,
@@ -2135,15 +2144,25 @@ function persistCookingState() {
     displayStepNumber: currentStages.length ? `${safeStepIndex + 1} / ${currentStages.length}` : "",
     activeTimers: timers,
     updatedAt: new Date().toISOString(),
-  });
+  };
+
+  writeLocal("cooking", snapshot);
+  syncWeekCookingSnapshot(snapshot);
 }
 
 function clearPersistedCookingState(options = {}) {
   removeLocal("cooking");
   state.pendingCookingRecovery = null;
+  syncWeekCookingSnapshot(null);
   if (options.resetCooking) {
     state.cooking = null;
   }
+}
+
+function syncWeekCookingSnapshot(snapshot) {
+  if (!state.week) return;
+  state.week.cookingSnapshot = snapshot ? { ...snapshot } : null;
+  writeLocal("week", normalizeWeek(state.week));
 }
 
 function resolveCookingStageSnapshot(target, options = {}) {
@@ -2175,7 +2194,11 @@ function resolveCookingStageSnapshot(target, options = {}) {
 }
 
 function readPersistedCookingState() {
-  const stored = readLocal("cooking", null);
+  const localStored = readLocal("cooking", null);
+  const weekStored = state.week?.cookingSnapshot || readLocal("week", null)?.cookingSnapshot || null;
+  const stored = [localStored, weekStored]
+    .filter((entry) => entry && typeof entry === "object")
+    .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())[0] || null;
   if (!stored || typeof stored !== "object") return null;
 
   const mealId = String(stored.mealId || "").trim();
@@ -2198,6 +2221,7 @@ function readPersistedCookingState() {
 
   if (!isRecoverableMode && !hasRecoverableTimers) {
     removeLocal("cooking");
+    syncWeekCookingSnapshot(null);
     return null;
   }
 
@@ -3434,6 +3458,26 @@ function dismissPersistedCookingRecovery() {
   if (state.modal?.type === "cook-recovery") {
     state.modal = null;
   }
+}
+
+function refreshPendingCookingRecovery(options = {}) {
+  const snapshot = readPersistedCookingState();
+  const shouldPrompt = options.prompt !== false;
+  const canPrompt = state.currentView !== "cook" && state.modal?.type !== "cook-recovery";
+
+  if (!snapshot?.mealId) {
+    state.pendingCookingRecovery = null;
+    if (state.modal?.type === "cook-recovery") {
+      state.modal = null;
+    }
+    return false;
+  }
+
+  state.pendingCookingRecovery = snapshot;
+  if (shouldPrompt && canPrompt) {
+    openCookingRecoveryPrompt(snapshot);
+  }
+  return true;
 }
 
 async function resumePersistedCooking(snapshot = state.pendingCookingRecovery) {
@@ -7675,6 +7719,10 @@ window.addEventListener("focus", () => {
   syncScreenWakeLock();
   flushDueReminders();
   void refreshRemoteReminderActivity({ showBanner: true });
+  if (state.week) {
+    const changed = refreshPendingCookingRecovery();
+    if (changed) render();
+  }
 });
 
 document.addEventListener("visibilitychange", () => {
@@ -7685,6 +7733,10 @@ document.addEventListener("visibilitychange", () => {
     syncScreenWakeLock();
     flushDueReminders();
     void refreshRemoteReminderActivity({ showBanner: true });
+    if (state.week) {
+      const changed = refreshPendingCookingRecovery();
+      if (changed) render();
+    }
   } else {
     void releaseScreenWakeLock();
   }
@@ -7782,10 +7834,7 @@ async function hydrateSession(session, options = {}) {
         activeTimers: persistedCooking?.activeTimers || [],
       });
     } else if (persistedCooking?.mealId) {
-      state.pendingCookingRecovery = persistedCooking;
-      if (!state.modal) {
-        openCookingRecoveryPrompt(persistedCooking);
-      }
+      refreshPendingCookingRecovery();
     }
   }
 
