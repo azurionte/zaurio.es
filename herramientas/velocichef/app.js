@@ -2062,6 +2062,32 @@ function persistCookingState() {
   });
 }
 
+function resolveCookingStageSnapshot(target, options = {}) {
+  const stages = getCookingStageList(target);
+  if (!stages.length) {
+    return {
+      stages,
+      stepIndex: 0,
+      step: null,
+    };
+  }
+
+  const requestedStepId = String(options.stepId || "").trim();
+  const requestedStepTitle = String(options.stepTitle || "").trim().toLowerCase();
+  const requestedStepIndex = Math.max(0, Number(options.stepIndex || 0));
+  const matchedStep = stages.find((step) => requestedStepId && step.id === requestedStepId)
+    || stages.find((step) => requestedStepTitle && String(step.title || "").trim().toLowerCase() === requestedStepTitle)
+    || stages[Math.max(0, Math.min(requestedStepIndex, stages.length - 1))]
+    || stages[0]
+    || null;
+  const stepIndex = matchedStep ? stages.findIndex((step) => step.id === matchedStep.id) : 0;
+  return {
+    stages,
+    stepIndex: Math.max(0, stepIndex),
+    step: matchedStep,
+  };
+}
+
 function readPersistedCookingState() {
   const stored = readLocal("cooking", null);
   if (!stored || typeof stored !== "object") return null;
@@ -2071,16 +2097,12 @@ function readPersistedCookingState() {
   const mode = mealId ? String(stored.mode || "active").trim() : "picker";
   const target = mealId ? getMealById(mealId) : null;
   if (!target) return null;
-  const stages = getCookingStageList(target);
-  const stageCount = stages.length;
   const requestedStepIndex = Math.max(0, Number(stored.stepIndex || 0));
-  const safeStepIndex = stageCount ? Math.min(requestedStepIndex, stageCount - 1) : requestedStepIndex;
-  const requestedStepId = String(stored.stepId || "").trim();
-  const requestedStepTitle = String(stored.stepTitle || "").trim().toLowerCase();
-  const safeStep = stages.find((step) => step.id === requestedStepId)
-    || stages.find((step) => String(step.title || "").trim().toLowerCase() === requestedStepTitle)
-    || stages[safeStepIndex]
-    || null;
+  const { stepIndex: safeStepIndex, step: safeStep } = resolveCookingStageSnapshot(target, {
+    stepId: stored.stepId || "",
+    stepTitle: stored.stepTitle || "",
+    stepIndex: requestedStepIndex,
+  });
   const activeTimers = (Array.isArray(stored.activeTimers) ? stored.activeTimers : [])
     .map(serializeCookingTimer)
     .filter((timer) => timer && (!timer.mealId || !!getMealById(timer.mealId)));
@@ -2089,8 +2111,8 @@ function readPersistedCookingState() {
     mealId,
     mealTitle: target.meal?.title || "",
     mealLabel: [target.day?.label, MEAL_LABELS[target.mealKey] || ""].filter(Boolean).join(" · "),
-    stepIndex: safeStep ? stages.findIndex((step) => step.id === safeStep.id) : requestedStepIndex,
-    stepId: safeStep?.id || requestedStepId,
+    stepIndex: safeStepIndex,
+    stepId: safeStep?.id || String(stored.stepId || "").trim(),
     stepTitle: String(stored.stepTitle || safeStep?.title || "").trim(),
     activeTimers,
     updatedAt: stored.updatedAt || "",
@@ -2313,6 +2335,15 @@ async function startCookingFlow(mealId, mode = "active", options = {}) {
   clearCookingMicHintTimer();
   state.notice = "";
   state.cooking = createCookingState(mode, mealId);
+  const initialTarget = mealId ? getMealById(mealId) : null;
+  if (initialTarget) {
+    const initialSnapshot = resolveCookingStageSnapshot(initialTarget, {
+      stepId: options.initialStepId || options.stepId || "",
+      stepTitle: options.initialStepTitle || options.stepTitle || "",
+      stepIndex: options.initialStepIndex ?? options.stepIndex ?? 0,
+    });
+    state.cooking.stepIndex = initialSnapshot.stepIndex;
+  }
   if (options.preserveTimers && Array.isArray(options.activeTimers) && options.activeTimers.length) {
     state.cooking.activeTimers = options.activeTimers.map((timer) => ({ ...timer }));
     syncPrimaryCookingTimer();
@@ -2332,6 +2363,13 @@ async function startCookingFlow(mealId, mode = "active", options = {}) {
 
   const target = getMealById(mealId);
   if (!target) return;
+  const resolvedSnapshot = resolveCookingStageSnapshot(target, {
+    stepId: options.initialStepId || options.stepId || "",
+    stepTitle: options.initialStepTitle || options.stepTitle || "",
+    stepIndex: options.initialStepIndex ?? options.stepIndex ?? state.cooking?.stepIndex ?? 0,
+  });
+  state.cooking.stepIndex = resolvedSnapshot.stepIndex;
+  persistCookingState();
   void prefetchCookingIllustrations(mealId, sessionId);
 }
 
@@ -2366,13 +2404,23 @@ function focusCookingStepIndex(mealId, stepIndex = 0) {
 async function openCookingSession(mealId, options = {}) {
   const mode = options.mode || "active";
   const stepId = options.stepId || "";
+  const stepTitle = options.stepTitle || "";
   const stepIndex = Math.max(0, Number(options.stepIndex || 0));
   await startCookingFlow(mealId, mode, {
     preserveTimers: !!options.preserveTimers,
     activeTimers: options.activeTimers || [],
     historyMode: options.historyMode || "push",
+    initialStepId: stepId,
+    initialStepTitle: stepTitle,
+    initialStepIndex: stepIndex,
   });
-  if (focusCookingStep(mealId, stepId) || focusCookingStepIndex(mealId, stepIndex)) {
+  const target = getMealById(mealId);
+  const resolvedSnapshot = target ? resolveCookingStageSnapshot(target, {
+    stepId,
+    stepTitle,
+    stepIndex,
+  }) : null;
+  if ((resolvedSnapshot && focusCookingStepIndex(mealId, resolvedSnapshot.stepIndex)) || focusCookingStep(mealId, stepId) || focusCookingStepIndex(mealId, stepIndex)) {
     const target = getMealById(mealId);
     const currentStep = target ? getCookingStage(target).current : null;
     if (currentStep?.kind === "instruction") {
@@ -3286,6 +3334,7 @@ async function resumePersistedCooking(snapshot = state.pendingCookingRecovery) {
   await openCookingSession(snapshot.mealId, {
     mode: "active",
     stepId: snapshot.stepId || "",
+    stepTitle: snapshot.stepTitle || "",
     stepIndex: snapshot.stepIndex || 0,
     preserveTimers: Array.isArray(snapshot.activeTimers) && snapshot.activeTimers.length > 0,
     activeTimers: snapshot.activeTimers || [],
