@@ -1,6 +1,6 @@
 window.__VELOCICHEF_VERSION__ = {
   major: 1,
   minor: 2,
-  build: "0404260746",
-  label: "1.2.0404260746",
+  build: "0404260754",
+  label: "1.2.0404260754",
 };

@@ -2155,11 +2155,13 @@ function resolveCookingStageSnapshot(target, options = {}) {
   const requestedStepId = String(options.stepId || "").trim();
   const requestedStepTitle = String(options.stepTitle || "").trim().toLowerCase();
   const requestedStepIndex = Math.max(0, Number(options.stepIndex || 0));
-  const matchedStep = stages.find((step) => requestedStepId && step.id === requestedStepId)
-    || stages.find((step) => requestedStepTitle && String(step.title || "").trim().toLowerCase() === requestedStepTitle)
-    || stages[Math.max(0, Math.min(requestedStepIndex, stages.length - 1))]
-    || stages[0]
-    || null;
+  const preferIndex = !!options.preferIndex;
+  const indexMatchedStep = stages[Math.max(0, Math.min(requestedStepIndex, stages.length - 1))] || null;
+  const idMatchedStep = stages.find((step) => requestedStepId && step.id === requestedStepId) || null;
+  const titleMatchedStep = stages.find((step) => requestedStepTitle && String(step.title || "").trim().toLowerCase() === requestedStepTitle) || null;
+  const matchedStep = preferIndex
+    ? (indexMatchedStep || idMatchedStep || titleMatchedStep || stages[0] || null)
+    : (idMatchedStep || titleMatchedStep || indexMatchedStep || stages[0] || null);
   const stepIndex = matchedStep ? stages.findIndex((step) => step.id === matchedStep.id) : 0;
   return {
     stages,
@@ -2182,6 +2184,7 @@ function readPersistedCookingState() {
     stepId: stored.stepId || "",
     stepTitle: stored.stepTitle || "",
     stepIndex: requestedStepIndex,
+    preferIndex: true,
   });
   const activeTimers = (Array.isArray(stored.activeTimers) ? stored.activeTimers : [])
     .map(serializeCookingTimer)
@@ -2193,7 +2196,7 @@ function readPersistedCookingState() {
     mealLabel: [target.day?.label, MEAL_LABELS[target.mealKey] || ""].filter(Boolean).join(" · "),
     stepIndex: safeStepIndex,
     stepId: safeStep?.id || String(stored.stepId || "").trim(),
-    stepTitle: String(stored.stepTitle || safeStep?.title || "").trim(),
+    stepTitle: String(safeStep?.title || stored.stepTitle || "").trim(),
     activeTimers,
     updatedAt: stored.updatedAt || "",
   };
@@ -2421,6 +2424,7 @@ async function startCookingFlow(mealId, mode = "active", options = {}) {
       stepId: options.initialStepId || options.stepId || "",
       stepTitle: options.initialStepTitle || options.stepTitle || "",
       stepIndex: options.initialStepIndex ?? options.stepIndex ?? 0,
+      preferIndex: !!options.preferStepIndex,
     });
     state.cooking.stepIndex = initialSnapshot.stepIndex;
   }
@@ -2447,6 +2451,7 @@ async function startCookingFlow(mealId, mode = "active", options = {}) {
     stepId: options.initialStepId || options.stepId || "",
     stepTitle: options.initialStepTitle || options.stepTitle || "",
     stepIndex: options.initialStepIndex ?? options.stepIndex ?? state.cooking?.stepIndex ?? 0,
+    preferIndex: !!options.preferStepIndex,
   });
   state.cooking.stepIndex = resolvedSnapshot.stepIndex;
   persistCookingState();
@@ -2486,6 +2491,7 @@ async function openCookingSession(mealId, options = {}) {
   const stepId = options.stepId || "";
   const stepTitle = options.stepTitle || "";
   const stepIndex = Math.max(0, Number(options.stepIndex || 0));
+  const preferStepIndex = !!options.preferStepIndex;
   await startCookingFlow(mealId, mode, {
     preserveTimers: !!options.preserveTimers,
     activeTimers: options.activeTimers || [],
@@ -2493,12 +2499,14 @@ async function openCookingSession(mealId, options = {}) {
     initialStepId: stepId,
     initialStepTitle: stepTitle,
     initialStepIndex: stepIndex,
+    preferStepIndex,
   });
   const target = getMealById(mealId);
   const resolvedSnapshot = target ? resolveCookingStageSnapshot(target, {
     stepId,
     stepTitle,
     stepIndex,
+    preferIndex: preferStepIndex,
   }) : null;
   if ((resolvedSnapshot && focusCookingStepIndex(mealId, resolvedSnapshot.stepIndex)) || focusCookingStep(mealId, stepId) || focusCookingStepIndex(mealId, stepIndex)) {
     const target = getMealById(mealId);
@@ -3407,6 +3415,13 @@ function openCookingRecoveryPrompt(snapshot = state.pendingCookingRecovery) {
   };
 }
 
+function dismissPersistedCookingRecovery() {
+  clearPersistedCookingState();
+  if (state.modal?.type === "cook-recovery") {
+    state.modal = null;
+  }
+}
+
 async function resumePersistedCooking(snapshot = state.pendingCookingRecovery) {
   if (!snapshot?.mealId) return;
   state.pendingCookingRecovery = null;
@@ -3416,6 +3431,7 @@ async function resumePersistedCooking(snapshot = state.pendingCookingRecovery) {
     stepId: snapshot.stepId || "",
     stepTitle: snapshot.stepTitle || "",
     stepIndex: snapshot.stepIndex || 0,
+    preferStepIndex: true,
     preserveTimers: Array.isArray(snapshot.activeTimers) && snapshot.activeTimers.length > 0,
     activeTimers: snapshot.activeTimers || [],
     historyMode: "push",
@@ -6529,7 +6545,7 @@ function renderCookRecoveryModal() {
   const snapshot = state.pendingCookingRecovery;
   if (!snapshot?.mealId) return "";
   const target = getMealById(snapshot.mealId);
-  const resolvedSnapshot = target ? resolveCookingStageSnapshot(target, snapshot) : null;
+  const resolvedSnapshot = target ? resolveCookingStageSnapshot(target, { ...snapshot, preferIndex: true }) : null;
   const mealTitle = snapshot.mealTitle || target?.meal?.title || "tu receta";
   const stepTitle = resolvedSnapshot?.step?.title || snapshot.stepTitle || "el punto donde lo dejaste";
   const mealLabel = snapshot.mealLabel || [target?.day?.label, MEAL_LABELS[target?.mealKey] || ""].filter(Boolean).join(" · ");
@@ -7314,16 +7330,16 @@ async function handleAction(action, trigger) {
       break;
 
     case "dismiss-cooking-recovery":
-      state.pendingCookingRecovery = null;
-      state.modal = null;
+      dismissPersistedCookingRecovery();
       render();
       break;
 
     case "close-modal":
       if (state.modal?.type === "cook-recovery") {
-        state.pendingCookingRecovery = null;
+        dismissPersistedCookingRecovery();
+      } else {
+        state.modal = null;
       }
-      state.modal = null;
       render();
       break;
 
