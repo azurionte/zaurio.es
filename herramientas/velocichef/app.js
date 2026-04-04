@@ -635,6 +635,14 @@ function writeLocal(kind, value) {
   }
 }
 
+function removeLocal(kind) {
+  try {
+    localStorage.removeItem(getLocalKey(kind));
+  } catch (error) {
+    // Ignoramos errores de almacenamiento local.
+  }
+}
+
 function bytesToBase64Url(bytes) {
   const value = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
   return btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
@@ -913,13 +921,14 @@ function buildRemoteTimerReminder(timer) {
 
   const target = timer.mealId ? getMealById(timer.mealId) : null;
   const triggerAt = new Date(timer.endsAt || (Date.now() + Math.max(0, Number(timer.remainingMs || 0)))).toISOString();
+  const timerLabel = String(timer.label || "Temporizador").trim() || "Temporizador";
   const payload = buildBrowserNotificationPayload({
     id: reminderId,
     kind: "timer",
-    title: "Tiempo cumplido",
-    body: `${timer.label} ya puede pasar al siguiente paso.`,
+    title: `${timerLabel} listo`,
+    body: `${timerLabel} ya está listo.`,
     url: timer.mealId ? buildCookSessionUrl(timer.mealId, timer.stepId || "") : `${APP_BASE_URL}?view=cook`,
-    actionLabel: "Seguir paso",
+    actionLabel: "Seguir",
     actionType: "cook",
     mealId: timer.mealId || null,
     stepId: timer.stepId || null,
@@ -945,10 +954,10 @@ function buildRemoteTimerReminder(timer) {
       ...payload,
       reminderId,
       kind: "timer",
-      tag: `timer-${reminderId}`,
+      tag: `timer-${timer.id || reminderId}`,
       groupKey: "cook-timer",
       timerId: timer.id,
-      timerLabel: timer.label,
+      timerLabel,
       mealId: timer.mealId || null,
       stepId: timer.stepId || null,
       mealDate: target?.day?.date || null,
@@ -1856,6 +1865,62 @@ function getPrimaryCookingTimer() {
   return getActiveCookingTimers()[0] || null;
 }
 
+function serializeCookingTimer(timer) {
+  if (!timer) return null;
+  return {
+    id: String(timer.id || createId()),
+    label: String(timer.label || "Temporizador").trim() || "Temporizador",
+    durationMinutes: Math.max(0, Number(timer.durationMinutes || 0)),
+    endsAt: Number(timer.endsAt || 0),
+    remainingMs: Math.max(0, Number(timer.remainingMs || 0)),
+    paused: !!timer.paused,
+    stepId: String(timer.stepId || "").trim(),
+    mealId: String(timer.mealId || "").trim(),
+    reminderId: isUuid(timer.reminderId) ? String(timer.reminderId).trim() : "",
+  };
+}
+
+function persistCookingState() {
+  if (!state.session?.user) return;
+  const cooking = state.cooking;
+  const timers = sortCookingTimers((cooking?.activeTimers || []).map(serializeCookingTimer).filter(Boolean));
+  const currentMealId = String(cooking?.mealId || "").trim();
+  const shouldPersist = !!currentMealId || timers.length > 0;
+
+  if (!shouldPersist) {
+    removeLocal("cooking");
+    return;
+  }
+
+  writeLocal("cooking", {
+    mode: currentMealId ? String(cooking?.mode || "active").trim() : "picker",
+    mealId: currentMealId || null,
+    stepIndex: Math.max(0, Number(cooking?.stepIndex || 0)),
+    activeTimers: timers,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+function restorePersistedCookingState() {
+  const stored = readLocal("cooking", null);
+  if (!stored || typeof stored !== "object") return false;
+
+  const mealId = String(stored.mealId || "").trim();
+  const mode = mealId ? String(stored.mode || "active").trim() : "picker";
+  const cooking = createCookingState(mode, mealId || null);
+  const target = mealId ? getMealById(mealId) : null;
+  const stageCount = target ? getCookingStage(target).stages.length : 0;
+  const requestedStepIndex = Math.max(0, Number(stored.stepIndex || 0));
+  cooking.stepIndex = stageCount ? Math.min(requestedStepIndex, stageCount - 1) : 0;
+  cooking.activeTimers = (Array.isArray(stored.activeTimers) ? stored.activeTimers : [])
+    .map(serializeCookingTimer)
+    .filter((timer) => timer && (!timer.mealId || !!getMealById(timer.mealId)));
+
+  state.cooking = cooking;
+  syncPrimaryCookingTimer();
+  return true;
+}
+
 function getCookingStageList(target) {
   if (!target) return [];
   const ingredientStep = {
@@ -2062,6 +2127,7 @@ async function startCookingFlow(mealId, mode = "active", options = {}) {
     state.cooking.activeTimers = options.activeTimers.map((timer) => ({ ...timer }));
     syncPrimaryCookingTimer();
   }
+  persistCookingState();
   const sessionId = state.cooking.sessionId;
   state.currentView = "cook";
   syncHistoryFromState({ mode: options.historyMode || "push", view: "cook", mealId, stepId: "" });
@@ -2085,6 +2151,7 @@ function focusCookingStep(mealId, stepId = "") {
   if (nextIndex < 0) return false;
   state.cooking.stepIndex = nextIndex;
   state.cooking.timerMenuOpen = false;
+  persistCookingState();
   window.scrollTo(0, 0);
   return true;
 }
@@ -2245,9 +2312,12 @@ function normalizeReminder(rawReminder) {
     deliveredAt: rawReminder.deliveredAt || rawReminder.delivered_at || null,
     skippedAt: rawReminder.skippedAt || rawReminder.skipped_at || null,
     mealId: rawReminder.mealId || rawReminder.meal_id || null,
+    stepId: rawReminder.stepId || rawReminder.step_id || null,
     mealDate: rawReminder.mealDate || rawReminder.meal_date || null,
     mealKey: rawReminder.mealKey || rawReminder.meal_key || null,
     mealTitle: rawReminder.mealTitle || rawReminder.meal_title || null,
+    timerId: rawReminder.timerId || rawReminder.timer_id || null,
+    timerLabel: rawReminder.timerLabel || rawReminder.timer_label || null,
     ingredient: rawReminder.ingredient || null,
     dateLabel: rawReminder.dateLabel || rawReminder.date_label || null,
     url: rawReminder.url || "",
@@ -2415,7 +2485,7 @@ function buildBrowserNotificationPayload(rawNotification) {
   const actionLabel = String(
     rawNotification.actionLabel
     || reminderPresentation?.actionLabel
-    || (kind === "timer" ? "Abrir paso" : "Abrir"),
+    || (kind === "timer" ? "Seguir" : "Abrir"),
   ).trim();
   const fallbackUrl = kind === "timer" && rawNotification.mealId
     ? buildCookSessionUrl(rawNotification.mealId, rawNotification.stepId || "")
@@ -2611,19 +2681,29 @@ function getActivityNotificationById(notificationId) {
   return getActivityNotifications().find((item) => item.id === notificationId) || null;
 }
 
+function getReminderActivitySourceKey(reminder) {
+  if (!reminder) return "";
+  if (String(reminder.kind || "") === "timer") {
+    return `timer:${reminder.timerId || reminder.id}`;
+  }
+  return `reminder:${reminder.id}`;
+}
+
 function buildActivityNotificationFromReminder(reminder) {
   if (!reminder) return null;
   const notificationPayload = buildBrowserNotificationPayload(reminder);
+  const isTimerReminder = String(reminder.kind || "") === "timer";
+  const timerLabel = String(reminder.timerLabel || "").trim();
   return {
     id: createId(),
-    sourceKey: `reminder:${reminder.id}`,
+    sourceKey: getReminderActivitySourceKey(reminder),
     kind: reminder.kind || "reminder",
-    title: notificationPayload.title,
-    body: notificationPayload.body,
+    title: isTimerReminder && timerLabel ? `${timerLabel} listo` : notificationPayload.title,
+    body: isTimerReminder && timerLabel ? `${timerLabel} ya está listo.` : notificationPayload.body,
     createdAt: reminder.deliveredAt || reminder.triggerAt || new Date().toISOString(),
     readAt: null,
-    actionLabel: notificationPayload.actionLabel || "Abrir",
-    actionType: "reminder",
+    actionLabel: isTimerReminder ? "Seguir" : (notificationPayload.actionLabel || "Abrir"),
+    actionType: isTimerReminder ? "cook" : (notificationPayload.actionType || "reminder"),
     reminderId: reminder.id,
     mealId: reminder.mealId || null,
     stepId: reminder.stepId || null,
@@ -2655,9 +2735,12 @@ async function ingestRemoteReminderPayload(rawPayload, options = {}) {
       triggerAt: rawPayload.triggerAt || rawPayload.trigger_at || rawPayload.timestamp || deliveredAt,
       deliveredAt,
       mealId: rawPayload.mealId || rawPayload.meal_id || null,
+      stepId: rawPayload.stepId || rawPayload.step_id || null,
       mealDate: rawPayload.mealDate || rawPayload.meal_date || null,
       mealKey: rawPayload.mealKey || rawPayload.meal_key || null,
       mealTitle: rawPayload.mealTitle || rawPayload.meal_title || null,
+      timerId: rawPayload.timerId || rawPayload.timer_id || null,
+      timerLabel: rawPayload.timerLabel || rawPayload.timer_label || null,
       ingredient: rawPayload.ingredient || null,
       dateLabel: rawPayload.dateLabel || rawPayload.date_label || null,
       url: rawPayload.url || "",
@@ -2672,7 +2755,7 @@ async function ingestRemoteReminderPayload(rawPayload, options = {}) {
     reminder.deliveredAt = reminder.deliveredAt || deliveredAt;
   }
 
-  const sourceKey = reminder ? `reminder:${reminder.id}` : "";
+  const sourceKey = reminder ? getReminderActivitySourceKey(reminder) : "";
   if (reminder && !getActivityNotificationBySourceKey(sourceKey)) {
     const activity = buildActivityNotificationFromReminder(reminder);
     if (activity) {
@@ -3279,33 +3362,36 @@ function syncCookingTimer() {
 
   if (finished.length) {
     finished.forEach((timer) => {
-      pushActivityNotification({
-        id: createId(),
-        sourceKey: `timer:${timer.id}`,
-        kind: "timer",
-        title: `${timer.label} listo`,
-        body: `${timer.label} ya está listo.`,
-        createdAt: new Date().toISOString(),
-        readAt: null,
-        actionLabel: "Seguir",
-        actionType: "cook",
-        mealId: timer.mealId || null,
-        stepId: timer.stepId || null,
-        url: timer.mealId ? buildCookSessionUrl(timer.mealId, timer.stepId || "") : `${APP_BASE_URL}?view=cook`,
-      }, { persist: true, showBanner: true });
+      const sourceKey = `timer:${timer.id}`;
+      if (!getActivityNotificationBySourceKey(sourceKey)) {
+        pushActivityNotification({
+          id: createId(),
+          sourceKey,
+          kind: "timer",
+          title: `${timer.label} listo`,
+          body: `${timer.label} ya está listo.`,
+          createdAt: new Date().toISOString(),
+          readAt: null,
+          actionLabel: "Seguir",
+          actionType: "cook",
+          mealId: timer.mealId || null,
+          stepId: timer.stepId || null,
+          url: timer.mealId ? buildCookSessionUrl(timer.mealId, timer.stepId || "") : `${APP_BASE_URL}?view=cook`,
+        }, { persist: true, showBanner: true });
+      }
     });
     finished.forEach((timer) => {
       void markRemoteTimerReminderDelivered(timer);
     });
-    if ("Notification" in window && Notification.permission === "granted") {
+    if (!isNotificationActiveOnCurrentDevice() && "Notification" in window && Notification.permission === "granted") {
       finished.forEach((timer) => {
         showBrowserNotification({
           id: `cook-timer-${timer.id}`,
           kind: "timer",
-          title: "Tiempo cumplido",
-          body: `${timer.label} ya puede pasar al siguiente paso.`,
+          title: `${timer.label} listo`,
+          body: `${timer.label} ya está listo.`,
           url: timer.mealId ? buildCookSessionUrl(timer.mealId, timer.stepId || "") : `${APP_BASE_URL}?view=cook`,
-          actionLabel: "Seguir paso",
+          actionLabel: "Seguir",
           actionType: "cook",
           mealId: timer.mealId || null,
           stepId: timer.stepId || null,
@@ -3319,6 +3405,7 @@ function syncCookingTimer() {
     clearTimerTicker();
   }
 
+  persistCookingState();
   render();
 }
 
@@ -3338,6 +3425,7 @@ function startCookingTimer(label, minutes, options = {}) {
   state.cooking.activeTimers.push(timer);
   syncPrimaryCookingTimer();
   state.cooking.timerMenuOpen = false;
+  persistCookingState();
   void upsertRemoteTimerReminder(timer);
   if (!state.timerTicker) {
     state.timerTicker = window.setInterval(syncCookingTimer, 1000);
@@ -3352,6 +3440,7 @@ function toggleCookingTimerPause(timerId = "") {
   if (timer.paused) {
     timer.paused = false;
     timer.endsAt = Date.now() + Math.max(0, timer.remainingMs || 0);
+    persistCookingState();
     void upsertRemoteTimerReminder(timer);
     if (!state.timerTicker) {
       state.timerTicker = window.setInterval(syncCookingTimer, 1000);
@@ -3362,6 +3451,7 @@ function toggleCookingTimerPause(timerId = "") {
     timer.paused = true;
     void deleteRemoteTimerReminder(timer);
     syncPrimaryCookingTimer();
+    persistCookingState();
     if (!(state.cooking.activeTimers || []).some((entry) => !entry.paused)) {
       clearTimerTicker();
     }
@@ -3384,6 +3474,7 @@ function stopCookingTimer(timerId = "") {
     state.cooking.activeTimers = (state.cooking.activeTimers || []).filter((timer) => timer.id !== timerId);
   }
   syncPrimaryCookingTimer();
+  persistCookingState();
   if (!(state.cooking.activeTimers || []).some((timer) => !timer.paused)) {
     clearTimerTicker();
   }
@@ -3398,6 +3489,7 @@ async function moveCookingStep(delta) {
   const sessionId = state.cooking.sessionId;
   state.cooking.stepIndex = Math.max(0, Math.min((state.cooking.stepIndex || 0) + delta, Math.max(0, stages.length - 1)));
   state.cooking.timerMenuOpen = false;
+  persistCookingState();
   syncHistoryFromState({ mode: "replace", view: "cook", mealId: target.meal.id, stepId: stages[state.cooking.stepIndex]?.id || "" });
   render();
   window.scrollTo(0, 0);
@@ -6967,6 +7059,7 @@ async function hydrateSession(session, options = {}) {
     state.week = null;
     state.feedback = [];
     state.currentView = "home";
+    removeLocal("cooking");
     state.loading = false;
     void syncAppBadgeCount();
     syncHistoryFromState({ mode: "replace", view: "home", force: true });
@@ -7004,6 +7097,11 @@ async function hydrateSession(session, options = {}) {
     state.week.reminders = needsReminderBootstrap ? composeReminders() : state.week.reminders;
     if (needsReminderBootstrap) {
       await saveWeek();
+    }
+    const restoredCooking = restorePersistedCookingState();
+    if (restoredCooking && (state.cooking?.activeTimers || []).some((timer) => !timer.paused) && !state.timerTicker) {
+      state.timerTicker = window.setInterval(syncCookingTimer, 1000);
+      syncCookingTimer();
     }
     await refreshRemoteReminderActivity({ force: true, showBanner: false });
     await flushDueReminders();

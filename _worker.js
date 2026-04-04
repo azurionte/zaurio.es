@@ -382,9 +382,12 @@ async function processDueVelocichefNotifications(env, limit = 50) {
       reminderId: reminder.payload?.reminderId || reminder.id,
       groupKey: reminder.payload?.groupKey || "",
       mealId: reminder.payload?.mealId || null,
+      stepId: reminder.payload?.stepId || null,
       mealDate: reminder.payload?.mealDate || null,
       mealKey: reminder.payload?.mealKey || null,
       mealTitle: reminder.payload?.mealTitle || null,
+      timerId: reminder.payload?.timerId || null,
+      timerLabel: reminder.payload?.timerLabel || null,
       ingredient: reminder.payload?.ingredient || null,
       deliveredAt,
     };
