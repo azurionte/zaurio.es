@@ -2193,9 +2193,8 @@ function readPersistedCookingState() {
     .filter((timer) => timer && (!timer.mealId || !!getMealById(timer.mealId)));
   const hasRecoverableTimers = activeTimers.length > 0;
   const isRecoverableMode = mode === "active";
-  const isLastVisibleStep = stages.length > 0 && safeStepIndex >= stages.length - 1;
 
-  if ((!isRecoverableMode && !hasRecoverableTimers) || (isLastVisibleStep && !hasRecoverableTimers)) {
+  if (!isRecoverableMode && !hasRecoverableTimers) {
     removeLocal("cooking");
     return null;
   }
