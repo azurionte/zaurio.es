@@ -227,6 +227,8 @@ let lastRenderedPageIdentity = "";
 let historyInitialized = false;
 let lastHistoryUrl = "";
 let isRestoringHistory = false;
+let remoteReminderRefreshPromise = null;
+let lastRemoteReminderRefreshAt = 0;
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
@@ -859,29 +861,32 @@ async function saveFeedback(entry) {
 async function syncRemoteReminders() {
   if (!state.client || !state.session?.user || !state.week?.id) return;
 
-  const rows = (state.week.reminders || []).map((reminder) => ({
-    id: reminder.id,
-    user_id: state.session.user.id,
-    week_id: state.week.id,
-    reminder_kind: reminder.kind,
-    trigger_at: reminder.triggerAt,
-    delivered_at: reminder.deliveredAt || null,
-    payload: {
-      title: reminder.title,
-      body: reminder.body,
-      url: reminder.url,
-      icon: APP_STORE_ICON_PATH,
-      badge: APP_STORE_ICON_PATH,
-      tag: reminder.id,
-      kind: reminder.kind,
-      groupKey: reminder.groupKey,
-      mealId: reminder.mealId,
-      mealDate: reminder.mealDate,
-      mealKey: reminder.mealKey,
-      mealTitle: reminder.mealTitle,
-      ingredient: reminder.ingredient,
-    },
-  }));
+  const rows = (state.week.reminders || []).map((reminder) => {
+    const notificationPayload = buildBrowserNotificationPayload(reminder);
+    return {
+      id: reminder.id,
+      user_id: state.session.user.id,
+      week_id: state.week.id,
+      reminder_kind: reminder.kind,
+      trigger_at: reminder.triggerAt,
+      delivered_at: reminder.deliveredAt || null,
+      payload: {
+        ...notificationPayload,
+        reminderId: reminder.id,
+        url: notificationPayload.url,
+        tag: reminder.id,
+        silentWhenVisible: true,
+        kind: reminder.kind,
+        groupKey: reminder.groupKey,
+        mealId: reminder.mealId,
+        mealDate: reminder.mealDate,
+        mealKey: reminder.mealKey,
+        mealTitle: reminder.mealTitle,
+        ingredient: reminder.ingredient,
+        dateLabel: reminder.dateLabel,
+      },
+    };
+  });
 
   try {
     const remove = await state.client
@@ -897,6 +902,80 @@ async function syncRemoteReminders() {
   } catch (_error) {
     state.storageMode = "local";
   }
+}
+
+async function refreshRemoteReminderActivity(options = {}) {
+  if (!state.client || !state.session?.user || !state.week?.id) return false;
+
+  if (remoteReminderRefreshPromise) return remoteReminderRefreshPromise;
+
+  const now = Date.now();
+  if (!options.force && (now - lastRemoteReminderRefreshAt) < 15000) {
+    return false;
+  }
+
+  remoteReminderRefreshPromise = (async () => {
+    let changed = false;
+    try {
+      let query = state.client
+        .from("velocichef_reminders")
+        .select("id, reminder_kind, trigger_at, delivered_at, payload")
+        .eq("week_id", state.week.id)
+        .not("delivered_at", "is", null)
+        .order("delivered_at", { ascending: true })
+        .limit(24);
+
+      if (state.week.lastReminderSyncAt) {
+        query = query.gt("delivered_at", state.week.lastReminderSyncAt);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const deliveredRows = Array.isArray(data) ? data : [];
+      for (const row of deliveredRows) {
+        // Secuencial para no desordenar la bandeja ni pisar badges.
+        // eslint-disable-next-line no-await-in-loop
+        const ingested = await ingestRemoteReminderPayload({
+          id: row.id,
+          reminderId: row.id,
+          kind: row.reminder_kind || row.payload?.kind || "reminder",
+          triggerAt: row.trigger_at,
+          deliveredAt: row.delivered_at,
+          ...(row.payload || {}),
+        }, {
+          persist: false,
+          showBanner: options.showBanner === true,
+        });
+        changed = ingested || changed;
+      }
+
+      const latestDeliveredAt = deliveredRows.length
+        ? (deliveredRows[deliveredRows.length - 1]?.delivered_at || "")
+        : "";
+      if (latestDeliveredAt && state.week.lastReminderSyncAt !== latestDeliveredAt) {
+        state.week.lastReminderSyncAt = latestDeliveredAt;
+        changed = true;
+      }
+
+      if (changed) {
+        await saveWeek();
+        render();
+      } else if (state.week) {
+        writeLocal("week", normalizeWeek(state.week));
+      }
+    } catch (_error) {
+      return false;
+    } finally {
+      lastRemoteReminderRefreshAt = Date.now();
+      remoteReminderRefreshPromise = null;
+      void syncAppBadgeCount();
+    }
+
+    return changed;
+  })();
+
+  return remoteReminderRefreshPromise;
 }
 
 async function upsertPushSubscription(subscription) {
@@ -2079,6 +2158,185 @@ function getUnreadActivityNotifications() {
   return getActivityNotifications().filter((item) => !item.readAt);
 }
 
+function getUnreadActivityNotificationCount() {
+  return getUnreadActivityNotifications().length;
+}
+
+function getActivityNotificationBySourceKey(sourceKey) {
+  if (!sourceKey) return null;
+  return getActivityNotifications().find((item) => item.sourceKey === sourceKey) || null;
+}
+
+async function syncAppBadgeCount() {
+  const count = getUnreadActivityNotificationCount();
+  try {
+    if (typeof navigator === "undefined") return;
+    if (count > 0 && typeof navigator.setAppBadge === "function") {
+      await navigator.setAppBadge(count);
+      return;
+    }
+    if (count === 0 && typeof navigator.clearAppBadge === "function") {
+      await navigator.clearAppBadge();
+      return;
+    }
+    if (count === 0 && typeof navigator.setAppBadge === "function") {
+      await navigator.setAppBadge(0);
+    }
+  } catch (_error) {
+    // Ignoramos navegadores sin soporte completo para badge.
+  }
+}
+
+function getNotificationKindEyebrow(kind) {
+  if (kind === "timer") return "Temporizador";
+  if (kind === "meal") return "Hora de cocinar";
+  if (kind === "thaw") return "Descongelar";
+  if (kind === "replan") return "Nueva semana";
+  return "Notificación";
+}
+
+function buildReminderNotificationPayload(reminder) {
+  const kind = String(reminder?.kind || "reminder");
+  const moment = reminder?.triggerAt ? getReminderMomentLabel(reminder) : "";
+  const defaults = {
+    actionLabel: "Abrir",
+    actionType: "reminder",
+    urgency: "normal",
+    requireInteraction: false,
+    renotify: false,
+    vibrate: [120, 60, 120],
+  };
+
+  if (kind === "meal") {
+    return {
+      title: String(reminder?.title || `Es hora de ponerte con ${String(MEAL_LABELS[reminder?.mealKey] || "la comida").toLowerCase()}`).trim(),
+      body: String(reminder?.body || `${reminder?.mealTitle || "Tu plato de hoy"} · ${moment}. Abre VelociChef y empieza con margen.`).trim(),
+      actionLabel: "Comenzar",
+      actionType: "reminder",
+      urgency: "high",
+      requireInteraction: false,
+      renotify: true,
+      vibrate: [160, 70, 160],
+    };
+  }
+
+  if (kind === "thaw") {
+    return {
+      title: String(reminder?.title || `Pon a descongelar ${reminder?.ingredient || "ese ingrediente"}`).trim(),
+      body: String(reminder?.body || `Lo necesitarás para ${reminder?.mealTitle || "el plato previsto"} del ${reminder?.mealDate ? formatDateLong(reminder.mealDate) : "día de hoy"}.`).trim(),
+      actionLabel: "Revisar",
+      actionType: "reminder",
+      urgency: "high",
+      requireInteraction: true,
+      renotify: true,
+      vibrate: [220, 90, 220],
+    };
+  }
+
+  if (kind === "replan") {
+    return {
+      title: String(reminder?.title || "Planifica tu próxima semana").trim(),
+      body: String(reminder?.body || "Tu planificación actual está a punto de terminar. Entra y deja lista la siguiente.").trim(),
+      actionLabel: "Planificar",
+      actionType: "reminder",
+      urgency: "normal",
+      requireInteraction: false,
+      renotify: false,
+      vibrate: [110, 50, 110],
+    };
+  }
+
+  return {
+    title: String(reminder?.title || "VelociChef").trim(),
+    body: String(reminder?.body || "Tienes un aviso pendiente en tu cocina semanal.").trim(),
+    ...defaults,
+  };
+}
+
+function buildBrowserNotificationPayload(rawNotification) {
+  if (!rawNotification) {
+    return {
+      title: "VelociChef",
+      body: "Tienes un aviso pendiente en tu cocina semanal.",
+      url: APP_BASE_URL,
+      icon: APP_STORE_ICON_PATH,
+      badge: APP_STORE_ICON_PATH,
+      tag: `velocichef-${Date.now()}`,
+      kind: "info",
+      actions: [],
+      badgeCount: Math.max(1, getUnreadActivityNotificationCount()),
+      timestamp: new Date().toISOString(),
+      renotify: false,
+      requireInteraction: false,
+      urgency: "normal",
+      vibrate: [],
+      actionLabel: "",
+      actionType: "",
+      reminderId: null,
+      mealId: null,
+      stepId: null,
+      mealDate: null,
+      mealKey: null,
+      mealTitle: null,
+      ingredient: null,
+      deliveredAt: null,
+    };
+  }
+
+  const kind = String(rawNotification.kind || "info");
+  const reminderPresentation = kind === "meal" || kind === "thaw" || kind === "replan"
+    ? buildReminderNotificationPayload(rawNotification)
+    : null;
+  const actionLabel = String(
+    rawNotification.actionLabel
+    || reminderPresentation?.actionLabel
+    || (kind === "timer" ? "Abrir paso" : "Abrir"),
+  ).trim();
+  const fallbackUrl = kind === "timer" && rawNotification.mealId
+    ? buildCookSessionUrl(rawNotification.mealId, rawNotification.stepId || "")
+    : APP_BASE_URL;
+  const timestamp = rawNotification.timestamp
+    || rawNotification.triggerAt
+    || rawNotification.createdAt
+    || rawNotification.deliveredAt
+    || new Date().toISOString();
+
+  return {
+    title: String(rawNotification.title || reminderPresentation?.title || "VelociChef").trim(),
+    body: String(rawNotification.body || reminderPresentation?.body || "Tienes un aviso pendiente en tu cocina semanal.").trim(),
+    url: rawNotification.url || fallbackUrl,
+    icon: rawNotification.icon || APP_STORE_ICON_PATH,
+    badge: rawNotification.badge || APP_STORE_ICON_PATH,
+    tag: rawNotification.tag || rawNotification.id || `${kind}-${Date.now()}`,
+    kind,
+    actions: actionLabel ? [{ action: "open", title: actionLabel }] : [],
+    badgeCount: Math.max(1, Number(rawNotification.badgeCount || getUnreadActivityNotificationCount() || 1)),
+    timestamp,
+    renotify: rawNotification.renotify ?? reminderPresentation?.renotify ?? (kind === "timer"),
+    requireInteraction: rawNotification.requireInteraction ?? reminderPresentation?.requireInteraction ?? (kind === "timer"),
+    urgency: String(rawNotification.urgency || reminderPresentation?.urgency || (kind === "timer" ? "high" : "normal")),
+    vibrate: Array.isArray(rawNotification.vibrate)
+      ? rawNotification.vibrate
+      : (Array.isArray(reminderPresentation?.vibrate) ? reminderPresentation.vibrate : (kind === "timer" ? [190, 80, 190] : [])),
+    actionLabel,
+    actionType: String(rawNotification.actionType || reminderPresentation?.actionType || (kind === "timer" ? "cook" : "")).trim(),
+    reminderId: rawNotification.reminderId || rawNotification.id || null,
+    mealId: rawNotification.mealId || null,
+    stepId: rawNotification.stepId || null,
+    mealDate: rawNotification.mealDate || null,
+    mealKey: rawNotification.mealKey || null,
+    mealTitle: rawNotification.mealTitle || null,
+    ingredient: rawNotification.ingredient || null,
+    deliveredAt: rawNotification.deliveredAt || null,
+  };
+}
+
+function isFreshNotificationTimestamp(value, thresholdMs = 120000) {
+  if (!value) return false;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) && (Date.now() - time) <= thresholdMs;
+}
+
 function clearNotificationBannerTimer() {
   if (!notificationBannerTimer) return;
   window.clearTimeout(notificationBannerTimer);
@@ -2183,6 +2441,7 @@ function pushActivityNotification(rawNotification, options = {}) {
     void saveWeek();
   }
 
+  void syncAppBadgeCount();
   render();
   return notification;
 }
@@ -2199,6 +2458,9 @@ function markAllActivityNotificationsRead() {
       readAt: new Date().toISOString(),
     };
   }).filter(Boolean);
+  if (changed) {
+    void syncAppBadgeCount();
+  }
   return changed;
 }
 
@@ -2214,6 +2476,9 @@ function markActivityNotificationRead(notificationId) {
       readAt: new Date().toISOString(),
     };
   }).filter(Boolean);
+  if (changed) {
+    void syncAppBadgeCount();
+  }
   return changed;
 }
 
@@ -2223,25 +2488,94 @@ function getActivityNotificationById(notificationId) {
 
 function buildActivityNotificationFromReminder(reminder) {
   if (!reminder) return null;
-  const actionLabel = reminder.kind === "meal"
-    ? "Comenzar"
-    : reminder.kind === "thaw"
-      ? "Revisar"
-      : "Abrir";
+  const notificationPayload = buildBrowserNotificationPayload(reminder);
   return {
     id: createId(),
     sourceKey: `reminder:${reminder.id}`,
     kind: reminder.kind || "reminder",
-    title: reminder.title,
-    body: reminder.body,
-    createdAt: new Date().toISOString(),
+    title: notificationPayload.title,
+    body: notificationPayload.body,
+    createdAt: reminder.deliveredAt || reminder.triggerAt || new Date().toISOString(),
     readAt: null,
-    actionLabel,
+    actionLabel: notificationPayload.actionLabel || "Abrir",
     actionType: "reminder",
     reminderId: reminder.id,
     mealId: reminder.mealId || null,
-    url: reminder.url || "",
+    stepId: reminder.stepId || null,
+    url: notificationPayload.url || reminder.url || "",
   };
+}
+
+async function ingestRemoteReminderPayload(rawPayload, options = {}) {
+  if (!state.week || !rawPayload) return false;
+
+  const deliveredAt = rawPayload.deliveredAt || rawPayload.delivered_at || new Date().toISOString();
+  const reminderId = rawPayload.reminderId || rawPayload.reminder_id || rawPayload.id || "";
+  let changed = false;
+  let reminder = reminderId ? getReminderById(reminderId) : null;
+
+  if (reminder && reminder.deliveredAt !== deliveredAt) {
+    reminder.deliveredAt = deliveredAt;
+    changed = true;
+  }
+
+  if (!reminder && reminderId) {
+    reminder = normalizeReminder({
+      id: reminderId,
+      key: rawPayload.key || reminderId,
+      kind: rawPayload.kind || "reminder",
+      groupKey: rawPayload.groupKey || rawPayload.group_key || rawPayload.kind || "reminder",
+      title: rawPayload.title || "",
+      body: rawPayload.body || "",
+      triggerAt: rawPayload.triggerAt || rawPayload.trigger_at || rawPayload.timestamp || deliveredAt,
+      deliveredAt,
+      mealId: rawPayload.mealId || rawPayload.meal_id || null,
+      mealDate: rawPayload.mealDate || rawPayload.meal_date || null,
+      mealKey: rawPayload.mealKey || rawPayload.meal_key || null,
+      mealTitle: rawPayload.mealTitle || rawPayload.meal_title || null,
+      ingredient: rawPayload.ingredient || null,
+      dateLabel: rawPayload.dateLabel || rawPayload.date_label || null,
+      url: rawPayload.url || "",
+    });
+    if (reminder) {
+      state.week.reminders = [...(state.week.reminders || []), reminder];
+      changed = true;
+    }
+  }
+
+  if (reminder) {
+    reminder.deliveredAt = reminder.deliveredAt || deliveredAt;
+  }
+
+  const sourceKey = reminder ? `reminder:${reminder.id}` : "";
+  if (reminder && !getActivityNotificationBySourceKey(sourceKey)) {
+    const activity = buildActivityNotificationFromReminder(reminder);
+    if (activity) {
+      activity.createdAt = deliveredAt;
+      pushActivityNotification(activity, {
+        persist: false,
+        showBanner: options.showBanner === true && isFreshNotificationTimestamp(deliveredAt),
+      });
+      changed = true;
+    }
+  }
+
+  if (deliveredAt && state.week.lastReminderSyncAt !== deliveredAt) {
+    state.week.lastReminderSyncAt = deliveredAt;
+    changed = true;
+  }
+
+  writeLocal("week", normalizeWeek(state.week));
+
+  if (changed && options.persist !== false) {
+    await saveWeek();
+    render();
+  } else {
+    void syncAppBadgeCount();
+    render();
+  }
+
+  return changed;
 }
 
 function finalizeReminder(baseReminder, previousReminder = null) {
@@ -2307,7 +2641,8 @@ function composeReminders() {
     Object.entries(day.meals || {}).forEach(([mealKey, meal]) => {
       let date = day.date;
       let time = "12:00";
-      let title = `Toca ${MEAL_LABELS[mealKey].toLowerCase()}: ${meal.title}`;
+      let title = `Es hora de empezar con ${meal.title}`;
+      let body = `${MEAL_LABELS[mealKey].toLowerCase()} de ${day.label}. Abre VelociChef y cocina con margen.`;
 
       if (mealKey === "dinner") {
         time = state.profile.dinnerTime || "21:00";
@@ -2315,7 +2650,8 @@ function composeReminders() {
         if (state.profile.lunchPrepNightBefore && index > 0) {
           date = state.week.days[index - 1].date;
           time = state.profile.dinnerTime || "20:00";
-          title = `Deja listo el almuerzo de maÃ±ana: ${meal.title}`;
+          title = `Deja listo el almuerzo de mañana: ${meal.title}`;
+          body = `Déjalo preparado esta noche para que mañana ${MEAL_LABELS[mealKey].toLowerCase()} vaya sin prisas.`;
         } else {
           time = state.profile.lunchTime || "14:30";
         }
@@ -2334,7 +2670,7 @@ function composeReminders() {
         kind: "meal",
         groupKey: `meal:${mealKey}`,
         title,
-        body: `Empieza a organizarte para ${MEAL_LABELS[mealKey].toLowerCase()} y cocina con margen.`,
+        body,
         triggerAt: triggerAt.toISOString(),
         mealId: meal.id,
         mealDate: day.date,
@@ -2357,7 +2693,7 @@ function composeReminders() {
         kind: "thaw",
         groupKey: "thaw",
         title: `Pon a descongelar ${item.ingredient}`,
-        body: `Lo necesitas para "${item.mealTitle}" del ${formatDateLong(item.mealDate)}.`,
+        body: `Lo vas a necesitar para ${item.mealTitle} del ${formatDateLong(item.mealDate)}.`,
         triggerAt: triggerAt.toISOString(),
         mealDate: item.mealDate,
         mealKey: item.mealKey,
@@ -2374,7 +2710,7 @@ function composeReminders() {
       kind: "replan",
       groupKey: "replan",
       title: "Tu semana de VelociChef se acaba pronto",
-      body: "Entra y programa la siguiente semana sin volver a pasar por todo el onboarding.",
+      body: "Aprovecha un momento y deja planificada la siguiente semana sin repetir todo el onboarding.",
       triggerAt: replanDate.toISOString(),
       mealDate: state.week.endDate,
     });
@@ -2614,21 +2950,42 @@ function clearReminderTimers() {
 
 async function showBrowserNotification(reminder) {
   if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const payload = buildBrowserNotificationPayload(reminder);
+  const timestamp = new Date(payload.timestamp).getTime();
 
   if (state.workerRegistration?.showNotification) {
-    await state.workerRegistration.showNotification(reminder.title, {
-      body: reminder.body,
-      icon: APP_STORE_ICON_PATH,
-      badge: APP_STORE_ICON_PATH,
-      data: { url: reminder.url },
-      tag: reminder.id,
+    await state.workerRegistration.showNotification(payload.title, {
+      body: payload.body,
+      icon: payload.icon,
+      badge: payload.badge,
+      data: {
+        url: payload.url,
+        payload,
+      },
+      tag: payload.tag,
+      actions: payload.actions,
+      renotify: !!payload.renotify,
+      requireInteraction: !!payload.requireInteraction,
+      timestamp: Number.isFinite(timestamp) ? timestamp : Date.now(),
+      vibrate: payload.vibrate,
     });
     return;
   }
 
-  new Notification(reminder.title, {
-    body: reminder.body,
-    icon: APP_STORE_ICON_PATH,
+  new Notification(payload.title, {
+    body: payload.body,
+    icon: payload.icon,
+    badge: payload.badge,
+    tag: payload.tag,
+    data: {
+      url: payload.url,
+      payload,
+    },
+    actions: payload.actions,
+    timestamp: Number.isFinite(timestamp) ? timestamp : Date.now(),
+    renotify: !!payload.renotify,
+    requireInteraction: !!payload.requireInteraction,
+    vibrate: payload.vibrate,
   });
 }
 
@@ -2725,6 +3082,19 @@ async function registerServiceWorker() {
     state.workerRegistration = await navigator.serviceWorker.ready;
     await refreshNotificationDeviceState();
     navigator.serviceWorker.addEventListener("message", (event) => {
+      if (event.data?.type === "velocichef-push" && event.data?.payload && state.week) {
+        void ingestRemoteReminderPayload(event.data.payload, {
+          showBanner: document.visibilityState === "visible",
+        });
+      }
+
+      if (event.data?.payload && state.week) {
+        void ingestRemoteReminderPayload(event.data.payload, {
+          showBanner: false,
+          persist: false,
+        });
+      }
+
       const url = event.data?.url;
       if (!url) return;
       applyIncomingUrl(url);
@@ -2802,9 +3172,14 @@ function syncCookingTimer() {
       finished.forEach((timer) => {
         showBrowserNotification({
           id: `cook-timer-${timer.id}`,
+          kind: "timer",
           title: "Tiempo cumplido",
           body: `${timer.label} ya puede pasar al siguiente paso.`,
           url: timer.mealId ? buildCookSessionUrl(timer.mealId, timer.stepId || "") : `${APP_BASE_URL}?view=cook`,
+          actionLabel: "Seguir paso",
+          actionType: "cook",
+          mealId: timer.mealId || null,
+          stepId: timer.stepId || null,
         }).catch(() => {});
       });
     }
@@ -3578,7 +3953,7 @@ function renderNotificationBanner() {
     <div class="vc-notification-banner" role="status" aria-live="polite">
       <div class="vc-notification-banner-bubble vc-notification-banner-${escapeHtml(notification.kind || "info")}">
         <div class="vc-notification-banner-copy">
-          <small>${escapeHtml(notification.kind === "timer" ? "Temporizador" : notification.kind === "meal" ? "Hora de cocinar" : notification.kind === "thaw" ? "Descongelar" : "Notificación")}</small>
+          <small>${escapeHtml(getNotificationKindEyebrow(notification.kind))}</small>
           <strong>${escapeHtml(notification.title)}</strong>
           <p>${escapeHtml(notification.body)}</p>
         </div>
@@ -5667,7 +6042,7 @@ async function sendTestNotification() {
 
   await showBrowserNotification({
     id: `test-${Date.now()}`,
-    title: "VelociChef estÃ¡ listo",
+    title: "VelociChef está listo",
     body: "Este es un aviso de prueba para confirmar que las notificaciones funcionan.",
     url: `${APP_BASE_URL}?view=profile`,
   });
@@ -5945,6 +6320,7 @@ async function handleAction(action, trigger) {
         state.activeNotificationBannerId = null;
       }
       await saveWeek();
+      void syncAppBadgeCount();
       render();
       break;
 
@@ -6404,11 +6780,13 @@ document.addEventListener("change", (event) => {
 
 window.addEventListener("focus", () => {
   flushDueReminders();
+  void refreshRemoteReminderActivity({ showBanner: true });
 });
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     flushDueReminders();
+    void refreshRemoteReminderActivity({ showBanner: true });
   }
 });
 
@@ -6427,6 +6805,7 @@ async function hydrateSession(session, options = {}) {
       }
     }
     await refreshNotificationDeviceState();
+    void syncAppBadgeCount();
     return;
   }
 
@@ -6445,6 +6824,7 @@ async function hydrateSession(session, options = {}) {
     state.feedback = [];
     state.currentView = "home";
     state.loading = false;
+    void syncAppBadgeCount();
     syncHistoryFromState({ mode: "replace", view: "home", force: true });
     render();
     return;
@@ -6476,8 +6856,12 @@ async function hydrateSession(session, options = {}) {
   }
 
   if (state.week) {
-    state.week.reminders = state.week.reminders?.length ? state.week.reminders : composeReminders();
-    await saveWeek();
+    const needsReminderBootstrap = !(state.week.reminders?.length);
+    state.week.reminders = needsReminderBootstrap ? composeReminders() : state.week.reminders;
+    if (needsReminderBootstrap) {
+      await saveWeek();
+    }
+    await refreshRemoteReminderActivity({ force: true, showBanner: false });
     await flushDueReminders();
     scheduleReminders();
     await resolvePendingReminderLink();
@@ -6494,6 +6878,7 @@ async function hydrateSession(session, options = {}) {
   await refreshNotificationDeviceState();
 
   state.loading = false;
+  void syncAppBadgeCount();
   syncHistoryFromState({ mode: "replace", force: true });
   render();
 }

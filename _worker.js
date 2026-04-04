@@ -254,7 +254,7 @@ async function sendWebPush(env, subscription, payload) {
     method: "POST",
     headers: {
       TTL: "2419200",
-      Urgency: payload.kind === "thaw" ? "high" : "normal",
+      Urgency: payload.urgency || (payload.kind === "thaw" ? "high" : "normal"),
       "Content-Encoding": "aes128gcm",
       "Content-Type": "application/octet-stream",
       Authorization: `vapid t=${token}, k=${env.VAPID_PUBLIC_KEY}`,
@@ -361,6 +361,7 @@ async function processDueVelocichefNotifications(env, limit = 50) {
   };
 
   for (const reminder of reminders || []) {
+    const deliveredAt = new Date().toISOString();
     const payload = {
       title: reminder.payload?.title || "VelociChef",
       body: reminder.payload?.body || "Tienes un recordatorio pendiente.",
@@ -369,6 +370,23 @@ async function processDueVelocichefNotifications(env, limit = 50) {
       badge: reminder.payload?.badge || "/velocichef/assets/store_icon.png",
       tag: reminder.payload?.tag || reminder.id,
       kind: reminder.payload?.kind || "meal",
+      actions: Array.isArray(reminder.payload?.actions) ? reminder.payload.actions : [],
+      actionLabel: reminder.payload?.actionLabel || "",
+      actionType: reminder.payload?.actionType || "",
+      timestamp: reminder.payload?.timestamp || reminder.payload?.triggerAt || deliveredAt,
+      renotify: !!reminder.payload?.renotify,
+      requireInteraction: !!reminder.payload?.requireInteraction,
+      vibrate: Array.isArray(reminder.payload?.vibrate) ? reminder.payload.vibrate : [],
+      badgeCount: Math.max(1, Number(reminder.payload?.badgeCount || 1)),
+      urgency: reminder.payload?.urgency || (reminder.payload?.kind === "thaw" ? "high" : "normal"),
+      reminderId: reminder.payload?.reminderId || reminder.id,
+      groupKey: reminder.payload?.groupKey || "",
+      mealId: reminder.payload?.mealId || null,
+      mealDate: reminder.payload?.mealDate || null,
+      mealKey: reminder.payload?.mealKey || null,
+      mealTitle: reminder.payload?.mealTitle || null,
+      ingredient: reminder.payload?.ingredient || null,
+      deliveredAt,
     };
 
     let subscriptions = [];
