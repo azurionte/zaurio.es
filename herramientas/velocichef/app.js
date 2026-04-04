@@ -2127,6 +2127,14 @@ function persistCookingState() {
   });
 }
 
+function clearPersistedCookingState(options = {}) {
+  removeLocal("cooking");
+  state.pendingCookingRecovery = null;
+  if (options.resetCooking) {
+    state.cooking = null;
+  }
+}
+
 function resolveCookingStageSnapshot(target, options = {}) {
   const stages = getCookingStageList(target);
   if (!stages.length) {
@@ -6513,8 +6521,9 @@ function renderCookRecoveryModal() {
   const snapshot = state.pendingCookingRecovery;
   if (!snapshot?.mealId) return "";
   const target = getMealById(snapshot.mealId);
+  const resolvedSnapshot = target ? resolveCookingStageSnapshot(target, snapshot) : null;
   const mealTitle = snapshot.mealTitle || target?.meal?.title || "tu receta";
-  const stepTitle = snapshot.stepTitle || "el punto donde lo dejaste";
+  const stepTitle = resolvedSnapshot?.step?.title || snapshot.stepTitle || "el punto donde lo dejaste";
   const mealLabel = snapshot.mealLabel || [target?.day?.label, MEAL_LABELS[target?.mealKey] || ""].filter(Boolean).join(" · ");
   const activeTimerCount = Array.isArray(snapshot.activeTimers) ? snapshot.activeTimers.filter((timer) => !timer.paused).length : 0;
 
@@ -6940,6 +6949,7 @@ async function handleAction(action, trigger) {
       clearCookingMicHintTimer();
       stopHandsFreeMode();
       stopCookingTimer();
+      clearPersistedCookingState({ resetCooking: true });
       state.notice = "Receta terminada. Ya puedes servir el plato.";
       state.currentView = "week";
       syncHistoryFromState({ mode: "push", view: "week" });
@@ -7681,8 +7691,7 @@ async function hydrateSession(session, options = {}) {
     state.week = null;
     state.feedback = [];
     state.currentView = "home";
-    removeLocal("cooking");
-    state.pendingCookingRecovery = null;
+    clearPersistedCookingState();
     state.loading = false;
     void syncAppBadgeCount();
     syncHistoryFromState({ mode: "replace", view: "home", force: true });
