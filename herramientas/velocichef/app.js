@@ -1061,6 +1061,66 @@ function normalizeUnit(unit) {
   return map[value] || "unit";
 }
 
+function normalizeShoppingStatus(status) {
+  const value = String(status || "").trim().toLowerCase();
+  if (["bought", "comprado", "done", "complete", "completed", "have"].includes(value)) return "bought";
+  return "pending";
+}
+
+function getShoppingStatusMeta(status) {
+  const normalized = normalizeShoppingStatus(status);
+  if (normalized === "bought") {
+    return {
+      key: "bought",
+      label: "Comprado",
+      icon: `
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M9.2 16.6 5.6 13l-1.4 1.4 5 5 10-10-1.4-1.4z"></path>
+        </svg>
+      `,
+    };
+  }
+  return {
+    key: "pending",
+    label: "Pendiente",
+    icon: `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2Zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2ZM7.17 14h9.95c.75 0 1.41-.41 1.75-1.03L22.96 5H6.21l-.94-2H2v2h2l3.6 7.59-1.35 2.45A2 2 0 0 0 8 18h12v-2H8z"></path>
+      </svg>
+    `,
+  };
+}
+
+function renderShoppingStatusBadge(status) {
+  const meta = getShoppingStatusMeta(status);
+  return `
+    <span class="vc-shopping-status-badge vc-shopping-status-${meta.key}">
+      <span class="vc-shopping-status-icon" aria-hidden="true">${meta.icon}</span>
+      <span>${escapeHtml(meta.label)}</span>
+    </span>
+  `;
+}
+
+function renderShoppingStatusAction(item) {
+  const status = normalizeShoppingStatus(item?.pantryStatus);
+  const nextStatus = status === "bought" ? "pending" : "bought";
+  const meta = getShoppingStatusMeta(nextStatus);
+  const label = nextStatus === "bought" ? "Marcar como comprado" : "Volver a pendiente";
+  return `
+    <button
+      class="vc-shopping-status-action vc-shopping-status-action-${meta.key}"
+      type="button"
+      data-action="set-shopping-state"
+      data-item-id="${item.id}"
+      data-status="${nextStatus}"
+      aria-label="${escapeHtml(label)}"
+      title="${escapeHtml(label)}"
+    >
+      <span class="vc-shopping-status-icon" aria-hidden="true">${meta.icon}</span>
+    </button>
+  `;
+}
+
 function unitToBase(quantity, unit) {
   const normalizedUnit = normalizeUnit(unit);
   const amount = Number(quantity || 0) || 0;
@@ -1316,7 +1376,7 @@ function aggregateShopping(days) {
           quantity: 0,
           unit: base.unit,
           category: ingredient.category || "Otros",
-          pantryStatus: "need",
+          pantryStatus: "pending",
           pantry: !!ingredient.pantry,
           spice: !!ingredient.spice,
           freezable: !!ingredient.freezable,
@@ -1401,7 +1461,7 @@ function normalizeWeek(rawWeek) {
     ? rawWeek.shoppingList.map((item) => ({
         ...item,
         id: item.id || createId(),
-        pantryStatus: item.pantryStatus || "need",
+        pantryStatus: normalizeShoppingStatus(item.pantryStatus),
         displayQuantity: item.displayQuantity || formatQuantity(item.quantity || 0, item.unit),
       }))
     : aggregateShopping(normalizedDays);
@@ -1844,7 +1904,7 @@ function updateMeal(mealId, updater) {
     const existing = state.week.shoppingList.find((current) => current.name === item.name && current.unit === item.unit);
     return {
       ...item,
-      pantryStatus: existing?.pantryStatus || "need",
+      pantryStatus: normalizeShoppingStatus(existing?.pantryStatus),
     };
   });
   state.week.freezerItems = buildFreezerItems(state.week.days);
@@ -2281,7 +2341,7 @@ function getRelevantShoppingItemsForEntries(entries, options = {}) {
   const onlyMissing = options.onlyMissing !== false;
   const refs = new Set(entries.map((entry) => `${entry.day.date}__${entry.mealKey}`));
   return (state.week?.shoppingList || [])
-    .filter((item) => !onlyMissing || item.pantryStatus !== "have")
+    .filter((item) => !onlyMissing || normalizeShoppingStatus(item.pantryStatus) !== "bought")
     .map((item) => ({
       ...item,
       relevantRefs: (item.refs || []).filter((ref) => refs.has(`${ref.date}__${ref.mealKey}`)),
@@ -3528,11 +3588,11 @@ function renderTopbar() {
                 `}
               </button>
               <div class="vc-menu-drop vc-user-menu" role="menu" aria-label="Menu del usuario">
+                <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Perfil</button>
+                <button class="vc-menu-action vc-menu-action-with-dot" type="button" data-action="open-view" data-view="notifications" role="menuitem">Notificaciones${unreadActivityCount ? '<span class="vc-menu-action-dot" aria-hidden="true"></span>' : ""}</button>
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
                 <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
-                <button class="vc-menu-action vc-menu-action-with-dot" type="button" data-action="open-view" data-view="notifications" role="menuitem">Notificaciones${unreadActivityCount ? '<span class="vc-menu-action-dot" aria-hidden="true"></span>' : ""}</button>
-                <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Perfil</button>
                 <div class="vc-menu-meta">
                   <span class="vc-meta-pill">${escapeHtml(notificationState)}</span>
                 </div>
@@ -4201,21 +4261,35 @@ function renderScheduleView() {
 function renderShoppingView() {
   if (!state.week) return renderWeekView();
   const grouped = groupByCategory(state.week.shoppingList);
-  const haveCount = state.week.shoppingList.filter((item) => item.pantryStatus === "have").length;
-  const needCount = state.week.shoppingList.filter((item) => item.pantryStatus !== "have").length;
+  const boughtCount = state.week.shoppingList.filter((item) => normalizeShoppingStatus(item.pantryStatus) === "bought").length;
+  const pendingCount = state.week.shoppingList.filter((item) => normalizeShoppingStatus(item.pantryStatus) !== "bought").length;
+  const pendingMeta = getShoppingStatusMeta("pending");
+  const boughtMeta = getShoppingStatusMeta("bought");
 
   return `
     <section class="vc-grid">
       <div class="vc-shopping-summary">
         <article class="vc-summary-card">
-          <small class="vc-muted">Ya lo tienes</small>
-          <strong>${haveCount}</strong>
-          <p class="vc-copy">ingredientes marcados como resueltos</p>
+          <small class="vc-muted">Estado de compra</small>
+          <div class="vc-shopping-summary-head">
+            <span class="vc-shopping-status-badge vc-shopping-status-pending">
+              <span class="vc-shopping-status-icon" aria-hidden="true">${pendingMeta.icon}</span>
+              <span>Pendiente</span>
+            </span>
+          </div>
+          <strong>${pendingCount}</strong>
+          <p class="vc-copy">ingredientes que siguen pendientes</p>
         </article>
         <article class="vc-summary-card">
-          <small class="vc-muted">A comprar</small>
-          <strong>${needCount}</strong>
-          <p class="vc-copy">ingredientes que siguen pendientes</p>
+          <small class="vc-muted">Estado de compra</small>
+          <div class="vc-shopping-summary-head">
+            <span class="vc-shopping-status-badge vc-shopping-status-bought">
+              <span class="vc-shopping-status-icon" aria-hidden="true">${boughtMeta.icon}</span>
+              <span>Comprado</span>
+            </span>
+          </div>
+          <strong>${boughtCount}</strong>
+          <p class="vc-copy">ingredientes que ya has marcado como comprados</p>
         </article>
       </div>
 
@@ -4224,7 +4298,7 @@ function renderShoppingView() {
           <div>
             <span class="vc-eyebrow">Mi lista de la compra</span>
             <h2 class="vc-title">Todo lo que necesitarÃ¡s esta semana</h2>
-            <p class="vc-copy">Marca quÃ© ya tienes en casa y quÃ© sigue pendiente para el sÃºper.</p>
+            <p class="vc-copy">Todo empieza en pendiente. Marca cada ingrediente como comprado cuando ya lo tengas resuelto.</p>
           </div>
         </div>
       </article>
@@ -4245,9 +4319,9 @@ function renderShoppingView() {
                     <span class="vc-shopping-name">${escapeHtml(item.name)}</span>
                     <span class="vc-muted">${escapeHtml(item.displayQuantity)}</span>
                   </div>
-                  <div class="vc-segmented vc-shopping-segmented">
-                    <button class="vc-toggle ${item.pantryStatus === "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="have">Ya lo tengo</button>
-                    <button class="vc-toggle ${item.pantryStatus !== "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="need">Comprar</button>
+                  <div class="vc-shopping-status-line">
+                    ${renderShoppingStatusBadge(item.pantryStatus)}
+                    ${renderShoppingStatusAction(item)}
                   </div>
                 </div>
                 <div class="vc-tag-row">
@@ -4304,9 +4378,9 @@ function renderTodayShoppingView() {
                     <span class="vc-shopping-name">${escapeHtml(item.name)}</span>
                     <span class="vc-muted">${escapeHtml(item.displayQuantity)}</span>
                   </div>
-                  <div class="vc-segmented vc-shopping-segmented">
-                    <button class="vc-toggle ${item.pantryStatus === "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="have">Ya lo tengo</button>
-                    <button class="vc-toggle ${item.pantryStatus !== "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="need">Comprar</button>
+                  <div class="vc-shopping-status-line">
+                    ${renderShoppingStatusBadge(item.pantryStatus)}
+                    ${renderShoppingStatusAction(item)}
                   </div>
                 </div>
                 <div class="vc-tag-row">
@@ -5837,7 +5911,7 @@ async function handleAction(action, trigger) {
 
     case "set-shopping-state": {
       const itemId = trigger.dataset.itemId;
-      const status = trigger.dataset.status || "need";
+      const status = normalizeShoppingStatus(trigger.dataset.status || "pending");
       state.week.shoppingList = state.week.shoppingList.map((item) => item.id === itemId ? { ...item, pantryStatus: status } : item);
       await saveWeek();
       render();

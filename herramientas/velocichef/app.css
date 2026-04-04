@@ -1364,18 +1364,84 @@ body.vc-cook-immersive-body .vc-app{
   color:var(--vc-orange-deep);
 }
 
-.vc-shopping-segmented{
-  display:inline-grid;
-  grid-auto-flow:column;
-  grid-auto-columns:max-content;
+.vc-shopping-status-line{
+  display:flex;
   align-items:center;
-  justify-self:end;
-  flex-shrink:0;
-  max-width:100%;
+  justify-content:flex-end;
+  gap:10px;
+  min-width:0;
 }
 
-.vc-shopping-segmented .vc-toggle{
+.vc-shopping-status-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:42px;
+  padding:0 14px;
+  border-radius:999px;
+  border:1px solid rgba(80,29,10,.12);
+  background:rgba(255,255,255,.84);
+  color:var(--vc-ink);
+  font-size:.92rem;
+  font-weight:800;
   white-space:nowrap;
+}
+
+.vc-shopping-status-pending{
+  background:rgba(255,248,238,.94);
+  color:#8a532b;
+}
+
+.vc-shopping-status-bought{
+  background:rgba(231,246,236,.94);
+  border-color:rgba(47,143,88,.2);
+  color:#2f6a48;
+}
+
+.vc-shopping-status-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:18px;
+  height:18px;
+  flex:0 0 18px;
+}
+
+.vc-shopping-status-icon svg{
+  width:18px;
+  height:18px;
+  fill:currentColor;
+}
+
+.vc-shopping-status-action{
+  width:44px;
+  min-width:44px;
+  height:44px;
+  border:none;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.84);
+  border:1px solid rgba(80,29,10,.12);
+  color:var(--vc-orange-deep);
+  box-shadow:0 12px 24px rgba(49,18,11,.08);
+}
+
+.vc-shopping-status-action-pending{
+  color:#8a532b;
+}
+
+.vc-shopping-status-action-bought{
+  color:#2f6a48;
+  background:rgba(231,246,236,.94);
+  border-color:rgba(47,143,88,.2);
+}
+
+.vc-shopping-summary-head{
+  display:flex;
+  align-items:center;
+  margin:4px 0 2px;
 }
 
 .vc-summary-card{
@@ -1654,7 +1720,7 @@ body.vc-cook-immersive-body .vc-app{
     grid-template-columns:minmax(0, 1fr);
   }
 
-  .vc-shopping-segmented{
+  .vc-shopping-status-line{
     justify-self:start;
   }
 }
