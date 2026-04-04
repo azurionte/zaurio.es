@@ -214,10 +214,31 @@ let cookingMicHintTimer = null;
 let notificationBannerTimer = null;
 let systemBannerTimer = null;
 let activeSystemBannerKey = "";
+let lastRenderedPageIdentity = "";
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
   return valid.has(view) ? view : "home";
+}
+
+function getCurrentPageIdentity() {
+  if (state.loading) return "loading";
+  if (!state.session) return "landing";
+  if (!state.profile?.onboardingCompleted || state.currentView === "onboarding") {
+    return `onboarding:${state.onboardingStep}`;
+  }
+  if (state.currentView === "cook") {
+    return `cook:${state.cooking?.mode || "idle"}`;
+  }
+  return `workspace:${state.currentView}`;
+}
+
+function scrollViewportToTop() {
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  const app = document.querySelector(".vc-app");
+  if (app) app.scrollTop = 0;
 }
 
 function createId() {
@@ -4220,11 +4241,11 @@ function renderShoppingView() {
             ${items.map((item) => `
               <article class="vc-shopping-item">
                 <div class="vc-shopping-top">
-                  <div>
+                  <div class="vc-shopping-copy">
                     <span class="vc-shopping-name">${escapeHtml(item.name)}</span>
                     <span class="vc-muted">${escapeHtml(item.displayQuantity)}</span>
                   </div>
-                  <div class="vc-segmented">
+                  <div class="vc-segmented vc-shopping-segmented">
                     <button class="vc-toggle ${item.pantryStatus === "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="have">Ya lo tengo</button>
                     <button class="vc-toggle ${item.pantryStatus !== "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="need">Comprar</button>
                   </div>
@@ -4279,11 +4300,11 @@ function renderTodayShoppingView() {
             ${items.map((item) => `
               <article class="vc-shopping-item">
                 <div class="vc-shopping-top">
-                  <div>
+                  <div class="vc-shopping-copy">
                     <span class="vc-shopping-name">${escapeHtml(item.name)}</span>
                     <span class="vc-muted">${escapeHtml(item.displayQuantity)}</span>
                   </div>
-                  <div class="vc-segmented">
+                  <div class="vc-segmented vc-shopping-segmented">
                     <button class="vc-toggle ${item.pantryStatus === "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="have">Ya lo tengo</button>
                     <button class="vc-toggle ${item.pantryStatus !== "have" ? "active" : ""}" data-action="set-shopping-state" data-item-id="${item.id}" data-status="need">Comprar</button>
                   </div>
@@ -5147,16 +5168,24 @@ function syncLayoutMetrics() {
 
 function render() {
   const immersiveCook = isImmersiveCookMode();
+  const pageIdentity = getCurrentPageIdentity();
+  const didPageChange = pageIdentity !== lastRenderedPageIdentity;
+  lastRenderedPageIdentity = pageIdentity;
   document.documentElement.classList.toggle("vc-cook-immersive-page", immersiveCook);
   document.body.classList.toggle("vc-cook-immersive-body", immersiveCook);
 
   if (state.loading) {
-    root.innerHTML = `${renderTopbar()}${renderLoading()}`;
+    root.innerHTML = `${renderTopbar()}<div class="vc-page-shell ${didPageChange ? "vc-page-enter" : ""}" data-page-key="${escapeHtml(pageIdentity)}">${renderLoading()}</div>`;
     modalRoot.innerHTML = renderModal();
     repairVisibleText(root);
     repairVisibleText(modalRoot);
     syncSystemBannerTimer();
-    window.requestAnimationFrame(syncLayoutMetrics);
+    window.requestAnimationFrame(() => {
+      syncLayoutMetrics();
+      if (didPageChange) {
+        scrollViewportToTop();
+      }
+    });
     return;
   }
 
@@ -5166,12 +5195,17 @@ function render() {
       ? renderOnboarding()
       : renderWorkspace();
 
-  root.innerHTML = `${renderTopbar()}${renderNotificationBanner()}${renderToastStack()}${content}`;
+  root.innerHTML = `${renderTopbar()}${renderNotificationBanner()}${renderToastStack()}<div class="vc-page-shell ${didPageChange ? "vc-page-enter" : ""}" data-page-key="${escapeHtml(pageIdentity)}">${content}</div>`;
   modalRoot.innerHTML = renderModal();
   repairVisibleText(root);
   repairVisibleText(modalRoot);
   syncSystemBannerTimer();
-  window.requestAnimationFrame(syncLayoutMetrics);
+  window.requestAnimationFrame(() => {
+    syncLayoutMetrics();
+    if (didPageChange) {
+      scrollViewportToTop();
+    }
+  });
 }
 
 function toggleFromArray(list, value) {

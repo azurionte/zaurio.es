@@ -81,6 +81,25 @@ body.vc-cook-immersive-body .vc-app{
   gap:16px;
 }
 
+.vc-page-shell{
+  width:100%;
+  transform-origin:top center;
+}
+
+.vc-page-enter{
+  animation:vcPageEnter .28s cubic-bezier(.22,.82,.32,1) both;
+}
+
+.vc-page-enter .vc-card,
+.vc-page-enter .vc-hero,
+.vc-page-enter .vc-panel,
+.vc-page-enter .vc-list-card,
+.vc-page-enter .vc-profile-card,
+.vc-page-enter .vc-summary-card,
+.vc-page-enter .vc-week-card{
+  animation:vcCardEnter .36s cubic-bezier(.22,.82,.32,1) both;
+}
+
 .vc-topbar{
   position:sticky;
   top:12px;
@@ -1265,6 +1284,10 @@ body.vc-cook-immersive-body .vc-app{
   font-size:1.05rem;
 }
 
+.vc-shopping-name{
+  overflow-wrap:anywhere;
+}
+
 .vc-meta{
   display:flex;
   flex-wrap:wrap;
@@ -1310,9 +1333,16 @@ body.vc-cook-immersive-body .vc-app{
 }
 
 .vc-shopping-top{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  align-items:start;
+  gap:12px;
+}
+
+.vc-shopping-copy{
+  min-width:0;
+  display:grid;
+  gap:2px;
 }
 
 .vc-segmented{
@@ -1332,6 +1362,20 @@ body.vc-cook-immersive-body .vc-app{
 .vc-toggle.active{
   background:rgba(239,123,45,.12);
   color:var(--vc-orange-deep);
+}
+
+.vc-shopping-segmented{
+  display:inline-grid;
+  grid-auto-flow:column;
+  grid-auto-columns:max-content;
+  align-items:center;
+  justify-self:end;
+  flex-shrink:0;
+  max-width:100%;
+}
+
+.vc-shopping-segmented .vc-toggle{
+  white-space:nowrap;
 }
 
 .vc-summary-card{
@@ -1566,6 +1610,53 @@ body.vc-cook-immersive-body .vc-app{
   background:rgba(255,242,241,.97);
   color:#9c2c23;
   border-color:rgba(232,90,79,.18);
+}
+
+@keyframes vcPageEnter{
+  from{
+    opacity:0;
+    transform:translateY(14px);
+    filter:blur(8px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+    filter:blur(0);
+  }
+}
+
+@keyframes vcCardEnter{
+  from{
+    opacity:0;
+    transform:translateY(10px) scale(.985);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .vc-page-enter,
+  .vc-page-enter .vc-card,
+  .vc-page-enter .vc-hero,
+  .vc-page-enter .vc-panel,
+  .vc-page-enter .vc-list-card,
+  .vc-page-enter .vc-profile-card,
+  .vc-page-enter .vc-summary-card,
+  .vc-page-enter .vc-week-card{
+    animation:none;
+  }
+}
+
+@media (max-width:420px){
+  .vc-shopping-top{
+    grid-template-columns:minmax(0, 1fr);
+  }
+
+  .vc-shopping-segmented{
+    justify-self:start;
+  }
 }
 
 .vc-hero-art{
