@@ -2484,12 +2484,13 @@ async function startCookingFlow(mealId, mode = "active", options = {}) {
   await ensureCookingGuidance(mealId);
 
   const target = getMealById(mealId);
-  if (!target) return;
+  if (!target || !state.cooking || state.cooking.sessionId !== sessionId || state.cooking.mealId !== mealId) return;
+  const liveStepIndex = Math.max(0, Number(state.cooking.stepIndex ?? options.initialStepIndex ?? options.stepIndex ?? 0));
   const resolvedSnapshot = resolveCookingStageSnapshot(target, {
     stepId: options.initialStepId || options.stepId || "",
     stepTitle: options.initialStepTitle || options.stepTitle || "",
-    stepIndex: options.initialStepIndex ?? options.stepIndex ?? state.cooking?.stepIndex ?? 0,
-    preferIndex: !!options.preferStepIndex,
+    stepIndex: liveStepIndex,
+    preferIndex: true,
   });
   state.cooking.stepIndex = resolvedSnapshot.stepIndex;
   persistCookingState();
