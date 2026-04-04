@@ -208,6 +208,7 @@ const state = {
   notificationDevice: null,
   notificationTab: urlParams.get("tab") === "pending" ? "pending" : "future",
   pendingReminderLink: null,
+  pendingCookingRecovery: null,
   activeNotificationBannerId: null,
   profileSections: {
     basics: true,
@@ -1885,6 +1886,12 @@ function persistCookingState() {
   const cooking = state.cooking;
   const timers = sortCookingTimers((cooking?.activeTimers || []).map(serializeCookingTimer).filter(Boolean));
   const currentMealId = String(cooking?.mealId || "").trim();
+  const currentMeal = currentMealId ? getMealById(currentMealId) : null;
+  const currentStages = currentMeal ? getCookingStageList(currentMeal) : [];
+  const safeStepIndex = currentStages.length
+    ? Math.max(0, Math.min(Number(cooking?.stepIndex || 0), currentStages.length - 1))
+    : 0;
+  const currentStep = currentStages[safeStepIndex] || null;
   const shouldPersist = !!currentMealId || timers.length > 0;
 
   if (!shouldPersist) {
@@ -1895,27 +1902,50 @@ function persistCookingState() {
   writeLocal("cooking", {
     mode: currentMealId ? String(cooking?.mode || "active").trim() : "picker",
     mealId: currentMealId || null,
-    stepIndex: Math.max(0, Number(cooking?.stepIndex || 0)),
+    stepIndex: safeStepIndex,
+    stepId: currentStep?.id || "",
     activeTimers: timers,
     updatedAt: new Date().toISOString(),
   });
 }
 
-function restorePersistedCookingState() {
+function readPersistedCookingState() {
   const stored = readLocal("cooking", null);
-  if (!stored || typeof stored !== "object") return false;
+  if (!stored || typeof stored !== "object") return null;
 
   const mealId = String(stored.mealId || "").trim();
+  if (!mealId) return null;
   const mode = mealId ? String(stored.mode || "active").trim() : "picker";
-  const cooking = createCookingState(mode, mealId || null);
   const target = mealId ? getMealById(mealId) : null;
-  const stageCount = target ? getCookingStage(target).stages.length : 0;
+  if (!target) return null;
+  const stages = getCookingStageList(target);
+  const stageCount = stages.length;
   const requestedStepIndex = Math.max(0, Number(stored.stepIndex || 0));
-  cooking.stepIndex = stageCount ? Math.min(requestedStepIndex, stageCount - 1) : 0;
-  cooking.activeTimers = (Array.isArray(stored.activeTimers) ? stored.activeTimers : [])
+  const safeStepIndex = stageCount ? Math.min(requestedStepIndex, stageCount - 1) : 0;
+  const requestedStepId = String(stored.stepId || "").trim();
+  const safeStep = stages.find((step) => step.id === requestedStepId) || stages[safeStepIndex] || null;
+  const activeTimers = (Array.isArray(stored.activeTimers) ? stored.activeTimers : [])
     .map(serializeCookingTimer)
     .filter((timer) => timer && (!timer.mealId || !!getMealById(timer.mealId)));
+  return {
+    mode,
+    mealId,
+    mealTitle: target.meal?.title || "",
+    mealLabel: [target.day?.label, MEAL_LABELS[target.mealKey] || ""].filter(Boolean).join(" · "),
+    stepIndex: safeStep ? stages.findIndex((step) => step.id === safeStep.id) : safeStepIndex,
+    stepId: safeStep?.id || "",
+    stepTitle: safeStep?.title || "",
+    activeTimers,
+    updatedAt: stored.updatedAt || "",
+  };
+}
 
+function restorePersistedCookingState() {
+  const snapshot = readPersistedCookingState();
+  if (!snapshot) return false;
+  const cooking = createCookingState(snapshot.mode, snapshot.mealId || null);
+  cooking.stepIndex = Math.max(0, Number(snapshot.stepIndex || 0));
+  cooking.activeTimers = snapshot.activeTimers.map((timer) => ({ ...timer }));
   state.cooking = cooking;
   syncPrimaryCookingTimer();
   return true;
@@ -2126,6 +2156,9 @@ async function startCookingFlow(mealId, mode = "active", options = {}) {
   if (options.preserveTimers && Array.isArray(options.activeTimers) && options.activeTimers.length) {
     state.cooking.activeTimers = options.activeTimers.map((timer) => ({ ...timer }));
     syncPrimaryCookingTimer();
+    if ((state.cooking.activeTimers || []).some((timer) => !timer.paused) && !state.timerTicker) {
+      state.timerTicker = window.setInterval(syncCookingTimer, 1000);
+    }
   }
   persistCookingState();
   const sessionId = state.cooking.sessionId;
@@ -3058,6 +3091,28 @@ function openReminderModal(reminder, options = {}) {
     editedTime: formatInputTimeFromIso(reminder.triggerAt),
     readOnly: isPending,
   };
+}
+
+function openCookingRecoveryPrompt(snapshot = state.pendingCookingRecovery) {
+  if (!snapshot?.mealId) return;
+  state.modal = {
+    type: "cook-recovery",
+    mealId: snapshot.mealId,
+    stepId: snapshot.stepId || "",
+  };
+}
+
+async function resumePersistedCooking(snapshot = state.pendingCookingRecovery) {
+  if (!snapshot?.mealId) return;
+  state.pendingCookingRecovery = null;
+  state.modal = null;
+  await openCookingSession(snapshot.mealId, {
+    mode: "active",
+    stepId: snapshot.stepId || "",
+    preserveTimers: Array.isArray(snapshot.activeTimers) && snapshot.activeTimers.length > 0,
+    activeTimers: snapshot.activeTimers || [],
+    historyMode: "push",
+  });
 }
 
 async function resolvePendingReminderLink(options = {}) {
@@ -6068,6 +6123,57 @@ function renderCookReminderModal(reminder) {
   `;
 }
 
+function renderCookRecoveryModal() {
+  const snapshot = state.pendingCookingRecovery;
+  if (!snapshot?.mealId) return "";
+  const target = getMealById(snapshot.mealId);
+  const mealTitle = snapshot.mealTitle || target?.meal?.title || "tu receta";
+  const stepTitle = snapshot.stepTitle || "el punto donde lo dejaste";
+  const mealLabel = snapshot.mealLabel || [target?.day?.label, MEAL_LABELS[target?.mealKey] || ""].filter(Boolean).join(" · ");
+  const activeTimerCount = Array.isArray(snapshot.activeTimers) ? snapshot.activeTimers.filter((timer) => !timer.paused).length : 0;
+
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-reminder-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">Recuperar receta</small>
+            <h2 class="vc-modal-title">Parece que estabas en medio de una receta</h2>
+            <p class="vc-copy">Puedo llevarte de vuelta exactamente a donde lo dejaste para seguir con "${escapeHtml(mealTitle)}".</p>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
+        </div>
+
+        <article class="vc-profile-card">
+          <div class="vc-grid">
+            ${mealLabel ? `
+              <div>
+                <small class="vc-muted">Receta</small>
+                <p class="vc-copy">${escapeHtml(mealLabel)}</p>
+              </div>
+            ` : ""}
+            <div>
+              <small class="vc-muted">Ultimo paso visible</small>
+              <p class="vc-copy"><strong>${escapeHtml(stepTitle)}</strong></p>
+            </div>
+            ${activeTimerCount > 0 ? `
+              <div>
+                <small class="vc-muted">Temporizadores activos</small>
+                <p class="vc-copy">${escapeHtml(`${activeTimerCount} en marcha`)}</p>
+              </div>
+            ` : ""}
+          </div>
+        </article>
+
+        <div class="vc-step-foot">
+          <button class="vc-button secondary" data-action="dismiss-cooking-recovery">Ahora no</button>
+          <button class="vc-button primary" data-action="resume-cooking-recovery">Recuperar donde lo deje</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderModal() {
   if (!state.modal) return renderBusyOverlay();
   if (state.modal.type === "details") {
@@ -6095,6 +6201,9 @@ function renderModal() {
   if (state.modal.type === "cook-reminder") {
     const reminder = getReminderById(state.modal.reminderId);
     return `${reminder ? renderCookReminderModal(reminder) : ""}${renderBusyOverlay()}`;
+  }
+  if (state.modal.type === "cook-recovery") {
+    return `${renderCookRecoveryModal()}${renderBusyOverlay()}`;
   }
   return renderBusyOverlay();
 }
@@ -6695,12 +6804,26 @@ async function handleAction(action, trigger) {
     case "start-cook-from-reminder": {
       const reminder = getReminderById(trigger.dataset.reminderId || state.modal?.reminderId);
       if (!reminder?.mealId) return;
+      state.pendingCookingRecovery = null;
       state.modal = null;
       await openCookingSession(reminder.mealId, { mode: "active" });
       break;
     }
 
+    case "resume-cooking-recovery":
+      await resumePersistedCooking();
+      break;
+
+    case "dismiss-cooking-recovery":
+      state.pendingCookingRecovery = null;
+      state.modal = null;
+      render();
+      break;
+
     case "close-modal":
+      if (state.modal?.type === "cook-recovery") {
+        state.pendingCookingRecovery = null;
+      }
       state.modal = null;
       render();
       break;
@@ -7052,6 +7175,7 @@ async function hydrateSession(session, options = {}) {
   state.session = session;
   state.activeMenu = null;
   state.cooking = null;
+  state.pendingCookingRecovery = null;
   state.activeNotificationBannerId = null;
 
   if (!session?.user) {
@@ -7060,6 +7184,7 @@ async function hydrateSession(session, options = {}) {
     state.feedback = [];
     state.currentView = "home";
     removeLocal("cooking");
+    state.pendingCookingRecovery = null;
     state.loading = false;
     void syncAppBadgeCount();
     syncHistoryFromState({ mode: "replace", view: "home", force: true });
@@ -7093,20 +7218,26 @@ async function hydrateSession(session, options = {}) {
   }
 
   if (state.week) {
+    const persistedCooking = readPersistedCookingState();
     const needsReminderBootstrap = !(state.week.reminders?.length);
     state.week.reminders = needsReminderBootstrap ? composeReminders() : state.week.reminders;
     if (needsReminderBootstrap) {
       await saveWeek();
     }
-    const restoredCooking = restorePersistedCookingState();
-    if (restoredCooking && (state.cooking?.activeTimers || []).some((timer) => !timer.paused) && !state.timerTicker) {
-      state.timerTicker = window.setInterval(syncCookingTimer, 1000);
-      syncCookingTimer();
-    }
     await refreshRemoteReminderActivity({ force: true, showBanner: false });
     await flushDueReminders();
     scheduleReminders();
-    await resolvePendingReminderLink();
+    if (state.pendingReminderLink) {
+      await resolvePendingReminderLink({
+        preserveTimers: !!(persistedCooking?.activeTimers || []).length,
+        activeTimers: persistedCooking?.activeTimers || [],
+      });
+    } else if (persistedCooking?.mealId) {
+      state.pendingCookingRecovery = persistedCooking;
+      if (!state.modal) {
+        openCookingRecoveryPrompt(persistedCooking);
+      }
+    }
   }
 
   if (state.profile.notificationEnabled) {
