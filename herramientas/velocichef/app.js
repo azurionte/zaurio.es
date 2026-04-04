@@ -3621,6 +3621,32 @@ function renderTopbar() {
   const cookingStepLabel = cookingStage
     ? `${String(cookingStage.stepIndex + 1).padStart(2, "0")} / ${String(cookingStage.stages.length).padStart(2, "0")}`
     : "";
+  const immersiveMicControl = isImmersiveCook ? `
+    <div class="vc-cook-mic-wrap vc-cook-mic-wrap-inline">
+      <button
+        class="vc-cook-mic-bubble ${handsFreeActive ? "active" : ""}"
+        type="button"
+        data-action="toggle-hands-free"
+        aria-label="${handsFreeActive ? "Desactivar manos libres" : "Activar manos libres"}"
+        aria-pressed="${handsFreeActive ? "true" : "false"}"
+      >
+        <span class="vc-cook-mic-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <rect x="9" y="3.5" width="6" height="10" rx="3"></rect>
+            <path d="M6.5 10.5a5.5 5.5 0 0 0 11 0"></path>
+            <path d="M12 16v4"></path>
+            <path d="M9 20h6"></path>
+            ${handsFreeActive ? "" : '<path d="M5 5L19 19"></path>'}
+          </svg>
+        </span>
+      </button>
+      ${state.cooking?.showMicHint ? `
+        <div class="vc-cook-mic-tooltip" role="status">
+          Activa el modo manos libres para navegar los pasos con la voz.
+        </div>
+      ` : ""}
+    </div>
+  ` : "";
 
   return `
     <header class="vc-topbar ${isImmersiveCook ? "vc-topbar-immersive" : "vc-card"} ${isCookView ? "vc-topbar-cooking" : ""}">
@@ -3658,6 +3684,7 @@ function renderTopbar() {
         <div class="vc-topbar-center">
           ${isImmersiveCook ? `
             <div class="vc-cook-step-cluster">
+              ${immersiveMicControl}
               <div class="vc-cook-step-indicator" aria-label="Paso actual">
                 <small>Paso</small>
                 <strong>${escapeHtml(cookingStepLabel)}</strong>
@@ -3746,32 +3773,6 @@ function renderTopbar() {
                 <button class="vc-menu-action vc-menu-action-danger" type="button" data-action="logout" role="menuitem">Salir</button>
               </div>
             </div>
-            ${isImmersiveCook ? `
-              <div class="vc-cook-mic-wrap">
-                <button
-                  class="vc-cook-mic-bubble ${handsFreeActive ? "active" : ""}"
-                  type="button"
-                  data-action="toggle-hands-free"
-                  aria-label="${handsFreeActive ? "Desactivar manos libres" : "Activar manos libres"}"
-                  aria-pressed="${handsFreeActive ? "true" : "false"}"
-                >
-                  <span class="vc-cook-mic-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                      <rect x="9" y="3.5" width="6" height="10" rx="3"></rect>
-                      <path d="M6.5 10.5a5.5 5.5 0 0 0 11 0"></path>
-                      <path d="M12 16v4"></path>
-                      <path d="M9 20h6"></path>
-                      ${handsFreeActive ? "" : '<path d="M5 5L19 19"></path>'}
-                    </svg>
-                  </span>
-                </button>
-                ${state.cooking?.showMicHint ? `
-                  <div class="vc-cook-mic-tooltip" role="status">
-                    Activa el modo manos libres para navegar los pasos con la voz.
-                  </div>
-                ` : ""}
-              </div>
-            ` : ""}
           ` : `
             <button class="vc-button secondary vc-nav-login" type="button" data-action="login-google">Entrar con Google</button>
           `}
