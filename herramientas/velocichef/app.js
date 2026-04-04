@@ -2110,13 +2110,15 @@ function persistCookingState() {
   const cooking = state.cooking;
   const timers = sortCookingTimers((cooking?.activeTimers || []).map(serializeCookingTimer).filter(Boolean));
   const currentMealId = String(cooking?.mealId || "").trim();
+  const currentMode = String(cooking?.mode || "").trim();
   const currentMeal = currentMealId ? getMealById(currentMealId) : null;
   const currentStages = currentMeal ? getCookingStageList(currentMeal) : [];
   const safeStepIndex = currentStages.length
     ? Math.max(0, Math.min(Number(cooking?.stepIndex || 0), currentStages.length - 1))
     : 0;
   const currentStep = currentStages[safeStepIndex] || null;
-  const shouldPersist = !!currentMealId || timers.length > 0;
+  const hasRecoverableMeal = !!currentMealId && currentMode === "active";
+  const shouldPersist = hasRecoverableMeal || timers.length > 0;
 
   if (!shouldPersist) {
     removeLocal("cooking");
@@ -2124,7 +2126,7 @@ function persistCookingState() {
   }
 
   writeLocal("cooking", {
-    mode: currentMealId ? String(cooking?.mode || "active").trim() : "picker",
+    mode: hasRecoverableMeal ? currentMode : "picker",
     mealId: currentMealId || null,
     stepIndex: safeStepIndex,
     stepId: currentStep?.id || "",
@@ -2180,7 +2182,7 @@ function readPersistedCookingState() {
   const target = mealId ? getMealById(mealId) : null;
   if (!target) return null;
   const requestedStepIndex = Math.max(0, Number(stored.stepIndex || 0));
-  const { stepIndex: safeStepIndex, step: safeStep } = resolveCookingStageSnapshot(target, {
+  const { stages, stepIndex: safeStepIndex, step: safeStep } = resolveCookingStageSnapshot(target, {
     stepId: stored.stepId || "",
     stepTitle: stored.stepTitle || "",
     stepIndex: requestedStepIndex,
@@ -2189,6 +2191,15 @@ function readPersistedCookingState() {
   const activeTimers = (Array.isArray(stored.activeTimers) ? stored.activeTimers : [])
     .map(serializeCookingTimer)
     .filter((timer) => timer && (!timer.mealId || !!getMealById(timer.mealId)));
+  const hasRecoverableTimers = activeTimers.length > 0;
+  const isRecoverableMode = mode === "active";
+  const isLastVisibleStep = stages.length > 0 && safeStepIndex >= stages.length - 1;
+
+  if ((!isRecoverableMode && !hasRecoverableTimers) || (isLastVisibleStep && !hasRecoverableTimers)) {
+    removeLocal("cooking");
+    return null;
+  }
+
   return {
     mode,
     mealId,
@@ -3666,8 +3677,9 @@ async function requestNotifications() {
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+    await navigator.serviceWorker.register("./sw.js", { scope: "./", updateViaCache: "none" });
     state.workerRegistration = await navigator.serviceWorker.ready;
+    await state.workerRegistration?.update?.();
     await refreshNotificationDeviceState();
     navigator.serviceWorker.addEventListener("message", (event) => {
       if (event.data?.type === "velocichef-push" && event.data?.payload && state.week) {

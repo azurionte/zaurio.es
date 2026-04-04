@@ -1,10 +1,11 @@
-const CACHE_NAME = "velocichef-shell-v7";
+const CACHE_NAME = "velocichef-shell-v8";
 const APP_URL = "/velocichef/";
 const ASSETS = [
   APP_URL,
   `${APP_URL}index.html`,
   `${APP_URL}app.css`,
   `${APP_URL}app.js`,
+  `${APP_URL}version.js`,
   `${APP_URL}manifest.webmanifest`,
   `${APP_URL}assets/logo.png`,
   `${APP_URL}assets/mini_logo.png`,
@@ -17,6 +18,7 @@ const NETWORK_FIRST_PATHS = new Set([
   `${APP_URL}index.html`,
   `${APP_URL}app.css`,
   `${APP_URL}app.js`,
+  `${APP_URL}version.js`,
   `${APP_URL}manifest.webmanifest`,
 ]);
 
