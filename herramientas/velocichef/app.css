@@ -1993,11 +1993,12 @@ body.vc-cook-immersive-body .vc-app{
   align-content:start;
   gap:12px;
   padding:14px;
+  min-height:0;
 }
 
 .vc-cook-stage-immersive.is-ingredients{
-  grid-template-rows:auto auto;
-  align-content:start;
+  grid-template-rows:auto minmax(0, 1fr);
+  align-content:stretch;
 }
 
 .vc-cook-visual{
@@ -2030,10 +2031,41 @@ body.vc-cook-immersive-body .vc-app{
   display:grid;
   gap:10px;
   align-content:start;
+  min-height:0;
 }
 
 .vc-cook-stage-immersive.is-ingredients .vc-cook-copy-panel{
   align-content:start;
+}
+
+.vc-cook-copy-panel-ingredients{
+  gap:8px;
+}
+
+.vc-cook-visual-ingredients{
+  min-height:0;
+  overflow:hidden;
+}
+
+.vc-cook-ingredient-board-wrap{
+  min-height:0;
+  height:100%;
+  overflow:hidden;
+  padding:4px;
+  border-radius:28px;
+  background:rgba(255,252,248,.62);
+  border:1px solid rgba(80,29,10,.08);
+}
+
+.vc-cook-ingredient-board-wrap .vc-cook-ingredient-board{
+  min-height:0;
+  height:100%;
+  overflow:auto;
+  align-content:start;
+  padding-right:4px;
+  scrollbar-gutter:stable;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
 }
 
 .vc-cook-copy-meta{
@@ -2088,6 +2120,11 @@ body.vc-cook-immersive-body .vc-app{
 .vc-cook-stage-immersive.vc-cook-density-sm .vc-cook-step-copy{
   font-size:clamp(1.32rem, 5vw, 1.85rem);
   line-height:1.2;
+}
+
+.vc-cook-stage-immersive.vc-cook-density-ingredients .vc-cook-step-copy{
+  font-size:clamp(1.28rem, 4.9vw, 1.85rem);
+  line-height:1.12;
 }
 
 .vc-cook-stage-immersive.vc-cook-density-xl .vc-cook-figure-immersive img{
@@ -2200,6 +2237,10 @@ body.vc-cook-immersive-body .vc-app{
   border:1px solid rgba(80,29,10,.08);
 }
 
+.vc-cook-stage-immersive.is-ingredients .vc-cook-ingredient{
+  padding:10px 14px;
+}
+
 .vc-cook-toolbar{
   display:flex;
   flex-wrap:wrap;
@@ -2252,6 +2293,10 @@ body.vc-cook-immersive-body .vc-app{
   overflow-wrap:normal;
   hyphens:none;
   text-wrap:pretty;
+}
+
+.vc-cook-step-copy-ingredients{
+  margin:0;
 }
 
 .vc-timer-modal{

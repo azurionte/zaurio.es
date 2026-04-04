@@ -224,6 +224,9 @@ let notificationBannerTimer = null;
 let systemBannerTimer = null;
 let activeSystemBannerKey = "";
 let lastRenderedPageIdentity = "";
+let historyInitialized = false;
+let lastHistoryUrl = "";
+let isRestoringHistory = false;
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
@@ -1857,6 +1860,7 @@ async function startCookingFlow(mealId, mode = "active", options = {}) {
   }
   const sessionId = state.cooking.sessionId;
   state.currentView = "cook";
+  syncHistoryFromState({ mode: options.historyMode || "push", view: "cook", mealId, stepId: "" });
   render();
   window.scrollTo(0, 0);
   scheduleCookingMicHint(sessionId);
@@ -1887,6 +1891,7 @@ async function openCookingSession(mealId, options = {}) {
   await startCookingFlow(mealId, mode, {
     preserveTimers: !!options.preserveTimers,
     activeTimers: options.activeTimers || [],
+    historyMode: options.historyMode || "push",
   });
   if (focusCookingStep(mealId, stepId)) {
     const target = getMealById(mealId);
@@ -1894,6 +1899,7 @@ async function openCookingSession(mealId, options = {}) {
     if (currentStep?.kind === "instruction") {
       void ensureStepIllustration(mealId, currentStep, { sessionId: state.cooking?.sessionId || "" });
     }
+    syncHistoryFromState({ mode: "replace", view: "cook", mealId, stepId: currentStep?.id || "" });
     render();
   }
 }
@@ -1955,6 +1961,66 @@ function buildCookSessionUrl(mealId, stepId = "") {
     params.set("step", stepId);
   }
   return `${APP_BASE_URL}?${params.toString()}`;
+}
+
+function getCurrentCookingStepId() {
+  if (state.currentView !== "cook" || !state.cooking?.mealId) return "";
+  const target = getMealById(state.cooking.mealId);
+  if (!target) return "";
+  return getCookingStage(target).current?.id || "";
+}
+
+function buildAppUrlFromState(overrides = {}) {
+  if (!state.session?.user) return APP_BASE_URL;
+
+  const params = new URLSearchParams();
+  const requestedView = normalizeView(overrides.view || state.currentView || "home");
+  const onboardingView = !state.profile?.onboardingCompleted || requestedView === "onboarding";
+
+  if (onboardingView) {
+    params.set("view", "onboarding");
+  } else if (requestedView !== "home") {
+    params.set("view", requestedView);
+  }
+
+  if (requestedView === "notifications") {
+    params.set("tab", overrides.tab || state.notificationTab || "future");
+  }
+
+  if (requestedView === "cook") {
+    const mealId = overrides.mealId !== undefined ? overrides.mealId : (state.cooking?.mealId || "");
+    const stepId = overrides.stepId !== undefined ? overrides.stepId : getCurrentCookingStepId();
+    if (mealId) params.set("meal", mealId);
+    if (stepId) params.set("step", stepId);
+  }
+
+  const query = params.toString();
+  return query ? `${APP_BASE_URL}?${query}` : APP_BASE_URL;
+}
+
+function syncHistoryFromState(options = {}) {
+  if (!window.history?.replaceState) return;
+  const mode = options.mode === "push" ? "pushState" : "replaceState";
+  const url = options.url || buildAppUrlFromState(options);
+
+  if (isRestoringHistory) {
+    lastHistoryUrl = window.location.href;
+    historyInitialized = true;
+    return;
+  }
+
+  if (!historyInitialized) {
+    window.history.replaceState({ velocichef: true }, "", url);
+    historyInitialized = true;
+    lastHistoryUrl = url;
+    return;
+  }
+
+  if (mode === "pushState" && url === lastHistoryUrl) return;
+  if (mode === "replaceState" && url === lastHistoryUrl && !options.force) return;
+
+  window.history[mode]({ velocichef: true }, "", url);
+  lastHistoryUrl = url;
 }
 
 function normalizeReminder(rawReminder) {
@@ -2450,7 +2516,7 @@ function openReminderModal(reminder, options = {}) {
   };
 }
 
-async function resolvePendingReminderLink() {
+async function resolvePendingReminderLink(options = {}) {
   if (!state.pendingReminderLink || !state.week) return;
   const pendingLink = { ...state.pendingReminderLink };
   state.pendingReminderLink = null;
@@ -2459,8 +2525,10 @@ async function resolvePendingReminderLink() {
     await openCookingSession(pendingLink.mealId, {
       mode: "active",
       stepId: pendingLink.stepId || "",
+      preserveTimers: !!options.preserveTimers,
+      activeTimers: options.activeTimers || [],
+      historyMode: options.historyMode || "replace",
     });
-    window.history.replaceState({}, "", `${APP_BASE_URL}?view=cook`);
     return;
   }
 
@@ -2470,7 +2538,73 @@ async function resolvePendingReminderLink() {
   state.currentView = "notifications";
   state.notificationTab = getReminderBucket(reminder);
   openReminderModal(reminder, { forceCookPrompt: pendingLink.intent === "cook" });
-  window.history.replaceState({}, "", `${APP_BASE_URL}?view=notifications`);
+  syncHistoryFromState({ mode: options.historyMode || "replace", view: "notifications", tab: state.notificationTab });
+}
+
+async function restoreNavigationFromUrl(url) {
+  isRestoringHistory = true;
+  applyIncomingUrl(url);
+  historyInitialized = true;
+  lastHistoryUrl = window.location.href;
+  state.modal = null;
+  state.activeMenu = null;
+
+  try {
+    if (!state.session?.user) {
+      render();
+      return;
+    }
+
+    if (!state.profile?.onboardingCompleted || state.currentView === "onboarding") {
+      render();
+      return;
+    }
+
+    if (state.currentView !== "cook") {
+      clearCookingMicHintTimer();
+      stopHandsFreeMode();
+    }
+
+    if (state.currentView === "notifications") {
+      clearNotificationBannerTimer();
+      state.activeNotificationBannerId = null;
+    }
+
+    if (state.pendingReminderLink) {
+      const preservedTimers = getActiveCookingTimers();
+      await resolvePendingReminderLink({
+        historyMode: "replace",
+        preserveTimers: preservedTimers.length > 0,
+        activeTimers: preservedTimers,
+      });
+      if (state.currentView === "notifications") {
+        render();
+      }
+      return;
+    }
+
+    if (state.currentView === "cook") {
+      const suggested = getSuggestedCookingTarget();
+      const preservedTimers = getActiveCookingTimers();
+      state.cooking = createCookingState(suggested ? "suggest" : "picker", suggested?.meal.id || null);
+      if (preservedTimers.length) {
+        state.cooking.activeTimers = preservedTimers.map((timer) => ({ ...timer }));
+        syncPrimaryCookingTimer();
+      }
+      render();
+      return;
+    }
+
+    render();
+
+    if (state.currentView === "profile" || state.currentView === "notifications") {
+      refreshNotificationDeviceState().then(() => {
+        if (!isRestoringHistory) render();
+      }).catch(() => {});
+    }
+  } finally {
+    isRestoringHistory = false;
+  }
 }
 
 function clearReminderTimers() {
@@ -2750,6 +2884,7 @@ async function moveCookingStep(delta) {
   const sessionId = state.cooking.sessionId;
   state.cooking.stepIndex = Math.max(0, Math.min((state.cooking.stepIndex || 0) + delta, Math.max(0, stages.length - 1)));
   state.cooking.timerMenuOpen = false;
+  syncHistoryFromState({ mode: "replace", view: "cook", mealId: target.meal.id, stepId: stages[state.cooking.stepIndex]?.id || "" });
   render();
   window.scrollTo(0, 0);
   const nextTarget = getCookingTarget();
@@ -3311,6 +3446,7 @@ async function generateWeek(startDate = getActivePlanningStartIso()) {
     state.week.reminders = composeReminders();
     await saveWeek();
     state.currentView = "week";
+    syncHistoryFromState({ mode: "replace", view: "week" });
     state.busy = false;
     state.busyLabel = "";
     render();
@@ -4968,24 +5104,47 @@ function renderCookView() {
   const timerButtonLabel = currentStepTimer
     ? "Volver a empezar este temporizador"
     : (activeTimer ? "Añadir otra cuenta regresiva" : "Comenzar cuenta regresiva");
-  const cookDensityClass = getCookCopyDensityClass(stepCopyText, {
-    isIngredientsStep,
-    hasTimer: !!current?.timerMinutes,
-  });
+  const cookDensityClass = isIngredientsStep
+    ? "vc-cook-density-ingredients"
+    : getCookCopyDensityClass(stepCopyText, {
+        isIngredientsStep,
+        hasTimer: !!current?.timerMinutes,
+      });
+  const cookCopyPanel = `
+    <div class="vc-cook-copy-panel ${isIngredientsStep ? "vc-cook-copy-panel-ingredients" : ""}">
+      <div class="vc-cook-copy-meta">
+        <small class="vc-muted">${escapeHtml(target.day.label)} · ${escapeHtml(MEAL_LABELS[target.mealKey])}</small>
+        <small class="vc-muted">${escapeHtml(stepMeta)}</small>
+      </div>
+      <p class="vc-copy vc-cook-step-copy ${isIngredientsStep ? "vc-cook-step-copy-ingredients" : ""}">${isIngredientsStep
+        ? escapeHtml(stepCopyText)
+        : renderTechniqueText(stepCopyText)}</p>
+      ${current?.timerMinutes ? `
+        <div class="vc-inline-actions vc-cook-inline-tools">
+          <button class="vc-button secondary" data-action="start-step-timer">
+            ${escapeHtml(timerButtonLabel)}
+          </button>
+        </div>
+      ` : ""}
+    </div>
+  `;
 
   return `
     <section class="vc-grid vc-cook-screen vc-cook-screen-immersive">
       <article class="vc-cook-mode vc-cook-mode-immersive">
         <article class="vc-cook-stage vc-cook-stage-immersive ${isIngredientsStep ? "is-ingredients" : ""} ${cookDensityClass}">
-          <div class="vc-cook-visual">
+          ${isIngredientsStep ? cookCopyPanel : ""}
+          <div class="vc-cook-visual ${isIngredientsStep ? "vc-cook-visual-ingredients" : ""}">
             ${isIngredientsStep ? `
-              <div class="vc-cook-ingredient-board">
-                ${(current.ingredients || []).map((ingredient) => `
-                  <article class="vc-cook-ingredient">
-                    <strong>${escapeHtml(ingredient.name)}</strong>
-                    <span class="vc-muted">${escapeHtml(formatQuantity(ingredient.quantity, ingredient.unit))}</span>
-                  </article>
-                `).join("")}
+              <div class="vc-cook-ingredient-board-wrap">
+                <div class="vc-cook-ingredient-board">
+                  ${(current.ingredients || []).map((ingredient) => `
+                    <article class="vc-cook-ingredient">
+                      <strong>${escapeHtml(ingredient.name)}</strong>
+                      <span class="vc-muted">${escapeHtml(formatQuantity(ingredient.quantity, ingredient.unit))}</span>
+                    </article>
+                  `).join("")}
+                </div>
               </div>
             ` : `
               ${!currentImage || currentImage?.status === "loading" ? `<div class="vc-cook-image-shell vc-cook-image-loading" aria-hidden="true"><span class="vc-cook-image-glow"></span></div>` : ""}
@@ -5000,23 +5159,7 @@ function renderCookView() {
               ${currentImage?.status === "error" ? `<div class="vc-note vc-cook-image-fallback">Ilustracion no disponible ahora mismo.</div>` : ""}
             `}
           </div>
-
-          <div class="vc-cook-copy-panel">
-            <div class="vc-cook-copy-meta">
-              <small class="vc-muted">${escapeHtml(target.day.label)} Â· ${escapeHtml(MEAL_LABELS[target.mealKey])}</small>
-              <small class="vc-muted">${escapeHtml(stepMeta)}</small>
-            </div>
-            <p class="vc-copy vc-cook-step-copy">${isIngredientsStep
-              ? escapeHtml(stepCopyText)
-              : renderTechniqueText(stepCopyText)}</p>
-            ${current?.timerMinutes ? `
-              <div class="vc-inline-actions vc-cook-inline-tools">
-                <button class="vc-button secondary" data-action="start-step-timer">
-                  ${escapeHtml(timerButtonLabel)}
-                </button>
-              </div>
-            ` : ""}
-          </div>
+          ${isIngredientsStep ? "" : cookCopyPanel}
         </article>
 
         <div class="vc-step-foot vc-cook-foot vc-cook-foot-immersive">
@@ -5448,6 +5591,7 @@ async function saveScheduleAndContinue() {
   await saveProfile();
   await saveWeek();
   state.currentView = "shopping";
+  syncHistoryFromState({ mode: "push", view: "shopping" });
   render();
 }
 
@@ -5597,6 +5741,7 @@ async function handleAction(action, trigger) {
       stopHandsFreeMode();
       if (!state.profile?.onboardingCompleted) {
         state.currentView = "onboarding";
+        syncHistoryFromState({ mode: "push", view: "onboarding" });
         render();
         break;
       }
@@ -5620,6 +5765,7 @@ async function handleAction(action, trigger) {
           await saveWeek();
         }
       }
+      syncHistoryFromState({ mode: "push", view: nextView, tab: state.notificationTab });
       render();
       if (nextView === "profile" || nextView === "notifications") {
         refreshNotificationDeviceState().then(() => {
@@ -5636,6 +5782,7 @@ async function handleAction(action, trigger) {
       stopCookingTimer();
       state.cooking = createCookingState(suggested ? "suggest" : "picker", suggested?.meal.id || null);
       state.currentView = "cook";
+      syncHistoryFromState({ mode: "push", view: "cook", mealId: "", stepId: "" });
       render();
       break;
     }
@@ -5648,6 +5795,7 @@ async function handleAction(action, trigger) {
     case "cook-suggest-no":
       ensureCookingState();
       state.cooking.mode = "picker";
+      syncHistoryFromState({ mode: "replace", view: "cook", mealId: "", stepId: "" });
       render();
       break;
 
@@ -5658,6 +5806,7 @@ async function handleAction(action, trigger) {
       ensureCookingState();
       state.cooking.mode = "picker";
       state.cooking.stepIndex = 0;
+      syncHistoryFromState({ mode: "replace", view: "cook", mealId: "", stepId: "" });
       render();
       break;
 
@@ -5679,6 +5828,7 @@ async function handleAction(action, trigger) {
       stopCookingTimer();
       state.notice = "Receta terminada. Ya puedes servir el plato.";
       state.currentView = "week";
+      syncHistoryFromState({ mode: "push", view: "week" });
       render();
       break;
 
@@ -5732,6 +5882,7 @@ async function handleAction(action, trigger) {
 
     case "set-notification-tab":
       state.notificationTab = trigger.dataset.tab === "pending" ? "pending" : "future";
+      syncHistoryFromState({ mode: "replace", view: "notifications", tab: state.notificationTab });
       render();
       break;
 
@@ -5775,6 +5926,11 @@ async function handleAction(action, trigger) {
 
       if (changed) {
         await saveWeek();
+      }
+      if (state.currentView === "notifications") {
+        syncHistoryFromState({ mode: "push", view: "notifications", tab: state.notificationTab });
+      } else if (state.currentView === "cook" && !notification.mealId) {
+        syncHistoryFromState({ mode: "push", view: "cook", mealId: "", stepId: "" });
       }
       render();
       break;
@@ -6081,6 +6237,7 @@ async function handleAction(action, trigger) {
       state.currentView = "onboarding";
       state.profile.onboardingCompleted = false;
       state.onboardingStep = 0;
+      syncHistoryFromState({ mode: "push", view: "onboarding" });
       render();
       break;
 
@@ -6092,6 +6249,7 @@ async function handleAction(action, trigger) {
       if (!state.week?.startDate) return;
       await generateWeek(state.week.startDate);
       state.currentView = "recipes";
+      syncHistoryFromState({ mode: "push", view: "recipes" });
       render();
       break;
 
@@ -6106,6 +6264,8 @@ async function handleAction(action, trigger) {
       state.error = "";
       await state.client.auth.signOut();
       window.history.replaceState({}, "", APP_BASE_URL);
+      historyInitialized = true;
+      lastHistoryUrl = APP_BASE_URL;
       break;
 
     case "toggle-pill": {
@@ -6284,6 +6444,7 @@ async function hydrateSession(session, options = {}) {
     state.feedback = [];
     state.currentView = "home";
     state.loading = false;
+    syncHistoryFromState({ mode: "replace", view: "home", force: true });
     render();
     return;
   }
@@ -6332,6 +6493,7 @@ async function hydrateSession(session, options = {}) {
   await refreshNotificationDeviceState();
 
   state.loading = false;
+  syncHistoryFromState({ mode: "replace", force: true });
   render();
 }
 
@@ -6368,6 +6530,9 @@ async function init() {
 
 window.addEventListener("resize", syncLayoutMetrics);
 window.addEventListener("orientationchange", syncLayoutMetrics);
+window.addEventListener("popstate", () => {
+  void restoreNavigationFromUrl(window.location.href);
+});
 
 init();
 
