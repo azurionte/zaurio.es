@@ -5430,8 +5430,10 @@ function renderShoppingView() {
               <span>Pendiente</span>
             </span>
           </div>
-          <strong>${pendingCount}</strong>
-          <p class="vc-copy">ingredientes que siguen pendientes</p>
+          <div class="vc-shopping-summary-line">
+            <strong>${pendingCount}</strong>
+            <p class="vc-copy">ingredientes que siguen pendientes</p>
+          </div>
         </article>
         <article class="vc-summary-card">
           <small class="vc-muted">Estado de compra</small>
@@ -5441,8 +5443,10 @@ function renderShoppingView() {
               <span>Comprado</span>
             </span>
           </div>
-          <strong>${boughtCount}</strong>
-          <p class="vc-copy">ingredientes que ya has marcado como comprados</p>
+          <div class="vc-shopping-summary-line">
+            <strong>${boughtCount}</strong>
+            <p class="vc-copy">ingredientes que ya has marcado como comprados</p>
+          </div>
         </article>
       </div>
 

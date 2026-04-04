@@ -1557,6 +1557,29 @@ body.vc-cook-immersive-body .vc-app{
   border:1px solid rgba(80,29,10,.12);
 }
 
+.vc-shopping-summary-line{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  flex-wrap:nowrap;
+  min-width:0;
+}
+
+.vc-shopping-summary-line strong{
+  flex:0 0 auto;
+  font-size:1.95rem;
+  line-height:1;
+}
+
+.vc-shopping-summary-line .vc-copy{
+  margin:0;
+  flex:1 1 auto;
+  min-width:0;
+  font-size:1rem;
+  line-height:1.25;
+  white-space:nowrap;
+}
+
 .vc-modal-layer{
   position:fixed;
   inset:0;
