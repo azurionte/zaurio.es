@@ -21,6 +21,10 @@
   --vc-radius-sm:14px;
   --vc-frame-gap:12px;
   --vc-topbar-current-height:112px;
+  --vc-topbar-current-top:12px;
+  --vc-topbar-current-bottom:124px;
+  --vc-safe-top:env(safe-area-inset-top, 0px);
+  --vc-safe-bottom:env(safe-area-inset-bottom, 0px);
 }
 
 *{box-sizing:border-box}
@@ -69,11 +73,11 @@ a{
 .vc-app{
   width:min(100%, 1240px);
   margin:0 auto;
-  padding:12px 12px 48px;
+  padding:calc(12px + var(--vc-safe-top)) 12px calc(48px + var(--vc-safe-bottom));
 }
 
 body.vc-cook-immersive-body .vc-app{
-  padding:10px 10px calc(12px + env(safe-area-inset-bottom, 0px));
+  padding:calc(10px + var(--vc-safe-top)) 10px calc(12px + var(--vc-safe-bottom));
 }
 
 .vc-shell{
@@ -102,7 +106,7 @@ body.vc-cook-immersive-body .vc-app{
 
 .vc-topbar{
   position:sticky;
-  top:12px;
+  top:calc(12px + var(--vc-safe-top));
   z-index:90;
   min-height:112px;
   margin-bottom:16px;
@@ -122,7 +126,7 @@ body.vc-cook-immersive-body .vc-app{
 
 .vc-topbar-immersive{
   position:sticky;
-  top:10px;
+  top:calc(10px + var(--vc-safe-top));
   z-index:95;
   margin-bottom:10px;
   padding:0;
@@ -1563,7 +1567,7 @@ body.vc-cook-immersive-body .vc-app{
   position:fixed;
   left:12px;
   right:12px;
-  top:calc(var(--vc-topbar-current-height, 112px) + 14px);
+  top:calc(var(--vc-topbar-current-bottom, 124px) + 14px);
   z-index:120;
   display:grid;
   gap:10px;
@@ -1572,7 +1576,7 @@ body.vc-cook-immersive-body .vc-app{
 
 .vc-system-banner{
   position:fixed;
-  top:calc(var(--vc-topbar-current-height, 112px) + 10px);
+  top:calc(var(--vc-topbar-current-bottom, 124px) + 10px);
   left:12px;
   right:12px;
   z-index:120;
@@ -1582,7 +1586,7 @@ body.vc-cook-immersive-body .vc-app{
 }
 
 .vc-system-banner.with-activity{
-  top:calc(var(--vc-topbar-current-height, 112px) + 116px);
+  top:calc(var(--vc-topbar-current-bottom, 124px) + 116px);
 }
 
 .vc-system-banner-bubble{
@@ -1604,7 +1608,7 @@ body.vc-cook-immersive-body .vc-app{
 
 .vc-notification-banner{
   position:fixed;
-  top:calc(var(--vc-topbar-current-height, 112px) + 10px);
+  top:calc(var(--vc-topbar-current-bottom, 124px) + 10px);
   right:12px;
   left:12px;
   z-index:121;
@@ -1879,16 +1883,16 @@ body.vc-cook-immersive-body .vc-app{
 }
 
 .vc-cook-screen{
-  min-height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 3));
+  min-height:calc(100dvh - var(--vc-topbar-current-bottom, 124px) - (var(--vc-frame-gap) * 3));
 }
 
 .vc-cook-screen-immersive{
-  height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 2));
-  min-height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 2));
+  height:calc(100dvh - var(--vc-topbar-current-bottom, 124px) - (var(--vc-frame-gap) * 2));
+  min-height:calc(100dvh - var(--vc-topbar-current-bottom, 124px) - (var(--vc-frame-gap) * 2));
 }
 
 .vc-cook-screen .vc-cook-mode{
-  min-height:calc(100dvh - var(--vc-topbar-current-height, 112px) - (var(--vc-frame-gap) * 3));
+  min-height:calc(100dvh - var(--vc-topbar-current-bottom, 124px) - (var(--vc-frame-gap) * 3));
   display:flex;
   flex-direction:column;
   gap:14px;
@@ -2285,7 +2289,7 @@ body.vc-cook-immersive-body .vc-app{
   bottom:0;
   z-index:2;
   padding-top:12px;
-  padding-bottom:calc(8px + env(safe-area-inset-bottom, 0px));
+  padding-bottom:calc(8px + var(--vc-safe-bottom));
   margin-top:2px;
   background:linear-gradient(180deg, rgba(255,246,234,0), rgba(255,246,234,.92) 22%, rgba(255,246,234,1) 100%);
   border-top:1px solid rgba(80,29,10,.1);
@@ -2295,7 +2299,7 @@ body.vc-cook-immersive-body .vc-app{
   position:static;
   margin-top:0;
   padding-top:0;
-  padding-bottom:calc(4px + env(safe-area-inset-bottom, 0px));
+  padding-bottom:calc(4px + var(--vc-safe-bottom));
   background:none;
   border-top:none;
 }
@@ -2394,17 +2398,17 @@ body.vc-cook-immersive-body .vc-app{
   }
 
   .vc-app{
-    padding:18px 18px 40px;
+    padding:calc(18px + var(--vc-safe-top)) 18px calc(40px + var(--vc-safe-bottom));
   }
 
   .vc-topbar{
-    top:18px;
+    top:calc(18px + var(--vc-safe-top));
     min-height:124px;
     padding:14px 18px;
   }
 
   .vc-topbar-immersive{
-    top:14px;
+    top:calc(14px + var(--vc-safe-top));
   }
 
   .vc-topbar-cooking{
@@ -2453,12 +2457,12 @@ body.vc-cook-immersive-body .vc-app{
   }
 
   .vc-cook-screen .vc-cook-mode{
-    min-height:calc(100dvh - var(--vc-topbar-current-height, 124px) - (var(--vc-frame-gap) * 3));
+    min-height:calc(100dvh - var(--vc-topbar-current-bottom, 142px) - (var(--vc-frame-gap) * 3));
   }
 
   .vc-cook-screen-immersive{
-    height:calc(100dvh - var(--vc-topbar-current-height, 124px) - (var(--vc-frame-gap) * 2));
-    min-height:calc(100dvh - var(--vc-topbar-current-height, 124px) - (var(--vc-frame-gap) * 2));
+    height:calc(100dvh - var(--vc-topbar-current-bottom, 142px) - (var(--vc-frame-gap) * 2));
+    min-height:calc(100dvh - var(--vc-topbar-current-bottom, 142px) - (var(--vc-frame-gap) * 2));
   }
 
   .vc-cook-screen .vc-cook-stage{

@@ -6009,8 +6009,13 @@ function renderModal() {
 
 function syncLayoutMetrics() {
   const topbar = root.querySelector(".vc-topbar");
-  const topbarHeight = topbar ? Math.ceil(topbar.getBoundingClientRect().height) : 0;
+  const rect = topbar ? topbar.getBoundingClientRect() : null;
+  const topbarHeight = rect ? Math.ceil(rect.height) : 0;
+  const topbarTop = rect ? Math.max(0, Math.ceil(rect.top)) : 0;
+  const topbarBottom = rect ? Math.max(topbarHeight, Math.ceil(rect.bottom)) : topbarHeight;
   document.documentElement.style.setProperty("--vc-topbar-current-height", `${topbarHeight}px`);
+  document.documentElement.style.setProperty("--vc-topbar-current-top", `${topbarTop}px`);
+  document.documentElement.style.setProperty("--vc-topbar-current-bottom", `${topbarBottom}px`);
 }
 
 function render() {
