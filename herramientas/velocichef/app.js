@@ -2131,6 +2131,8 @@ function persistCookingState() {
     stepIndex: safeStepIndex,
     stepId: currentStep?.id || "",
     stepTitle: currentStep?.title || "",
+    displayStepTitle: currentStep?.title || "",
+    displayStepNumber: currentStages.length ? `${safeStepIndex + 1} / ${currentStages.length}` : "",
     activeTimers: timers,
     updatedAt: new Date().toISOString(),
   });
@@ -2206,7 +2208,9 @@ function readPersistedCookingState() {
     mealLabel: [target.day?.label, MEAL_LABELS[target.mealKey] || ""].filter(Boolean).join(" · "),
     stepIndex: safeStepIndex,
     stepId: safeStep?.id || String(stored.stepId || "").trim(),
-    stepTitle: String(safeStep?.title || stored.stepTitle || "").trim(),
+    stepTitle: String(stored.stepTitle || safeStep?.title || "").trim(),
+    displayStepTitle: String(stored.displayStepTitle || stored.stepTitle || safeStep?.title || "").trim(),
+    displayStepNumber: String(stored.displayStepNumber || "").trim(),
     activeTimers,
     updatedAt: stored.updatedAt || "",
   };
@@ -3438,8 +3442,6 @@ async function resumePersistedCooking(snapshot = state.pendingCookingRecovery) {
   state.modal = null;
   await openCookingSession(snapshot.mealId, {
     mode: "active",
-    stepId: snapshot.stepId || "",
-    stepTitle: snapshot.stepTitle || "",
     stepIndex: snapshot.stepIndex || 0,
     preferStepIndex: true,
     preserveTimers: Array.isArray(snapshot.activeTimers) && snapshot.activeTimers.length > 0,
@@ -6556,9 +6558,9 @@ function renderCookRecoveryModal() {
   const snapshot = state.pendingCookingRecovery;
   if (!snapshot?.mealId) return "";
   const target = getMealById(snapshot.mealId);
-  const resolvedSnapshot = target ? resolveCookingStageSnapshot(target, { ...snapshot, preferIndex: true }) : null;
   const mealTitle = snapshot.mealTitle || target?.meal?.title || "tu receta";
-  const stepTitle = resolvedSnapshot?.step?.title || snapshot.stepTitle || "el punto donde lo dejaste";
+  const stepTitle = snapshot.displayStepTitle || snapshot.stepTitle || "el punto donde lo dejaste";
+  const stepNumber = snapshot.displayStepNumber || "";
   const mealLabel = snapshot.mealLabel || [target?.day?.label, MEAL_LABELS[target?.mealKey] || ""].filter(Boolean).join(" · ");
   const activeTimerCount = Array.isArray(snapshot.activeTimers) ? snapshot.activeTimers.filter((timer) => !timer.paused).length : 0;
 
@@ -6584,6 +6586,7 @@ function renderCookRecoveryModal() {
             ` : ""}
             <div>
               <small class="vc-muted">Ultimo paso visible</small>
+              ${stepNumber ? `<p class="vc-copy">${escapeHtml(stepNumber)}</p>` : ""}
               <p class="vc-copy"><strong>${escapeHtml(stepTitle)}</strong></p>
             </div>
             ${activeTimerCount > 0 ? `
