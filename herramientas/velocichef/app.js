@@ -3464,7 +3464,7 @@ function dismissPersistedCookingRecovery() {
 function refreshPendingCookingRecovery(options = {}) {
   const snapshot = readPersistedCookingState();
   const shouldPrompt = options.prompt !== false;
-  const canPrompt = state.currentView !== "cook" && state.modal?.type !== "cook-recovery";
+  const canPrompt = state.modal?.type !== "cook-recovery" && !(state.currentView === "cook" && state.cooking?.mealId);
 
   if (!snapshot?.mealId) {
     state.pendingCookingRecovery = null;
@@ -7829,7 +7829,11 @@ async function hydrateSession(session, options = {}) {
     await refreshRemoteReminderActivity({ force: true, showBanner: false });
     await flushDueReminders();
     scheduleReminders();
-    if (state.pendingReminderLink) {
+    const hasExplicitReminderIntent = !!(state.pendingReminderLink?.reminderId || state.pendingReminderLink?.intent);
+    if (state.pendingReminderLink && !hasExplicitReminderIntent && persistedCooking?.mealId && state.pendingReminderLink.mealId === persistedCooking.mealId) {
+      state.pendingReminderLink = null;
+      refreshPendingCookingRecovery();
+    } else if (state.pendingReminderLink) {
       await resolvePendingReminderLink({
         preserveTimers: !!(persistedCooking?.activeTimers || []).length,
         activeTimers: persistedCooking?.activeTimers || [],
