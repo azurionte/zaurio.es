@@ -691,6 +691,15 @@ body.vc-cook-immersive-body .vc-app{
   gap:8px;
 }
 
+.vc-menu-version{
+  margin-top:6px;
+  padding:10px 14px 2px;
+  color:rgba(98,75,64,.72);
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.02em;
+}
+
 .vc-menu-action-danger{
   color:#9c2c23;
 }

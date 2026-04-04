@@ -47,3 +47,29 @@ Hay un script local para generarlas en Windows:
 ```bash
 powershell -ExecutionPolicy Bypass -File .\herramientas\velocichef\scripts\generate-vapid.ps1
 ```
+
+## Versionado de VelociChef
+
+VelociChef muestra su versión en el menú de perfil con este formato:
+
+`major.minor.ddmmaahhmm`
+
+Regla acordada:
+
+- Deploy menor: solo cambia `ddmmaahhmm`
+- Implementación grande: sube `minor`
+- Cambio GRANDE: sube `major`
+
+Para no olvidarlo, no conviene desplegar VelociChef con `wrangler deploy` a mano. Usa este script:
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\herramientas\velocichef\scripts\deploy-velocichef.ps1
+```
+
+Opciones:
+
+```bash
+powershell -ExecutionPolicy Bypass -File .\herramientas\velocichef\scripts\deploy-velocichef.ps1 -BumpMinor
+powershell -ExecutionPolicy Bypass -File .\herramientas\velocichef\scripts\deploy-velocichef.ps1 -BumpMajor
+powershell -ExecutionPolicy Bypass -File .\herramientas\velocichef\scripts\deploy-velocichef.ps1 -SkipDeploy
+```

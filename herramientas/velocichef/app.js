@@ -10,6 +10,13 @@ const ZAURIO_MENU_LOGO_PATH = "/shared/assets/brand/favicon-32x32.png";
 const PUSH_PUBLIC_KEY_ENDPOINT = "/api/velocichef/push-public-key";
 const STEP_IMAGE_ENDPOINT = "/api/velocichef/step-image";
 const DEFAULT_REMINDER_LEAD_MINUTES = 75;
+const APP_VERSION_META = window.__VELOCICHEF_VERSION__ || {
+  major: 1,
+  minor: 2,
+  build: "0000000000",
+  label: "1.2.0000000000",
+};
+const APP_VERSION_LABEL = `Version ${APP_VERSION_META.label || "1.2.0000000000"}`;
 const ZAURIO_DESTINATIONS = [
   {
     href: "https://zaurio.es",
@@ -4737,6 +4744,7 @@ function renderTopbar() {
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
                 <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
                 <button class="vc-menu-action vc-menu-action-danger" type="button" data-action="logout" role="menuitem">Salir</button>
+                <div class="vc-menu-version" aria-label="${escapeHtml(APP_VERSION_LABEL)}">${escapeHtml(APP_VERSION_LABEL)}</div>
               </div>
             </div>
           ` : `
