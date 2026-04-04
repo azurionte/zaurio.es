@@ -7392,14 +7392,16 @@ async function handleAction(action, trigger) {
 document.addEventListener("click", async (event) => {
   const trigger = event.target.closest("[data-action]");
   if (!trigger) return;
-  event.preventDefault();
 
-  if (trigger.classList.contains("vc-modal-layer") && trigger.dataset.action === "close-modal" && event.target === trigger) {
+  if (trigger.classList.contains("vc-modal-layer") && trigger.dataset.action === "close-modal") {
+    if (event.target !== trigger) return;
+    event.preventDefault();
     state.modal = null;
     render();
     return;
   }
 
+  event.preventDefault();
   await handleAction(trigger.dataset.action, trigger);
 });
 
