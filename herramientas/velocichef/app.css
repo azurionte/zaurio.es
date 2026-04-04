@@ -1769,6 +1769,75 @@ body.vc-cook-immersive-body .vc-app{
   border:1px solid rgba(80,29,10,.09);
 }
 
+.vc-editor-accordion{
+  gap:0;
+  overflow:hidden;
+}
+
+.vc-editor-toggle{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  align-items:center;
+  gap:14px;
+  padding:0;
+  border:none;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+
+.vc-editor-toggle-copy{
+  min-width:0;
+  display:grid;
+  gap:6px;
+}
+
+.vc-editor-toggle-title{
+  color:var(--vc-brown-900);
+  font-size:1.08rem;
+  line-height:1.15;
+}
+
+.vc-editor-toggle-summary{
+  color:var(--vc-brown-600);
+  font-size:.96rem;
+  line-height:1.45;
+}
+
+.vc-editor-toggle-arrow{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:rgba(255,249,241,.92);
+  border:1px solid rgba(80,29,10,.1);
+  color:var(--vc-brown-700);
+  box-shadow:0 10px 24px rgba(80,29,10,.08);
+  transition:transform .22s ease, background .22s ease, color .22s ease;
+}
+
+.vc-editor-toggle-arrow svg{
+  width:18px;
+  height:18px;
+}
+
+.vc-editor-accordion.is-open .vc-editor-toggle-arrow{
+  transform:rotate(180deg);
+  background:rgba(255,168,84,.2);
+  color:var(--vc-orange-deep);
+}
+
+.vc-editor-panel{
+  display:grid;
+  gap:14px;
+  margin-top:16px;
+  padding-top:16px;
+  border-top:1px solid rgba(80,29,10,.1);
+}
+
 .vc-inline-term{
   padding:0;
   border:none;

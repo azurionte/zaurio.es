@@ -209,6 +209,15 @@ const state = {
   notificationTab: urlParams.get("tab") === "pending" ? "pending" : "future",
   pendingReminderLink: null,
   activeNotificationBannerId: null,
+  profileSections: {
+    basics: true,
+    allergies: false,
+    tastes: false,
+    goals: false,
+    household: false,
+    plan: false,
+    notifications: false,
+  },
 };
 let cookingMicHintTimer = null;
 let notificationBannerTimer = null;
@@ -3462,9 +3471,7 @@ function renderTopbar() {
   const zaurioMenuOpen = state.activeMenu === "zaurio";
   const userMenuOpen = state.activeMenu === "user";
   const displayName = state.profile?.displayName || getUserLabel(user);
-  const notificationState = isNotificationActiveOnCurrentDevice()
-    ? "Avisos aqui activos"
-    : (state.profile?.notificationEnabled ? "Avisos en otro dispositivo" : "Avisos pendientes");
+  const notificationsActive = isNotificationActiveOnCurrentDevice();
   const shoppingState = state.week
     ? (state.week.shoppingCompleted ? "Compra cerrada" : "Compra pendiente")
     : "Sin semana activa";
@@ -3590,12 +3597,16 @@ function renderTopbar() {
               <div class="vc-menu-drop vc-user-menu" role="menu" aria-label="Menu del usuario">
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Perfil</button>
                 <button class="vc-menu-action vc-menu-action-with-dot" type="button" data-action="open-view" data-view="notifications" role="menuitem">Notificaciones${unreadActivityCount ? '<span class="vc-menu-action-dot" aria-hidden="true"></span>' : ""}</button>
+                ${notificationsActive ? `
+                  <div class="vc-menu-meta">
+                    <span class="vc-meta-pill">Notificaciones activadas</span>
+                  </div>
+                ` : `
+                  <button class="vc-menu-action" type="button" data-action="request-notifications" role="menuitem">Activar notificaciones</button>
+                `}
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
                 <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
                 <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
-                <div class="vc-menu-meta">
-                  <span class="vc-meta-pill">${escapeHtml(notificationState)}</span>
-                </div>
                 <button class="vc-menu-action vc-menu-action-danger" type="button" data-action="logout" role="menuitem">Salir</button>
               </div>
             </div>
@@ -4539,164 +4550,268 @@ function renderNotificationsView() {
   `;
 }
 
+function ensureProfileSectionState() {
+  const defaults = {
+    basics: true,
+    allergies: false,
+    tastes: false,
+    goals: false,
+    household: false,
+    plan: false,
+    notifications: false,
+  };
+  state.profileSections = {
+    ...defaults,
+    ...(state.profileSections || {}),
+  };
+  return state.profileSections;
+}
+
+function summarizeProfileValues(values, fallback, max = 2) {
+  const clean = uniqueValues(values || []).filter(Boolean);
+  if (!clean.length) return fallback;
+  if (clean.length <= max) return clean.join(", ");
+  return `${clean.slice(0, max).join(", ")} y ${clean.length - max} mas`;
+}
+
+function getProfileSectionSummary(key) {
+  const count = Math.max(1, Number(state.profile?.householdCount || 1));
+  const cookingStyleLabel = COOKING_STYLE_OPTIONS.find((option) => option.value === state.profile?.cookingStyle)?.label || "A tu ritmo";
+  const customMembers = (state.profile?.householdMembers || []).filter((member) => !member.sameAsMe).length;
+  const plannedMeals = uniqueValues(state.profile?.plannedMeals || []).map((meal) => MEAL_LABELS[meal] || meal);
+  const notificationEnabledHere = isNotificationActiveOnCurrentDevice();
+
+  switch (key) {
+    case "basics":
+      return `${state.profile?.displayName || "Chef"} · ${count} ${count === 1 ? "persona" : "personas"} en casa`;
+    case "allergies":
+      return state.profile?.allergyNotes?.trim()
+        ? `${summarizeProfileValues(state.profile?.allergies, "Sin alergias marcadas")} · con notas extra`
+        : summarizeProfileValues(state.profile?.allergies, "Sin alergias marcadas");
+    case "tastes": {
+      const likes = summarizeProfileValues(state.profile?.likes, "gustos sin marcar", 2);
+      const dislikes = state.profile?.dislikes?.length ? summarizeProfileValues(state.profile.dislikes, "", 2) : "";
+      return dislikes ? `Te gusta ${likes} · evitamos ${dislikes}` : `Te gusta ${likes}`;
+    }
+    case "goals":
+      return `${cookingStyleLabel} · ${summarizeProfileValues(state.profile?.goalTags, "sin objetivos marcados", 2)}`;
+    case "household":
+      return customMembers ? `${count} personas · ${customMembers} con reglas propias` : `${count} personas · todos siguen tus mismas reglas`;
+    case "plan":
+      return `${summarizeProfileValues(plannedMeals, "Sin comidas elegidas", 3)} · almuerzo ${state.profile?.lunchTime || "--:--"} · cena ${state.profile?.dinnerTime || "--:--"}`;
+    case "notifications":
+      return `${notificationEnabledHere ? "Notificaciones activadas" : "Notificaciones por activar"} · aviso ${state.profile?.reminderLeadMinutes || DEFAULT_REMINDER_LEAD_MINUTES} min antes`;
+    default:
+      return "";
+  }
+}
+
+function renderProfileEditorSection({ key, eyebrow, title, summary, body, open }) {
+  return `
+    <section class="vc-editor-section vc-editor-accordion ${open ? "is-open" : ""}">
+      <button class="vc-editor-toggle" type="button" data-action="toggle-profile-section" data-section="${key}" aria-expanded="${open ? "true" : "false"}">
+        <span class="vc-editor-toggle-copy">
+          <span class="vc-eyebrow">${escapeHtml(eyebrow)}</span>
+          <strong class="vc-editor-toggle-title">${title}</strong>
+          <span class="vc-editor-toggle-summary">${escapeHtml(summary)}</span>
+        </span>
+        <span class="vc-editor-toggle-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+          </svg>
+        </span>
+      </button>
+      ${open ? `<div class="vc-editor-panel">${body}</div>` : ""}
+    </section>
+  `;
+}
+
 function renderProfileView() {
   const pushCapable = "PushManager" in window;
   const speechCapable = !!getSpeechRecognitionCtor();
   const deviceNotification = getNotificationDeviceState();
+  const sectionState = ensureProfileSectionState();
   return `
     <section class="vc-grid">
       <article class="vc-panel">
         <span class="vc-eyebrow">Perfil</span>
         <h2 class="vc-title">Ajusta tu cocina a tu gusto</h2>
-        <p class="vc-copy">Todo lo que cambies aquÃ­ se guardarÃ¡ para las prÃ³ximas semanas y para el modo cocinar.</p>
+        <p class="vc-copy">Todo lo que cambies aqu&iacute; se guardar&aacute; para las pr&oacute;ximas semanas y para el modo cocinar.</p>
       </article>
 
       <article class="vc-card vc-step vc-profile-editor">
-        <div class="vc-grid two">
-          <div class="vc-field">
-            <label class="vc-label" for="profile-name">CÃ³mo quieres que te llame VelociChef</label>
-            <input id="profile-name" class="vc-input" type="text" data-field="displayName" value="${escapeHtml(state.profile.displayName || "")}">
-          </div>
-          <div class="vc-field">
-            <label class="vc-label" for="profile-household-count">Personas que comen regularmente contigo</label>
-            <input id="profile-household-count" class="vc-input" type="number" min="1" max="8" data-field="householdCount" value="${state.profile.householdCount}">
-          </div>
-        </div>
+        ${renderProfileEditorSection({
+          key: "basics",
+          eyebrow: "Base",
+          title: "Tu perfil base",
+          summary: getProfileSectionSummary("basics"),
+          open: sectionState.basics,
+          body: `
+            <div class="vc-grid two">
+              <div class="vc-field">
+                <label class="vc-label" for="profile-name">C&oacute;mo quieres que te llame VelociChef</label>
+                <input id="profile-name" class="vc-input" type="text" data-field="displayName" value="${escapeHtml(state.profile.displayName || "")}">
+              </div>
+              <div class="vc-field">
+                <label class="vc-label" for="profile-household-count">Personas que comen regularmente contigo</label>
+                <input id="profile-household-count" class="vc-input" type="number" min="1" max="8" data-field="householdCount" value="${state.profile.householdCount}">
+              </div>
+            </div>
+          `,
+        })}
 
-        <section class="vc-editor-section">
-          <div>
-            <span class="vc-eyebrow">Alergias</span>
-            <h3 class="vc-inline-title">Ingredientes que deben quedar fuera</h3>
-          </div>
-          <div class="vc-pill-grid">${ALLERGY_OPTIONS.map((option) => renderPill(option, "allergies", state.profile.allergies)).join("")}</div>
-          <div class="vc-field">
-            <label class="vc-label" for="profile-allergy-notes">Otros detalles importantes</label>
-            <textarea id="profile-allergy-notes" class="vc-textarea" data-field="allergyNotes" placeholder="Ejemplo: el pescado blanco me va bien, pero el marisco no.">${escapeHtml(state.profile.allergyNotes)}</textarea>
-          </div>
-        </section>
+        ${renderProfileEditorSection({
+          key: "allergies",
+          eyebrow: "Alergias",
+          title: "Ingredientes que deben quedar fuera",
+          summary: getProfileSectionSummary("allergies"),
+          open: sectionState.allergies,
+          body: `
+            <div class="vc-pill-grid">${ALLERGY_OPTIONS.map((option) => renderPill(option, "allergies", state.profile.allergies)).join("")}</div>
+            <div class="vc-field">
+              <label class="vc-label" for="profile-allergy-notes">Otros detalles importantes</label>
+              <textarea id="profile-allergy-notes" class="vc-textarea" data-field="allergyNotes" placeholder="Ejemplo: el pescado blanco me va bien, pero el marisco no.">${escapeHtml(state.profile.allergyNotes)}</textarea>
+            </div>
+          `,
+        })}
 
-        <section class="vc-editor-section">
-          <div>
-            <span class="vc-eyebrow">Gustos</span>
-            <h3 class="vc-inline-title">Lo que sí y lo que no</h3>
-          </div>
-          <div class="vc-fieldset">
-            <label class="vc-label">Cosas que me gustan</label>
-            <div class="vc-pill-grid">${LIKE_OPTIONS.map((option) => renderPill(option, "likes", state.profile.likes)).join("")}</div>
-          </div>
-          <div class="vc-fieldset">
-            <label class="vc-label">Cosas que no me gustan</label>
-            <div class="vc-pill-grid">${DISLIKE_OPTIONS.map((option) => renderPill(option, "dislikes", state.profile.dislikes)).join("")}</div>
-          </div>
-          <div class="vc-field">
-            <label class="vc-label" for="profile-dietary-notes">Cuéntamelo con tus palabras</label>
-            <textarea id="profile-dietary-notes" class="vc-textarea" data-field="dietaryNotes" placeholder="Ejemplo: prefiero platos jugosos y cenas suaves.">${escapeHtml(state.profile.dietaryNotes)}</textarea>
-          </div>
-        </section>
+        ${renderProfileEditorSection({
+          key: "tastes",
+          eyebrow: "Gustos",
+          title: "Lo que s&iacute; y lo que no",
+          summary: getProfileSectionSummary("tastes"),
+          open: sectionState.tastes,
+          body: `
+            <div class="vc-fieldset">
+              <label class="vc-label">Cosas que me gustan</label>
+              <div class="vc-pill-grid">${LIKE_OPTIONS.map((option) => renderPill(option, "likes", state.profile.likes)).join("")}</div>
+            </div>
+            <div class="vc-fieldset">
+              <label class="vc-label">Cosas que no me gustan</label>
+              <div class="vc-pill-grid">${DISLIKE_OPTIONS.map((option) => renderPill(option, "dislikes", state.profile.dislikes)).join("")}</div>
+            </div>
+            <div class="vc-field">
+              <label class="vc-label" for="profile-dietary-notes">Cu&eacute;ntamelo con tus palabras</label>
+              <textarea id="profile-dietary-notes" class="vc-textarea" data-field="dietaryNotes" placeholder="Ejemplo: prefiero platos jugosos y cenas suaves.">${escapeHtml(state.profile.dietaryNotes)}</textarea>
+            </div>
+          `,
+        })}
 
-        <section class="vc-editor-section">
-          <div>
-            <span class="vc-eyebrow">Objetivos</span>
-            <h3 class="vc-inline-title">Cómo quieres comer esta semana</h3>
-          </div>
-          <div class="vc-fieldset">
-            <label class="vc-label">Nivel de cocina</label>
-            <div class="vc-pill-grid">${COOKING_STYLE_OPTIONS.map((option) => renderCookingChoice(option, state.profile.cookingStyle)).join("")}</div>
-          </div>
-          <div class="vc-fieldset">
-            <label class="vc-label">Objetivos alimentarios</label>
-            <div class="vc-pill-grid">${GOAL_OPTIONS.map((option) => renderPill(option, "goalTags", state.profile.goalTags)).join("")}</div>
-          </div>
-        </section>
+        ${renderProfileEditorSection({
+          key: "goals",
+          eyebrow: "Objetivos",
+          title: "C&oacute;mo quieres comer esta semana",
+          summary: getProfileSectionSummary("goals"),
+          open: sectionState.goals,
+          body: `
+            <div class="vc-fieldset">
+              <label class="vc-label">Nivel de cocina</label>
+              <div class="vc-pill-grid">${COOKING_STYLE_OPTIONS.map((option) => renderCookingChoice(option, state.profile.cookingStyle)).join("")}</div>
+            </div>
+            <div class="vc-fieldset">
+              <label class="vc-label">Objetivos alimentarios</label>
+              <div class="vc-pill-grid">${GOAL_OPTIONS.map((option) => renderPill(option, "goalTags", state.profile.goalTags)).join("")}</div>
+            </div>
+          `,
+        })}
 
-        <section class="vc-editor-section">
-          <div>
-            <span class="vc-eyebrow">Hogar</span>
-            <h3 class="vc-inline-title">Reglas por persona</h3>
-          </div>
-          <div class="vc-member-list">
-            ${state.profile.householdMembers.map((member, index) => `
-              <article class="vc-member-card">
-                <div class="vc-field">
-                  <label class="vc-label">Persona ${index + 1}</label>
-                  <input
-                    class="vc-input"
-                    type="text"
-                    value="${escapeHtml(member.name)}"
-                    data-member-field="name"
-                    data-member-id="${member.id}"
-                  >
-                </div>
-                <label class="vc-switch">
-                  <span>
-                    <strong>Lo mismo que yo</strong>
-                    <small class="vc-helper">Usa tus mismas reglas alimentarias.</small>
-                  </span>
-                  <input type="checkbox" ${member.sameAsMe ? "checked" : ""} data-member-field="sameAsMe" data-member-id="${member.id}">
-                </label>
-                ${member.sameAsMe ? "" : `
+        ${renderProfileEditorSection({
+          key: "household",
+          eyebrow: "Hogar",
+          title: "Reglas por persona",
+          summary: getProfileSectionSummary("household"),
+          open: sectionState.household,
+          body: `
+            <div class="vc-member-list">
+              ${state.profile.householdMembers.map((member, index) => `
+                <article class="vc-member-card">
                   <div class="vc-field">
-                    <label class="vc-label">Reglas especiales o preferencias</label>
-                    <textarea class="vc-textarea" data-member-field="notes" data-member-id="${member.id}" placeholder="Ejemplo: prefiere cenas suaves y sin pescado azul.">${escapeHtml(member.notes)}</textarea>
+                    <label class="vc-label">Persona ${index + 1}</label>
+                    <input
+                      class="vc-input"
+                      type="text"
+                      value="${escapeHtml(member.name)}"
+                      data-member-field="name"
+                      data-member-id="${member.id}"
+                    >
                   </div>
-                `}
-              </article>
-            `).join("")}
-          </div>
-        </section>
+                  <label class="vc-switch">
+                    <span>
+                      <strong>Lo mismo que yo</strong>
+                      <small class="vc-helper">Usa tus mismas reglas alimentarias.</small>
+                    </span>
+                    <input type="checkbox" ${member.sameAsMe ? "checked" : ""} data-member-field="sameAsMe" data-member-id="${member.id}">
+                  </label>
+                  ${member.sameAsMe ? "" : `
+                    <div class="vc-field">
+                      <label class="vc-label">Reglas especiales o preferencias</label>
+                      <textarea class="vc-textarea" data-member-field="notes" data-member-id="${member.id}" placeholder="Ejemplo: prefiere cenas suaves y sin pescado azul.">${escapeHtml(member.notes)}</textarea>
+                    </div>
+                  `}
+                </article>
+              `).join("")}
+            </div>
+          `,
+        })}
 
-        <section class="vc-editor-section">
-          <div>
-            <span class="vc-eyebrow">Plan</span>
-            <h3 class="vc-inline-title">Comidas, horarios y avisos</h3>
-          </div>
-          <div class="vc-fieldset">
-            <label class="vc-label">Comidas a planificar</label>
-            <div class="vc-pill-grid">${MEAL_OPTIONS.map((option) => renderMealChoice(option, state.profile.plannedMeals)).join("")}</div>
-          </div>
-          <label class="vc-switch vc-switch-card">
-            <span>
-              <strong>¿Preparas el almuerzo la noche anterior?</strong>
-              <small class="vc-helper">Así podré organizar mejor el momento de cocinar.</small>
-            </span>
-            <input type="checkbox" data-field="lunchPrepNightBefore" ${state.profile.lunchPrepNightBefore ? "checked" : ""}>
-          </label>
-          <div class="vc-grid two">
-            <div class="vc-field">
-              <label class="vc-label" for="profile-lunch-time">¿A qué hora sueles comer?</label>
-              <input id="profile-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
+        ${renderProfileEditorSection({
+          key: "plan",
+          eyebrow: "Plan",
+          title: "Comidas, horarios y avisos",
+          summary: getProfileSectionSummary("plan"),
+          open: sectionState.plan,
+          body: `
+            <div class="vc-fieldset">
+              <label class="vc-label">Comidas a planificar</label>
+              <div class="vc-pill-grid">${MEAL_OPTIONS.map((option) => renderMealChoice(option, state.profile.plannedMeals)).join("")}</div>
+            </div>
+            <label class="vc-switch vc-switch-card">
+              <span>
+                <strong>&iquest;Preparas el almuerzo la noche anterior?</strong>
+                <small class="vc-helper">As&iacute; podr&eacute; organizar mejor el momento de cocinar.</small>
+              </span>
+              <input type="checkbox" data-field="lunchPrepNightBefore" ${state.profile.lunchPrepNightBefore ? "checked" : ""}>
+            </label>
+            <div class="vc-grid two">
+              <div class="vc-field">
+                <label class="vc-label" for="profile-lunch-time">&iquest;A qu&eacute; hora sueles comer?</label>
+                <input id="profile-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
+              </div>
+              <div class="vc-field">
+                <label class="vc-label" for="profile-dinner-time">&iquest;A qu&eacute; hora sueles cenar?</label>
+                <input id="profile-dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}">
+              </div>
             </div>
             <div class="vc-field">
-              <label class="vc-label" for="profile-dinner-time">¿A qué hora sueles cenar?</label>
-              <input id="profile-dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}">
+              <label class="vc-label" for="profile-lead-time">&iquest;Con cu&aacute;nto margen quieres que te avise?</label>
+              <select id="profile-lead-time" class="vc-select" data-field="reminderLeadMinutes">
+                ${[45, 60, 75, 90, 120].map((value) => `<option value="${value}" ${Number(state.profile.reminderLeadMinutes) === value ? "selected" : ""}>${value} minutos antes</option>`).join("")}
+              </select>
             </div>
-          </div>
-          <div class="vc-field">
-            <label class="vc-label" for="profile-lead-time">¿Con cuánto margen quieres que te avise?</label>
-            <select id="profile-lead-time" class="vc-select" data-field="reminderLeadMinutes">
-              ${[45, 60, 75, 90, 120].map((value) => `<option value="${value}" ${Number(state.profile.reminderLeadMinutes) === value ? "selected" : ""}>${value} minutos antes</option>`).join("")}
-            </select>
-          </div>
-        </section>
+          `,
+        })}
 
-        <section class="vc-editor-section">
-          <div>
-            <span class="vc-eyebrow">Avisos y ayuda</span>
-            <h3 class="vc-inline-title">Mantén la app a tu ritmo</h3>
-          </div>
-          ${isIOSDevice() && !isStandaloneApp() ? `<div class="vc-note">En iPhone, abre VelociChef desde la pantalla de inicio para poder activar avisos.</div>` : ""}
-          <p class="vc-copy">${escapeHtml(getNotificationStatusCopy())} ${state.profile.freezeNotificationsEnabled ? "También recordaré los ingredientes que convenga descongelar." : "Los recordatorios de congelado siguen apagados por ahora."}</p>
-          <div class="vc-chip-row">
-            <span class="vc-meta-pill">${escapeHtml(getNotificationDeviceChip())}</span>
-            <span class="vc-meta-pill">${pushCapable ? "Avisos también fuera de la app" : "Avisos mientras la app está abierta"}</span>
-            <span class="vc-meta-pill">${speechCapable ? "Modo manos libres disponible" : "Modo manos libres limitado en este navegador"}</span>
-            <span class="vc-meta-pill">${deviceNotification.permission === "granted" ? "Permiso concedido" : deviceNotification.permission === "denied" ? "Permiso bloqueado" : "Permiso pendiente"}</span>
-          </div>
-          <div class="vc-inline-actions">
-            <button class="vc-button secondary" data-action="request-notifications">${escapeHtml(getNotificationCtaLabel())}</button>
-            <button class="vc-button ghost" data-action="test-notification">Probar aviso</button>
-          </div>
-        </section>
+        ${renderProfileEditorSection({
+          key: "notifications",
+          eyebrow: "Avisos y ayuda",
+          title: "Mant&eacute;n la app a tu ritmo",
+          summary: getProfileSectionSummary("notifications"),
+          open: sectionState.notifications,
+          body: `
+            ${isIOSDevice() && !isStandaloneApp() ? `<div class="vc-note">En iPhone, abre VelociChef desde la pantalla de inicio para poder activar avisos.</div>` : ""}
+            <p class="vc-copy">${escapeHtml(getNotificationStatusCopy())} ${state.profile.freezeNotificationsEnabled ? "Tambi&eacute;n recordar&eacute; los ingredientes que convenga descongelar." : "Los recordatorios de congelado siguen apagados por ahora."}</p>
+            <div class="vc-chip-row">
+              <span class="vc-meta-pill">${escapeHtml(getNotificationDeviceChip())}</span>
+              <span class="vc-meta-pill">${pushCapable ? "Avisos tambi&eacute;n fuera de la app" : "Avisos mientras la app est&aacute; abierta"}</span>
+              <span class="vc-meta-pill">${speechCapable ? "Modo manos libres disponible" : "Modo manos libres limitado en este navegador"}</span>
+              <span class="vc-meta-pill">${deviceNotification.permission === "granted" ? "Permiso concedido" : deviceNotification.permission === "denied" ? "Permiso bloqueado" : "Permiso pendiente"}</span>
+            </div>
+            <div class="vc-inline-actions">
+              <button class="vc-button secondary" data-action="request-notifications">${escapeHtml(getNotificationCtaLabel())}</button>
+              <button class="vc-button ghost" data-action="test-notification">Probar aviso</button>
+            </div>
+          `,
+        })}
 
         <div class="vc-step-foot">
           <button class="vc-button secondary" data-action="plan-new-week">Planificar nueva semana</button>
@@ -5945,6 +6060,12 @@ async function handleAction(action, trigger) {
 
     case "request-notifications":
       await requestNotifications();
+      render();
+      break;
+
+    case "toggle-profile-section":
+      ensureProfileSectionState();
+      state.profileSections[trigger.dataset.section] = !state.profileSections[trigger.dataset.section];
       render();
       break;
 
