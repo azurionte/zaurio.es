@@ -212,6 +212,8 @@ const state = {
 };
 let cookingMicHintTimer = null;
 let notificationBannerTimer = null;
+let systemBannerTimer = null;
+let activeSystemBannerKey = "";
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
@@ -1927,12 +1929,75 @@ function clearNotificationBannerTimer() {
   notificationBannerTimer = null;
 }
 
+function clearSystemBannerTimer() {
+  if (!systemBannerTimer) return;
+  window.clearTimeout(systemBannerTimer);
+  systemBannerTimer = null;
+}
+
 function showNotificationBanner(notificationId) {
   clearNotificationBannerTimer();
   state.activeNotificationBannerId = notificationId;
   notificationBannerTimer = window.setTimeout(() => {
     state.activeNotificationBannerId = null;
     notificationBannerTimer = null;
+    render();
+  }, 5000);
+}
+
+function getSystemBannerMessage() {
+  const notice = String(state.notice || "").trim();
+  const error = String(state.error || "").trim();
+  if (!notice && !error) return null;
+  if (notice) {
+    return {
+      key: `notice:${notice}::${error}`,
+      kind: error ? "warning" : "note",
+      label: error ? "Aviso de sistema" : "Aviso",
+      text: sanitizeUiCopy(notice),
+      clearNotice: notice,
+      clearError: error,
+    };
+  }
+  return {
+    key: `error:${error}`,
+    kind: "error",
+    label: "Algo no salió bien",
+    text: sanitizeUiCopy(error),
+    clearNotice: "",
+    clearError: error,
+  };
+}
+
+function syncSystemBannerTimer() {
+  const banner = getSystemBannerMessage();
+  if (!banner) {
+    activeSystemBannerKey = "";
+    clearSystemBannerTimer();
+    return;
+  }
+  if (activeSystemBannerKey === banner.key && systemBannerTimer) {
+    return;
+  }
+
+  activeSystemBannerKey = banner.key;
+  clearSystemBannerTimer();
+  systemBannerTimer = window.setTimeout(() => {
+    const currentBanner = getSystemBannerMessage();
+    if (!currentBanner || currentBanner.key !== banner.key) {
+      activeSystemBannerKey = "";
+      systemBannerTimer = null;
+      return;
+    }
+
+    if (banner.clearNotice && state.notice === banner.clearNotice) {
+      state.notice = "";
+    }
+    if (banner.clearError && state.error === banner.clearError) {
+      state.error = "";
+    }
+    activeSystemBannerKey = "";
+    systemBannerTimer = null;
     render();
   }, 5000);
 }
@@ -3264,20 +3329,17 @@ function renderBusyOverlay() {
 }
 
 function renderToastStack() {
-  const items = [
-    state.notice ? { kind: "note", text: sanitizeUiCopy(state.notice) } : null,
-    state.error ? { kind: "error", text: sanitizeUiCopy(state.error) } : null,
-  ].filter(Boolean);
-
-  if (!items.length) return "";
+  const banner = getSystemBannerMessage();
+  if (!banner) return "";
 
   return `
-    <div class="vc-toast-stack" aria-live="polite" aria-atomic="true">
-      ${items.map((item) => `
-        <div class="vc-toast vc-toast-${item.kind}">
-          ${escapeHtml(item.text)}
+    <div class="vc-system-banner ${state.activeNotificationBannerId ? "with-activity" : ""}" aria-live="polite" aria-atomic="true">
+      <div class="vc-notification-banner-bubble vc-system-banner-bubble vc-system-banner-${escapeHtml(banner.kind)}">
+        <div class="vc-notification-banner-copy">
+          <small>${escapeHtml(banner.label)}</small>
+          <p>${escapeHtml(banner.text)}</p>
         </div>
-      `).join("")}
+      </div>
     </div>
   `;
 }
@@ -5093,6 +5155,7 @@ function render() {
     modalRoot.innerHTML = renderModal();
     repairVisibleText(root);
     repairVisibleText(modalRoot);
+    syncSystemBannerTimer();
     window.requestAnimationFrame(syncLayoutMetrics);
     return;
   }
@@ -5107,6 +5170,7 @@ function render() {
   modalRoot.innerHTML = renderModal();
   repairVisibleText(root);
   repairVisibleText(modalRoot);
+  syncSystemBannerTimer();
   window.requestAnimationFrame(syncLayoutMetrics);
 }
 
