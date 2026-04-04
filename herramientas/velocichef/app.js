@@ -892,7 +892,8 @@ async function syncRemoteReminders() {
     const remove = await state.client
       .from("velocichef_reminders")
       .delete()
-      .eq("week_id", state.week.id);
+      .eq("week_id", state.week.id)
+      .neq("reminder_kind", "timer");
     if (remove.error) throw remove.error;
 
     if (rows.length) {
@@ -902,6 +903,130 @@ async function syncRemoteReminders() {
   } catch (_error) {
     state.storageMode = "local";
   }
+}
+
+function buildRemoteTimerReminder(timer) {
+  if (!timer || !state.week?.id || !state.session?.user) return null;
+
+  const reminderId = isUuid(timer.reminderId) ? timer.reminderId : createId();
+  timer.reminderId = reminderId;
+
+  const target = timer.mealId ? getMealById(timer.mealId) : null;
+  const triggerAt = new Date(timer.endsAt || (Date.now() + Math.max(0, Number(timer.remainingMs || 0)))).toISOString();
+  const payload = buildBrowserNotificationPayload({
+    id: reminderId,
+    kind: "timer",
+    title: "Tiempo cumplido",
+    body: `${timer.label} ya puede pasar al siguiente paso.`,
+    url: timer.mealId ? buildCookSessionUrl(timer.mealId, timer.stepId || "") : `${APP_BASE_URL}?view=cook`,
+    actionLabel: "Seguir paso",
+    actionType: "cook",
+    mealId: timer.mealId || null,
+    stepId: timer.stepId || null,
+    mealDate: target?.day?.date || null,
+    mealKey: target?.mealKey || null,
+    mealTitle: target?.meal?.title || null,
+    timestamp: triggerAt,
+    triggerAt,
+    renotify: true,
+    requireInteraction: true,
+    urgency: "high",
+    silentWhenVisible: true,
+  });
+
+  return {
+    id: reminderId,
+    user_id: state.session.user.id,
+    week_id: state.week.id,
+    reminder_kind: "timer",
+    trigger_at: triggerAt,
+    delivered_at: null,
+    payload: {
+      ...payload,
+      reminderId,
+      kind: "timer",
+      tag: `timer-${reminderId}`,
+      groupKey: "cook-timer",
+      timerId: timer.id,
+      timerLabel: timer.label,
+      mealId: timer.mealId || null,
+      stepId: timer.stepId || null,
+      mealDate: target?.day?.date || null,
+      mealKey: target?.mealKey || null,
+      mealTitle: target?.meal?.title || null,
+      deliveredAt: null,
+      silentWhenVisible: true,
+    },
+  };
+}
+
+async function upsertRemoteTimerReminder(timer) {
+  if (!state.client || !state.session?.user || !state.week?.id || !timer) return;
+  if (!isNotificationActiveOnCurrentDevice()) return;
+  if (timer.paused) return;
+
+  const row = buildRemoteTimerReminder(timer);
+  if (!row) return;
+
+  try {
+    const { error } = await state.client.from("velocichef_reminders").upsert(row, {
+      onConflict: "id",
+    });
+    if (error) throw error;
+    state.storageMode = "supabase";
+  } catch (_error) {
+    state.storageMode = "local";
+  }
+}
+
+async function deleteRemoteTimerReminder(timerOrId) {
+  if (!state.client || !state.session?.user) return;
+  const reminderId = typeof timerOrId === "string"
+    ? timerOrId
+    : (timerOrId?.reminderId || "");
+  if (!isUuid(reminderId)) return;
+
+  try {
+    const { error } = await state.client
+      .from("velocichef_reminders")
+      .delete()
+      .eq("id", reminderId)
+      .eq("user_id", state.session.user.id);
+    if (error) throw error;
+    state.storageMode = "supabase";
+  } catch (_error) {
+    state.storageMode = "local";
+  }
+}
+
+async function markRemoteTimerReminderDelivered(timerOrId) {
+  if (!state.client || !state.session?.user) return;
+  const reminderId = typeof timerOrId === "string"
+    ? timerOrId
+    : (timerOrId?.reminderId || "");
+  if (!isUuid(reminderId)) return;
+
+  try {
+    const { error } = await state.client
+      .from("velocichef_reminders")
+      .update({ delivered_at: new Date().toISOString() })
+      .eq("id", reminderId)
+      .eq("user_id", state.session.user.id);
+    if (error) throw error;
+    state.storageMode = "supabase";
+  } catch (_error) {
+    state.storageMode = "local";
+  }
+}
+
+function syncRemoteCookingTimers() {
+  if (!state.cooking?.activeTimers?.length) return;
+  if (!isNotificationActiveOnCurrentDevice()) return;
+  (state.cooking.activeTimers || []).forEach((timer) => {
+    if (!timer?.paused) {
+      void upsertRemoteTimerReminder(timer);
+    }
+  });
 }
 
 async function refreshRemoteReminderActivity(options = {}) {
@@ -3055,6 +3180,7 @@ async function requestNotifications() {
         await saveWeek();
         scheduleReminders();
       }
+      syncRemoteCookingTimers();
       state.notice = isNotificationActiveOnCurrentDevice()
         ? "Avisos activados en este dispositivo. Te avisaré también aunque la app no esté abierta."
         : "Los avisos están activados mientras la app siga abierta en este dispositivo.";
@@ -3168,6 +3294,9 @@ function syncCookingTimer() {
         url: timer.mealId ? buildCookSessionUrl(timer.mealId, timer.stepId || "") : `${APP_BASE_URL}?view=cook`,
       }, { persist: true, showBanner: true });
     });
+    finished.forEach((timer) => {
+      void markRemoteTimerReminderDelivered(timer);
+    });
     if ("Notification" in window && Notification.permission === "granted") {
       finished.forEach((timer) => {
         showBrowserNotification({
@@ -3209,6 +3338,7 @@ function startCookingTimer(label, minutes, options = {}) {
   state.cooking.activeTimers.push(timer);
   syncPrimaryCookingTimer();
   state.cooking.timerMenuOpen = false;
+  void upsertRemoteTimerReminder(timer);
   if (!state.timerTicker) {
     state.timerTicker = window.setInterval(syncCookingTimer, 1000);
   }
@@ -3222,6 +3352,7 @@ function toggleCookingTimerPause(timerId = "") {
   if (timer.paused) {
     timer.paused = false;
     timer.endsAt = Date.now() + Math.max(0, timer.remainingMs || 0);
+    void upsertRemoteTimerReminder(timer);
     if (!state.timerTicker) {
       state.timerTicker = window.setInterval(syncCookingTimer, 1000);
     }
@@ -3229,6 +3360,7 @@ function toggleCookingTimerPause(timerId = "") {
   } else {
     timer.remainingMs = Math.max(0, timer.endsAt - Date.now());
     timer.paused = true;
+    void deleteRemoteTimerReminder(timer);
     syncPrimaryCookingTimer();
     if (!(state.cooking.activeTimers || []).some((entry) => !entry.paused)) {
       clearTimerTicker();
@@ -3240,8 +3372,15 @@ function toggleCookingTimerPause(timerId = "") {
 function stopCookingTimer(timerId = "") {
   if (!state.cooking) return;
   if (!timerId) {
+    (state.cooking.activeTimers || []).forEach((timer) => {
+      void deleteRemoteTimerReminder(timer);
+    });
     state.cooking.activeTimers = [];
   } else {
+    const timerToRemove = (state.cooking.activeTimers || []).find((timer) => timer.id === timerId);
+    if (timerToRemove) {
+      void deleteRemoteTimerReminder(timerToRemove);
+    }
     state.cooking.activeTimers = (state.cooking.activeTimers || []).filter((timer) => timer.id !== timerId);
   }
   syncPrimaryCookingTimer();

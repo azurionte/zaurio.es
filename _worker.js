@@ -901,7 +901,7 @@ export default {
   },
 
   async scheduled(controller, env, ctx) {
-    const limit = controller.cron === "*/5 * * * *" ? 80 : 50;
+    const limit = controller.cron === "* * * * *" ? 80 : 50;
     ctx.waitUntil(
       processDueVelocichefNotifications(env, limit).catch((error) => {
         console.error("VelociChef push cron failed:", error);

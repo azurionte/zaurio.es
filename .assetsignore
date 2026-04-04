@@ -4,3 +4,9 @@ wrangler.jsonc
 node_modules
 .git
 .gitignore
+.wrangler
+.wrangler/**
+_tmp*
+_tmp*/**
+supabase/.temp
+supabase/.temp/**
