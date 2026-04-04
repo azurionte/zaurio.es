@@ -232,6 +232,7 @@ let notificationBannerTimer = null;
 let systemBannerTimer = null;
 let activeSystemBannerKey = "";
 let cookingSnapshotSyncTimer = null;
+let lastPushAutoRepairAt = 0;
 let lastRenderedPageIdentity = "";
 let historyInitialized = false;
 let lastHistoryUrl = "";
@@ -242,6 +243,8 @@ let wakeLockSentinel = null;
 let wakeLockRequestPromise = null;
 let lastWakeLockErrorAt = 0;
 const COOKING_RECOVERY_MAX_AGE_MS = 1000 * 60 * 60 * 18;
+const PUSH_AUTO_REPAIR_MIN_INTERVAL_MS = 1000 * 45;
+const PUSH_EXPIRY_WARNING_MS = 1000 * 60 * 60 * 24 * 3;
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
@@ -1217,18 +1220,37 @@ async function upsertPushSubscription(subscription) {
   }
 }
 
-async function disablePushSubscription(subscription) {
-  if (!state.client || !state.session?.user || !subscription?.endpoint) return;
+async function disablePushSubscription(subscriptionOrEndpoint) {
+  const endpoint = typeof subscriptionOrEndpoint === "string"
+    ? String(subscriptionOrEndpoint || "").trim()
+    : String(subscriptionOrEndpoint?.endpoint || "").trim();
+  if (!state.client || !state.session?.user || !endpoint) return;
   try {
     const { error } = await state.client
       .from("velocichef_push_subscriptions")
       .update({ enabled: false, updated_at: new Date().toISOString() })
-      .eq("endpoint", subscription.endpoint)
+      .eq("endpoint", endpoint)
       .eq("user_id", state.session.user.id);
     if (error) throw error;
   } catch (_error) {
     state.storageMode = "local";
   }
+}
+
+function readPushMeta() {
+  return readLocal("push-meta", null);
+}
+
+function writePushMeta(subscription) {
+  if (!subscription) {
+    removeLocal("push-meta");
+    return;
+  }
+  writeLocal("push-meta", {
+    endpoint: String(subscription.endpoint || "").trim(),
+    expirationTime: Number.isFinite(Number(subscription.expirationTime)) ? Number(subscription.expirationTime) : null,
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 async function ensurePushSubscription(forceSubscribe = false) {
@@ -1237,6 +1259,7 @@ async function ensurePushSubscription(forceSubscribe = false) {
 
   const registration = state.workerRegistration || await navigator.serviceWorker.ready;
   let subscription = await registration.pushManager.getSubscription();
+  const previousMeta = readPushMeta();
 
   if (!subscription && forceSubscribe) {
     const publicKey = await fetchPushPublicKey();
@@ -1247,7 +1270,13 @@ async function ensurePushSubscription(forceSubscribe = false) {
   }
 
   if (subscription) {
+    if (previousMeta?.endpoint && previousMeta.endpoint !== subscription.endpoint) {
+      await disablePushSubscription(previousMeta.endpoint);
+    }
     await upsertPushSubscription(subscription);
+    writePushMeta(subscription);
+  } else if (previousMeta?.endpoint) {
+    writePushMeta(null);
   }
 
   return { supported: true, subscription };
@@ -1260,6 +1289,9 @@ function createNotificationDeviceState(overrides = {}) {
     needsInstall: isIOSDevice() && !isStandaloneApp(),
     permission: "Notification" in window ? Notification.permission : "unsupported",
     hasSubscription: false,
+    endpoint: "",
+    expirationTime: null,
+    expiringSoon: false,
     ...overrides,
   };
 }
@@ -1272,6 +1304,9 @@ async function refreshNotificationDeviceState() {
       const registration = state.workerRegistration || await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
       nextState.hasSubscription = !!subscription;
+      nextState.endpoint = subscription?.endpoint || "";
+      nextState.expirationTime = Number.isFinite(Number(subscription?.expirationTime)) ? Number(subscription.expirationTime) : null;
+      nextState.expiringSoon = !!(nextState.expirationTime && nextState.expirationTime - Date.now() <= PUSH_EXPIRY_WARNING_MS);
     } catch (_error) {
       nextState.hasSubscription = false;
     }
@@ -1279,6 +1314,32 @@ async function refreshNotificationDeviceState() {
 
   state.notificationDevice = nextState;
   return nextState;
+}
+
+async function autoRepairPushSubscription(options = {}) {
+  const force = !!options.force;
+  const now = Date.now();
+  if (!force && now - lastPushAutoRepairAt < PUSH_AUTO_REPAIR_MIN_INTERVAL_MS) {
+    return getNotificationDeviceState();
+  }
+  lastPushAutoRepairAt = now;
+
+  const currentDevice = await refreshNotificationDeviceState();
+  if (!currentDevice.supported || currentDevice.needsInstall || currentDevice.permission !== "granted" || !currentDevice.pushSupported) {
+    return currentDevice;
+  }
+
+  try {
+    const result = await ensurePushSubscription(!currentDevice.hasSubscription);
+    const repairedState = await refreshNotificationDeviceState();
+    if (result.subscription && state.profile && !state.profile.notificationEnabled) {
+      state.profile.notificationEnabled = true;
+      await saveProfile();
+    }
+    return repairedState;
+  } catch (_error) {
+    return currentDevice;
+  }
 }
 
 function getNotificationDeviceState() {
@@ -7759,6 +7820,9 @@ window.addEventListener("focus", () => {
   syncScreenWakeLock();
   flushDueReminders();
   void refreshRemoteReminderActivity({ showBanner: true });
+  if (state.profile?.notificationEnabled || ("Notification" in window && Notification.permission === "granted")) {
+    void autoRepairPushSubscription();
+  }
   if (state.week) {
     const changed = refreshPendingCookingRecovery();
     if (changed) render();
@@ -7773,6 +7837,9 @@ document.addEventListener("visibilitychange", () => {
     syncScreenWakeLock();
     flushDueReminders();
     void refreshRemoteReminderActivity({ showBanner: true });
+    if (state.profile?.notificationEnabled || ("Notification" in window && Notification.permission === "granted")) {
+      void autoRepairPushSubscription();
+    }
     if (state.week) {
       const changed = refreshPendingCookingRecovery();
       if (changed) render();
@@ -7798,7 +7865,7 @@ async function hydrateSession(session, options = {}) {
     state.session = session;
     if (state.profile?.notificationEnabled) {
       try {
-        await ensurePushSubscription(("Notification" in window) && Notification.permission === "granted");
+        await autoRepairPushSubscription({ force: true });
       } catch (_error) {
         // Si falla el push real, mantenemos el estado visible actual.
       }
@@ -7901,7 +7968,7 @@ async function hydrateSession(session, options = {}) {
 
   if (state.profile.notificationEnabled) {
     try {
-      await ensurePushSubscription(("Notification" in window) && Notification.permission === "granted");
+      await autoRepairPushSubscription({ force: true });
     } catch (_error) {
       // Si falla el push real, mantenemos al menos el fallback local.
     }
