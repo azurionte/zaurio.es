@@ -231,6 +231,7 @@ let cookingMicHintTimer = null;
 let notificationBannerTimer = null;
 let systemBannerTimer = null;
 let activeSystemBannerKey = "";
+let cookingSnapshotSyncTimer = null;
 let lastRenderedPageIdentity = "";
 let historyInitialized = false;
 let lastHistoryUrl = "";
@@ -240,6 +241,7 @@ let lastRemoteReminderRefreshAt = 0;
 let wakeLockSentinel = null;
 let wakeLockRequestPromise = null;
 let lastWakeLockErrorAt = 0;
+const COOKING_RECOVERY_MAX_AGE_MS = 1000 * 60 * 60 * 18;
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
@@ -612,7 +614,6 @@ function deserializeProfile(user, row) {
 }
 
 function serializeWeek(userId, week) {
-  const { cookingSnapshot: _cookingSnapshot, ...persistedWeek } = week || {};
   return {
     id: week.id,
     user_id: userId,
@@ -621,7 +622,7 @@ function serializeWeek(userId, week) {
     status: week.status || "draft",
     shopping_completed: !!week.shoppingCompleted,
     freeze_prompt_answered: !!week.freezePromptAnswered,
-    week_payload: persistedWeek,
+    week_payload: week,
     updated_at: new Date().toISOString(),
   };
 }
@@ -2159,10 +2160,23 @@ function clearPersistedCookingState(options = {}) {
   }
 }
 
+function queueCookingSnapshotRemoteSync(delayMs = 600) {
+  if (cookingSnapshotSyncTimer) {
+    window.clearTimeout(cookingSnapshotSyncTimer);
+    cookingSnapshotSyncTimer = null;
+  }
+  if (!state.week || !state.client || !state.session?.user) return;
+  cookingSnapshotSyncTimer = window.setTimeout(() => {
+    cookingSnapshotSyncTimer = null;
+    void saveWeek();
+  }, Math.max(0, Number(delayMs || 0)));
+}
+
 function syncWeekCookingSnapshot(snapshot) {
   if (!state.week) return;
   state.week.cookingSnapshot = snapshot ? { ...snapshot } : null;
   writeLocal("week", normalizeWeek(state.week));
+  queueCookingSnapshotRemoteSync(snapshot ? 600 : 0);
 }
 
 function resolveCookingStageSnapshot(target, options = {}) {
@@ -2218,8 +2232,9 @@ function readPersistedCookingState() {
     .filter((timer) => timer && (!timer.mealId || !!getMealById(timer.mealId)));
   const hasRecoverableTimers = activeTimers.length > 0;
   const isRecoverableMode = mode === "active";
+  const snapshotAge = Date.now() - new Date(stored.updatedAt || 0).getTime();
 
-  if (!isRecoverableMode && !hasRecoverableTimers) {
+  if ((!isRecoverableMode && !hasRecoverableTimers) || !Number.isFinite(snapshotAge) || snapshotAge > COOKING_RECOVERY_MAX_AGE_MS) {
     removeLocal("cooking");
     syncWeekCookingSnapshot(null);
     return null;
@@ -3459,6 +3474,30 @@ function dismissPersistedCookingRecovery() {
   if (state.modal?.type === "cook-recovery") {
     state.modal = null;
   }
+}
+
+function buildCookingRecoverySnapshotFromLink(link) {
+  if (!link?.mealId || !state.week) return null;
+  const target = getMealById(link.mealId);
+  if (!target) return null;
+  const resolvedSnapshot = resolveCookingStageSnapshot(target, {
+    stepId: link.stepId || "",
+    stepIndex: 0,
+    preferIndex: false,
+  });
+  return {
+    mode: "active",
+    mealId: target.meal.id,
+    mealTitle: target.meal.title || "",
+    mealLabel: [target.day?.label, MEAL_LABELS[target.mealKey] || ""].filter(Boolean).join(" · "),
+    stepIndex: resolvedSnapshot.stepIndex,
+    stepId: resolvedSnapshot.step?.id || String(link.stepId || "").trim(),
+    stepTitle: resolvedSnapshot.step?.title || "",
+    displayStepTitle: resolvedSnapshot.step?.title || "",
+    displayStepNumber: resolvedSnapshot.stages.length ? `${resolvedSnapshot.stepIndex + 1} / ${resolvedSnapshot.stages.length}` : "",
+    activeTimers: [],
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 function refreshPendingCookingRecovery(options = {}) {
@@ -7772,6 +7811,10 @@ async function hydrateSession(session, options = {}) {
 
   clearReminderTimers();
   clearNotificationBannerTimer();
+  if (cookingSnapshotSyncTimer) {
+    window.clearTimeout(cookingSnapshotSyncTimer);
+    cookingSnapshotSyncTimer = null;
+  }
   stopHandsFreeMode();
   stopCookingTimer();
   void releaseScreenWakeLock();
@@ -7830,9 +7873,22 @@ async function hydrateSession(session, options = {}) {
     await flushDueReminders();
     scheduleReminders();
     const hasExplicitReminderIntent = !!(state.pendingReminderLink?.reminderId || state.pendingReminderLink?.intent);
-    if (state.pendingReminderLink && !hasExplicitReminderIntent && persistedCooking?.mealId && state.pendingReminderLink.mealId === persistedCooking.mealId) {
-      state.pendingReminderLink = null;
-      refreshPendingCookingRecovery();
+    if (state.pendingReminderLink && !hasExplicitReminderIntent) {
+      const recoverySnapshot = (persistedCooking?.mealId && state.pendingReminderLink.mealId === persistedCooking.mealId)
+        ? persistedCooking
+        : buildCookingRecoverySnapshotFromLink(state.pendingReminderLink);
+      if (recoverySnapshot?.mealId) {
+        state.pendingReminderLink = null;
+        state.pendingCookingRecovery = recoverySnapshot;
+        if (!state.modal) {
+          openCookingRecoveryPrompt(recoverySnapshot);
+        }
+      } else {
+        await resolvePendingReminderLink({
+          preserveTimers: !!(persistedCooking?.activeTimers || []).length,
+          activeTimers: persistedCooking?.activeTimers || [],
+        });
+      }
     } else if (state.pendingReminderLink) {
       await resolvePendingReminderLink({
         preserveTimers: !!(persistedCooking?.activeTimers || []).length,
