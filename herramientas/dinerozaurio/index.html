@@ -4905,72 +4905,23 @@
         cacheLocal();
         updateSaveUi();
       };
-      
-      // Timeout para auto-save de initialReserve y defaultStart
-      let saveTimeoutId = null;
-      const autoSaveToSupabase = async () => {
-        try {
-          if(state.planId && window.dzSupabase && state.session) {
-            const result = await window.dzSupabase
-              .from('plans')
-              .update({
-                initial_reserve: Number(state.reserveInitial || 0),
-                default_start_month: state.defaultStartMonth || todayMonth()
-              })
-              .eq('id', state.planId);
-            if(result.error) {
-              console.error('Error guardando a Supabase:', result.error);
-            } else {
-              console.log('💾 Datos guardados automáticamente en Supabase');
-            }
-          }
-        } catch(err) {
-          console.error('Error en auto-save:', err);
-        }
-      };
-      
       document.getElementById('initialReserve').addEventListener('input', handleGeneralSettingsInput);
       document.getElementById('initialReserve').addEventListener('change', () => {
         syncGeneralSettingsFromInputs();
         kpis();
         touchState();
-        // Auto-save a Supabase con debounce
-        clearTimeout(saveTimeoutId);
-        saveTimeoutId = setTimeout(autoSaveToSupabase, 800);
       });
       document.getElementById('defaultStart').addEventListener('input', handleGeneralSettingsInput);
       document.getElementById('defaultStart').addEventListener('change', () => {
         syncGeneralSettingsFromInputs();
         touchState();
-        // Auto-save a Supabase con debounce
-        clearTimeout(saveTimeoutId);
-        saveTimeoutId = setTimeout(autoSaveToSupabase, 800);
       });
-      // Auto-save del método de pago
-      document.getElementById('paymentMethod').addEventListener('change', async () => {
-        const newMethod = document.getElementById('paymentMethod').value;
-        state.paymentMethod = newMethod;
+      // Listener para cambios en el método de pago
+      document.getElementById('paymentMethod').addEventListener('change', () => {
         syncGeneralSettingsFromInputs();
         cacheLocal();
         updateSaveUi();
         touchState();
-        // Guardar inmediatamente a Supabase
-        try {
-          if(state.planId && window.dzSupabase && state.session) {
-            const result = await window.dzSupabase
-              .from('plans')
-              .update({ payment_method: newMethod })
-              .eq('id', state.planId);
-            if(result.error) {
-              console.error('Error guardando método de pago:', result.error);
-              alert('Error al guardar el método de pago');
-            } else {
-              console.log('✅ Método de pago guardado:', newMethod);
-            }
-          }
-        } catch(err) {
-          console.error('Error en auto-save de método de pago:', err);
-        }
       });
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
