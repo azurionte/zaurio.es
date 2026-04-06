@@ -7,6 +7,12 @@
   <title>DineroZaurio · Base estable</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
+  <link rel="manifest" href="/herramientas/dinerozaurio/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/herramientas/dinerozaurio/assets/piggy-app-icon-192.png" />
+  <meta name="theme-color" content="#2a0046" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DineroZaurio" />
   <link rel="stylesheet" href="/shared/css/zaurio-ui.css">
   <style>
     :root{
@@ -774,17 +780,31 @@
       } else {
         delete overrides.__cardTransfers;
       }
+      if(String(adj.reserveTransferName || '').trim() || Number(adj.reserveTransferAmount || 0) !== 0){
+        overrides.__reserveTransfer = {
+          name: String(adj.reserveTransferName || '').trim(),
+          amount: Number(adj.reserveTransferAmount || 0)
+        };
+      } else {
+        delete overrides.__reserveTransfer;
+      }
       return overrides;
     }
     function normalizeMonthAdjustmentShape(adj = {}, monthKey = ''){
       const expenseOverrides = cloneData(adj.expenseOverrides || {});
       const embeddedOneOffExpenses = Array.isArray(expenseOverrides.__oneOffExpenses) ? expenseOverrides.__oneOffExpenses : [];
       const embeddedCardTransfers = Array.isArray(expenseOverrides.__cardTransfers) ? expenseOverrides.__cardTransfers : [];
+      const embeddedReserveTransfer = expenseOverrides.__reserveTransfer && typeof expenseOverrides.__reserveTransfer === 'object'
+        ? expenseOverrides.__reserveTransfer
+        : null;
       delete expenseOverrides.__oneOffExpenses;
       delete expenseOverrides.__cardTransfers;
+      delete expenseOverrides.__reserveTransfer;
       return {
         extraIncomeName: String(adj.extraIncomeName || '').trim(),
         extraIncomeAmount: Number(adj.extraIncomeAmount || 0),
+        reserveTransferName: String(adj.reserveTransferName || embeddedReserveTransfer?.name || '').trim(),
+        reserveTransferAmount: Number(adj.reserveTransferAmount ?? embeddedReserveTransfer?.amount ?? 0),
         extraExpenseName: String(adj.extraExpenseName || '').trim(),
         extraExpenseAmount: Number(adj.extraExpenseAmount || 0),
         extraSavingName: String(adj.extraSavingName || '').trim(),
@@ -1432,7 +1452,7 @@
     }
     function formatFieldValue(collection, field, value){
       if(value === undefined || value === null || value === '') return 'vacio';
-      if(['amount','monthlyAmount','targetTotal','monthlyPayment','currentDebt','currentPayment','extraIncomeAmount','extraExpenseAmount','extraSavingAmount','creditLimit','totalBorrowed'].includes(field)){
+      if(['amount','monthlyAmount','targetTotal','monthlyPayment','currentDebt','currentPayment','extraIncomeAmount','reserveTransferAmount','extraExpenseAmount','extraSavingAmount','creditLimit','totalBorrowed'].includes(field)){
         return euros(value);
       }
       if(['remainingInstallments'].includes(field)){
@@ -1762,6 +1782,7 @@
     }
     function pushMonthAdjustmentChanges(changes, monthKey, before, after, current){
       pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraIncome', 'Ingreso');
+      pushExtraAdjustmentChanges(changes, monthKey, before, after, 'reserveTransfer', 'Uso de colchón');
       pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraExpense', 'Gasto');
       pushExtraAdjustmentChanges(changes, monthKey, before, after, 'extraSaving', 'Ahorro');
       pushOneOffExpenseChanges(changes, monthKey, before, after, current);
@@ -1950,7 +1971,13 @@
         label.textContent = 'Sin cambios pendientes';
       }
     }
-    function touchState(options = {}){
+    function syncGeneralSettingsFromInputs(){
+      const reserveEl = document.getElementById('initialReserve');
+      const startEl = document.getElementById('defaultStart');
+      if(reserveEl) state.reserveInitial = Number(reserveEl.value || 0);
+      if(startEl) state.defaultStartMonth = startEl.value || todayMonth();
+    }
+    function touchState(options = {}){ 
       const { reopenMonth = null, rerender = true } = options;
       cacheLocal();
       if(rerender){
@@ -2318,10 +2345,11 @@
     }
     function buildForecastMonthSnapshot(ym){
       const adj = adjustmentForMonth(ym);
+      const reserveTransferAmount = Number(adj.reserveTransferAmount || 0);
       const income = state.incomes.reduce((sum, item) => {
         const override = adj.incomeOverrides[item.id];
         return sum + (override !== undefined ? Number(override) : getIncomeMonthlyCharge(item, ym));
-      }, 0) + Number(adj.extraIncomeAmount || 0) + monthCardTransfersTotal(ym);
+      }, 0) + Number(adj.extraIncomeAmount || 0) + reserveTransferAmount + monthCardTransfersTotal(ym);
       const expenseItems = state.expenses
         .map(item => {
           const override = adj.expenseOverrides[item.id];
@@ -2330,7 +2358,7 @@
         .filter(item => item.monthAmount !== 0);
       const expense = expenseItems.reduce((sum, item) => sum + Number(item.monthAmount || 0), 0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(ym);
       let debt = 0;
-      let reserveUsage = reserveOneOffExpensesTotal(ym);
+      let reserveUsage = reserveOneOffExpensesTotal(ym) + reserveTransferAmount;
       let savingsUsage = savingsOneOffExpensesTotal(ym);
       state.debts.forEach(item => {
         const funding = getDebtFundingForMonth(item, ym);
@@ -2376,6 +2404,7 @@
       const monthLabel = prettyMonthLabel(ym);
       const adj = adjustmentForMonth(ym);
       const transferEntries = monthCardTransfers(ym);
+      const reserveTransferAmount = Number(adj.reserveTransferAmount || 0);
       const oneOffEntries = monthOneOffExpenses(ym);
       const recovered = state.debts.reduce((sum, item) => sum + getDebtRecoveredForMonth(item, ym), 0);
       const { reserve, cumulativeSavings } = buildReserveStateThroughMonth(ym);
@@ -2405,6 +2434,14 @@
             <div class="money">${euros(entry.amount || 0)}</div>
           </div>`;
         }),
+        ...(reserveTransferAmount ? [`
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(adj.reserveTransferName || 'Ingreso extra desde colchón')}</div>
+              <div class="miniSub">Ingreso extra desde colchón</div>
+            </div>
+            <div class="money">${euros(reserveTransferAmount)}</div>
+          </div>`] : []),
         ...(Number(adj.extraIncomeAmount || 0) ? [`
           <div class="miniItem">
             <div class="miniMeta">
@@ -2590,6 +2627,8 @@
         .map(item => `<option value="${item.id}">${escapeHtml(debtDisplayName(item))}</option>`)
         .join('');
       const { deficit, suggestions } = buildNegativeMonthSuggestions(ym);
+      const reserveAvailable = Math.max(0, Number(buildReserveStateThroughMonth(ym).reserve || 0));
+      const reserveSuggested = Math.min(deficit, reserveAvailable);
       const root = document.getElementById('modalRoot');
       root.className = 'modalRoot';
       root.innerHTML = `<div class="modalCard">
@@ -2603,6 +2642,17 @@
         <div class="warnBox">
           <h4>Las siguientes cosas deberían pagarse con tarjeta</h4>
           ${suggestions.length ? `<ul class="warnDetails">${suggestions.map(item => `<li><strong>${escapeHtml(item.name)}</strong> · ${euros(item.amount)} · ${escapeHtml(item.reason)}</li>`).join('')}</ul>` : '<div class="muted">No veo gastos claros para mover a tarjeta en este mes.</div>'}
+        </div>
+        <div class="panel">
+          <h4 style="margin:0 0 10px">Usar colchón para cubrir el negativo</h4>
+          <div class="sub" style="margin-bottom:12px">Colchón disponible con la previsión actual: ${euros(reserveAvailable)}.</div>
+          <div class="modalGrid">
+            <div class="field"><label>Monto</label><input id="negativeReserveAmount" class="input" type="number" step="0.01" value="${reserveSuggested > 0 ? reserveSuggested : 0}"></div>
+            <div class="field" style="grid-column:1/-1"><label>Concepto</label><input id="negativeReserveName" class="input" value="Traspaso desde colchón para cubrir negativo"></div>
+          </div>
+          <div class="btnRow" style="margin-top:14px">
+            <button id="applyNegativeReserveBtn" class="btn good" ${reserveAvailable > 0 ? '' : 'disabled'}>Resolver con colchón</button>
+          </div>
         </div>
         <div class="panel">
           <h4 style="margin:0 0 10px">Haz un traspaso de dinero desde la tarjeta</h4>
@@ -2619,6 +2669,24 @@
       </div>`;
       root.onclick = (e) => { if(e.target === root) closeModal(); };
       document.getElementById('closeModalBtn').onclick = closeModal;
+      const reserveBtn = document.getElementById('applyNegativeReserveBtn');
+      if(reserveBtn) reserveBtn.onclick = () => {
+        const amount = Number(document.getElementById('negativeReserveAmount').value || 0);
+        const name = document.getElementById('negativeReserveName').value.trim() || 'Traspaso desde colchón';
+        if(amount <= 0){
+          alert('Necesito un monto válido para usar el colchón.');
+          return;
+        }
+        if(amount > reserveAvailable){
+          alert(`Ese monto supera el colchón disponible para este mes (${euros(reserveAvailable)}).`);
+          return;
+        }
+        closeModal();
+        commitMonthAdjustmentGlobal(ym, nextAdj => {
+          nextAdj.reserveTransferName = name;
+          nextAdj.reserveTransferAmount = amount;
+        });
+      };
       const applyBtn = document.getElementById('applyNegativeTransferBtn');
       if(applyBtn) applyBtn.onclick = () => {
         const cardDebtId = document.getElementById('negativeTransferCard').value;
@@ -2679,6 +2747,8 @@
       if(!target) return false;
       if(String(target.extraIncomeName || '').trim()) return true;
       if(Number(target.extraIncomeAmount || 0) !== 0) return true;
+      if(String(target.reserveTransferName || '').trim()) return true;
+      if(Number(target.reserveTransferAmount || 0) !== 0) return true;
       if(String(target.extraExpenseName || '').trim()) return true;
       if(Number(target.extraExpenseAmount || 0) !== 0) return true;
       if(String(target.extraSavingName || '').trim()) return true;
@@ -2735,7 +2805,8 @@
       });
     }
 
-    async function loadOrCreatePlan(){
+    async function loadOrCreatePlan(options = {}){
+      const { syncPlanState = true } = options;
       if(!window.dzSupabase || !state.session?.user) return null;
       const userId = state.session.user.id;
       let { data: plans, error } = await window.dzSupabase
@@ -2761,8 +2832,10 @@
         plan = ins.data;
       }
       state.planId = plan.id;
-      state.reserveInitial = Number(plan.initial_reserve || 0);
-      state.defaultStartMonth = plan.default_start_month || todayMonth();
+      if(syncPlanState){
+        state.reserveInitial = Number(plan.initial_reserve || 0);
+        state.defaultStartMonth = plan.default_start_month || todayMonth();
+      }
       return plan;
     }
 
@@ -2785,7 +2858,7 @@
         cacheLocal();
         if(!window.dzSupabase || !state.session?.user) return;
         await ensureProfile();
-        const plan = await loadOrCreatePlan();
+        const plan = await loadOrCreatePlan({ syncPlanState: !dataOverride });
         const planId = plan.id;
 
         const planUpdate = await window.dzSupabase
@@ -3267,6 +3340,7 @@
         setSaveStatus('saving');
         try{
           await saveToSupabase(snapshot);
+          assignPersistableState(snapshot);
           savedBaseline = cloneData(snapshot);
           cacheLocal();
           closeSaveModal();
@@ -3284,6 +3358,8 @@
       };
     }
     function openSaveModal(){
+      syncGeneralSettingsFromInputs();
+      cacheLocal();
       const changes = buildStateChanges();
       if(!changes.length) return;
       saveModalSelection = new Set(changes.map(change => change.id));
@@ -3684,6 +3760,8 @@
         if(!target) return false;
         if(String(target.extraIncomeName || '').trim()) return true;
         if(Number(target.extraIncomeAmount || 0) !== 0) return true;
+        if(String(target.reserveTransferName || '').trim()) return true;
+        if(Number(target.reserveTransferAmount || 0) !== 0) return true;
         if(String(target.extraExpenseName || '').trim()) return true;
         if(Number(target.extraExpenseAmount || 0) !== 0) return true;
         if(String(target.extraSavingName || '').trim()) return true;
@@ -3739,6 +3817,17 @@
             <div class="miniActions"></div>
           </div>`;
         }).join('') : '';
+        const reserveTransfer = adj.reserveTransferAmount ? `
+          <div class="miniItem">
+            <div class="miniMeta">
+              <div class="miniName">${escapeHtml(adj.reserveTransferName || 'Ingreso extra desde colchón')}</div>
+              <div class="miniSub">${euros(adj.reserveTransferAmount)} · ingreso extra desde colchón</div>
+            </div>
+            <div class="miniActions">
+              <button class="btn ghost" id="editReserveTransferBtn">Editar</button>
+              <button class="btn danger" id="removeReserveTransferBtn">Eliminar</button>
+            </div>
+          </div>` : '';
         const punctual = adj.extraIncomeAmount ? `
           <div class="miniItem">
             <div class="miniMeta"><div class="miniName">${escapeHtml(adj.extraIncomeName||'Ingreso puntual')}</div><div class="miniSub">${euros(adj.extraIncomeAmount)} · puntual</div></div>
@@ -3747,7 +3836,7 @@
               <button class="btn danger" id="removeExtraIncomeBtn">Eliminar</button>
             </div>
           </div>` : '';
-        return (base + transfers + punctual) || '<div class="empty">No hay ingresos activos este mes.</div>';
+        return (base + transfers + reserveTransfer + punctual) || '<div class="empty">No hay ingresos activos este mes.</div>';
       }
       function expenseListHtml(){
         const base = current.expenses.length ? current.expenses.map(it => `
@@ -4228,6 +4317,30 @@
           nextAdj.extraIncomeAmount = 0;
         });
       };
+      const editReserveTransferBtn = document.getElementById('editReserveTransferBtn');
+      if(editReserveTransferBtn) editReserveTransferBtn.onclick = () => {
+        mountInlineForm('monthIncomeForm', 'Editar uso de colchón', [
+          { id:'amr_name', label:'Nombre', type:'text', value:adj.reserveTransferName || 'Traspaso desde colchón para cubrir negativo' },
+          { id:'amr_amount', label:'Monto', type:'number', step:'0.01', value:adj.reserveTransferAmount || 0 }
+        ], () => {
+          const amount = Number(document.getElementById('amr_amount').value || 0);
+          if(amount <= 0){
+            alert('Necesito un monto mayor que 0 para registrar el uso de colchón.');
+            return;
+          }
+          commitMonthAdjustment(nextAdj => {
+            nextAdj.reserveTransferName = document.getElementById('amr_name').value.trim() || 'Traspaso desde colchón';
+            nextAdj.reserveTransferAmount = amount;
+          });
+        });
+      };
+      const removeReserveTransferBtn = document.getElementById('removeReserveTransferBtn');
+      if(removeReserveTransferBtn) removeReserveTransferBtn.onclick = () => {
+        commitMonthAdjustment(nextAdj => {
+          nextAdj.reserveTransferName = '';
+          nextAdj.reserveTransferAmount = 0;
+        });
+      };
 
       const editExtraExpenseBtn = document.getElementById('editExtraExpenseBtn');
       if(editExtraExpenseBtn) editExtraExpenseBtn.onclick = () => {
@@ -4444,11 +4557,12 @@
       allMonths.forEach(m => {
         const adj = adjustmentForMonth(m);
         const transferIn = monthCardTransfersTotal(m);
+        const reserveTransferIn = Number(adj.reserveTransferAmount || 0);
 
         const income = state.incomes.reduce((a,b)=>{
           const ov = adj.incomeOverrides[b.id];
           return a + (ov !== undefined ? Number(ov) : getIncomeMonthlyCharge(b, m));
-        },0) + Number(adj.extraIncomeAmount || 0) + transferIn;
+        },0) + Number(adj.extraIncomeAmount || 0) + reserveTransferIn + transferIn;
 
         const expense = state.expenses.reduce((a,b)=>{
           const ov = adj.expenseOverrides[b.id];
@@ -4456,7 +4570,7 @@
         },0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(m);
 
         let debt = 0;
-        let reserveUsage = reserveOneOffExpensesTotal(m);
+        let reserveUsage = reserveOneOffExpensesTotal(m) + reserveTransferIn;
         let savingsUsage = savingsOneOffExpensesTotal(m);
         state.debts.forEach(item => {
           const funding = getDebtFundingForMonth(item, m);
@@ -4499,6 +4613,7 @@
             </div>
             <div class="rows">
               <div class="lab">Ingreso</div><div>${euros(income)}</div>
+              ${reserveTransferIn ? `<div class="lab">Uso colchón</div><div>${euros(reserveTransferIn)}</div>` : ''}
               ${transferIn ? `<div class="lab">Traspaso tarjeta</div><div>${euros(transferIn)}</div>` : ''}
               <div class="lab">Gastos</div><div>${euros(expense)}</div>
               <div class="lab">Deuda</div><div>${euros(debt)}</div>
@@ -4769,11 +4884,21 @@
         openDebtCreateFlow('', 'revolving', false);
       });
 
-      document.getElementById('initialReserve').addEventListener('change', e => {
-        state.reserveInitial = Number(e.target.value||0); kpis(); touchState();
+      const handleGeneralSettingsInput = () => {
+        syncGeneralSettingsFromInputs();
+        cacheLocal();
+        updateSaveUi();
+      };
+      document.getElementById('initialReserve').addEventListener('input', handleGeneralSettingsInput);
+      document.getElementById('initialReserve').addEventListener('change', () => {
+        syncGeneralSettingsFromInputs();
+        kpis();
+        touchState();
       });
-      document.getElementById('defaultStart').addEventListener('change', e => {
-        state.defaultStartMonth = e.target.value || todayMonth(); touchState();
+      document.getElementById('defaultStart').addEventListener('input', handleGeneralSettingsInput);
+      document.getElementById('defaultStart').addEventListener('change', () => {
+        syncGeneralSettingsFromInputs();
+        touchState();
       });
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
