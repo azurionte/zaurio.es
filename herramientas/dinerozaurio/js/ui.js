@@ -32,7 +32,8 @@ export async function loadOrCreateDefaultPlan(userId) {
         user_id: userId,
         name: 'Plan principal',
         initial_reserve: 0,
-        default_start_month: ymNow()
+        default_start_month: ymNow(),
+        payment_method: 'reserve'
       })
       .select()
       .single();
@@ -80,16 +81,95 @@ export async function loadPlanData(planId) {
   }
 }
 
-// Guarda los metadatos del plan (nombre, reserva inicial, mes de inicio)
+// Guarda los metadatos del plan (nombre, reserva inicial, mes de inicio, método de pago)
 export async function savePlanMeta() {
-  return supabase
+  const { data, error } = await supabase
     .from('plans')
     .update({
       name: state.plan.name,
       initial_reserve: state.plan.initial_reserve,
-      default_start_month: state.plan.default_start_month
+      default_start_month: state.plan.default_start_month,
+      payment_method: state.plan.payment_method || 'reserve'
     })
-    .eq('id', state.plan.id);
+    .eq('id', state.plan.id)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error guardando metadatos del plan:', error);
+    throw error;
+  }
+  
+  // Actualizar el state con los datos guardados
+  state.plan = { ...state.plan, ...data };
+  return data;
+}
+
+// Actualiza solo el método de pago
+export async function updatePaymentMethod(method) {
+  if (!['reserve', 'credit_card'].includes(method)) {
+    throw new Error('Método de pago inválido. Debe ser "reserve" o "credit_card"');
+  }
+  
+  state.plan.payment_method = method;
+  
+  const { data, error } = await supabase
+    .from('plans')
+    .update({ payment_method: method })
+    .eq('id', state.plan.id)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error actualizando método de pago:', error);
+    throw error;
+  }
+  
+  state.plan = { ...state.plan, ...data };
+  return data;
+}
+
+// Actualiza solo el mes por defecto y persiste en BD
+export async function updateDefaultStartMonth(month) {
+  state.plan.default_start_month = month;
+  state.forecast.from = month;
+  state.forecast.to = month;
+  
+  const { data, error } = await supabase
+    .from('plans')
+    .update({ default_start_month: month })
+    .eq('id', state.plan.id)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error actualizando mes por defecto:', error);
+    throw error;
+  }
+  
+  state.plan = { ...state.plan, ...data };
+  return data;
+}
+
+// Actualiza solo la reserva inicial (colchón) y persiste en BD
+export async function updateInitialReserve(amount) {
+  const numAmount = Number(amount || 0);
+  state.plan.initial_reserve = numAmount;
+  
+  const { data, error } = await supabase
+    .from('plans')
+    .update({ initial_reserve: numAmount })
+    .eq('id', state.plan.id)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error actualizando reserva inicial:', error);
+    throw error;
+  }
+  
+  state.plan = { ...state.plan, ...data };
+  return data;
 }
 
 // Función genérica para upsert en cualquier tabla del plan

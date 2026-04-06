@@ -557,13 +557,20 @@
             <div class="panel">
               <div class="section-title">
                 <div>
-                  <h2>Colchón</h2>
-                  <div class="sub">Indica aquí si existen ahorros previos a este plan.</div>
+                  <h2>Colchón y método de pago</h2>
+                  <div class="sub">Ahorro previo y cómo gestionar el dinero (colchón o tarjeta).</div>
                 </div>
               </div>
               <div class="field">
-                <label>Colchón inicial</label>
+                <label>Colchón inicial (€)</label>
                 <input id="initialReserve" class="input" type="number" step="0.01" value="0" />
+              </div>
+              <div class="field">
+                <label>Método de pago/ahorro</label>
+                <select id="paymentMethod" class="select">
+                  <option value="reserve">Colchón (dinero en cuenta)</option>
+                  <option value="credit_card">Tarjeta de crédito</option>
+                </select>
               </div>
             </div>
 
@@ -623,6 +630,7 @@
       planId: null,
       reserveInitial: 0,
       defaultStartMonth: todayMonth(),
+      paymentMethod: 'reserve',
       incomes: [],
       expenses: [],
       goals: [],
@@ -1974,8 +1982,10 @@
     function syncGeneralSettingsFromInputs(){
       const reserveEl = document.getElementById('initialReserve');
       const startEl = document.getElementById('defaultStart');
+      const methodEl = document.getElementById('paymentMethod');
       if(reserveEl) state.reserveInitial = Number(reserveEl.value || 0);
       if(startEl) state.defaultStartMonth = startEl.value || todayMonth();
+      if(methodEl) state.paymentMethod = methodEl.value || 'reserve';
     }
     function touchState(options = {}){ 
       const { reopenMonth = null, rerender = true } = options;
@@ -2824,7 +2834,8 @@
             user_id: userId,
             name: 'Plan principal',
             initial_reserve: Number(state.reserveInitial || 0),
-            default_start_month: state.defaultStartMonth || todayMonth()
+            default_start_month: state.defaultStartMonth || todayMonth(),
+            payment_method: state.paymentMethod || 'reserve'
           })
           .select()
           .single();
@@ -2835,6 +2846,7 @@
       if(syncPlanState){
         state.reserveInitial = Number(plan.initial_reserve || 0);
         state.defaultStartMonth = plan.default_start_month || todayMonth();
+        state.paymentMethod = plan.payment_method || 'reserve';
       }
       return plan;
     }
@@ -2865,7 +2877,8 @@
           .from('plans')
           .update({
             initial_reserve: Number(state.reserveInitial || 0),
-            default_start_month: state.defaultStartMonth || todayMonth()
+            default_start_month: state.defaultStartMonth || todayMonth(),
+            payment_method: state.paymentMethod || 'reserve'
           })
           .eq('id', planId);
         if(planUpdate.error) throw planUpdate.error;
@@ -4689,7 +4702,10 @@
       window.dzSupabase = client;
       updateDebugExportUi();
 
+      // Renderizar campos de configuración
+      document.getElementById('initialReserve').value = state.reserveInitial || 0;
       document.getElementById('defaultStart').value = state.defaultStartMonth;
+      document.getElementById('paymentMethod').value = state.paymentMethod || 'reserve';
       document.getElementById('forecastFrom').value = state.forecast.from;
       document.getElementById('forecastTo').value = state.forecast.to;
 
@@ -4889,16 +4905,72 @@
         cacheLocal();
         updateSaveUi();
       };
+      
+      // Timeout para auto-save de initialReserve y defaultStart
+      let saveTimeoutId = null;
+      const autoSaveToSupabase = async () => {
+        try {
+          if(state.planId && window.dzSupabase && state.session) {
+            const result = await window.dzSupabase
+              .from('plans')
+              .update({
+                initial_reserve: Number(state.reserveInitial || 0),
+                default_start_month: state.defaultStartMonth || todayMonth()
+              })
+              .eq('id', state.planId);
+            if(result.error) {
+              console.error('Error guardando a Supabase:', result.error);
+            } else {
+              console.log('💾 Datos guardados automáticamente en Supabase');
+            }
+          }
+        } catch(err) {
+          console.error('Error en auto-save:', err);
+        }
+      };
+      
       document.getElementById('initialReserve').addEventListener('input', handleGeneralSettingsInput);
       document.getElementById('initialReserve').addEventListener('change', () => {
         syncGeneralSettingsFromInputs();
         kpis();
         touchState();
+        // Auto-save a Supabase con debounce
+        clearTimeout(saveTimeoutId);
+        saveTimeoutId = setTimeout(autoSaveToSupabase, 800);
       });
       document.getElementById('defaultStart').addEventListener('input', handleGeneralSettingsInput);
       document.getElementById('defaultStart').addEventListener('change', () => {
         syncGeneralSettingsFromInputs();
         touchState();
+        // Auto-save a Supabase con debounce
+        clearTimeout(saveTimeoutId);
+        saveTimeoutId = setTimeout(autoSaveToSupabase, 800);
+      });
+      // Auto-save del método de pago
+      document.getElementById('paymentMethod').addEventListener('change', async () => {
+        const newMethod = document.getElementById('paymentMethod').value;
+        state.paymentMethod = newMethod;
+        syncGeneralSettingsFromInputs();
+        cacheLocal();
+        updateSaveUi();
+        touchState();
+        // Guardar inmediatamente a Supabase
+        try {
+          if(state.planId && window.dzSupabase && state.session) {
+            const result = await window.dzSupabase
+              .from('plans')
+              .update({ payment_method: newMethod })
+              .eq('id', state.planId);
+            if(result.error) {
+              console.error('Error guardando método de pago:', result.error);
+              alert('Error al guardar el método de pago');
+            } else {
+              console.log('✅ Método de pago guardado:', newMethod);
+            }
+          }
+        } catch(err) {
+          console.error('Error en auto-save de método de pago:', err);
+        }
       });
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
