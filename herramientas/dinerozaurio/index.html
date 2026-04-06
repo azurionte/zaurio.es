@@ -2671,62 +2671,101 @@
           ${suggestions.length ? `<ul class="warnDetails">${suggestions.map(item => `<li><strong>${escapeHtml(item.name)}</strong> · ${euros(item.amount)} · ${escapeHtml(item.reason)}</li>`).join('')}</ul>` : '<div class="muted">No veo gastos claros para mover a tarjeta en este mes.</div>'}
         </div>
         <div class="panel">
-          <h4 style="margin:0 0 10px">Usar colchón para cubrir el negativo</h4>
-          <div class="sub" style="margin-bottom:12px">Colchón disponible con la previsión actual: ${euros(reserveAvailable)}.</div>
+          <h4 style="margin:0 0 10px">Resolver el negativo</h4>
+          <div class="sub" style="margin-bottom:12px">Elige cómo quieres cubrir el déficit de este mes.</div>
           <div class="modalGrid">
-            <div class="field"><label>Monto</label><input id="negativeReserveAmount" class="input" type="number" step="0.01" value="${reserveSuggested > 0 ? reserveSuggested : 0}"></div>
-            <div class="field" style="grid-column:1/-1"><label>Concepto</label><input id="negativeReserveName" class="input" value="Traspaso desde colchón para cubrir negativo"></div>
+            <div class="field"><label>Método</label><select id="negativeMethod" class="select">
+              <option value="reserve">Colchón (dinero en cuenta)</option>
+              <option value="card">Tarjeta de crédito</option>
+            </select></div>
+            <div class="field" id="negativeReserveAmountField"><label>Monto del colchón</label><input id="negativeReserveAmount" class="input" type="number" step="0.01" value="${reserveSuggested > 0 ? reserveSuggested : 0}"></div>
+            <div class="field" id="negativeCardField" style="display:none"><label>Tarjeta</label><select id="negativeTransferCard" class="select">${cardOptions || '<option value="">No hay tarjetas revolving disponibles</option>'}</select></div>
+            <div class="field" id="negativeAmountField"><label>Monto</label><input id="negativeTransferAmount" class="input" type="number" step="0.01" value="${deficit > 0 ? deficit : 0}"></div>
+            <div class="field" style="grid-column:1/-1"><label>Concepto</label><input id="negativeName" class="input" value="Traspaso para cubrir negativo"></div>
           </div>
           <div class="btnRow" style="margin-top:14px">
-            <button id="applyNegativeReserveBtn" class="btn good" ${reserveAvailable > 0 ? '' : 'disabled'}>Resolver con colchón</button>
-          </div>
-        </div>
-        <div class="panel">
-          <h4 style="margin:0 0 10px">Haz un traspaso de dinero desde la tarjeta</h4>
-          <div class="sub" style="margin-bottom:12px">Si prefieres cubrirlo con crédito, registramos un traspaso en una tarjeta revolving y lo reflejamos en su saldo actual.</div>
-          <div class="modalGrid">
-            <div class="field"><label>Tarjeta</label><select id="negativeTransferCard" class="select">${cardOptions || '<option value="">No hay tarjetas revolving disponibles</option>'}</select></div>
-            <div class="field"><label>Monto</label><input id="negativeTransferAmount" class="input" type="number" step="0.01" value="${deficit > 0 ? deficit : 0}"></div>
-            <div class="field" style="grid-column:1/-1"><label>Concepto</label><input id="negativeTransferName" class="input" value="Traspaso a cuenta para cubrir negativo"></div>
-          </div>
-          <div class="btnRow" style="margin-top:14px">
-            <button id="applyNegativeTransferBtn" class="btn primary" ${cardOptions ? '' : 'disabled'}>Resolver con traspaso</button>
+            <button id="applyNegativeBtn" class="btn primary">Resolver negativo</button>
           </div>
         </div>
       </div>`;
       root.onclick = (e) => { if(e.target === root) closeModal(); };
       document.getElementById('closeModalBtn').onclick = closeModal;
-      const reserveBtn = document.getElementById('applyNegativeReserveBtn');
-      if(reserveBtn) reserveBtn.onclick = () => {
-        const amount = Number(document.getElementById('negativeReserveAmount').value || 0);
-        const name = document.getElementById('negativeReserveName').value.trim() || 'Traspaso desde colchón';
-        if(amount <= 0){
-          alert('Necesito un monto válido para usar el colchón.');
-          return;
+
+      // Función para actualizar la UI según el método seleccionado
+      function updateNegativeMethodUI() {
+        const method = document.getElementById('negativeMethod').value;
+        const reserveField = document.getElementById('negativeReserveAmountField');
+        const cardField = document.getElementById('negativeCardField');
+        const amountField = document.getElementById('negativeAmountField');
+        const amountInput = document.getElementById('negativeTransferAmount');
+        const reserveInput = document.getElementById('negativeReserveAmount');
+        const applyBtn = document.getElementById('applyNegativeBtn');
+
+        if (method === 'reserve') {
+          reserveField.style.display = 'block';
+          cardField.style.display = 'none';
+          amountInput.value = reserveInput.value;
+          applyBtn.disabled = reserveAvailable <= 0;
+          applyBtn.textContent = 'Resolver con colchón';
+        } else {
+          reserveField.style.display = 'none';
+          cardField.style.display = 'block';
+          reserveInput.value = amountInput.value;
+          applyBtn.disabled = !cardOptions;
+          applyBtn.textContent = 'Resolver con traspaso';
         }
-        if(amount > reserveAvailable){
-          alert(`Ese monto supera el colchón disponible para este mes (${euros(reserveAvailable)}).`);
-          return;
+      }
+
+      // Event listener para cambio de método
+      document.getElementById('negativeMethod').onchange = updateNegativeMethodUI;
+
+      // Sincronizar valores entre los inputs de monto
+      document.getElementById('negativeReserveAmount').oninput = (e) => {
+        if (document.getElementById('negativeMethod').value === 'reserve') {
+          document.getElementById('negativeTransferAmount').value = e.target.value;
         }
-        closeModal();
-        commitMonthAdjustmentGlobal(ym, nextAdj => {
-          nextAdj.reserveTransferName = name;
-          nextAdj.reserveTransferAmount = amount;
-        });
       };
-      const applyBtn = document.getElementById('applyNegativeTransferBtn');
-      if(applyBtn) applyBtn.onclick = () => {
-        const cardDebtId = document.getElementById('negativeTransferCard').value;
-        const amount = Number(document.getElementById('negativeTransferAmount').value || 0);
-        const name = document.getElementById('negativeTransferName').value.trim() || 'Traspaso desde tarjeta';
-        if(!cardDebtId || amount <= 0){
-          alert('Necesito una tarjeta revolving y un monto válido para resolver el negativo.');
-          return;
+      document.getElementById('negativeTransferAmount').oninput = (e) => {
+        if (document.getElementById('negativeMethod').value === 'card') {
+          document.getElementById('negativeReserveAmount').value = e.target.value;
         }
-        closeModal();
-        commitMonthAdjustmentGlobal(ym, nextAdj => {
-          nextAdj.cardTransfers = [...(nextAdj.cardTransfers || []), normalizeCardTransferEntry({ cardDebtId, amount, name, monthKey: ym }, ym)];
-        });
+      };
+
+      // Inicializar UI
+      updateNegativeMethodUI();
+
+      const applyBtn = document.getElementById('applyNegativeBtn');
+      if(applyBtn) applyBtn.onclick = () => {
+        const method = document.getElementById('negativeMethod').value;
+        const name = document.getElementById('negativeName').value.trim() || 'Traspaso para cubrir negativo';
+
+        if (method === 'reserve') {
+          const amount = Number(document.getElementById('negativeReserveAmount').value || 0);
+          if(amount <= 0){
+            alert('Necesito un monto válido para usar el colchón.');
+            return;
+          }
+          if(amount > reserveAvailable){
+            alert(`Ese monto supera el colchón disponible para este mes (${euros(reserveAvailable)}).`);
+            return;
+          }
+          closeModal();
+          commitMonthAdjustmentGlobal(ym, nextAdj => {
+            nextAdj.reserveTransferName = name;
+            nextAdj.reserveTransferAmount = amount;
+          });
+        } else {
+          const cardDebtId = document.getElementById('negativeTransferCard').value;
+          const amount = Number(document.getElementById('negativeTransferAmount').value || 0);
+          if(!cardDebtId || amount <= 0){
+            alert('Necesito una tarjeta revolving y un monto válido para resolver el negativo.');
+            return;
+          }
+          closeModal();
+          commitMonthAdjustmentGlobal(ym, nextAdj => {
+            nextAdj.cardTransfers = [...(nextAdj.cardTransfers || []), normalizeCardTransferEntry({ cardDebtId, amount, name, monthKey: ym }, ym)];
+          });
+        }
       };
     }
     function itemGroupTotal(collection, item){
