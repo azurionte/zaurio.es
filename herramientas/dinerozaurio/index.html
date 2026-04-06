@@ -1268,6 +1268,7 @@
       return {
         reserveInitial: 0,
         defaultStartMonth: todayMonth(),
+        paymentMethod: 'reserve',
         incomes: [],
         expenses: [],
         goals: [],
@@ -1279,6 +1280,7 @@
       return {
         reserveInitial: Number(state.reserveInitial || 0),
         defaultStartMonth: state.defaultStartMonth || todayMonth(),
+        paymentMethod: state.paymentMethod || 'reserve',
         incomes: cloneData(state.incomes || []),
         expenses: cloneData(state.expenses || []),
         goals: cloneData(state.goals || []),
@@ -1825,6 +1827,21 @@
           field:'defaultStartMonth',
           title:'Mes por defecto actualizado',
           desc:`${base.defaultStartMonth || '—'} → ${current.defaultStartMonth || '—'}`
+        });
+      }
+      if((base.paymentMethod || 'reserve') !== (current.paymentMethod || 'reserve')){
+        const methodLabel = {
+          'reserve': 'Colchón (dinero en cuenta)',
+          'card': 'Tarjeta de crédito'
+        };
+        changes.push({
+          id:'plan:paymentMethod',
+          kind:'plan',
+          groupKey:'plan:general',
+          groupTitle:'Configuracion general',
+          field:'paymentMethod',
+          title:'Método de pago actualizado',
+          desc:`${methodLabel[base.paymentMethod || 'reserve']} → ${methodLabel[current.paymentMethod || 'reserve']}`
         });
       }
 
