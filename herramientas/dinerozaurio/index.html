@@ -588,7 +588,7 @@
             <div class="field"><label>Hasta</label><input id="forecastTo" class="input" type="month" /></div>
             <div class="field"><label>Leyenda</label><div class="pill">Recuperado = cuota liberada al terminar una deuda</div></div>
             <div class="field"><label>Leyenda</label><div class="pill">Sobrante = ingreso - gastos - deuda - ahorro</div></div>
-            <div class="field"><label>Leyenda</label><div class="pill">Colchón = acumulado incluyendo meses anteriores</div></div>
+            <div class="field"><label>Leyenda</label><div class="pill">Colchón = acumulado previo y sobrantes positivos; solo baja si lo usas explícitamente</div></div>
           </div>
           <div class="legend">
             <span class="pill">Primera parte: la base ya no se rompe al entrar.</span>
@@ -814,6 +814,9 @@
       return monthOneOffExpenses(ym)
         .filter(entry => entry.paymentSource === 'reserve')
         .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+    }
+    function reserveCarryFromNet(net){
+      return Math.max(0, Number(net || 0));
     }
     function savingsOneOffExpensesTotal(ym){
       return monthOneOffExpenses(ym)
@@ -2353,13 +2356,13 @@
       let cumulativeSavings = 0;
       if(ym < state.defaultStartMonth){
         const snapshot = buildForecastMonthSnapshot(ym);
-        reserve += Number(snapshot.net || 0) - Number(snapshot.reserveUsage || 0);
+        reserve += reserveCarryFromNet(snapshot.net) - Number(snapshot.reserveUsage || 0);
         cumulativeSavings += Number(snapshot.savings || 0) - Number(snapshot.savingsUsage || 0);
         return { reserve, cumulativeSavings };
       }
       monthsInRange(state.defaultStartMonth, ym).forEach(monthKey => {
         const snapshot = buildForecastMonthSnapshot(monthKey);
-        reserve += Number(snapshot.net || 0) - Number(snapshot.reserveUsage || 0);
+        reserve += reserveCarryFromNet(snapshot.net) - Number(snapshot.reserveUsage || 0);
         cumulativeSavings += Number(snapshot.savings || 0) - Number(snapshot.savingsUsage || 0);
       });
       return { reserve, cumulativeSavings };
@@ -2515,7 +2518,7 @@
               <div class="value ${reserve >= 0 ? 'kpi-green' : 'kpi-red'}">${euros(reserve)}</div>
             </div>
           </div>
-          ${hasNegative ? `<div class="warnBox" style="margin-top:14px"><h4>Este mes está en negativo</h4><div class="muted">Faltan ${euros(Math.abs(snapshot.net))}. Puedes abrir el aviso para ver sugerencias o resolverlo con tarjeta.</div></div>` : ''}
+          ${hasNegative ? `<div class="warnBox" style="margin-top:14px"><h4>Este mes está en negativo</h4><div class="muted">Faltan ${euros(Math.abs(snapshot.net))}. El colchón no se usa automáticamente: solo baja si marcas gastos o deudas como pagados con colchón.</div></div>` : ''}
         </div>
 
         <div class="currentMonthGrid" style="margin-top:16px">
@@ -2593,7 +2596,7 @@
         <div class="modalHead">
           <div>
             <h3>Mes en negativo · ${escapeHtml(prettyMonthLabel(ym))}</h3>
-            <div class="muted">Faltan ${euros(deficit)} para que el mes no quede en rojo.</div>
+            <div class="muted">Faltan ${euros(deficit)} para que el mes no quede en rojo. El colchón no se aplica automáticamente.</div>
           </div>
           <button id="closeModalBtn" class="btn danger">Cerrar</button>
         </div>
@@ -4484,7 +4487,7 @@
         });
 
         const net = income - expense - debt - totalSaving;
-        reserve += net - reserveUsage;
+        reserve += reserveCarryFromNet(net) - reserveUsage;
         cumulativeSavings += totalSaving - savingsUsage;
         const monthRisk = net < 0 ? buildNegativeMonthSuggestions(m) : { deficit:0, suggestions:[] };
 
