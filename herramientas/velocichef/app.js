@@ -536,6 +536,8 @@ function buildDefaultProfile(user) {
     ],
     plannedMeals: ["breakfast", "lunch", "dinner"],
     lunchPrepNightBefore: false,
+    breakfastTime: "08:00",
+    snackTime: "17:30",
     lunchTime: "14:30",
     dinnerTime: "21:00",
     reminderLeadMinutes: DEFAULT_REMINDER_LEAD_MINUTES,
@@ -581,6 +583,8 @@ function serializeProfile(userId, profile) {
     household_members: syncHouseholdMembers({ ...profile }).householdMembers,
     planned_meals: uniqueValues(profile.plannedMeals),
     lunch_prep_night_before: !!profile.lunchPrepNightBefore,
+    breakfast_time: profile.breakfastTime || null,
+    snack_time: profile.snackTime || null,
     lunch_time: profile.lunchTime || null,
     dinner_time: profile.dinnerTime || null,
     reminder_lead_minutes: Number(profile.reminderLeadMinutes || DEFAULT_REMINDER_LEAD_MINUTES),
@@ -606,6 +610,8 @@ function deserializeProfile(user, row) {
     householdMembers: Array.isArray(row?.household_members) ? row.household_members : [],
     plannedMeals: uniqueValues(row?.planned_meals || ["breakfast", "lunch", "dinner"]),
     lunchPrepNightBefore: !!row?.lunch_prep_night_before,
+    breakfastTime: row?.breakfast_time || "08:00",
+    snackTime: row?.snack_time || "17:30",
     lunchTime: row?.lunch_time || "14:30",
     dinnerTime: row?.dinner_time || "21:00",
     reminderLeadMinutes: Number(row?.reminder_lead_minutes || DEFAULT_REMINDER_LEAD_MINUTES),
@@ -2034,6 +2040,8 @@ function getFutureReplacementEntries(reminder) {
 }
 
 function getMealClock(mealKey) {
+  if (mealKey === "breakfast") return state.profile?.breakfastTime || DEFAULT_MEAL_CLOCK.breakfast;
+  if (mealKey === "snack") return state.profile?.snackTime || DEFAULT_MEAL_CLOCK.snack;
   if (mealKey === "lunch") return state.profile?.lunchTime || DEFAULT_MEAL_CLOCK.lunch;
   if (mealKey === "dinner") return state.profile?.dinnerTime || DEFAULT_MEAL_CLOCK.dinner;
   return DEFAULT_MEAL_CLOCK[mealKey] || "12:00";
@@ -3324,9 +3332,9 @@ function composeReminders() {
           time = state.profile.lunchTime || "14:30";
         }
       } else if (mealKey === "breakfast") {
-        time = "08:00";
+        time = state.profile.breakfastTime || "08:00";
       } else if (mealKey === "snack") {
-        time = "17:30";
+        time = state.profile.snackTime || "17:30";
       } else if (mealKey === "bites") {
         time = "11:30";
       }
@@ -3353,7 +3361,7 @@ function composeReminders() {
     state.week.freezerItems.forEach((item) => {
       const mealDate = combineDateAndTime(
         item.mealDate,
-        item.mealKey === "dinner" ? state.profile.dinnerTime || "21:00" : state.profile.lunchTime || "14:30",
+        getMealClock(item.mealKey),
       );
       const triggerAt = new Date(mealDate.getTime() - (Number(item.thawLeadHours || 12) * 3600000));
       pushReminder({
@@ -4457,6 +4465,8 @@ function plannerProfilePayload() {
     householdMembers: state.profile?.householdMembers || [],
     plannedMeals: state.profile?.plannedMeals || ["breakfast", "lunch", "dinner"],
     lunchPrepNightBefore: !!state.profile?.lunchPrepNightBefore,
+    breakfastTime: state.profile?.breakfastTime || null,
+    snackTime: state.profile?.snackTime || null,
     lunchTime: state.profile?.lunchTime || null,
     dinnerTime: state.profile?.dinnerTime || null,
     carryoverIngredients: mergeCarryoverIngredients(state.week?.carryoverIngredients || []),
@@ -5168,7 +5178,7 @@ function renderOnboarding() {
     {
       kicker: "Plan",
       title: "¿Qué comidas quieres planificar?",
-      copy: "Marca las franjas de comida que quieres planificar y cuéntame cómo encaja el almuerzo en tu día.",
+      copy: "Marca las franjas de comida que quieres planificar y cuéntame a qué horas sueles comer.",
       content: `
         <div class="vc-step-section vc-fieldset">
           <label class="vc-label">Comidas a planificar</label>
@@ -5182,8 +5192,13 @@ function renderOnboarding() {
           <input type="checkbox" data-field="lunchPrepNightBefore" ${state.profile.lunchPrepNightBefore ? "checked" : ""}>
         </label>
         <div class="vc-step-section vc-fieldset">
-          <label class="vc-label" for="onboarding-lunch-time">¿A qué hora te gusta comer regularmente?</label>
-          <input id="onboarding-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
+          <label class="vc-label">¿A qué horas sueles comer regularmente?</label>
+          <div class="vc-grid two">
+            ${state.profile.plannedMeals.includes("breakfast") ? `<div class="vc-field"><label class="vc-label" for="onboarding-breakfast-time">Desayuno</label><input id="onboarding-breakfast-time" class="vc-time" type="time" data-field="breakfastTime" value="${escapeHtml(state.profile.breakfastTime)}"></div>` : ""}
+            ${state.profile.plannedMeals.includes("snack") ? `<div class="vc-field"><label class="vc-label" for="onboarding-snack-time">Merienda</label><input id="onboarding-snack-time" class="vc-time" type="time" data-field="snackTime" value="${escapeHtml(state.profile.snackTime)}"></div>` : ""}
+            ${state.profile.plannedMeals.includes("lunch") ? `<div class="vc-field"><label class="vc-label" for="onboarding-lunch-time">Almuerzo</label><input id="onboarding-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}"></div>` : ""}
+            ${state.profile.plannedMeals.includes("dinner") ? `<div class="vc-field"><label class="vc-label" for="onboarding-dinner-time">Cena</label><input id="onboarding-dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}"></div>` : ""}
+          </div>
           <span class="vc-helper">Esto se usará para ajustar recordatorios y encajar el plan con tu ritmo real.</span>
         </div>
         <div class="vc-note vc-note-strong">
@@ -5530,14 +5545,10 @@ function renderScheduleView() {
         </div>
 
         <div class="vc-grid two">
-          <div class="vc-field">
-            <label class="vc-label" for="lunch-time">¿A qué hora te gustaría almorzar regularmente?</label>
-            <input id="lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
-          </div>
-          <div class="vc-field">
-            <label class="vc-label" for="dinner-time">¿A qué hora te gustaría cenar regularmente?</label>
-            <input id="dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}">
-          </div>
+          ${state.profile.plannedMeals.includes("breakfast") ? `<div class="vc-field"><label class="vc-label" for="breakfast-time">¿A qué hora te gustaría desayunar regularmente?</label><input id="breakfast-time" class="vc-time" type="time" data-field="breakfastTime" value="${escapeHtml(state.profile.breakfastTime)}"></div>` : ""}
+          ${state.profile.plannedMeals.includes("snack") ? `<div class="vc-field"><label class="vc-label" for="snack-time">¿A qué hora te gustaría merendar regularmente?</label><input id="snack-time" class="vc-time" type="time" data-field="snackTime" value="${escapeHtml(state.profile.snackTime)}"></div>` : ""}
+          ${state.profile.plannedMeals.includes("lunch") ? `<div class="vc-field"><label class="vc-label" for="lunch-time">¿A qué hora te gustaría almorzar regularmente?</label><input id="lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}"></div>` : ""}
+          ${state.profile.plannedMeals.includes("dinner") ? `<div class="vc-field"><label class="vc-label" for="dinner-time">¿A qué hora te gustaría cenar regularmente?</label><input id="dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}"></div>` : ""}
         </div>
 
         <div class="vc-field">
@@ -5886,8 +5897,14 @@ function getProfileSectionSummary(key) {
       return `${cookingStyleLabel} · ${summarizeProfileValues(state.profile?.goalTags, "sin objetivos marcados", 2)}`;
     case "household":
       return customMembers ? `${count} personas · ${customMembers} con reglas propias` : `${count} personas · todos siguen tus mismas reglas`;
-    case "plan":
-      return `${summarizeProfileValues(plannedMeals, "Sin comidas elegidas", 3)} · almuerzo ${state.profile?.lunchTime || "--:--"} · cena ${state.profile?.dinnerTime || "--:--"}`;
+    case "plan": {
+      const times = [];
+      if (plannedMeals.includes("breakfast")) times.push(`desayuno ${state.profile?.breakfastTime || "--:--"}`);
+      if (plannedMeals.includes("snack")) times.push(`merienda ${state.profile?.snackTime || "--:--"}`);
+      if (plannedMeals.includes("lunch")) times.push(`almuerzo ${state.profile?.lunchTime || "--:--"}`);
+      if (plannedMeals.includes("dinner")) times.push(`cena ${state.profile?.dinnerTime || "--:--"}`);
+      return `${summarizeProfileValues(plannedMeals, "Sin comidas elegidas", 3)} · ${times.join(" · ")}`;
+    }
     case "notifications":
       return `${notificationEnabledHere ? "Notificaciones activadas" : "Notificaciones por activar"} · aviso ${state.profile?.reminderLeadMinutes || DEFAULT_REMINDER_LEAD_MINUTES} min antes`;
     default:
@@ -6062,14 +6079,10 @@ function renderProfileView() {
               <input type="checkbox" data-field="lunchPrepNightBefore" ${state.profile.lunchPrepNightBefore ? "checked" : ""}>
             </label>
             <div class="vc-grid two">
-              <div class="vc-field">
-                <label class="vc-label" for="profile-lunch-time">&iquest;A qu&eacute; hora sueles comer?</label>
-                <input id="profile-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}">
-              </div>
-              <div class="vc-field">
-                <label class="vc-label" for="profile-dinner-time">&iquest;A qu&eacute; hora sueles cenar?</label>
-                <input id="profile-dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}">
-              </div>
+              ${state.profile.plannedMeals.includes("breakfast") ? `<div class="vc-field"><label class="vc-label" for="profile-breakfast-time">¿A qué hora sueles desayunar?</label><input id="profile-breakfast-time" class="vc-time" type="time" data-field="breakfastTime" value="${escapeHtml(state.profile.breakfastTime)}"></div>` : ""}
+              ${state.profile.plannedMeals.includes("snack") ? `<div class="vc-field"><label class="vc-label" for="profile-snack-time">¿A qué hora sueles merendar?</label><input id="profile-snack-time" class="vc-time" type="time" data-field="snackTime" value="${escapeHtml(state.profile.snackTime)}"></div>` : ""}
+              ${state.profile.plannedMeals.includes("lunch") ? `<div class="vc-field"><label class="vc-label" for="profile-lunch-time">¿A qué hora sueles comer?</label><input id="profile-lunch-time" class="vc-time" type="time" data-field="lunchTime" value="${escapeHtml(state.profile.lunchTime)}"></div>` : ""}
+              ${state.profile.plannedMeals.includes("dinner") ? `<div class="vc-field"><label class="vc-label" for="profile-dinner-time">¿A qué hora sueles cenar?</label><input id="profile-dinner-time" class="vc-time" type="time" data-field="dinnerTime" value="${escapeHtml(state.profile.dinnerTime)}"></div>` : ""}
             </div>
             <div class="vc-field">
               <label class="vc-label" for="profile-lead-time">&iquest;Con cu&aacute;nto margen quieres que te avise?</label>
@@ -6865,8 +6878,16 @@ function validateOnboardingStep() {
     render();
     return false;
   }
-  if (state.onboardingStep === 4 && !state.profile.lunchTime) {
-    state.error = "Necesito una hora de almuerzo para ajustar bien el plan semanal.";
+  const missingTimes = state.profile.plannedMeals.filter(meal => {
+    if (meal === "breakfast") return !state.profile.breakfastTime;
+    if (meal === "snack") return !state.profile.snackTime;
+    if (meal === "lunch") return !state.profile.lunchTime;
+    if (meal === "dinner") return !state.profile.dinnerTime;
+    return false;
+  });
+  if (state.onboardingStep === 4 && missingTimes.length > 0) {
+    const mealLabels = missingTimes.map(meal => MEAL_LABELS[meal]).join(", ");
+    state.error = `Necesito una hora para ${mealLabels} para ajustar bien el plan semanal.`;
     render();
     return false;
   }
@@ -6913,8 +6934,16 @@ async function saveProfileSettings() {
     render();
     return false;
   }
-  if (!state.profile.lunchTime || !state.profile.dinnerTime) {
-    state.error = "Necesito una hora de almuerzo y una hora de cena para guardar el perfil.";
+  const missingTimes = state.profile.plannedMeals.filter(meal => {
+    if (meal === "breakfast") return !state.profile.breakfastTime;
+    if (meal === "snack") return !state.profile.snackTime;
+    if (meal === "lunch") return !state.profile.lunchTime;
+    if (meal === "dinner") return !state.profile.dinnerTime;
+    return false;
+  });
+  if (missingTimes.length > 0) {
+    const mealLabels = missingTimes.map(meal => MEAL_LABELS[meal]).join(", ");
+    state.error = `Necesito una hora para ${mealLabels} para guardar el perfil.`;
     render();
     return false;
   }
