@@ -16,6 +16,12 @@ export async function ensureProfile(user) {
 }
 
 // Carga el plan por defecto del usuario o lo crea si no existe
+function isMissingPlansColumnError(error, column) {
+  const message = String(error?.message || error || '').toLowerCase();
+  return message.includes(`could not find the '${column}' column of 'plans'`) ||
+    message.includes(`column \"${column}\" of relation \"plans\" does not exist`);
+}
+
 export async function loadOrCreateDefaultPlan(userId) {
   const { data: plans, error } = await supabase
     .from('plans')
@@ -27,7 +33,7 @@ export async function loadOrCreateDefaultPlan(userId) {
 
   let plan = plans?.[0];
   if (!plan) {
-    const ins = await supabase.from('plans')
+    let ins = await supabase.from('plans')
       .insert({
         user_id: userId,
         name: 'Plan principal',
@@ -37,6 +43,19 @@ export async function loadOrCreateDefaultPlan(userId) {
       })
       .select()
       .single();
+
+    if (ins.error && isMissingPlansColumnError(ins.error, 'payment_method')) {
+      ins = await supabase.from('plans')
+        .insert({
+          user_id: userId,
+          name: 'Plan principal',
+          initial_reserve: 0,
+          default_start_month: ymNow()
+        })
+        .select()
+        .single();
+    }
+
     if (ins.error) throw ins.error;
     plan = ins.data;
   }
@@ -83,7 +102,7 @@ export async function loadPlanData(planId) {
 
 // Guarda los metadatos del plan (nombre, reserva inicial, mes de inicio, método de pago)
 export async function savePlanMeta() {
-  const { data, error } = await supabase
+  let result = await supabase
     .from('plans')
     .update({
       name: state.plan.name,
@@ -94,15 +113,27 @@ export async function savePlanMeta() {
     .eq('id', state.plan.id)
     .select()
     .single();
-  
-  if (error) {
-    console.error('Error guardando metadatos del plan:', error);
-    throw error;
+
+  if (result.error && isMissingPlansColumnError(result.error, 'payment_method')) {
+    result = await supabase
+      .from('plans')
+      .update({
+        name: state.plan.name,
+        initial_reserve: state.plan.initial_reserve,
+        default_start_month: state.plan.default_start_month
+      })
+      .eq('id', state.plan.id)
+      .select()
+      .single();
+  }
+
+  if (result.error) {
+    console.error('Error guardando metadatos del plan:', result.error);
+    throw result.error;
   }
   
-  // Actualizar el state con los datos guardados
-  state.plan = { ...state.plan, ...data };
-  return data;
+  state.plan = { ...state.plan, ...result.data };
+  return result.data;
 }
 
 // Actualiza solo el método de pago
@@ -113,20 +144,25 @@ export async function updatePaymentMethod(method) {
   
   state.plan.payment_method = method;
   
-  const { data, error } = await supabase
+  let result = await supabase
     .from('plans')
     .update({ payment_method: method })
     .eq('id', state.plan.id)
     .select()
     .single();
-  
-  if (error) {
-    console.error('Error actualizando método de pago:', error);
-    throw error;
+
+  if (result.error && isMissingPlansColumnError(result.error, 'payment_method')) {
+    console.warn('El campo payment_method no existe en la tabla plans; se conservará en el estado local.');
+    return state.plan;
   }
   
-  state.plan = { ...state.plan, ...data };
-  return data;
+  if (result.error) {
+    console.error('Error actualizando método de pago:', result.error);
+    throw result.error;
+  }
+  
+  state.plan = { ...state.plan, ...result.data };
+  return result.data;
 }
 
 // Actualiza solo el mes por defecto y persiste en BD
