@@ -1000,7 +1000,9 @@ async function syncRemoteReminders() {
     if (remove.error) throw remove.error;
 
     if (rows.length) {
-      const insert = await state.client.from("velocichef_reminders").insert(rows);
+      const insert = await state.client.from("velocichef_reminders").upsert(rows, {
+        onConflict: "id",
+      });
       if (insert.error) throw insert.error;
     }
   } catch (_error) {
