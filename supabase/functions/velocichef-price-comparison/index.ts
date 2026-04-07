@@ -1,7 +1,8 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, accept, origin",
+  "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+  "Access-Control-Max-Age": "86400",
 };
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");

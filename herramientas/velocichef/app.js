@@ -7101,6 +7101,13 @@ async function comparePrices() {
   render();
 
   try {
+    const ingredients = state.week.shoppingList.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      category: item.category,
+    }));
+
     const sessionResult = await state.client.auth.getSession();
     if (sessionResult.error) {
       throw sessionResult.error;
@@ -7115,32 +7122,21 @@ async function comparePrices() {
 
     state.session = activeSession;
 
-    const ingredients = state.week.shoppingList.map((item) => ({
-      name: item.name,
-      quantity: item.quantity,
-      unit: item.unit,
-      category: item.category,
-    }));
-
     const headers = {
       "Content-Type": "application/json",
       "apikey": SUPABASE_ANON_KEY,
       "Authorization": `Bearer ${accessToken}`,
     };
 
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/velocichef-price-comparison`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ ingredients }),
+    const { data, error } = await state.client.functions.invoke("velocichef-price-comparison", {
+      body: { ingredients },
     });
 
-    const payload = await response.json();
-
-    if (!response.ok) {
-      throw new Error(payload?.error || "Error al comparar precios");
+    if (error) {
+      throw error;
     }
 
-    state.priceComparison.results = payload.data;
+    state.priceComparison.results = data?.data;
     state.priceComparison.loading = false;
     state.modal = { type: "priceComparison" };
     render();
