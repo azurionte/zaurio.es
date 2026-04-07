@@ -226,6 +226,11 @@ const state = {
     plan: false,
     notifications: false,
   },
+  priceComparison: {
+    loading: false,
+    results: null,
+    error: null,
+  },
 };
 let cookingMicHintTimer = null;
 let notificationBannerTimer = null;
@@ -5613,6 +5618,9 @@ function renderShoppingView() {
               <h2 class="vc-title">Todo lo que necesitarás esta semana</h2>
               <p class="vc-copy">Todo empieza en pendiente. Marca cada ingrediente como comprado cuando ya lo tengas resuelto.</p>
             </div>
+            <div class="vc-inline-actions">
+              <button class="vc-button secondary" data-action="compare-prices" title="Compara precios en supermercados españoles">🔍 Comparar precios</button>
+            </div>
           </div>
       </article>
 
@@ -6515,6 +6523,164 @@ function renderFreezerPromptModal() {
   `;
 }
 
+function renderPriceComparisonModal() {
+  const results = state.priceComparison.results;
+  const loading = state.priceComparison.loading;
+  const error = state.priceComparison.error;
+
+  if (loading) {
+    return `
+      <div class="vc-modal-layer" data-action="close-modal">
+        <div class="vc-modal" role="dialog" aria-modal="true">
+          <div class="vc-modal-head">
+            <h2 class="vc-modal-title">Comparando precios...</h2>
+            <p class="vc-copy">Estoy buscando los mejores precios en Carrefour, Mercadona, Bon Preu y Charter.</p>
+          </div>
+          <div class="vc-loading" style="padding: 40px 20px; text-align: center;">
+            <div class="vc-spinner" style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(239,123,45,.2); border-top-color: #ef7b2d; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          </div>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    `;
+  }
+
+  if (error) {
+    return `
+      <div class="vc-modal-layer" data-action="close-modal">
+        <div class="vc-modal" role="dialog" aria-modal="true">
+          <div class="vc-modal-head">
+            <div>
+              <h2 class="vc-modal-title">Error al comparar precios</h2>
+              <p class="vc-copy">${escapeHtml(error)}</p>
+            </div>
+          </div>
+          <div class="vc-step-foot">
+            <button class="vc-button primary" data-action="close-modal">Entendido</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (!results) {
+    return ``;
+  }
+
+  const ingredients = results.ingredients || [];
+  const summary = results.summary || {};
+
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-modal-large" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <h2 class="vc-modal-title">Comparación de precios</h2>
+            <p class="vc-copy">Aquí están los precios de tus ingredientes en diferentes supermercados españoles. El mejor supermercado para tu compra es: <strong>${escapeHtml(summary.best_supermarket_overall || "buscando...")}</strong></p>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
+        </div>
+
+        <div class="vc-price-grid">
+          ${ingredients.map((ing) => `
+            <article class="vc-price-card">
+              <div class="vc-price-card-head">
+                <h3 class="vc-price-ingredient">${escapeHtml(ing.name)}</h3>
+                <span class="vc-price-quantity">${ing.quantity}${ing.unit ? ` ${ing.unit}` : ""}</span>
+              </div>
+              <div class="vc-price-results">
+                ${ing.results && ing.results.length > 0 
+                  ? ing.results.map((result) => `
+                      <div class="vc-price-item">
+                        <span class="vc-price-supermarket">${escapeHtml(result.supermarket)}</span>
+                        <strong class="vc-price-value">${result.price.toFixed(2)} €</strong>
+                        <span class="vc-price-availability ${result.availability === "available" ? "available" : "unavailable"}">${result.availability === "available" ? "✓" : "✗"}</span>
+                      </div>
+                    `).join("")
+                  : `<p class="vc-muted">No se encontraron precios</p>`
+                }
+              </div>
+            </article>
+          `).join("")}
+        </div>
+
+        <div class="vc-step-foot">
+          <button class="vc-button primary" data-action="close-modal">Entendido</button>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .vc-modal-large {
+        max-width: 720px;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      .vc-price-grid {
+        display: grid;
+        gap: 16px;
+        padding: 16px;
+      }
+      .vc-price-card {
+        border: 1px solid rgba(80,29,10,.12);
+        border-radius: 12px;
+        padding: 12px;
+        background: rgba(255,250,244,.5);
+      }
+      .vc-price-card-head {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .vc-price-ingredient {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        color: var(--vc-ink);
+      }
+      .vc-price-quantity {
+        font-size: 0.875rem;
+        color: var(--vc-muted);
+      }
+      .vc-price-results {
+        display: grid;
+        gap: 8px;
+      }
+      .vc-price-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        background: rgba(255,255,255,.5);
+        border-radius: 8px;
+        font-size: 0.9rem;
+      }
+      .vc-price-supermarket {
+        font-weight: 500;
+        flex: 1;
+      }
+      .vc-price-value {
+        color: #ef7b2d;
+        font-size: 1.1rem;
+        margin: 0 12px;
+      }
+      .vc-price-availability {
+        font-size: 1.2rem;
+      }
+      .vc-price-availability.available {
+        color: #2f8f58;
+      }
+      .vc-price-availability.unavailable {
+        color: #e85a4f;
+      }
+    </style>
+  `;
+}
+
 function renderReminderDetailModal(reminder) {
   const isReadOnly = !!state.modal?.readOnly;
   const canSkipFutureMeal = !isReadOnly && reminder.kind === "meal";
@@ -6807,6 +6973,9 @@ function renderModal() {
   if (state.modal.type === "cook-recovery") {
     return `${renderCookRecoveryModal()}${renderBusyOverlay()}`;
   }
+  if (state.modal.type === "priceComparison") {
+    return `${renderPriceComparisonModal()}${renderBusyOverlay()}`;
+  }
   return renderBusyOverlay();
 }
 
@@ -6916,6 +7085,68 @@ async function completeShoppingList() {
   state.week.reminders = composeReminders();
   await saveWeek();
   render();
+}
+
+async function comparePrices() {
+  if (!state.week?.shoppingList?.length) {
+    state.error = "No hay ingredientes en la lista para comparar.";
+    render();
+    return;
+  }
+
+  state.priceComparison.loading = true;
+  state.priceComparison.error = null;
+  render();
+
+  try {
+    const sessionResult = await state.client.auth.getSession();
+    if (sessionResult.error) {
+      throw sessionResult.error;
+    }
+
+    let activeSession = sessionResult.data?.session || state.session || null;
+    let accessToken = activeSession?.access_token || "";
+
+    if (!accessToken) {
+      throw new Error("No hay una sesión activa para comparar precios.");
+    }
+
+    state.session = activeSession;
+
+    const ingredients = state.week.shoppingList.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      category: item.category,
+    }));
+
+    const headers = {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${accessToken}`,
+    };
+
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/velocichef-price-comparison`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ ingredients }),
+    });
+
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload?.error || "Error al comparar precios");
+    }
+
+    state.priceComparison.results = payload.data;
+    state.priceComparison.loading = false;
+    state.modal = { type: "priceComparison" };
+    render();
+  } catch (error) {
+    state.priceComparison.loading = false;
+    state.priceComparison.error = String(error?.message || "Error desconocido");
+    render();
+  }
 }
 
 async function saveScheduleAndContinue() {
@@ -7634,6 +7865,10 @@ async function handleAction(action, trigger) {
 
     case "complete-shopping":
       await completeShoppingList();
+      break;
+
+    case "compare-prices":
+      await comparePrices();
       break;
 
     case "accept-freezer":
