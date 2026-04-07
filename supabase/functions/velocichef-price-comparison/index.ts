@@ -1,21 +1,19 @@
-const corsHeaders = {
+const corsHeaders = new Headers({
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, accept, origin",
-  "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Max-Age": "86400",
-};
+});
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
 
-function json(body: unknown, init?: ResponseInit) {
+function json(body: unknown, status = 200) {
+  const headers = new Headers(corsHeaders);
+  headers.set("Content-Type", "application/json; charset=utf-8");
   return new Response(JSON.stringify(body), {
-    ...init,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      ...corsHeaders,
-      ...(init?.headers || {}),
-    },
+    status,
+    headers,
   });
 }
 
@@ -108,37 +106,38 @@ async function callGemini(prompt: string) {
 }
 
 async function handleComparePrices(req: Request) {
-  const body = await req.json();
-  const ingredients = body.ingredients || [];
-
-  if (!Array.isArray(ingredients) || ingredients.length === 0) {
-    return json({ error: "Se requiere un array de ingredientes." }, { status: 400 });
-  }
-
   try {
+    const body = await req.json();
+    const ingredients = body.ingredients || [];
+
+    if (!Array.isArray(ingredients) || ingredients.length === 0) {
+      return json({ error: "Se requiere un array de ingredientes." }, 400);
+    }
+
     const prompt = buildPriceComparisonPrompt(ingredients);
     const result = await callGemini(prompt);
 
     return json({
       ok: true,
       data: result,
-    });
+    }, 200);
   } catch (error) {
     console.error("Error en comparación de precios:", error);
     return json(
       {
         error: String(error?.message || "Error desconocido al comparar precios."),
       },
-      { status: 500 },
+      500,
     );
   }
 }
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      status: 200,
-      headers: corsHeaders,
+    const headers = new Headers(corsHeaders);
+    return new Response(undefined, {
+      status: 204,
+      headers,
     });
   }
 
@@ -146,5 +145,5 @@ Deno.serve(async (req: Request) => {
     return await handleComparePrices(req);
   }
 
-  return json({ error: "Método no permitido" }, { status: 405 });
+  return json({ error: "Método no permitido" }, 405);
 });
