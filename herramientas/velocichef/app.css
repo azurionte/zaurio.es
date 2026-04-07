@@ -538,10 +538,10 @@ body.vc-cook-immersive-body .vc-app{
   width:min(240px, calc(100vw - 32px));
   padding:12px 14px;
   border-radius:18px;
-  background:rgba(255,250,244,.97);
+  background:linear-gradient(135deg, rgba(255,226,184,.98), rgba(255,244,221,.98));
   color:var(--vc-ink);
-  border:1px solid rgba(80,29,10,.1);
-  box-shadow:0 18px 34px rgba(80,29,10,.14);
+  border:1px solid rgba(239,123,45,.24);
+  box-shadow:0 18px 34px rgba(132,56,18,.18);
   font-size:.92rem;
   line-height:1.35;
 }
@@ -559,9 +559,9 @@ body.vc-cook-immersive-body .vc-app{
   right:18px;
   width:16px;
   height:16px;
-  border-left:1px solid rgba(80,29,10,.1);
-  border-top:1px solid rgba(80,29,10,.1);
-  background:rgba(255,250,244,.97);
+  border-left:1px solid rgba(239,123,45,.24);
+  border-top:1px solid rgba(239,123,45,.24);
+  background:rgba(255,232,195,.98);
   transform:rotate(45deg);
 }
 
