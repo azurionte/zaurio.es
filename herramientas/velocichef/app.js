@@ -7098,6 +7098,8 @@ async function comparePrices() {
 
   state.priceComparison.loading = true;
   state.priceComparison.error = null;
+  state.priceComparison.results = null;
+  state.modal = { type: "priceComparison" };
   render();
 
   try {
@@ -7115,7 +7117,6 @@ async function comparePrices() {
 
     state.priceComparison.results = data?.data || data;
     state.priceComparison.loading = false;
-    state.modal = { type: "priceComparison" };
     render();
   } catch (error) {
     state.priceComparison.loading = false;
