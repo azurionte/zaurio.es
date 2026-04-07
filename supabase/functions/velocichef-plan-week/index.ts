@@ -135,6 +135,14 @@ function buildPriceComparisonPrompt(ingredients: Array<Record<string, unknown>>)
 Ingredientes:
 ${ingredientList}
 
+Reglas importantes:
+- Si la cantidad requerida es pequeña (menos de 500g o 500ml), considera que los productos se venden en paquetes más grandes y proporciona el precio por unidad del paquete más pequeño disponible, pero especifica que es para una cantidad mayor.
+- Por ejemplo, si se necesitan 200g de mantequilla y el mínimo es 500g, muestra el precio de 500g como referencia pero indica "Precio para paquete de 500g (mínimo disponible)".
+- Busca productos equivalentes si el exacto no existe.
+- Incluye al menos 2-3 opciones de precio por ingrediente cuando sea posible.
+- Devuelve solo supermercados españoles con disponibilidad online.
+- Los precios deben ser aproximados pero realistas.
+
 Devuelve exactamente esta estructura JSON:
 {
   "ingredients": [
@@ -149,7 +157,8 @@ Devuelve exactamente esta estructura JSON:
           "currency": "EUR",
           "product_name": "nombre exacto del producto",
           "availability": "available/out_of_stock/unavailable",
-          "url": "enlace al producto si está disponible"
+          "url": "enlace al producto si está disponible",
+          "note": "Precio para paquete de 500g (mínimo disponible)" // opcional si aplica
         }
       ]
     }

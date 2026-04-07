@@ -134,6 +134,24 @@ const MEAL_OPTIONS = [
 
 const MEAL_LABELS = Object.fromEntries(MEAL_OPTIONS.map((item) => [item.key, item.label]));
 
+const PRICE_COMPARISON_SUBTITLES = [
+  "Estoy buscando los mejores precios en Carrefour, Mercadona, Bon Preu y Charter.",
+  "Buscando las mejores ofertas para ahorrar en la compra.",
+  "Analizando precios como un experto en no romper la hucha.",
+  "Comparando ofertas para que tu bolsillo sonría.",
+  "Investigando descuentos y promociones especiales.",
+  "Calculando el mejor supermercado para tu lista.",
+  "Explorando gangas y precios irresistibles.",
+  "Optimizando tu compra para máxima eficiencia.",
+  "Descubriendo ahorros ocultos en los estantes.",
+  "Evaluando opciones para una compra inteligente.",
+  "Buscando precios que hagan bailar a tu cartera.",
+  "Analizando mercados para encontrar el tesoro.",
+  "Comparando costes como un detective financiero.",
+  "Descifrando códigos de barras y precios bajos.",
+  "Explorando el mundo de las ofertas económicas.",
+];
+
 const REFINEMENT_REASON_OPTIONS = [
   { key: "ingredients", label: "No me gustan algunos ingredientes" },
   { key: "difficulty", label: "Es muy difícil" },
@@ -6529,6 +6547,7 @@ function renderPriceComparisonModal() {
   const results = state.priceComparison.results;
   const loading = state.priceComparison.loading;
   const error = state.priceComparison.error;
+  const subtitle = state.priceComparison.subtitle || "Estoy buscando los mejores precios en Carrefour, Mercadona, Bon Preu y Charter.";
 
   if (loading) {
     return `
@@ -6536,10 +6555,10 @@ function renderPriceComparisonModal() {
         <div class="vc-modal" role="dialog" aria-modal="true">
           <div class="vc-modal-head">
             <h2 class="vc-modal-title">Comparando precios...</h2>
-            <p class="vc-copy">Estoy buscando los mejores precios en Carrefour, Mercadona, Bon Preu y Charter.</p>
+            <p class="vc-copy" style="text-align: left; line-height: 1.4; max-width: 420px; margin: 0 0 16px;">${escapeHtml(subtitle)}</p>
           </div>
-          <div class="vc-loading" style="padding: 40px 20px; text-align: center;">
-            <div class="vc-spinner" style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(239,123,45,.2); border-top-color: #ef7b2d; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <div class="vc-loading" style="padding: 24px 20px; text-align: center;">
+            <div class="vc-spinner" style="display: inline-block; width: 44px; height: 44px; border: 3px solid rgba(239,123,45,.2); border-top-color: #ef7b2d; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
           </div>
         </div>
       </div>
@@ -6592,19 +6611,19 @@ function renderPriceComparisonModal() {
             <article class="vc-price-card">
               <div class="vc-price-card-head">
                 <h3 class="vc-price-ingredient">${escapeHtml(ing.name)}</h3>
-                <span class="vc-price-quantity">${ing.quantity}${ing.unit ? ` ${ing.unit}` : ""}</span>
+                <span class="vc-price-quantity">${escapeHtml(String(ing.quantity || ""))}${ing.unit ? ` ${escapeHtml(String(ing.unit))}` : ""}</span>
               </div>
               <div class="vc-price-results">
-                ${ing.results && ing.results.length > 0 
+                ${ing.results && ing.results.length > 0
                   ? ing.results.map((result) => `
                       <div class="vc-price-item">
-                        <span class="vc-price-supermarket">${escapeHtml(result.supermarket)}</span>
-                        <strong class="vc-price-value">${result.price.toFixed(2)} €</strong>
+                        <span class="vc-price-supermarket">${escapeHtml(String(result.supermarket || ""))}</span>
+                        <strong class="vc-price-value">${Number(result.price || 0).toFixed(2)} €</strong>
                         <span class="vc-price-availability ${result.availability === "available" ? "available" : "unavailable"}">${result.availability === "available" ? "✓" : "✗"}</span>
+                        ${result.note ? `<span class="vc-price-note">${escapeHtml(String(result.note))}</span>` : ""}
                       </div>
                     `).join("")
-                  : `<p class="vc-muted">No se encontraron precios</p>`
-                }
+                  : `<p class="vc-muted">No se encontraron precios</p>`}
               </div>
             </article>
           `).join("")}
@@ -6672,6 +6691,12 @@ function renderPriceComparisonModal() {
       }
       .vc-price-availability {
         font-size: 1.2rem;
+      }
+      .vc-price-note {
+        font-size: 0.8rem;
+        color: var(--vc-muted);
+        margin-top: 4px;
+        display: block;
       }
       .vc-price-availability.available {
         color: #2f8f58;
@@ -7096,11 +7121,31 @@ async function comparePrices() {
     return;
   }
 
+  // Check if we have cached results for the same shopping list
+  const currentListKey = JSON.stringify(state.week.shoppingList.map(item => ({ name: item.name, quantity: item.quantity, unit: item.unit })));
+  if (state.week.priceComparison && state.week.priceComparison.listKey === currentListKey && state.week.priceComparison.results) {
+    state.priceComparison.results = state.week.priceComparison.results;
+    state.priceComparison.loading = false;
+    state.priceComparison.error = null;
+    state.modal = { type: "priceComparison" };
+    render();
+    return;
+  }
+
   state.priceComparison.loading = true;
   state.priceComparison.error = null;
   state.priceComparison.results = null;
+  state.priceComparison.subtitle = PRICE_COMPARISON_SUBTITLES[0];
   state.modal = { type: "priceComparison" };
   render();
+
+  // Start rotating subtitles
+  let subtitleIndex = 0;
+  const subtitleTimer = setInterval(() => {
+    subtitleIndex = (subtitleIndex + 1) % PRICE_COMPARISON_SUBTITLES.length;
+    state.priceComparison.subtitle = PRICE_COMPARISON_SUBTITLES[subtitleIndex];
+    render();
+  }, 4000);
 
   try {
     const ingredients = state.week.shoppingList.map((item) => ({
@@ -7115,10 +7160,21 @@ async function comparePrices() {
       ingredients,
     });
 
+    clearInterval(subtitleTimer);
     state.priceComparison.results = data?.data || data;
     state.priceComparison.loading = false;
+
+    // Cache the results
+    state.week.priceComparison = {
+      listKey: currentListKey,
+      results: state.priceComparison.results,
+      timestamp: new Date().toISOString(),
+    };
+    await saveWeek();
+
     render();
   } catch (error) {
+    clearInterval(subtitleTimer);
     state.priceComparison.loading = false;
     state.priceComparison.error = String(error?.message || "Error desconocido");
     render();
