@@ -6571,6 +6571,7 @@ function renderPriceComparisonModal() {
   }
 
   if (error) {
+    const retryAvailable = (state.priceComparison.retryCount || 0) < 2;
     return `
       <div class="vc-modal-layer" data-action="close-modal">
         <div class="vc-modal" role="dialog" aria-modal="true">
@@ -6581,7 +6582,8 @@ function renderPriceComparisonModal() {
             </div>
           </div>
           <div class="vc-step-foot">
-            <button class="vc-button primary" data-action="close-modal">Entendido</button>
+            ${retryAvailable ? '<button class="vc-button secondary" data-action="retry-price-comparison">Intentar de nuevo</button>' : ''}
+            <button class="vc-button primary" data-action="close-modal">${retryAvailable ? 'Cerrar' : 'Cerrar'}</button>
           </div>
         </div>
       </div>
@@ -7114,6 +7116,17 @@ async function completeShoppingList() {
   render();
 }
 
+function translatePriceComparisonError(error) {
+  const raw = String(error?.message || error || "").toLowerCase();
+  if (raw.includes("high demand") || raw.includes("spikes in demand") || raw.includes("model is currently experiencing") || raw.includes("muy demandado") || raw.includes("saturado")) {
+    return "El modelo está muy demandado ahora mismo. Es un pico temporal.";
+  }
+  if (raw.includes("timeout") || raw.includes("gateway timeout") || raw.includes("504")) {
+    return "No he recibido respuesta a tiempo del servicio de precios.";
+  }
+  return "No he podido obtener la comparación de precios en este momento.";
+}
+
 async function comparePrices() {
   if (!state.week?.shoppingList?.length) {
     state.error = "No hay ingredientes en la lista para comparar.";
@@ -7121,12 +7134,12 @@ async function comparePrices() {
     return;
   }
 
-  // Check if we have cached results for the same shopping list
   const currentListKey = JSON.stringify(state.week.shoppingList.map(item => ({ name: item.name, quantity: item.quantity, unit: item.unit })));
   if (state.week.priceComparison && state.week.priceComparison.listKey === currentListKey && state.week.priceComparison.results) {
     state.priceComparison.results = state.week.priceComparison.results;
     state.priceComparison.loading = false;
     state.priceComparison.error = null;
+    state.priceComparison.retryCount = 0;
     state.modal = { type: "priceComparison" };
     render();
     return;
@@ -7135,11 +7148,11 @@ async function comparePrices() {
   state.priceComparison.loading = true;
   state.priceComparison.error = null;
   state.priceComparison.results = null;
+  state.priceComparison.retryCount = 0;
   state.priceComparison.subtitle = PRICE_COMPARISON_SUBTITLES[0];
   state.modal = { type: "priceComparison" };
   render();
 
-  // Start rotating subtitles
   let subtitleIndex = 0;
   const subtitleTimer = setInterval(() => {
     subtitleIndex = (subtitleIndex + 1) % PRICE_COMPARISON_SUBTITLES.length;
@@ -7164,7 +7177,6 @@ async function comparePrices() {
     state.priceComparison.results = data?.data || data;
     state.priceComparison.loading = false;
 
-    // Cache the results
     state.week.priceComparison = {
       listKey: currentListKey,
       results: state.priceComparison.results,
@@ -7176,7 +7188,13 @@ async function comparePrices() {
   } catch (error) {
     clearInterval(subtitleTimer);
     state.priceComparison.loading = false;
-    state.priceComparison.error = String(error?.message || "Error desconocido");
+    state.priceComparison.retryCount = (state.priceComparison.retryCount || 0) + 1;
+    const friendly = translatePriceComparisonError(error);
+    if (state.priceComparison.retryCount < 2) {
+      state.priceComparison.error = `${friendly} Intenta de nuevo.`;
+    } else {
+      state.priceComparison.error = `No he podido completar la comparación. Intenta más tarde, por favor.`;
+    }
     render();
   }
 }
@@ -7442,6 +7460,10 @@ async function handleAction(action, trigger) {
       } else {
         startHandsFreeMode();
       }
+      break;
+
+    case "retry-price-comparison":
+      await comparePrices();
       break;
 
     case "open-technique":
