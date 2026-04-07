@@ -125,6 +125,43 @@ function buildWeekPrompt(input: Record<string, unknown>) {
   ].join("\n");
 }
 
+function buildPriceComparisonPrompt(ingredients: Array<Record<string, unknown>>) {
+  const ingredientList = Array.isArray(ingredients)
+    ? ingredients.map((item) => `- ${item.name || "ingrediente"} ${item.quantity || 1}${item.unit ? ` ${item.unit}` : ""}`).join("\n")
+    : "";
+
+  return `Compara precios para los siguientes ingredientes en los supermercados españoles Carrefour, Mercadona, Bon Preu y Charter, y provee resultados en formato JSON sin markdown ni texto adicional. Usa precios reales aproximados de abril de 2026.
+
+Ingredientes:
+${ingredientList}
+
+Devuelve exactamente esta estructura JSON:
+{
+  "ingredients": [
+    {
+      "name": "nombre del ingrediente",
+      "quantity": 1,
+      "unit": "kg",
+      "results": [
+        {
+          "supermarket": "Nombre del supermercado",
+          "price": 2.50,
+          "currency": "EUR",
+          "product_name": "nombre exacto del producto",
+          "availability": "available/out_of_stock/unavailable",
+          "url": "enlace al producto si está disponible"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_items": 5,
+    "supermarkets_compared": ["Carrefour", "Mercadona", "Bon Preu", "Charter"],
+    "best_supermarket_overall": "nombre del supermercado con mejor relación precio-cantidad"
+  }
+}`;
+}
+
 function buildSwapPrompt(input: Record<string, unknown>) {
   const profile = (input.profile || {}) as Record<string, unknown>;
   const target = (input.target || {}) as Record<string, unknown>;
@@ -638,6 +675,15 @@ Deno.serve(async (request) => {
     const body = await request.json().catch(() => ({}));
     const action = String(body.action || "generate_week");
     const startDate = String(body.startDate || new Date().toISOString().slice(0, 10));
+
+    if (action === "compare_prices") {
+      const ingredients = Array.isArray(body.ingredients) ? body.ingredients : [];
+      if (!ingredients.length) {
+        return json({ ok: false, error: "Se requiere un array de ingredientes para comparar." }, { status: 400 });
+      }
+      const rawResult = await callGemini(buildPriceComparisonPrompt(ingredients));
+      return json({ ok: true, data: rawResult });
+    }
 
     if (action === "cook_guidance") {
       const rawGuidance = await callGemini(buildCookingGuidancePromptV2(body));

@@ -7108,35 +7108,12 @@ async function comparePrices() {
       category: item.category,
     }));
 
-    const sessionResult = await state.client.auth.getSession();
-    if (sessionResult.error) {
-      throw sessionResult.error;
-    }
-
-    let activeSession = sessionResult.data?.session || state.session || null;
-    let accessToken = activeSession?.access_token || "";
-
-    if (!accessToken) {
-      throw new Error("No hay una sesión activa para comparar precios.");
-    }
-
-    state.session = activeSession;
-
-    const headers = {
-      "Content-Type": "application/json",
-      "apikey": SUPABASE_ANON_KEY,
-      "Authorization": `Bearer ${accessToken}`,
-    };
-
-    const { data, error } = await state.client.functions.invoke("velocichef-price-comparison", {
-      body: { ingredients },
+    const data = await invokePlannerStable({
+      action: "compare_prices",
+      ingredients,
     });
 
-    if (error) {
-      throw error;
-    }
-
-    state.priceComparison.results = data?.data;
+    state.priceComparison.results = data?.data || data;
     state.priceComparison.loading = false;
     state.modal = { type: "priceComparison" };
     render();
