@@ -481,7 +481,18 @@ async function callGemini(prompt: string) {
   if (!text) {
     throw new Error("Gemini no devolvió contenido útil.");
   }
-  return JSON.parse(text);
+
+  // Extract JSON from the response, in case there's extra text
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error("Gemini no devolvió JSON válido.");
+  }
+
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch (parseError) {
+    throw new Error(`Error al parsear JSON de Gemini: ${parseError.message}`);
+  }
 }
 
 async function callGeminiImage(prompt: string) {
