@@ -3227,23 +3227,20 @@ function createCookLaunchOverlay(trigger, mealId) {
   overlay.className = "vc-cook-launch-overlay";
   const orb = document.createElement("div");
   orb.className = "vc-cook-launch-orb";
-  const revealOrb = document.createElement("div");
-  revealOrb.className = "vc-cook-launch-reveal-orb";
   const caption = document.createElement("span");
   caption.className = "vc-cook-launch-orb-label";
   caption.textContent = "Cocinar";
   orb.appendChild(caption);
   overlay.appendChild(orb);
-  overlay.appendChild(revealOrb);
   document.body.appendChild(overlay);
 
   activeCookLaunchOverlay = {
     element: overlay,
     orb,
-    revealOrb,
     caption,
     rect,
     mealId,
+    phase: "covering",
   };
 
   return activeCookLaunchOverlay;
@@ -3262,7 +3259,7 @@ async function playCookLaunchTransition(trigger, mealId) {
     return;
   }
 
-  const { rect, element, orb, revealOrb, caption } = launch;
+  const { rect, element, orb, caption } = launch;
   const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 390;
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 844;
   const centerX = rect.left + (rect.width / 2);
@@ -3279,17 +3276,10 @@ async function playCookLaunchTransition(trigger, mealId) {
   orb.style.width = `${rect.width}px`;
   orb.style.height = `${rect.height}px`;
   orb.style.borderRadius = `${Math.max(20, rect.height / 2)}px`;
-  revealOrb.style.left = `${rect.left}px`;
-  revealOrb.style.top = `${rect.top}px`;
-  revealOrb.style.width = `${rect.width}px`;
-  revealOrb.style.height = `${rect.height}px`;
-  revealOrb.style.borderRadius = `${Math.max(20, rect.height / 2)}px`;
 
   requestAnimationFrame(() => {
     element.classList.add("is-active");
   });
-
-  const startPromise = startCookingFlow(mealId, "active");
 
   try {
     const collapse = orb.animate([
@@ -3308,7 +3298,7 @@ async function playCookLaunchTransition(trigger, mealId) {
         borderRadius: "999px",
       },
     ], {
-      duration: 180,
+      duration: 220,
       easing: "cubic-bezier(.2,.8,.25,1)",
       fill: "forwards",
     });
@@ -3317,7 +3307,7 @@ async function playCookLaunchTransition(trigger, mealId) {
       { opacity: 1, transform: "scale(1)" },
       { opacity: 0, transform: "scale(.92)" },
     ], {
-      duration: 120,
+      duration: 180,
       easing: "ease-out",
       fill: "forwards",
     });
@@ -3334,7 +3324,6 @@ async function playCookLaunchTransition(trigger, mealId) {
         opacity: 1,
       },
       {
-        offset: .58,
         left: `${finalLeft}px`,
         top: `${finalTop}px`,
         width: `${expandedSize}px`,
@@ -3342,67 +3331,28 @@ async function playCookLaunchTransition(trigger, mealId) {
         borderRadius: `${Math.max(48, expandedSize * 0.18)}px`,
         opacity: 1,
       },
-      {
-        left: `${finalLeft}px`,
-        top: `${finalTop}px`,
-        width: `${expandedSize}px`,
-        height: `${expandedSize}px`,
-        borderRadius: `${Math.max(48, expandedSize * 0.18)}px`,
-        opacity: 0,
-      },
     ], {
-      duration: 680,
-      easing: "cubic-bezier(.16,.88,.24,1)",
+      duration: 540,
+      easing: "cubic-bezier(.16,.9,.24,1)",
       fill: "forwards",
     });
 
-    const revealExpand = revealOrb.animate([
-      {
-        left: `${morphLeft}px`,
-        top: `${morphTop}px`,
-        width: `${Math.max(48, morphSize * .78)}px`,
-        height: `${Math.max(48, morphSize * .78)}px`,
-        borderRadius: "999px",
-        opacity: .04,
-      },
-      {
-        offset: .36,
-        left: `${finalLeft + (expandedSize * .035)}px`,
-        top: `${finalTop + (expandedSize * .035)}px`,
-        width: `${expandedSize * .94}px`,
-        height: `${expandedSize * .94}px`,
-        borderRadius: `${Math.max(44, expandedSize * 0.16)}px`,
-        opacity: .98,
-      },
-      {
-        left: `${finalLeft + (expandedSize * .035)}px`,
-        top: `${finalTop + (expandedSize * .035)}px`,
-        width: `${expandedSize * .94}px`,
-        height: `${expandedSize * .94}px`,
-        borderRadius: `${Math.max(44, expandedSize * 0.16)}px`,
-        opacity: .88,
-      },
-      {
-        left: `${finalLeft + (expandedSize * .035)}px`,
-        top: `${finalTop + (expandedSize * .035)}px`,
-        width: `${expandedSize * .94}px`,
-        height: `${expandedSize * .94}px`,
-        borderRadius: `${Math.max(44, expandedSize * 0.16)}px`,
-        opacity: 0,
-      },
-    ], {
-      duration: 820,
-      delay: 115,
-      easing: "cubic-bezier(.14,.86,.22,1)",
-      fill: "forwards",
-    });
+    await expand.finished;
 
-    await Promise.allSettled([expand.finished, revealExpand.finished]);
-
+    activeCookLaunchOverlay.phase = "revealing";
+    const flowPromise = startCookingFlow(mealId, "active");
+    await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
+    const shell = root.querySelector(".vc-page-shell");
+    if (shell) {
+      shell.classList.add("vc-cook-reveal-shell");
+      shell.style.setProperty("--vc-cook-reveal-x", `${Math.round(centerX)}px`);
+      shell.style.setProperty("--vc-cook-reveal-y", `${Math.round(centerY)}px`);
+    }
+    element.classList.add("is-fading");
     cookLaunchCleanupTimer = window.setTimeout(() => {
       clearCookLaunchOverlay();
-    }, 90);
-    await startPromise;
+    }, 560);
+    await flowPromise;
   } catch (error) {
     clearCookLaunchOverlay();
     throw error;
@@ -8210,7 +8160,7 @@ function render() {
   const immersiveCook = isImmersiveCookMode();
   const pageIdentity = getCurrentPageIdentity();
   const didPageChange = pageIdentity !== lastRenderedPageIdentity;
-  const cookLaunchEntering = state.currentView === "cook" && !!activeCookLaunchOverlay;
+  const suppressPageEnter = state.currentView === "cook" && !!activeCookLaunchOverlay;
   const plannerTabKey = state.currentView === "week" || state.currentView === "recipes"
     ? `${state.currentView}:${state.selectedPlannerDay || ""}`
     : "";
@@ -8220,7 +8170,7 @@ function render() {
 
   if (state.loading) {
     captureModalUiState();
-    root.innerHTML = `${renderTopbar()}<div class="vc-page-shell ${didPageChange ? "vc-page-enter" : ""} ${cookLaunchEntering ? "vc-cook-reveal-shell" : ""}" data-page-key="${escapeHtml(pageIdentity)}">${renderLoading()}</div>`;
+    root.innerHTML = `${renderTopbar()}<div class="vc-page-shell ${didPageChange && !suppressPageEnter ? "vc-page-enter" : ""}" data-page-key="${escapeHtml(pageIdentity)}">${renderLoading()}</div>`;
     modalRoot.innerHTML = renderModal();
     repairVisibleText(root);
     repairVisibleText(modalRoot);
@@ -8253,7 +8203,7 @@ function render() {
       : renderWorkspace();
 
   captureModalUiState();
-  root.innerHTML = `${renderTopbar()}${renderNotificationBanner()}${renderToastStack()}<div class="vc-page-shell ${didPageChange ? "vc-page-enter" : ""} ${cookLaunchEntering ? "vc-cook-reveal-shell" : ""}" data-page-key="${escapeHtml(pageIdentity)}">${content}</div>`;
+  root.innerHTML = `${renderTopbar()}${renderNotificationBanner()}${renderToastStack()}<div class="vc-page-shell ${didPageChange && !suppressPageEnter ? "vc-page-enter" : ""}" data-page-key="${escapeHtml(pageIdentity)}">${content}</div>`;
   modalRoot.innerHTML = renderModal();
   repairVisibleText(root);
   repairVisibleText(modalRoot);

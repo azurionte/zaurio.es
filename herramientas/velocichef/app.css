@@ -782,13 +782,17 @@ body.vc-cook-immersive-body .vc-app{
   content:"";
   position:absolute;
   inset:0;
-  background:rgba(255,248,239,.14);
+  background:rgba(255,248,239,.08);
   opacity:0;
-  transition:opacity .18s ease;
+  transition:opacity .26s ease;
 }
 
 .vc-cook-launch-overlay.is-active::before{
   opacity:1;
+}
+
+.vc-cook-launch-overlay.is-fading::before{
+  opacity:0;
 }
 
 .vc-cook-launch-orb{
@@ -802,18 +806,7 @@ body.vc-cook-immersive-body .vc-app{
   letter-spacing:.01em;
   box-shadow:0 24px 48px rgba(239,123,45,.26);
   will-change:left, top, width, height, border-radius, opacity;
-  transition:opacity .18s ease, transform .18s ease;
-}
-
-.vc-cook-launch-reveal-orb{
-  position:fixed;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,.94), rgba(255,244,229,.82) 54%, rgba(255,233,202,.74));
-  box-shadow:0 20px 44px rgba(255,214,153,.2);
-  backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
-  will-change:left, top, width, height, border-radius, opacity;
-  opacity:0;
+  transition:opacity .42s ease, transform .42s ease, filter .42s ease;
 }
 
 .vc-cook-launch-orb-label{
@@ -822,20 +815,27 @@ body.vc-cook-immersive-body .vc-app{
 }
 
 .vc-cook-reveal-shell{
-  animation:vcCookRevealContent .72s cubic-bezier(.18,.82,.28,1) both;
+  animation:vcCookRevealContent .68s cubic-bezier(.16,.84,.24,1) both;
+  transform-origin:var(--vc-cook-reveal-x, 50%) var(--vc-cook-reveal-y, 50%);
 }
 
 @keyframes vcCookRevealContent{
   from{
-    opacity:.04;
-    filter:blur(16px);
-    transform:translateY(18px) scale(.985);
+    opacity:.08;
+    filter:blur(12px);
+    transform:scale(.985);
   }
   to{
     opacity:1;
     filter:blur(0);
-    transform:translateY(0) scale(1);
+    transform:scale(1);
   }
+}
+
+.vc-cook-launch-overlay.is-fading .vc-cook-launch-orb{
+  opacity:0;
+  transform:scale(1.015);
+  filter:saturate(.92) brightness(1.02);
 }
 
 .vc-card,
