@@ -268,6 +268,7 @@ let lastWakeLockErrorAt = 0;
 const COOKING_RECOVERY_MAX_AGE_MS = 1000 * 60 * 60 * 18;
 const PUSH_AUTO_REPAIR_MIN_INTERVAL_MS = 1000 * 45;
 const PUSH_EXPIRY_WARNING_MS = 1000 * 60 * 60 * 24 * 3;
+const PUSH_DEVICE_TAG_PREFIX = "vc-device:";
 
 function normalizeView(view) {
   const valid = new Set(["home", "week", "schedule", "shopping", "today-shopping", "recipes", "profile", "notifications", "onboarding", "cook"]);
@@ -755,6 +756,31 @@ function bytesToBase64Url(bytes) {
   return btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
+function normalizeSubscriptionUserAgent(userAgent) {
+  return String(userAgent || "").replace(/\s*\[vc-device:[^\]]+\]\s*$/i, "").trim();
+}
+
+function extractPushDeviceId(userAgent) {
+  const match = String(userAgent || "").match(/\[vc-device:([^\]]+)\]\s*$/i);
+  return match?.[1] ? String(match[1]).trim() : "";
+}
+
+function getPushDeviceId() {
+  const current = readLocal("push-device", null);
+  if (current?.id) return String(current.id);
+  const next = createId();
+  writeLocal("push-device", {
+    id: next,
+    createdAt: new Date().toISOString(),
+  });
+  return next;
+}
+
+function buildPushSubscriptionUserAgent() {
+  const baseUserAgent = String(navigator.userAgent || "").trim();
+  return `${baseUserAgent} [${PUSH_DEVICE_TAG_PREFIX}${getPushDeviceId()}]`.trim();
+}
+
 function base64UrlToUint8Array(value) {
   const padded = `${String(value).replace(/-/g, "+").replace(/_/g, "/")}${"=".repeat((4 - (String(value).length % 4 || 4)) % 4)}`;
   const raw = atob(padded);
@@ -868,22 +894,48 @@ async function loadWeek() {
       .select("*")
       .eq("user_id", state.session.user.id)
       .order("start_date", { ascending: false })
+      .order("updated_at", { ascending: false })
       .limit(12);
 
     if (error) throw error;
     if (Array.isArray(data) && data.length) {
-      const normalizedWeeks = data
-        .map((row) => normalizeWeek(row.week_payload))
-        .filter(Boolean);
-      const activeWeek = normalizedWeeks.find((week) => isCurrentPlanningWeek(week));
-      if (activeWeek) {
+      const normalizedRows = data
+        .map((row) => ({
+          row,
+          week: normalizeWeek({
+            ...(row.week_payload || {}),
+            id: row.id,
+            start_date: row.start_date,
+            end_date: row.end_date,
+            status: row.status,
+            shopping_completed: row.shopping_completed,
+            updated_at: row.updated_at,
+          }),
+        }))
+        .filter((entry) => entry.week)
+        .sort((left, right) => {
+          const startDiff = compareIsoDate(right.week.startDate, left.week.startDate);
+          if (startDiff) return startDiff;
+          return new Date(right.row.updated_at || 0).getTime() - new Date(left.row.updated_at || 0).getTime();
+        });
+      const activeEntry = normalizedRows.find((entry) => isCurrentPlanningWeek(entry.week));
+      if (activeEntry) {
+        const duplicateIds = normalizedRows
+          .filter((entry) => entry.row.id !== activeEntry.row.id)
+          .filter((entry) =>
+            entry.week.startDate === activeEntry.week.startDate
+            && entry.week.endDate === activeEntry.week.endDate)
+          .map((entry) => entry.row.id);
+        if (duplicateIds.length) {
+          void pruneDuplicateWeeks(activeEntry.week, duplicateIds);
+        }
         state.storageMode = "supabase";
         const mergedWeek = fallback?.cookingSnapshot
           ? normalizeWeek({
-              ...activeWeek,
+              ...activeEntry.week,
               cookingSnapshot: fallback.cookingSnapshot,
             })
-          : activeWeek;
+          : activeEntry.week;
         writeLocal("week", mergedWeek);
         return mergedWeek;
       }
@@ -917,6 +969,7 @@ async function saveWeek() {
     });
     if (error) throw error;
     state.storageMode = "supabase";
+    await pruneDuplicateWeeks(normalized);
     await syncRemoteReminders();
   } catch (_error) {
     state.storageMode = "local";
@@ -1240,12 +1293,13 @@ async function upsertPushSubscription(subscription) {
       endpoint: subscription.endpoint,
       p256dh: bytesToBase64Url(new Uint8Array(p256dh)),
       auth: bytesToBase64Url(new Uint8Array(auth)),
-      user_agent: navigator.userAgent,
+      user_agent: buildPushSubscriptionUserAgent(),
       enabled: true,
     }, {
       onConflict: "endpoint",
     });
     if (error) throw error;
+    await disableDuplicatePushSubscriptions(subscription);
   } catch (_error) {
     state.storageMode = "local";
   }
@@ -1268,6 +1322,43 @@ async function disablePushSubscription(subscriptionOrEndpoint) {
   }
 }
 
+async function disableDuplicatePushSubscriptions(subscription) {
+  if (!state.client || !state.session?.user || !subscription?.endpoint) return;
+  const currentEndpoint = String(subscription.endpoint || "").trim();
+  const currentDeviceId = getPushDeviceId();
+  const currentUserAgent = normalizeSubscriptionUserAgent(navigator.userAgent);
+  if (!currentEndpoint || !currentDeviceId) return;
+
+  try {
+    const { data, error } = await state.client
+      .from("velocichef_push_subscriptions")
+      .select("endpoint,user_agent,enabled")
+      .eq("user_id", state.session.user.id)
+      .eq("enabled", true);
+    if (error) throw error;
+
+    const duplicateEndpoints = (Array.isArray(data) ? data : [])
+      .filter((row) => String(row.endpoint || "").trim() && String(row.endpoint || "").trim() !== currentEndpoint)
+      .filter((row) => {
+        const storedDeviceId = extractPushDeviceId(row.user_agent);
+        if (storedDeviceId) return storedDeviceId === currentDeviceId;
+        return normalizeSubscriptionUserAgent(row.user_agent) === currentUserAgent;
+      })
+      .map((row) => String(row.endpoint).trim());
+
+    if (!duplicateEndpoints.length) return;
+
+    const { error: disableError } = await state.client
+      .from("velocichef_push_subscriptions")
+      .update({ enabled: false, updated_at: new Date().toISOString() })
+      .in("endpoint", duplicateEndpoints)
+      .eq("user_id", state.session.user.id);
+    if (disableError) throw disableError;
+  } catch (_error) {
+    state.storageMode = "local";
+  }
+}
+
 function readPushMeta() {
   return readLocal("push-meta", null);
 }
@@ -1279,6 +1370,7 @@ function writePushMeta(subscription) {
   }
   writeLocal("push-meta", {
     endpoint: String(subscription.endpoint || "").trim(),
+    deviceId: getPushDeviceId(),
     expirationTime: Number.isFinite(Number(subscription.expirationTime)) ? Number(subscription.expirationTime) : null,
     updatedAt: new Date().toISOString(),
   });
@@ -1311,6 +1403,36 @@ async function ensurePushSubscription(forceSubscribe = false) {
   }
 
   return { supported: true, subscription };
+}
+
+async function pruneDuplicateWeeks(referenceWeek = state.week, explicitDuplicateIds = []) {
+  if (!state.client || !state.session?.user || !referenceWeek?.id) return;
+  const duplicateIds = Array.from(new Set((explicitDuplicateIds || []).filter(Boolean)));
+
+  try {
+    if (!duplicateIds.length) {
+      const { data, error } = await state.client
+        .from("velocichef_weeks")
+        .select("id")
+        .eq("user_id", state.session.user.id)
+        .eq("start_date", referenceWeek.startDate)
+        .eq("end_date", referenceWeek.endDate)
+        .neq("id", referenceWeek.id);
+      if (error) throw error;
+      duplicateIds.push(...(Array.isArray(data) ? data.map((row) => row.id).filter(Boolean) : []));
+    }
+
+    if (!duplicateIds.length) return;
+
+    const { error: deleteError } = await state.client
+      .from("velocichef_weeks")
+      .delete()
+      .in("id", duplicateIds)
+      .eq("user_id", state.session.user.id);
+    if (deleteError) throw deleteError;
+  } catch (_error) {
+    state.storageMode = "local";
+  }
 }
 
 function createNotificationDeviceState(overrides = {}) {
@@ -4615,12 +4737,18 @@ async function generateWeek(startDate = getActivePlanningStartIso()) {
       profile: plannerProfilePayload(),
     });
     state.week = buildWeekFromPlan(data.plan || data);
+    if (previousWeek?.startDate === state.week.startDate && previousWeek?.endDate === state.week.endDate) {
+      state.week.id = previousWeek.id;
+    }
     state.week.carryoverIngredients = [];
     state.notice = "";
     state.error = "";
   } catch (_error) {
     const error = _error;
     state.week = buildWeekFromPlan(createSampleWeekPlan(startDate));
+    if (previousWeek?.startDate === state.week.startDate && previousWeek?.endDate === state.week.endDate) {
+      state.week.id = previousWeek.id;
+    }
     state.week.carryoverIngredients = mergeCarryoverIngredients(previousWeek?.carryoverIngredients || [], state.week.carryoverIngredients || []);
     state.notice = "No pude cerrar la generaciÃ³n real en este intento, asÃ­ que he dejado una semana de muestra editable para que sigas avanzando.";
     state.error = "Ahora mismo no he podido generar el menÃº real.";
@@ -8338,5 +8466,4 @@ window.addEventListener("popstate", () => {
 });
 
 init();
-
 

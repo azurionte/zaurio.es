@@ -295,14 +295,22 @@ async function fetchDueReminders(env, limit = 50) {
   const nowIso = encodeURIComponent(new Date().toISOString());
   return readSupabaseJson(
     env,
-    `/velocichef_reminders?select=id,user_id,payload&delivered_at=is.null&trigger_at=lte.${nowIso}&order=trigger_at.asc&limit=${limit}`,
+    `/velocichef_reminders?select=id,user_id,week_id,reminder_kind,trigger_at,payload&delivered_at=is.null&trigger_at=lte.${nowIso}&order=trigger_at.asc&limit=${limit}`,
   );
 }
 
 async function fetchSubscriptionsForUser(env, userId) {
   return readSupabaseJson(
     env,
-    `/velocichef_push_subscriptions?select=endpoint,p256dh,auth&enabled=is.true&user_id=eq.${encodeURIComponent(userId)}`,
+    `/velocichef_push_subscriptions?select=endpoint,p256dh,auth,user_agent,created_at,updated_at&enabled=is.true&user_id=eq.${encodeURIComponent(userId)}`,
+  );
+}
+
+async function fetchRecentWeeksForUser(env, userId, limit = 8) {
+  if (!userId) return [];
+  return readSupabaseJson(
+    env,
+    `/velocichef_weeks?select=id,user_id,start_date,end_date,created_at,updated_at&user_id=eq.${encodeURIComponent(userId)}&order=start_date.desc&order=updated_at.desc&limit=${limit}`,
   );
 }
 
@@ -342,6 +350,58 @@ async function disableSubscription(env, endpoint) {
   );
 }
 
+function extractPushDeviceId(userAgent) {
+  const match = String(userAgent || "").match(/\[vc-device:([^\]]+)\]\s*$/i);
+  return match?.[1] ? String(match[1]).trim() : "";
+}
+
+function normalizeSubscriptionUserAgent(userAgent) {
+  return String(userAgent || "").replace(/\s*\[vc-device:[^\]]+\]\s*$/i, "").trim();
+}
+
+function dedupeSubscriptions(subscriptions) {
+  const deduped = new Map();
+  for (const subscription of subscriptions || []) {
+    const taggedDeviceId = extractPushDeviceId(subscription.user_agent);
+    const signature = taggedDeviceId
+      ? `device:${taggedDeviceId}`
+      : (normalizeSubscriptionUserAgent(subscription.user_agent)
+        ? `ua:${normalizeSubscriptionUserAgent(subscription.user_agent)}`
+        : `endpoint:${subscription.endpoint}`);
+    const currentTimestamp = new Date(subscription.updated_at || subscription.created_at || 0).getTime();
+    const existing = deduped.get(signature);
+    const existingTimestamp = existing ? new Date(existing.updated_at || existing.created_at || 0).getTime() : -Infinity;
+    if (!existing || currentTimestamp >= existingTimestamp) {
+      deduped.set(signature, subscription);
+    }
+  }
+  return Array.from(deduped.values());
+}
+
+function compareWeeksByPriority(left, right) {
+  const endDiff = String(right?.end_date || "").localeCompare(String(left?.end_date || ""));
+  if (endDiff) return endDiff;
+  const startDiff = String(right?.start_date || "").localeCompare(String(left?.start_date || ""));
+  if (startDiff) return startDiff;
+  const updatedDiff = new Date(right?.updated_at || 0).getTime() - new Date(left?.updated_at || 0).getTime();
+  if (updatedDiff) return updatedDiff;
+  return new Date(right?.created_at || 0).getTime() - new Date(left?.created_at || 0).getTime();
+}
+
+function buildPrimaryWeekMap(weeks) {
+  const grouped = new Map();
+  for (const week of weeks || []) {
+    const userId = String(week?.user_id || "").trim();
+    const weekId = String(week?.id || "").trim();
+    if (!userId || !weekId) continue;
+    const current = grouped.get(userId);
+    if (!current || compareWeeksByPriority(week, current) < 0) {
+      grouped.set(userId, week);
+    }
+  }
+  return new Map(Array.from(grouped.entries()).map(([userId, week]) => [userId, week.id]));
+}
+
 async function processDueVelocichefNotifications(env, limit = 50) {
   if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) {
     return {
@@ -356,11 +416,45 @@ async function processDueVelocichefNotifications(env, limit = 50) {
     scanned: Array.isArray(reminders) ? reminders.length : 0,
     delivered: 0,
     skipped: 0,
+    suppressed: 0,
     invalidSubscriptions: 0,
     errors: [],
   };
 
+  let primaryWeekByUser = new Map();
+  const reminderUsers = Array.from(new Set((reminders || []).map((reminder) => reminder.user_id).filter(Boolean)));
+  if (reminderUsers.length) {
+    try {
+      const allWeeks = [];
+      for (const userId of reminderUsers) {
+        // Secuencial para mantener controlado el trafico al backend.
+        // eslint-disable-next-line no-await-in-loop
+        const weeks = await fetchRecentWeeksForUser(env, userId);
+        allWeeks.push(...(Array.isArray(weeks) ? weeks : []));
+      }
+      primaryWeekByUser = buildPrimaryWeekMap(allWeeks);
+    } catch (error) {
+      stats.errors.push(error instanceof Error ? error.message : "No pude leer las semanas activas de los recordatorios.");
+    }
+  }
+
   for (const reminder of reminders || []) {
+    const primaryWeekId = reminder.week_id ? primaryWeekByUser.get(reminder.user_id) : "";
+    if (
+      reminder.week_id
+      && reminder.reminder_kind !== "timer"
+      && primaryWeekId
+      && reminder.week_id !== primaryWeekId
+    ) {
+      try {
+        await markReminderDelivered(env, reminder.id);
+        stats.suppressed += 1;
+      } catch (error) {
+        stats.errors.push(error instanceof Error ? error.message : "No pude suprimir un recordatorio duplicado.");
+      }
+      continue;
+    }
+
     const deliveredAt = new Date().toISOString();
     const payload = {
       title: reminder.payload?.title || "VelociChef",
@@ -394,7 +488,7 @@ async function processDueVelocichefNotifications(env, limit = 50) {
 
     let subscriptions = [];
     try {
-      subscriptions = await fetchSubscriptionsForUser(env, reminder.user_id);
+      subscriptions = dedupeSubscriptions(await fetchSubscriptionsForUser(env, reminder.user_id));
     } catch (error) {
       stats.errors.push(error instanceof Error ? error.message : "No pude leer suscripciones.");
       continue;
