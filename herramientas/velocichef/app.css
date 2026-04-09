@@ -1234,6 +1234,10 @@ body.vc-cook-immersive-body .vc-app{
   padding:22px;
 }
 
+.vc-home-hero-compact{
+  padding:20px 22px;
+}
+
 .vc-home-summary-copy{
   max-width:62ch;
   font-size:1.04rem;
@@ -1272,6 +1276,125 @@ body.vc-cook-immersive-body .vc-app{
 .vc-home-ok{
   border-color:rgba(47,143,88,.2);
   background:linear-gradient(135deg, rgba(223,247,231,.76), rgba(255,255,255,.9));
+}
+
+.vc-home-week-shell{
+  display:grid;
+  gap:0;
+  overflow:hidden;
+}
+
+.vc-home-week-toggle{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  width:100%;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+}
+
+.vc-home-week-toggle-copy{
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+
+.vc-home-week-toggle-arrow{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:rgba(255,255,255,.76);
+  border:1px solid rgba(80,29,10,.1);
+  color:var(--vc-orange-deep);
+  font-size:1.15rem;
+}
+
+.vc-home-week-body{
+  display:grid;
+  gap:16px;
+  margin-top:18px;
+}
+
+.vc-home-week-tabs{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.vc-home-week-tab{
+  border:1px solid rgba(80,29,10,.1);
+  background:rgba(255,255,255,.7);
+  color:var(--vc-muted);
+  border-radius:999px;
+  padding:10px 14px;
+  font:inherit;
+  font-weight:800;
+}
+
+.vc-home-week-tab.active{
+  color:var(--vc-orange-deep);
+  border-color:rgba(239,123,45,.24);
+  background:linear-gradient(135deg, rgba(255,248,239,.98), rgba(255,236,210,.94));
+}
+
+.vc-home-week-summary{
+  position:relative;
+  overflow:hidden;
+  max-height:4.1em;
+}
+
+.vc-home-week-summary.is-expanded{
+  max-height:none;
+}
+
+.vc-home-week-summary-copy{
+  margin:0;
+  line-height:1.62;
+  padding-right:8px;
+}
+
+.vc-home-week-fade{
+  position:absolute;
+  inset:auto 0 0;
+  height:44px;
+  background:linear-gradient(180deg, rgba(255,250,244,0), rgba(255,250,244,.96));
+  pointer-events:none;
+}
+
+.vc-home-week-tips{
+  display:grid;
+  gap:12px;
+}
+
+.vc-home-shopping-widget{
+  gap:10px;
+}
+
+.vc-home-shopping-progress{
+  margin:0;
+  font-size:clamp(1.8rem, 5vw, 2.6rem);
+  line-height:1;
+  font-weight:900;
+  color:var(--vc-ink);
+}
+
+.vc-home-notification-cta{
+  border-color:rgba(239,123,45,.22);
+  background:
+    radial-gradient(circle at top right, rgba(255,212,91,.2), transparent 42%),
+    linear-gradient(135deg, rgba(255,249,241,.98), rgba(255,238,216,.92));
+}
+
+.vc-home-replan-banner{
+  border-color:rgba(239,123,45,.24);
 }
 
 .vc-reminder-tabs{
@@ -1536,7 +1659,7 @@ body.vc-cook-immersive-body .vc-app{
   gap:10px;
 }
 
-.vc-meal-actions .vc-button:last-child{
+.vc-meal-actions .vc-button.vc-button-wide{
   grid-column:1 / -1;
 }
 
@@ -1913,6 +2036,14 @@ body.vc-cook-immersive-body .vc-app{
   max-width:100%;
 }
 
+.vc-date-input{
+  min-height:52px;
+}
+
+.vc-planning-modal{
+  max-width:560px;
+}
+
 .vc-toast-stack{
   position:fixed;
   left:12px;
@@ -2253,6 +2384,10 @@ body.vc-cook-immersive-body .vc-app{
   .vc-recipe-bulkbar-actions .vc-button{
     flex:1 1 100%;
   }
+
+  .vc-home-week-toggle{
+    gap:12px;
+  }
 }
 
 @media (max-width:420px){
@@ -2267,6 +2402,11 @@ body.vc-cook-immersive-body .vc-app{
   .vc-day-tabs{
     gap:10px;
     padding-bottom:6px;
+  }
+
+  .vc-home-week-tabs{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
   }
 
   .vc-cook-feedback-stars{

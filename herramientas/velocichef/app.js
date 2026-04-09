@@ -232,6 +232,9 @@ const state = {
   profile: null,
   week: null,
   feedback: [],
+  homeWeekAccordionOpen: true,
+  homeWeekTab: "summary",
+  homeWeekExpanded: false,
   selectedPlannerDay: urlParams.get("day") || "",
   onboardingStep: 0,
   currentView: normalizeView(urlParams.get("view") || "home"),
@@ -517,6 +520,15 @@ function formatDateLong(isoDate) {
     weekday: "long",
     day: "numeric",
     month: "long",
+  });
+}
+
+function formatDateCalendarLong(isoDate) {
+  if (!isoDate) return "";
+  return fromIsoDate(isoDate).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 }
 
@@ -995,13 +1007,45 @@ async function loadWeek() {
 
 async function saveWeek() {
   if (!state.week || !state.session?.user) return;
-  const normalized = normalizeWeek(state.week);
-  state.week = normalized;
-  writeLocal("week", normalized);
+  state.week = await persistWeekRecord(state.week, { writeLocalWeek: true });
+}
+
+function composeRemindersForWeek(week) {
+  if (!week) return [];
+  const previousWeek = state.week;
+  state.week = week;
+  try {
+    return composeReminders();
+  } finally {
+    state.week = previousWeek;
+  }
+}
+
+async function syncRemoteRemindersForWeek(week) {
+  if (!week) return;
+  const previousWeek = state.week;
+  state.week = week;
+  try {
+    await syncRemoteReminders();
+  } finally {
+    state.week = previousWeek;
+  }
+}
+
+async function persistWeekRecord(week, options = {}) {
+  if (!week || !state.session?.user) return normalizeWeek(week);
+  const normalized = normalizeWeek(week);
+  const writeLocalWeek = options.writeLocalWeek !== false;
+  const duplicateIds = Array.from(new Set((options.duplicateIds || []).filter(Boolean)));
+
+  if (writeLocalWeek) {
+    state.week = normalized;
+    writeLocal("week", normalized);
+  }
 
   if (!state.client) {
     state.storageMode = "local";
-    return;
+    return normalized;
   }
 
   try {
@@ -1011,11 +1055,67 @@ async function saveWeek() {
     });
     if (error) throw error;
     state.storageMode = "supabase";
-    await pruneDuplicateWeeks(normalized);
-    await syncRemoteReminders();
+    await pruneDuplicateWeeks(normalized, duplicateIds);
+    await syncRemoteRemindersForWeek(normalized);
   } catch (_error) {
     state.storageMode = "local";
   }
+
+  return normalized;
+}
+
+async function findExistingWeeksByRange(startDate, endDate) {
+  if (!state.client || !state.session?.user || !startDate || !endDate) return [];
+
+  try {
+    const { data, error } = await state.client
+      .from("velocichef_weeks")
+      .select("id, start_date, end_date, updated_at")
+      .eq("user_id", state.session.user.id)
+      .eq("start_date", startDate)
+      .eq("end_date", endDate)
+      .order("updated_at", { ascending: false })
+      .limit(12);
+    if (error) throw error;
+    return Array.isArray(data) ? data.filter((row) => row?.id) : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+async function getPlanningRangeInfo() {
+  const fallbackLatestEnd = state.week?.endDate || "";
+  let latestEndDate = fallbackLatestEnd;
+
+  if (state.client && state.session?.user) {
+    try {
+      const { data, error } = await state.client
+        .from("velocichef_weeks")
+        .select("end_date")
+        .eq("user_id", state.session.user.id)
+        .order("end_date", { ascending: false })
+        .order("updated_at", { ascending: false })
+        .limit(24);
+      if (error) throw error;
+      const dates = Array.isArray(data)
+        ? data.map((row) => String(row?.end_date || "").trim()).filter(Boolean)
+        : [];
+      if (dates.length) {
+        latestEndDate = dates.sort((left, right) => compareIsoDate(right, left))[0];
+      }
+    } catch (_error) {
+      latestEndDate = fallbackLatestEnd;
+    }
+  }
+
+  const hasPlans = !!latestEndDate;
+  const minStartDate = hasPlans ? addDays(latestEndDate, 1) : getActivePlanningStartIso();
+  return {
+    hasPlans,
+    latestEndDate,
+    minStartDate,
+    suggestedStartDate: minStartDate,
+  };
 }
 
 async function loadFeedback() {
@@ -3944,6 +4044,17 @@ function buildWeekSummaryText() {
   return `Esta semana tienes ${mealCount} platos pensados para que la cocina vaya suave, con sabores variados y una compra mas facil de sostener. ${ingredientCopy}`;
 }
 
+function getShoppingProgress(items = []) {
+  const normalizedItems = Array.isArray(items) ? items : [];
+  const total = normalizedItems.length;
+  const bought = normalizedItems.filter((item) => normalizeShoppingStatus(item?.pantryStatus) === "bought").length;
+  return {
+    total,
+    bought,
+    pending: Math.max(0, total - bought),
+  };
+}
+
 function parseAppUrl(url) {
   const next = new URL(url, window.location.origin);
   return {
@@ -5043,11 +5154,18 @@ async function invokePlannerStable(body) {
   return payload;
 }
 
-async function generateWeek(startDate = getActivePlanningStartIso()) {
+async function generateWeek(startDate = getActivePlanningStartIso(), options = {}) {
   state.busy = true;
-  state.busyLabel = "Preparando tu menÃº semanal...";
+  state.busyLabel = "Preparando tu menú semanal...";
   state.error = "";
   const previousWeek = state.week ? normalizeWeek(state.week) : null;
+  const preserveVisibleWeek = !!options.preserveVisibleWeek && !!previousWeek;
+  const sameVisibleRange = previousWeek
+    && previousWeek.startDate === startDate
+    && previousWeek.endDate === addDays(startDate, 6);
+  const returnView = options.returnView || (preserveVisibleWeek ? (state.currentView === "onboarding" ? "home" : state.currentView || "home") : "week");
+  let usedFallback = false;
+  let nextWeek = null;
   render();
 
   try {
@@ -5056,29 +5174,65 @@ async function generateWeek(startDate = getActivePlanningStartIso()) {
       startDate,
       profile: plannerProfilePayload(),
     });
-    state.week = buildWeekFromPlan(data.plan || data);
-    if (previousWeek?.startDate === state.week.startDate && previousWeek?.endDate === state.week.endDate) {
-      state.week.id = previousWeek.id;
-    }
-    state.week.carryoverIngredients = [];
-    state.notice = "";
-    state.error = "";
+    nextWeek = buildWeekFromPlan(data.plan || data);
   } catch (_error) {
-    const error = _error;
-    state.week = buildWeekFromPlan(createSampleWeekPlan(startDate));
-    if (previousWeek?.startDate === state.week.startDate && previousWeek?.endDate === state.week.endDate) {
-      state.week.id = previousWeek.id;
-    }
-    state.week.carryoverIngredients = mergeCarryoverIngredients(previousWeek?.carryoverIngredients || [], state.week.carryoverIngredients || []);
-    state.notice = "No pude cerrar la generaciÃ³n real en este intento, asÃ­ que he dejado una semana de muestra editable para que sigas avanzando.";
-    state.error = "Ahora mismo no he podido generar el menÃº real.";
+    usedFallback = true;
+    nextWeek = buildWeekFromPlan(createSampleWeekPlan(startDate));
   } finally {
-    state.week.reminders = composeReminders();
-    await saveWeek();
-    state.currentView = "week";
-    ensureSelectedPlannerDay({ forceDefault: true });
-    pendingPlannerTabCenterBehavior = "auto";
-    syncHistoryFromState({ mode: "replace", view: "week", day: state.selectedPlannerDay });
+    if (nextWeek) {
+      const matchingWeeks = await findExistingWeeksByRange(nextWeek.startDate, nextWeek.endDate);
+      if (sameVisibleRange && previousWeek?.id) {
+        nextWeek.id = previousWeek.id;
+      } else if (matchingWeeks.length) {
+        nextWeek.id = matchingWeeks[0].id;
+      }
+
+      if (sameVisibleRange) {
+        nextWeek.carryoverIngredients = usedFallback
+          ? mergeCarryoverIngredients(previousWeek?.carryoverIngredients || [], nextWeek.carryoverIngredients || [])
+          : (nextWeek.carryoverIngredients || []);
+      }
+
+      nextWeek.reminders = composeRemindersForWeek(nextWeek);
+      const duplicateIds = matchingWeeks
+        .map((row) => row.id)
+        .filter((id) => id && id !== nextWeek.id);
+      const savedWeek = await persistWeekRecord(nextWeek, {
+        writeLocalWeek: !preserveVisibleWeek,
+        duplicateIds,
+      });
+
+      if (preserveVisibleWeek) {
+        state.week = previousWeek;
+        writeLocal("week", previousWeek);
+        state.notice = options.successNotice || (usedFallback
+          ? `No pude cerrar la generación real de la semana que empieza el ${formatDateCalendarLong(startDate)}, pero he dejado una propuesta base guardada para ti.`
+          : `He dejado preparada otra semana empezando el ${formatDateCalendarLong(startDate)}. Tu plan actual sigue intacto.`);
+        state.error = "";
+        state.currentView = returnView;
+        if (state.currentView === "week" || state.currentView === "recipes") {
+          ensureSelectedPlannerDay();
+          pendingPlannerTabCenterBehavior = "auto";
+          syncHistoryFromState({ mode: "replace", view: state.currentView, day: state.selectedPlannerDay });
+        } else {
+          syncHistoryFromState({ mode: "replace", view: state.currentView, tab: state.notificationTab });
+        }
+      } else {
+        state.week = savedWeek;
+        state.notice = options.successNotice || (usedFallback
+          ? "No pude cerrar la generación real en este intento, así que he dejado una semana de muestra editable para que sigas avanzando."
+          : "");
+        state.error = "";
+        state.currentView = returnView;
+        if (state.currentView === "week" || state.currentView === "recipes") {
+          ensureSelectedPlannerDay({ forceDefault: true });
+          pendingPlannerTabCenterBehavior = "auto";
+          syncHistoryFromState({ mode: "replace", view: state.currentView, day: state.selectedPlannerDay });
+        } else {
+          syncHistoryFromState({ mode: "replace", view: state.currentView, tab: state.notificationTab });
+        }
+      }
+    }
     state.busy = false;
     state.busyLabel = "";
     render();
@@ -5759,7 +5913,7 @@ function renderOnboarding() {
           <span class="vc-helper">Esto se usará para ajustar recordatorios y encajar el plan con tu ritmo real.</span>
         </div>
         <div class="vc-note vc-note-strong">
-          Se generará una semana empezando mañana, con porciones adaptadas a ${state.profile.householdCount} ${state.profile.householdCount === 1 ? "persona" : "personas"}, intentando reutilizar ingredientes y midiendo calorías aproximadas por plato.
+          Cuando termines te preguntaré desde qué día quieres empezar a planificar, con porciones adaptadas a ${state.profile.householdCount} ${state.profile.householdCount === 1 ? "persona" : "personas"}, intentando reutilizar ingredientes y midiendo calorías aproximadas por plato.
         </div>
       `,
     },
@@ -5800,80 +5954,100 @@ function renderOnboarding() {
 
 function renderBanner() {
   if (!state.week) return "";
-
-  const banners = [];
-  if (shouldPromptShopping(state.week)) {
-    banners.push(`
-      <article class="vc-banner">
-        <strong>Tu lista de la compra todavÃ­a no estÃ¡ marcada como completada.</strong>
-        <p class="vc-copy">Puedes terminarla ahora o revisar quÃ© ingredientes te faltan antes de salir al sÃºper.</p>
-        <div class="vc-inline-actions">
-          <button class="vc-button primary" data-action="open-view" data-view="shopping">Completar</button>
-          <button class="vc-button secondary" data-action="open-view" data-view="shopping">Revisar lista</button>
-        </div>
-      </article>
-    `);
-  }
-
-  if (isWeekEndingSoon(state.week)) {
-    banners.push(`
-      <article class="vc-banner">
-        <strong>Esta semana estÃ¡ a punto de acabarse.</strong>
-        <p class="vc-copy">Puedes lanzar ya la siguiente comenzando justo despuÃ©s del plan actual y reutilizando las preferencias guardadas.</p>
-        <div class="vc-inline-actions">
-          <button class="vc-button primary" data-action="replan-next-week">Programar la siguiente semana</button>
-        </div>
-      </article>
-    `);
-  }
-
-  return banners.join("");
+  if (!isWeekEndingSoon(state.week)) return "";
+  return `
+    <article class="vc-banner">
+      <strong>Esta semana está a punto de acabarse.</strong>
+      <p class="vc-copy">Cuando quieras, preparo la siguiente sin tocar el plan que ya tienes activo.</p>
+      <div class="vc-inline-actions">
+        <button class="vc-button primary" data-action="replan-next-week">Planificar semana siguiente</button>
+      </div>
+    </article>
+  `;
 }
 
 function renderWorkspaceHeader() {
   const userName = state.profile?.displayName?.split(" ")[0] || "Chef";
-  const mealsCount = flattenMeals(state.week).length;
-  const shoppingItems = state.week?.shoppingList?.length || 0;
-  const reminderCount = state.week?.reminders?.filter((item) => !item.deliveredAt).length || 0;
-  const weekSummary = buildWeekSummaryText();
 
   return `
     <section class="vc-workspace-head">
-      <article class="vc-hero vc-home-hero">
+      <article class="vc-hero vc-home-hero vc-home-hero-compact">
         <div class="vc-header-copy">
-          <span class="vc-eyebrow">Tu semana actual</span>
+          <span class="vc-eyebrow">Inicio</span>
           <h1 class="vc-title">Hola, ${escapeHtml(userName)}.</h1>
-          <p class="vc-copy vc-home-summary-copy">${escapeHtml(weekSummary)}</p>
-        </div>
-        <div class="vc-chip-row">
-          <span class="vc-meta-pill">${escapeHtml(formatDateLong(state.week?.startDate || getTomorrowIso()))}</span>
-          <span class="vc-meta-pill">${state.week?.shoppingCompleted ? "Compra cerrada" : "Compra pendiente"}</span>
-          <span class="vc-meta-pill">${escapeHtml(state.profile?.timezone || getTimezone())}</span>
-        </div>
-        <div class="vc-inline-actions">
-          <button class="vc-button primary" data-action="open-view" data-view="week">Ver calendario</button>
-          <button class="vc-button secondary" data-action="open-view" data-view="shopping">Abrir compra</button>
+          <p class="vc-copy">Te dejo a mano lo importante de tu semana para cocinar con menos fricción.</p>
         </div>
       </article>
-
-      <div class="vc-stat-grid">
-        <article class="vc-stat">
-          <small class="vc-muted">Semana actual</small>
-          <strong>${mealsCount}</strong>
-          <span class="vc-muted">platos planificados</span>
-        </article>
-        <article class="vc-stat">
-          <small class="vc-muted">Lista del sÃºper</small>
-          <strong>${shoppingItems}</strong>
-          <span class="vc-muted">ingredientes agregados</span>
-        </article>
-        <article class="vc-stat">
-          <small class="vc-muted">Recordatorios</small>
-          <strong>${reminderCount}</strong>
-          <span class="vc-muted">avisos pendientes</span>
-        </article>
-      </div>
     </section>
+  `;
+}
+
+function renderHomeWeekOverview() {
+  if (!state.week) return "";
+  const isOpen = state.homeWeekAccordionOpen !== false;
+  const activeTab = state.homeWeekTab === "tips" ? "tips" : "summary";
+  const summaryExpanded = !!state.homeWeekExpanded;
+  const summaryText = buildWeekSummaryText();
+  const tips = (state.week.batchingTips || []).slice(0, 4);
+
+  return `
+    <article class="vc-panel vc-home-week-shell ${isOpen ? "is-open" : ""}">
+      <button class="vc-home-week-toggle" type="button" data-action="toggle-home-week-accordion" aria-expanded="${isOpen ? "true" : "false"}">
+        <span class="vc-home-week-toggle-copy">
+          <span class="vc-eyebrow">Tu semana actual</span>
+          <strong class="vc-inline-title">Resumen rápido</strong>
+          <span class="vc-editor-toggle-summary">${escapeHtml(formatDateLong(state.week.startDate))} a ${escapeHtml(formatDateCalendarLong(state.week.endDate))}</span>
+        </span>
+        <span class="vc-home-week-toggle-arrow" aria-hidden="true">${isOpen ? "▾" : "▸"}</span>
+      </button>
+
+      ${isOpen ? `
+        <div class="vc-home-week-body">
+          <div class="vc-home-week-tabs" role="tablist" aria-label="Resumen de tu semana">
+            <button class="vc-home-week-tab ${activeTab === "summary" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "summary" ? "true" : "false"}" data-action="set-home-week-tab" data-tab="summary">Esta semana</button>
+            <button class="vc-home-week-tab ${activeTab === "tips" ? "active" : ""}" type="button" role="tab" aria-selected="${activeTab === "tips" ? "true" : "false"}" data-action="set-home-week-tab" data-tab="tips">Tips para esta semana</button>
+          </div>
+
+          ${activeTab === "summary" ? `
+            <div class="vc-home-week-summary ${summaryExpanded ? "is-expanded" : ""}">
+              <p class="vc-copy vc-home-week-summary-copy">${escapeHtml(summaryText)}</p>
+              ${summaryExpanded ? "" : '<div class="vc-home-week-fade" aria-hidden="true"></div>'}
+            </div>
+            <div class="vc-inline-actions">
+              <button class="vc-button secondary" type="button" data-action="toggle-home-week-expanded">${summaryExpanded ? "Ver menos" : "Ver más"}</button>
+              <button class="vc-button primary" type="button" data-action="open-view" data-view="week">Ver calendario</button>
+            </div>
+          ` : `
+            <div class="vc-home-week-tips">
+              ${tips.length ? `
+                <ul class="vc-list">
+                  ${tips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join("")}
+                </ul>
+              ` : `
+                <p class="vc-copy">Cuando detecte atajos útiles para esta semana te los dejaré aquí a mano.</p>
+              `}
+            </div>
+            <div class="vc-inline-actions">
+              <button class="vc-button primary" type="button" data-action="open-view" data-view="week">Ver calendario</button>
+            </div>
+          `}
+        </div>
+      ` : ""}
+    </article>
+  `;
+}
+
+function renderHomeShoppingWidget({ eyebrow, title, progress, description, actionView, actionLabel }) {
+  return `
+    <article class="vc-summary-card vc-home-shopping-widget">
+      <small class="vc-muted">${escapeHtml(eyebrow)}</small>
+      <strong>${escapeHtml(title)}</strong>
+      <p class="vc-home-shopping-progress">${progress.bought}/${progress.total}</p>
+      <p class="vc-copy">${escapeHtml(description)}</p>
+      <div class="vc-inline-actions">
+        <button class="vc-button secondary" data-action="open-view" data-view="${actionView}">${escapeHtml(actionLabel)}</button>
+      </div>
+    </article>
   `;
 }
 
@@ -5901,83 +6075,84 @@ function renderHomeView() {
   if (!state.week) return renderWeekView();
   const todayEntries = getRemainingCookingEntriesToday();
   const nextEntry = getNextCookingEntry();
-  const missingTodayItems = getTodayMissingShoppingItems();
-  const futureReminderCount = (state.week.reminders || []).filter((reminder) => getReminderBucket(reminder) === "future").length;
-  const batchingTips = (state.week.batchingTips || []).slice(0, 3);
+  const todayItems = getRelevantShoppingItemsForEntries(todayEntries, { onlyMissing: false });
+  const weekProgress = getShoppingProgress(state.week.shoppingList || []);
+  const todayProgress = getShoppingProgress(todayItems);
+  const missingTodayItems = todayProgress.pending;
+  const notificationsActiveHere = isNotificationActiveOnCurrentDevice();
 
   return `
     <section class="vc-grid">
-      <div class="vc-grid two vc-home-grid">
-        <article class="vc-panel vc-home-section">
-          <span class="vc-eyebrow">Hoy</span>
-          <h2 class="vc-title">Lo que queda por cocinar</h2>
-          <p class="vc-copy">VelociChef mira la hora actual y te ensena solo los platos que todavia entran en juego hoy.</p>
-          ${todayEntries.length ? `
-            <div class="vc-home-meal-list">
-              ${todayEntries.map(renderHomeMealCard).join("")}
-            </div>
-          ` : `
-            <article class="vc-card vc-empty vc-home-empty">
-              <h3 class="vc-inline-title">Hoy ya no queda nada pendiente.</h3>
-              <p class="vc-copy">${nextEntry
-                ? `Lo siguiente que viene es ${nextEntry.meal.title} para ${formatDateLong(nextEntry.day.date)}.`
-                : "Cuando tengas un plato activo aqui te mostrare el siguiente paso de la semana."}</p>
-              <div class="vc-inline-actions" style="justify-content:center">
-                <button class="vc-button primary" data-action="open-view" data-view="week">Abrir calendario</button>
-              </div>
-            </article>
-          `}
-        </article>
+      ${renderHomeWeekOverview()}
 
-        <article class="vc-panel vc-home-section">
-          <span class="vc-eyebrow">Semana</span>
-          <h2 class="vc-title">Resumen rapido</h2>
-          <p class="vc-copy">Tus avisos, la compra y las recetas de esta semana quedan aqui a mano para moverte rapido entre lo importante.</p>
-          <div class="vc-home-side-stack">
-            <article class="vc-summary-card">
-              <small class="vc-muted">Avisos por delante</small>
-              <strong>${futureReminderCount}</strong>
-              <p class="vc-copy">recordatorios futuros entre cocina, congelador y replanificacion.</p>
-            </article>
-            <article class="vc-summary-card">
-              <small class="vc-muted">Compra de hoy</small>
-              <strong>${missingTodayItems.length}</strong>
-              <p class="vc-copy">${missingTodayItems.length ? "ingredientes pendientes para los platos de hoy." : "No hay ingredientes pendientes para hoy."}</p>
-            </article>
-          </div>
+      ${notificationsActiveHere ? "" : `
+        <article class="vc-banner vc-home-notification-cta">
+          <strong>Activa las notificaciones para que VelociChef te acompañe de verdad.</strong>
+          <p class="vc-copy">Así te avisaré cuando toque cocinar, descongelar algo o planificar la siguiente semana.</p>
           <div class="vc-inline-actions">
-            <button class="vc-button secondary" data-action="open-view" data-view="notifications">Notificaciones</button>
-            <button class="vc-button ghost" data-action="open-view" data-view="recipes">Mis recetas</button>
+            <button class="vc-button primary" data-action="request-notifications">Activar notificaciones</button>
           </div>
-        </article>
-      </div>
-
-      ${missingTodayItems.length ? `
-        <article class="vc-banner vc-home-warning">
-          <strong>Puede que no tengas todos los ingredientes para hoy.</strong>
-          <p class="vc-copy">Faltan ${missingTodayItems.length} ingrediente${missingTodayItems.length === 1 ? "" : "s"} por revisar para los platos que aun quedan por cocinar.</p>
-          <div class="vc-inline-actions">
-            <button class="vc-button primary" data-action="open-view" data-view="today-shopping">Revisar</button>
-          </div>
-        </article>
-      ` : `
-        <article class="vc-summary-card vc-home-ok">
-          <strong>Hoy lo tienes controlado.</strong>
-          <p class="vc-copy">Todo lo que necesitas para los platos pendientes de hoy ya esta marcado como resuelto.</p>
         </article>
       `}
 
-      ${batchingTips.length ? `
-        <article class="vc-panel">
-          <span class="vc-eyebrow">Para que vaya suave</span>
-          <h2 class="vc-title">Pequenos atajos de la semana</h2>
-          <ul class="vc-list">
-            ${batchingTips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join("")}
-          </ul>
+      <article class="vc-panel vc-home-section">
+        <span class="vc-eyebrow">Compra</span>
+        <h2 class="vc-title">Ingredientes del plan actual</h2>
+        <p class="vc-copy">${missingTodayItems ? "Puede que no tengas todos los ingredientes para hoy." : "La compra de hoy parece controlada, pero aquí te dejo el avance real para revisar rápido."}</p>
+        <div class="vc-grid two vc-home-grid">
+          ${renderHomeShoppingWidget({
+            eyebrow: "Carrito semanal",
+            title: `${weekProgress.pending ? "Pendiente" : "Comprado"}`,
+            progress: weekProgress,
+            description: weekProgress.total
+              ? `${weekProgress.bought} de ${weekProgress.total} ingredientes ya están revisados para toda la semana.`
+              : "Todavía no hay ingredientes cargados en esta semana.",
+            actionView: "shopping",
+            actionLabel: "Abrir carrito semanal",
+          })}
+          ${renderHomeShoppingWidget({
+            eyebrow: "Ingredientes para hoy",
+            title: todayProgress.total ? `${todayProgress.pending ? "Por revisar" : "Todo listo"}` : "Sin compra pendiente",
+            progress: todayProgress,
+            description: todayProgress.total
+              ? `${todayProgress.bought} de ${todayProgress.total} ingredientes de hoy ya están marcados como resueltos.`
+              : "No hay ingredientes pendientes ligados a lo que queda por cocinar hoy.",
+            actionView: "today-shopping",
+            actionLabel: "Revisar lo de hoy",
+          })}
+        </div>
+      </article>
+
+      <article class="vc-panel vc-home-section">
+        <span class="vc-eyebrow">Plan pendiente para hoy</span>
+        <h2 class="vc-title">Lo que queda por cocinar</h2>
+        <p class="vc-copy">VelociChef mira la hora actual y te enseña solo los platos que todavía entran en juego hoy.</p>
+        ${todayEntries.length ? `
+          <div class="vc-home-meal-list">
+            ${todayEntries.map(renderHomeMealCard).join("")}
+          </div>
+        ` : `
+          <article class="vc-card vc-empty vc-home-empty">
+            <h3 class="vc-inline-title">Hoy ya no queda nada pendiente.</h3>
+            <p class="vc-copy">${nextEntry
+              ? `Lo siguiente que viene es ${nextEntry.meal.title} para ${formatDateLong(nextEntry.day.date)}.`
+              : "Cuando tengas otro plato en marcha volveré a mostrártelo aquí."}</p>
+            <div class="vc-inline-actions" style="justify-content:center">
+              <button class="vc-button primary" data-action="open-view" data-view="week">Ver calendario</button>
+            </div>
+          </article>
+        `}
+      </article>
+
+      ${isWeekEndingSoon(state.week) ? `
+        <article class="vc-banner vc-home-replan-banner">
+          <strong>Esta semana está a punto de acabarse.</strong>
+          <p class="vc-copy">Puedes dejar la siguiente planificada desde la fecha que prefieras sin tocar tu plan actual.</p>
+          <div class="vc-inline-actions">
+            <button class="vc-button primary" data-action="replan-next-week">Planificar semana siguiente</button>
+          </div>
         </article>
       ` : ""}
-
-      ${renderBanner()}
     </section>
   `;
 }
@@ -6015,10 +6190,10 @@ function renderMealCard(day, mealKey, meal) {
       ${pendingChange ? `<div class="vc-note vc-note-warn vc-meal-note">${escapeHtml(getPendingRecipeReasonSummary(pendingChange))}</div>` : ""}
       <div class="vc-meal-actions">
         ${cookable ? `<button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>` : ""}
+        <button class="vc-button ghost" data-action="open-details" data-meal-id="${meal.id}">Ver detalles</button>
         ${cookable ? `<button class="vc-button subtle" data-action="toggle-like" data-meal-id="${meal.id}">Me gusta</button>` : ""}
         ${cookable ? `<button class="vc-button secondary" data-action="open-refine" data-meal-id="${meal.id}">${pendingChange ? "Editar cambio" : "No me convence"}</button>` : ""}
-        <button class="vc-button ghost" data-action="open-details" data-meal-id="${meal.id}">Ver detalles</button>
-        ${pendingChange ? `<button class="vc-button ghost" data-action="remove-pending-recipe-change" data-meal-id="${meal.id}">Quitar marca</button>` : ""}
+        ${pendingChange ? `<button class="vc-button ghost vc-button-wide" data-action="remove-pending-recipe-change" data-meal-id="${meal.id}">Quitar marca</button>` : ""}
       </div>
     </article>
   `;
@@ -6118,12 +6293,6 @@ function renderWeeklyPlannerView() {
             ${Object.entries(selectedDay.meals || {}).map(([mealKey, meal]) => renderMealCard(selectedDay, mealKey, meal)).join("")}
           </div>
         </article>
-      ` : ""}
-
-      ${!state.week.scheduleStepComplete ? `
-        <div class="vc-inline-actions" style="justify-content:flex-end">
-          <button class="vc-button primary" data-action="open-view" data-view="schedule">Siguiente</button>
-        </div>
       ` : ""}
 
       ${renderPlannerBulkBar()}
@@ -7404,6 +7573,55 @@ function renderFutureNoCookResultModal() {
   `;
 }
 
+function renderPlanningStartModal() {
+  const modalState = state.modal || {};
+  const plannedUntil = modalState.plannedUntil || "";
+  const minStartDate = modalState.minStartDate || getActivePlanningStartIso();
+  const startDate = modalState.startDate || minStartDate;
+  const inlineError = modalState.inlineError || "";
+
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-reminder-modal vc-planning-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">${plannedUntil ? "Nueva planificación" : "Primera semana"}</small>
+            <h2 class="vc-modal-title">${escapeHtml(modalState.title || "¿Desde cuándo quieres planificar?")}</h2>
+            <p class="vc-copy">${escapeHtml(modalState.body || "Elige el día desde el que quieres empezar.")}</p>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
+        </div>
+
+        <article class="vc-profile-card">
+          ${plannedUntil ? `
+            <div class="vc-note vc-note-strong">
+              Tienes planificadas comidas hasta el <strong>${escapeHtml(formatDateCalendarLong(plannedUntil))}</strong>.
+            </div>
+          ` : ""}
+          <div class="vc-field">
+            <label class="vc-label" for="planning-start-date">Desde cuándo quieres planificar</label>
+            <input
+              id="planning-start-date"
+              class="vc-input vc-date-input"
+              type="date"
+              data-modal-field="startDate"
+              min="${escapeHtml(minStartDate)}"
+              value="${escapeHtml(startDate)}"
+            >
+            <small class="vc-helper">A partir de esa fecha prepararé una semana completa sin borrar lo que ya tengas guardado.</small>
+          </div>
+          ${inlineError ? `<div class="vc-error">${escapeHtml(inlineError)}</div>` : ""}
+        </article>
+
+        <div class="vc-step-foot">
+          <button class="vc-button secondary" data-action="close-modal">Cancelar</button>
+          <button class="vc-button primary" data-action="confirm-planning-start">Preparar semana</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderReminderApplyAllModal(reminder) {
   return `
     <div class="vc-modal-layer" data-action="close-modal">
@@ -7728,6 +7946,9 @@ function renderModal() {
   if (state.modal.type === "future-no-cook-result") {
     return `${renderFutureNoCookResultModal()}${renderBusyOverlay()}`;
   }
+  if (state.modal.type === "planning-start") {
+    return `${renderPlanningStartModal()}${renderBusyOverlay()}`;
+  }
   if (state.modal.type === "cook-recovery") {
     return `${renderCookRecoveryModal()}${renderBusyOverlay()}`;
   }
@@ -7876,6 +8097,34 @@ function validateOnboardingStep() {
   return true;
 }
 
+async function openPlanningStartModal(mode = "future-week") {
+  state.busy = true;
+  state.busyLabel = "Preparando fechas...";
+  state.error = "";
+  render();
+
+  try {
+    const planningInfo = await getPlanningRangeInfo();
+    const isFirstWeek = mode === "first-week";
+    state.modal = {
+      type: "planning-start",
+      mode,
+      startDate: planningInfo.suggestedStartDate,
+      minStartDate: planningInfo.minStartDate,
+      plannedUntil: planningInfo.hasPlans ? planningInfo.latestEndDate : "",
+      title: isFirstWeek ? "¿Desde cuándo quieres planificar?" : "¿Desde cuándo quieres planificar?",
+      body: isFirstWeek
+        ? "Elige el día desde el que quieres empezar a recibir tu primera semana de comidas."
+        : "Puedo dejar preparada otra semana sin tocar la que ya tienes activa.",
+      inlineError: "",
+    };
+  } finally {
+    state.busy = false;
+    state.busyLabel = "";
+    render();
+  }
+}
+
 async function finishOnboarding() {
   if (!(state.profile.plannedMeals || []).length) {
     state.error = "Necesito al menos una comida seleccionada para preparar tu semana.";
@@ -7886,7 +8135,7 @@ async function finishOnboarding() {
   state.profile.onboardingCompleted = true;
   state.profile.timezone = getTimezone();
   await saveProfile();
-  await generateWeek(getActivePlanningStartIso());
+  await openPlanningStartModal("first-week");
 }
 
 async function completeShoppingList() {
@@ -8138,7 +8387,7 @@ async function handleAction(action, trigger) {
       break;
 
     case "generate-first-week":
-      await generateWeek(getActivePlanningStartIso());
+      await openPlanningStartModal("first-week");
       break;
 
     case "plan-new-week":
@@ -8150,7 +8399,7 @@ async function handleAction(action, trigger) {
         render();
         break;
       }
-      await generateWeek(getActivePlanningStartIso());
+      await openPlanningStartModal("future-week");
       break;
 
     case "open-view": {
@@ -8848,7 +9097,7 @@ async function handleAction(action, trigger) {
       break;
 
     case "replan-next-week":
-      await generateWeek(getActivePlanningStartIso());
+      await openPlanningStartModal("future-week");
       break;
 
       case "redo-current-week":
@@ -8867,6 +9116,51 @@ async function handleAction(action, trigger) {
         syncHistoryFromState({ mode: "replace", view: state.currentView, day: state.selectedPlannerDay });
         render();
         break;
+
+    case "toggle-home-week-accordion":
+      state.homeWeekAccordionOpen = state.homeWeekAccordionOpen === false;
+      render();
+      break;
+
+    case "set-home-week-tab":
+      state.homeWeekTab = trigger.dataset.tab === "tips" ? "tips" : "summary";
+      render();
+      break;
+
+    case "toggle-home-week-expanded":
+      state.homeWeekExpanded = !state.homeWeekExpanded;
+      render();
+      break;
+
+    case "confirm-planning-start": {
+      const startDate = String(state.modal?.startDate || "").trim();
+      const minStartDate = String(state.modal?.minStartDate || "").trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+        state.modal = {
+          ...(state.modal || {}),
+          inlineError: "Elige una fecha válida para preparar la semana.",
+        };
+        render();
+        break;
+      }
+      if (minStartDate && compareIsoDate(startDate, minStartDate) < 0) {
+        state.modal = {
+          ...(state.modal || {}),
+          inlineError: `Elige una fecha igual o posterior al ${formatDateCalendarLong(minStartDate)}.`,
+        };
+        render();
+        break;
+      }
+
+      const preserveVisibleWeek = !!state.week && compareIsoDate(startDate, state.week.startDate) !== 0;
+      state.modal = null;
+      render();
+      await generateWeek(startDate, {
+        preserveVisibleWeek,
+        returnView: preserveVisibleWeek ? (state.currentView === "onboarding" ? "home" : state.currentView || "home") : "week",
+      });
+      break;
+    }
 
     case "remove-pending-recipe-change": {
       const mealId = trigger.dataset.mealId || "";
@@ -9005,7 +9299,7 @@ document.addEventListener("input", (event) => {
   const modalField = event.target.dataset.modalField;
   if (modalField && state.modal) {
     state.modal[modalField] = event.target.value;
-    if (modalField === "editedTime" || modalField === "postponeChoice") {
+    if (modalField === "editedTime" || modalField === "postponeChoice" || modalField === "startDate") {
       state.modal.inlineError = "";
     }
     return;
@@ -9036,7 +9330,7 @@ document.addEventListener("change", (event) => {
   const modalField = event.target.dataset.modalField;
   if (modalField && state.modal) {
     state.modal[modalField] = event.target.value;
-    if (modalField === "editedTime" || modalField === "postponeChoice" || modalField === "replacementMealId") {
+    if (modalField === "editedTime" || modalField === "postponeChoice" || modalField === "replacementMealId" || modalField === "startDate") {
       state.modal.inlineError = "";
     }
     return;
