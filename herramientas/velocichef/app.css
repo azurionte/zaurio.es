@@ -1332,6 +1332,113 @@ body.vc-cook-immersive-body .vc-app{
   gap:14px;
 }
 
+.vc-week-planner-head,
+.vc-week-focus-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+
+.vc-week-planner-head{
+  flex-wrap:wrap;
+}
+
+.vc-week-focus-card{
+  gap:18px;
+}
+
+.vc-weekday-title{
+  margin:0;
+  font-size:clamp(1.35rem, 2.9vw, 1.9rem);
+}
+
+.vc-day-tabs{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(132px, 1fr);
+  gap:12px;
+  overflow-x:auto;
+  padding:2px 2px 8px;
+  scroll-snap-type:x proximity;
+  scrollbar-width:none;
+}
+
+.vc-day-tabs::-webkit-scrollbar{
+  display:none;
+}
+
+.vc-day-tab{
+  display:grid;
+  gap:8px;
+  align-content:start;
+  min-height:112px;
+  padding:14px 16px;
+  border:1px solid rgba(80,29,10,.1);
+  border-radius:24px;
+  background:rgba(255,255,255,.72);
+  color:var(--vc-ink);
+  text-align:left;
+  scroll-snap-align:start;
+  box-shadow:0 16px 28px rgba(126,52,15,.06);
+}
+
+.vc-day-tab small{
+  color:var(--vc-muted);
+  font-weight:700;
+}
+
+.vc-day-tab strong{
+  font-size:1.08rem;
+  line-height:1.15;
+}
+
+.vc-day-tab-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.vc-day-tab-badge,
+.vc-day-tab-count{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:.74rem;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.vc-day-tab-badge{
+  color:#9a5e07;
+  background:rgba(255,212,91,.24);
+}
+
+.vc-day-tab-count{
+  color:var(--vc-orange-deep);
+  background:rgba(239,123,45,.12);
+}
+
+.vc-day-tab.active{
+  border-color:rgba(239,123,45,.32);
+  background:linear-gradient(180deg, rgba(255,250,244,.98), rgba(255,241,225,.92));
+  box-shadow:0 18px 32px rgba(239,123,45,.16);
+}
+
+.vc-day-tab.is-today{
+  border-color:rgba(255,212,91,.5);
+}
+
+.vc-day-tab.active.is-today{
+  background:
+    radial-gradient(circle at top right, rgba(255,212,91,.32), transparent 46%),
+    linear-gradient(180deg, rgba(255,250,244,.98), rgba(255,241,225,.92));
+}
+
 .vc-weekday-head,
 .vc-meal-head,
 .vc-shopping-head,
@@ -1350,6 +1457,10 @@ body.vc-cook-immersive-body .vc-app{
 .vc-meal-card{
   display:grid;
   gap:12px;
+}
+
+.vc-meal-note{
+  margin-top:-2px;
 }
 
 .vc-meal-copy strong,
@@ -1378,6 +1489,18 @@ body.vc-cook-immersive-body .vc-app{
   border:1px solid rgba(80,29,10,.08);
   font-size:.78rem;
   font-weight:700;
+}
+
+.vc-meta-pill-good{
+  background:rgba(47,143,88,.12);
+  color:#1f6a42;
+  border-color:rgba(47,143,88,.18);
+}
+
+.vc-meta-pill-warn{
+  background:rgba(255,212,91,.24);
+  color:#8e5b00;
+  border-color:rgba(255,212,91,.34);
 }
 
 .vc-meal-actions{
@@ -1689,6 +1812,12 @@ body.vc-cook-immersive-body .vc-app{
   border:1px solid rgba(25,123,119,.12);
 }
 
+.vc-note-warn{
+  background:rgba(255,212,91,.18);
+  color:#7a4a03;
+  border-color:rgba(255,212,91,.3);
+}
+
 .vc-note-strong{
   padding:16px 18px;
   background:linear-gradient(135deg, rgba(255,230,184,.72), rgba(255,249,241,.96));
@@ -1702,6 +1831,50 @@ body.vc-cook-immersive-body .vc-app{
   background:rgba(232,90,79,.08);
   color:#9c2c23;
   border:1px solid rgba(232,90,79,.14);
+}
+
+.vc-recipe-bulkbar{
+  position:sticky;
+  bottom:calc(12px + var(--vc-safe-bottom));
+  z-index:6;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:16px 18px;
+  border:1px solid rgba(239,123,45,.22);
+  border-radius:26px;
+  background:
+    radial-gradient(circle at top right, rgba(255,212,91,.22), transparent 44%),
+    linear-gradient(135deg, rgba(255,249,241,.98), rgba(255,238,216,.96));
+  box-shadow:0 20px 40px rgba(126,52,15,.12);
+}
+
+.vc-recipe-bulkbar-copy{
+  display:grid;
+  gap:4px;
+}
+
+.vc-recipe-bulkbar-copy small{
+  color:var(--vc-orange-deep);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.vc-recipe-bulkbar-copy strong{
+  font-size:1.05rem;
+}
+
+.vc-recipe-bulkbar-copy .vc-copy{
+  margin:0;
+}
+
+.vc-recipe-bulkbar-actions{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:10px;
 }
 
 .vc-toast-stack{
@@ -2031,6 +2204,27 @@ body.vc-cook-immersive-body .vc-app{
 
   .vc-shopping-status-line{
     justify-self:start;
+  }
+
+  .vc-day-tabs{
+    grid-auto-columns:minmax(118px, 1fr);
+  }
+
+  .vc-week-focus-head,
+  .vc-recipe-bulkbar{
+    flex-direction:column;
+  }
+
+  .vc-recipe-bulkbar{
+    align-items:stretch;
+  }
+
+  .vc-recipe-bulkbar-actions{
+    justify-content:stretch;
+  }
+
+  .vc-recipe-bulkbar-actions .vc-button{
+    flex:1 1 100%;
   }
 
   .vc-cook-feedback-stars{

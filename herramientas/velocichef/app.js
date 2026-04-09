@@ -171,6 +171,9 @@ const REFINEMENT_REASON_OPTIONS = [
   { key: "difficulty", label: "Es muy difícil" },
   { key: "time", label: "Lleva demasiado tiempo" },
 ];
+const REFINEMENT_REASON_LABELS = Object.fromEntries(
+  REFINEMENT_REASON_OPTIONS.map((item) => [item.key, item.label]),
+);
 
 const DEFAULT_MEAL_CLOCK = {
   breakfast: "08:00",
@@ -229,6 +232,7 @@ const state = {
   profile: null,
   week: null,
   feedback: [],
+  selectedPlannerDay: urlParams.get("day") || "",
   onboardingStep: 0,
   currentView: normalizeView(urlParams.get("view") || "home"),
   loading: true,
@@ -297,6 +301,9 @@ function getCurrentPageIdentity() {
   }
   if (state.currentView === "cook") {
     return `cook:${state.cooking?.mode || "idle"}`;
+  }
+  if (state.currentView === "week" || state.currentView === "recipes") {
+    return `workspace:${state.currentView}:${state.selectedPlannerDay || ""}:${getPendingRecipeChanges().length}`;
   }
   return `workspace:${state.currentView}`;
 }
@@ -2016,6 +2023,20 @@ function normalizeCarryoverIngredient(item) {
   };
 }
 
+function normalizePendingRecipeChange(change) {
+  if (!change?.mealId) return null;
+  return {
+    mealId: String(change.mealId || "").trim(),
+    mealTitle: String(change.mealTitle || "").trim(),
+    mealKey: String(change.mealKey || "").trim(),
+    dayDate: String(change.dayDate || change.date || "").trim(),
+    reasons: uniqueValues(change.reasons || []),
+    ingredients: uniqueValues(change.ingredients || []),
+    savePreference: change.savePreference !== false,
+    createdAt: change.createdAt || new Date().toISOString(),
+  };
+}
+
 function mergeCarryoverIngredients(existing = [], next = []) {
   const bucket = new Map();
   [...existing, ...next]
@@ -2121,6 +2142,9 @@ function normalizeWeek(rawWeek) {
     freezerOptIn: !!rawWeek.freezerOptIn,
     freezerItems: buildFreezerItems(normalizedDays, rawWeek.freezerItems),
     carryoverIngredients: mergeCarryoverIngredients(rawWeek.carryoverIngredients || rawWeek.carryover_ingredients || []),
+    pendingRecipeChanges: Array.isArray(rawWeek.pendingRecipeChanges)
+      ? rawWeek.pendingRecipeChanges.map(normalizePendingRecipeChange).filter(Boolean)
+      : [],
     reminders: Array.isArray(rawWeek.reminders) ? rawWeek.reminders.map(normalizeReminder).filter(Boolean) : [],
     activityNotifications: Array.isArray(rawWeek.activityNotifications) ? rawWeek.activityNotifications.map(normalizeActivityNotification).filter(Boolean) : [],
     cookingSnapshot: rawWeek.cookingSnapshot && typeof rawWeek.cookingSnapshot === "object" ? { ...rawWeek.cookingSnapshot } : null,
@@ -2153,8 +2177,88 @@ function flattenMeals(week) {
   );
 }
 
+function getPendingRecipeChanges() {
+  if (!state.week) return [];
+  state.week.pendingRecipeChanges = Array.isArray(state.week.pendingRecipeChanges)
+    ? state.week.pendingRecipeChanges.map(normalizePendingRecipeChange).filter(Boolean)
+    : [];
+  return state.week.pendingRecipeChanges;
+}
+
+function getPendingRecipeChangeByMealId(mealId) {
+  return getPendingRecipeChanges().find((entry) => entry.mealId === mealId) || null;
+}
+
+function upsertPendingRecipeChange(change) {
+  if (!state.week) return null;
+  const normalized = normalizePendingRecipeChange(change);
+  if (!normalized) return null;
+  const current = getPendingRecipeChanges().filter((entry) => entry.mealId !== normalized.mealId);
+  current.push(normalized);
+  state.week.pendingRecipeChanges = current;
+  return normalized;
+}
+
+function removePendingRecipeChange(mealId) {
+  if (!state.week || !mealId) return false;
+  const before = getPendingRecipeChanges().length;
+  state.week.pendingRecipeChanges = getPendingRecipeChanges().filter((entry) => entry.mealId !== mealId);
+  return state.week.pendingRecipeChanges.length !== before;
+}
+
+function clearPendingRecipeChanges() {
+  if (!state.week) return;
+  state.week.pendingRecipeChanges = [];
+}
+
+function getPendingRecipeChangesForDate(date) {
+  if (!date) return [];
+  return getPendingRecipeChanges().filter((entry) => entry.dayDate === date);
+}
+
 function getMealById(mealId) {
   return flattenMeals(state.week).find((item) => item.meal.id === mealId) || null;
+}
+
+function getDefaultPlannerDayDate(week = state.week) {
+  if (!week?.days?.length) return "";
+  const todayIso = toIsoDate(new Date());
+  const exactToday = week.days.find((day) => day.date === todayIso);
+  if (exactToday) return exactToday.date;
+  const upcoming = week.days.find((day) => day.date >= todayIso);
+  return upcoming?.date || week.days[0].date;
+}
+
+function ensureSelectedPlannerDay(options = {}) {
+  if (!state.week?.days?.length) {
+    state.selectedPlannerDay = "";
+    return "";
+  }
+  const available = new Set(state.week.days.map((day) => day.date));
+  const forceDefault = !!options.forceDefault;
+  const nextDate = forceDefault || !available.has(state.selectedPlannerDay)
+    ? getDefaultPlannerDayDate()
+    : state.selectedPlannerDay;
+  state.selectedPlannerDay = nextDate;
+  return nextDate;
+}
+
+function getSelectedPlannerDayEntry() {
+  const selectedDate = ensureSelectedPlannerDay();
+  return state.week?.days?.find((day) => day.date === selectedDate) || state.week?.days?.[0] || null;
+}
+
+function isTodayPlannerDate(isoDate) {
+  return String(isoDate || "") === toIsoDate(new Date());
+}
+
+function formatPlannerTabDate(isoDate) {
+  if (!isoDate) return "";
+  const date = new Date(`${isoDate}T12:00:00`);
+  return date.toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "short",
+  });
 }
 
 function isMealCookable(meal) {
@@ -3042,6 +3146,13 @@ function buildAppUrlFromState(overrides = {}) {
     params.set("tab", overrides.tab || state.notificationTab || "pending");
   }
 
+  if (requestedView === "week" || requestedView === "recipes") {
+    const selectedDay = overrides.day !== undefined ? overrides.day : ensureSelectedPlannerDay();
+    if (selectedDay) {
+      params.set("day", selectedDay);
+    }
+  }
+
   if (requestedView === "cook") {
     const mealId = overrides.mealId !== undefined ? overrides.mealId : (state.cooking?.mealId || "");
     const stepId = overrides.stepId !== undefined ? overrides.stepId : getCurrentCookingStepId();
@@ -3802,6 +3913,7 @@ function parseAppUrl(url) {
   return {
     view: normalizeView(next.searchParams.get("view") || "home"),
     tab: next.searchParams.get("tab") === "future" ? "future" : "pending",
+    day: next.searchParams.get("day") || "",
     reminderId: next.searchParams.get("reminder") || "",
     intent: next.searchParams.get("intent") || "",
     mealId: next.searchParams.get("meal") || "",
@@ -3813,6 +3925,7 @@ function applyIncomingUrl(url) {
   const parsed = parseAppUrl(url);
   state.currentView = parsed.view;
   state.notificationTab = parsed.tab;
+  state.selectedPlannerDay = parsed.day || state.selectedPlannerDay || "";
   state.pendingReminderLink = parsed.reminderId || parsed.mealId
     ? {
         reminderId: parsed.reminderId,
@@ -4927,21 +5040,26 @@ async function generateWeek(startDate = getActivePlanningStartIso()) {
     state.week.reminders = composeReminders();
     await saveWeek();
     state.currentView = "week";
-    syncHistoryFromState({ mode: "replace", view: "week" });
+    ensureSelectedPlannerDay({ forceDefault: true });
+    syncHistoryFromState({ mode: "replace", view: "week", day: state.selectedPlannerDay });
     state.busy = false;
     state.busyLabel = "";
     render();
   }
 }
 
-async function swapMeal(target, reasons) {
+async function swapMeal(target, reasons, options = {}) {
   const original = target.meal;
-  state.busy = true;
-  state.busyLabel = "Buscando otra opciÃ³n de plato...";
-  state.error = "";
-  render();
+  const manageBusy = !options.keepBusy;
+  if (manageBusy) {
+    state.busy = true;
+    state.busyLabel = options.busyLabel || "Buscando otra opción de plato...";
+    state.error = "";
+    render();
+  }
 
   let replacement = null;
+  let usedFallback = false;
   try {
     const data = await invokePlannerStable({
       action: "swap_meal",
@@ -4983,12 +5101,18 @@ async function swapMeal(target, reasons) {
     state.error = "";
   } catch (_error) {
     replacement = createFallbackSwapMeal(target, original);
-    state.notice = "No he podido traer una alternativa real ahora mismo y te he puesto una opción de apoyo para no frenarte.";
-    state.error = "No he podido sustituir el plato ahora mismo.";
-  } finally {
-    updateMeal(target.meal.id, () => replacement);
-    state.week.reminders = composeReminders();
-    await saveWeek();
+    usedFallback = true;
+    if (!options.suppressNotices) {
+      state.notice = "No he podido traer una alternativa real ahora mismo y te he puesto una opción de apoyo para no frenarte.";
+      state.error = "No he podido sustituir el plato ahora mismo.";
+    }
+  }
+
+  updateMeal(target.meal.id, () => replacement);
+  removePendingRecipeChange(original.id);
+  state.week.reminders = composeReminders();
+  await saveWeek();
+  if (!options.skipFeedback) {
     await saveFeedback({
       id: createId(),
       weekId: state.week?.id,
@@ -4997,9 +5121,67 @@ async function swapMeal(target, reasons) {
       payload: reasons,
       createdAt: new Date().toISOString(),
     });
+  }
+
+  if (manageBusy) {
     state.busy = false;
     state.busyLabel = "";
-    state.modal = null;
+    if (!options.keepModal) {
+      state.modal = null;
+    }
+    render();
+  }
+  return { replacement, usedFallback };
+}
+
+async function applyPendingRecipeChanges() {
+  const pendingChanges = [...getPendingRecipeChanges()];
+  if (!pendingChanges.length) return;
+
+  state.busy = true;
+  state.busyLabel = pendingChanges.length === 1
+    ? "Cambiando tu receta marcada..."
+    : `Cambiando ${pendingChanges.length} recetas marcadas...`;
+  state.notice = "";
+  state.error = "";
+  render();
+
+  let appliedCount = 0;
+  let fallbackCount = 0;
+
+  try {
+    for (let index = 0; index < pendingChanges.length; index += 1) {
+      const pendingChange = pendingChanges[index];
+      const target = getMealById(pendingChange.mealId);
+      if (!target || !isMealCookable(target.meal)) {
+        removePendingRecipeChange(pendingChange.mealId);
+        continue;
+      }
+      state.busyLabel = pendingChanges.length === 1
+        ? `Cambiando ${target.meal.title}...`
+        : `Cambiando ${index + 1} de ${pendingChanges.length}: ${target.meal.title}`;
+      render();
+      const result = await swapMeal(target, {
+        reasons: pendingChange.reasons || [],
+        ingredients: pendingChange.ingredients || [],
+        dietaryNotes: state.profile?.dietaryNotes || "",
+      }, {
+        keepBusy: true,
+        keepModal: true,
+        suppressNotices: true,
+      });
+      appliedCount += 1;
+      if (result?.usedFallback) {
+        fallbackCount += 1;
+      }
+    }
+    state.notice = appliedCount
+      ? `He actualizado ${appliedCount} receta${appliedCount === 1 ? "" : "s"}${fallbackCount ? `, con ${fallbackCount} usando una alternativa de apoyo` : ""}.`
+      : "No quedaba ninguna receta pendiente por cambiar.";
+    state.error = "";
+  } finally {
+    state.busy = false;
+    state.busyLabel = "";
     render();
   }
 }
@@ -5763,9 +5945,19 @@ function renderHomeView() {
   `;
 }
 
+function getPendingRecipeReasonSummary(pendingChange) {
+  if (!pendingChange) return "";
+  const reasonLabels = (pendingChange.reasons || [])
+    .map((reason) => REFINEMENT_REASON_LABELS[reason] || reason)
+    .filter(Boolean);
+  if (!reasonLabels.length) return "Marcada para buscar una alternativa.";
+  return `Motivos guardados: ${reasonLabels.join(", ")}.`;
+}
+
 function renderMealCard(day, mealKey, meal) {
   const feedback = meal.feedback || {};
   const cookable = isMealCookable(meal);
+  const pendingChange = getPendingRecipeChangeByMealId(meal.id);
   return `
     <article class="vc-meal-card">
       <div class="vc-meal-head">
@@ -5781,19 +5973,68 @@ function renderMealCard(day, mealKey, meal) {
         <span class="vc-meta-pill">${meal.calories} kcal</span>
         <span class="vc-meta-pill">${meal.servings} ${meal.servings === 1 ? "persona" : "personas"}</span>
         ${feedback.liked ? `<span class="vc-meta-pill">Te gusta</span>` : ""}
+        ${pendingChange ? `<span class="vc-meta-pill vc-meta-pill-warn">Pendiente de cambio</span>` : ""}
       </div>
+      ${pendingChange ? `<div class="vc-note vc-note-warn vc-meal-note">${escapeHtml(getPendingRecipeReasonSummary(pendingChange))}</div>` : ""}
       <div class="vc-meal-actions">
         ${cookable ? `<button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>` : ""}
         ${cookable ? `<button class="vc-button subtle" data-action="toggle-like" data-meal-id="${meal.id}">Me gusta</button>` : ""}
-        ${cookable ? `<button class="vc-button secondary" data-action="open-refine" data-meal-id="${meal.id}">No me gusta</button>` : ""}
-        ${cookable ? `<button class="vc-button secondary" data-action="swap-meal" data-meal-id="${meal.id}">Cambiar por otro plato</button>` : ""}
+        ${cookable ? `<button class="vc-button secondary" data-action="open-refine" data-meal-id="${meal.id}">${pendingChange ? "Editar cambio" : "No me convence"}</button>` : ""}
         <button class="vc-button ghost" data-action="open-details" data-meal-id="${meal.id}">Ver detalles</button>
+        ${pendingChange ? `<button class="vc-button ghost" data-action="remove-pending-recipe-change" data-meal-id="${meal.id}">Quitar marca</button>` : ""}
       </div>
     </article>
   `;
 }
 
-function renderWeekView() {
+function renderPlannerDayTabs(selectedDate) {
+  return `
+      <div class="vc-day-tabs" role="tablist" aria-label="Dias de la semana">
+        ${state.week.days.map((day) => {
+          const active = day.date === selectedDate;
+          const isToday = isTodayPlannerDate(day.date);
+          const pendingCount = getPendingRecipeChangesForDate(day.date).length;
+          return `
+            <button
+              class="vc-day-tab ${active ? "active" : ""} ${isToday ? "is-today" : ""}"
+              type="button"
+              role="tab"
+              aria-selected="${active ? "true" : "false"}"
+              data-action="set-planner-day"
+              data-date="${day.date}"
+            >
+              <div class="vc-day-tab-meta">
+                <small>${escapeHtml(day.label)}</small>
+                ${isToday ? '<span class="vc-day-tab-badge">Hoy</span>' : ""}
+              </div>
+              <strong>${escapeHtml(formatPlannerTabDate(day.date))}</strong>
+              ${pendingCount ? `<span class="vc-day-tab-count">${pendingCount} cambio${pendingCount === 1 ? "" : "s"}</span>` : ""}
+            </button>
+          `;
+        }).join("")}
+      </div>
+    `;
+}
+
+function renderPlannerBulkBar() {
+  const pendingChanges = getPendingRecipeChanges();
+  if (!pendingChanges.length) return "";
+  return `
+      <div class="vc-recipe-bulkbar" role="region" aria-label="Cambios de recetas pendientes">
+        <div class="vc-recipe-bulkbar-copy">
+          <small>Cambiar recetas</small>
+          <strong>${pendingChanges.length} receta${pendingChanges.length === 1 ? "" : "s"} marcada${pendingChanges.length === 1 ? "" : "s"}</strong>
+          <p class="vc-copy">He guardado tus motivos. Cuando quieras, cambio todas estas recetas del tirón.</p>
+        </div>
+        <div class="vc-recipe-bulkbar-actions">
+          <button class="vc-button ghost" type="button" data-action="clear-pending-recipe-changes">Limpiar</button>
+          <button class="vc-button primary" type="button" data-action="apply-pending-recipe-changes">Cambiar recetas (${pendingChanges.length})</button>
+        </div>
+    </div>
+  `;
+}
+
+function renderWeeklyPlannerView() {
   if (!state.week) {
     return `
       <article class="vc-card vc-empty">
@@ -5806,51 +6047,56 @@ function renderWeekView() {
     `;
   }
 
-  return `
-    <section class="vc-grid">
-      <article class="vc-panel">
-        <div class="vc-weekday-head">
-          <div>
-            <span class="vc-eyebrow">Semana desde ${escapeHtml(friendlyDayLabel(state.week.startDate, state.week.startDate))}</span>
-            <h2 class="vc-title">Calendario de platos</h2>
-            <p class="vc-copy">${escapeHtml(state.week.strategy || "Semana pensada para cocinar con cabeza y comprar sin duplicar demasiado.")}</p>
+  const selectedDate = ensureSelectedPlannerDay();
+  const selectedDay = getSelectedPlannerDayEntry();
+  const pendingChanges = getPendingRecipeChanges();
+
+    return `
+      <section class="vc-grid">
+        <article class="vc-panel">
+          <div class="vc-week-planner-head">
+            <div class="vc-header-copy">
+              <span class="vc-eyebrow">Tu semana actual</span>
+              <h2 class="vc-title">Mis recetas de esta semana</h2>
+            </div>
+            <div class="vc-inline-actions">
+              <button class="vc-button secondary" data-action="redo-current-week">Rehacer planificación</button>
+            </div>
           </div>
-          <div class="vc-inline-actions">
-            <button class="vc-button secondary" data-action="open-view" data-view="recipes">Mis recetas de esta semana</button>
-          </div>
-        </div>
+        ${renderPlannerDayTabs(selectedDate)}
       </article>
 
-      <div class="vc-week-grid">
-        ${state.week.days.map((day) => `
-          <article class="vc-week-card vc-card">
-            <div class="vc-weekday-head">
+      ${selectedDay ? `
+        <article class="vc-week-card vc-card vc-week-focus-card">
+            <div class="vc-week-focus-head">
               <div>
-                <h3 class="vc-weekday-title">${escapeHtml(day.label)}</h3>
-                <p class="vc-weekday-date">${escapeHtml(formatDateLong(day.date))}</p>
+                <h3 class="vc-weekday-title">${escapeHtml(selectedDay.label)}</h3>
+                <p class="vc-weekday-date">${escapeHtml(formatDateLong(selectedDay.date))}</p>
+              </div>
+              <div class="vc-chip-row">
+                ${isTodayPlannerDate(selectedDay.date) ? '<span class="vc-meta-pill vc-meta-pill-good">Hoy</span>' : ""}
+                ${getPendingRecipeChangesForDate(selectedDay.date).length ? `<span class="vc-meta-pill vc-meta-pill-warn">${getPendingRecipeChangesForDate(selectedDay.date).length} por cambiar hoy</span>` : ""}
               </div>
             </div>
-            <div class="vc-day-meals">
-              ${Object.entries(day.meals || {}).map(([mealKey, meal]) => renderMealCard(day, mealKey, meal)).join("")}
-            </div>
-          </article>
-        `).join("")}
-      </div>
-
-      ${state.week.batchingTips?.length ? `
-        <article class="vc-panel">
-          <h3 class="vc-title">Tips para que la semana vaya suave</h3>
-          <ul class="vc-list">
-            ${state.week.batchingTips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join("")}
-          </ul>
+          <div class="vc-day-meals">
+            ${Object.entries(selectedDay.meals || {}).map(([mealKey, meal]) => renderMealCard(selectedDay, mealKey, meal)).join("")}
+          </div>
         </article>
       ` : ""}
 
-      <div class="vc-inline-actions" style="justify-content:flex-end">
-        <button class="vc-button primary" data-action="open-view" data-view="schedule">Siguiente</button>
-      </div>
+      ${!state.week.scheduleStepComplete ? `
+        <div class="vc-inline-actions" style="justify-content:flex-end">
+          <button class="vc-button primary" data-action="open-view" data-view="schedule">Siguiente</button>
+        </div>
+      ` : ""}
+
+      ${renderPlannerBulkBar()}
     </section>
   `;
+}
+
+function renderWeekView() {
+  return renderWeeklyPlannerView();
 }
 
 function groupByCategory(items) {
@@ -6058,38 +6304,7 @@ function renderTodayShoppingView() {
 }
 
 function renderRecipesView() {
-  if (!state.week) return renderWeekView();
-  return `
-    <section class="vc-grid">
-      <article class="vc-panel">
-        <span class="vc-eyebrow">Mis recetas de esta semana</span>
-        <h2 class="vc-title">Recetario semanal</h2>
-        <p class="vc-copy">AquÃ­ tienes todos los platos reunidos para revisar detalles o volver a una receta concreta.</p>
-        <div class="vc-inline-actions">
-          <button class="vc-button secondary" data-action="redo-current-week">Rehacer planificaciÃ³n</button>
-        </div>
-      </article>
-      <div class="vc-recipe-grid">
-        ${flattenMeals(state.week).map(({ day, mealKey, meal }) => `
-          <article class="vc-profile-card">
-            <small class="vc-muted">${escapeHtml(day.label)} Â· ${escapeHtml(MEAL_LABELS[mealKey])}</small>
-            <h3 class="vc-inline-title">${escapeHtml(meal.title)}</h3>
-            <p class="vc-copy">${escapeHtml(meal.summary)}</p>
-            <div class="vc-meta">
-              <span class="vc-meta-pill">${meal.prepMinutes} min</span>
-              <span class="vc-meta-pill">${meal.calories} kcal</span>
-              <span class="vc-meta-pill">${escapeHtml(meal.difficulty)}</span>
-            </div>
-            <div class="vc-inline-actions">
-              ${isMealCookable(meal) ? `<button class="vc-button primary" data-action="cook-meal" data-meal-id="${meal.id}">Cocinar</button>` : ""}
-              <button class="vc-button ghost" data-action="open-details" data-meal-id="${meal.id}">Ver detalles</button>
-              ${isMealCookable(meal) ? `<button class="vc-button secondary" data-action="swap-meal" data-meal-id="${meal.id}">Cambiar</button>` : ""}
-            </div>
-          </article>
-        `).join("")}
-      </div>
-    </section>
-  `;
+  return renderWeeklyPlannerView();
 }
 
 function renderReminderCard(reminder, bucket) {
@@ -6778,6 +6993,7 @@ function renderRefineModal(target) {
   const chosen = state.modal?.reasons || [];
   const ingredientChoices = state.modal?.selectedIngredients || [];
   const savePreference = state.modal?.savePreference !== false;
+  const inlineError = state.modal?.inlineError || "";
 
   return `
     <div class="vc-modal-layer" data-action="close-modal">
@@ -6786,7 +7002,7 @@ function renderRefineModal(target) {
           <div>
             <small class="vc-muted">${escapeHtml(target.day.label)} Â· ${escapeHtml(MEAL_LABELS[target.mealKey])}</small>
             <h2 class="vc-modal-title">Afinar gustos</h2>
-            <p class="vc-copy">CuÃ©ntame quÃ© ha fallado en "${escapeHtml(target.meal.title)}" y te busco algo mejor.</p>
+            <p class="vc-copy">Cuéntame qué no te convence de "${escapeHtml(target.meal.title)}" y dejaré este plato marcado para cambiarlo junto con el resto.</p>
           </div>
           <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
         </div>
@@ -6823,9 +7039,11 @@ function renderRefineModal(target) {
           <input type="checkbox" data-action="toggle-refine-save" ${savePreference ? "checked" : ""}>
         </label>
 
+        ${inlineError ? `<div class="vc-error">${escapeHtml(inlineError)}</div>` : ""}
+
         <div class="vc-step-foot">
           <button class="vc-button secondary" data-action="close-modal">Cancelar</button>
-          <button class="vc-button primary" data-action="submit-refinement">Guardar preferencias y recibir otro plato</button>
+          <button class="vc-button primary" data-action="submit-refinement">Guardar y marcar para cambiar</button>
         </div>
       </div>
     </div>
@@ -7891,7 +8109,10 @@ async function handleAction(action, trigger) {
           await saveWeek();
         }
       }
-      syncHistoryFromState({ mode: "push", view: nextView, tab: state.notificationTab });
+      if (nextView === "week" || nextView === "recipes") {
+        ensureSelectedPlannerDay({ forceDefault: true });
+      }
+      syncHistoryFromState({ mode: "push", view: nextView, tab: state.notificationTab, day: state.selectedPlannerDay });
       render();
       if (nextView === "profile" || nextView === "notifications") {
         refreshNotificationDeviceState().then(() => {
@@ -8389,12 +8610,17 @@ async function handleAction(action, trigger) {
     case "toggle-like": {
       const target = getMealById(trigger.dataset.mealId);
       if (!target) return;
+      const nextLiked = target.meal.feedback?.liked !== true;
+      if (nextLiked) {
+        removePendingRecipeChange(target.meal.id);
+      }
       updateMeal(target.meal.id, (meal) => ({
         ...meal,
         feedback: {
           ...(meal.feedback || {}),
-          liked: !(meal.feedback?.liked),
+          liked: nextLiked,
           disliked: false,
+          reasons: nextLiked ? null : meal.feedback?.reasons || null,
         },
       }));
       await saveWeek();
@@ -8403,7 +8629,7 @@ async function handleAction(action, trigger) {
         weekId: state.week?.id,
         mealId: target.meal.id,
         type: "like",
-        payload: { liked: target.meal.feedback?.liked !== true },
+        payload: { liked: nextLiked },
         createdAt: new Date().toISOString(),
       });
       render();
@@ -8439,8 +8665,23 @@ async function handleAction(action, trigger) {
     case "submit-refinement": {
       const target = getMealById(state.modal.mealId);
       if (!target) return;
+      if (!(state.modal.reasons || []).length) {
+        state.modal.inlineError = "Marca al menos un motivo para que sepa qué cambiar.";
+        render();
+        break;
+      }
 
       applyRefinementPreferences(state.modal, target);
+      upsertPendingRecipeChange({
+        mealId: target.meal.id,
+        mealTitle: target.meal.title,
+        mealKey: target.mealKey,
+        dayDate: target.day.date,
+        reasons: state.modal.reasons,
+        ingredients: state.modal.selectedIngredients,
+        savePreference: state.modal.savePreference,
+        createdAt: new Date().toISOString(),
+      });
       await saveProfile();
       await saveWeek();
       await saveFeedback({
@@ -8455,18 +8696,25 @@ async function handleAction(action, trigger) {
         },
         createdAt: new Date().toISOString(),
       });
-      await swapMeal(target, {
-        reasons: state.modal.reasons,
-        ingredients: state.modal.selectedIngredients,
-        dietaryNotes: state.profile.dietaryNotes,
-      });
+      state.modal = null;
+      state.notice = "He dejado esta receta marcada para cambiarla junto con el resto.";
+      state.error = "";
+      render();
       break;
     }
 
     case "swap-meal": {
       const target = getMealById(trigger.dataset.mealId);
       if (!target) return;
-      await swapMeal(target, { reasons: ["swap_direct"], ingredients: [] });
+      state.modal = {
+        type: "refine",
+        mealId: target.meal.id,
+        reasons: ["time"],
+        selectedIngredients: [],
+        savePreference: false,
+        inlineError: "",
+      };
+      render();
       break;
     }
 
@@ -8547,9 +8795,57 @@ async function handleAction(action, trigger) {
       if (!state.week?.startDate) return;
       await generateWeek(state.week.startDate);
       state.currentView = "recipes";
-      syncHistoryFromState({ mode: "push", view: "recipes" });
+      ensureSelectedPlannerDay({ forceDefault: true });
+      syncHistoryFromState({ mode: "push", view: "recipes", day: state.selectedPlannerDay });
       render();
       break;
+
+    case "set-planner-day":
+      state.selectedPlannerDay = trigger.dataset.date || ensureSelectedPlannerDay({ forceDefault: true });
+      syncHistoryFromState({ mode: "replace", view: state.currentView, day: state.selectedPlannerDay });
+      render();
+      break;
+
+    case "remove-pending-recipe-change": {
+      const mealId = trigger.dataset.mealId || "";
+      if (!mealId) return;
+      removePendingRecipeChange(mealId);
+      updateMeal(mealId, (meal) => ({
+        ...meal,
+        feedback: {
+          ...(meal.feedback || {}),
+          disliked: false,
+          reasons: null,
+        },
+      }));
+      await saveWeek();
+      state.notice = "He quitado esta receta de la cola de cambios.";
+      state.error = "";
+      render();
+      break;
+    }
+
+    case "clear-pending-recipe-changes":
+      clearPendingRecipeChanges();
+      flattenMeals(state.week).forEach(({ meal }) => {
+        updateMeal(meal.id, (currentMeal) => ({
+          ...currentMeal,
+          feedback: {
+            ...(currentMeal.feedback || {}),
+            disliked: false,
+            reasons: null,
+          },
+        }));
+      });
+      await saveWeek();
+      state.notice = "He limpiado las recetas marcadas para cambiar.";
+      state.error = "";
+      render();
+      break;
+
+      case "apply-pending-recipe-changes":
+        await applyPendingRecipeChanges();
+        break;
 
     case "logout":
       if (!state.client) return;
