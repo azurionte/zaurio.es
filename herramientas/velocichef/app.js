@@ -282,6 +282,8 @@ let lastCenteredPlannerTabKey = "";
 let pendingPlannerTabCenterBehavior = "";
 let historyInitialized = false;
 let lastHistoryUrl = "";
+let activeCookLaunchOverlay = null;
+let cookLaunchCleanupTimer = null;
 let isRestoringHistory = false;
 let remoteReminderRefreshPromise = null;
 let lastRemoteReminderRefreshAt = 0;
@@ -480,6 +482,10 @@ function toIsoDate(date) {
 
 function isIOSDevice() {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function prefersReducedMotion() {
+  return !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 }
 
 function isStandaloneApp() {
@@ -3196,6 +3202,154 @@ async function openCookingSession(mealId, options = {}) {
     }
     syncHistoryFromState({ mode: "replace", view: "cook", mealId, stepId: currentStep?.id || "" });
     render();
+  }
+}
+
+function clearCookLaunchOverlay() {
+  if (cookLaunchCleanupTimer) {
+    window.clearTimeout(cookLaunchCleanupTimer);
+    cookLaunchCleanupTimer = null;
+  }
+  if (activeCookLaunchOverlay?.element?.isConnected) {
+    activeCookLaunchOverlay.element.remove();
+  }
+  activeCookLaunchOverlay = null;
+}
+
+function createCookLaunchOverlay(trigger, mealId) {
+  if (!(trigger instanceof HTMLElement)) return null;
+  const rect = trigger.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+
+  clearCookLaunchOverlay();
+
+  const overlay = document.createElement("div");
+  overlay.className = "vc-cook-launch-overlay";
+  const orb = document.createElement("div");
+  orb.className = "vc-cook-launch-orb";
+  const caption = document.createElement("span");
+  caption.className = "vc-cook-launch-orb-label";
+  caption.textContent = "Cocinar";
+  orb.appendChild(caption);
+  overlay.appendChild(orb);
+  document.body.appendChild(overlay);
+
+  activeCookLaunchOverlay = {
+    element: overlay,
+    orb,
+    caption,
+    rect,
+    mealId,
+  };
+
+  return activeCookLaunchOverlay;
+}
+
+async function playCookLaunchTransition(trigger, mealId) {
+  if (!mealId) return;
+  if (prefersReducedMotion()) {
+    await startCookingFlow(mealId, "active");
+    return;
+  }
+
+  const launch = createCookLaunchOverlay(trigger, mealId);
+  if (!launch) {
+    await startCookingFlow(mealId, "active");
+    return;
+  }
+
+  const { rect, element, orb, caption } = launch;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 390;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 844;
+  const centerX = rect.left + (rect.width / 2);
+  const centerY = rect.top + (rect.height / 2);
+  const morphSize = Math.max(74, Math.min(96, Math.max(rect.width, rect.height)));
+  const expandedSize = Math.ceil(Math.hypot(viewportWidth, viewportHeight) * 1.45);
+  const morphLeft = centerX - (morphSize / 2);
+  const morphTop = centerY - (morphSize / 2);
+  const finalLeft = (viewportWidth / 2) - (expandedSize / 2);
+  const finalTop = (viewportHeight / 2) - (expandedSize / 2);
+
+  orb.style.left = `${rect.left}px`;
+  orb.style.top = `${rect.top}px`;
+  orb.style.width = `${rect.width}px`;
+  orb.style.height = `${rect.height}px`;
+  orb.style.borderRadius = `${Math.max(20, rect.height / 2)}px`;
+
+  requestAnimationFrame(() => {
+    element.classList.add("is-active");
+  });
+
+  const startPromise = (async () => {
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+    await startCookingFlow(mealId, "active");
+  })();
+
+  try {
+    const collapse = orb.animate([
+      {
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        borderRadius: `${Math.max(20, rect.height / 2)}px`,
+      },
+      {
+        left: `${morphLeft}px`,
+        top: `${morphTop}px`,
+        width: `${morphSize}px`,
+        height: `${morphSize}px`,
+        borderRadius: "999px",
+      },
+    ], {
+      duration: 180,
+      easing: "cubic-bezier(.2,.8,.25,1)",
+      fill: "forwards",
+    });
+
+    const captionFade = caption.animate([
+      { opacity: 1, transform: "scale(1)" },
+      { opacity: 0, transform: "scale(.92)" },
+    ], {
+      duration: 120,
+      easing: "ease-out",
+      fill: "forwards",
+    });
+
+    await Promise.allSettled([collapse.finished, captionFade.finished]);
+
+    const expand = orb.animate([
+      {
+        left: `${morphLeft}px`,
+        top: `${morphTop}px`,
+        width: `${morphSize}px`,
+        height: `${morphSize}px`,
+        borderRadius: "999px",
+        opacity: 1,
+      },
+      {
+        left: `${finalLeft}px`,
+        top: `${finalTop}px`,
+        width: `${expandedSize}px`,
+        height: `${expandedSize}px`,
+        borderRadius: `${Math.max(48, expandedSize * 0.18)}px`,
+        opacity: 1,
+      },
+    ], {
+      duration: 560,
+      easing: "cubic-bezier(.16,.88,.24,1)",
+      fill: "forwards",
+    });
+
+    await Promise.allSettled([startPromise, expand.finished]);
+
+    element.classList.add("is-revealed");
+    cookLaunchCleanupTimer = window.setTimeout(() => {
+      clearCookLaunchOverlay();
+    }, 220);
+  } catch (error) {
+    clearCookLaunchOverlay();
+    throw error;
   }
 }
 
@@ -8467,7 +8621,7 @@ async function handleAction(action, trigger) {
       break;
 
     case "cook-meal":
-      await startCookingFlow(trigger.dataset.mealId, "active");
+      await playCookLaunchTransition(trigger, trigger.dataset.mealId);
       break;
 
     case "cook-stage-prev":
