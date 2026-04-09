@@ -791,11 +791,6 @@ body.vc-cook-immersive-body .vc-app{
   opacity:1;
 }
 
-.vc-cook-launch-overlay.is-revealed::before{
-  opacity:0;
-  transition-duration:.2s;
-}
-
 .vc-cook-launch-orb{
   position:fixed;
   display:grid;
@@ -826,25 +821,15 @@ body.vc-cook-immersive-body .vc-app{
   white-space:nowrap;
 }
 
-.vc-cook-launch-overlay.is-revealed .vc-cook-launch-orb{
-  opacity:0;
-  transform:scale(1.03);
-}
-
-.vc-cook-launch-overlay.is-revealed .vc-cook-launch-reveal-orb{
-  opacity:0;
-  transition:opacity .2s ease;
-}
-
 .vc-cook-reveal-shell{
-  animation:vcCookRevealContent .46s cubic-bezier(.18,.82,.28,1) both;
+  animation:vcCookRevealContent .72s cubic-bezier(.18,.82,.28,1) both;
 }
 
 @keyframes vcCookRevealContent{
   from{
-    opacity:.12;
-    filter:blur(10px);
-    transform:translateY(12px) scale(.99);
+    opacity:.04;
+    filter:blur(16px);
+    transform:translateY(18px) scale(.985);
   }
   to{
     opacity:1;

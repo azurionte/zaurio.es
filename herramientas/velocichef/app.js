@@ -3289,10 +3289,7 @@ async function playCookLaunchTransition(trigger, mealId) {
     element.classList.add("is-active");
   });
 
-  const startPromise = (async () => {
-    await new Promise((resolve) => window.setTimeout(resolve, 72));
-    await startCookingFlow(mealId, "active");
-  })();
+  const startPromise = startCookingFlow(mealId, "active");
 
   try {
     const collapse = orb.animate([
@@ -3337,6 +3334,7 @@ async function playCookLaunchTransition(trigger, mealId) {
         opacity: 1,
       },
       {
+        offset: .58,
         left: `${finalLeft}px`,
         top: `${finalTop}px`,
         width: `${expandedSize}px`,
@@ -3344,8 +3342,16 @@ async function playCookLaunchTransition(trigger, mealId) {
         borderRadius: `${Math.max(48, expandedSize * 0.18)}px`,
         opacity: 1,
       },
+      {
+        left: `${finalLeft}px`,
+        top: `${finalTop}px`,
+        width: `${expandedSize}px`,
+        height: `${expandedSize}px`,
+        borderRadius: `${Math.max(48, expandedSize * 0.18)}px`,
+        opacity: 0,
+      },
     ], {
-      duration: 560,
+      duration: 680,
       easing: "cubic-bezier(.16,.88,.24,1)",
       fill: "forwards",
     });
@@ -3357,7 +3363,16 @@ async function playCookLaunchTransition(trigger, mealId) {
         width: `${Math.max(48, morphSize * .78)}px`,
         height: `${Math.max(48, morphSize * .78)}px`,
         borderRadius: "999px",
-        opacity: .08,
+        opacity: .04,
+      },
+      {
+        offset: .36,
+        left: `${finalLeft + (expandedSize * .035)}px`,
+        top: `${finalTop + (expandedSize * .035)}px`,
+        width: `${expandedSize * .94}px`,
+        height: `${expandedSize * .94}px`,
+        borderRadius: `${Math.max(44, expandedSize * 0.16)}px`,
+        opacity: .98,
       },
       {
         left: `${finalLeft + (expandedSize * .035)}px`,
@@ -3365,21 +3380,28 @@ async function playCookLaunchTransition(trigger, mealId) {
         width: `${expandedSize * .94}px`,
         height: `${expandedSize * .94}px`,
         borderRadius: `${Math.max(44, expandedSize * 0.16)}px`,
-        opacity: .96,
+        opacity: .88,
+      },
+      {
+        left: `${finalLeft + (expandedSize * .035)}px`,
+        top: `${finalTop + (expandedSize * .035)}px`,
+        width: `${expandedSize * .94}px`,
+        height: `${expandedSize * .94}px`,
+        borderRadius: `${Math.max(44, expandedSize * 0.16)}px`,
+        opacity: 0,
       },
     ], {
-      duration: 620,
-      delay: 55,
+      duration: 820,
+      delay: 115,
       easing: "cubic-bezier(.14,.86,.22,1)",
       fill: "forwards",
     });
 
     await Promise.allSettled([expand.finished, revealExpand.finished]);
 
-    element.classList.add("is-revealed");
     cookLaunchCleanupTimer = window.setTimeout(() => {
       clearCookLaunchOverlay();
-    }, 180);
+    }, 90);
     await startPromise;
   } catch (error) {
     clearCookLaunchOverlay();
