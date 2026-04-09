@@ -3303,10 +3303,8 @@ async function playCookLaunchTransition(trigger, mealId) {
   orb.style.height = `${rect.height}px`;
   orb.style.borderRadius = `${Math.max(20, rect.height / 2)}px`;
 
-  // Start the overlay fade-in immediately
-  requestAnimationFrame(() => {
-    element.classList.add("is-active");
-  });
+  // Start the overlay fade-in and animations immediately
+  element.classList.add("is-active");
 
   try {
     const captionFade = caption.animate([
@@ -3353,7 +3351,6 @@ async function playCookLaunchTransition(trigger, mealId) {
 
     await Promise.allSettled([cover.finished, captionFade.finished]);
     element.classList.add("is-covered");
-    element.classList.add("is-solid"); // Add this earlier for smoother transition
     const flowPromise = startCookingFlow(mealId, "active");
     let shell = null;
     for (let attempt = 0; attempt < 10 && !shell; attempt += 1) {

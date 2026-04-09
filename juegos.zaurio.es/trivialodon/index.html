@@ -423,7 +423,7 @@
         <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
         <div class="langPicker introLangPicker" id="introLangPicker">
           <button class="langBtn" id="langEsIntro" type="button" aria-label="Español">🇪🇸</button>
-          <button class="langBtn" id="langEnIntro" type="button" aria-label="English">�🇸</button>
+          <button class="langBtn" id="langEnIntro" type="button" aria-label="English">🇺🇸</button>
         </div>
         <p class="introLead" id="introLead">El juego de trivia mas actualizado y divertido.</p>
         <div class="actions center" style="margin-top:28px">
@@ -481,7 +481,7 @@
                 <span class="settingsSectionTitle" id="settingsLangTitle">Idioma</span>
                 <div class="langPicker" id="settingsLangPicker">
                   <button class="langBtn" id="langEs" type="button" aria-label="Español">🇪🇸</button>
-                  <button class="langBtn" id="langEn" type="button" aria-label="English">�🇸</button>
+                  <button class="langBtn" id="langEn" type="button" aria-label="English">🇺🇸</button>
                 </div>
               </div>
               <div class="settingsSection">
@@ -826,12 +826,6 @@
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Test if JavaScript executes
-    console.log("JavaScript is working!");
-    document.body.style.backgroundColor = "red";
-    alert("JavaScript is executing!");
-  </script>
-  <script>
     const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
     const FRAME_SRC = "/shared/assets/brand/participantes-frame.png";
@@ -856,14 +850,14 @@
     ];
     const CLASSIC_TOTAL_QUESTIONS = 300;
     const LANGUAGE_KEY = "trivialodon-lang-v1";
-    let currentLang = DEFAULT_LANG;
     const DEFAULT_LANG = (() => {
       try{
         const saved = String(localStorage.getItem(LANGUAGE_KEY) || "").toLowerCase();
         if(saved === "en" || saved === "es") return saved;
-      } catch(_){}
+      } catch(_){ }
       return String(navigator.language || "es").toLowerCase().startsWith("en") ? "en" : "es";
     })();
+    let currentLang = DEFAULT_LANG;
     const I18N = {
       es:{
         introLead:"El juego de trivia mas actualizado y divertido.",
@@ -3165,3 +3159,6 @@
   </script>
 </body>
 </html>
+
+
+
