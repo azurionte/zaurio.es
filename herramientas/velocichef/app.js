@@ -3282,12 +3282,15 @@ async function playCookLaunchTransition(trigger, mealId) {
   const finalLeft = centerX - (expandedSize / 2);
   const finalTop = centerY - (expandedSize / 2);
   const nextFrame = () => new Promise((resolve) => window.requestAnimationFrame(resolve));
-  const animateHoleReveal = (targetRadius, duration = 760) => new Promise((resolve) => {
+  const animateHoleReveal = (targetRadius, duration = 680) => new Promise((resolve) => {
     const start = performance.now();
+    const startRadius = parseFloat(element.style.getPropertyValue("--vc-cook-hole-size") || "0");
+    const radiusDiff = targetRadius - startRadius;
     const step = (timestamp) => {
       const progress = Math.min(1, (timestamp - start) / duration);
-      const eased = 1 - ((1 - progress) ** 3);
-      element.style.setProperty("--vc-cook-hole-size", `${Math.round(targetRadius * eased)}px`);
+      const eased = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
+      const currentRadius = startRadius + (radiusDiff * eased);
+      element.style.setProperty("--vc-cook-hole-size", `${Math.round(currentRadius)}px`);
       if (progress < 1) {
         window.requestAnimationFrame(step);
       } else {
@@ -3309,11 +3312,12 @@ async function playCookLaunchTransition(trigger, mealId) {
 
   try {
     const captionFade = caption.animate([
-      { opacity: 1, transform: "scale(1)" },
-      { opacity: 0, transform: "scale(.92)" },
+      { opacity: 1, transform: "scale(1) translateY(0px)" },
+      { opacity: 0.8, transform: "scale(1.1) translateY(-2px)", offset: 0.6 },
+      { opacity: 0, transform: "scale(.92) translateY(-4px)" },
     ], {
-      duration: 220,
-      easing: "ease-out",
+      duration: 240,
+      easing: "cubic-bezier(.4,0,.2,1)",
       fill: "forwards",
     });
 
@@ -3325,6 +3329,19 @@ async function playCookLaunchTransition(trigger, mealId) {
         height: `${rect.height}px`,
         borderRadius: `${Math.max(20, rect.height / 2)}px`,
         opacity: 1,
+        transform: "scale(1)",
+        filter: "brightness(1)",
+      },
+      {
+        left: `${rect.left + (morphLeft - rect.left) * 0.15}px`,
+        top: `${rect.top + (morphTop - rect.top) * 0.15}px`,
+        width: `${rect.width + (morphSize - rect.width) * 0.3}px`,
+        height: `${rect.height + (morphSize - rect.height) * 0.3}px`,
+        borderRadius: `${Math.max(20, rect.height / 2) + (999 - Math.max(20, rect.height / 2)) * 0.2}px`,
+        opacity: 1,
+        transform: "scale(1.02)",
+        filter: "brightness(1.1)",
+        offset: 0.15,
       },
       {
         left: `${morphLeft}px`,
@@ -3333,7 +3350,9 @@ async function playCookLaunchTransition(trigger, mealId) {
         height: `${morphSize}px`,
         borderRadius: "999px",
         opacity: 1,
-        offset: 0.34,
+        transform: "scale(1.05)",
+        filter: "brightness(1.2)",
+        offset: 0.4,
       },
       {
         left: `${finalLeft}px`,
@@ -3342,11 +3361,13 @@ async function playCookLaunchTransition(trigger, mealId) {
         height: `${expandedSize}px`,
         borderRadius: "999px",
         opacity: 1,
+        transform: "scale(1)",
+        filter: "brightness(1.1)",
         offset: 1,
       },
     ], {
-      duration: 780,
-      easing: "cubic-bezier(.18,.88,.18,1)",
+      duration: 720,
+      easing: "cubic-bezier(.25,.46,.45,.94)",
       fill: "forwards",
     });
 
@@ -3374,7 +3395,7 @@ async function playCookLaunchTransition(trigger, mealId) {
     });
     element.classList.add("is-solid");
     element.classList.add("is-revealing");
-    const revealPromise = animateHoleReveal(revealRadius + 72, 780);
+    const revealPromise = animateHoleReveal(revealRadius + 72, 680);
     await Promise.allSettled([orbFade.finished, revealPromise, flowPromise]);
     element.classList.add("is-fading");
     cookLaunchCleanupTimer = window.setTimeout(() => {

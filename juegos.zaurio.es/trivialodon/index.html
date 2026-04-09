@@ -33,7 +33,7 @@
     .langPicker{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .langBtn{width:48px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:1.2rem;transition:transform .18s ease,background .18s ease,border-color .18s ease}
     .langBtn:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}
-    .langBtn.active{background:linear-gradient(135deg,rgba(255,216,58,.18),rgba(255,119,203,.14));border-color:rgba(255,216,58,.4);box-shadow:0 0 0 1px rgba(255,216,58,.12)}
+    .langBtn.active{background:linear-gradient(135deg,rgba(255,216,58,.18),rgba(255,119,203,.14));border-color:rgba(255,216,58,.4);box-shadow:0 0 0 1px rgba(255,216,58,.12), 0 0 12px rgba(255,216,58,.3), 0 0 24px rgba(255,119,203,.2)}
     .introLangPicker{justify-content:center;margin-top:6px}
     .settingsSection{display:grid;gap:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
     .settingsSectionTitle{font-size:.74rem;font-weight:900;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
@@ -423,7 +423,7 @@
         <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
         <div class="langPicker introLangPicker" id="introLangPicker">
           <button class="langBtn" id="langEsIntro" type="button" aria-label="Español">🇪🇸</button>
-          <button class="langBtn" id="langEnIntro" type="button" aria-label="English">🇬🇧</button>
+          <button class="langBtn" id="langEnIntro" type="button" aria-label="English">�🇸</button>
         </div>
         <p class="introLead" id="introLead">El juego de trivia mas actualizado y divertido.</p>
         <div class="actions center" style="margin-top:28px">
@@ -481,7 +481,7 @@
                 <span class="settingsSectionTitle" id="settingsLangTitle">Idioma</span>
                 <div class="langPicker" id="settingsLangPicker">
                   <button class="langBtn" id="langEs" type="button" aria-label="Español">🇪🇸</button>
-                  <button class="langBtn" id="langEn" type="button" aria-label="English">🇬🇧</button>
+                  <button class="langBtn" id="langEn" type="button" aria-label="English">�🇸</button>
                 </div>
               </div>
               <div class="settingsSection">
@@ -850,6 +850,7 @@
     ];
     const CLASSIC_TOTAL_QUESTIONS = 300;
     const LANGUAGE_KEY = "trivialodon-lang-v1";
+    let currentLang = DEFAULT_LANG;
     const DEFAULT_LANG = (() => {
       try{
         const saved = String(localStorage.getItem(LANGUAGE_KEY) || "").toLowerCase();
@@ -947,6 +948,7 @@
         allAlmostReady:"Todos casi listos",
         whenEveryoneReady:"Cuando todos hayan pulsado listo, puedes pasar a la configuracion del juego.",
         waitingInRoom:"Esperando en sala",
+        gameClosed:"Partida cerrada",
         players:"Jugadores",
         hostProfileTitle:"Comparte el codigo de sala",
         guestProfileTitle:"Prepara tu ficha",
@@ -1098,6 +1100,7 @@
         allAlmostReady:"Almost ready",
         whenEveryoneReady:"Once everyone has pressed ready, you can move on to game setup.",
         waitingInRoom:"Waiting in room",
+        gameClosed:"Game closed",
         players:"Players",
         hostProfileTitle:"Share the room code",
         guestProfileTitle:"Set up your badge",
@@ -1158,7 +1161,19 @@
         tone_familiar:"Family",
         difficulty_facil:"Easy",
         difficulty_media:"Medium",
-        difficulty_dificil:"Hard"
+        difficulty_dificil:"Hard",
+        required:"is required",
+        chromecastConnected:"Chromecast connected",
+        castingRoom:"Casting room {code} to TV.",
+        findChromecast:"Find your Chromecast and launch the room's TV screen.",
+        joinRoomFirst:"Join a room first so you can send it to the TV.",
+        reconnectTv:"Reconnect TV",
+        sendToTv:"Send to TV",
+        unmuteTv:"Unmute TV",
+        iosCastWarning:"On iPhone or iPad, web Google Cast is usually not available. Use Chrome on desktop or Android.",
+        castNotAvailable:"Google Cast is not available in this browser yet.",
+        tvConnected:"TV connected{custom}.",
+        chromecastReady:"Chromecast ready to connect when you want."
       }
     };
     const CATEGORY_LABELS = {
@@ -1181,6 +1196,55 @@
       "Categoria sorpresa":{en:"Surprise category"},
       "Otros":{en:"Other"}
     };
+    function setLanguage(lang) {
+      if (lang !== "es" && lang !== "en") return;
+      currentLang = lang;
+      try { localStorage.setItem(LANGUAGE_KEY, lang); } catch(_) {}
+      document.documentElement.lang = lang;
+      applyTranslations();
+      updateLanguageButtons();
+    }
+    function t(key, params = {}) {
+      const text = I18N[currentLang]?.[key] || I18N.es[key] || key;
+      return Object.entries(params).reduce((str, [k, v]) => str.replace(new RegExp(`\\{${k}\\}`, 'g'), v), text);
+    }
+    function applyTranslations() {
+      // Intro screen
+      ui.introLead.textContent = t("introLead");
+      ui.btnContinue.textContent = t("continueGame");
+      ui.btnHost.textContent = t("host");
+      ui.btnGuest.textContent = t("guest");
+
+      // Menu
+      ui.settingsLanguage.textContent = t("settingsLanguage");
+      ui.settingsGame.textContent = t("settingsGame");
+      ui.btnEndGameText.textContent = t("endGame");
+      ui.btnExitGameText.textContent = t("exit");
+
+      // Profile screen
+      ui.profileKicker.textContent = state.role === "host" ? t("room") : t("guestKicker");
+      ui.profileTitle.textContent = state.role === "host" ? t("hostProfileTitle") : t("guestProfileTitle");
+      ui.profileSideTitle.textContent = state.role === "host" ? t("hostProfileSideTitle") : t("guestProfileSideTitle");
+      ui.profileSideText.textContent = state.role === "host" ? t("hostProfileSideText") : t("guestProfileSideText");
+
+      // Lobby screen
+      ui.lobbyTitle.textContent = t("preparingRoom");
+      ui.lobbyDesc.textContent = t("lobbyDesc");
+
+      // Setup screen
+      ui.setupTitle.textContent = t("setupTitle");
+      ui.setupDesc.textContent = t("setupDesc");
+
+      // Update other dynamic content
+      updateIdentity();
+      renderCurrentScene();
+    }
+    function updateLanguageButtons() {
+      ui.langEsIntro.classList.toggle("active", currentLang === "es");
+      ui.langEnIntro.classList.toggle("active", currentLang === "en");
+      ui.langEs.classList.toggle("active", currentLang === "es");
+      ui.langEn.classList.toggle("active", currentLang === "en");
+    }
     const STANDARD_VARIANT_LEADS = ["","Cambiamos de tercio: ","Vamos con una mas fina: ","Subimos un poco el nivel: "];
     const SPEED_VARIANT_LEADS = ["","Modo Velociraptor! ","Ronda Velociraptor! ","Velociraptor en pista: ","Atencion, garras fuera: "];
     const BASE_STANDARD_QUESTIONS = [
@@ -1459,7 +1523,9 @@
       durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
       customModal:$("customModal"), customThemeInput:$("customThemeInput"), customToneChoices:$("customToneChoices"), customDifficultyChoices:$("customDifficultyChoices"), customPromptInput:$("customPromptInput"),
       btnCloseCustom:$("btnCloseCustom"), btnAcceptCustom:$("btnAcceptCustom"),
-      castDeviceName:$("castDeviceName"), castDeviceHint:$("castDeviceHint"), btnCastConnect:$("btnCastConnect"), castVolumeInput:$("castVolumeInput"), btnCastMute:$("btnCastMute"), btnCastDisconnect:$("btnCastDisconnect"), castStatus:$("castStatus")
+      castDeviceName:$("castDeviceName"), castDeviceHint:$("castDeviceHint"), btnCastConnect:$("btnCastConnect"), castVolumeInput:$("castVolumeInput"), btnCastMute:$("btnCastMute"), btnCastDisconnect:$("btnCastDisconnect"), castStatus:$("castStatus"),
+      introLead:$("introLead"), settingsLanguage:$("settingsLangTitle"), settingsGame:$("settingsGameTitle"), btnEndGameText:$("btnEndGameText"), btnExitGameText:$("btnExitGameText"),
+      langEsIntro:$("langEsIntro"), langEnIntro:$("langEnIntro"), langEs:$("langEs"), langEn:$("langEn")
     };
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:false,autoRefreshToken:false}});
     const state = {
@@ -1977,20 +2043,20 @@
       const roomReady = !!state.roomCode;
       if(ui.settingsCast) ui.settingsCast.hidden = isIosLike();
       refreshCastSessionData();
-      ui.castDeviceName.textContent = castState.connected ? (castState.deviceName || "Chromecast conectado") : "Sin dispositivo conectado";
-      ui.castDeviceHint.textContent = castState.connected ? `Emitiendo la sala ${state.roomCode || "----"} en la TV.` : (roomReady ? "Busca tu Chromecast y lanza la pantalla de TV de la sala actual." : "Primero entra en una sala para poder enviarla a la TV.");
-      ui.btnCastConnect.innerHTML = castState.connected ? `<span class="btnIcon">📺</span>Reconectar TV` : `<span class="btnIcon">📺</span>Enviar a TV`;
+      ui.castDeviceName.textContent = castState.connected ? (castState.deviceName || t("chromecastConnected")) : t("noDevice");
+      ui.castDeviceHint.textContent = castState.connected ? t("castingRoom", {code: state.roomCode || "----"}) : (roomReady ? t("findChromecast") : t("joinRoomFirst"));
+      ui.btnCastConnect.innerHTML = castState.connected ? `<span class="btnIcon">📺</span>${t("reconnectTv")}` : `<span class="btnIcon">📺</span>${t("sendToTv")}`;
       ui.btnCastConnect.disabled = !roomReady || isIosLike();
       ui.btnCastDisconnect.disabled = !castState.connected;
       ui.btnCastMute.disabled = !castState.connected;
       ui.castVolumeInput.disabled = !castState.connected;
       ui.castVolumeInput.value = String(Math.round((castState.volume || 0) * 100));
-      ui.btnCastMute.innerHTML = castState.muted ? `<span class="btnIcon">🔊</span>Activar audio TV` : `<span class="btnIcon">🔇</span>Mute TV`;
+      ui.btnCastMute.innerHTML = castState.muted ? `<span class="btnIcon">🔊</span>${t("unmuteTv")}` : `<span class="btnIcon">🔇</span>${t("muteTv")}`;
       if(ui.settingsCast) ui.settingsCast.hidden = isIosLike();
-      if(isIosLike()) setCastStatus("En iPhone o iPad Google Cast web no suele estar disponible. Usa Chrome en escritorio o Android.", "danger");
-      else if(!castState.available) setCastStatus("Google Cast aun no esta disponible en este navegador.", "danger");
-      else if(castState.connected) setCastStatus(`TV conectada${castState.deviceName ? `: ${castState.deviceName}` : ""}.`, "ok");
-      else setCastStatus("Chromecast listo para vincularse cuando quieras.", "info");
+      if(isIosLike()) setCastStatus(t("iosCastWarning"), "danger");
+      else if(!castState.available) setCastStatus(t("castNotAvailable"), "danger");
+      else if(castState.connected) setCastStatus(t("tvConnected", {custom: castState.deviceName ? `: ${castState.deviceName}` : ""}), "ok");
+      else setCastStatus(t("chromecastReady"), "info");
     }
     function castPayload(){
       return {type:"sync", roomCode:state.roomCode, soundOff:false, sentAt:Date.now(), title:"Trivialodon Live"};
@@ -2310,9 +2376,9 @@
         });
         bindAvatarSwipe();
       }
-    function updateIdentity(){ ui.identity.hidden = !state.role; updateSoundChip(); ui.identityName.textContent = state.name || "Sin nombre"; ui.roomBadge.textContent = state.roomCode || "------"; ui.scoreChipValue.textContent = String((state.game.scores && state.game.scores[state.playerId]) || 0); const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; ui.btnEndGame.hidden = state.role !== "host"; updateCastUi(); }
+    function updateIdentity(){ ui.identity.hidden = !state.role; updateSoundChip(); ui.identityName.textContent = state.name || t("noName"); ui.roomBadge.textContent = state.roomCode || "------"; ui.scoreChipValue.textContent = String((state.game.scores && state.game.scores[state.playerId]) || 0); const src = state.avatar.rendered || state.avatar.src; ui.identityAvatar.innerHTML = src ? `<img src="${src}" alt="">` : "\uD83E\uDD96"; ui.btnEndGame.hidden = state.role !== "host"; updateCastUi(); }
     function applyAvatar(){ syncAvatarIndex(); renderAvatarCarousel(); updateIdentity(); }
-    function renderPlayerRows(players){ if(!players.length) return `<article class="playerCard"><div class="sceneStack"><div class="playerName">Nadie todavia</div><div class="playerSub">La sala espera al primer dino.</div></div></article>`; return players.map(player => `<article class="playerCard"><div class="avatarStack">${player.ready && player.avatarSrc ? `<div class="avatarShot"><img src="${player.avatarSrc}" alt=""></div>` : `<div class="dinoHole">\uD83E\uDD96</div>`}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="sceneStack" style="gap:6px"><div class="playerName">${esc(player.ready ? player.name : (player.waitingLine || lineFor(player.playerId)))}</div><div class="playerSub">${esc(player.ready ? (player.role === "host" ? "Anfitrion listo" : "Invitado listo") : "Aun no ha pulsado listo")}</div></div></article>`).join(""); }
+    function renderPlayerRows(players){ if(!players.length) return `<article class="playerCard"><div class="sceneStack"><div class="playerName">${t("nobodyYet")}</div><div class="playerSub">${t("roomWaits")}</div></div></article>`; return players.map(player => `<article class="playerCard"><div class="avatarStack">${player.ready && player.avatarSrc ? `<div class="avatarShot"><img src="${player.avatarSrc}" alt=""></div>` : `<div class="dinoHole">\uD83E\uDD96</div>`}<img class="avatarFrame" src="${FRAME_SRC}" alt=""></div><div class="sceneStack" style="gap:6px"><div class="playerName">${esc(player.ready ? player.name : (player.waitingLine || lineFor(player.playerId)))}</div><div class="playerSub">${esc(player.ready ? (player.role === "host" ? t("hostReady") : t("guestReady")) : t("notReadyYet"))}</div></div></article>`).join(""); }
     function dedupePlayers(raw){ const map = new Map(); raw.forEach(entry => { const prev = map.get(entry.playerId); if(!prev || entry.updatedAt > prev.updatedAt) map.set(entry.playerId, entry); }); return [...map.values()].sort((a,b) => { if(a.role !== b.role) return a.role === "host" ? -1 : 1; if(a.ready !== b.ready) return a.ready ? -1 : 1; return String(a.name || a.waitingLine).localeCompare(String(b.name || b.waitingLine), "es"); }); }
     function scoreEntries(){ return readyPlayers().map(player => ({playerId:player.playerId,name:player.name,avatarSrc:player.avatarSrc,score:(state.game.scores && state.game.scores[player.playerId]) || 0})).sort((a,b) => b.score - a.score || a.name.localeCompare(b.name, "es")); }
     function renderProfileScene(){
@@ -2836,16 +2902,20 @@
         }, {passive:eventName === "touchstart"});
       });
     ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
+    ui.langEsIntro.onclick = () => setLanguage("es");
+    ui.langEnIntro.onclick = () => setLanguage("en");
+    ui.langEs.onclick = () => setLanguage("es");
+    ui.langEn.onclick = () => setLanguage("en");
     ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; renderCurrentScene(); ensureAudioReady(); await connectRoom("host", roomCode()); renderCurrentScene(); };
     ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); ensureAudioReady(); renderCurrentScene(); };
     ui.btnContinue.onclick = async () => { ensureAudioReady(); const ok = await restoreSavedSession(readSession()); if(!ok) location.reload(); };
     ui.btnJoinBack.onclick = () => location.reload();
-    ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = "Necesito un codigo valido de 4 cifras."; return; } ui.joinStatus.textContent = "Entrando en la sala..."; ensureAudioReady(); await connectRoom("guest", code); renderCurrentScene(); };
+    ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = t("joinHint"); return; } ui.joinStatus.textContent = "Entrando en la sala..."; ensureAudioReady(); await connectRoom("guest", code); renderCurrentScene(); };
     ui.joinCodeOnlyInput.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); ui.btnJoinNext.click(); } });
     ui.btnBack.onclick = () => location.reload();
     ui.btnAvatarPrev.onclick = () => { shiftAvatar(-1); setStatus("","info"); };
     ui.btnAvatarNext.onclick = () => { shiftAvatar(1); setStatus("","info"); };
-    ui.btnReady.onclick = async () => { ensureAudioReady(); const name = ui.nameInput.value.trim(); if(!name){ setStatus("Necesito tu nombre antes de continuar.","danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus("Elige un avatar antes de continuar.","danger"); return; } state.name = name; state.ready = true; await updatePresence(); syncPlayers(); setStatus("","info"); renderCurrentScene(); };
+    ui.btnReady.onclick = async () => { ensureAudioReady(); const name = ui.nameInput.value.trim(); if(!name){ setStatus(t("yourName") + " " + t("required"), "danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus(t("chooseAvatar"), "danger"); return; } state.name = name; state.ready = true; await updatePresence(); syncPlayers(); setStatus("","info"); renderCurrentScene(); };
     ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; state.game.lastRoundScores = {}; state.game.tieTracker = {streak:0,pair:[]}; state.game.versus = null; state.game.hostNotice = ""; await broadcastGame(); renderCurrentScene(); };
     function renderCountdownScene(){ const now = sharedNow(); const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - now) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `Modo Velociraptor! · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general"); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = next?.category || "Categoria"; ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">Pausar</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
     function renderQuestionScene(){
@@ -3074,6 +3144,8 @@
     if(savedSession?.role && savedSession?.roomCode){ ui.btnContinue.hidden = false; }
     syncChoiceGroup(ui.customToneChoices, "tone", state.game.customConfig.tone);
     syncChoiceGroup(ui.customDifficultyChoices, "difficulty", state.game.customConfig.difficulty);
+    applyTranslations();
+    updateLanguageButtons();
     applyAvatar();
     renderCurrentScene();
     if(savedSession?.role && savedSession?.roomCode && !state.role){
