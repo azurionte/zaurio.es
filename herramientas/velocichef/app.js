@@ -7500,6 +7500,27 @@ function syncLayoutMetrics() {
   document.documentElement.style.setProperty("--vc-topbar-current-bottom", `${topbarBottom}px`);
 }
 
+function captureModalUiState() {
+  if (!state.modal) return;
+  if (state.modal.type === "cook-feedback") {
+    const scroller = modalRoot.querySelector(".vc-cook-feedback-scroll");
+    if (scroller) {
+      state.modal.scrollTop = scroller.scrollTop;
+    }
+  }
+}
+
+function restoreModalUiState() {
+  if (!state.modal) return;
+  if (state.modal.type === "cook-feedback") {
+    const desiredScrollTop = Math.max(0, Number(state.modal.scrollTop || 0));
+    const scroller = modalRoot.querySelector(".vc-cook-feedback-scroll");
+    if (scroller) {
+      scroller.scrollTop = desiredScrollTop;
+    }
+  }
+}
+
 function render() {
   const immersiveCook = isImmersiveCookMode();
   const pageIdentity = getCurrentPageIdentity();
@@ -7509,6 +7530,7 @@ function render() {
   document.body.classList.toggle("vc-cook-immersive-body", immersiveCook);
 
   if (state.loading) {
+    captureModalUiState();
     root.innerHTML = `${renderTopbar()}<div class="vc-page-shell ${didPageChange ? "vc-page-enter" : ""}" data-page-key="${escapeHtml(pageIdentity)}">${renderLoading()}</div>`;
     modalRoot.innerHTML = renderModal();
     repairVisibleText(root);
@@ -7517,6 +7539,7 @@ function render() {
     syncScreenWakeLock();
     window.requestAnimationFrame(() => {
       syncLayoutMetrics();
+      restoreModalUiState();
       if (didPageChange) {
         scrollViewportToTop();
       }
@@ -7530,6 +7553,7 @@ function render() {
       ? renderOnboarding()
       : renderWorkspace();
 
+  captureModalUiState();
   root.innerHTML = `${renderTopbar()}${renderNotificationBanner()}${renderToastStack()}<div class="vc-page-shell ${didPageChange ? "vc-page-enter" : ""}" data-page-key="${escapeHtml(pageIdentity)}">${content}</div>`;
   modalRoot.innerHTML = renderModal();
   repairVisibleText(root);
@@ -7538,6 +7562,7 @@ function render() {
   syncScreenWakeLock();
   window.requestAnimationFrame(() => {
     syncLayoutMetrics();
+    restoreModalUiState();
     if (didPageChange) {
       scrollViewportToTop();
     }
