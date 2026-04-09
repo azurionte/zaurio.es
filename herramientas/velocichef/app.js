@@ -275,6 +275,8 @@ let activeSystemBannerKey = "";
 let cookingSnapshotSyncTimer = null;
 let lastPushAutoRepairAt = 0;
 let lastRenderedPageIdentity = "";
+let lastCenteredPlannerTabKey = "";
+let pendingPlannerTabCenterBehavior = "";
 let historyInitialized = false;
 let lastHistoryUrl = "";
 let isRestoringHistory = false;
@@ -301,9 +303,6 @@ function getCurrentPageIdentity() {
   }
   if (state.currentView === "cook") {
     return `cook:${state.cooking?.mode || "idle"}`;
-  }
-  if (state.currentView === "week" || state.currentView === "recipes") {
-    return `workspace:${state.currentView}:${state.selectedPlannerDay || ""}:${getPendingRecipeChanges().length}`;
   }
   return `workspace:${state.currentView}`;
 }
@@ -527,6 +526,28 @@ function friendlyDayLabel(isoDate, startDate) {
   if (diff === 1) return "Pasado mañana";
   const formatted = formatDateLong(isoDate);
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+function formatWeekdayLabel(isoDate, options = {}) {
+  if (!isoDate) return "";
+  const weekday = fromIsoDate(isoDate).toLocaleDateString("es-ES", { weekday: "long" });
+  if (options.capitalize === false) return weekday;
+  return weekday.charAt(0).toUpperCase() + weekday.slice(1);
+}
+
+function getDisplayDayLabel(dayOrDate, options = {}) {
+  const isoDate = typeof dayOrDate === "string"
+    ? dayOrDate
+    : (dayOrDate?.date || dayOrDate?.mealDate || "");
+  if (isoDate) {
+    return formatWeekdayLabel(isoDate, options);
+  }
+  const fallback = String(typeof dayOrDate === "object" ? dayOrDate?.label || "" : "").trim();
+  if (!fallback) return "";
+  if (options.capitalize === false) {
+    return fallback.charAt(0).toLowerCase() + fallback.slice(1);
+  }
+  return fallback.charAt(0).toUpperCase() + fallback.slice(1);
 }
 
 function formatTime(time) {
@@ -2112,7 +2133,7 @@ function normalizeWeek(rawWeek) {
     });
     return {
       date,
-      label: day.label || friendlyDayLabel(date, startDate),
+      label: getDisplayDayLabel(date),
       meals,
     };
   });
@@ -2259,6 +2280,21 @@ function formatPlannerTabDate(isoDate) {
     day: "numeric",
     month: "short",
   });
+}
+
+function centerSelectedPlannerDayTab(behavior = "auto") {
+  if (!(state.currentView === "week" || state.currentView === "recipes")) return;
+  if (!state.selectedPlannerDay) return;
+  const scroller = document.querySelector(".vc-day-tabs");
+  if (!scroller) return;
+  const tab = scroller.querySelector(`[data-date="${state.selectedPlannerDay}"]`);
+  if (!tab) return;
+  const maxLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+  const targetLeft = Math.max(0, Math.min(
+    tab.offsetLeft - ((scroller.clientWidth - tab.offsetWidth) / 2),
+    maxLeft,
+  ));
+  scroller.scrollTo({ left: targetLeft, behavior });
 }
 
 function isMealCookable(meal) {
@@ -3746,7 +3782,7 @@ function composeReminders() {
       let date = day.date;
       let time = "12:00";
       let title = `Es hora de empezar con ${meal.title}`;
-      let body = `${MEAL_LABELS[mealKey].toLowerCase()} de ${day.label}. Abre VelociChef y cocina con margen.`;
+      let body = `${MEAL_LABELS[mealKey].toLowerCase()} del ${getDisplayDayLabel(day.date, { capitalize: false })}. Abre VelociChef y cocina con margen.`;
 
       if (mealKey === "dinner") {
         time = state.profile.dinnerTime || "21:00";
@@ -3780,7 +3816,7 @@ function composeReminders() {
         mealDate: day.date,
         mealKey,
         mealTitle: meal.title,
-        dateLabel: day.label,
+        dateLabel: getDisplayDayLabel(day.date),
       });
     });
   });
@@ -4782,7 +4818,7 @@ function createSampleWeekPlan(startDate) {
 
     return {
       date,
-      label: friendlyDayLabel(date, startDate),
+      label: getDisplayDayLabel(date),
       meals,
     };
   });
@@ -5041,6 +5077,7 @@ async function generateWeek(startDate = getActivePlanningStartIso()) {
     await saveWeek();
     state.currentView = "week";
     ensureSelectedPlannerDay({ forceDefault: true });
+    pendingPlannerTabCenterBehavior = "auto";
     syncHistoryFromState({ mode: "replace", view: "week", day: state.selectedPlannerDay });
     state.busy = false;
     state.busyLabel = "";
@@ -5988,7 +6025,7 @@ function renderMealCard(day, mealKey, meal) {
 }
 
 function renderPlannerDayTabs(selectedDate) {
-  return `
+    return `
       <div class="vc-day-tabs" role="tablist" aria-label="Dias de la semana">
         ${state.week.days.map((day) => {
           const active = day.date === selectedDate;
@@ -6004,7 +6041,7 @@ function renderPlannerDayTabs(selectedDate) {
               data-date="${day.date}"
             >
               <div class="vc-day-tab-meta">
-                <small>${escapeHtml(day.label)}</small>
+                <small>${escapeHtml(getDisplayDayLabel(day.date))}</small>
                 ${isToday ? '<span class="vc-day-tab-badge">Hoy</span>' : ""}
               </div>
               <strong>${escapeHtml(formatPlannerTabDate(day.date))}</strong>
@@ -6070,12 +6107,11 @@ function renderWeeklyPlannerView() {
         <article class="vc-week-card vc-card vc-week-focus-card">
             <div class="vc-week-focus-head">
               <div>
-                <h3 class="vc-weekday-title">${escapeHtml(selectedDay.label)}</h3>
-                <p class="vc-weekday-date">${escapeHtml(formatDateLong(selectedDay.date))}</p>
+                <h3 class="vc-weekday-title">${escapeHtml(getDisplayDayLabel(selectedDay.date))}</h3>
               </div>
               <div class="vc-chip-row">
                 ${isTodayPlannerDate(selectedDay.date) ? '<span class="vc-meta-pill vc-meta-pill-good">Hoy</span>' : ""}
-                ${getPendingRecipeChangesForDate(selectedDay.date).length ? `<span class="vc-meta-pill vc-meta-pill-warn">${getPendingRecipeChangesForDate(selectedDay.date).length} por cambiar hoy</span>` : ""}
+                ${getPendingRecipeChangesForDate(selectedDay.date).length ? `<span class="vc-meta-pill vc-meta-pill-warn">${getPendingRecipeChangesForDate(selectedDay.date).length} por cambiar</span>` : ""}
               </div>
             </div>
           <div class="vc-day-meals">
@@ -6749,7 +6785,7 @@ function renderCookView() {
 
           ${suggestedTarget ? `
             <article class="vc-cook-suggestion">
-              <small class="vc-muted">${escapeHtml(suggestedTarget.day.label)} Â· ${escapeHtml(MEAL_LABELS[suggestedTarget.mealKey])}</small>
+              <small class="vc-muted">${escapeHtml(getDisplayDayLabel(suggestedTarget.day.date))} · ${escapeHtml(MEAL_LABELS[suggestedTarget.mealKey])}</small>
               <h3 class="vc-inline-title">Estas queriendo cocinar el plato "${escapeHtml(suggestedTarget.meal.title)}" del ${escapeHtml((MEAL_LABELS[suggestedTarget.mealKey] || "").toLowerCase())} del dia ${escapeHtml(formatDateLong(suggestedTarget.day.date))}?</h3>
               <p class="vc-copy">${escapeHtml(suggestedTarget.meal.summary)}</p>
               <div class="vc-inline-actions">
@@ -6784,8 +6820,8 @@ function renderCookView() {
             <article class="vc-week-card vc-card">
               <div class="vc-weekday-head">
                 <div>
-                  <h3 class="vc-weekday-title">${escapeHtml(day.label)}</h3>
-                  <p class="vc-weekday-date">${escapeHtml(formatDateLong(day.date))}</p>
+                  <h3 class="vc-weekday-title">${escapeHtml(getDisplayDayLabel(day.date))}</h3>
+                  <p class="vc-weekday-date">${escapeHtml(formatPlannerTabDate(day.date))}</p>
                 </div>
               </div>
               <div class="vc-cook-pick-list">
@@ -6835,7 +6871,7 @@ function renderCookView() {
   const cookCopyPanel = `
     <div class="vc-cook-copy-panel ${isIngredientsStep ? "vc-cook-copy-panel-ingredients" : ""}">
       <div class="vc-cook-copy-meta">
-        <small class="vc-muted">${escapeHtml(target.day.label)} · ${escapeHtml(MEAL_LABELS[target.mealKey])}</small>
+        <small class="vc-muted">${escapeHtml(getDisplayDayLabel(target.day.date))} · ${escapeHtml(MEAL_LABELS[target.mealKey])}</small>
         <small class="vc-muted">${escapeHtml(stepMeta)}</small>
       </div>
       <p class="vc-copy vc-cook-step-copy ${isIngredientsStep ? "vc-cook-step-copy-ingredients" : ""}">${isIngredientsStep
@@ -6923,7 +6959,7 @@ function renderMealDetailModal(target) {
       <div class="vc-modal" role="dialog" aria-modal="true">
         <div class="vc-modal-head">
           <div>
-            <small class="vc-muted">${escapeHtml(day.label)} Â· ${escapeHtml(MEAL_LABELS[mealKey])}</small>
+            <small class="vc-muted">${escapeHtml(getDisplayDayLabel(day.date))} · ${escapeHtml(MEAL_LABELS[mealKey])}</small>
             <h2 class="vc-modal-title">${escapeHtml(meal.title)}</h2>
             <p class="vc-copy">${escapeHtml(meal.summary)}</p>
           </div>
@@ -7000,7 +7036,7 @@ function renderRefineModal(target) {
       <div class="vc-modal" role="dialog" aria-modal="true">
         <div class="vc-modal-head">
           <div>
-            <small class="vc-muted">${escapeHtml(target.day.label)} Â· ${escapeHtml(MEAL_LABELS[target.mealKey])}</small>
+            <small class="vc-muted">${escapeHtml(getDisplayDayLabel(target.day.date))} · ${escapeHtml(MEAL_LABELS[target.mealKey])}</small>
             <h2 class="vc-modal-title">Afinar gustos</h2>
             <p class="vc-copy">Cuéntame qué no te convence de "${escapeHtml(target.meal.title)}" y dejaré este plato marcado para cambiarlo junto con el resto.</p>
           </div>
@@ -7317,7 +7353,7 @@ function renderFutureNoCookModal(reminder) {
                 <option value="">Elige una comida futura</option>
                 ${replacementOptions.map((entry) => `
                   <option value="${escapeHtml(entry.meal.id)}" ${replacementMealId === entry.meal.id ? "selected" : ""}>
-                    ${escapeHtml(`${entry.day.label} · ${MEAL_LABELS[entry.mealKey] || entry.mealKey} · ${entry.meal.title}`)}
+                    ${escapeHtml(`${getDisplayDayLabel(entry.day.date)} · ${MEAL_LABELS[entry.mealKey] || entry.mealKey} · ${entry.meal.title}`)}
                   </option>
                 `).join("")}
               </select>
@@ -7499,7 +7535,7 @@ function renderCookCloseConfirmModal() {
   const target = getCookingTarget();
   const cookingStage = target ? getCookingStage(target) : null;
   const activeTimerCount = getActiveCookingTimers().length;
-  const mealLabel = target ? `${target.day.label} · ${MEAL_LABELS[target.mealKey] || target.mealKey}` : "Modo cocina";
+  const mealLabel = target ? `${getDisplayDayLabel(target.day.date)} · ${MEAL_LABELS[target.mealKey] || target.mealKey}` : "Modo cocina";
 
   return `
     <div class="vc-modal-layer" data-action="close-modal">
@@ -7582,7 +7618,7 @@ function renderCookFeedbackModal() {
         <div class="vc-cook-feedback-scroll">
           <article class="vc-profile-card vc-cook-feedback-head">
             <div class="vc-cook-feedback-meta">
-              <span class="vc-meta-pill">${escapeHtml(target.day.label)} · ${escapeHtml(MEAL_LABELS[target.mealKey] || target.mealKey)}</span>
+              <span class="vc-meta-pill">${escapeHtml(getDisplayDayLabel(target.day.date))} · ${escapeHtml(MEAL_LABELS[target.mealKey] || target.mealKey)}</span>
               <span class="vc-meta-pill">${escapeHtml(String(target.meal.prepMinutes || 0))} min</span>
               <span class="vc-meta-pill">${escapeHtml(String(target.meal.calories || 0))} kcal</span>
               <span class="vc-meta-pill">${escapeHtml(target.meal.difficulty || "Media")}</span>
@@ -7743,6 +7779,9 @@ function render() {
   const immersiveCook = isImmersiveCookMode();
   const pageIdentity = getCurrentPageIdentity();
   const didPageChange = pageIdentity !== lastRenderedPageIdentity;
+  const plannerTabKey = state.currentView === "week" || state.currentView === "recipes"
+    ? `${state.currentView}:${state.selectedPlannerDay || ""}`
+    : "";
   lastRenderedPageIdentity = pageIdentity;
   document.documentElement.classList.toggle("vc-cook-immersive-page", immersiveCook);
   document.body.classList.toggle("vc-cook-immersive-body", immersiveCook);
@@ -7761,6 +7800,16 @@ function render() {
       if (didPageChange) {
         scrollViewportToTop();
       }
+      if (plannerTabKey) {
+        const behavior = pendingPlannerTabCenterBehavior || (plannerTabKey !== lastCenteredPlannerTabKey ? "auto" : "");
+        if (behavior) {
+          centerSelectedPlannerDayTab(behavior);
+          lastCenteredPlannerTabKey = plannerTabKey;
+        }
+      } else {
+        lastCenteredPlannerTabKey = "";
+      }
+      pendingPlannerTabCenterBehavior = "";
     });
     return;
   }
@@ -7784,6 +7833,16 @@ function render() {
     if (didPageChange) {
       scrollViewportToTop();
     }
+    if (plannerTabKey) {
+      const behavior = pendingPlannerTabCenterBehavior || (plannerTabKey !== lastCenteredPlannerTabKey ? "auto" : "");
+      if (behavior) {
+        centerSelectedPlannerDayTab(behavior);
+        lastCenteredPlannerTabKey = plannerTabKey;
+      }
+    } else {
+      lastCenteredPlannerTabKey = "";
+    }
+    pendingPlannerTabCenterBehavior = "";
   });
 }
 
@@ -8108,12 +8167,13 @@ async function handleAction(action, trigger) {
         if (markAllActivityNotificationsRead()) {
           await saveWeek();
         }
-      }
-      if (nextView === "week" || nextView === "recipes") {
-        ensureSelectedPlannerDay({ forceDefault: true });
-      }
-      syncHistoryFromState({ mode: "push", view: nextView, tab: state.notificationTab, day: state.selectedPlannerDay });
-      render();
+        }
+        if (nextView === "week" || nextView === "recipes") {
+          ensureSelectedPlannerDay({ forceDefault: true });
+          pendingPlannerTabCenterBehavior = "auto";
+        }
+        syncHistoryFromState({ mode: "push", view: nextView, tab: state.notificationTab, day: state.selectedPlannerDay });
+        render();
       if (nextView === "profile" || nextView === "notifications") {
         refreshNotificationDeviceState().then(() => {
           render();
@@ -8791,20 +8851,22 @@ async function handleAction(action, trigger) {
       await generateWeek(getActivePlanningStartIso());
       break;
 
-    case "redo-current-week":
-      if (!state.week?.startDate) return;
-      await generateWeek(state.week.startDate);
-      state.currentView = "recipes";
-      ensureSelectedPlannerDay({ forceDefault: true });
-      syncHistoryFromState({ mode: "push", view: "recipes", day: state.selectedPlannerDay });
-      render();
-      break;
+      case "redo-current-week":
+        if (!state.week?.startDate) return;
+        await generateWeek(state.week.startDate);
+        state.currentView = "recipes";
+        ensureSelectedPlannerDay({ forceDefault: true });
+        pendingPlannerTabCenterBehavior = "auto";
+        syncHistoryFromState({ mode: "push", view: "recipes", day: state.selectedPlannerDay });
+        render();
+        break;
 
-    case "set-planner-day":
-      state.selectedPlannerDay = trigger.dataset.date || ensureSelectedPlannerDay({ forceDefault: true });
-      syncHistoryFromState({ mode: "replace", view: state.currentView, day: state.selectedPlannerDay });
-      render();
-      break;
+      case "set-planner-day":
+        state.selectedPlannerDay = trigger.dataset.date || ensureSelectedPlannerDay({ forceDefault: true });
+        pendingPlannerTabCenterBehavior = "smooth";
+        syncHistoryFromState({ mode: "replace", view: state.currentView, day: state.selectedPlannerDay });
+        render();
+        break;
 
     case "remove-pending-recipe-change": {
       const mealId = trigger.dataset.mealId || "";
@@ -9110,6 +9172,10 @@ async function hydrateSession(session, options = {}) {
   }
 
   if (state.week) {
+    if (state.currentView === "week" || state.currentView === "recipes") {
+      ensureSelectedPlannerDay({ forceDefault: true });
+      pendingPlannerTabCenterBehavior = "auto";
+    }
     const persistedCooking = readPersistedCookingState();
     const needsReminderBootstrap = !(state.week.reminders?.length);
     state.week.reminders = needsReminderBootstrap ? composeReminders() : state.week.reminders;
