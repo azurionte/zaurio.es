@@ -3291,39 +3291,24 @@ async function playCookLaunchTransition(trigger, mealId) {
   });
 
   try {
-    const collapse = orb.animate([
+    const captionFade = caption.animate([
+      { opacity: 1, transform: "scale(1)" },
+      { opacity: 0, transform: "scale(.92)" },
+    ], {
+      duration: 220,
+      easing: "ease-out",
+      fill: "forwards",
+    });
+
+    const cover = orb.animate([
       {
         left: `${rect.left}px`,
         top: `${rect.top}px`,
         width: `${rect.width}px`,
         height: `${rect.height}px`,
         borderRadius: `${Math.max(20, rect.height / 2)}px`,
+        opacity: 1,
       },
-      {
-        left: `${morphLeft}px`,
-        top: `${morphTop}px`,
-        width: `${morphSize}px`,
-        height: `${morphSize}px`,
-        borderRadius: "999px",
-      },
-    ], {
-      duration: 220,
-      easing: "cubic-bezier(.24,.78,.24,1)",
-      fill: "forwards",
-    });
-
-    const captionFade = caption.animate([
-      { opacity: 1, transform: "scale(1)" },
-      { opacity: 0, transform: "scale(.92)" },
-    ], {
-      duration: 180,
-      easing: "ease-out",
-      fill: "forwards",
-    });
-
-    await Promise.allSettled([collapse.finished, captionFade.finished]);
-
-    const expand = orb.animate([
       {
         left: `${morphLeft}px`,
         top: `${morphTop}px`,
@@ -3331,6 +3316,7 @@ async function playCookLaunchTransition(trigger, mealId) {
         height: `${morphSize}px`,
         borderRadius: "999px",
         opacity: 1,
+        offset: 0.34,
       },
       {
         left: `${finalLeft}px`,
@@ -3339,16 +3325,17 @@ async function playCookLaunchTransition(trigger, mealId) {
         height: `${expandedSize}px`,
         borderRadius: "999px",
         opacity: 1,
+        offset: 1,
       },
     ], {
-      duration: 620,
-      easing: "cubic-bezier(.16,.86,.22,1)",
+      duration: 920,
+      easing: "cubic-bezier(.16,.88,.2,1)",
       fill: "forwards",
     });
 
-    await expand.finished;
+    await Promise.allSettled([cover.finished, captionFade.finished]);
     element.classList.add("is-covered");
-    await new Promise((resolve) => window.setTimeout(resolve, 70));
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
 
     const flowPromise = startCookingFlow(mealId, "active");
     let shell = null;
@@ -3362,11 +3349,11 @@ async function playCookLaunchTransition(trigger, mealId) {
       shell.style.setProperty("--vc-cook-reveal-radius", `${revealRadius}px`);
       shell.classList.add("vc-cook-reveal-shell");
     }
-    await nextFrame();
+    await new Promise((resolve) => window.setTimeout(resolve, 110));
     element.classList.add("is-fading");
     cookLaunchCleanupTimer = window.setTimeout(() => {
       clearCookLaunchOverlay();
-    }, 720);
+    }, 980);
     await flowPromise;
   } catch (error) {
     clearCookLaunchOverlay();
