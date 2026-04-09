@@ -1612,7 +1612,10 @@ body.vc-cook-immersive-body .vc-app{
 .vc-modal-layer{
   position:fixed;
   inset:0;
-  padding:16px;
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 12px)
+    16px
+    calc(env(safe-area-inset-bottom, 0px) + 16px);
   background:rgba(49,18,11,.28);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
@@ -1628,6 +1631,9 @@ body.vc-cook-immersive-body .vc-app{
   padding:18px;
   display:grid;
   gap:16px;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
 }
 
 .vc-close{
@@ -1838,6 +1844,29 @@ body.vc-cook-immersive-body .vc-app{
 
 .vc-cook-feedback-modal{
   width:min(100%, 640px);
+  max-height:min(82dvh, 780px);
+  overflow:hidden;
+  grid-template-rows:auto minmax(0, 1fr) auto;
+  align-self:end;
+}
+
+.vc-cook-feedback-scroll{
+  min-height:0;
+  overflow:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
+  display:grid;
+  gap:16px;
+  padding-right:4px;
+}
+
+.vc-cook-feedback-foot{
+  position:relative;
+  z-index:1;
+  margin-top:0;
+  padding-top:8px;
+  background:linear-gradient(180deg, rgba(255,249,242,0), rgba(255,249,242,.96) 32%, rgba(255,249,242,.98));
 }
 
 .vc-cook-feedback-head{
@@ -2020,6 +2049,10 @@ body.vc-cook-immersive-body .vc-app{
 
   .vc-cook-feedback-reasons{
     grid-template-columns:minmax(0, 1fr);
+  }
+
+  .vc-cook-feedback-modal{
+    max-height:min(84dvh, 860px);
   }
 }
 

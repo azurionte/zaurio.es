@@ -7361,70 +7361,72 @@ function renderCookFeedbackModal() {
           >&times;</button>
         </div>
 
-        <article class="vc-profile-card vc-cook-feedback-head">
-          <div class="vc-cook-feedback-meta">
-            <span class="vc-meta-pill">${escapeHtml(target.day.label)} · ${escapeHtml(MEAL_LABELS[target.mealKey] || target.mealKey)}</span>
-            <span class="vc-meta-pill">${escapeHtml(String(target.meal.prepMinutes || 0))} min</span>
-            <span class="vc-meta-pill">${escapeHtml(String(target.meal.calories || 0))} kcal</span>
-            <span class="vc-meta-pill">${escapeHtml(target.meal.difficulty || "Media")}</span>
-          </div>
+        <div class="vc-cook-feedback-scroll">
+          <article class="vc-profile-card vc-cook-feedback-head">
+            <div class="vc-cook-feedback-meta">
+              <span class="vc-meta-pill">${escapeHtml(target.day.label)} · ${escapeHtml(MEAL_LABELS[target.mealKey] || target.mealKey)}</span>
+              <span class="vc-meta-pill">${escapeHtml(String(target.meal.prepMinutes || 0))} min</span>
+              <span class="vc-meta-pill">${escapeHtml(String(target.meal.calories || 0))} kcal</span>
+              <span class="vc-meta-pill">${escapeHtml(target.meal.difficulty || "Media")}</span>
+            </div>
 
-          ${submitted ? `
-            <div class="vc-cook-feedback-thanks">
-              <div class="vc-cook-feedback-face" aria-hidden="true">${rating >= 5 ? "&#9786;" : "&#9787;"}</div>
-              <div class="vc-cook-feedback-thanks-copy">
-                <strong>${escapeHtml(thanksTitle)}</strong>
-                <p class="vc-copy">${escapeHtml(thanksBody)}</p>
-                ${selectedReasonLabels.length ? `<p class="vc-copy vc-cook-feedback-summary">Me apunto esto para ti: ${escapeHtml(selectedReasonLabels.join(", "))}.</p>` : ""}
-              </div>
-            </div>
-          ` : `
-            <div class="vc-cook-feedback-stars" role="radiogroup" aria-label="Valora esta receta de una a cinco estrellas">
-              ${Array.from({ length: 5 }, (_, index) => {
-                const starValue = index + 1;
-                const active = starValue <= rating;
-                return `
-                  <button
-                    class="vc-cook-feedback-star ${active ? "active" : ""}"
-                    type="button"
-                    data-action="set-cook-feedback-rating"
-                    data-value="${starValue}"
-                    aria-label="Valorar con ${starValue} estrellas"
-                    aria-pressed="${active ? "true" : "false"}"
-                  >
-                    <span class="vc-cook-feedback-star-glyph" aria-hidden="true">&#9733;</span>
-                    <small>${starValue}</small>
-                  </button>
-                `;
-              }).join("")}
-            </div>
-            <p class="vc-cook-feedback-rating-label">${escapeHtml(ratingLabel)}</p>
-            ${rating >= 5 ? `
-              <div class="vc-cook-feedback-thanks vc-cook-feedback-thanks-inline">
-                <div class="vc-cook-feedback-face" aria-hidden="true">&#9786;</div>
+            ${submitted ? `
+              <div class="vc-cook-feedback-thanks">
+                <div class="vc-cook-feedback-face" aria-hidden="true">${rating >= 5 ? "&#9786;" : "&#9787;"}</div>
                 <div class="vc-cook-feedback-thanks-copy">
-                  <strong>Gracias por tu opinion</strong>
-                  <p class="vc-copy">Me sirve para repetirte recetas parecidas cuando encajen contigo.</p>
+                  <strong>${escapeHtml(thanksTitle)}</strong>
+                  <p class="vc-copy">${escapeHtml(thanksBody)}</p>
+                  ${selectedReasonLabels.length ? `<p class="vc-copy vc-cook-feedback-summary">Me apunto esto para ti: ${escapeHtml(selectedReasonLabels.join(", "))}.</p>` : ""}
                 </div>
               </div>
-            ` : ""}
-          `}
-        </article>
-
-        ${showReasons ? `
-          <article class="vc-profile-card">
-            <div class="vc-cook-feedback-reason-head">
-              <h3 class="vc-inline-title">Que mejorarias?</h3>
-              <p class="vc-copy">Marca todo lo que te ayude a tener recetas mejores la proxima vez.</p>
-            </div>
-            <div class="vc-cook-feedback-reasons">
-              ${COOKING_FEEDBACK_REASON_OPTIONS.map((option) => renderCookingFeedbackReasonPill(option, reasons)).join("")}
-            </div>
-            ${inlineError ? `<div class="vc-error">${escapeHtml(inlineError)}</div>` : ""}
+            ` : `
+              <div class="vc-cook-feedback-stars" role="radiogroup" aria-label="Valora esta receta de una a cinco estrellas">
+                ${Array.from({ length: 5 }, (_, index) => {
+                  const starValue = index + 1;
+                  const active = starValue <= rating;
+                  return `
+                    <button
+                      class="vc-cook-feedback-star ${active ? "active" : ""}"
+                      type="button"
+                      data-action="set-cook-feedback-rating"
+                      data-value="${starValue}"
+                      aria-label="Valorar con ${starValue} estrellas"
+                      aria-pressed="${active ? "true" : "false"}"
+                    >
+                      <span class="vc-cook-feedback-star-glyph" aria-hidden="true">&#9733;</span>
+                      <small>${starValue}</small>
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+              <p class="vc-cook-feedback-rating-label">${escapeHtml(ratingLabel)}</p>
+              ${rating >= 5 ? `
+                <div class="vc-cook-feedback-thanks vc-cook-feedback-thanks-inline">
+                  <div class="vc-cook-feedback-face" aria-hidden="true">&#9786;</div>
+                  <div class="vc-cook-feedback-thanks-copy">
+                    <strong>Gracias por tu opinion</strong>
+                    <p class="vc-copy">Me sirve para repetirte recetas parecidas cuando encajen contigo.</p>
+                  </div>
+                </div>
+              ` : ""}
+            `}
           </article>
-        ` : ""}
 
-        <div class="vc-step-foot">
+          ${showReasons ? `
+            <article class="vc-profile-card">
+              <div class="vc-cook-feedback-reason-head">
+                <h3 class="vc-inline-title">Que mejorarias?</h3>
+                <p class="vc-copy">Marca todo lo que te ayude a tener recetas mejores la proxima vez.</p>
+              </div>
+              <div class="vc-cook-feedback-reasons">
+                ${COOKING_FEEDBACK_REASON_OPTIONS.map((option) => renderCookingFeedbackReasonPill(option, reasons)).join("")}
+              </div>
+              ${inlineError ? `<div class="vc-error">${escapeHtml(inlineError)}</div>` : ""}
+            </article>
+          ` : ""}
+        </div>
+
+        <div class="vc-step-foot vc-cook-feedback-foot">
           ${submitted ? `
             <button class="vc-button primary" data-action="finish-cook-feedback">Cerrar receta</button>
           ` : `
