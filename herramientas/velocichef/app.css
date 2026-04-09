@@ -1338,6 +1338,8 @@ body.vc-cook-immersive-body .vc-app{
   align-items:flex-start;
   justify-content:space-between;
   gap:14px;
+  min-width:0;
+  max-width:100%;
 }
 
 .vc-week-planner-head{
@@ -1354,11 +1356,16 @@ body.vc-cook-immersive-body .vc-app{
 }
 
 .vc-day-tabs{
-  display:grid;
-  grid-auto-flow:column;
-  grid-auto-columns:minmax(132px, 1fr);
+  display:flex;
+  flex-wrap:nowrap;
   gap:12px;
+  width:100%;
+  max-width:100%;
+  min-width:0;
   overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;
   padding:2px 2px 8px;
   scroll-snap-type:x proximity;
   scrollbar-width:none;
@@ -1370,6 +1377,10 @@ body.vc-cook-immersive-body .vc-app{
 
 .vc-day-tab{
   display:grid;
+  flex:0 0 clamp(118px, 32vw, 144px);
+  width:clamp(118px, 32vw, 144px);
+  max-width:calc(100vw - 88px);
+  min-width:0;
   gap:8px;
   align-content:start;
   min-height:112px;
@@ -1842,8 +1853,11 @@ body.vc-cook-immersive-body .vc-app{
   justify-content:space-between;
   gap:16px;
   padding:16px 18px;
+  width:100%;
+  max-width:100%;
   border:1px solid rgba(239,123,45,.22);
   border-radius:26px;
+  box-sizing:border-box;
   background:
     radial-gradient(circle at top right, rgba(255,212,91,.22), transparent 44%),
     linear-gradient(135deg, rgba(255,249,241,.98), rgba(255,238,216,.96));
@@ -1853,6 +1867,7 @@ body.vc-cook-immersive-body .vc-app{
 .vc-recipe-bulkbar-copy{
   display:grid;
   gap:4px;
+  min-width:0;
 }
 
 .vc-recipe-bulkbar-copy small{
@@ -1875,6 +1890,11 @@ body.vc-cook-immersive-body .vc-app{
   flex-wrap:wrap;
   justify-content:flex-end;
   gap:10px;
+  min-width:0;
+}
+
+.vc-recipe-bulkbar-actions .vc-button{
+  max-width:100%;
 }
 
 .vc-toast-stack{
@@ -2197,6 +2217,28 @@ body.vc-cook-immersive-body .vc-app{
   }
 }
 
+@media (max-width:720px){
+  .vc-week-planner-head,
+  .vc-week-focus-head,
+  .vc-recipe-bulkbar{
+    flex-direction:column;
+  }
+
+  .vc-recipe-bulkbar{
+    align-items:stretch;
+  }
+
+  .vc-week-planner-head .vc-inline-actions,
+  .vc-recipe-bulkbar-actions{
+    width:100%;
+  }
+
+  .vc-week-planner-head .vc-inline-actions .vc-button,
+  .vc-recipe-bulkbar-actions .vc-button{
+    flex:1 1 100%;
+  }
+}
+
 @media (max-width:420px){
   .vc-shopping-top{
     grid-template-columns:minmax(0, 1fr);
@@ -2207,24 +2249,8 @@ body.vc-cook-immersive-body .vc-app{
   }
 
   .vc-day-tabs{
-    grid-auto-columns:minmax(118px, 1fr);
-  }
-
-  .vc-week-focus-head,
-  .vc-recipe-bulkbar{
-    flex-direction:column;
-  }
-
-  .vc-recipe-bulkbar{
-    align-items:stretch;
-  }
-
-  .vc-recipe-bulkbar-actions{
-    justify-content:stretch;
-  }
-
-  .vc-recipe-bulkbar-actions .vc-button{
-    flex:1 1 100%;
+    gap:10px;
+    padding-bottom:6px;
   }
 
   .vc-cook-feedback-stars{
