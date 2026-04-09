@@ -3236,6 +3236,9 @@ function createCookLaunchOverlay(trigger, mealId) {
 
   const originX = rect.left + (rect.width / 2);
   const originY = rect.top + (rect.height / 2);
+  overlay.style.setProperty("--vc-cook-origin-x", `${Math.round(originX)}px`);
+  overlay.style.setProperty("--vc-cook-origin-y", `${Math.round(originY)}px`);
+  overlay.style.setProperty("--vc-cook-hole-size", "0px");
 
   activeCookLaunchOverlay = {
     element: overlay,
@@ -3279,6 +3282,20 @@ async function playCookLaunchTransition(trigger, mealId) {
   const finalLeft = centerX - (expandedSize / 2);
   const finalTop = centerY - (expandedSize / 2);
   const nextFrame = () => new Promise((resolve) => window.requestAnimationFrame(resolve));
+  const animateHoleReveal = (targetRadius, duration = 760) => new Promise((resolve) => {
+    const start = performance.now();
+    const step = (timestamp) => {
+      const progress = Math.min(1, (timestamp - start) / duration);
+      const eased = 1 - ((1 - progress) ** 3);
+      element.style.setProperty("--vc-cook-hole-size", `${Math.round(targetRadius * eased)}px`);
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        resolve();
+      }
+    };
+    window.requestAnimationFrame(step);
+  });
 
   orb.style.left = `${rect.left}px`;
   orb.style.top = `${rect.top}px`;
@@ -3328,33 +3345,41 @@ async function playCookLaunchTransition(trigger, mealId) {
         offset: 1,
       },
     ], {
-      duration: 920,
-      easing: "cubic-bezier(.16,.88,.2,1)",
+      duration: 780,
+      easing: "cubic-bezier(.18,.88,.18,1)",
       fill: "forwards",
     });
 
     await Promise.allSettled([cover.finished, captionFade.finished]);
     element.classList.add("is-covered");
-    await new Promise((resolve) => window.setTimeout(resolve, 120));
-
     const flowPromise = startCookingFlow(mealId, "active");
     let shell = null;
-    for (let attempt = 0; attempt < 6 && !shell; attempt += 1) {
+    for (let attempt = 0; attempt < 10 && !shell; attempt += 1) {
       await nextFrame();
       shell = root.querySelector(".vc-page-shell");
     }
     if (shell) {
-      shell.style.setProperty("--vc-cook-reveal-x", `${Math.round(centerX)}px`);
-      shell.style.setProperty("--vc-cook-reveal-y", `${Math.round(centerY)}px`);
-      shell.style.setProperty("--vc-cook-reveal-radius", `${revealRadius}px`);
       shell.classList.add("vc-cook-reveal-shell");
+      window.setTimeout(() => {
+        shell.classList.remove("vc-cook-reveal-shell");
+      }, 1200);
     }
-    await new Promise((resolve) => window.setTimeout(resolve, 110));
+    const orbFade = orb.animate([
+      { opacity: 1, transform: "scale(1)" },
+      { opacity: 0, transform: "scale(1.015)" },
+    ], {
+      duration: 220,
+      easing: "ease-out",
+      fill: "forwards",
+    });
+    element.classList.add("is-solid");
+    element.classList.add("is-revealing");
+    const revealPromise = animateHoleReveal(revealRadius + 72, 780);
+    await Promise.allSettled([orbFade.finished, revealPromise, flowPromise]);
     element.classList.add("is-fading");
     cookLaunchCleanupTimer = window.setTimeout(() => {
       clearCookLaunchOverlay();
-    }, 980);
-    await flowPromise;
+    }, 220);
   } catch (error) {
     clearCookLaunchOverlay();
     throw error;
