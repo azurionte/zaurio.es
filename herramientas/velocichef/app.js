@@ -3260,13 +3260,8 @@ async function playCookLaunchTransition(trigger, mealId) {
     return;
   }
 
-  // Immediate feedback - scale down slightly
-  trigger.style.transform = "scale(0.95)";
-  trigger.style.transition = "transform 0.1s ease";
-
   const launch = createCookLaunchOverlay(trigger, mealId);
   if (!launch) {
-    trigger.style.transform = "";
     await startCookingFlow(mealId, "active");
     return;
   }
@@ -3313,15 +3308,12 @@ async function playCookLaunchTransition(trigger, mealId) {
     element.classList.add("is-active");
   });
 
-  // Quick button feedback, then start main animation
-  await new Promise(resolve => setTimeout(resolve, 50));
-
   try {
     const captionFade = caption.animate([
       { opacity: 1, transform: "scale(1)" },
       { opacity: 0, transform: "scale(.92)" },
     ], {
-      duration: 180,
+      duration: 220,
       easing: "ease-out",
       fill: "forwards",
     });
@@ -3342,7 +3334,7 @@ async function playCookLaunchTransition(trigger, mealId) {
         height: `${morphSize}px`,
         borderRadius: "999px",
         opacity: 1,
-        offset: 0.3,
+        offset: 0.35,
       },
       {
         left: `${finalLeft}px`,
@@ -3354,13 +3346,14 @@ async function playCookLaunchTransition(trigger, mealId) {
         offset: 1,
       },
     ], {
-      duration: 550,
+      duration: 680,
       easing: "cubic-bezier(.25,.46,.45,.94)",
       fill: "forwards",
     });
 
     await Promise.allSettled([cover.finished, captionFade.finished]);
     element.classList.add("is-covered");
+    element.classList.add("is-solid"); // Add this earlier for smoother transition
     const flowPromise = startCookingFlow(mealId, "active");
     let shell = null;
     for (let attempt = 0; attempt < 10 && !shell; attempt += 1) {
@@ -3381,9 +3374,8 @@ async function playCookLaunchTransition(trigger, mealId) {
       easing: "ease-out",
       fill: "forwards",
     });
-    element.classList.add("is-solid");
     element.classList.add("is-revealing");
-    const revealPromise = animateHoleReveal(revealRadius + 72, 520);
+    const revealPromise = animateHoleReveal(revealRadius + 72, 640);
     await Promise.allSettled([orbFade.finished, revealPromise, flowPromise]);
     element.classList.add("is-fading");
     cookLaunchCleanupTimer = window.setTimeout(() => {

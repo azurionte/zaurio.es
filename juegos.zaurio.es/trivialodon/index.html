@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -422,8 +422,8 @@
       <article class="panel introCard">
         <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
         <div class="langPicker introLangPicker" id="introLangPicker">
-          <button class="langBtn" id="langEsIntro" type="button" aria-label="Espa�ol">????</button>
-          <button class="langBtn" id="langEnIntro" type="button" aria-label="English">????</button>
+          <button class="langBtn" id="langEsIntro" type="button" aria-label="Español">🇪🇸</button>
+          <button class="langBtn" id="langEnIntro" type="button" aria-label="English">�🇸</button>
         </div>
         <p class="introLead" id="introLead">El juego de trivia mas actualizado y divertido.</p>
         <div class="actions center" style="margin-top:28px">
@@ -438,7 +438,7 @@
       <header class="topbar">
         <div class="topLeft">
           <div class="menuWrap" id="menuWrap">
-            <button class="menuBtn" id="menuBtn" type="button" aria-label="Abrir menu de Zaurio"><span class="menuGlyph">?</span><img src="/shared/assets/brand/favicon-32x32.png" alt=""></button>
+            <button class="menuBtn" id="menuBtn" type="button" aria-label="Abrir menu de Zaurio"><span class="menuGlyph">☰</span><img src="/shared/assets/brand/favicon-32x32.png" alt=""></button>
             <nav class="menuDrop">
               <a href="https://zaurio.es"><img src="/shared/assets/brand/favicon-32x32.png" alt="">Inicio</a>
               <a href="https://miercoles.zaurio.es"><img src="/shared/assets/brand/miercoles.png" alt="">Miercoles</a>
@@ -448,7 +448,7 @@
             </nav>
           </div>
           <div class="soundWrap" id="soundWrap">
-            <button class="soundChip" id="soundChip" type="button" aria-label="Audio y ajustes" hidden><span class="soundStack"><span class="soundGlyph" id="soundChipGlyph">??</span><span class="gearGlyph">??</span></span><span class="soundLabel">Audio</span></button>
+            <button class="soundChip" id="soundChip" type="button" aria-label="Audio y ajustes" hidden><span class="soundStack"><span class="soundGlyph" id="soundChipGlyph">🔊</span><span class="gearGlyph">⚙️</span></span><span class="soundLabel">Audio</span></button>
             <div class="soundPanel" id="soundPanel">
               <div class="soundPanelRow">
                 <span class="soundMini">Sonido</span>
@@ -465,30 +465,30 @@
                     <strong id="castDeviceName">Sin dispositivo conectado</strong>
                     <span id="castDeviceHint">Busca tu Chromecast y lanza la pantalla de TV de la sala actual.</span>
                   </div>
-                  <button class="btn btnPrimary" id="btnCastConnect" type="button"><span class="btnIcon">??</span>Enviar a TV</button>
+                  <button class="btn btnPrimary" id="btnCastConnect" type="button"><span class="btnIcon">📺</span>Enviar a TV</button>
                 </div>
                 <div class="field" style="gap:6px">
                   <label for="castVolumeInput">Volumen de la TV</label>
                   <input id="castVolumeInput" type="range" min="0" max="100" step="1" value="70">
                 </div>
                 <div class="actions">
-                  <button class="btn btnGhost" id="btnCastMute" type="button"><span class="btnIcon">??</span>Mute TV</button>
-                  <button class="btn btnGhost" id="btnCastDisconnect" type="button"><span class="btnIcon">?</span>Desconectar</button>
+                  <button class="btn btnGhost" id="btnCastMute" type="button"><span class="btnIcon">🔇</span>Mute TV</button>
+                  <button class="btn btnGhost" id="btnCastDisconnect" type="button"><span class="btnIcon">⏹</span>Desconectar</button>
                 </div>
                 <div class="castStatus" id="castStatus"></div>
               </div>
               <div class="settingsSection">
                 <span class="settingsSectionTitle" id="settingsLangTitle">Idioma</span>
                 <div class="langPicker" id="settingsLangPicker">
-                  <button class="langBtn" id="langEs" type="button" aria-label="Espa�ol">????</button>
-                  <button class="langBtn" id="langEn" type="button" aria-label="English">????</button>
+                  <button class="langBtn" id="langEs" type="button" aria-label="Español">🇪🇸</button>
+                  <button class="langBtn" id="langEn" type="button" aria-label="English">�🇸</button>
                 </div>
               </div>
               <div class="settingsSection">
                 <span class="settingsSectionTitle" id="settingsGameTitle">Partida</span>
                 <div class="settingsActions">
-                  <button class="btn btnGhost" id="btnEndGame" type="button"><span class="btnIcon">??</span><span id="btnEndGameText">Terminar partida</span></button>
-                  <button class="btn btnGhost" id="btnExitGame" type="button"><span class="btnIcon">?</span><span id="btnExitGameText">Salir</span></button>
+                  <button class="btn btnGhost" id="btnEndGame" type="button"><span class="btnIcon">🛑</span><span id="btnEndGameText">Terminar partida</span></button>
+                  <button class="btn btnGhost" id="btnExitGame" type="button"><span class="btnIcon">↩</span><span id="btnExitGameText">Salir</span></button>
                 </div>
               </div>
             </div>
@@ -523,12 +523,12 @@
             <div class="avatarEditor">
               <span class="kicker">Escoge tu avatar</span>
               <div class="avatarCarousel">
-                <button class="avatarNav" id="btnAvatarPrev" type="button" aria-label="Avatar anterior">�</button>
+                <button class="avatarNav" id="btnAvatarPrev" type="button" aria-label="Avatar anterior">‹</button>
                 <div class="avatarViewport">
                   <div class="avatarCenterFrame" aria-hidden="true"></div>
                   <div class="avatarRail" id="avatarRail"></div>
                 </div>
-                <button class="avatarNav" id="btnAvatarNext" type="button" aria-label="Avatar siguiente">�</button>
+                <button class="avatarNav" id="btnAvatarNext" type="button" aria-label="Avatar siguiente">›</button>
               </div>
               <p class="avatarLegend" id="avatarLegend">Chispa</p>
               <p class="avatarHint"></p>
@@ -733,7 +733,7 @@
             </div>
             <article class="versusPlayer" id="versusPlayerB"></article>
           </div>
-          <div class="versusChampionFx" id="versusChampionFx"><span class="versusCrown">??</span><span id="versusChampionText">Victoria jurasica</span></div>
+          <div class="versusChampionFx" id="versusChampionFx"><span class="versusCrown">👑</span><span id="versusChampionText">Victoria jurasica</span></div>
           <div class="versusMeta">
             <div class="versusScoreline" id="versusScoreline"></div>
             <div class="countPill" style="justify-self:center" id="versusTimer">5</div>
@@ -825,6 +825,12 @@
   </div>
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Test if JavaScript executes
+    console.log("JavaScript is working!");
+    document.body.style.backgroundColor = "red";
+    alert("JavaScript is executing!");
+  </script>
   <script>
     const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
@@ -1001,7 +1007,7 @@
         correctOrder:"Orden correcto",
         answerLoading:"Preparando respuestas...",
         speedMode:"Modo Velociraptor!",
-        languageLabelEs:"Espa�ol",
+        languageLabelEs:"Español",
         languageLabelEn:"English",
         tone_divertido:"Divertido",
         tone_televisivo:"Televisivo",
@@ -1153,7 +1159,7 @@
         correctOrder:"Correct order",
         answerLoading:"Preparing answers...",
         speedMode:"Velociraptor Mode!",
-        languageLabelEs:"Espa�ol",
+        languageLabelEs:"Español",
         languageLabelEn:"English",
         tone_divertido:"Fun",
         tone_televisivo:"Showtime",
@@ -1327,7 +1333,7 @@
       {category:"Arte y musica",prompt:"\u00BFCual de estas figuras musicales dura mas?",answers:["Negra","Corchea","Redonda","Blanca","Semicorchea"],correct:2},
       {category:"Lengua y cultura",prompt:"\u00BFCual es el plural correcto de 'luz'?",answers:["Luzes","Luces","Luzs","Luzos","Luzeses"],correct:1},
       {category:"Lengua y cultura",prompt:"\u00BFCual de estas palabras lleva tilde?",answers:["Facil","Dificil","Joven","Azul","Pared"],correct:1},
-      {category:"Lengua y cultura",prompt:"\u00BFCual de estos signos se usa para preguntar en espanol?",answers:["! !","? ?","� ?","; ;",": :"],correct:2},
+      {category:"Lengua y cultura",prompt:"\u00BFCual de estos signos se usa para preguntar en espanol?",answers:["! !","? ?","¿ ?","; ;",": :"],correct:2},
       {category:"Lengua y cultura",prompt:"\u00BFCual es un sinonimo de 'rapido'?",answers:["Lento","Veloz","Torpe","Callado","Suave"],correct:1},
       {category:"Lengua y cultura",prompt:"\u00BFCual de estas obras escribio Cervantes?",answers:["La Celestina","Don Quijote de la Mancha","La Regenta","El Lazarillo","Fuenteovejuna"],correct:1},
       {category:"Lengua y cultura",prompt:"\u00BFCual es la palabra correcta para una coleccion de poemas?",answers:["Novela","Poemario","Ensayo","Guion","F\u00E1bula"],correct:1},
@@ -1495,9 +1501,9 @@
       otros:{src:"/trivialodon/assets/otros.png", keywords:[]}
     };
     const VERSUS_MOVES = [
-      {id:"rock",label:"Piedra",glyph:"?"},
-      {id:"paper",label:"Papel",glyph:"?"},
-      {id:"scissors",label:"Tijera",glyph:"??"}
+      {id:"rock",label:"Piedra",glyph:"✊"},
+      {id:"paper",label:"Papel",glyph:"✋"},
+      {id:"scissors",label:"Tijera",glyph:"✌️"}
     ];
     const VERSUS_INTRO_SECONDS = 4;
     const VERSUS_BONUS_POINTS = 20;
@@ -1505,6 +1511,8 @@
     const CAST_APP_ID = "C5432B88";
     const CAST_NAMESPACE = "urn:x-cast:zaurio.trivialodon";
     const $ = id => document.getElementById(id);
+    console.log("JavaScript is executing!");
+    document.body.style.background = "red";
     const ui = {
       introScene:$("introScene"), shell:$("shell"), btnHost:$("btnHost"), btnGuest:$("btnGuest"), btnContinue:$("btnContinue"), menuWrap:$("menuWrap"), menuBtn:$("menuBtn"),
       identity:$("identity"), scoreChipValue:$("scoreChipValue"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), btnToggleMute:$("btnToggleMute"), soundVolumeInput:$("soundVolumeInput"), settingsCast:$("settingsCast"), btnEndGame:$("btnEndGame"), btnExitGame:$("btnExitGame"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
@@ -1831,7 +1839,7 @@
     }
     function updateSoundChip(){
       ui.soundChip.hidden = !state.role;
-      ui.soundChipGlyph.textContent = audioState.muted ? "??" : (audioState.volume < .45 ? "??" : "??");
+      ui.soundChipGlyph.textContent = audioState.muted ? "🔇" : (audioState.volume < .45 ? "🔉" : "🔊");
       ui.btnToggleMute.textContent = audioState.muted ? "Activar" : "Mute";
     }
     refreshAudioTargets();
@@ -2045,13 +2053,13 @@
       refreshCastSessionData();
       ui.castDeviceName.textContent = castState.connected ? (castState.deviceName || t("chromecastConnected")) : t("noDevice");
       ui.castDeviceHint.textContent = castState.connected ? t("castingRoom", {code: state.roomCode || "----"}) : (roomReady ? t("findChromecast") : t("joinRoomFirst"));
-      ui.btnCastConnect.innerHTML = castState.connected ? `<span class="btnIcon">??</span>${t("reconnectTv")}` : `<span class="btnIcon">??</span>${t("sendToTv")}`;
+      ui.btnCastConnect.innerHTML = castState.connected ? `<span class="btnIcon">📺</span>${t("reconnectTv")}` : `<span class="btnIcon">📺</span>${t("sendToTv")}`;
       ui.btnCastConnect.disabled = !roomReady || isIosLike();
       ui.btnCastDisconnect.disabled = !castState.connected;
       ui.btnCastMute.disabled = !castState.connected;
       ui.castVolumeInput.disabled = !castState.connected;
       ui.castVolumeInput.value = String(Math.round((castState.volume || 0) * 100));
-      ui.btnCastMute.innerHTML = castState.muted ? `<span class="btnIcon">??</span>${t("unmuteTv")}` : `<span class="btnIcon">??</span>${t("muteTv")}`;
+      ui.btnCastMute.innerHTML = castState.muted ? `<span class="btnIcon">🔊</span>${t("unmuteTv")}` : `<span class="btnIcon">🔇</span>${t("muteTv")}`;
       if(ui.settingsCast) ui.settingsCast.hidden = isIosLike();
       if(isIosLike()) setCastStatus(t("iosCastWarning"), "danger");
       else if(!castState.available) setCastStatus(t("castNotAvailable"), "danger");
@@ -2411,7 +2419,7 @@
         ui.setupLayout.style.justifyContent = "center";
         ui.setupSide.hidden = true;
         ui.setupSide.style.display = "none";
-        ui.setupActions.innerHTML = `<div class="field" style="min-width:180px"><label for="leadSecondsInput">Mostrar pregunta sola</label><input id="leadSecondsInput" type="number" min="0" max="30" value="${Number(state.game.questionLeadSeconds || 6)}"></div><div class="field" style="min-width:180px"><label for="answerSecondsInput">Tiempo para responder</label><input id="answerSecondsInput" type="number" min="5" max="60" value="${Number(state.game.answerSeconds || 15)}"></div><button class="btn btnGhost" id="btnSetupBack" type="button">Volver</button><button class="btn btnPrimary" id="btnStartRound" type="button" ${!(state.game.selectedMode && state.game.selectedDuration) ? "disabled" : ""}>${state.game.selectedMode === "custom" ? `Generar ${plannedQuestionCount()} preguntas` : `Empezar ${plannedQuestionCount()} preguntas`}</button>`;
+        ui.setupActions.innerHTML = `<div class="field" style="min-width:180px"><label for="leadSecondsInput">${t("showQuestionAlone")}</label><input id="leadSecondsInput" type="number" min="0" max="30" value="${Number(state.game.questionLeadSeconds || 6)}"></div><div class="field" style="min-width:180px"><label for="answerSecondsInput">${t("answerSeconds")}</label><input id="answerSecondsInput" type="number" min="5" max="60" value="${Number(state.game.answerSeconds || 15)}"></div><button class="btn btnGhost" id="btnSetupBack" type="button">${t("back")}</button><button class="btn btnPrimary" id="btnStartRound" type="button" ${!(state.game.selectedMode && state.game.selectedDuration) ? "disabled" : ""}>${state.game.selectedMode === "custom" ? t("generateQuestions", {count: plannedQuestionCount()}) : t("startQuestions", {count: plannedQuestionCount()})}</button>`;
         $("leadSecondsInput").onchange = async ev => { state.game.questionLeadSeconds = Math.max(0, Math.min(30, Number(ev.target.value || 6))); await broadcastGame(); renderCurrentScene(); };
         $("answerSecondsInput").onchange = async ev => { state.game.answerSeconds = Math.max(5, Math.min(60, Number(ev.target.value || 15))); await broadcastGame(); renderCurrentScene(); };
         $("btnSetupBack").onclick = async () => { state.game.phase = "lobby"; await broadcastGame(); renderCurrentScene(); };
@@ -2501,14 +2509,14 @@
         };
       });
     }
-    function renderPausedScene(){ ui.pausedTitle.textContent = "Juego pausado"; ui.pausedCopy.textContent = state.role === "host" ? "Has pausado la partida entre preguntas. Reanudamos cuando quieras." : "El anfitrion ha pausado la partida. Espera a que vuelva el rugido."; ui.pausedActions.innerHTML = state.role === "host" ? `<button class="btn btnPrimary" id="btnResumeGame" type="button">Reanudar</button>` : ""; if(state.role === "host" && $("btnResumeGame")) $("btnResumeGame").onclick = async () => { state.game.phase = "countdown"; state.game.countdownEndAt = Date.now() + Math.max(1000, Number(state.game.pausedRemainingMs || 4000)); state.game.pausedRemainingMs = 0; await broadcastGame(); renderCurrentScene(); }; }
+    function renderPausedScene(){ ui.pausedTitle.textContent = t("gamePaused"); ui.pausedCopy.textContent = state.role === "host" ? t("pausedHost") : t("pausedGuest"); ui.pausedActions.innerHTML = state.role === "host" ? `<button class="btn btnPrimary" id="btnResumeGame" type="button">${t("resume")}</button>` : ""; if(state.role === "host" && $("btnResumeGame")) $("btnResumeGame").onclick = async () => { state.game.phase = "countdown"; state.game.countdownEndAt = Date.now() + Math.max(1000, Number(state.game.pausedRemainingMs || 4000)); state.game.pausedRemainingMs = 0; await broadcastGame(); renderCurrentScene(); }; }
     function renderAnswerScene(){ const question = state.game.question; const choices = Array.isArray(question.choices) ? question.choices : []; ui.answerCorrect.textContent = choices[question.correct] || ""; ui.answerPrompt.textContent = question.prompt; }
-    function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? "Lider actual" : "En carrera"}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">?</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>Aun no hay puntuaciones.</p>`; if(finished){ ui.scoresTitle.textContent = win ? "Victoria Jurasica!" : "Has perdido :("; ui.scoresLead.textContent = win ? `Te coronas con ${myScore} puntos. Rugido de campeon.` : "Te tocara saborear las sobras. Pero la proxima remontas."; } else { ui.scoresTitle.textContent = leader ? `${leader.name} lidera la partida` : "Puntuacion del round"; ui.scoresLead.textContent = leader ? `${leader.score} puntos acumulados` : "Todavia no hay puntuaciones."; } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">Continuar partida</button><button class="btn btnGhost" id="btnNewGame" type="button">Partida nueva</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); }; } }
+    function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? "Lider actual" : "En carrera"}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>Aun no hay puntuaciones.</p>`; if(finished){ ui.scoresTitle.textContent = win ? "Victoria Jurasica!" : "Has perdido :("; ui.scoresLead.textContent = win ? `Te coronas con ${myScore} puntos. Rugido de campeon.` : "Te tocara saborear las sobras. Pero la proxima remontas."; } else { ui.scoresTitle.textContent = leader ? `${leader.name} lidera la partida` : "Puntuacion del round"; ui.scoresLead.textContent = leader ? `${leader.score} puntos acumulados` : "Todavia no hay puntuaciones."; } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">Continuar partida</button><button class="btn btnGhost" id="btnNewGame" type="button">Partida nueva</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); }; } }
     function renderVersusPlayerCard(playerId, activeId, visibleChoiceId){
       const player = findPlayer(playerId);
       const choice = visibleChoiceId ? versusMoveById(visibleChoiceId) : null;
       const waitingText = playerId === state.playerId ? "Esperando tu marca" : "Eleccion oculta";
-      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "??"}</div><strong class="versusPlayerName">${esc(player?.name || "Jugador")}</strong><span class="versusPlayerSub">${playerId === state.playerId ? "Tu duelo" : "En duelo"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Marca ya" : waitingText)}</div>`;
+      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong class="versusPlayerName">${esc(player?.name || "Jugador")}</strong><span class="versusPlayerSub">${playerId === state.playerId ? "Tu duelo" : "En duelo"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Marca ya" : waitingText)}</div>`;
     }
     function renderVersusIntroScene(){
       const versus = state.game.versus || {};
@@ -2556,7 +2564,7 @@
       ui.versusScoreline.innerHTML = contenderIds.map(playerId => {
         const player = findPlayer(playerId);
         const wins = Number(versus.wins?.[playerId] || 0);
-        const target = "?".repeat(wins) + "?".repeat(Math.max(0, neededWins - wins));
+        const target = "●".repeat(wins) + "○".repeat(Math.max(0, neededWins - wins));
         return `<span class="versusPill">${esc(player?.name || "Jugador")} <strong>${wins}</strong> <span>${target}</span></span>`;
       }).join("") || `<span class="versusPill">Best of 3</span>`;
       ui.versusTimer.textContent = String(countdown);
@@ -2902,12 +2910,12 @@
         }, {passive:eventName === "touchstart"});
       });
     ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
-    ui.langEsIntro.onclick = () => setLanguage("es");
-    ui.langEnIntro.onclick = () => setLanguage("en");
+    ui.langEsIntro.onclick = () => { setLanguage("es"); ui.introLead.textContent = "SPANISH SELECTED"; };
+    ui.langEnIntro.onclick = () => { setLanguage("en"); ui.introLead.textContent = "ENGLISH SELECTED"; };
     ui.langEs.onclick = () => setLanguage("es");
     ui.langEn.onclick = () => setLanguage("en");
-    ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; renderCurrentScene(); ensureAudioReady(); await connectRoom("host", roomCode()); renderCurrentScene(); };
-    ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); ensureAudioReady(); renderCurrentScene(); };
+    ui.btnHost.onclick = async () => { ui.introLead.textContent = "HOST BUTTON CLICKED"; resetDraft(); showShell(); state.role = "host"; renderCurrentScene(); ensureAudioReady(); await connectRoom("host", roomCode()); renderCurrentScene(); };
+    ui.btnGuest.onclick = async () => { ui.introLead.textContent = "GUEST BUTTON CLICKED"; resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); ensureAudioReady(); renderCurrentScene(); };
     ui.btnContinue.onclick = async () => { ensureAudioReady(); const ok = await restoreSavedSession(readSession()); if(!ok) location.reload(); };
     ui.btnJoinBack.onclick = () => location.reload();
     ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = t("joinHint"); return; } ui.joinStatus.textContent = "Entrando en la sala..."; ensureAudioReady(); await connectRoom("guest", code); renderCurrentScene(); };
@@ -2917,7 +2925,7 @@
     ui.btnAvatarNext.onclick = () => { shiftAvatar(1); setStatus("","info"); };
     ui.btnReady.onclick = async () => { ensureAudioReady(); const name = ui.nameInput.value.trim(); if(!name){ setStatus(t("yourName") + " " + t("required"), "danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus(t("chooseAvatar"), "danger"); return; } state.name = name; state.ready = true; await updatePresence(); syncPlayers(); setStatus("","info"); renderCurrentScene(); };
     ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; state.game.lastRoundScores = {}; state.game.tieTracker = {streak:0,pair:[]}; state.game.versus = null; state.game.hostNotice = ""; await broadcastGame(); renderCurrentScene(); };
-    function renderCountdownScene(){ const now = sharedNow(); const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - now) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `Modo Velociraptor! � ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general"); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = next?.category || "Categoria"; ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">Pausar</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
+    function renderCountdownScene(){ const now = sharedNow(); const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - now) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `Modo Velociraptor! · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general"); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = next?.category || "Categoria"; ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">Pausar</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
     function renderQuestionScene(){
       const now = sharedNow();
       const question = state.game.question || {prompt:"",choices:[],correct:0,endAt:now,revealed:false,responses:{}};
@@ -2976,8 +2984,8 @@
       }).join("");
 
       const ranking = isSpeed && question.revealed
-        ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">? ? ? ? ?</div>` : ""}<span class="kicker">Orden correcto</span><strong>${esc(question.category || "Modo Velociraptor!")}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" � ")}</p></article>`
-        : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">? ? ? ? ?</div>` : ""}<span class="kicker">Fun fact</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : "");
+        ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Orden correcto</span><strong>${esc(question.category || "Modo Velociraptor!")}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" · ")}</p></article>`
+        : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Fun fact</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : "");
 
       ui.questionAnswers.innerHTML = ranking + cards;
       ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => {
@@ -3157,8 +3165,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
