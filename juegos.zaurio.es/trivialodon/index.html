@@ -30,6 +30,11 @@
       .soundPanel input[type="range"]{width:100%;touch-action:pan-y}
     .soundPanelRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .soundMini{font-size:.9rem;color:#fff;font-weight:900}
+    .langPicker{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .langBtn{width:48px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:1.2rem;transition:transform .18s ease,background .18s ease,border-color .18s ease}
+    .langBtn:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}
+    .langBtn.active{background:linear-gradient(135deg,rgba(255,216,58,.18),rgba(255,119,203,.14));border-color:rgba(255,216,58,.4);box-shadow:0 0 0 1px rgba(255,216,58,.12)}
+    .introLangPicker{justify-content:center;margin-top:6px}
     .settingsSection{display:grid;gap:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
     .settingsSectionTitle{font-size:.74rem;font-weight:900;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
     .settingsActions{display:grid;gap:8px}
@@ -393,6 +398,8 @@
       .versusRoundGrid{gap:6px}
       .versusMove{padding:8px 6px}
     }
+    .langSwitch{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    .langBtn{min-width:78px}
     @media (max-width:520px) and (max-height:520px){
       .topbar{min-height:50px;padding:6px 8px}
       .topLeft{flex-basis:92px}
@@ -414,7 +421,11 @@
     <section class="intro on" id="introScene">
       <article class="panel introCard">
         <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
-        <p class="introLead">El juego de trivia mas actualizado y divertido.</p>
+        <div class="langPicker introLangPicker" id="introLangPicker">
+          <button class="langBtn" id="langEsIntro" type="button" aria-label="Español">🇪🇸</button>
+          <button class="langBtn" id="langEnIntro" type="button" aria-label="English">🇬🇧</button>
+        </div>
+        <p class="introLead" id="introLead">El juego de trivia mas actualizado y divertido.</p>
         <div class="actions center" style="margin-top:28px">
           <button class="btn btnOk" id="btnContinue" hidden>Continuar partida</button>
           <button class="btn btnPrimary" id="btnHost">Soy el anfitrion</button>
@@ -467,10 +478,17 @@
                 <div class="castStatus" id="castStatus"></div>
               </div>
               <div class="settingsSection">
-                <span class="settingsSectionTitle">Partida</span>
+                <span class="settingsSectionTitle" id="settingsLangTitle">Idioma</span>
+                <div class="langPicker" id="settingsLangPicker">
+                  <button class="langBtn" id="langEs" type="button" aria-label="Español">🇪🇸</button>
+                  <button class="langBtn" id="langEn" type="button" aria-label="English">🇬🇧</button>
+                </div>
+              </div>
+              <div class="settingsSection">
+                <span class="settingsSectionTitle" id="settingsGameTitle">Partida</span>
                 <div class="settingsActions">
-                  <button class="btn btnGhost" id="btnEndGame" type="button"><span class="btnIcon">🛑</span>Terminar partida</button>
-                  <button class="btn btnGhost" id="btnExitGame" type="button"><span class="btnIcon">↩</span>Salir</button>
+                  <button class="btn btnGhost" id="btnEndGame" type="button"><span class="btnIcon">🛑</span><span id="btnEndGameText">Terminar partida</span></button>
+                  <button class="btn btnGhost" id="btnExitGame" type="button"><span class="btnIcon">↩</span><span id="btnExitGameText">Salir</span></button>
                 </div>
               </div>
             </div>
@@ -481,7 +499,7 @@
           <button class="identity" id="identity" type="button" hidden>
             <div class="identityMeta">
               <div class="identityName" id="identityName">Jugador</div>
-              <div class="identityRole">Puntos <span class="scoreValue" id="scoreChipValue">0</span></div>
+              <div class="identityRole" id="identityRole">Puntos <span class="scoreValue" id="scoreChipValue">0</span></div>
             </div>
             <div class="miniAvatar" id="identityAvatar"></div>
           </button>
@@ -532,11 +550,11 @@
 
       <section class="scene sceneCenter" id="joinScene">
         <article class="panel narrow sceneStack">
-          <span class="kicker">Invitado</span>
-      <h2 class="subtitle">Introduce el codigo de sala</h2>
-      <p>Primero entramos en la sala. En la siguiente pantalla ya te pedire nombre y avatar.</p>
+          <span class="kicker" id="joinKicker">Invitado</span>
+      <h2 class="subtitle" id="joinTitle">Introduce el codigo de sala</h2>
+      <p id="joinLead">Primero entramos en la sala. En la siguiente pantalla ya te pedire nombre y avatar.</p>
       <div class="field">
-        <label for="joinCodeOnlyInput">Codigo de sala</label>
+        <label for="joinCodeOnlyInput" id="joinCodeOnlyLabel">Codigo de sala</label>
         <input id="joinCodeOnlyInput" maxlength="4" inputmode="numeric" placeholder="1234" />
       </div>
           <div class="status info" id="joinStatus">Escribe el codigo tal como te lo haya dado el anfitrion.</div>
@@ -553,7 +571,7 @@
           <article class="panel sceneStack">
             <div class="actions between">
               <div class="sceneStack" style="gap:10px">
-                <span class="kicker">Lista de jugadores</span>
+                <span class="kicker" id="lobbyKicker">Lista de jugadores</span>
                 <h2 class="subtitle" id="lobbyTitle">Preparando la sala</h2>
                 <p id="lobbyDesc">Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida.</p>
               </div>
@@ -569,21 +587,21 @@
           <article class="panel sceneStack" id="setupSide"></article>
           <article class="panel sceneStack">
             <div class="sceneStack" style="gap:10px">
-              <span class="kicker">Configuracion</span>
-              <h2 class="subtitle">Preparamos la partida</h2>
+              <span class="kicker" id="setupKicker">Configuracion</span>
+              <h2 class="subtitle" id="setupTitle">Preparamos la partida</h2>
               <p id="setupDesc">Elige el modo y la duracion antes de lanzar la ronda.</p>
             </div>
             <section class="setupSection">
               <div class="setupSectionHead">
-                <span class="kicker">Modos de juego</span>
-                <p>Escoge entre la experiencia clasica o una ronda personalizada.</p>
+                <span class="kicker" id="modesKicker">Modos de juego</span>
+                <p id="modesLead">Escoge entre la experiencia clasica o una ronda personalizada.</p>
               </div>
               <div class="modes" id="modeGrid"></div>
             </section>
             <section class="setupSection">
               <div class="setupSectionHead">
-                <span class="kicker">Duracion</span>
-                <p>Decide si la partida va por tiempo, por numero de preguntas o en formato olimpico.</p>
+                <span class="kicker" id="durationKicker">Duracion</span>
+                <p id="durationLead">Decide si la partida va por tiempo, por numero de preguntas o en formato olimpico.</p>
               </div>
               <div class="modes" id="durationGrid"></div>
             </section>
@@ -595,16 +613,16 @@
       <section class="scene sceneCenter sceneWrap" id="generatingScene">
         <article class="heroCard" style="width:min(860px,100%)">
           <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" style="width:min(280px,70%);margin-bottom:0">
-          <span class="kicker" style="justify-self:center">Personalizado</span>
+          <span class="kicker" id="generatingKicker" style="justify-self:center">Personalizado</span>
           <div class="spinner"></div>
-          <h2 class="subtitle" style="text-align:center">Trivialodon esta montando la ronda</h2>
+          <h2 class="subtitle" id="generatingTitle" style="text-align:center">Trivialodon esta montando la ronda</h2>
           <p class="loadingLine" id="generatingLine">Buscando preguntas con chispa jurasica...</p>
         </article>
       </section>
 
       <section class="scene sceneCenter sceneWrap" id="pausedScene">
         <article class="heroCard" style="width:min(860px,100%)">
-          <span class="kicker" style="justify-self:center">Sesion</span>
+          <span class="kicker" id="pausedKicker" style="justify-self:center">Sesion</span>
           <h2 class="subtitle" id="pausedTitle" style="text-align:center">Juego pausado</h2>
           <p id="pausedCopy" style="text-align:center">El anfitrion ha pausado la partida. Enseguida seguimos.</p>
           <div class="actions center" id="pausedActions"></div>
@@ -613,11 +631,11 @@
 
       <section class="scene sceneCenter sceneWrap" id="countdownScene">
         <article class="heroCard" style="width:min(860px,100%)">
-          <span class="kicker" style="justify-self:center">Cuenta atras</span>
+          <span class="kicker" id="countdownKicker" style="justify-self:center">Cuenta atras</span>
           <img class="categoryArt" id="countdownCategoryArt" alt="" hidden>
           <h2 class="subtitle" id="countdownCategory">Cultura general</h2>
           <div class="bigCount" id="countdownValue">4</div>
-          <p>Respira. Enseguida empieza la accion.</p>
+          <p id="countdownCopy">Respira. Enseguida empieza la accion.</p>
           <div class="actions center" id="countdownActions"></div>
         </article>
       </section>
@@ -626,7 +644,7 @@
         <article class="panel questionBox" style="width:min(980px,100%)">
           <div class="questionHeader">
             <div class="sceneStack" style="gap:10px">
-              <span class="kicker">Pregunta</span>
+              <span class="kicker" id="questionKicker">Pregunta</span>
               <h1 class="title questionTitle" id="questionPrompt">Pregunta</h1>
               <p id="questionCopy">Marca tu respuesta antes de que termine la cuenta atras.</p>
             </div>
@@ -640,7 +658,7 @@
 
       <section class="scene sceneCenter sceneWrap" id="answerScene">
         <article class="heroCard" style="width:min(900px,100%)">
-          <span class="kicker" style="justify-self:center">Respuesta correcta</span>
+          <span class="kicker" id="answerKicker" style="justify-self:center">Respuesta correcta</span>
           <h1 class="title" id="answerCorrect">Marte</h1>
           <p id="answerPrompt">El planeta rojo era Marte.</p>
         </article>
@@ -649,7 +667,7 @@
       <section class="scene sceneCenter sceneWrap" id="scoresScene">
         <article class="panel scoreBoard" style="width:min(980px,100%)">
           <div class="scoreHero">
-            <span class="kicker">Marcador</span>
+            <span class="kicker" id="scoresKicker">Marcador</span>
             <h2 class="subtitle" id="scoresTitle">Puntuacion del round</h2>
             <p id="scoresLead">Un momento para leer el ranking.</p>
           </div>
@@ -664,8 +682,8 @@
             <img src="/trivialodon/assets/vs.png" alt="Versus">
             <div class="versusOverlay">
               <div class="sceneStack" style="gap:10px;justify-items:center">
-                <span class="kicker">Desempate jurasico</span>
-                <h2 class="title">VERSUS!</h2>
+                <span class="kicker" id="versusIntroKicker">Desempate jurasico</span>
+                <h2 class="title" id="versusIntroTitle">VERSUS!</h2>
                 <p id="versusIntroLead">Dos dinos no pueden seguir empatando.</p>
               </div>
             </div>
@@ -679,8 +697,8 @@
       <section class="scene sceneCenter sceneWrap" id="versusScene">
         <article class="panel versusCard">
           <div class="versusMeta">
-            <span class="kicker" style="justify-self:center">Combate</span>
-            <h2 class="subtitle">Decidid con las manos</h2>
+            <span class="kicker" id="versusKicker" style="justify-self:center">Combate</span>
+            <h2 class="subtitle" id="versusTitle">Decidid con las manos</h2>
             <p id="versusLead">Dos dinos no pueden seguir empatando.</p>
             <div class="versusRoundBadge" id="versusRoundBadge">Ronda 1</div>
           </div>
@@ -728,8 +746,8 @@
   </main>
   <div class="overlay" id="scoreModal">
     <div class="modalCard">
-      <span class="kicker">Marcador</span>
-      <h2 class="subtitle">Puntos de esta sesion</h2>
+      <span class="kicker" id="scoreModalKicker">Marcador</span>
+      <h2 class="subtitle" id="scoreModalTitle">Puntos de esta sesion</h2>
       <div id="scoreModalRows"></div>
       <div class="actions between">
         <span></span>
@@ -739,9 +757,9 @@
   </div>
   <div class="overlay" id="resumeModal">
     <div class="modalCard">
-      <span class="kicker">Sesion guardada</span>
-      <h2 class="subtitle">Quieres continuar donde lo dejaste?</h2>
-      <p>Hemos recuperado tu sala, tu perfil y el estado actual. Puedes seguir jugando o empezar desde cero.</p>
+      <span class="kicker" id="resumeKicker">Sesion guardada</span>
+      <h2 class="subtitle" id="resumeTitle">Quieres continuar donde lo dejaste?</h2>
+      <p id="resumeText">Hemos recuperado tu sala, tu perfil y el estado actual. Puedes seguir jugando o empezar desde cero.</p>
       <div class="actions between">
         <button class="btn btnGhost" id="btnResumeNew" type="button">Empezar nueva partida</button>
         <button class="btn btnPrimary" id="btnResumeContinue" type="button">Continuar juego</button>
@@ -750,15 +768,15 @@
   </div>
   <div class="overlay" id="durationModal">
     <div class="modalCard">
-      <span class="kicker">Duracion</span>
+      <span class="kicker" id="durationModalKicker">Duracion</span>
       <h2 class="subtitle" id="durationModalTitle">Configura la duracion</h2>
       <div class="miniForm">
         <div class="field" id="durationMinutesField">
-          <label for="durationMinutesInput">Minutos de partida</label>
+          <label for="durationMinutesInput" id="durationMinutesLabel">Minutos de partida</label>
           <input id="durationMinutesInput" type="number" min="5" max="180" value="15" />
         </div>
         <div class="field" id="durationQuestionsField">
-          <label for="durationQuestionsInput">Numero de preguntas</label>
+          <label for="durationQuestionsInput" id="durationQuestionsLabel">Numero de preguntas</label>
           <input id="durationQuestionsInput" type="number" min="5" max="60" value="15" />
         </div>
       </div>
@@ -770,15 +788,15 @@
   </div>
   <div class="overlay" id="customModal">
     <div class="modalCard">
-      <span class="kicker">Personalizado</span>
-      <h2 class="subtitle">Define el estilo de la ronda</h2>
+      <span class="kicker" id="customKicker">Personalizado</span>
+      <h2 class="subtitle" id="customTitle">Define el estilo de la ronda</h2>
       <div class="miniForm">
         <div class="field">
-          <label for="customThemeInput">Tema</label>
+          <label for="customThemeInput" id="customThemeLabel">Tema</label>
           <input id="customThemeInput" maxlength="80" placeholder="Ejemplo: ciencia, cine, actualidad, videojuegos" />
         </div>
         <div class="choiceBlock">
-          <label>Tono</label>
+          <label id="customToneLabel">Tono</label>
           <div class="pillChoices" id="customToneChoices">
             <button class="pillChoice" data-tone="divertido" type="button">Divertido</button>
             <button class="pillChoice" data-tone="televisivo" type="button">Televisivo</button>
@@ -787,7 +805,7 @@
           </div>
         </div>
         <div class="choiceBlock">
-          <label>Dificultad</label>
+          <label id="customDifficultyLabel">Dificultad</label>
           <div class="pillChoices" id="customDifficultyChoices">
             <button class="pillChoice" data-difficulty="facil" type="button">Facil</button>
             <button class="pillChoice" data-difficulty="media" type="button">Media</button>
@@ -795,7 +813,7 @@
           </div>
         </div>
         <div class="field">
-          <label for="customPromptInput">Indicacion extra</label>
+          <label for="customPromptInput" id="customPromptLabel">Indicacion extra</label>
           <textarea id="customPromptInput" rows="4" placeholder="Ejemplo: evita preguntas repetidas y busca datos sorprendentes"></textarea>
         </div>
       </div>
@@ -831,6 +849,338 @@
       {id:"olympic",icon:"\uD83C\uDFC6",title:"Trivialodon olimpico",desc:"Formato oficial de 40 minutos."}
     ];
     const CLASSIC_TOTAL_QUESTIONS = 300;
+    const LANGUAGE_KEY = "trivialodon-lang-v1";
+    const DEFAULT_LANG = (() => {
+      try{
+        const saved = String(localStorage.getItem(LANGUAGE_KEY) || "").toLowerCase();
+        if(saved === "en" || saved === "es") return saved;
+      } catch(_){}
+      return String(navigator.language || "es").toLowerCase().startsWith("en") ? "en" : "es";
+    })();
+    const I18N = {
+      es:{
+        introLead:"El juego de trivia mas actualizado y divertido.",
+        continueGame:"Continuar partida",
+        host:"Soy el anfitrion",
+        guest:"Soy el invitado",
+        settingsLanguage:"Idioma",
+        settingsGame:"Partida",
+        endGame:"Terminar partida",
+        exit:"Salir",
+        audio:"Sonido",
+        mute:"Mute",
+        volume:"Volumen",
+        tv:"TV",
+        noDevice:"Sin dispositivo conectado",
+        castHintReady:"Busca tu Chromecast y lanza la pantalla de TV de la sala actual.",
+        castHintNeedRoom:"Primero entra en una sala para poder enviarla a la TV.",
+        castVolume:"Volumen de la TV",
+        sendToTv:"Enviar a TV",
+        reconnectTv:"Reconectar TV",
+        muteTv:"Mute TV",
+        unmuteTv:"Activar audio TV",
+        disconnect:"Desconectar",
+        room:"Sala",
+        guestKicker:"Invitado",
+        roomCode:"Codigo de sala",
+        yourName:"Tu nombre",
+        chooseAvatar:"Escoge tu avatar",
+        back:"Volver",
+        next:"Siguiente",
+        joinTitle:"Introduce el codigo de sala",
+        joinLead:"Primero entramos en la sala. En la siguiente pantalla ya te pedire nombre y avatar.",
+        joinHint:"Escribe el codigo tal como te lo haya dado el anfitrion.",
+        playersList:"Lista de jugadores",
+        preparingRoom:"Preparando la sala",
+        lobbyDesc:"Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida.",
+        setup:"Configuracion",
+        setupTitle:"Preparamos la partida",
+        setupDesc:"Elige el modo y la duracion antes de lanzar la ronda.",
+        modesTitle:"Modos de juego",
+        modesLead:"Escoge entre la experiencia clasica o una ronda personalizada.",
+        durationTitle:"Duracion",
+        durationLead:"Decide si la partida va por tiempo, por numero de preguntas o en formato olimpico.",
+        personalized:"Personalizado",
+        generatingTitle:"Trivialodon esta montando la ronda",
+        pausedKicker:"Sesion",
+        gamePaused:"Juego pausado",
+        pausedHost:"Has pausado la partida entre preguntas. Reanudamos cuando quieras.",
+        pausedGuest:"El anfitrion ha pausado la partida. Espera a que vuelva el rugido.",
+        resume:"Reanudar",
+        countdown:"Cuenta atras",
+        countdownCopy:"Respira. Enseguida empieza la accion.",
+        surpriseCategory:"Categoria sorpresa",
+        question:"Pregunta",
+        questionLead:"Marca tu respuesta antes de que termine la cuenta atras.",
+        answerKicker:"Respuesta correcta",
+        scoresKicker:"Marcador",
+        scoreSession:"Puntos de esta sesion",
+        scoreRound:"Puntuacion del round",
+        scoreLead:"Un momento para leer el ranking.",
+        close:"Cerrar",
+        savedSession:"Sesion guardada",
+        resumeTitle:"Quieres continuar donde lo dejaste?",
+        resumeText:"Hemos recuperado tu sala, tu perfil y el estado actual. Puedes seguir jugando o empezar desde cero.",
+        newGame:"Empezar nueva partida",
+        continuePlay:"Continuar juego",
+        durationKickerModal:"Duracion",
+        durationModalTitle:"Configura la duracion",
+        durationMinutesLabel:"Minutos de partida",
+        durationQuestionsLabel:"Numero de preguntas",
+        cancel:"Cancelar",
+        accept:"Aceptar",
+        customKicker:"Personalizado",
+        customTitle:"Define el estilo de la ronda",
+        theme:"Tema",
+        tone:"Tono",
+        difficulty:"Dificultad",
+        extraPrompt:"Indicacion extra",
+        save:"Guardar",
+        player:"Jugador",
+        noName:"Sin nombre",
+        points:"Puntos",
+        nobodyYet:"Nadie todavia",
+        roomWaits:"La sala espera al primer dino.",
+        hostReady:"Anfitrion listo",
+        guestReady:"Invitado listo",
+        notReadyYet:"Aun no ha pulsado listo",
+        allAlmostReady:"Todos casi listos",
+        whenEveryoneReady:"Cuando todos hayan pulsado listo, puedes pasar a la configuracion del juego.",
+        waitingInRoom:"Esperando en sala",
+        players:"Jugadores",
+        hostProfileTitle:"Comparte el codigo de sala",
+        guestProfileTitle:"Prepara tu ficha",
+        hostProfileSideTitle:"Preparando la sala",
+        guestProfileSideTitle:"Sala encontrada",
+        hostProfileSideText:"Comparte el codigo de sala y espera a que entren los invitados.",
+        guestProfileSideText:"Ya estas dentro. Ahora solo falta tu nombre y tu avatar.",
+        hostConfiguring:"El anfitrion esta configurando la partida.",
+        showQuestionAlone:"Mostrar pregunta sola",
+        answerSeconds:"Tiempo para responder",
+        generateQuestions:"Generar {count} preguntas",
+        startQuestions:"Empezar {count} preguntas",
+        generatingQuestions:"Generando {count} preguntas...",
+        minutesQuestion:"Cuantos minutos quieres jugar",
+        countQuestion:"Cuantas preguntas quieres jugar",
+        couldNotPrepareQuestions:"No he podido preparar las preguntas ahora mismo.",
+        currentLeader:"Lider actual",
+        inRace:"En carrera",
+        noScoresYet:"Aun no hay puntuaciones.",
+        victory:"Victoria Jurasica!",
+        defeat:"Has perdido :(",
+        championText:"Te coronas con {score} puntos. Rugido de campeon.",
+        defeatText:"Te tocara saborear las sobras. Pero la proxima remontas.",
+        leadsGame:"{name} lidera la partida",
+        accumulatedPoints:"{score} puntos acumulados",
+        continueSession:"Continuar partida",
+        newSession:"Partida nueva",
+        tiebreakKicker:"Desempate jurasico",
+        tiebreakTitle:"VERSUS!",
+        tiebreakLead:"Dos dinos no pueden seguir empatando.",
+        tiebreakCopy:"En cuanto acabe la cuenta atras pasaremos a las manos. Tendreis 5 segundos para marcar.",
+        versusKicker:"Combate",
+        versusTitle:"Decidid con las manos",
+        versusRound:"Ronda {round}",
+        decisiveRound:"Ronda decisiva",
+        duelResolved:"Duelo resuelto",
+        hiddenChoice:"Eleccion oculta",
+        yourDuel:"Tu duelo",
+        inDuel:"En duelo",
+        markNow:"Marca ya",
+        haveSecondsToMark:"Teneis 5 segundos para marcar.",
+        timeResolving:"Tiempo. Resolviendo la mano...",
+        onlyDuelists:"Solo los duelistas pueden marcar. El resto observa.",
+        drawHands:"Empate. Otra vez a las manos.",
+        roundWinner:"{name} gana esta mano. Seguimos con el mejor de 3.",
+        finalVsWinner:"{name} gana el VS y se lleva {points} puntos extra.",
+        chooseAnswer:"Elegir",
+        correct:"Correcta",
+        funFact:"Fun fact",
+        correctOrder:"Orden correcto",
+        answerLoading:"Preparando respuestas...",
+        speedMode:"Modo Velociraptor!",
+        languageLabelEs:"Español",
+        languageLabelEn:"English",
+        tone_divertido:"Divertido",
+        tone_televisivo:"Televisivo",
+        tone_serio:"Serio",
+        tone_familiar:"Familiar",
+        difficulty_facil:"Facil",
+        difficulty_media:"Media",
+        difficulty_dificil:"Dificil"
+      },
+      en:{
+        introLead:"The freshest and most fun trivia game around.",
+        continueGame:"Resume game",
+        host:"I'm the host",
+        guest:"I'm a guest",
+        settingsLanguage:"Language",
+        settingsGame:"Game",
+        endGame:"End game",
+        exit:"Leave",
+        audio:"Sound",
+        mute:"Mute",
+        volume:"Volume",
+        tv:"TV",
+        noDevice:"No device connected",
+        castHintReady:"Find your Chromecast and launch the room's TV screen.",
+        castHintNeedRoom:"Join a room first so you can send it to the TV.",
+        castVolume:"TV volume",
+        sendToTv:"Cast to TV",
+        reconnectTv:"Reconnect TV",
+        muteTv:"Mute TV",
+        unmuteTv:"Unmute TV",
+        disconnect:"Disconnect",
+        room:"Room",
+        guestKicker:"Guest",
+        roomCode:"Room code",
+        yourName:"Your name",
+        chooseAvatar:"Choose your avatar",
+        back:"Back",
+        next:"Next",
+        joinTitle:"Enter the room code",
+        joinLead:"First we join the room. On the next screen I'll ask for your name and avatar.",
+        joinHint:"Type the code exactly as the host gave it to you.",
+        playersList:"Players",
+        preparingRoom:"Setting up the room",
+        lobbyDesc:"Anyone who joined but isn't ready yet shows up with a dinosaur and a funny line.",
+        setup:"Setup",
+        setupTitle:"Let's set up the match",
+        setupDesc:"Choose the mode and duration before starting the round.",
+        modesTitle:"Game modes",
+        modesLead:"Pick between the classic experience or a custom round.",
+        durationTitle:"Duration",
+        durationLead:"Choose whether the match runs by time, by question count, or in olympic format.",
+        personalized:"Custom",
+        generatingTitle:"Trivialodon is building the round",
+        pausedKicker:"Session",
+        gamePaused:"Game paused",
+        pausedHost:"You've paused the game between questions. We can resume whenever you want.",
+        pausedGuest:"The host has paused the game. Wait for the roar to come back.",
+        resume:"Resume",
+        countdown:"Countdown",
+        countdownCopy:"Breathe in. The action starts in a moment.",
+        surpriseCategory:"Surprise category",
+        question:"Question",
+        questionLead:"Pick your answer before the countdown ends.",
+        answerKicker:"Correct answer",
+        scoresKicker:"Scoreboard",
+        scoreSession:"Points this session",
+        scoreRound:"Round score",
+        scoreLead:"A moment to read the standings.",
+        close:"Close",
+        savedSession:"Saved session",
+        resumeTitle:"Want to continue where you left off?",
+        resumeText:"We recovered your room, profile and current state. You can keep playing or start fresh.",
+        newGame:"Start new game",
+        continuePlay:"Continue game",
+        durationKickerModal:"Duration",
+        durationModalTitle:"Set the duration",
+        durationMinutesLabel:"Minutes",
+        durationQuestionsLabel:"Number of questions",
+        cancel:"Cancel",
+        accept:"Accept",
+        customKicker:"Custom",
+        customTitle:"Define the style of the round",
+        theme:"Theme",
+        tone:"Tone",
+        difficulty:"Difficulty",
+        extraPrompt:"Extra instruction",
+        save:"Save",
+        player:"Player",
+        noName:"No name",
+        points:"Points",
+        nobodyYet:"Nobody yet",
+        roomWaits:"The room is waiting for the first dino.",
+        hostReady:"Host ready",
+        guestReady:"Guest ready",
+        notReadyYet:"Hasn't pressed ready yet",
+        allAlmostReady:"Almost ready",
+        whenEveryoneReady:"Once everyone has pressed ready, you can move on to game setup.",
+        waitingInRoom:"Waiting in room",
+        players:"Players",
+        hostProfileTitle:"Share the room code",
+        guestProfileTitle:"Set up your badge",
+        hostProfileSideTitle:"Preparing the room",
+        guestProfileSideTitle:"Room found",
+        hostProfileSideText:"Share the room code and wait for the guests to join.",
+        guestProfileSideText:"You're in. Now all that's left is your name and avatar.",
+        hostConfiguring:"The host is configuring the match.",
+        showQuestionAlone:"Show question alone",
+        answerSeconds:"Time to answer",
+        generateQuestions:"Generate {count} questions",
+        startQuestions:"Start {count} questions",
+        generatingQuestions:"Generating {count} questions...",
+        minutesQuestion:"How many minutes do you want to play?",
+        countQuestion:"How many questions do you want to play?",
+        couldNotPrepareQuestions:"I couldn't prepare the questions right now.",
+        currentLeader:"Current leader",
+        inRace:"Still in it",
+        noScoresYet:"There are no scores yet.",
+        victory:"Jurassic victory!",
+        defeat:"You lost :(",
+        championText:"You win with {score} points. Champion roar unlocked.",
+        defeatText:"You'll have to taste the leftovers this time. Next match, comeback time.",
+        leadsGame:"{name} is leading the game",
+        accumulatedPoints:"{score} points total",
+        continueSession:"Continue playing",
+        newSession:"New game",
+        tiebreakKicker:"Jurassic tiebreaker",
+        tiebreakTitle:"VERSUS!",
+        tiebreakLead:"These two dinos can't keep tying.",
+        tiebreakCopy:"Once the countdown ends, it's hands time. You'll get 5 seconds to pick.",
+        versusKicker:"Showdown",
+        versusTitle:"Settle it by hand",
+        versusRound:"Round {round}",
+        decisiveRound:"Deciding round",
+        duelResolved:"Duel settled",
+        hiddenChoice:"Hidden choice",
+        yourDuel:"Your duel",
+        inDuel:"In duel",
+        markNow:"Pick now",
+        haveSecondsToMark:"You have 5 seconds to choose.",
+        timeResolving:"Time's up. Resolving the hand...",
+        onlyDuelists:"Only the duelists can choose. Everyone else watches.",
+        drawHands:"Draw. Hands again.",
+        roundWinner:"{name} wins this hand. We continue with the best of 3.",
+        finalVsWinner:"{name} wins the VS and gets {points} bonus points.",
+        chooseAnswer:"Choose",
+        correct:"Correct",
+        funFact:"Fun fact",
+        correctOrder:"Correct order",
+        answerLoading:"Preparing answers...",
+        speedMode:"Velociraptor Mode!",
+        languageLabelEs:"Español",
+        languageLabelEn:"English",
+        tone_divertido:"Fun",
+        tone_televisivo:"Showtime",
+        tone_serio:"Serious",
+        tone_familiar:"Family",
+        difficulty_facil:"Easy",
+        difficulty_media:"Medium",
+        difficulty_dificil:"Hard"
+      }
+    };
+    const CATEGORY_LABELS = {
+      "Ciencia":{en:"Science"},
+      "Mundo":{en:"World"},
+      "Cultura general":{en:"General knowledge"},
+      "Historia y cultura":{en:"History and culture"},
+      "Lengua y cultura":{en:"Language and culture"},
+      "Naturaleza":{en:"Nature"},
+      "Espana":{en:"Spain"},
+      "Arte y musica":{en:"Arts and music"},
+      "Geografia":{en:"Geography"},
+      "Arquitectura":{en:"Architecture"},
+      "Gastronomia":{en:"Food and drink"},
+      "Cine y TV":{en:"Film and TV"},
+      "Cine y television":{en:"Film and TV"},
+      "Psicologia":{en:"Psychology"},
+      "Personalizado":{en:"Custom"},
+      "Modo Velociraptor!":{en:"Velociraptor Mode!"},
+      "Categoria sorpresa":{en:"Surprise category"},
+      "Otros":{en:"Other"}
+    };
     const STANDARD_VARIANT_LEADS = ["","Cambiamos de tercio: ","Vamos con una mas fina: ","Subimos un poco el nivel: "];
     const SPEED_VARIANT_LEADS = ["","Modo Velociraptor! ","Ronda Velociraptor! ","Velociraptor en pista: ","Atencion, garras fuera: "];
     const BASE_STANDARD_QUESTIONS = [
