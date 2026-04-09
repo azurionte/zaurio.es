@@ -782,12 +782,15 @@ body.vc-cook-immersive-body .vc-app{
   content:"";
   position:absolute;
   inset:0;
-  background:rgba(255,248,239,.08);
+  background:
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,.2), rgba(255,255,255,0) 34%),
+    linear-gradient(145deg, rgba(239,123,45,.16), rgba(255,177,92,.1));
   opacity:0;
-  transition:opacity .26s ease;
+  transition:opacity .42s ease;
 }
 
-.vc-cook-launch-overlay.is-active::before{
+.vc-cook-launch-overlay.is-active::before,
+.vc-cook-launch-overlay.is-covered::before{
   opacity:1;
 }
 
@@ -806,36 +809,59 @@ body.vc-cook-immersive-body .vc-app{
   letter-spacing:.01em;
   box-shadow:0 24px 48px rgba(239,123,45,.26);
   will-change:left, top, width, height, border-radius, opacity;
-  transition:opacity .42s ease, transform .42s ease, filter .42s ease;
+  transition:opacity .54s ease, transform .54s ease, filter .54s ease;
+}
+
+.vc-cook-launch-orb::after{
+  content:"";
+  position:absolute;
+  inset:2.5%;
+  border-radius:inherit;
+  background:radial-gradient(circle at 28% 24%, rgba(255,255,255,.28), rgba(255,255,255,0) 44%);
+  opacity:.92;
 }
 
 .vc-cook-launch-orb-label{
+  position:relative;
+  z-index:1;
   font-size:1rem;
   white-space:nowrap;
 }
 
 .vc-cook-reveal-shell{
-  animation:vcCookRevealContent .68s cubic-bezier(.16,.84,.24,1) both;
-  transform-origin:var(--vc-cook-reveal-x, 50%) var(--vc-cook-reveal-y, 50%);
+  opacity:0;
+  filter:blur(18px);
+  clip-path:circle(0px at var(--vc-cook-reveal-x, 50%) var(--vc-cook-reveal-y, 50%));
+  -webkit-clip-path:circle(0px at var(--vc-cook-reveal-x, 50%) var(--vc-cook-reveal-y, 50%));
+  animation:vcCookRevealContent .72s cubic-bezier(.16,.84,.24,1) both;
+  will-change:clip-path, opacity, filter, transform;
 }
 
 @keyframes vcCookRevealContent{
   from{
-    opacity:.08;
-    filter:blur(12px);
-    transform:scale(.985);
+    opacity:.12;
+    filter:blur(18px);
+    transform:scale(.992);
+    clip-path:circle(0px at var(--vc-cook-reveal-x, 50%) var(--vc-cook-reveal-y, 50%));
+    -webkit-clip-path:circle(0px at var(--vc-cook-reveal-x, 50%) var(--vc-cook-reveal-y, 50%));
+  }
+  52%{
+    opacity:.9;
+    filter:blur(6px);
   }
   to{
     opacity:1;
     filter:blur(0);
     transform:scale(1);
+    clip-path:circle(var(--vc-cook-reveal-radius, 160vmax) at var(--vc-cook-reveal-x, 50%) var(--vc-cook-reveal-y, 50%));
+    -webkit-clip-path:circle(var(--vc-cook-reveal-radius, 160vmax) at var(--vc-cook-reveal-x, 50%) var(--vc-cook-reveal-y, 50%));
   }
 }
 
 .vc-cook-launch-overlay.is-fading .vc-cook-launch-orb{
   opacity:0;
-  transform:scale(1.015);
-  filter:saturate(.92) brightness(1.02);
+  transform:scale(1.01);
+  filter:saturate(.94) brightness(1.02);
 }
 
 .vc-card,

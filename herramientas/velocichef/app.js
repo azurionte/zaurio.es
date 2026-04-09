@@ -3234,13 +3234,17 @@ function createCookLaunchOverlay(trigger, mealId) {
   overlay.appendChild(orb);
   document.body.appendChild(overlay);
 
+  const originX = rect.left + (rect.width / 2);
+  const originY = rect.top + (rect.height / 2);
+
   activeCookLaunchOverlay = {
     element: overlay,
     orb,
     caption,
     rect,
+    originX,
+    originY,
     mealId,
-    phase: "covering",
   };
 
   return activeCookLaunchOverlay;
@@ -3259,17 +3263,22 @@ async function playCookLaunchTransition(trigger, mealId) {
     return;
   }
 
-  const { rect, element, orb, caption } = launch;
+  const { rect, element, orb, caption, originX, originY } = launch;
   const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 390;
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 844;
-  const centerX = rect.left + (rect.width / 2);
-  const centerY = rect.top + (rect.height / 2);
+  const centerX = originX;
+  const centerY = originY;
   const morphSize = Math.max(74, Math.min(96, Math.max(rect.width, rect.height)));
-  const expandedSize = Math.ceil(Math.hypot(viewportWidth, viewportHeight) * 1.45);
+  const revealRadius = Math.ceil(Math.hypot(
+    Math.max(centerX, viewportWidth - centerX),
+    Math.max(centerY, viewportHeight - centerY),
+  ) + 96);
+  const expandedSize = revealRadius * 2;
   const morphLeft = centerX - (morphSize / 2);
   const morphTop = centerY - (morphSize / 2);
-  const finalLeft = (viewportWidth / 2) - (expandedSize / 2);
-  const finalTop = (viewportHeight / 2) - (expandedSize / 2);
+  const finalLeft = centerX - (expandedSize / 2);
+  const finalTop = centerY - (expandedSize / 2);
+  const nextFrame = () => new Promise((resolve) => window.requestAnimationFrame(resolve));
 
   orb.style.left = `${rect.left}px`;
   orb.style.top = `${rect.top}px`;
@@ -3299,7 +3308,7 @@ async function playCookLaunchTransition(trigger, mealId) {
       },
     ], {
       duration: 220,
-      easing: "cubic-bezier(.2,.8,.25,1)",
+      easing: "cubic-bezier(.24,.78,.24,1)",
       fill: "forwards",
     });
 
@@ -3328,30 +3337,36 @@ async function playCookLaunchTransition(trigger, mealId) {
         top: `${finalTop}px`,
         width: `${expandedSize}px`,
         height: `${expandedSize}px`,
-        borderRadius: `${Math.max(48, expandedSize * 0.18)}px`,
+        borderRadius: "999px",
         opacity: 1,
       },
     ], {
-      duration: 540,
-      easing: "cubic-bezier(.16,.9,.24,1)",
+      duration: 620,
+      easing: "cubic-bezier(.16,.86,.22,1)",
       fill: "forwards",
     });
 
     await expand.finished;
+    element.classList.add("is-covered");
+    await new Promise((resolve) => window.setTimeout(resolve, 70));
 
-    activeCookLaunchOverlay.phase = "revealing";
     const flowPromise = startCookingFlow(mealId, "active");
-    await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
-    const shell = root.querySelector(".vc-page-shell");
+    let shell = null;
+    for (let attempt = 0; attempt < 6 && !shell; attempt += 1) {
+      await nextFrame();
+      shell = root.querySelector(".vc-page-shell");
+    }
     if (shell) {
-      shell.classList.add("vc-cook-reveal-shell");
       shell.style.setProperty("--vc-cook-reveal-x", `${Math.round(centerX)}px`);
       shell.style.setProperty("--vc-cook-reveal-y", `${Math.round(centerY)}px`);
+      shell.style.setProperty("--vc-cook-reveal-radius", `${revealRadius}px`);
+      shell.classList.add("vc-cook-reveal-shell");
     }
+    await nextFrame();
     element.classList.add("is-fading");
     cookLaunchCleanupTimer = window.setTimeout(() => {
       clearCookLaunchOverlay();
-    }, 560);
+    }, 720);
     await flowPromise;
   } catch (error) {
     clearCookLaunchOverlay();
