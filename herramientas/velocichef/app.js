@@ -3281,7 +3281,7 @@ async function playCookLaunchTransition(trigger, mealId) {
   });
 
   const startPromise = (async () => {
-    await new Promise((resolve) => window.setTimeout(resolve, 120));
+    await new Promise((resolve) => window.setTimeout(resolve, 72));
     await startCookingFlow(mealId, "active");
   })();
 
@@ -3341,12 +3341,13 @@ async function playCookLaunchTransition(trigger, mealId) {
       fill: "forwards",
     });
 
-    await Promise.allSettled([startPromise, expand.finished]);
+    await expand.finished;
 
     element.classList.add("is-revealed");
     cookLaunchCleanupTimer = window.setTimeout(() => {
       clearCookLaunchOverlay();
-    }, 220);
+    }, 140);
+    await startPromise;
   } catch (error) {
     clearCookLaunchOverlay();
     throw error;

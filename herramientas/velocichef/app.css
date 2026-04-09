@@ -807,11 +807,17 @@ body.vc-cook-immersive-body .vc-app{
   letter-spacing:.01em;
   box-shadow:0 24px 48px rgba(239,123,45,.26);
   will-change:left, top, width, height, border-radius, opacity;
+  transition:opacity .18s ease, transform .18s ease;
 }
 
 .vc-cook-launch-orb-label{
   font-size:1rem;
   white-space:nowrap;
+}
+
+.vc-cook-launch-overlay.is-revealed .vc-cook-launch-orb{
+  opacity:0;
+  transform:scale(1.03);
 }
 
 .vc-card,
