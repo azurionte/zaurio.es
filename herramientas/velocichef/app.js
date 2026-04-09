@@ -3323,7 +3323,7 @@ async function playCookLaunchTransition(trigger, mealId) {
         width: `${rect.width}px`,
         height: `${rect.height}px`,
         borderRadius: `${Math.max(20, rect.height / 2)}px`,
-        opacity: 1,
+        opacity: 0.8,
       },
       {
         left: `${morphLeft}px`,
@@ -3332,7 +3332,7 @@ async function playCookLaunchTransition(trigger, mealId) {
         height: `${morphSize}px`,
         borderRadius: "999px",
         opacity: 1,
-        offset: 0.35,
+        offset: 0.2,
       },
       {
         left: `${finalLeft}px`,
@@ -3372,6 +3372,7 @@ async function playCookLaunchTransition(trigger, mealId) {
       fill: "forwards",
     });
     element.classList.add("is-revealing");
+    element.classList.add("is-solid");
     const revealPromise = animateHoleReveal(revealRadius + 72, 640);
     await Promise.allSettled([orbFade.finished, revealPromise, flowPromise]);
     element.classList.add("is-fading");

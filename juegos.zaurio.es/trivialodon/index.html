@@ -31,9 +31,9 @@
     .soundPanelRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .soundMini{font-size:.9rem;color:#fff;font-weight:900}
     .langPicker{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .langBtn{width:48px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:1.2rem;transition:transform .18s ease,background .18s ease,border-color .18s ease}
-    .langBtn:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}
-    .langBtn.active{background:linear-gradient(135deg,rgba(255,216,58,.18),rgba(255,119,203,.14));border-color:rgba(255,216,58,.4);box-shadow:0 0 0 1px rgba(255,216,58,.12), 0 0 12px rgba(255,216,58,.3), 0 0 24px rgba(255,119,203,.2)}
+    .langBtn{min-width:60px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);display:grid;place-items:center;font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Segoe UI Symbol",sans-serif;font-size:1.5rem;line-height:1;transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease}
+    .langBtn:hover{transform:translateY(-1px);background:rgba(255,255,255,.14)}
+    .langBtn.active{background:linear-gradient(135deg,rgba(255,216,58,.24),rgba(255,119,203,.22));border-color:rgba(255,216,58,.7);box-shadow:0 0 0 1px rgba(255,216,58,.18),0 0 16px rgba(255,216,58,.35),0 0 32px rgba(255,119,203,.22);transform:scale(1.08);}
     .introLangPicker{justify-content:center;margin-top:6px}
     .settingsSection{display:grid;gap:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
     .settingsSectionTitle{font-size:.74rem;font-weight:900;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
@@ -422,8 +422,8 @@
       <article class="panel introCard">
         <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
         <div class="langPicker introLangPicker" id="introLangPicker">
-          <button class="langBtn" id="langEsIntro" type="button" aria-label="Español">🇪🇸</button>
-          <button class="langBtn" id="langEnIntro" type="button" aria-label="English">🇺🇸</button>
+          <button class="langBtn" id="langEsIntro" type="button" aria-label="Español" title="Español" data-lang="es">🇪🇸</button>
+          <button class="langBtn" id="langEnIntro" type="button" aria-label="English" title="English" data-lang="en">🇺🇸</button>
         </div>
         <p class="introLead" id="introLead">El juego de trivia mas actualizado y divertido.</p>
         <div class="actions center" style="margin-top:28px">
@@ -440,7 +440,7 @@
           <div class="menuWrap" id="menuWrap">
             <button class="menuBtn" id="menuBtn" type="button" aria-label="Abrir menu de Zaurio"><span class="menuGlyph">☰</span><img src="/shared/assets/brand/favicon-32x32.png" alt=""></button>
             <nav class="menuDrop">
-              <a href="https://zaurio.es"><img src="/shared/assets/brand/favicon-32x32.png" alt="">Inicio</a>
+              <a href="https://zaurio.es"><img src="/shared/assets/brand/favicon-32x32.png" alt=""><span id="menuHomeLinkLabel">Inicio</span></a>
               <a href="https://miercoles.zaurio.es"><img src="/shared/assets/brand/miercoles.png" alt="">Miercoles</a>
               <a href="https://secretos.zaurio.es"><img src="/shared/assets/brand/confesion.png" alt="">Secretos</a>
               <a href="https://herramientas.zaurio.es"><img src="/shared/assets/brand/emprezaurio-icono.png" alt="">Herramientas</a>
@@ -448,14 +448,14 @@
             </nav>
           </div>
           <div class="soundWrap" id="soundWrap">
-            <button class="soundChip" id="soundChip" type="button" aria-label="Audio y ajustes" hidden><span class="soundStack"><span class="soundGlyph" id="soundChipGlyph">🔊</span><span class="gearGlyph">⚙️</span></span><span class="soundLabel">Audio</span></button>
+            <button class="soundChip" id="soundChip" type="button" aria-label="Audio y ajustes" hidden><span class="soundStack"><span class="soundGlyph" id="soundChipGlyph">🔊</span><span class="gearGlyph">⚙️</span></span><span class="soundLabel" id="soundChipLabel">Audio</span></button>
             <div class="soundPanel" id="soundPanel">
               <div class="soundPanelRow">
-                <span class="soundMini">Sonido</span>
+                <span class="soundMini" id="soundMini">Sonido</span>
                 <button class="btn btnGhost" id="btnToggleMute" type="button">Mute</button>
               </div>
               <div class="field" style="gap:6px">
-                <label for="soundVolumeInput">Volumen</label>
+                <label for="soundVolumeInput" id="soundVolumeLabel">Volumen</label>
                 <input id="soundVolumeInput" type="range" min="0" max="100" step="1" value="70">
               </div>
               <div class="settingsSection settingsCast" id="settingsCast">
@@ -468,7 +468,7 @@
                   <button class="btn btnPrimary" id="btnCastConnect" type="button"><span class="btnIcon">📺</span>Enviar a TV</button>
                 </div>
                 <div class="field" style="gap:6px">
-                  <label for="castVolumeInput">Volumen de la TV</label>
+                  <label for="castVolumeInput" id="castVolumeLabel">Volumen de la TV</label>
                   <input id="castVolumeInput" type="range" min="0" max="100" step="1" value="70">
                 </div>
                 <div class="actions">
@@ -480,8 +480,8 @@
               <div class="settingsSection">
                 <span class="settingsSectionTitle" id="settingsLangTitle">Idioma</span>
                 <div class="langPicker" id="settingsLangPicker">
-                  <button class="langBtn" id="langEs" type="button" aria-label="Español">🇪🇸</button>
-                  <button class="langBtn" id="langEn" type="button" aria-label="English">🇺🇸</button>
+                  <button class="langBtn" id="langEs" type="button" aria-label="Español" title="Español" data-lang="es">🇪🇸</button>
+                  <button class="langBtn" id="langEn" type="button" aria-label="English" title="English" data-lang="en">🇺🇸</button>
                 </div>
               </div>
               <div class="settingsSection">
@@ -513,7 +513,7 @@
             <h2 class="subtitle" id="profileTitle">Comparte el codigo de sala</h2>
             <div class="codeBadge" id="roomBadge">------</div>
             <div class="field" id="joinCodeField" hidden>
-              <label for="joinCodeInput">Codigo de sala</label>
+              <label for="joinCodeInput" id="joinCodeLabel">Codigo de sala</label>
               <input id="joinCodeInput" maxlength="4" inputmode="numeric" placeholder="1234" />
             </div>
             <div class="field">
@@ -521,7 +521,7 @@
               <input id="nameInput" maxlength="26" placeholder="Ejemplo: Marta Rex" />
             </div>
             <div class="avatarEditor">
-              <span class="kicker">Escoge tu avatar</span>
+              <span class="kicker" id="avatarEditorKicker">Escoge tu avatar</span>
               <div class="avatarCarousel">
                 <button class="avatarNav" id="btnAvatarPrev" type="button" aria-label="Avatar anterior">‹</button>
                 <div class="avatarViewport">
@@ -540,7 +540,7 @@
             </div>
           </article>
           <article class="panel sceneStack" id="profileSideCard">
-            <span class="kicker">Sala</span>
+            <span class="kicker" id="profileSideKicker">Sala</span>
             <h2 class="subtitle" id="profileSideTitle">Entrando en Trivialodon</h2>
             <p id="profileSideText">Elige tu avatar, pon tu nombre y entra listo a la sala.</p>
             <div class="playersGrid" id="profilePlayers"></div>
@@ -840,13 +840,13 @@
       {id:"yellow_purple",label:"Solis",src:"/trivialodon/assets/avatars/yellow_purple.png"}
     ];
     const MODES = [
-      {id:"classic",icon:"\uD83C\uDFA9",title:"Trivialodon classic",desc:"Rondas elegantes con ritmo de concurso clasico."},
-      {id:"custom",icon:"\uD83D\uDEE0",title:"Personalizado",desc:"Ajusta el tono del juego y juega a tu manera."}
+      {id:"classic",icon:"\uD83C\uDFA9",titleKey:"mode_classic_title",descKey:"mode_classic_desc"},
+      {id:"custom",icon:"\uD83D\uDEE0",titleKey:"mode_custom_title",descKey:"mode_custom_desc"}
     ];
     const DURATIONS = [
-      {id:"timed",icon:"\u23F1",title:"Quiero que dure un tiempo determinado",desc:"Sesiones por tiempo flexible."},
-      {id:"questions",icon:"?",title:"Quiero que dure una cantidad de preguntas determinada",desc:"Controlas la longitud por numero de preguntas."},
-      {id:"olympic",icon:"\uD83C\uDFC6",title:"Trivialodon olimpico",desc:"Formato oficial de 40 minutos."}
+      {id:"timed",icon:"\u23F1",titleKey:"duration_timed_title",descKey:"duration_timed_desc"},
+      {id:"questions",icon:"?",titleKey:"duration_questions_title",descKey:"duration_questions_desc"},
+      {id:"olympic",icon:"\uD83C\uDFC6",titleKey:"duration_olympic_title",descKey:"duration_olympic_desc"}
     ];
     const CLASSIC_TOTAL_QUESTIONS = 300;
     const LANGUAGE_KEY = "trivialodon-lang-v1";
@@ -868,8 +868,12 @@
         settingsGame:"Partida",
         endGame:"Terminar partida",
         exit:"Salir",
+        home:"Inicio",
         audio:"Sonido",
-        mute:"Mute",
+        mute:"Silenciar",
+        unmute:"Activar sonido",
+        audioSettings:"Audio y ajustes",
+        openMenu:"Abrir menu de Zaurio",
         volume:"Volumen",
         tv:"TV",
         noDevice:"Sin dispositivo conectado",
@@ -881,13 +885,19 @@
         muteTv:"Mute TV",
         unmuteTv:"Activar audio TV",
         disconnect:"Desconectar",
+        castOpening:"Abriendo selector de Chromecast...",
+        castMuteError:"No he podido cambiar el mute de la TV.",
+        castVolumeError:"No he podido ajustar el volumen de la TV.",
         room:"Sala",
         guestKicker:"Invitado",
         roomCode:"Codigo de sala",
         yourName:"Tu nombre",
         chooseAvatar:"Escoge tu avatar",
+        nameExample:"Ejemplo: Marta Rex",
         back:"Volver",
         next:"Siguiente",
+        avatarPrev:"Avatar anterior",
+        avatarNext:"Avatar siguiente",
         joinTitle:"Introduce el codigo de sala",
         joinLead:"Primero entramos en la sala. En la siguiente pantalla ya te pedire nombre y avatar.",
         joinHint:"Escribe el codigo tal como te lo haya dado el anfitrion.",
@@ -901,6 +911,16 @@
         modesLead:"Escoge entre la experiencia clasica o una ronda personalizada.",
         durationTitle:"Duracion",
         durationLead:"Decide si la partida va por tiempo, por numero de preguntas o en formato olimpico.",
+        mode_classic_title:"Trivialodon classic",
+        mode_classic_desc:"Rondas elegantes con ritmo de concurso clasico.",
+        mode_custom_title:"Personalizado",
+        mode_custom_desc:"Ajusta el tono del juego y juega a tu manera.",
+        duration_timed_title:"Quiero que dure un tiempo determinado",
+        duration_timed_desc:"Sesiones por tiempo flexible.",
+        duration_questions_title:"Quiero que dure una cantidad de preguntas determinada",
+        duration_questions_desc:"Controlas la longitud por numero de preguntas.",
+        duration_olympic_title:"Trivialodon olimpico",
+        duration_olympic_desc:"Formato oficial de 40 minutos.",
         personalized:"Personalizado",
         generatingTitle:"Trivialodon esta montando la ronda",
         pausedKicker:"Sesion",
@@ -935,6 +955,7 @@
         theme:"Tema",
         tone:"Tono",
         difficulty:"Dificultad",
+        customThemePlaceholder:"Ejemplo: ciencia, cine, actualidad, videojuegos",
         extraPrompt:"Indicacion extra",
         save:"Guardar",
         player:"Jugador",
@@ -965,6 +986,7 @@
         minutesQuestion:"Cuantos minutos quieres jugar",
         countQuestion:"Cuantas preguntas quieres jugar",
         couldNotPrepareQuestions:"No he podido preparar las preguntas ahora mismo.",
+        enteringRoom:"Entrando en la sala...",
         currentLeader:"Lider actual",
         inRace:"En carrera",
         noScoresYet:"Aun no hay puntuaciones.",
@@ -995,7 +1017,25 @@
         drawHands:"Empate. Otra vez a las manos.",
         roundWinner:"{name} gana esta mano. Seguimos con el mejor de 3.",
         finalVsWinner:"{name} gana el VS y se lleva {points} puntos extra.",
+        winner:"Ganador",
+        waitingForYourMark:"Esperando tu marca",
+        versusChampionTitle:"{name} domina la era jurasica",
+        bestOfThree:"Mejor de 3",
         chooseAnswer:"Elegir",
+        selected:"Elegida",
+        yourAnswer:"Tuya",
+        locked:"Bloqueada",
+        pick:"Coger",
+        pause:"Pausar",
+        questionProgress:"Pregunta {current} de {total}",
+        preparingVelociraptor:"Preparando Modo Velociraptor!",
+        preparingAnswers:"Preparando respuestas...",
+        timeUp:"Tiempo. Mira la correcta y quedate con el dato curioso.",
+        timeUpSpeed:"Tiempo. Mira el ranking completo del Modo Velociraptor!.",
+        speedReadyInfo:"Modo Velociraptor! Cada respuesta se bloquea al instante y da puntos distintos.",
+        speedCountdownNotice:"Atencion: se acerca un Modo Velociraptor!",
+        category:"Categoria",
+        pointsShort:"pts",
         correct:"Correcta",
         funFact:"Fun fact",
         correctOrder:"Orden correcto",
@@ -1020,8 +1060,12 @@
         settingsGame:"Game",
         endGame:"End game",
         exit:"Leave",
+        home:"Home",
         audio:"Sound",
         mute:"Mute",
+        unmute:"Unmute",
+        audioSettings:"Audio settings",
+        openMenu:"Open Zaurio menu",
         volume:"Volume",
         tv:"TV",
         noDevice:"No device connected",
@@ -1033,13 +1077,19 @@
         muteTv:"Mute TV",
         unmuteTv:"Unmute TV",
         disconnect:"Disconnect",
+        castOpening:"Opening Chromecast selector...",
+        castMuteError:"Could not change TV mute.",
+        castVolumeError:"Could not adjust TV volume.",
         room:"Room",
         guestKicker:"Guest",
         roomCode:"Room code",
         yourName:"Your name",
         chooseAvatar:"Choose your avatar",
+        nameExample:"Example: Jamie Rex",
         back:"Back",
         next:"Next",
+        avatarPrev:"Previous avatar",
+        avatarNext:"Next avatar",
         joinTitle:"Enter the room code",
         joinLead:"First we join the room. On the next screen I'll ask for your name and avatar.",
         joinHint:"Type the code exactly as the host gave it to you.",
@@ -1053,6 +1103,16 @@
         modesLead:"Pick between the classic experience or a custom round.",
         durationTitle:"Duration",
         durationLead:"Choose whether the match runs by time, by question count, or in olympic format.",
+        mode_classic_title:"Trivialodon classic",
+        mode_classic_desc:"Elegant rounds with classic quiz rhythm.",
+        mode_custom_title:"Custom",
+        mode_custom_desc:"Shape the round and play your way.",
+        duration_timed_title:"I want it to last a specific time",
+        duration_timed_desc:"Flexible time sessions.",
+        duration_questions_title:"I want it to last a specific number of questions",
+        duration_questions_desc:"You control length by question count.",
+        duration_olympic_title:"Trivialodon Olympic",
+        duration_olympic_desc:"Official 40-minute format.",
         personalized:"Custom",
         generatingTitle:"Trivialodon is building the round",
         pausedKicker:"Session",
@@ -1087,6 +1147,7 @@
         theme:"Theme",
         tone:"Tone",
         difficulty:"Difficulty",
+        customThemePlaceholder:"Example: science, film, current events, video games",
         extraPrompt:"Extra instruction",
         save:"Save",
         player:"Player",
@@ -1147,7 +1208,25 @@
         drawHands:"Draw. Hands again.",
         roundWinner:"{name} wins this hand. We continue with the best of 3.",
         finalVsWinner:"{name} wins the VS and gets {points} bonus points.",
+        winner:"Winner",
+        waitingForYourMark:"Waiting for your choice",
+        versusChampionTitle:"{name} rules the Jurassic era",
+        bestOfThree:"Best of 3",
         chooseAnswer:"Choose",
+        selected:"Selected",
+        yourAnswer:"Yours",
+        locked:"Locked",
+        pick:"Choose",
+        pause:"Pause",
+        questionProgress:"Question {current} of {total}",
+        preparingVelociraptor:"Preparing Velociraptor Mode!",
+        preparingAnswers:"Preparing answers...",
+        timeUp:"Time. See the correct answer and take the fun fact.",
+        timeUpSpeed:"Time. See the full Velociraptor Mode ranking.",
+        speedReadyInfo:"Velociraptor Mode! Each answer locks instantly and gives different points.",
+        speedCountdownNotice:"Heads up: Velociraptor Mode is coming!",
+        category:"Category",
+        pointsShort:"pts",
         correct:"Correct",
         funFact:"Fun fact",
         correctOrder:"Correct order",
@@ -1220,6 +1299,40 @@
       ui.settingsGame.textContent = t("settingsGame");
       ui.btnEndGameText.textContent = t("endGame");
       ui.btnExitGameText.textContent = t("exit");
+      ui.menuHomeLinkLabel?.textContent = t("home");
+      ui.soundChipLabel?.textContent = t("audio");
+      ui.soundChip?.setAttribute("aria-label", t("audio"));
+      ui.soundMini?.textContent = t("audio");
+      ui.btnToggleMute.textContent = t("mute");
+      ui.soundVolumeLabel?.textContent = t("volume");
+      ui.castVolumeLabel?.textContent = t("castVolume");
+      ui.castDeviceName?.textContent = t("noDevice");
+      ui.castDeviceHint?.textContent = t("castHintReady");
+      if(ui.btnCastConnect) ui.btnCastConnect.innerHTML = `<span class="btnIcon">📺</span>${t("sendToTv")}`;
+      if(ui.btnCastMute) ui.btnCastMute.innerHTML = `<span class="btnIcon">🔇</span>${t("muteTv")}`;
+      if(ui.btnCastDisconnect) ui.btnCastDisconnect.innerHTML = `<span class="btnIcon">⏹</span>${t("disconnect")}`;
+      ui.menuBtn?.setAttribute("aria-label", t("openMenu"));
+      ui.soundChip?.setAttribute("aria-label", t("audioSettings"));
+      ui.btnAvatarPrev?.setAttribute("aria-label", t("avatarPrev"));
+      ui.btnAvatarNext?.setAttribute("aria-label", t("avatarNext"));
+      ui.joinStatus?.textContent = t("joinHint");
+      ui.nameInput?.setAttribute("placeholder", t("nameExample"));
+      ui.customThemeInput?.setAttribute("placeholder", t("customThemePlaceholder"));
+      ui.customPromptInput?.setAttribute("placeholder", t("customPromptPlaceholder"));
+      ui.avatarEditorKicker?.textContent = t("chooseAvatar");
+      ui.profileSideKicker?.textContent = state.role === "host" ? t("room") : t("guestKicker");
+      ui.setupKicker?.textContent = t("setup");
+      ui.modesKicker?.textContent = t("modesTitle");
+      ui.durationKicker?.textContent = t("durationTitle");
+      ui.countdownKicker?.textContent = t("countdown");
+      ui.questionKicker?.textContent = t("question");
+      ui.answerKicker?.textContent = t("answerKicker");
+      ui.scoresKicker?.textContent = t("scoresKicker");
+      ui.versusIntroKicker?.textContent = t("tiebreakKicker");
+      ui.versusIntroTitle?.textContent = t("tiebreakTitle");
+      ui.versusKicker?.textContent = t("versusKicker");
+      ui.versusTitle?.textContent = t("versusTitle");
+      ui.btnCloseScore?.textContent = t("close");
 
       // Profile screen
       ui.profileKicker.textContent = state.role === "host" ? t("room") : t("guestKicker");
@@ -1227,13 +1340,57 @@
       ui.profileSideTitle.textContent = state.role === "host" ? t("hostProfileSideTitle") : t("guestProfileSideTitle");
       ui.profileSideText.textContent = state.role === "host" ? t("hostProfileSideText") : t("guestProfileSideText");
 
+      // Join screen
+      ui.joinKicker?.textContent = t("guestKicker");
+      ui.joinTitle?.textContent = t("joinTitle");
+      ui.joinLead?.textContent = t("joinLead");
+      ui.joinCodeLabel?.textContent = t("roomCode");
+      ui.joinCodeOnlyLabel?.textContent = t("roomCode");
+      ui.btnJoinBack?.textContent = t("back");
+      ui.btnJoinNext?.textContent = t("next");
+      ui.btnBack?.textContent = t("back");
+      ui.btnReady?.textContent = t("next");
+
       // Lobby screen
+      ui.lobbyKicker?.textContent = t("playersList");
       ui.lobbyTitle.textContent = t("preparingRoom");
       ui.lobbyDesc.textContent = t("lobbyDesc");
+      ui.btnToSetup?.textContent = t("next");
+      ui.durationLead?.textContent = t("durationLead");
 
       // Setup screen
       ui.setupTitle.textContent = t("setupTitle");
       ui.setupDesc.textContent = t("setupDesc");
+      ui.modesLead?.textContent = t("modesLead");
+      ui.durationLead?.textContent = t("durationLead");
+      ui.generatingTitle?.textContent = t("generatingTitle");
+      ui.generatingKicker?.textContent = t("customKicker");
+      ui.pausedKicker?.textContent = t("pausedKicker");
+
+      ui.scoreModalKicker?.textContent = t("scoresKicker");
+      ui.scoreModalTitle?.textContent = t("scoreSession");
+      ui.resumeKicker?.textContent = t("savedSession");
+      ui.resumeTitle?.textContent = t("resumeTitle");
+      ui.resumeText?.textContent = t("resumeText");
+      ui.btnResumeNew?.textContent = t("newGame");
+      ui.btnResumeContinue?.textContent = t("continuePlay");
+      ui.durationModalKicker?.textContent = t("durationKickerModal");
+      ui.durationMinutesLabel?.textContent = t("durationMinutesLabel");
+      ui.durationQuestionsLabel?.textContent = t("durationQuestionsLabel");
+      ui.btnCloseDuration?.textContent = t("cancel");
+      ui.btnAcceptDuration?.textContent = t("accept");
+      ui.customKicker?.textContent = t("customKicker");
+      ui.customTitle?.textContent = t("customTitle");
+      ui.customThemeLabel?.textContent = t("theme");
+      ui.customThemeInput?.setAttribute("placeholder", t("customThemePlaceholder"));
+      ui.customToneLabel?.textContent = t("tone");
+      ui.customDifficultyLabel?.textContent = t("difficulty");
+      ui.customPromptLabel?.textContent = t("extraPrompt");
+      ui.customPromptInput?.setAttribute("placeholder", t("extraPrompt"));
+      ui.btnCloseCustom?.textContent = t("cancel");
+      ui.btnAcceptCustom?.textContent = t("save");
+      ui.customToneChoices?.querySelectorAll("[data-tone]")?.forEach(btn => btn.textContent = t(`tone_${btn.dataset.tone}`));
+      ui.customDifficultyChoices?.querySelectorAll("[data-difficulty]")?.forEach(btn => btn.textContent = t(`difficulty_${btn.dataset.difficulty}`));
 
       // Update other dynamic content
       updateIdentity();
@@ -1475,8 +1632,14 @@
     const expandSpeedBank = (base, target) => { const out = []; for(let i = 0; out.length < target; i++){ const item = base[i % base.length]; const variant = Math.floor(i / base.length); const lead = SPEED_VARIANT_LEADS[variant % SPEED_VARIANT_LEADS.length]; out.push({...item, basePrompt:item.prompt, prompt:`${lead}${item.prompt}`.trim()}); } return out; };
     const QUESTION_BANK = expandStandardBank(CURATED_STANDARD_QUESTIONS, 240);
     const SPEED_QUESTION_BANK = expandSpeedBank([...HARDER_SPEED_QUESTIONS, ...BASE_SPEED_QUESTIONS], 60);
-    const FUN_LINES = ["espera espera, voy!","estoy eligiendo mi mejor dino","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"];
-    const GENERATING_LINES = ["Trivialodon esta buscando preguntas con chispa jurasica...","Trivialodon esta abriendo cajones secretos del saber...","Trivialodon esta peinando datos para que no salgan preguntas sosas...","Trivialodon esta afinando opciones trampa con elegancia televisiva...","Trivialodon esta desenterrando curiosidades frescas del planeta trivia..."];
+    const FUN_LINES = {
+      es:["espera espera, voy!","estoy eligiendo mi mejor dino","mi dinosaurio interior ya casi sale","un momento, que me peino las escamas","estoy eligiendo mi pose jurasica","ya casi, estoy afinando el glamour","buscando angulo de estrella prehistorica","modo diva sauria en proceso"],
+      en:["hold up, I'm on it!","I'm choosing my best dino","my inner dinosaur is almost ready","one sec, I'm fluffing the scales","I'm finding the perfect prehistoric pose","almost there, tuning the glam","scanning the trivia planet","dinosaur diva mode engaged"]
+    };
+    const GENERATING_LINES = {
+      es:["Trivialodon esta buscando preguntas con chispa jurasica...","Trivialodon esta abriendo cajones secretos del saber...","Trivialodon esta peinando datos para que no salgan preguntas sosas...","Trivialodon esta afinando opciones trampa con elegancia televisiva...","Trivialodon esta desenterrando curiosidades frescas del planeta trivia..."],
+      en:["Trivialodon is searching for Jurassic-fresh questions...","Trivialodon is opening secret knowledge drawers...","Trivialodon is combing facts so boring questions don't slip through...","Trivialodon is tuning trap options with TV elegance...","Trivialodon is unearthing fresh trivia curiosities..."]
+    };
     const STORAGE_KEY = "trivialodon-session-v1";
     const SOUND_KEY = "trivialodon-sound-muted-v1";
     const SOUND_VOLUME_KEY = "trivialodon-sound-volume-v1";
@@ -1495,9 +1658,9 @@
       otros:{src:"/trivialodon/assets/otros.png", keywords:[]}
     };
     const VERSUS_MOVES = [
-      {id:"rock",label:"Piedra",glyph:"✊"},
-      {id:"paper",label:"Papel",glyph:"✋"},
-      {id:"scissors",label:"Tijera",glyph:"✌️"}
+      {id:"rock",label:{es:"Piedra",en:"Rock"},glyph:"✊"},
+      {id:"paper",label:{es:"Papel",en:"Paper"},glyph:"✋"},
+      {id:"scissors",label:{es:"Tijera",en:"Scissors"},glyph:"✌️"}
     ];
     const VERSUS_INTRO_SECONDS = 4;
     const VERSUS_BONUS_POINTS = 20;
@@ -1505,27 +1668,25 @@
     const CAST_APP_ID = "C5432B88";
     const CAST_NAMESPACE = "urn:x-cast:zaurio.trivialodon";
     const $ = id => document.getElementById(id);
-    console.log("JavaScript is executing!");
-    document.body.style.background = "red";
     const ui = {
-      introScene:$("introScene"), shell:$("shell"), btnHost:$("btnHost"), btnGuest:$("btnGuest"), btnContinue:$("btnContinue"), menuWrap:$("menuWrap"), menuBtn:$("menuBtn"),
-      identity:$("identity"), scoreChipValue:$("scoreChipValue"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), btnToggleMute:$("btnToggleMute"), soundVolumeInput:$("soundVolumeInput"), settingsCast:$("settingsCast"), btnEndGame:$("btnEndGame"), btnExitGame:$("btnExitGame"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
+      introScene:$("introScene"), shell:$("shell"), btnHost:$("btnHost"), btnGuest:$("btnGuest"), btnContinue:$("btnContinue"), menuWrap:$("menuWrap"), menuBtn:$("menuBtn"), menuHomeLinkLabel:$("menuHomeLinkLabel"),
+      identity:$("identity"), scoreChipValue:$("scoreChipValue"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), soundChipLabel:$("soundChipLabel"), btnToggleMute:$("btnToggleMute"), soundMini:$("soundMini"), soundVolumeInput:$("soundVolumeInput"), soundVolumeLabel:$("soundVolumeLabel"), settingsCast:$("settingsCast"), btnEndGame:$("btnEndGame"), btnExitGame:$("btnExitGame"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
       scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene"), versusIntro:$("versusIntroScene"), versus:$("versusScene")},
       joinCodeOnlyInput:$("joinCodeOnlyInput"), joinStatus:$("joinStatus"), btnJoinBack:$("btnJoinBack"), btnJoinNext:$("btnJoinNext"),
-      profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), lobbyLayout:$("lobbyLayout"), setupLayout:$("setupLayout"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"),
+      profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), lobbyLayout:$("lobbyLayout"), setupLayout:$("setupLayout"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"), joinCodeLabel:$("joinCodeLabel"),
       nameInput:$("nameInput"), avatarViewport:$("avatarViewport"), avatarRail:$("avatarRail"), avatarLegend:$("avatarLegend"), btnAvatarPrev:$("btnAvatarPrev"), btnAvatarNext:$("btnAvatarNext"), profileStatus:$("profileStatus"), btnBack:$("btnBack"), btnReady:$("btnReady"),
-      profilePlayers:$("profilePlayers"), profileSideTitle:$("profileSideTitle"), profileSideText:$("profileSideText"), lobbySide:$("lobbySide"), lobbyTitle:$("lobbyTitle"),
-      lobbyDesc:$("lobbyDesc"), lobbyPlayers:$("lobbyPlayers"), btnToSetup:$("btnToSetup"), setupSide:$("setupSide"), setupDesc:$("setupDesc"), hostVoteWrap:$("hostVoteWrap"),
+      joinKicker:$("joinKicker"), joinTitle:$("joinTitle"), joinLead:$("joinLead"), joinCodeOnlyLabel:$("joinCodeOnlyLabel"), profilePlayers:$("profilePlayers"), profileSideKicker:$("profileSideKicker"), profileSideTitle:$("profileSideTitle"), profileSideText:$("profileSideText"), lobbySide:$("lobbySide"), lobbyKicker:$("lobbyKicker"), lobbyTitle:$("lobbyTitle"),
+      lobbyDesc:$("lobbyDesc"), lobbyPlayers:$("lobbyPlayers"), modesLead:$("modesLead"), btnToSetup:$("btnToSetup"), setupSide:$("setupSide"), setupKicker:$("setupKicker"), setupDesc:$("setupDesc"), modesKicker:$("modesKicker"), durationKicker:$("durationKicker"), durationLead:$("durationLead"), generatingTitle:$("generatingTitle"), generatingKicker:$("generatingKicker"), hostVoteWrap:$("hostVoteWrap"),
       hostVoteCountdown:$("hostVoteCountdown"), voteToggle:$("voteToggle"), modeGrid:$("modeGrid"), durationGrid:$("durationGrid"), setupActions:$("setupActions"),
-      generatingLine:$("generatingLine"), pausedTitle:$("pausedTitle"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
+      generatingLine:$("generatingLine"), generatingKicker:$("generatingKicker"), pausedTitle:$("pausedTitle"), pausedKicker:$("pausedKicker"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
-      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalRows:$("scoreModalRows"),
-      btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
-      durationModal:$("durationModal"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
-      durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
-      customModal:$("customModal"), customThemeInput:$("customThemeInput"), customToneChoices:$("customToneChoices"), customDifficultyChoices:$("customDifficultyChoices"), customPromptInput:$("customPromptInput"),
+      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalKicker:$("scoreModalKicker"), scoreModalTitle:$("scoreModalTitle"), scoreModalRows:$("scoreModalRows"),
+      btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), resumeKicker:$("resumeKicker"), resumeTitle:$("resumeTitle"), resumeText:$("resumeText"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
+      durationModal:$("durationModal"), durationModalKicker:$("durationModalKicker"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
+      durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), durationMinutesLabel:$("durationMinutesLabel"), durationQuestionsLabel:$("durationQuestionsLabel"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
+      customModal:$("customModal"), customKicker:$("customKicker"), customTitle:$("customTitle"), customThemeInput:$("customThemeInput"), customThemeLabel:$("customThemeLabel"), customToneLabel:$("customToneLabel"), customToneChoices:$("customToneChoices"), customDifficultyLabel:$("customDifficultyLabel"), customDifficultyChoices:$("customDifficultyChoices"), customPromptLabel:$("customPromptLabel"), customPromptInput:$("customPromptInput"),
       btnCloseCustom:$("btnCloseCustom"), btnAcceptCustom:$("btnAcceptCustom"),
-      castDeviceName:$("castDeviceName"), castDeviceHint:$("castDeviceHint"), btnCastConnect:$("btnCastConnect"), castVolumeInput:$("castVolumeInput"), btnCastMute:$("btnCastMute"), btnCastDisconnect:$("btnCastDisconnect"), castStatus:$("castStatus"),
+      castDeviceName:$("castDeviceName"), castDeviceHint:$("castDeviceHint"), btnCastConnect:$("btnCastConnect"), castVolumeInput:$("castVolumeInput"), castVolumeLabel:$("castVolumeLabel"), btnCastMute:$("btnCastMute"), btnCastDisconnect:$("btnCastDisconnect"), castStatus:$("castStatus"),
       introLead:$("introLead"), settingsLanguage:$("settingsLangTitle"), settingsGame:$("settingsGameTitle"), btnEndGameText:$("btnEndGameText"), btnExitGameText:$("btnExitGameText"),
       langEsIntro:$("langEsIntro"), langEnIntro:$("langEnIntro"), langEs:$("langEs"), langEn:$("langEn")
     };
@@ -1556,6 +1717,11 @@
       const match = Object.values(CATEGORY_ARTS).find(entry => entry.keywords.some(keyword => raw.includes(keyword)));
       return match || CATEGORY_ARTS.otros;
     }
+    function translateCategory(category){
+      if(!category) return t("surpriseCategory");
+      if(currentLang === "en" && CATEGORY_LABELS[category]?.en) return CATEGORY_LABELS[category].en;
+      return category;
+    }
     const normalize = value => String(value || "").replace(/\D/g,"").slice(0,4);
     const sharedNow = () => Date.now() + clockOffsetMs;
     const syncClock = hostNow => {
@@ -1564,7 +1730,10 @@
       clockOffsetMs = Math.abs(clockOffsetMs) < 1 ? nextOffset : Math.round((clockOffsetMs * 0.4) + (nextOffset * 0.6));
     };
     const countText = ts => { const left = Math.max(0, Math.ceil((ts - sharedNow()) / 1000)); return `${String(Math.floor(left / 60)).padStart(2,"0")}:${String(left % 60).padStart(2,"0")}`; };
-    const lineFor = id => FUN_LINES[[...id].reduce((a,c)=>a + c.charCodeAt(0), 0) % FUN_LINES.length];
+    const lineFor = id => {
+      const lines = FUN_LINES[currentLang] || FUN_LINES.es;
+      return lines[[...id].reduce((a,c)=>a + c.charCodeAt(0), 0) % lines.length];
+    };
     const roomCode = () => String(Math.floor(1000 + Math.random() * 9000));
     const hostCanContinue = () => state.role === "host" && state.players.length > 0 && state.players.every(player => player.ready);
     const shuffle = list => { const copy = [...list]; for(let i = copy.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [copy[i], copy[j]] = [copy[j], copy[i]]; } return copy; };
@@ -1656,6 +1825,7 @@
     };
     const scorePairKey = pair => [...(pair || [])].sort().join("|");
     const versusMoveById = id => VERSUS_MOVES.find(move => move.id === id) || VERSUS_MOVES[0];
+    const versusMoveLabel = move => move ? (typeof move.label === "object" ? (move.label[currentLang] || move.label.en) : move.label) : "";
     const versusBeats = (left, right) => (left === "rock" && right === "scissors") || (left === "paper" && right === "rock") || (left === "scissors" && right === "paper");
     function readyPlayers(){
       return state.players.filter(player => player.ready);
@@ -1834,7 +2004,7 @@
     function updateSoundChip(){
       ui.soundChip.hidden = !state.role;
       ui.soundChipGlyph.textContent = audioState.muted ? "🔇" : (audioState.volume < .45 ? "🔉" : "🔊");
-      ui.btnToggleMute.textContent = audioState.muted ? "Activar" : "Mute";
+      ui.btnToggleMute.textContent = audioState.muted ? t("unmute") : t("mute");
     }
     refreshAudioTargets();
     function safePause(track){ try{ track.pause(); } catch(_){} }
@@ -2146,20 +2316,20 @@
     }
     async function connectCast(){
       if(!state.roomCode){
-        setCastStatus("Primero necesitamos una sala activa para poder enviarla a la TV.", "danger");
+        setCastStatus(t("joinRoomFirst"), "danger");
         return;
       }
       if(isIosLike()){
-        setCastStatus("En iPhone o iPad Google Cast web no esta soportado aqui. Usa Chrome en escritorio o Android.", "danger");
+        setCastStatus(t("iosCastWarning"), "danger");
         return;
       }
       const ctx = getCastContext();
       if(!ctx && !window.chrome?.cast?.requestSession){
-        setCastStatus("Google Cast no esta listo todavia en este navegador.", "danger");
+        setCastStatus(t("castNotAvailable"), "danger");
         return;
       }
       ui.btnCastConnect.disabled = true;
-      setCastStatus("Abriendo selector de Chromecast...", "info");
+      setCastStatus(t("castOpening"), "info");
       try{
         if(ctx?.requestSession) await ctx.requestSession();
         else await fallbackRequestSession();
@@ -2387,10 +2557,11 @@
       const guestDraft = state.role === "guest" && !!state.roomCode;
       const soloProfileStep = state.role === "host" || guestDraft;
       if(!ui.profileStatus.classList.contains("danger")) setStatus("", "info");
-      ui.profileKicker.textContent = state.role === "host" ? "Sala" : "Invitado";
-      ui.profileTitle.textContent = state.role === "host" ? "Comparte el codigo de sala" : "Prepara tu ficha";
-      ui.profileSideTitle.textContent = state.role === "host" ? "Preparando la sala" : "Sala encontrada";
-      ui.profileSideText.textContent = state.role === "host" ? "Comparte el codigo de sala y espera a que entren los invitados." : "Ya estas dentro. Ahora solo falta tu nombre y tu avatar.";
+      ui.profileKicker.textContent = state.role === "host" ? t("room") : t("guestKicker");
+      ui.profileTitle.textContent = state.role === "host" ? t("hostProfileTitle") : t("guestProfileTitle");
+      ui.profileSideKicker.textContent = state.role === "host" ? t("room") : t("guestKicker");
+      ui.profileSideTitle.textContent = state.role === "host" ? t("hostProfileSideTitle") : t("guestProfileSideTitle");
+      ui.profileSideText.textContent = state.role === "host" ? t("hostProfileSideText") : t("guestProfileSideText");
       ui.roomBadge.hidden = state.role !== "host";
       ui.roomBadge.style.display = state.role !== "host" ? "none" : "inline-flex";
       ui.joinCodeField.hidden = true;
@@ -2402,12 +2573,16 @@
       ui.profileLayout.style.justifyContent = soloProfileStep ? "center" : "stretch";
     }
     function renderLobbyScene(){ const notice = state.game.hostNotice || ""; ui.lobbyPlayers.innerHTML = renderPlayerRows(state.players); ui.btnToSetup.disabled = !hostCanContinue(); if(state.role === "host"){ ui.lobbyLayout.style.gridTemplateColumns = "minmax(320px,420px) minmax(0,1fr)"; ui.lobbyLayout.style.width = "min(1180px,100%)"; ui.lobbyLayout.style.justifyContent = "stretch"; ui.lobbySide.hidden = false; ui.lobbySide.style.display = "grid"; ui.lobbyTitle.textContent = t("preparingRoom"); ui.lobbyDesc.textContent = notice || t("lobbyDesc"); ui.btnToSetup.style.display = "inline-flex"; ui.lobbySide.innerHTML = `<span class="kicker">${t("room")}</span><h2 class="subtitle">${notice ? t("gameClosed") : t("allAlmostReady")}</h2><p>${notice ? esc(notice) : t("whenEveryoneReady")}</p><div class="codeBadge">${esc(state.roomCode)}</div>`; } else { ui.lobbyLayout.style.gridTemplateColumns = "minmax(320px,760px)"; ui.lobbyLayout.style.width = "min(760px,100%)"; ui.lobbyLayout.style.justifyContent = "center"; ui.lobbySide.hidden = true; ui.lobbySide.style.display = "none"; ui.lobbyTitle.textContent = t("waitingInRoom"); ui.lobbyDesc.textContent = notice || t("players"); ui.btnToSetup.style.display = "none"; } }
-    function renderSetupCards(items, kind, current){ return items.map(item => `<button class="modeCard ${current === item.id ? "active" : ""}" data-kind="${kind}" data-id="${item.id}"><div class="modeHead"><span class="modeIcon">${item.icon}</span></div><strong>${esc(item.title)}</strong><p>${esc(item.desc)}</p></button>`).join(""); }
+    function renderSetupCards(items, kind, current){ return items.map(item => {
+      const title = t(item.titleKey || item.title || "");
+      const desc = t(item.descKey || item.desc || "");
+      return `<button class="modeCard ${current === item.id ? "active" : ""}" data-kind="${kind}" data-id="${item.id}"><div class="modeHead"><span class="modeIcon">${item.icon}</span></div><strong>${esc(title)}</strong><p>${esc(desc)}</p></button>`;
+    }).join(""); }
     function renderSetupScene(){
       ui.modeGrid.innerHTML = renderSetupCards(MODES, "mode", state.game.selectedMode);
       ui.durationGrid.innerHTML = renderSetupCards(DURATIONS, "duration", state.game.selectedDuration);
       if(state.role === "host"){
-        ui.setupDesc.textContent = "Elige el modo y la duracion de esta partida. Cuando lo tengas claro, lanzamos la ronda.";
+        ui.setupDesc.textContent = t("setupDesc");
         ui.setupLayout.style.gridTemplateColumns = "minmax(320px,980px)";
         ui.setupLayout.style.width = "min(980px,100%)";
         ui.setupLayout.style.justifyContent = "center";
@@ -2424,7 +2599,7 @@
           state.game.questionSet = [];
           if(state.game.selectedMode === "custom"){
             const amount = plannedQuestionCount();
-            ui.setupActions.innerHTML = `<div class="countPill">Generando ${amount} preguntas...</div>`;
+            ui.setupActions.innerHTML = `<div class="countPill">${t("generatingQuestions", {count: amount})}</div>`;
             state.game.phase = "generating";
             await broadcastGame();
             renderCurrentScene();
@@ -2441,7 +2616,7 @@
             const generated = data && Array.isArray(data.questions) ? data.questions : [];
             if(error || !generated.length){
               state.game.phase = "setup";
-              ui.setupActions.innerHTML = `<div class="status danger">No he podido preparar las preguntas ahora mismo.</div>`;
+              ui.setupActions.innerHTML = `<div class="status danger">${t("couldNotPrepareQuestions")}</div>`;
               await broadcastGame();
               renderCurrentScene();
               return;
@@ -2461,7 +2636,7 @@
         ui.setupLayout.style.justifyContent = "center";
         ui.setupSide.hidden = true;
         ui.setupSide.style.display = "none";
-        ui.setupDesc.textContent = "El anfitrion esta configurando la partida.";
+        ui.setupDesc.textContent = t("hostConfiguring");
         ui.setupActions.innerHTML = ``;
       }
       [...ui.modeGrid.querySelectorAll("[data-kind]"), ...ui.durationGrid.querySelectorAll("[data-kind]")].forEach(btn => {
@@ -2481,13 +2656,13 @@
             } else {
               state.game.selectedDuration = id;
               if(id === "timed"){
-                ui.durationModalTitle.textContent = "Cuantos minutos quieres jugar";
+                ui.durationModalTitle.textContent = t("durationModalTitle");
                 ui.durationMinutesField.style.display = "grid";
                 ui.durationQuestionsField.style.display = "none";
                 ui.durationMinutesInput.value = String(state.game.selectedDurationValue || 15);
                 ui.durationModal.classList.add("on");
               } else if(id === "questions"){
-                ui.durationModalTitle.textContent = "Cuantas preguntas quieres jugar";
+                ui.durationModalTitle.textContent = t("durationModalTitle");
                 ui.durationMinutesField.style.display = "none";
                 ui.durationQuestionsField.style.display = "grid";
                 ui.durationQuestionsInput.value = String(state.game.selectedDurationValue || 15);
@@ -2505,19 +2680,20 @@
     }
     function renderPausedScene(){ ui.pausedTitle.textContent = t("gamePaused"); ui.pausedCopy.textContent = state.role === "host" ? t("pausedHost") : t("pausedGuest"); ui.pausedActions.innerHTML = state.role === "host" ? `<button class="btn btnPrimary" id="btnResumeGame" type="button">${t("resume")}</button>` : ""; if(state.role === "host" && $("btnResumeGame")) $("btnResumeGame").onclick = async () => { state.game.phase = "countdown"; state.game.countdownEndAt = Date.now() + Math.max(1000, Number(state.game.pausedRemainingMs || 4000)); state.game.pausedRemainingMs = 0; await broadcastGame(); renderCurrentScene(); }; }
     function renderAnswerScene(){ const question = state.game.question; const choices = Array.isArray(question.choices) ? question.choices : []; ui.answerCorrect.textContent = choices[question.correct] || ""; ui.answerPrompt.textContent = question.prompt; }
-    function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? "Lider actual" : "En carrera"}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>Aun no hay puntuaciones.</p>`; if(finished){ ui.scoresTitle.textContent = win ? "Victoria Jurasica!" : "Has perdido :("; ui.scoresLead.textContent = win ? `Te coronas con ${myScore} puntos. Rugido de campeon.` : "Te tocara saborear las sobras. Pero la proxima remontas."; } else { ui.scoresTitle.textContent = leader ? `${leader.name} lidera la partida` : "Puntuacion del round"; ui.scoresLead.textContent = leader ? `${leader.score} puntos acumulados` : "Todavia no hay puntuaciones."; } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">Continuar partida</button><button class="btn btnGhost" id="btnNewGame" type="button">Partida nueva</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); }; } }
+    function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? t("currentLeader") : t("inRace")}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>${t("noScoresYet")}</p>`; if(finished){ ui.scoresTitle.textContent = win ? t("victory") : t("defeat"); ui.scoresLead.textContent = win ? t("championText", {score: myScore}) : t("defeatText"); } else { ui.scoresTitle.textContent = leader ? t("leadsGame", {name: leader.name}) : t("scoreRound"); ui.scoresLead.textContent = leader ? t("accumulatedPoints", {score: leader.score}) : t("noScoresYet"); } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">${t("continueSession")}</button><button class="btn btnGhost" id="btnNewGame" type="button">${t("newSession")}</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); }; } }
     function renderVersusPlayerCard(playerId, activeId, visibleChoiceId){
       const player = findPlayer(playerId);
       const choice = visibleChoiceId ? versusMoveById(visibleChoiceId) : null;
-      const waitingText = playerId === state.playerId ? "Esperando tu marca" : "Eleccion oculta";
-      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong class="versusPlayerName">${esc(player?.name || "Jugador")}</strong><span class="versusPlayerSub">${playerId === state.playerId ? "Tu duelo" : "En duelo"}</span><div class="versusChoice">${choice ? `${choice.glyph} ${choice.label}` : (activeId === playerId ? "Marca ya" : waitingText)}</div>`;
+      const waitingText = playerId === state.playerId ? t("waitingForYourMark") : t("hiddenChoice");
+      const choiceLabel = choice ? versusMoveLabel(choice) : "";
+      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong class="versusPlayerName">${esc(player?.name || t("player"))}</strong><span class="versusPlayerSub">${playerId === state.playerId ? t("yourDuel") : t("inDuel")}</span><div class="versusChoice">${choice ? `${choice.glyph} ${esc(choiceLabel)}` : (activeId === playerId ? t("markNow") : waitingText)}</div>`;
     }
     function renderVersusIntroScene(){
       const versus = state.game.versus || {};
       const names = (versus.pair || []).map(playerId => findPlayer(playerId)?.name).filter(Boolean);
-      ui.versusIntroLead.textContent = names.length === 2 ? `${names[0]} y ${names[1]} no pueden seguir empatando... resolvamos esto como en la era jurasica.` : "Dos dinos no pueden seguir empatando...";
+      ui.versusIntroLead.textContent = t("tiebreakLead");
       ui.versusIntroNames.innerHTML = names.map(name => `<span class="versusPill">${esc(name)}</span>`).join("");
-      ui.versusIntroCopy.textContent = "En cuanto acabe la cuenta atras pasaremos a las manos. Tendreis 5 segundos para marcar.";
+      ui.versusIntroCopy.textContent = t("tiebreakCopy");
       ui.versusIntroCount.textContent = String(Math.max(0, Math.ceil((Number(versus.introEndsAt || 0) - sharedNow()) / 1000)));
     }
     function renderVersusScene(){
@@ -2540,8 +2716,8 @@
       const ownChoiceB = playerB === state.playerId ? ((versus.choices || {})[playerB] || "") : "";
       const visibleChoiceA = (revealActive || versus.finalWinnerId || versus.roundWinnerId) ? ((versus.revealChoices || {})[playerA] || "") : ownChoiceA;
       const visibleChoiceB = (revealActive || versus.finalWinnerId || versus.roundWinnerId) ? ((versus.revealChoices || {})[playerB] || "") : ownChoiceB;
-      ui.versusLead.textContent = contenderIds.length === 2 ? `${playerAData?.name || "Jugador 1"} y ${playerBData?.name || "Jugador 2"} no pueden seguir empatando. Resolvamos esto como en la era jurasica.` : "Dos dinos no pueden seguir empatando.";
-      ui.versusRoundBadge.textContent = versus.finalWinnerId ? "Duelo resuelto" : ((winsA === neededWins - 1 && winsB === neededWins - 1) ? "Ronda decisiva" : `Ronda ${Number(versus.roundNumber || 1)}`);
+      ui.versusLead.textContent = t("tiebreakLead");
+      ui.versusRoundBadge.textContent = versus.finalWinnerId ? t("duelResolved") : ((winsA === neededWins - 1 && winsB === neededWins - 1) ? t("decisiveRound") : t("versusRound", {round: Number(versus.roundNumber || 1)}));
       const handMoveA = visibleChoiceA || "rock";
       const handMoveB = visibleChoiceB || "rock";
       ui.versusHandA.dataset.move = handMoveA;
@@ -2552,30 +2728,30 @@
       ui.versusPlayerB.className = `versusPlayer ${versus.roundWinnerId === playerB ? "active" : ""} ${championId === playerB ? "champion" : ""}`;
       ui.versusBurst.className = `versusBurst ${championId ? "champion" : ""}`;
       ui.versusChampionFx.className = `versusChampionFx ${championId ? "on" : ""}`;
-      ui.versusChampionText.textContent = champion ? `${champion.name} domina la era jurasica` : "Victoria jurasica";
+      ui.versusChampionText.textContent = champion ? t("versusChampionTitle", {name: champion.name}) : t("victory");
       ui.versusPlayerA.innerHTML = renderVersusPlayerCard(playerA, canPick ? state.playerId : "", visibleChoiceA);
       ui.versusPlayerB.innerHTML = renderVersusPlayerCard(playerB, canPick ? state.playerId : "", visibleChoiceB);
       ui.versusScoreline.innerHTML = contenderIds.map(playerId => {
         const player = findPlayer(playerId);
         const wins = Number(versus.wins?.[playerId] || 0);
         const target = "●".repeat(wins) + "○".repeat(Math.max(0, neededWins - wins));
-        return `<span class="versusPill">${esc(player?.name || "Jugador")} <strong>${wins}</strong> <span>${target}</span></span>`;
-      }).join("") || `<span class="versusPill">Best of 3</span>`;
+        return `<span class="versusPill">${esc(player?.name || t("player"))} <strong>${wins}</strong> <span>${target}</span></span>`;
+      }).join("") || `<span class="versusPill">${t("bestOfThree")}</span>`;
       ui.versusTimer.textContent = String(countdown);
       if(versus.finalWinnerId){
         const winner = findPlayer(versus.finalWinnerId);
-        ui.versusRoundCopy.textContent = `${winner?.name || "Ganador"} gana el VS y se lleva ${VERSUS_BONUS_POINTS} puntos extra.`;
+        ui.versusRoundCopy.textContent = t("finalVsWinner", {name: winner?.name || t("winner"), points: VERSUS_BONUS_POINTS});
       } else if(revealActive && !versus.roundWinnerId){
-        ui.versusRoundCopy.textContent = "Empate. Otra vez a las manos.";
+        ui.versusRoundCopy.textContent = t("drawHands");
       } else if(versus.roundWinnerId){
         const winner = findPlayer(versus.roundWinnerId);
-        ui.versusRoundCopy.textContent = `${winner?.name || "Ganador"} gana esta mano. Seguimos con el mejor de 3.`;
+        ui.versusRoundCopy.textContent = t("roundWinner", {name: winner?.name || t("winner")});
       } else if(countdown === 0){
-        ui.versusRoundCopy.textContent = "Tiempo. Resolviendo la mano...";
+        ui.versusRoundCopy.textContent = t("timeResolving");
       } else if(isContender){
-        ui.versusRoundCopy.textContent = "Teneis 5 segundos para marcar.";
+        ui.versusRoundCopy.textContent = t("haveSecondsToMark");
       } else {
-        ui.versusRoundCopy.textContent = "Solo los duelistas pueden marcar. El resto observa.";
+        ui.versusRoundCopy.textContent = t("onlyDuelists");
       }
       ui.versusButtons.innerHTML = canPick ? VERSUS_MOVES.map(move => {
         const mine = (versus.choices || {})[state.playerId] === move.id;
@@ -2597,7 +2773,7 @@
         };
       });
     }
-    function renderGeneratingScene(){ const line = GENERATING_LINES[Math.floor(Date.now() / 3200) % GENERATING_LINES.length]; ui.generatingLine.textContent = line; }
+    function renderGeneratingScene(){ const lines = GENERATING_LINES[currentLang] || GENERATING_LINES.es; const line = lines[Math.floor(Date.now() / 3200) % lines.length]; ui.generatingLine.textContent = line; }
     function showScene(name){ Object.entries(ui.scenes).forEach(([key,node]) => node.classList.toggle("on", key === name)); }
     function currentScene(){ if(state.role === "guest" && !state.roomCode) return "join"; if(!state.ready) return "profile"; if(state.game.phase === "lobby") return "lobby"; if(state.game.phase === "setup") return state.role === "host" ? "setup" : "lobby"; if(state.game.phase === "generating") return "generating"; if(state.game.phase === "paused") return "paused"; if(state.game.phase === "countdown") return "countdown"; if(state.game.phase === "question" || state.game.phase === "answer") return "question"; if(state.game.phase === "scores") return "scores"; if(state.game.phase === "versus_intro") return "versusIntro"; if(state.game.phase === "versus") return "versus"; return "lobby"; }
     function renderCurrentScene(){ updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderGeneratingScene(); renderPausedScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); renderScoresScene(); renderVersusIntroScene(); renderVersusScene(); saveSession(); showScene(currentScene()); syncAudio(); syncCastSession(); }
@@ -2826,7 +3002,7 @@
     window.trivialodonDebug = debugApi;
     window.td = debugApi;
     function showShell(){ ui.introScene.classList.remove("on"); ui.introScene.classList.add("off"); ui.shell.classList.add("on"); }
-    function resetDraft(){ state.name = ""; state.ready = false; state.roomCode = ""; state.localAnswer = null; state.avatarIndex = 0; state.avatar = {kind:"preset",src:AVATAR_OPTIONS[0].src,rendered:AVATAR_OPTIONS[0].src,avatarId:AVATAR_OPTIONS[0].id}; ui.nameInput.value = ""; if(ui.joinCodeOnlyInput) ui.joinCodeOnlyInput.value = ""; ui.joinCodeInput.value = ""; applyAvatar(); setStatus("","info"); if(ui.joinStatus) ui.joinStatus.textContent = "Escribe el codigo tal como te lo haya dado el anfitrion."; }
+    function resetDraft(){ state.name = ""; state.ready = false; state.roomCode = ""; state.localAnswer = null; state.avatarIndex = 0; state.avatar = {kind:"preset",src:AVATAR_OPTIONS[0].src,rendered:AVATAR_OPTIONS[0].src,avatarId:AVATAR_OPTIONS[0].id}; ui.nameInput.value = ""; if(ui.joinCodeOnlyInput) ui.joinCodeOnlyInput.value = ""; ui.joinCodeInput.value = ""; applyAvatar(); setStatus("","info"); if(ui.joinStatus) ui.joinStatus.textContent = t("joinHint"); }
       const closeOverlays = () => {
         ui.soundWrap.classList.remove("open");
         ui.menuWrap.classList.remove("open");
@@ -2869,11 +3045,11 @@
     ui.btnCastDisconnect.onclick = () => { disconnectCast(); };
     ui.btnCastMute.onclick = async () => {
       const ok = await setCastMuted(!castState.muted);
-      if(!ok) setCastStatus("No he podido cambiar el mute de la TV.", "danger");
+      if(!ok) setCastStatus(t("castMuteError"), "danger");
     };
     ui.castVolumeInput.oninput = async ev => {
       const ok = await setCastVolume(Math.max(0, Math.min(1, Number(ev.target.value || 0) / 100)));
-      if(!ok) setCastStatus("No he podido ajustar el volumen de la TV.", "danger");
+      if(!ok) setCastStatus(t("castVolumeError"), "danger");
     };
     ui.btnResumeContinue.onclick = () => hideResumeModal();
     ui.btnResumeNew.onclick = () => startFreshFromMenu();
@@ -2904,22 +3080,22 @@
         }, {passive:eventName === "touchstart"});
       });
     ["click","touchstart","keydown"].forEach(eventName => window.addEventListener(eventName, primeAudio, {once:true, passive:eventName !== "keydown"}));
-    ui.langEsIntro.onclick = () => { setLanguage("es"); ui.introLead.textContent = "SPANISH SELECTED"; };
-    ui.langEnIntro.onclick = () => { setLanguage("en"); ui.introLead.textContent = "ENGLISH SELECTED"; };
+    ui.langEsIntro.onclick = () => setLanguage("es");
+    ui.langEnIntro.onclick = () => setLanguage("en");
     ui.langEs.onclick = () => setLanguage("es");
     ui.langEn.onclick = () => setLanguage("en");
-    ui.btnHost.onclick = async () => { ui.introLead.textContent = "HOST BUTTON CLICKED"; resetDraft(); showShell(); state.role = "host"; renderCurrentScene(); ensureAudioReady(); await connectRoom("host", roomCode()); renderCurrentScene(); };
-    ui.btnGuest.onclick = async () => { ui.introLead.textContent = "GUEST BUTTON CLICKED"; resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); ensureAudioReady(); renderCurrentScene(); };
+    ui.btnHost.onclick = async () => { resetDraft(); showShell(); state.role = "host"; renderCurrentScene(); ensureAudioReady(); await connectRoom("host", roomCode()); renderCurrentScene(); };
+    ui.btnGuest.onclick = async () => { resetDraft(); showShell(); state.role = "guest"; renderCurrentScene(); ensureAudioReady(); renderCurrentScene(); };
     ui.btnContinue.onclick = async () => { ensureAudioReady(); const ok = await restoreSavedSession(readSession()); if(!ok) location.reload(); };
     ui.btnJoinBack.onclick = () => location.reload();
-    ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = t("joinHint"); return; } ui.joinStatus.textContent = "Entrando en la sala..."; ensureAudioReady(); await connectRoom("guest", code); renderCurrentScene(); };
+    ui.btnJoinNext.onclick = async () => { const code = normalize(ui.joinCodeOnlyInput.value); if(code.length !== 4){ ui.joinStatus.textContent = t("joinHint"); return; } ui.joinStatus.textContent = t("enteringRoom"); ensureAudioReady(); await connectRoom("guest", code); renderCurrentScene(); };
     ui.joinCodeOnlyInput.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); ui.btnJoinNext.click(); } });
     ui.btnBack.onclick = () => location.reload();
     ui.btnAvatarPrev.onclick = () => { shiftAvatar(-1); setStatus("","info"); };
     ui.btnAvatarNext.onclick = () => { shiftAvatar(1); setStatus("","info"); };
     ui.btnReady.onclick = async () => { ensureAudioReady(); const name = ui.nameInput.value.trim(); if(!name){ setStatus(t("yourName") + " " + t("required"), "danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus(t("chooseAvatar"), "danger"); return; } state.name = name; state.ready = true; await updatePresence(); syncPlayers(); setStatus("","info"); renderCurrentScene(); };
     ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; state.game.lastRoundScores = {}; state.game.tieTracker = {streak:0,pair:[]}; state.game.versus = null; state.game.hostNotice = ""; await broadcastGame(); renderCurrentScene(); };
-    function renderCountdownScene(){ const now = sharedNow(); const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - now) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `Modo Velociraptor! · ${next?.category || "Categoria sorpresa"}` : (next?.category || "Cultura general"); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = next?.category || "Categoria"; ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">Pausar</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
+    function renderCountdownScene(){ const now = sharedNow(); const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - now) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `${t("speedMode")} · ${translateCategory(next?.category || t("surpriseCategory"))}` : translateCategory(next?.category || t("surpriseCategory")); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = translateCategory(next?.category || t("surpriseCategory")); ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">${t("pause")}</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
     function renderQuestionScene(){
       const now = sharedNow();
       const question = state.game.question || {prompt:"",choices:[],correct:0,endAt:now,revealed:false,responses:{}};
@@ -2948,16 +3124,16 @@
       if(promptLength > 148 || promptWordCount > 24) ui.questionPrompt.classList.add("ultraTight");
 
       ui.questionCopy.textContent = question.revealed
-        ? (isSpeed ? "Tiempo. Mira el ranking completo del Modo Velociraptor!." : "Tiempo. Mira la correcta y quedate con el dato curioso.")
+        ? (isSpeed ? t("timeUpSpeed") : t("timeUp"))
         : (answersVisible
-          ? (isSpeed ? "Modo Velociraptor! Cada respuesta se bloquea al instante y da puntos distintos." : (state.role === "host" ? `Pregunta ${(state.game.questionIndex || 0) + 1} de ${activeQuestionSet().length}` : "Marca tu respuesta antes de que termine la cuenta atras."))
-          : (isSpeed ? "Atencion: se acerca un Modo Velociraptor!" : "Lee la pregunta. Las opciones aparecen enseguida."));
+          ? (isSpeed ? t("speedReadyInfo") : (state.role === "host" ? t("questionProgress", {current:String((state.game.questionIndex || 0) + 1), total:String(activeQuestionSet().length)}) : t("questionLead")))
+          : (isSpeed ? t("speedCountdownNotice") : t("questionLead")));
       ui.questionTimer.textContent = String(left);
       ui.questionTimerRing.style.setProperty("--timer", progress);
       ui.questionAnswers.classList.toggle("twoCols", canUseTwoCols);
 
       if(!answersVisible){
-        ui.questionAnswers.innerHTML = `<div class="categoryLead"><img class="categoryArt" src="${art.src}" alt="${esc(question.category || "Categoria")}"><article class="answerCard" style="text-align:left"><div class="categoryLeadText"><span class="kicker">Categoria</span><span class="answerText">${esc(question.category || "Categoria sorpresa")}</span><span class="answerState" style="justify-self:start">${isSpeed ? "Preparando Modo Velociraptor!" : "Preparando respuestas..."}</span></div></article></div>`;
+        ui.questionAnswers.innerHTML = `<div class="categoryLead"><img class="categoryArt" src="${art.src}" alt="${esc(translateCategory(question.category || t("surpriseCategory")))}"><article class="answerCard" style="text-align:left"><div class="categoryLeadText"><span class="kicker">${t("category")}</span><span class="answerText">${esc(translateCategory(question.category || t("surpriseCategory")))}</span><span class="answerState" style="justify-self:start">${isSpeed ? t("preparingVelociraptor") : t("preparingAnswers")}</span></div></article></div>`;
         return;
       }
 
@@ -2974,12 +3150,12 @@
         const mineLocked = taken[index] && taken[index] === state.playerId;
         const speedScore = isSpeed && question.revealed ? Number(question.scores?.[index] || 0) : null;
         const speedRank = isSpeed && question.revealed ? Number(question.ranking?.find(item => item.text === answer)?.rank || 0) : 0;
-        return `<button class="answerCard ${state.localAnswer === index ? "active" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""} ${sparkle ? "sparkle" : ""} ${isSpeed && speedScore > 0 ? "correct" : ""} ${isSpeed && question.revealed && speedScore === 0 ? "wrong" : ""}" data-answer="${index}" ${(question.revealed || left === 0 || (isSpeed && (lockedBy || mineLocked))) ? "disabled" : ""}><span class="answerText"><span class="answerKey">${String.fromCharCode(65 + index)}</span> ${esc(answer)}</span><span class="answerState">${isSpeed ? (question.revealed ? `${speedRank ? `#${speedRank}` : ""} ${speedScore} pts` : (mineLocked ? "Tuya" : (lockedBy ? "Bloqueada" : "Coger"))) : (revealCorrect ? "Correcta" : (revealWrong ? "Tu respuesta" : (state.localAnswer === index ? "Elegida" : "Elegir")))}</span></button>`;
+        return `<button class="answerCard ${state.localAnswer === index ? "active" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""} ${sparkle ? "sparkle" : ""} ${isSpeed && speedScore > 0 ? "correct" : ""} ${isSpeed && question.revealed && speedScore === 0 ? "wrong" : ""}" data-answer="${index}" ${(question.revealed || left === 0 || (isSpeed && (lockedBy || mineLocked))) ? "disabled" : ""}><span class="answerText"><span class="answerKey">${String.fromCharCode(65 + index)}</span> ${esc(answer)}</span><span class="answerState">${isSpeed ? (question.revealed ? `${speedRank ? `#${speedRank}` : ""} ${speedScore} ${t("pointsShort")}` : (mineLocked ? t("yourAnswer") : (lockedBy ? t("locked") : t("pick")))) : (revealCorrect ? t("correct") : (revealWrong ? t("yourAnswer") : (state.localAnswer === index ? t("selected") : t("chooseAnswer"))))}</span></button>`;
       }).join("");
 
       const ranking = isSpeed && question.revealed
-        ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Orden correcto</span><strong>${esc(question.category || "Modo Velociraptor!")}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} pts)`).join(" · ")}</p></article>`
-        : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">Fun fact</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : "");
+        ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">${t("correctOrder")}</span><strong>${esc(translateCategory(question.category || t("speedMode")))}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} ${t("pointsShort")})`).join(" · ")}</p></article>`
+        : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">${t("funFact")}</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : "");
 
       ui.questionAnswers.innerHTML = ranking + cards;
       ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => {

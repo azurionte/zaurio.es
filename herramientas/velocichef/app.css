@@ -780,7 +780,7 @@ body.vc-cook-immersive-body .vc-app{
     radial-gradient(circle at 22% 18%, rgba(255,255,255,.2), rgba(255,255,255,0) 34%),
     linear-gradient(135deg, var(--vc-orange), #ffb15c 54%, #ffcc8a 100%);
   opacity:0;
-  transition:opacity .3s ease;
+  transition:opacity .4s cubic-bezier(.25,.46,.45,.94);
 }
 
 .vc-cook-launch-overlay::before{
@@ -800,6 +800,14 @@ body.vc-cook-immersive-body .vc-app{
 }
 
 .vc-cook-launch-overlay.is-active{
+  opacity:0.3;
+}
+
+.vc-cook-launch-overlay.is-covered{
+  opacity:0.8;
+}
+
+.vc-cook-launch-overlay.is-solid{
   opacity:1;
 }
 
