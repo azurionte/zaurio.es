@@ -810,6 +810,17 @@ body.vc-cook-immersive-body .vc-app{
   transition:opacity .18s ease, transform .18s ease;
 }
 
+.vc-cook-launch-reveal-orb{
+  position:fixed;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,.94), rgba(255,244,229,.82) 54%, rgba(255,233,202,.74));
+  box-shadow:0 20px 44px rgba(255,214,153,.2);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  will-change:left, top, width, height, border-radius, opacity;
+  opacity:0;
+}
+
 .vc-cook-launch-orb-label{
   font-size:1rem;
   white-space:nowrap;
@@ -818,6 +829,28 @@ body.vc-cook-immersive-body .vc-app{
 .vc-cook-launch-overlay.is-revealed .vc-cook-launch-orb{
   opacity:0;
   transform:scale(1.03);
+}
+
+.vc-cook-launch-overlay.is-revealed .vc-cook-launch-reveal-orb{
+  opacity:0;
+  transition:opacity .2s ease;
+}
+
+.vc-cook-reveal-shell{
+  animation:vcCookRevealContent .46s cubic-bezier(.18,.82,.28,1) both;
+}
+
+@keyframes vcCookRevealContent{
+  from{
+    opacity:.12;
+    filter:blur(10px);
+    transform:translateY(12px) scale(.99);
+  }
+  to{
+    opacity:1;
+    filter:blur(0);
+    transform:translateY(0) scale(1);
+  }
 }
 
 .vc-card,
