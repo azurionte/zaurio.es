@@ -88,6 +88,7 @@ function buildProfileSummary(profile: Record<string, unknown>) {
     `Horario de almuerzo: ${profile.lunchTime || "14:30"}.`,
     `Horario de cena: ${profile.dinnerTime || "21:00"}.`,
     profile.lunchPrepNightBefore ? "Prefiere cocinar el almuerzo la noche anterior." : "El almuerzo se cocina el mismo día.",
+    profile.recentCookingFeedbackSummary ? `Feedback reciente al cocinar: ${profile.recentCookingFeedbackSummary}` : "",
   ].filter(Boolean).join("\n");
 }
 
@@ -196,6 +197,7 @@ function buildSwapPrompt(input: Record<string, unknown>) {
     "",
     "Forma JSON exacta:",
     '{"title":"...","summary":"...","prep_minutes":18,"difficulty":"facil","calories":510,"servings":2,"nutrition":{"protein_g":30,"carbs_g":45,"fats_g":18,"fiber_g":8},"ingredients":[{"name":"...","quantity":250,"unit":"g","category":"Despensa","pantry":false,"spice":false,"freezable":false,"thaw_lead_hours":0}],"steps":[{"title":"Preparar","text":"...","timer_minutes":0,"image_prompt":"..."}],"tags":["..."]}',
+    profile.recentCookingFeedbackSummary ? `Feedback reciente al cocinar: ${profile.recentCookingFeedbackSummary}` : "",
   ].filter(Boolean).join("\n");
 }
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = "velocichef-shell-v8";
+const CACHE_NAME = "velocichef-shell-v9";
 const APP_URL = "/velocichef/";
 const ASSETS = [
   APP_URL,

@@ -132,7 +132,21 @@ const MEAL_OPTIONS = [
   { key: "bites", label: "Colaciones", icon: "\uD83E\uDD5C", hint: "Pequeñas opciones para picar entre comidas." },
 ];
 
+const COOKING_FEEDBACK_REASON_OPTIONS = [
+  { key: "steps_not_precise", label: "Los pasos no eran precisos", hint: "Faltaban detalles o quedaban ambiguos." },
+  { key: "quantities_not_precise", label: "Las cantidades no eran precisas", hint: "Algo no cuadraba con la receta real." },
+  { key: "cooking_details_missing", label: "Faltaban detalles de cocción", hint: "Temperatura, punto o utensilio poco claros." },
+  { key: "time_not_realistic", label: "El tiempo no era realista", hint: "Tardé bastante más o bastante menos." },
+  { key: "difficulty_mismatch", label: "La dificultad no encajaba", hint: "Era más fácil o más difícil de lo esperado." },
+  { key: "result_not_tasty", label: "El resultado no me convenció", hint: "No repetiría el plato tal como estaba." },
+  { key: "visuals_not_helpful", label: "Las ilustraciones no ayudaban", hint: "La imagen no explicaba bien el paso." },
+  { key: "too_long", label: "Se hizo demasiado largo", hint: "Demasiados pasos o demasiado tiempo seguido." },
+];
+
 const MEAL_LABELS = Object.fromEntries(MEAL_OPTIONS.map((item) => [item.key, item.label]));
+const COOKING_FEEDBACK_REASON_LABELS = Object.fromEntries(
+  COOKING_FEEDBACK_REASON_OPTIONS.map((item) => [item.key, item.label]),
+);
 
 const PRICE_COMPARISON_SUBTITLES = [
   "Estoy buscando los mejores precios en Carrefour, Mercadona, Bon Preu y Charter.",
@@ -1030,6 +1044,47 @@ async function saveFeedback(entry) {
   } catch (_error) {
     state.storageMode = "local";
   }
+}
+
+function getFeedbackEntryType(entry) {
+  return String(entry?.type || entry?.feedback_type || "").trim();
+}
+
+function getFeedbackEntryPayload(entry) {
+  return entry?.payload && typeof entry.payload === "object" ? entry.payload : {};
+}
+
+function getRecentCookingFeedbackSummary(limit = 8) {
+  const entries = (state.feedback || [])
+    .filter((entry) => getFeedbackEntryType(entry) === "cook_rating")
+    .slice(0, limit);
+  if (!entries.length) return "";
+
+  const positives = entries.filter((entry) => Number(getFeedbackEntryPayload(entry).rating || 0) >= 5).length;
+  const reasonCounts = new Map();
+
+  entries.forEach((entry) => {
+    const payload = getFeedbackEntryPayload(entry);
+    const reasons = Array.isArray(payload.reasons) ? payload.reasons.map(String).filter(Boolean) : [];
+    reasons.forEach((reason) => {
+      reasonCounts.set(reason, Number(reasonCounts.get(reason) || 0) + 1);
+    });
+  });
+
+  const topReasons = Array.from(reasonCounts.entries())
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 3)
+    .map(([reason]) => COOKING_FEEDBACK_REASON_LABELS[reason] || reason);
+
+  const summaryParts = [];
+  if (positives) {
+    summaryParts.push(`${positives} recetas recientes han gustado mucho al usuario.`);
+  }
+  if (topReasons.length) {
+    summaryParts.push(`Ajustes pedidos recientemente: ${topReasons.join(", ")}.`);
+  }
+
+  return summaryParts.join(" ").trim();
 }
 
 async function syncRemoteReminders() {
@@ -2374,6 +2429,121 @@ function clearPersistedCookingState(options = {}) {
   if (options.resetCooking) {
     state.cooking = null;
   }
+}
+
+function getCookingFeedbackTarget(modalState = state.modal) {
+  const mealId = String(modalState?.mealId || "").trim();
+  return mealId ? getMealById(mealId) : getCookingTarget();
+}
+
+function getCookingFeedbackRatingLabel(rating) {
+  if (rating >= 5) return "Me encantó";
+  if (rating === 4) return "Bastante bien";
+  if (rating === 3) return "Aceptable";
+  if (rating === 2) return "Regular";
+  if (rating === 1) return "Flojita";
+  return "Valora la receta";
+}
+
+function renderCookingFeedbackReasonPill(option, activeReasons) {
+  const active = activeReasons.includes(option.key);
+  return `
+    <button
+      class="vc-pill ${active ? "active" : ""}"
+      type="button"
+      data-action="toggle-cook-feedback-reason"
+      data-value="${option.key}"
+    >
+      <span class="vc-pill-content">
+        <span class="vc-pill-copy">
+          <strong class="vc-pill-label">${escapeHtml(option.label)}</strong>
+          <small>${escapeHtml(option.hint)}</small>
+        </span>
+      </span>
+      <span class="vc-pill-check" aria-hidden="true"></span>
+    </button>
+  `;
+}
+
+function markCookingMealCompleted(mealId, feedbackPatch = {}) {
+  const target = mealId ? getMealById(mealId) : getCookingTarget();
+  if (!target) return null;
+  const cookedAt = new Date().toISOString();
+  updateMeal(target.meal.id, (meal) => ({
+    ...meal,
+    feedback: {
+      ...(meal.feedback || {}),
+      cookedAt,
+      ...feedbackPatch,
+    },
+  }));
+  return { ...target, cookedAt };
+}
+
+async function completeCookingSession(options = {}) {
+  const notice = String(options.notice || "").trim();
+  clearCookingMicHintTimer();
+  stopHandsFreeMode();
+  stopCookingTimer();
+  clearPersistedCookingState({ resetCooking: true });
+  state.modal = null;
+  state.notice = notice;
+  state.error = "";
+  state.currentView = options.view || "week";
+  syncHistoryFromState({ mode: options.historyMode || "push", view: state.currentView });
+  render();
+}
+
+async function submitCookingFeedbackAndFinish(options = {}) {
+  const modalState = state.modal;
+  if (!modalState || modalState.type !== "cook-feedback") return false;
+  const target = getCookingFeedbackTarget(modalState);
+  if (!target) return false;
+
+  const rating = Math.max(1, Math.min(5, Number(options.rating || modalState.rating || 0)));
+  const reasons = Array.isArray(options.reasons) ? options.reasons : (modalState.reasons || []);
+  const skipReasonsValidation = !!options.skipReasonsValidation;
+
+  if (rating <= 4 && !skipReasonsValidation && !reasons.length) {
+    state.modal.inlineError = "Elige al menos un motivo para que pueda afinar mejor las próximas recetas.";
+    render();
+    return false;
+  }
+
+  markCookingMealCompleted(target.meal.id, {
+    recipeRating: rating,
+    recipeReasons: reasons,
+  });
+  await saveWeek();
+  await saveFeedback({
+    id: createId(),
+    weekId: state.week?.id,
+    mealId: target.meal.id,
+    type: "cook_rating",
+    payload: {
+      rating,
+      reasons,
+      mealTitle: target.meal.title,
+      mealDate: target.day.date,
+      mealKey: target.mealKey,
+      prepMinutes: target.meal.prepMinutes,
+      difficulty: target.meal.difficulty,
+      calories: target.meal.calories,
+    },
+    createdAt: new Date().toISOString(),
+  });
+
+  state.modal = {
+    ...modalState,
+    type: "cook-feedback",
+    mealId: target.meal.id,
+    rating,
+    reasons,
+    submitted: true,
+    inlineError: "",
+  };
+  render();
+  return true;
 }
 
 function queueCookingSnapshotRemoteSync(delayMs = 600) {
@@ -4617,6 +4787,7 @@ function plannerProfilePayload() {
     lunchTime: state.profile?.lunchTime || null,
     dinnerTime: state.profile?.dinnerTime || null,
     carryoverIngredients: mergeCarryoverIngredients(state.week?.carryoverIngredients || []),
+    recentCookingFeedbackSummary: getRecentCookingFeedbackSummary(),
     timezone: state.profile?.timezone || getTimezone(),
   };
 }
@@ -4957,6 +5128,17 @@ function renderTopbar() {
       ` : ""}
     </div>
   ` : "";
+  const immersiveCloseControl = isImmersiveCook ? `
+    <button
+      class="vc-cook-close-bubble"
+      type="button"
+      data-action="request-close-cooking-session"
+      aria-label="Cerrar modo cocina"
+      title="Cerrar modo cocina"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
+  ` : "";
 
   return `
     <header class="vc-topbar ${isImmersiveCook ? "vc-topbar-immersive" : "vc-card"} ${isCookView ? "vc-topbar-cooking" : ""}">
@@ -5047,42 +5229,45 @@ function renderTopbar() {
 
         <div class="vc-topbar-side vc-topbar-right ${isImmersiveCook ? "vc-topbar-right-immersive" : ""}">
           ${user ? `
-            <div class="vc-menu-wrap vc-user-wrap ${userMenuOpen ? "open" : ""}">
-              <button
-                class="vc-user-pill ${isImmersiveCook ? "vc-user-pill-avatar" : ""}"
-                type="button"
-                data-action="toggle-menu"
-                data-menu="user"
-                aria-label="Abrir menu del usuario"
-                aria-haspopup="true"
-                aria-expanded="${userMenuOpen ? "true" : "false"}"
-              >
-                ${renderUserAvatar(user)}
-                ${unreadActivityCount && !state.activeNotificationBannerId ? `<span class="vc-user-avatar-dot" aria-hidden="true"></span>` : ""}
-                ${isImmersiveCook ? "" : `
-                  <span class="vc-user-copy">
-                    <strong>${escapeHtml(displayName)}</strong>
-                    <small>${escapeHtml(shoppingState)}</small>
-                  </span>
-                  <span class="vc-user-caret" aria-hidden="true"></span>
-                `}
-              </button>
-              <div class="vc-menu-drop vc-user-menu" role="menu" aria-label="Menu del usuario">
-                <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Perfil</button>
-                <button class="vc-menu-action vc-menu-action-with-dot" type="button" data-action="open-view" data-view="notifications" role="menuitem">Notificaciones${unreadActivityCount ? '<span class="vc-menu-action-dot" aria-hidden="true"></span>' : ""}</button>
-                ${notificationsActive ? `
-                  <div class="vc-menu-meta">
-                    <span class="vc-meta-pill">Notificaciones activadas</span>
-                  </div>
-                ` : `
-                  <button class="vc-menu-action" type="button" data-action="request-notifications" role="menuitem">Activar notificaciones</button>
-                `}
-                <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
-                <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
-                <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
-                <button class="vc-menu-action vc-menu-action-danger" type="button" data-action="logout" role="menuitem">Salir</button>
-                <div class="vc-menu-version" aria-label="${escapeHtml(APP_VERSION_LABEL)}">${escapeHtml(APP_VERSION_LABEL)}</div>
+            <div class="vc-topbar-user-stack ${isImmersiveCook ? "vc-topbar-user-stack-immersive" : ""}">
+              <div class="vc-menu-wrap vc-user-wrap ${userMenuOpen ? "open" : ""}">
+                <button
+                  class="vc-user-pill ${isImmersiveCook ? "vc-user-pill-avatar" : ""}"
+                  type="button"
+                  data-action="toggle-menu"
+                  data-menu="user"
+                  aria-label="Abrir menu del usuario"
+                  aria-haspopup="true"
+                  aria-expanded="${userMenuOpen ? "true" : "false"}"
+                >
+                  ${renderUserAvatar(user)}
+                  ${unreadActivityCount && !state.activeNotificationBannerId ? `<span class="vc-user-avatar-dot" aria-hidden="true"></span>` : ""}
+                  ${isImmersiveCook ? "" : `
+                    <span class="vc-user-copy">
+                      <strong>${escapeHtml(displayName)}</strong>
+                      <small>${escapeHtml(shoppingState)}</small>
+                    </span>
+                    <span class="vc-user-caret" aria-hidden="true"></span>
+                  `}
+                </button>
+                <div class="vc-menu-drop vc-user-menu" role="menu" aria-label="Menu del usuario">
+                  <button class="vc-menu-action" type="button" data-action="open-view" data-view="profile" role="menuitem">Perfil</button>
+                  <button class="vc-menu-action vc-menu-action-with-dot" type="button" data-action="open-view" data-view="notifications" role="menuitem">Notificaciones${unreadActivityCount ? '<span class="vc-menu-action-dot" aria-hidden="true"></span>' : ""}</button>
+                  ${notificationsActive ? `
+                    <div class="vc-menu-meta">
+                      <span class="vc-meta-pill">Notificaciones activadas</span>
+                    </div>
+                  ` : `
+                    <button class="vc-menu-action" type="button" data-action="request-notifications" role="menuitem">Activar notificaciones</button>
+                  `}
+                  <button class="vc-menu-action" type="button" data-action="open-view" data-view="shopping" role="menuitem">Mi lista de la compra</button>
+                  <button class="vc-menu-action" type="button" data-action="open-view" data-view="recipes" role="menuitem">Mis recetas de esta semana</button>
+                  <button class="vc-menu-action" type="button" data-action="plan-new-week" role="menuitem">Planificar nueva semana</button>
+                  <button class="vc-menu-action vc-menu-action-danger" type="button" data-action="logout" role="menuitem">Salir</button>
+                  <div class="vc-menu-version" aria-label="${escapeHtml(APP_VERSION_LABEL)}">${escapeHtml(APP_VERSION_LABEL)}</div>
+                </div>
               </div>
+              ${immersiveCloseControl}
             </div>
           ` : `
             <button class="vc-button secondary vc-nav-login" type="button" data-action="login-google">Entrar con Google</button>
@@ -7092,6 +7277,166 @@ function renderCookRecoveryModal() {
   `;
 }
 
+function renderCookCloseConfirmModal() {
+  const target = getCookingTarget();
+  const cookingStage = target ? getCookingStage(target) : null;
+  const activeTimerCount = getActiveCookingTimers().length;
+  const mealLabel = target ? `${target.day.label} · ${MEAL_LABELS[target.mealKey] || target.mealKey}` : "Modo cocina";
+
+  return `
+    <div class="vc-modal-layer" data-action="close-modal">
+      <div class="vc-modal vc-reminder-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">Cerrar modo cocina</small>
+            <h2 class="vc-modal-title">Quieres salir de esta receta?</h2>
+            <p class="vc-copy">Cerraras el modo cocina y dejare de seguir este paso a paso hasta que vuelvas a abrirlo.</p>
+          </div>
+          <button class="vc-close" data-action="close-modal" aria-label="Cerrar">&times;</button>
+        </div>
+
+        <article class="vc-profile-card">
+          <div class="vc-grid">
+            <div>
+              <small class="vc-muted">Receta actual</small>
+              <p class="vc-copy"><strong>${escapeHtml(target?.meal?.title || "Tu receta actual")}</strong></p>
+              <p class="vc-copy">${escapeHtml(mealLabel)}</p>
+            </div>
+            ${cookingStage?.current ? `
+              <div>
+                <small class="vc-muted">Paso visible</small>
+                <p class="vc-copy">${escapeHtml(`${String(cookingStage.stepIndex + 1).padStart(2, "0")} / ${String(cookingStage.stages.length).padStart(2, "0")}`)}</p>
+                <p class="vc-copy"><strong>${escapeHtml(cookingStage.current.title || "Paso actual")}</strong></p>
+              </div>
+            ` : ""}
+            ${activeTimerCount ? `
+              <div>
+                <small class="vc-muted">Temporizadores activos</small>
+                <p class="vc-copy">${escapeHtml(`${activeTimerCount} en marcha`)}</p>
+              </div>
+            ` : ""}
+          </div>
+          ${activeTimerCount ? `<div class="vc-note">Si cierras ahora, tambien parare los temporizadores activos de esta receta.</div>` : ""}
+        </article>
+
+        <div class="vc-step-foot">
+          <button class="vc-button secondary" data-action="close-modal">Seguir cocinando</button>
+          <button class="vc-button primary" data-action="confirm-close-cooking-session">Si, cerrar</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCookFeedbackModal() {
+  const modalState = state.modal;
+  const target = getCookingFeedbackTarget(modalState);
+  if (!target) return "";
+
+  const rating = Math.max(0, Math.min(5, Number(modalState?.rating || 0)));
+  const reasons = Array.isArray(modalState?.reasons) ? modalState.reasons.map(String) : [];
+  const submitted = !!modalState?.submitted;
+  const inlineError = modalState?.inlineError || "";
+  const showReasons = rating > 0 && rating <= 4 && !submitted;
+  const ratingLabel = getCookingFeedbackRatingLabel(rating);
+  const selectedReasonLabels = reasons.map((reason) => COOKING_FEEDBACK_REASON_LABELS[reason] || reason).filter(Boolean);
+  const thanksTitle = rating >= 5 ? "Gracias por tu opinion" : "Gracias por ayudarme a mejorar";
+  const thanksBody = rating >= 5
+    ? "Me guardo esta receta como una buena referencia para proponerte platos parecidos."
+    : "Tendre en cuenta tus comentarios para afinar futuras recetas y los prompts que usamos contigo.";
+
+  return `
+    <div class="vc-modal-layer">
+      <div class="vc-modal vc-cook-feedback-modal" role="dialog" aria-modal="true">
+        <div class="vc-modal-head">
+          <div>
+            <small class="vc-muted">Receta terminada</small>
+            <h2 class="vc-modal-title">Que te ha parecido esta receta?</h2>
+            <p class="vc-copy">${escapeHtml(target.meal.title)}</p>
+          </div>
+          <button
+            class="vc-close"
+            data-action="${submitted ? "finish-cook-feedback" : "skip-cook-feedback"}"
+            aria-label="${submitted ? "Cerrar receta" : "Omitir valoracion"}"
+          >&times;</button>
+        </div>
+
+        <article class="vc-profile-card vc-cook-feedback-head">
+          <div class="vc-cook-feedback-meta">
+            <span class="vc-meta-pill">${escapeHtml(target.day.label)} · ${escapeHtml(MEAL_LABELS[target.mealKey] || target.mealKey)}</span>
+            <span class="vc-meta-pill">${escapeHtml(String(target.meal.prepMinutes || 0))} min</span>
+            <span class="vc-meta-pill">${escapeHtml(String(target.meal.calories || 0))} kcal</span>
+            <span class="vc-meta-pill">${escapeHtml(target.meal.difficulty || "Media")}</span>
+          </div>
+
+          ${submitted ? `
+            <div class="vc-cook-feedback-thanks">
+              <div class="vc-cook-feedback-face" aria-hidden="true">${rating >= 5 ? "&#9786;" : "&#9787;"}</div>
+              <div class="vc-cook-feedback-thanks-copy">
+                <strong>${escapeHtml(thanksTitle)}</strong>
+                <p class="vc-copy">${escapeHtml(thanksBody)}</p>
+                ${selectedReasonLabels.length ? `<p class="vc-copy vc-cook-feedback-summary">Me apunto esto para ti: ${escapeHtml(selectedReasonLabels.join(", "))}.</p>` : ""}
+              </div>
+            </div>
+          ` : `
+            <div class="vc-cook-feedback-stars" role="radiogroup" aria-label="Valora esta receta de una a cinco estrellas">
+              ${Array.from({ length: 5 }, (_, index) => {
+                const starValue = index + 1;
+                const active = starValue <= rating;
+                return `
+                  <button
+                    class="vc-cook-feedback-star ${active ? "active" : ""}"
+                    type="button"
+                    data-action="set-cook-feedback-rating"
+                    data-value="${starValue}"
+                    aria-label="Valorar con ${starValue} estrellas"
+                    aria-pressed="${active ? "true" : "false"}"
+                  >
+                    <span class="vc-cook-feedback-star-glyph" aria-hidden="true">&#9733;</span>
+                    <small>${starValue}</small>
+                  </button>
+                `;
+              }).join("")}
+            </div>
+            <p class="vc-cook-feedback-rating-label">${escapeHtml(ratingLabel)}</p>
+            ${rating >= 5 ? `
+              <div class="vc-cook-feedback-thanks vc-cook-feedback-thanks-inline">
+                <div class="vc-cook-feedback-face" aria-hidden="true">&#9786;</div>
+                <div class="vc-cook-feedback-thanks-copy">
+                  <strong>Gracias por tu opinion</strong>
+                  <p class="vc-copy">Me sirve para repetirte recetas parecidas cuando encajen contigo.</p>
+                </div>
+              </div>
+            ` : ""}
+          `}
+        </article>
+
+        ${showReasons ? `
+          <article class="vc-profile-card">
+            <div class="vc-cook-feedback-reason-head">
+              <h3 class="vc-inline-title">Que mejorarias?</h3>
+              <p class="vc-copy">Marca todo lo que te ayude a tener recetas mejores la proxima vez.</p>
+            </div>
+            <div class="vc-cook-feedback-reasons">
+              ${COOKING_FEEDBACK_REASON_OPTIONS.map((option) => renderCookingFeedbackReasonPill(option, reasons)).join("")}
+            </div>
+            ${inlineError ? `<div class="vc-error">${escapeHtml(inlineError)}</div>` : ""}
+          </article>
+        ` : ""}
+
+        <div class="vc-step-foot">
+          ${submitted ? `
+            <button class="vc-button primary" data-action="finish-cook-feedback">Cerrar receta</button>
+          ` : `
+            <button class="vc-button secondary" data-action="skip-cook-feedback">Omitir</button>
+            <button class="vc-button primary" data-action="submit-cook-feedback" ${rating ? "" : "disabled"}>Guardar opinion</button>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderModal() {
   if (!state.modal) return renderBusyOverlay();
   if (state.modal.type === "details") {
@@ -7129,6 +7474,12 @@ function renderModal() {
   }
   if (state.modal.type === "cook-recovery") {
     return `${renderCookRecoveryModal()}${renderBusyOverlay()}`;
+  }
+  if (state.modal.type === "cook-close-confirm") {
+    return `${renderCookCloseConfirmModal()}${renderBusyOverlay()}`;
+  }
+  if (state.modal.type === "cook-feedback") {
+    return `${renderCookFeedbackModal()}${renderBusyOverlay()}`;
   }
   if (state.modal.type === "priceComparison") {
     return `${renderPriceComparisonModal()}${renderBusyOverlay()}`;
@@ -7570,15 +7921,75 @@ async function handleAction(action, trigger) {
       await moveCookingStep(1);
       break;
 
-    case "finish-cooking-session":
-      clearCookingMicHintTimer();
-      stopHandsFreeMode();
-      stopCookingTimer();
-      clearPersistedCookingState({ resetCooking: true });
-      state.notice = "Receta terminada. Ya puedes servir el plato.";
-      state.currentView = "week";
-      syncHistoryFromState({ mode: "push", view: "week" });
+    case "request-close-cooking-session":
+      state.modal = { type: "cook-close-confirm" };
       render();
+      break;
+
+    case "confirm-close-cooking-session":
+      await completeCookingSession({
+        notice: "He cerrado el modo cocina. Puedes volver cuando quieras con otra receta.",
+      });
+      break;
+
+    case "finish-cooking-session":
+      state.modal = {
+        type: "cook-feedback",
+        mealId: getCookingTarget()?.meal?.id || "",
+        rating: Number(getCookingTarget()?.meal?.feedback?.recipeRating || 0),
+        reasons: [...(getCookingTarget()?.meal?.feedback?.recipeReasons || [])],
+        submitted: false,
+        inlineError: "",
+      };
+      render();
+      break;
+
+    case "set-cook-feedback-rating":
+      if (state.modal?.type !== "cook-feedback") return;
+      state.modal = {
+        ...state.modal,
+        rating: Math.max(1, Math.min(5, Number(trigger.dataset.value || 0))),
+        inlineError: "",
+      };
+      render();
+      break;
+
+    case "toggle-cook-feedback-reason":
+      if (state.modal?.type !== "cook-feedback") return;
+      state.modal = {
+        ...state.modal,
+        reasons: toggleFromArray(state.modal.reasons || [], trigger.dataset.value),
+        inlineError: "",
+      };
+      render();
+      break;
+
+    case "submit-cook-feedback":
+      if (state.modal?.type !== "cook-feedback") return;
+      if (!Number(state.modal.rating || 0)) {
+        state.modal.inlineError = "Marca una puntuacion antes de guardar tu opinion.";
+        render();
+        break;
+      }
+      await submitCookingFeedbackAndFinish();
+      break;
+
+    case "skip-cook-feedback": {
+      const target = getCookingFeedbackTarget();
+      if (target) {
+        markCookingMealCompleted(target.meal.id);
+        await saveWeek();
+      }
+      await completeCookingSession({
+        notice: "Receta terminada. Ya puedes servir el plato.",
+      });
+      break;
+    }
+
+    case "finish-cook-feedback":
+      await completeCookingSession({
+        notice: "Gracias por tu opinion. Ya puedes servir el plato.",
+      });
       break;
 
     case "toggle-hands-free":
@@ -8466,4 +8877,3 @@ window.addEventListener("popstate", () => {
 });
 
 init();
-
