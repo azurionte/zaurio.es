@@ -3231,14 +3231,20 @@ function createCookLaunchOverlay(trigger, mealId) {
   caption.className = "vc-cook-launch-orb-label";
   caption.textContent = "Cocinar";
   orb.appendChild(caption);
-  overlay.appendChild(orb);
-  document.body.appendChild(overlay);
 
   const originX = rect.left + (rect.width / 2);
   const originY = rect.top + (rect.height / 2);
+  orb.style.left = `${rect.left}px`;
+  orb.style.top = `${rect.top}px`;
+  orb.style.width = `${rect.width}px`;
+  orb.style.height = `${rect.height}px`;
+  orb.style.borderRadius = `${Math.max(20, rect.height / 2)}px`;
   overlay.style.setProperty("--vc-cook-origin-x", `${Math.round(originX)}px`);
   overlay.style.setProperty("--vc-cook-origin-y", `${Math.round(originY)}px`);
   overlay.style.setProperty("--vc-cook-hole-size", "0px");
+
+  overlay.appendChild(orb);
+  document.body.appendChild(overlay);
 
   activeCookLaunchOverlay = {
     element: overlay,
@@ -3297,16 +3303,10 @@ async function playCookLaunchTransition(trigger, mealId) {
     window.requestAnimationFrame(step);
   });
 
-  orb.style.left = `${rect.left}px`;
-  orb.style.top = `${rect.top}px`;
-  orb.style.width = `${rect.width}px`;
-  orb.style.height = `${rect.height}px`;
-  orb.style.borderRadius = `${Math.max(20, rect.height / 2)}px`;
-
-  // Start the overlay fade-in and animations immediately
-  element.classList.add("is-active");
-
   try {
+    await nextFrame();
+    element.classList.add("is-active");
+
     const captionFade = caption.animate([
       { opacity: 1, transform: "scale(1)" },
       { opacity: 0, transform: "scale(.92)" },

@@ -794,20 +794,17 @@ body.vc-cook-immersive-body .vc-app{
   transition:opacity .42s ease;
 }
 
-.vc-cook-launch-overlay.is-active::before,
-.vc-cook-launch-overlay.is-covered::before{
+.vc-cook-launch-overlay.is-covered::before,
+.vc-cook-launch-overlay.is-solid::before,
+.vc-cook-launch-overlay.is-revealing::before{
   opacity:1;
 }
 
-.vc-cook-launch-overlay.is-active{
-  opacity:0.3;
+.vc-cook-launch-overlay.is-solid{
+  opacity:1;
 }
 
 .vc-cook-launch-overlay.is-covered{
-  opacity:0.8;
-}
-
-.vc-cook-launch-overlay.is-solid{
   opacity:1;
 }
 
