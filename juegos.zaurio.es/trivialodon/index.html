@@ -1352,10 +1352,10 @@
       setText(ui.btnCloseScore, t("close"));
 
       // Profile screen
-      ui.profileKicker.textContent = state.role === "host" ? t("room") : t("guestKicker");
-      ui.profileTitle.textContent = state.role === "host" ? t("hostProfileTitle") : t("guestProfileTitle");
-      ui.profileSideTitle.textContent = state.role === "host" ? t("hostProfileSideTitle") : t("guestProfileSideTitle");
-      ui.profileSideText.textContent = state.role === "host" ? t("hostProfileSideText") : t("guestProfileSideText");
+      setText(ui.profileKicker, state.role === "host" ? t("room") : t("guestKicker"));
+      setText(ui.profileTitle, state.role === "host" ? t("hostProfileTitle") : t("guestProfileTitle"));
+      setText(ui.profileSideTitle, state.role === "host" ? t("hostProfileSideTitle") : t("guestProfileSideTitle"));
+      setText(ui.profileSideText, state.role === "host" ? t("hostProfileSideText") : t("guestProfileSideText"));
 
       // Join screen
       setText(ui.joinKicker, t("guestKicker"));
@@ -1370,14 +1370,14 @@
 
       // Lobby screen
       setText(ui.lobbyKicker, t("playersList"));
-      ui.lobbyTitle.textContent = t("preparingRoom");
-      ui.lobbyDesc.textContent = t("lobbyDesc");
+      setText(ui.lobbyTitle, t("preparingRoom"));
+      setText(ui.lobbyDesc, t("lobbyDesc"));
       setText(ui.btnToSetup, t("next"));
       setText(ui.durationLead, t("durationLead"));
 
       // Setup screen
-      ui.setupTitle.textContent = t("setupTitle");
-      ui.setupDesc.textContent = t("setupDesc");
+      setText(ui.setupTitle, t("setupTitle"));
+      setText(ui.setupDesc, t("setupDesc"));
       setText(ui.modesLead, t("modesLead"));
       setText(ui.durationLead, t("durationLead"));
       setText(ui.generatingTitle, t("generatingTitle"));
@@ -1691,13 +1691,13 @@
       scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), scores:$("scoresScene"), versusIntro:$("versusIntroScene"), versus:$("versusScene")},
       joinCodeOnlyInput:$("joinCodeOnlyInput"), joinStatus:$("joinStatus"), btnJoinBack:$("btnJoinBack"), btnJoinNext:$("btnJoinNext"),
       profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), lobbyLayout:$("lobbyLayout"), setupLayout:$("setupLayout"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"), joinCodeLabel:$("joinCodeLabel"),
-      nameInput:$("nameInput"), avatarViewport:$("avatarViewport"), avatarRail:$("avatarRail"), avatarLegend:$("avatarLegend"), btnAvatarPrev:$("btnAvatarPrev"), btnAvatarNext:$("btnAvatarNext"), profileStatus:$("profileStatus"), btnBack:$("btnBack"), btnReady:$("btnReady"),
+      nameInput:$("nameInput"), avatarViewport:$("avatarViewport"), avatarRail:$("avatarRail"), avatarLegend:$("avatarLegend"), avatarEditorKicker:$("avatarEditorKicker"), btnAvatarPrev:$("btnAvatarPrev"), btnAvatarNext:$("btnAvatarNext"), profileStatus:$("profileStatus"), btnBack:$("btnBack"), btnReady:$("btnReady"),
       joinKicker:$("joinKicker"), joinTitle:$("joinTitle"), joinLead:$("joinLead"), joinCodeOnlyLabel:$("joinCodeOnlyLabel"), profilePlayers:$("profilePlayers"), profileSideKicker:$("profileSideKicker"), profileSideTitle:$("profileSideTitle"), profileSideText:$("profileSideText"), lobbySide:$("lobbySide"), lobbyKicker:$("lobbyKicker"), lobbyTitle:$("lobbyTitle"),
-      lobbyDesc:$("lobbyDesc"), lobbyPlayers:$("lobbyPlayers"), modesLead:$("modesLead"), btnToSetup:$("btnToSetup"), setupSide:$("setupSide"), setupKicker:$("setupKicker"), setupDesc:$("setupDesc"), modesKicker:$("modesKicker"), durationKicker:$("durationKicker"), durationLead:$("durationLead"), generatingTitle:$("generatingTitle"), generatingKicker:$("generatingKicker"), hostVoteWrap:$("hostVoteWrap"),
+      lobbyDesc:$("lobbyDesc"), lobbyPlayers:$("lobbyPlayers"), modesLead:$("modesLead"), btnToSetup:$("btnToSetup"), setupSide:$("setupSide"), setupKicker:$("setupKicker"), setupTitle:$("setupTitle"), setupDesc:$("setupDesc"), modesKicker:$("modesKicker"), durationKicker:$("durationKicker"), durationLead:$("durationLead"), generatingTitle:$("generatingTitle"), generatingKicker:$("generatingKicker"), hostVoteWrap:$("hostVoteWrap"),
       hostVoteCountdown:$("hostVoteCountdown"), voteToggle:$("voteToggle"), modeGrid:$("modeGrid"), durationGrid:$("durationGrid"), setupActions:$("setupActions"),
-      generatingLine:$("generatingLine"), generatingKicker:$("generatingKicker"), pausedTitle:$("pausedTitle"), pausedKicker:$("pausedKicker"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
-      questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
-      scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalKicker:$("scoreModalKicker"), scoreModalTitle:$("scoreModalTitle"), scoreModalRows:$("scoreModalRows"),
+      generatingLine:$("generatingLine"), generatingKicker:$("generatingKicker"), pausedTitle:$("pausedTitle"), pausedKicker:$("pausedKicker"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownKicker:$("countdownKicker"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionKicker:$("questionKicker"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
+      questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerKicker:$("answerKicker"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
+      scoresKicker:$("scoresKicker"), scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroKicker:$("versusIntroKicker"), versusIntroTitle:$("versusIntroTitle"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusKicker:$("versusKicker"), versusTitle:$("versusTitle"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalKicker:$("scoreModalKicker"), scoreModalTitle:$("scoreModalTitle"), scoreModalRows:$("scoreModalRows"),
       btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), resumeKicker:$("resumeKicker"), resumeTitle:$("resumeTitle"), resumeText:$("resumeText"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
       durationModal:$("durationModal"), durationModalKicker:$("durationModalKicker"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
       durationMinutesInput:$("durationMinutesInput"), durationQuestionsInput:$("durationQuestionsInput"), durationMinutesLabel:$("durationMinutesLabel"), durationQuestionsLabel:$("durationQuestionsLabel"), btnCloseDuration:$("btnCloseDuration"), btnAcceptDuration:$("btnAcceptDuration"),
