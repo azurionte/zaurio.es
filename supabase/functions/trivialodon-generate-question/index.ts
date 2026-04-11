@@ -23,31 +23,54 @@ function buildPrompt(input) {
     ? '[{"type":"standard","question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."},{"type":"speed","question":"...","choices":[{"text":"...","score":140,"rank":1}],"explanation":"...","category":"...","difficulty":"..."}]'
     : '{"type":"standard","question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."}';
   const speedCount = Math.max(1, Math.round(input.questionCount * 0.2));
+  const english = input.language === "en";
   return [
     input.questionCount > 1
-      ? `Genera ${input.questionCount} preguntas para un concurso de trivia en espanol.`
-      : "Genera una unica pregunta para un concurso de trivia en espanol.",
-    "Debe ser clara, entretenida y apta para una audiencia general.",
-    `Tema solicitado: ${input.theme}.`,
-    `Tono solicitado: ${input.tone}.`,
-    `Dificultad: ${input.difficulty}.`,
-    `Audiencia: ${input.audience}.`,
-    `Numero de respuestas: ${input.answerCount}.`,
-    input.customPrompt ? `Instruccion extra del anfitrion: ${input.customPrompt}.` : "",
-    "Devuelve solo JSON valido, sin markdown, sin texto adicional y sin comentarios.",
-    "El JSON debe seguir exactamente esta forma:",
+      ? (english ? `Generate ${input.questionCount} trivia questions in English.` : `Genera ${input.questionCount} preguntas para un concurso de trivia en espanol.`)
+      : (english ? "Generate a single trivia question in English." : "Genera una unica pregunta para un concurso de trivia en espanol."),
+    english ? "They must be clear, entertaining, and suitable for a general audience." : "Debe ser clara, entretenida y apta para una audiencia general.",
+    english ? `Requested theme: ${input.theme}.` : `Tema solicitado: ${input.theme}.`,
+    english ? `Requested tone: ${input.tone}.` : `Tono solicitado: ${input.tone}.`,
+    english ? `Difficulty: ${input.difficulty}.` : `Dificultad: ${input.difficulty}.`,
+    english ? `Audience: ${input.audience}.` : `Audiencia: ${input.audience}.`,
+    english ? `Number of answers: ${input.answerCount}.` : `Numero de respuestas: ${input.answerCount}.`,
+    input.customPrompt ? (english ? `Extra host instruction: ${input.customPrompt}.` : `Instruccion extra del anfitrion: ${input.customPrompt}.`) : "",
+    english ? "Return only valid JSON, no markdown, no extra text, no comments." : "Devuelve solo JSON valido, sin markdown, sin texto adicional y sin comentarios.",
+    english ? "The JSON must follow exactly this shape:" : "El JSON debe seguir exactamente esta forma:",
     shape,
-    "Reglas:",
-    "- En preguntas standard, choices debe tener exactamente el numero pedido.",
-    "- En preguntas standard, correct_index debe apuntar a una unica respuesta correcta.",
-    "- En preguntas speed, choices debe ser un array de objetos con text, score y rank.",
-    "- En preguntas speed, todas las respuestas deben ser validas, pero unas mejores que otras.",
-    "- En preguntas speed, rank 1 debe ser la mejor y rank mayor la peor.",
-    `- Si devuelves varias preguntas, exactamente ${speedCount} deben ser de tipo "speed" y el resto "standard".`,
-    "- No repitas opciones ni hagas respuestas ambiguas.",
-    "- explanation debe ser breve, maxima dos frases.",
-    input.questionCount > 1 ? `- Debes devolver exactamente ${input.questionCount} preguntas.` : "",
+    english ? "Rules:" : "Reglas:",
+    english ? "- For standard questions, choices must have exactly the requested amount." : "- En preguntas standard, choices debe tener exactamente el numero pedido.",
+    english ? "- For standard questions, correct_index must point to exactly one correct answer." : "- En preguntas standard, correct_index debe apuntar a una unica respuesta correcta.",
+    english ? "- For speed questions, choices must be an array of objects with text, score, and rank." : "- En preguntas speed, choices debe ser un array de objetos con text, score y rank.",
+    english ? "- For speed questions, every answer must be valid, but some must be better than others." : "- En preguntas speed, todas las respuestas deben ser validas, pero unas mejores que otras.",
+    english ? "- For speed questions, rank 1 must be the best and larger ranks must be worse." : "- En preguntas speed, rank 1 debe ser la mejor y rank mayor la peor.",
+    english ? `- If you return multiple questions, exactly ${speedCount} must be of type "speed" and the rest "standard".` : `- Si devuelves varias preguntas, exactamente ${speedCount} deben ser de tipo "speed" y el resto "standard".`,
+    english ? "- Do not repeat options or create ambiguous answers." : "- No repitas opciones ni hagas respuestas ambiguas.",
+    english ? "- explanation must be brief, maximum two sentences." : "- explanation debe ser breve, maxima dos frases.",
+    input.questionCount > 1 ? (english ? `- You must return exactly ${input.questionCount} questions.` : `- Debes devolver exactamente ${input.questionCount} preguntas.`) : "",
   ].filter(Boolean).join("\n");
+}
+
+function buildTranslatePrompt(input) {
+  const english = input.language === "en";
+  return [
+    english
+      ? "Translate the following trivia questions into English."
+      : "Traduce las siguientes preguntas de trivia al espanol.",
+    english
+      ? "Return only valid JSON. Keep the same structure and the same number of items."
+      : "Devuelve solo JSON valido. Mantén la misma estructura y la misma cantidad de elementos.",
+    english
+      ? "Preserve type, correct_index, score, rank, and array order."
+      : "Conserva type, correct_index, score, rank y el orden de los arrays.",
+    english
+      ? "Translate question, choices text, explanation, category, and difficulty naturally."
+      : "Traduce de forma natural question, choices text, explanation, category y difficulty.",
+    english
+      ? "Do not invent or remove answers."
+      : "No inventes ni elimines respuestas.",
+    JSON.stringify(input.questions || []),
+  ].join("\n");
 }
 
 function normalizeQuestion(raw, answerCount) {
@@ -107,7 +130,7 @@ async function callGemini(input) {
           {
             parts: [
               {
-                text: buildPrompt(input),
+                text: input.mode === "translate" ? buildTranslatePrompt(input) : buildPrompt(input),
               },
             ],
           },
@@ -131,6 +154,12 @@ async function callGemini(input) {
   }
 
   const parsed = JSON.parse(text);
+  if (input.mode === "translate") {
+    if (!Array.isArray(parsed) || parsed.length !== input.questions.length) {
+      throw new Error("Gemini no devolvio la cantidad exacta de preguntas traducidas.");
+    }
+    return parsed.map((item) => normalizeQuestion(item, input.answerCount));
+  }
   if (input.questionCount > 1) {
     if (!Array.isArray(parsed) || parsed.length !== input.questionCount) {
       throw new Error("Gemini no devolvio la cantidad exacta de preguntas.");
@@ -152,6 +181,8 @@ Deno.serve(async (request) => {
   try {
     const body = await request.json().catch(() => ({}));
     const input = {
+      mode: body?.mode === "translate" ? "translate" : "generate",
+      language: body?.language === "en" ? "en" : "es",
       theme: String(body?.theme || "conocimiento general"),
       tone: String(body?.tone || "divertido"),
       difficulty: String(body?.difficulty || "media"),
@@ -159,7 +190,12 @@ Deno.serve(async (request) => {
       answerCount: Math.max(4, Math.min(5, Number(body?.answerCount || 5))),
       questionCount: Math.max(1, Math.min(60, Number(body?.questionCount || 1))),
       customPrompt: String(body?.customPrompt || ""),
+      questions: Array.isArray(body?.questions) ? body.questions : [],
     };
+
+    if (input.mode === "translate" && !input.questions.length) {
+      throw new Error("No he recibido preguntas para traducir.");
+    }
 
     const result = await callGemini(input);
     return json({

@@ -1,831 +1,4 @@
-﻿<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Trivialodon | Zaurio</title>
-  <link rel="icon" href="/shared/assets/brand/favicon.ico" />
-  <style>
-    :root{--bg:radial-gradient(circle at top,#2f0049 0%,#180024 36%,#060009 100%);--panel:rgba(43,4,73,.9);--stroke:rgba(255,255,255,.12);--text:#fff;--muted:rgba(255,255,255,.88);--cyan:#39dbff;--yellow:#ffd83a;--pink:#ff77cb;--green:#88e16e;--danger:#ff84b8;--frame:168px;--avatar:114px}
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Arial,system-ui,sans-serif}body{padding:18px}button,input{font:inherit}button{cursor:pointer}
-    .app{width:min(1320px,100%);margin:0 auto;display:grid;gap:18px}.shell{display:none;gap:18px;align-content:start}.shell.on{display:grid}
-    .topbar,.panel,.playerCard,.answerCard,.scoreRow,.modeCard,.modalCard,.heroCard{border:1px solid var(--stroke);border-radius:30px;background:var(--panel);box-shadow:0 16px 48px rgba(0,0,0,.24),0 0 32px rgba(255,0,170,.08);backdrop-filter:blur(14px)}
-    .topbar{position:relative;z-index:120;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;min-height:86px;overflow:visible}
-    .topLeft,.topRight{display:flex;align-items:center;gap:12px;position:relative;z-index:2}
-    .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;pointer-events:none;width:188px;height:46px;overflow:visible}
-    .logoMark{display:block;width:auto;height:100%;max-width:100%;max-height:100%;object-fit:contain;transform:none}
-    .menuWrap,.soundWrap{position:relative;z-index:121}.menuBtn,.btn,.switch{border:0}.menuBtn,.identity,.soundChip{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#fff;font-weight:800}.menuBtn{padding:0 18px;gap:12px;flex-direction:row}.menuBtn img{width:34px;height:34px}
-    .menuGlyph{font-size:1.6rem;line-height:1}
-    .menuDrop{position:absolute;left:0;top:calc(100% + 10px);display:none;min-width:240px;padding:8px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20}.menuWrap.open .menuDrop{display:grid}.menuDrop a{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;color:#fff;text-decoration:none}.menuDrop a:hover{background:rgba(255,255,255,.08)}.menuDrop img{width:22px;height:22px;object-fit:contain}
-    .identity{max-width:100%;padding:0 12px 0 16px;gap:12px;justify-content:space-between}
-    .identity[hidden],.soundChip[hidden]{display:none}
-    .summaryScore{font-size:.78rem;font-weight:1000;color:var(--yellow);white-space:nowrap;line-height:1.02}
-    .soundGlyph,.gearGlyph{font-size:1rem;line-height:1}
-    .soundStack{display:inline-flex;align-items:center;gap:6px}
-    .soundLabel{display:none}
-    .miniAvatar{width:42px;height:42px;border-radius:999px;overflow:hidden;display:grid;place-items:center;flex:0 0 42px;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18))}.miniAvatar img{width:100%;height:100%;object-fit:cover}.identityMeta{display:grid;gap:3px;min-width:0;justify-items:start;flex:1 1 auto}.identityName{font-size:1rem;font-weight:900;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1}.identityRole{font-size:.74rem;color:var(--yellow);letter-spacing:0;line-height:1}
-      .soundPanel{position:absolute;top:calc(100% + 10px);left:0;display:none;min-width:320px;padding:14px;border-radius:22px;background:rgba(18,3,31,.96);border:1px solid var(--stroke);z-index:20;gap:12px;overscroll-behavior:contain}
-      .soundWrap.open .soundPanel{display:grid}
-      .soundPanel label{font-size:.82rem;color:var(--muted);font-weight:800}
-      .soundPanel input[type="range"]{width:100%;touch-action:pan-y}
-    .soundPanelRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .soundMini{font-size:.9rem;color:#fff;font-weight:900}
-    .langPicker{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .langBtn{min-width:60px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);display:grid;place-items:center;font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Segoe UI Symbol",sans-serif;font-size:1.5rem;line-height:1;transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease}
-    .langBtn:hover{transform:translateY(-1px);background:rgba(255,255,255,.14)}
-    .langBtn.active{background:linear-gradient(135deg,rgba(255,216,58,.24),rgba(255,119,203,.22));border-color:rgba(255,216,58,.7);box-shadow:0 0 0 1px rgba(255,216,58,.18),0 0 16px rgba(255,216,58,.35),0 0 32px rgba(255,119,203,.22);transform:scale(1.08);}
-    .introLangPicker{justify-content:center;margin-top:6px}
-    .settingsSection{display:grid;gap:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
-    .settingsSectionTitle{font-size:.74rem;font-weight:900;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-    .settingsActions{display:grid;gap:8px}
-    .settingsActions .btn{width:100%;justify-content:flex-start;text-align:left}
-    .btnIcon{display:inline-flex;align-items:center;justify-content:center;min-width:1.1em}
-    .settingsCast[hidden]{display:none}
-    .castRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:22px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
-    .castMeta{display:grid;gap:4px}
-    .castMeta strong{font-size:1rem}
-    .castMeta span{font-size:.86rem;color:var(--muted)}
-    .castStatus{min-height:22px;font-weight:800}
-    .castStatus.ok{color:#c8ffab}
-    .castStatus.info{color:var(--cyan)}
-    .castStatus.danger{color:var(--danger)}
-    .intro{min-height:calc(100vh - 36px);display:grid;place-items:center}.intro.on{display:grid}.intro.off{display:none}.introCard{width:min(760px,100%);padding:48px 38px;text-align:center}.introLogo{width:min(360px,82%);display:block;margin:0 auto 18px;filter:drop-shadow(0 10px 24px rgba(255,0,170,.2))}.introLead{max-width:34ch;margin:0 auto;color:var(--muted);font-size:1.15rem;line-height:1.55}
-    .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.actions.center{justify-content:center}.actions.between{justify-content:space-between}.btn{padding:14px 20px;border-radius:999px;font-weight:900;color:#fff;background:rgba(255,255,255,.08);transition:transform .18s ease,opacity .18s ease,background .18s ease}.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.btnPrimary{background:linear-gradient(135deg,var(--yellow),var(--pink));color:#2c003d}.btnGhost{background:rgba(255,255,255,.08)}.btnOk{background:rgba(136,225,110,.16);color:#f2ffe8}
-    .scene{display:none;animation:sceneIn .42s ease both;align-content:start}.scene.on{display:grid}.sceneWrap{min-height:calc(100vh - 154px)}.sceneCenter{justify-items:center;align-content:start}.sceneSplit{display:grid;grid-template-columns:minmax(320px,440px) minmax(0,1fr);gap:18px;align-items:start}.sceneStack{display:grid;gap:18px}.panel{padding:28px}.panel.narrow{width:min(520px,100%)}.kicker{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:rgba(47,211,255,.14);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
-    #profileScene,#joinScene,#lobbyScene,#setupScene{align-content:start}
-    h1,h2,h3,p{margin:0}p{color:var(--muted);line-height:1.55}.title{font-size:clamp(2rem,5vw,3.3rem);line-height:1.02;font-weight:1000}.subtitle{font-size:clamp(1.2rem,2.5vw,1.9rem);font-weight:900}.field{display:grid;gap:8px}.field label{font-weight:800}.field input{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}
-    .codeBadge,.countPill{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:18px;background:rgba(255,216,58,.12);color:var(--yellow);font-weight:1000;letter-spacing:.08em}.status{min-height:20px;font-weight:700}.status.info{color:var(--cyan)}.status.ok{color:#c8ffab}.status.danger{color:var(--danger)}
-      .avatarEditor{--avatar-card-w:112px;--avatar-gap:12px;display:grid;gap:10px;padding:18px 12px 12px;border-radius:24px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.avatarCarousel{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:10px;margin-top:10px}.avatarViewport{position:relative;overflow:hidden;padding:18px 0 14px;touch-action:pan-y;width:calc((var(--avatar-card-w) * 3) + (var(--avatar-gap) * 2));justify-self:center}.avatarRail{display:flex;gap:var(--avatar-gap);align-items:stretch;justify-content:flex-start;min-height:126px;width:max-content;padding:0;will-change:transform}.avatarCenterFrame{position:absolute;left:50%;top:10px;bottom:10px;transform:translateX(-50%);width:calc(var(--avatar-card-w) + 6px);border-radius:20px;border:2px solid rgba(255,216,58,.82);box-shadow:0 0 0 1px rgba(255,216,58,.18),0 10px 22px rgba(0,0,0,.16),0 0 28px rgba(255,216,58,.16);background:linear-gradient(135deg,rgba(255,216,58,.07),rgba(255,119,203,.06));pointer-events:none;z-index:5}.avatarCard{flex:0 0 var(--avatar-card-w);border:1px solid rgba(255,255,255,.08);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));padding:12px 8px;display:grid;justify-items:center;align-content:center;min-height:112px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);transition:transform .32s cubic-bezier(.22,.8,.18,1),opacity .32s ease,filter .32s ease,border-color .32s ease;background-color .32s ease}.avatarCard img{width:100%;max-width:74px;height:auto;display:block;filter:drop-shadow(0 6px 12px rgba(0,0,0,.18));transition:transform .32s cubic-bezier(.22,.8,.18,1),filter .32s ease}.avatarCard span{display:none}.avatarCard.is-center{opacity:1;transform:scale(1)}.avatarCard.is-center img{transform:scale(1.02)}.avatarCard.is-side{opacity:.9;transform:scale(.92)}.avatarCard.is-side img{filter:drop-shadow(0 5px 10px rgba(0,0,0,.16)) saturate(.98)}.avatarCard.is-far{opacity:.66;transform:scale(.86)}.avatarNav{width:40px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:1.25rem;font-weight:1000;display:grid;place-items:center;transition:transform .18s ease,background .18s ease}.avatarNav:hover{transform:translateY(-1px);background:rgba(255,255,255,.1)}.avatarLegend{text-align:center;font-size:1rem;color:#fff;font-weight:900;line-height:1.1;margin-top:2px}.avatarStack{width:var(--frame);height:var(--frame);position:relative}.avatarFrame{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))}.avatarHint{display:none}
-    .playersGrid{display:grid;gap:14px}.playerCard{padding:16px 18px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}.playerName{font-size:clamp(1rem,2vw,1.45rem);font-weight:1000;text-shadow:0 4px 0 rgba(0,0,0,.72),0 0 16px rgba(0,0,0,.45)}.playerSub{font-size:.96rem;color:var(--muted)}
-    .dinoHole,.avatarShot{position:absolute;left:50%;top:50%;width:var(--avatar);height:var(--avatar);border-radius:999px;overflow:hidden;transform:translate(-50%,-50%) translateY(-10px)}.dinoHole{display:grid;place-items:center;font-size:3rem;background:radial-gradient(circle at 30% 20%,rgba(47,211,255,.22),rgba(255,119,203,.16))}.avatarShot img{width:100%;height:100%;object-fit:cover}
-    .heroCard{padding:32px;display:grid;gap:20px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));text-align:center}.bigCount{font-size:clamp(5rem,18vw,11rem);font-weight:1000;line-height:1}
-    .categoryArt{width:min(220px,48vw);max-width:100%;justify-self:center;display:block;filter:drop-shadow(0 12px 26px rgba(0,0,0,.26))}
-    .categoryLead{display:grid;grid-template-columns:auto minmax(280px,1fr);align-items:center;gap:20px;padding:12px 0 2px}
-    .categoryLead .categoryArt{width:clamp(110px,16vw,168px)}
-    .categoryLead .answerCard{min-height:120px;align-content:center}
-    .categoryLeadText{display:grid;gap:8px}
-    .categoryLeadText .kicker{justify-self:start}
-    .questionBox{display:grid;gap:20px}.questionHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.timerRing{width:88px;height:88px;border-radius:999px;display:grid;place-items:center;background:conic-gradient(var(--yellow) calc(var(--timer,1) * 1turn),rgba(255,255,255,.08) 0);padding:6px}.timerInner{width:100%;height:100%;border-radius:999px;background:#240436;display:grid;place-items:center;font-weight:1000;font-size:1.4rem}
-    .questionTitle{font-size:clamp(1.7rem,4.4vw,2.8rem);line-height:1.08}
-    .answers{display:grid;gap:14px}.answerCard{width:100%;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:14px;transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;color:#fff;text-align:left}.answerCard *{pointer-events:none}.answerCard:hover{transform:translateX(4px)}.answerCard.active{border-color:rgba(47,211,255,.38);background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,119,203,.1))}.answerCard.correct{border-color:rgba(136,225,110,.86);background:linear-gradient(135deg,rgba(136,225,110,.28),rgba(47,211,255,.1));box-shadow:0 0 0 1px rgba(136,225,110,.2),0 0 28px rgba(136,225,110,.22)}.answerCard.wrong{border-color:rgba(255,112,112,.95);background:linear-gradient(135deg,rgba(255,112,112,.26),rgba(255,119,203,.1));box-shadow:0 0 0 1px rgba(255,112,112,.24),0 0 24px rgba(255,112,112,.18)}.answerCard.sparkle{box-shadow:0 0 0 1px rgba(255,255,255,.12),0 0 26px rgba(255,216,58,.28),0 0 46px rgba(136,225,110,.18)}.answerKey{font-weight:1000;color:var(--yellow)}.answerState{font-weight:900;color:#fff}.answerText{color:#fff;font-size:clamp(1rem,2vw,1.14rem);line-height:1.35}.factCard{padding:18px 20px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,216,58,.08));display:grid;gap:8px;order:-1}.factCard strong{color:var(--yellow)}.sparkles{display:flex;justify-content:center;gap:10px;font-size:1.3rem;letter-spacing:.3rem;animation:twinkle 1.2s ease-in-out infinite}
-    .spinner{width:94px;height:94px;border-radius:999px;border:8px solid rgba(255,255,255,.12);border-top-color:var(--yellow);border-right-color:var(--pink);animation:spin 1s linear infinite;justify-self:center}.loadingLine{min-height:28px;font-size:clamp(1rem,2.4vw,1.25rem);font-weight:900;color:#fff;text-align:center}
-    .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.modeCard{padding:18px;display:grid;gap:8px;cursor:pointer;transition:transform .16s ease,background .16s ease,border-color .16s ease;color:#fff}.modeCard:hover{transform:translateY(-2px)}.modeCard.active{border-color:rgba(255,216,58,.42);background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.12))}.modeIcon{font-size:1.5rem}.setupSection{display:grid;gap:12px;padding:16px;border-radius:26px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.setupSectionHead{display:grid;gap:6px}.setupSectionHead p{margin:0;color:rgba(255,255,255,.72);font-size:.95rem;line-height:1.45}
-    .scoreBoard{display:grid;gap:14px}.scoreHero{padding:22px;border-radius:28px;background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.14));border:1px solid rgba(255,255,255,.1);text-align:center}.scoreRow{padding:14px 16px;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center}.rankAvatar{width:58px;height:58px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.14),rgba(255,119,203,.14));display:grid;place-items:center}.rankAvatar img{width:100%;height:100%;object-fit:cover}.scoreValueWrap{position:relative;min-width:120px;text-align:right;font-weight:1000;display:flex;justify-content:flex-end;align-items:center;gap:10px}.scoreDelta{position:static;color:#a6ff8b;font-weight:1000;animation:scoreFly 2.2s ease forwards}.scoreGlitter{color:var(--yellow);animation:twinkle .9s ease-in-out infinite}.finalActions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
-    .versusCard,.versusIntroCard{width:min(1080px,100%);display:grid;gap:14px;padding:18px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.03))}
-    .versusIntroCard{width:min(920px,100%);text-align:center}
-    .versusHero{position:relative;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(135deg,rgba(255,216,58,.12),rgba(255,119,203,.16))}
-    .versusHero img{display:block;width:100%;height:clamp(160px,24vw,240px);object-fit:cover;opacity:.82}
-    .versusOverlay{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;background:linear-gradient(180deg,rgba(9,0,15,.12),rgba(9,0,15,.72))}
-    .versusOverlay .title{font-size:clamp(2rem,6vw,4rem);text-shadow:0 8px 18px rgba(0,0,0,.4)}
-    .versusOverlay p{max-width:34ch}
-    .versusIntroNames{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
-    .versusIntroCount{justify-self:center;min-width:74px;font-size:1.65rem;padding:10px 16px;border-radius:22px;background:rgba(255,216,58,.16);border:1px solid rgba(255,216,58,.32);color:var(--yellow);font-weight:1000}
-    .versusArena{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr) minmax(0,220px);align-items:center;gap:18px;padding:16px 18px;border-radius:28px;border:1px solid rgba(255,255,255,.1);background:radial-gradient(circle at top,rgba(57,219,255,.09),rgba(255,255,255,.02) 38%,rgba(0,0,0,.16) 100%)}
-    .versusCenter{display:grid;gap:12px;justify-items:center;min-width:0}
-    .versusPlayer{display:grid;justify-items:center;align-content:center;gap:8px;min-height:180px;text-align:center}
-    .versusPlayer.active .versusAvatar{box-shadow:0 0 0 2px rgba(255,216,58,.28),0 0 30px rgba(255,119,203,.16)}
-    .versusPlayer.champion .versusAvatar{box-shadow:0 0 0 2px rgba(255,216,58,.42),0 0 38px rgba(255,216,58,.18),0 0 68px rgba(136,225,110,.12)}
-    .versusAvatar{width:78px;height:78px;border-radius:999px;overflow:hidden;background:linear-gradient(135deg,rgba(47,211,255,.18),rgba(255,119,203,.18));display:grid;place-items:center;transition:box-shadow .18s ease,transform .18s ease}
-    .versusAvatar img{width:100%;height:100%;object-fit:cover}
-    .versusPlayerName{font-size:1.18rem;font-weight:1000;line-height:1.05}
-    .versusPlayerSub{font-size:.86rem;color:var(--muted);line-height:1.18}
-    .versusChoice{font-size:1rem;font-weight:1000;color:var(--yellow);line-height:1.1}
-    .versusRoundGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-    .versusMove{padding:14px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);display:grid;gap:6px;justify-items:center;text-align:center;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
-    .versusMove:hover{transform:translateY(-2px)}
-    .versusMove.active{border-color:rgba(57,219,255,.48);background:linear-gradient(135deg,rgba(57,219,255,.16),rgba(255,119,203,.12))}
-    .versusMove.win{border-color:rgba(136,225,110,.78);background:linear-gradient(135deg,rgba(136,225,110,.24),rgba(57,219,255,.08));box-shadow:0 0 24px rgba(136,225,110,.18)}
-    .versusMove:disabled{opacity:.55;transform:none;cursor:not-allowed}
-    .versusGlyph{font-size:1.9rem;line-height:1}
-    .versusMeta{display:grid;gap:10px;text-align:center}
-    .versusRoundBadge{justify-self:center;display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:linear-gradient(135deg,rgba(255,216,58,.18),rgba(255,119,203,.16));border:1px solid rgba(255,216,58,.28);font-weight:1000}
-    .versusScoreline{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
-    .versusPill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);font-weight:900}
-    .versusPill strong{font-size:1.15rem;color:var(--yellow)}
-    .versusHands{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px}
-    .versusHandWrap{display:grid;justify-items:center;gap:8px}
-    .versusHand{margin:6px;width:150px;height:150px;position:relative;display:inline-block;transform:rotate(10deg);animation:handShake 1s infinite}
-    .versusHand.right{transform:rotateY(180deg);animation:handShakeMirror 1s infinite}
-    .versusHand.revealed,.versusHand.locked{animation:none}
-    .versusHand > div{position:absolute;box-sizing:border-box;border:2px solid rgba(35,13,0,.92);background:linear-gradient(180deg,#ffd66f,#f3aa41);transition:all .18s ease}
-    .versusHand .fist{height:84px;left:30px;top:38px;width:66px;border-radius:18px 0 0 18px}
-    .versusHand .finger{width:52px;height:22px;border-radius:16px;left:60px;transform-origin:0 50%}
-    .versusHand .finger-1{top:38px;--dif:0px}
-    .versusHand .finger-2{top:60px;left:64px;--dif:3px}
-    .versusHand .finger-3{top:82px;--dif:0px}
-    .versusHand .finger-4{top:104px;height:20px;left:56px;--dif:-6px}
-    .versusHand .thumb{width:26px;height:52px;border-radius:0 16px 16px 16px;top:38px;left:60px;border-left:0;box-shadow:-13px 5px 0 -12px rgba(35,13,0,.92)}
-    .versusHand .arm{width:18px;height:56px;left:14px;top:52px;border:0;border-top:2px solid rgba(35,13,0,.92);border-bottom:2px solid rgba(35,13,0,.92);background:linear-gradient(180deg,#f8bd57,#d88a2a)}
-    .versusHand[data-move="scissors"] .finger-1{width:92px;transform:rotate(-5deg)}
-    .versusHand[data-move="scissors"] .finger-2{width:92px;transform:rotate(5deg)}
-    .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(93px + var(--dif));width:58px;border-left:0;border-radius:0 16px 16px 0}
-    .versusBurst{width:66px;height:66px;border-radius:999px;display:grid;place-items:center;background:radial-gradient(circle,rgba(255,216,58,.28),rgba(255,119,203,.08));border:1px solid rgba(255,216,58,.22);font-size:1.1rem;font-weight:1000;color:var(--yellow);box-shadow:0 0 28px rgba(255,216,58,.12)}
-    .versusBurst.champion{background:radial-gradient(circle,rgba(255,216,58,.5),rgba(255,119,203,.14));box-shadow:0 0 36px rgba(255,216,58,.28),0 0 80px rgba(255,216,58,.12);transform:scale(1.08)}
-    .versusChampionFx{display:none;justify-self:center;padding:12px 18px;border-radius:999px;background:linear-gradient(135deg,rgba(255,216,58,.24),rgba(136,225,110,.18));border:1px solid rgba(255,216,58,.38);font-weight:1000;color:#fff;letter-spacing:.03em;box-shadow:0 0 34px rgba(255,216,58,.18);animation:championPulse .9s ease-in-out infinite}
-    .versusChampionFx.on{display:inline-flex;align-items:center;gap:10px}
-    .versusCrown{font-size:1.35rem;filter:drop-shadow(0 3px 10px rgba(255,216,58,.3))}
-    @keyframes handShake{0%,100%{transform:rotate(10deg)}50%{transform:rotate(-10deg)}}
-    @keyframes handShakeMirror{0%,100%{transform:rotateY(180deg) rotate(10deg)}50%{transform:rotateY(180deg) rotate(-10deg)}}
-    @keyframes championPulse{0%,100%{transform:scale(.98);opacity:.86}50%{transform:scale(1.03);opacity:1}}
-    .overlay{position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(5,2,12,.76);backdrop-filter:blur(12px);z-index:80}.overlay.on{display:grid}.modalCard{width:min(760px,100%);max-height:min(86vh,920px);overflow:auto;padding:28px;display:grid;gap:18px}.emojiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.emojiChoice{padding:18px;border-radius:22px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);display:grid;gap:8px;place-items:center}.emojiChoice.active{border-color:rgba(255,216,58,.42)}.emojiBall{width:84px;height:84px;border-radius:999px;display:grid;place-items:center;font-size:2.35rem;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}.miniForm{display:grid;gap:14px}.miniForm input,.miniForm textarea{width:100%;padding:14px 16px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#fff;outline:none}.gridTwo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.choiceBlock{display:grid;gap:10px}.pillChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pillChoice{padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;font-weight:900;text-align:center}.pillChoice.active{border-color:rgba(255,216,58,.48);background:linear-gradient(135deg,rgba(255,216,58,.16),rgba(255,119,203,.12));color:#fff}
-    @keyframes sceneIn{from{opacity:0;transform:translateY(20px) scale(.985)}to{transform:none;opacity:1}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes scoreFly{0%{opacity:0;transform:translateX(-26px) translateY(8px) scale(.82)}18%{opacity:1}72%{opacity:1}100%{opacity:0;transform:translateX(50px) translateY(-10px) scale(1.08)}}@keyframes twinkle{0%,100%{transform:scale(.94);opacity:.72}50%{transform:scale(1.14);opacity:1}}@keyframes avatarSettle{from{opacity:.52;transform:translateY(4px) scale(.98)}to{opacity:1;transform:none}}
-    @media (max-width:980px){
-      body{padding:10px}
-      .app{gap:12px}
-      .topbar{padding:10px 14px;min-height:78px}
-      .topLeft,.topRight{gap:8px}
-      .topCenter{top:50%}
-      .topCenter{width:172px;height:40px;max-height:40px}
-      .menuBtn,.identity,.soundChip{height:46px;padding:0 12px;font-size:.92rem}
-      .menuBtn{padding:0 14px}
-      .soundPanel{min-width:min(320px,92vw)}
-      .miniAvatar{width:36px;height:36px}
-      .identityName{font-size:.92rem}
-      .identityRole{font-size:.7rem}
-      .intro{min-height:calc(100vh - 20px)}
-      .introCard{padding:28px 18px;border-radius:24px}
-      .introLead{font-size:1rem}
-      .sceneSplit,.modes{grid-template-columns:1fr !important}
-      .sceneSplit{gap:12px;width:100% !important}
-      .panel,.heroCard,.modalCard{padding:18px;border-radius:22px}
-      .panel.narrow{width:100%}
-      .actions{gap:10px}
-      .actions.between{flex-wrap:wrap}
-      .actions.between .btn{flex:1 1 140px}
-      .btn{padding:13px 16px}
-      .field input{padding:13px 14px}
-        .avatarEditor{--avatar-card-w:100px;padding:16px 11px 11px}
-        .avatarCarousel{grid-template-columns:38px minmax(0,1fr) 38px;gap:6px}
-        .avatarViewport{padding:16px 0 12px}
-        .avatarRail{gap:6px;min-height:106px}
-        .avatarCenterFrame{top:8px;bottom:8px}
-        .avatarCard{padding:8px 5px 7px;border-radius:18px;min-height:102px}
-        .avatarCard img{max-width:64px}
-        .avatarNav{width:38px;height:38px}
-      .avatarStack{width:148px;height:148px}
-      .playerCard{grid-template-columns:88px minmax(0,1fr);gap:12px;padding:14px;align-items:center}
-      .playerName,.playerSub{text-align:left}
-      .playerName{font-size:1.15rem}
-      .questionHeader{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}
-      .questionBox{gap:16px}
-      .questionHeader .sceneStack{min-width:0}
-      .timerRing{width:76px;height:76px;justify-self:end;align-self:start}
-      .title{font-size:clamp(1.6rem,8vw,2.4rem)}
-      .subtitle{font-size:clamp(1.1rem,6vw,1.6rem)}
-      .bigCount{font-size:clamp(4.5rem,28vw,7rem)}
-      .answerCard{padding:16px;align-items:flex-start}
-      .answerCard:hover{transform:none}
-      .answerState{font-size:.9rem}
-      .modeCard{padding:16px;min-height:auto}
-      .modeCard p{font-size:.95rem}
-      .toggleBar{padding:12px 14px}
-      .scoreRow{grid-template-columns:56px minmax(0,1fr) auto;padding:12px}
-      .rankAvatar{width:48px;height:48px}
-      .emojiGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .gridTwo,.pillChoices{grid-template-columns:1fr}
-      .versusCard,.versusIntroCard{padding:16px;gap:12px}
-      .versusHands{gap:8px}
-      .versusHand{width:124px;height:124px}
-      .versusHand .fist{height:70px;left:24px;top:30px;width:56px}
-      .versusHand .finger{width:44px;height:18px;left:52px}
-      .versusHand .finger-1{top:30px}
-      .versusHand .finger-2{top:48px;left:55px}
-      .versusHand .finger-3{top:66px}
-      .versusHand .finger-4{top:84px;height:17px;left:48px}
-      .versusHand .thumb{width:22px;height:44px;top:30px;left:52px}
-      .versusHand .arm{width:14px;height:44px;left:12px;top:42px}
-      .versusHand[data-move="scissors"] .finger-1,.versusHand[data-move="scissors"] .finger-2{width:76px}
-      .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(76px + var(--dif));width:50px}
-    }
-    @media (max-width:640px){
-      body{padding:8px;overflow-x:hidden;overflow-y:auto}
-      .app,.shell{gap:10px}
-      .shell{min-height:calc(100dvh - 16px)}
-      .topbar{position:sticky;top:8px;z-index:20;padding:4px 8px;border-radius:20px;height:46px;min-height:46px;display:flex;align-items:center;justify-content:space-between}
-      .topLeft,.topRight{gap:6px;min-width:0;position:relative;z-index:2}
-      .topLeft{flex:0 0 118px;justify-content:flex-start}
-      .topRight{flex:0 0 118px;justify-content:flex-end}
-      .topCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);justify-content:center;align-items:center;pointer-events:none;z-index:1}
-      .menuBtn,.identity,.soundChip{width:auto;justify-content:center;height:30px;padding:0 8px;border-radius:16px}
-      .menuBtn{min-width:0;font-size:0;padding:0 10px;gap:8px}
-      .menuBtn span:not(.menuGlyph){display:none}
-      .menuBtn img{width:22px;height:22px;margin:0}
-      .menuGlyph{font-size:1.12rem}
-      .soundChip{min-width:30px;height:30px;font-size:.74rem;padding:0 7px;border-radius:999px}
-      .soundChip .soundLabel{display:none}
-      .identity{max-width:118px;gap:6px;padding:0 8px;height:30px}
-      .miniAvatar{order:2;width:24px;height:24px;flex-basis:24px}
-      .identityMeta{order:1;gap:2px;min-width:0}
-      .identityName{font-size:.64rem;line-height:.94;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-align:left}
-      .identityRole{font-size:.48rem;line-height:.94}
-      .summaryScore{font-size:.62rem}
-      .topCenter{width:132px;height:28px;max-height:28px}
-      .menuDrop{position:fixed;top:58px;left:8px;right:auto;min-width:210px;max-width:min(280px,calc(100vw - 16px));max-height:calc(100vh - 70px);overflow:auto;z-index:130}
-        .soundPanel{position:fixed;top:58px;left:50%;right:auto;transform:translateX(-50%);min-width:0;width:min(340px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100vh - 70px);overflow:auto;-webkit-overflow-scrolling:touch;z-index:131}
-      .actions.center .btn{flex:1 1 100%}
-      .actions.between .btn{flex:1 1 calc(50% - 4px)}
-      .modalCard{max-height:calc(100vh - 20px);padding:16px;gap:14px;border-radius:22px}
-      .sceneWrap{min-height:calc(100dvh - 84px)}
-      .sceneStack{gap:12px}
-      .panel,.heroCard{padding:14px;border-radius:20px}
-      .kicker{padding:5px 10px;font-size:10px}
-      .subtitle{font-size:clamp(1.02rem,5vw,1.42rem)}
-      .field{gap:6px}
-      .field input{height:44px;padding:0 14px;border-radius:16px}
-      .codeBadge,.countPill{padding:8px 12px;border-radius:16px;font-size:1rem}
-        .avatarEditor{--avatar-card-w:92px;--avatar-gap:8px;gap:8px;padding:16px 12px 12px;border-radius:20px}
-        .avatarCarousel{grid-template-columns:34px minmax(0,1fr) 34px;gap:4px}
-        .avatarViewport{padding:14px 0 10px;width:calc((var(--avatar-card-w) * 3) + (var(--avatar-gap) * 2))}
-        .avatarRail{min-height:98px}
-        .avatarCenterFrame{top:8px;bottom:8px;border-radius:18px}
-        .avatarCard{min-height:94px;padding:8px 5px 7px;border-radius:16px}
-        .avatarCard img{max-width:54px}
-        .avatarCard span{font-size:.64rem}
-        .avatarNav{width:34px;height:34px;font-size:1.05rem}
-      .avatarLegend{display:block;font-size:.8rem}
-      .avatarHint{display:none}
-      .miniForm{gap:12px}
-      .miniForm input,.miniForm textarea{padding:12px 14px}
-      .choiceBlock{gap:8px}
-      .pillChoices{gap:8px}
-      .pillChoice{padding:11px 12px;border-radius:16px;font-size:.96rem}
-      .playerCard{grid-template-columns:1fr;justify-items:center;text-align:center}
-      .playerName,.playerSub{text-align:center}
-      .questionAnswers,.answers{gap:10px}
-      .answerCard{flex-direction:column;align-items:flex-start}
-      .modeHead{align-items:flex-start}
-      .scoreRow{grid-template-columns:1fr;justify-items:center;text-align:center}
-      .scoreRow .sceneStack{justify-items:center}
-      .questionTitle{font-size:clamp(1.34rem,8.8vw,2.02rem);line-height:1}
-      .questionTitle.compact{font-size:clamp(1.08rem,6.9vw,1.54rem);line-height:1.02}
-      .questionTitle.tight{font-size:clamp(.94rem,5.8vw,1.24rem);line-height:1.05}
-      .questionTitle.ultraTight{font-size:clamp(.84rem,5vw,1.06rem);line-height:1.07}
-      .questionBox{gap:14px}
-      .questionHeader{grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start}
-      .questionHeader .sceneStack{min-width:0}
-      .timerRing{width:74px;height:74px;justify-self:end;align-self:start}
-      .timerInner{font-size:1.14rem}
-      .answerCard{padding:13px 15px}
-      .answerText{font-size:.98rem}
-      .answers.twoCols{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-      .answers.twoCols .answerCard{min-height:76px;padding:10px 11px;gap:7px}
-      .answers.twoCols .answerText{font-size:.88rem;line-height:1.14}
-      .answers.twoCols .answerState{font-size:.78rem}
-      .answers.twoCols .answerCard:last-child:nth-child(odd){grid-column:1 / -1}
-      .categoryLead{grid-template-columns:1fr;justify-items:center;gap:14px}
-      .categoryLead .categoryArt{width:min(180px,48vw)}
-      .categoryLead .answerCard{min-height:0}
-      .versusHero img{height:140px}
-      .versusOverlay{padding:16px}
-      .versusOverlay .title{font-size:clamp(1.8rem,10vw,2.8rem)}
-      .versusIntroCount{font-size:1.45rem;min-width:64px;padding:8px 14px}
-      .versusMeta{gap:8px}
-      .versusRoundBadge,.versusPill{padding:8px 12px;font-size:.92rem}
-      .versusArena{grid-template-columns:minmax(0,148px) minmax(0,1fr) minmax(0,148px);gap:10px;padding:12px}
-      .versusCenter{gap:8px}
-      .versusHands{gap:4px}
-      .versusHand{width:94px;height:94px;margin:2px}
-      .versusHand .fist{height:52px;left:18px;top:24px;width:42px;border-radius:14px 0 0 14px}
-      .versusHand .finger{width:34px;height:14px;left:40px;border-radius:12px}
-      .versusHand .finger-1{top:24px}
-      .versusHand .finger-2{top:38px;left:43px}
-      .versusHand .finger-3{top:52px}
-      .versusHand .finger-4{top:66px;height:13px;left:37px}
-      .versusHand .thumb{width:18px;height:34px;top:24px;left:40px;border-radius:0 12px 12px 12px}
-      .versusHand .arm{width:11px;height:34px;left:9px;top:34px}
-      .versusHand[data-move="scissors"] .finger-1,.versusHand[data-move="scissors"] .finger-2{width:58px}
-      .versusHand[data-move="paper"] .finger-1,.versusHand[data-move="paper"] .finger-2,.versusHand[data-move="paper"] .finger-3,.versusHand[data-move="paper"] .finger-4{left:calc(58px + var(--dif));width:36px}
-      .versusBurst{width:48px;height:48px;font-size:.9rem}
-      .versusPlayer{min-height:138px;gap:6px}
-      .versusAvatar{width:56px;height:56px}
-      .versusPlayerName{font-size:1rem}
-      .versusPlayerSub{font-size:.76rem}
-      .versusChoice{font-size:.92rem}
-      .versusRoundGrid{gap:8px}
-      .versusMove{padding:10px 6px;border-radius:18px}
-      .versusGlyph{font-size:1.5rem}
-      .versusChampionFx{padding:10px 14px;font-size:.92rem}
-      #profileLayout{width:100% !important}
-      #profileScene{margin-top:0}
-      #profileLayout > article:first-child{gap:10px}
-      #profileLayout .subtitle{font-size:1.04rem}
-      #profileLayout .codeBadge{justify-self:stretch}
-      #profileLayout .actions.between{gap:8px;flex-wrap:nowrap}
-      #profileLayout .btn{height:40px;padding:0 14px}
-      #profileLayout .status{min-height:0}
-      #setupLayout{width:100% !important}
-      #setupLayout .panel{padding:12px}
-      #setupLayout .modes{gap:10px}
-      #setupLayout .setupSection{padding:12px;gap:10px}
-      #setupLayout .setupSectionHead p{font-size:.82rem}
-      #setupLayout .modeCard{padding:12px;gap:6px}
-      #setupLayout .modeCard strong{font-size:.95rem}
-      #setupLayout .modeCard p{font-size:.78rem;line-height:1.24}
-      #setupActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-      #setupActions .field{min-width:0 !important}
-      #setupActions .btn{width:100%;justify-content:center}
-    }
-    @media (max-width:640px) and (max-height:920px){
-      .topbar{height:42px;min-height:42px;padding:4px 7px}
-      .topLeft{flex-basis:110px}
-      .topRight{flex-basis:110px}
-      .topCenter{width:126px;height:26px;max-height:26px}
-      .menuBtn,.identity,.soundChip{height:28px;border-radius:15px}
-      .identity{max-width:108px;padding:0 7px}
-      .miniAvatar{width:22px;height:22px;flex-basis:22px}
-      .identityName{font-size:.62rem}
-      .identityRole{font-size:.46rem}
-      .sceneWrap{min-height:calc(100dvh - 78px)}
-      .panel,.heroCard{padding:12px;border-radius:18px}
-      .sceneStack{gap:10px}
-      .subtitle{font-size:1rem}
-      .field input{height:40px}
-      .codeBadge{padding:7px 10px}
-        .avatarEditor{--avatar-card-w:84px;--avatar-gap:6px;padding:14px 8px 8px;gap:6px}
-        .avatarViewport{padding:12px 0 10px}
-        .avatarRail{min-height:88px}
-        .avatarCenterFrame{top:8px;bottom:8px;border-radius:16px}
-        .avatarCard{min-height:82px;padding:7px 4px 5px}
-        .avatarCard img{max-width:48px}
-      .avatarCard span{font-size:.62rem}
-      .avatarNav{width:32px;height:32px;font-size:1rem}
-      .avatarLegend{display:block;font-size:.76rem}
-      #profileLayout .btn{height:38px}
-      #setupLayout .modes{grid-template-columns:repeat(2,minmax(0,1fr))}
-      #setupLayout .setupSection{padding:12px 10px}
-      #setupLayout .modeCard{padding:11px 10px;min-height:0}
-      #setupLayout .modeCard strong{font-size:.9rem}
-      #setupLayout .modeCard p{font-size:.73rem;line-height:1.2}
-      .menuDrop,.soundPanel{top:54px;max-height:calc(100vh - 62px)}
-    }
-    @media (max-height:520px){
-      body{padding:6px}
-      .app,.shell{gap:8px}
-      .sceneWrap{min-height:calc(100vh - 108px)}
-      .topbar{padding:8px 10px;border-radius:20px;min-height:58px}
-      .topLeft{flex-basis:100px}
-      .topRight{flex-basis:100px}
-      .topCenter{width:120px;height:24px;max-height:24px}
-      .menuBtn,.identity,.soundChip{padding:4px 6px}
-      .miniAvatar{width:20px;height:20px;flex-basis:20px}
-      .identity{min-height:30px}
-      .identityName{font-size:.66rem}
-      .identityRole{font-size:.48rem}
-      .summaryScore{font-size:.7rem}
-      .panel,.heroCard{padding:14px;border-radius:18px}
-      .heroCard{gap:12px}
-      .introLogo{width:min(170px,56%)}
-      .kicker{padding:5px 10px;font-size:10px}
-      .subtitle{font-size:clamp(1rem,4vw,1.35rem)}
-      .title{font-size:clamp(1.3rem,5vw,2rem)}
-      .bigCount{font-size:clamp(3rem,16vw,5rem)}
-      .questionBox{gap:10px}
-      .questionTitle{font-size:clamp(1.15rem,5vw,1.8rem)}
-      .questionHeader{grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}
-      .questionHeader .sceneStack{min-width:0}
-      .timerRing{width:62px;height:62px;padding:5px;justify-self:end;align-self:start}
-      .timerInner{font-size:1rem}
-      .answerCard{padding:12px 14px}
-      .countPill,.codeBadge{padding:8px 12px}
-      .versusCard,.versusIntroCard{gap:10px;padding:12px}
-      .versusHero img{height:120px}
-      .versusArena{grid-template-columns:minmax(0,112px) minmax(0,1fr) minmax(0,112px);gap:8px;padding:10px}
-      .versusHand{width:86px;height:86px}
-      .versusBurst{width:42px;height:42px}
-      .versusPlayer{min-height:126px;gap:5px}
-      .versusPlayerName{font-size:.92rem}
-      .versusPlayerSub{font-size:.72rem}
-      .versusRoundGrid{gap:6px}
-      .versusMove{padding:8px 6px}
-    }
-    .langSwitch{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-    .langBtn{min-width:78px}
-    @media (max-width:520px) and (max-height:520px){
-      .topbar{min-height:50px;padding:6px 8px}
-      .topLeft{flex-basis:92px}
-      .topRight{flex-basis:92px}
-      .topbar{height:38px;min-height:38px;padding:4px 6px}
-      .topCenter{width:110px;height:22px;max-height:22px}
-      .menuBtn img{width:18px;height:18px}
-      .menuGlyph{font-size:.96rem}
-        .soundChip{min-width:26px;min-height:26px;padding:3px 5px}
-        .identity{max-width:92px;padding:3px 5px}
-        .panel,.heroCard{padding:12px}
-        .introLogo{width:min(145px,50%)}
-        .bigCount{font-size:clamp(2.7rem,14vw,4.2rem)}
-      }
-  </style>
-</head>
-<body>
-  <main class="app">
-    <section class="intro on" id="introScene">
-      <article class="panel introCard">
-        <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" />
-        <div class="langPicker introLangPicker" id="introLangPicker">
-          <button class="langBtn" id="langEsIntro" type="button" aria-label="Español" title="Español" data-lang="es">🇪🇸</button>
-          <button class="langBtn" id="langEnIntro" type="button" aria-label="English" title="English" data-lang="en">🇺🇸</button>
-        </div>
-        <p class="introLead" id="introLead">El juego de trivia mas actualizado y divertido.</p>
-        <div class="actions center" style="margin-top:28px">
-          <button class="btn btnOk" id="btnContinue" hidden>Continuar partida</button>
-          <button class="btn btnPrimary" id="btnHost">Soy el anfitrion</button>
-          <button class="btn btnGhost" id="btnGuest">Soy el invitado</button>
-        </div>
-      </article>
-    </section>
 
-    <section class="shell" id="shell">
-      <header class="topbar">
-        <div class="topLeft">
-          <div class="menuWrap" id="menuWrap">
-            <button class="menuBtn" id="menuBtn" type="button" aria-label="Abrir menu de Zaurio"><span class="menuGlyph">☰</span><img src="/shared/assets/brand/favicon-32x32.png" alt=""></button>
-            <nav class="menuDrop">
-              <a href="https://zaurio.es"><img src="/shared/assets/brand/favicon-32x32.png" alt=""><span id="menuHomeLinkLabel">Inicio</span></a>
-              <a href="https://miercoles.zaurio.es"><img src="/shared/assets/brand/miercoles.png" alt="">Miercoles</a>
-              <a href="https://secretos.zaurio.es"><img src="/shared/assets/brand/confesion.png" alt="">Secretos</a>
-              <a href="https://herramientas.zaurio.es"><img src="/shared/assets/brand/emprezaurio-icono.png" alt="">Herramientas</a>
-              <a href="https://juegos.zaurio.es"><img src="/shared/assets/brand/trivialodon-icono.png" alt="">Juegos</a>
-            </nav>
-          </div>
-          <div class="soundWrap" id="soundWrap">
-            <button class="soundChip" id="soundChip" type="button" aria-label="Audio y ajustes" hidden><span class="soundStack"><span class="soundGlyph" id="soundChipGlyph">🔊</span><span class="gearGlyph">⚙️</span></span><span class="soundLabel" id="soundChipLabel">Audio</span></button>
-            <div class="soundPanel" id="soundPanel">
-              <div class="soundPanelRow">
-                <span class="soundMini" id="soundMini">Sonido</span>
-                <button class="btn btnGhost" id="btnToggleMute" type="button">Mute</button>
-              </div>
-              <div class="field" style="gap:6px">
-                <label for="soundVolumeInput" id="soundVolumeLabel">Volumen</label>
-                <input id="soundVolumeInput" type="range" min="0" max="100" step="1" value="70">
-              </div>
-              <div class="settingsSection settingsCast" id="settingsCast">
-                <span class="settingsSectionTitle">TV</span>
-                <div class="castRow">
-                  <div class="castMeta">
-                    <strong id="castDeviceName">Sin dispositivo conectado</strong>
-                    <span id="castDeviceHint">Busca tu Chromecast y lanza la pantalla de TV de la sala actual.</span>
-                  </div>
-                  <button class="btn btnPrimary" id="btnCastConnect" type="button"><span class="btnIcon">📺</span>Enviar a TV</button>
-                </div>
-                <div class="field" style="gap:6px">
-                  <label for="castVolumeInput" id="castVolumeLabel">Volumen de la TV</label>
-                  <input id="castVolumeInput" type="range" min="0" max="100" step="1" value="70">
-                </div>
-                <div class="actions">
-                  <button class="btn btnGhost" id="btnCastMute" type="button"><span class="btnIcon">🔇</span>Mute TV</button>
-                  <button class="btn btnGhost" id="btnCastDisconnect" type="button"><span class="btnIcon">⏹</span>Desconectar</button>
-                </div>
-                <div class="castStatus" id="castStatus"></div>
-              </div>
-              <div class="settingsSection">
-                <span class="settingsSectionTitle" id="settingsLangTitle">Idioma</span>
-                <div class="langPicker" id="settingsLangPicker">
-                  <button class="langBtn" id="langEs" type="button" aria-label="Español" title="Español" data-lang="es">🇪🇸</button>
-                  <button class="langBtn" id="langEn" type="button" aria-label="English" title="English" data-lang="en">🇺🇸</button>
-                </div>
-              </div>
-              <div class="settingsSection">
-                <span class="settingsSectionTitle" id="settingsGameTitle">Partida</span>
-                <div class="settingsActions">
-                  <button class="btn btnGhost" id="btnEndGame" type="button"><span class="btnIcon">🛑</span><span id="btnEndGameText">Terminar partida</span></button>
-                  <button class="btn btnGhost" id="btnExitGame" type="button"><span class="btnIcon">↩</span><span id="btnExitGameText">Salir</span></button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="topCenter"><img class="logoMark" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon"></div>
-        <div class="topRight">
-          <button class="identity" id="identity" type="button" hidden>
-            <div class="identityMeta">
-              <div class="identityName" id="identityName">Jugador</div>
-              <div class="identityRole" id="identityRole">Puntos <span class="scoreValue" id="scoreChipValue">0</span></div>
-            </div>
-            <div class="miniAvatar" id="identityAvatar"></div>
-          </button>
-        </div>
-      </header>
-
-      <section class="scene sceneCenter on" id="profileScene">
-        <div class="sceneSplit" id="profileLayout" style="width:min(1160px,100%)">
-          <article class="panel sceneStack">
-            <span class="kicker" id="profileKicker">Sala</span>
-            <h2 class="subtitle" id="profileTitle">Comparte el codigo de sala</h2>
-            <div class="codeBadge" id="roomBadge">------</div>
-            <div class="field" id="joinCodeField" hidden>
-              <label for="joinCodeInput" id="joinCodeLabel">Codigo de sala</label>
-              <input id="joinCodeInput" maxlength="4" inputmode="numeric" placeholder="1234" />
-            </div>
-            <div class="field">
-              <label for="nameInput">Tu nombre</label>
-              <input id="nameInput" maxlength="26" placeholder="Ejemplo: Marta Rex" />
-            </div>
-            <div class="avatarEditor">
-              <span class="kicker" id="avatarEditorKicker">Escoge tu avatar</span>
-              <div class="avatarCarousel">
-                <button class="avatarNav" id="btnAvatarPrev" type="button" aria-label="Avatar anterior">‹</button>
-                <div class="avatarViewport">
-                  <div class="avatarCenterFrame" aria-hidden="true"></div>
-                  <div class="avatarRail" id="avatarRail"></div>
-                </div>
-                <button class="avatarNav" id="btnAvatarNext" type="button" aria-label="Avatar siguiente">›</button>
-              </div>
-              <p class="avatarLegend" id="avatarLegend">Chispa</p>
-              <p class="avatarHint"></p>
-            </div>
-            <div class="status info" id="profileStatus"></div>
-            <div class="actions between">
-              <button class="btn btnGhost" id="btnBack" type="button">Volver</button>
-              <button class="btn btnOk" id="btnReady" type="button">Siguiente</button>
-            </div>
-          </article>
-          <article class="panel sceneStack" id="profileSideCard">
-            <span class="kicker" id="profileSideKicker">Sala</span>
-            <h2 class="subtitle" id="profileSideTitle">Entrando en Trivialodon</h2>
-            <p id="profileSideText">Elige tu avatar, pon tu nombre y entra listo a la sala.</p>
-            <div class="playersGrid" id="profilePlayers"></div>
-          </article>
-        </div>
-      </section>
-
-      <section class="scene sceneCenter" id="joinScene">
-        <article class="panel narrow sceneStack">
-          <span class="kicker" id="joinKicker">Invitado</span>
-      <h2 class="subtitle" id="joinTitle">Introduce el codigo de sala</h2>
-      <p id="joinLead">Primero entramos en la sala. En la siguiente pantalla ya te pedire nombre y avatar.</p>
-      <div class="field">
-        <label for="joinCodeOnlyInput" id="joinCodeOnlyLabel">Codigo de sala</label>
-        <input id="joinCodeOnlyInput" maxlength="4" inputmode="numeric" placeholder="1234" />
-      </div>
-          <div class="status info" id="joinStatus">Escribe el codigo tal como te lo haya dado el anfitrion.</div>
-          <div class="actions between">
-            <button class="btn btnGhost" id="btnJoinBack" type="button">Volver</button>
-            <button class="btn btnPrimary" id="btnJoinNext" type="button">Siguiente</button>
-          </div>
-        </article>
-      </section>
-
-      <section class="scene sceneCenter" id="lobbyScene">
-        <div class="sceneSplit" id="lobbyLayout" style="width:min(1180px,100%)">
-          <article class="panel sceneStack" id="lobbySide"></article>
-          <article class="panel sceneStack">
-            <div class="actions between">
-              <div class="sceneStack" style="gap:10px">
-                <span class="kicker" id="lobbyKicker">Lista de jugadores</span>
-                <h2 class="subtitle" id="lobbyTitle">Preparando la sala</h2>
-                <p id="lobbyDesc">Quien haya entrado pero aun no este listo aparece con dinosaurio y una frase divertida.</p>
-              </div>
-              <button class="btn btnPrimary" id="btnToSetup" type="button" disabled>Siguiente</button>
-            </div>
-            <div class="playersGrid" id="lobbyPlayers"></div>
-          </article>
-        </div>
-      </section>
-
-      <section class="scene sceneCenter" id="setupScene">
-        <div class="sceneSplit" id="setupLayout" style="width:min(1200px,100%)">
-          <article class="panel sceneStack" id="setupSide"></article>
-          <article class="panel sceneStack">
-            <div class="sceneStack" style="gap:10px">
-              <span class="kicker" id="setupKicker">Configuracion</span>
-              <h2 class="subtitle" id="setupTitle">Preparamos la partida</h2>
-              <p id="setupDesc">Elige el modo y la duracion antes de lanzar la ronda.</p>
-            </div>
-            <section class="setupSection">
-              <div class="setupSectionHead">
-                <span class="kicker" id="modesKicker">Modos de juego</span>
-                <p id="modesLead">Escoge entre la experiencia clasica o una ronda personalizada.</p>
-              </div>
-              <div class="modes" id="modeGrid"></div>
-            </section>
-            <section class="setupSection">
-              <div class="setupSectionHead">
-                <span class="kicker" id="durationKicker">Duracion</span>
-                <p id="durationLead">Decide si la partida va por tiempo, por numero de preguntas o en formato olimpico.</p>
-              </div>
-              <div class="modes" id="durationGrid"></div>
-            </section>
-            <div class="actions between" id="setupActions"></div>
-          </article>
-        </div>
-      </section>
-
-      <section class="scene sceneCenter sceneWrap" id="generatingScene">
-        <article class="heroCard" style="width:min(860px,100%)">
-          <img class="introLogo" src="/shared/assets/brand/trivialodon.png" alt="Trivialodon" style="width:min(280px,70%);margin-bottom:0">
-          <span class="kicker" id="generatingKicker" style="justify-self:center">Personalizado</span>
-          <div class="spinner"></div>
-          <h2 class="subtitle" id="generatingTitle" style="text-align:center">Trivialodon esta montando la ronda</h2>
-          <p class="loadingLine" id="generatingLine">Buscando preguntas con chispa jurasica...</p>
-        </article>
-      </section>
-
-      <section class="scene sceneCenter sceneWrap" id="pausedScene">
-        <article class="heroCard" style="width:min(860px,100%)">
-          <span class="kicker" id="pausedKicker" style="justify-self:center">Sesion</span>
-          <h2 class="subtitle" id="pausedTitle" style="text-align:center">Juego pausado</h2>
-          <p id="pausedCopy" style="text-align:center">El anfitrion ha pausado la partida. Enseguida seguimos.</p>
-          <div class="actions center" id="pausedActions"></div>
-        </article>
-      </section>
-
-      <section class="scene sceneCenter sceneWrap" id="countdownScene">
-        <article class="heroCard" style="width:min(860px,100%)">
-          <span class="kicker" id="countdownKicker" style="justify-self:center">Cuenta atras</span>
-          <img class="categoryArt" id="countdownCategoryArt" alt="" hidden>
-          <h2 class="subtitle" id="countdownCategory">Cultura general</h2>
-          <div class="bigCount" id="countdownValue">4</div>
-          <p id="countdownCopy">Respira. Enseguida empieza la accion.</p>
-          <div class="actions center" id="countdownActions"></div>
-        </article>
-      </section>
-
-      <section class="scene sceneCenter sceneWrap" id="questionScene">
-        <article class="panel questionBox" style="width:min(980px,100%)">
-          <div class="questionHeader">
-            <div class="sceneStack" style="gap:10px">
-              <span class="kicker" id="questionKicker">Pregunta</span>
-              <h1 class="title questionTitle" id="questionPrompt">Pregunta</h1>
-              <p id="questionCopy">Marca tu respuesta antes de que termine la cuenta atras.</p>
-            </div>
-            <div class="timerRing" id="questionTimerRing" style="--timer:1">
-              <div class="timerInner" id="questionTimer">20</div>
-            </div>
-          </div>
-          <div class="answers" id="questionAnswers"></div>
-        </article>
-      </section>
-
-      <section class="scene sceneCenter sceneWrap" id="answerScene">
-        <article class="heroCard" style="width:min(900px,100%)">
-          <span class="kicker" id="answerKicker" style="justify-self:center">Respuesta correcta</span>
-          <h1 class="title" id="answerCorrect">Marte</h1>
-          <p id="answerPrompt">El planeta rojo era Marte.</p>
-        </article>
-      </section>
-
-      <section class="scene sceneCenter sceneWrap" id="scoresScene">
-        <article class="panel scoreBoard" style="width:min(980px,100%)">
-          <div class="scoreHero">
-            <span class="kicker" id="scoresKicker">Marcador</span>
-            <h2 class="subtitle" id="scoresTitle">Puntuacion del round</h2>
-            <p id="scoresLead">Un momento para leer el ranking.</p>
-          </div>
-          <div id="scoresRows"></div>
-          <div class="finalActions" id="finalActions"></div>
-        </article>
-      </section>
-
-      <section class="scene sceneCenter sceneWrap" id="versusIntroScene">
-        <article class="panel versusIntroCard">
-          <div class="versusHero">
-            <img src="/trivialodon/assets/vs.png" alt="Versus">
-            <div class="versusOverlay">
-              <div class="sceneStack" style="gap:10px;justify-items:center">
-                <span class="kicker" id="versusIntroKicker">Desempate jurasico</span>
-                <h2 class="title" id="versusIntroTitle">VERSUS!</h2>
-                <p id="versusIntroLead">Dos dinos no pueden seguir empatando.</p>
-              </div>
-            </div>
-          </div>
-          <div class="versusIntroNames" id="versusIntroNames"></div>
-          <p id="versusIntroCopy">Teneis unos segundos para prepararos. En la siguiente pantalla elegireis jugada.</p>
-          <div class="versusIntroCount" id="versusIntroCount">4</div>
-        </article>
-      </section>
-
-      <section class="scene sceneCenter sceneWrap" id="versusScene">
-        <article class="panel versusCard">
-          <div class="versusMeta">
-            <span class="kicker" id="versusKicker" style="justify-self:center">Combate</span>
-            <h2 class="subtitle" id="versusTitle">Decidid con las manos</h2>
-            <p id="versusLead">Dos dinos no pueden seguir empatando.</p>
-            <div class="versusRoundBadge" id="versusRoundBadge">Ronda 1</div>
-          </div>
-          <div class="versusArena">
-            <article class="versusPlayer" id="versusPlayerA"></article>
-            <div class="versusCenter">
-              <div class="versusHands">
-                <div class="versusHandWrap">
-                  <div class="versusHand" id="versusHandA" data-move="rock">
-                    <div class="fist"></div>
-                    <div class="finger finger-1"></div>
-                    <div class="finger finger-2"></div>
-                    <div class="finger finger-3"></div>
-                    <div class="finger finger-4"></div>
-                    <div class="thumb"></div>
-                    <div class="arm"></div>
-                  </div>
-                </div>
-                <div class="versusBurst" id="versusBurst">VS</div>
-                <div class="versusHandWrap">
-                  <div class="versusHand right" id="versusHandB" data-move="rock">
-                    <div class="fist"></div>
-                    <div class="finger finger-1"></div>
-                    <div class="finger finger-2"></div>
-                    <div class="finger finger-3"></div>
-                    <div class="finger finger-4"></div>
-                    <div class="thumb"></div>
-                    <div class="arm"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <article class="versusPlayer" id="versusPlayerB"></article>
-          </div>
-          <div class="versusChampionFx" id="versusChampionFx"><span class="versusCrown">👑</span><span id="versusChampionText">Victoria jurasica</span></div>
-          <div class="versusMeta">
-            <div class="versusScoreline" id="versusScoreline"></div>
-            <div class="countPill" style="justify-self:center" id="versusTimer">5</div>
-            <p id="versusRoundCopy">Teneis 5 segundos para marcar.</p>
-          </div>
-          <div class="versusRoundGrid" id="versusButtons"></div>
-        </article>
-      </section>
-    </section>
-  </main>
-  <div class="overlay" id="scoreModal">
-    <div class="modalCard">
-      <span class="kicker" id="scoreModalKicker">Marcador</span>
-      <h2 class="subtitle" id="scoreModalTitle">Puntos de esta sesion</h2>
-      <div id="scoreModalRows"></div>
-      <div class="actions between">
-        <span></span>
-        <button class="btn btnPrimary" id="btnCloseScore" type="button">Cerrar</button>
-      </div>
-    </div>
-  </div>
-  <div class="overlay" id="resumeModal">
-    <div class="modalCard">
-      <span class="kicker" id="resumeKicker">Sesion guardada</span>
-      <h2 class="subtitle" id="resumeTitle">Quieres continuar donde lo dejaste?</h2>
-      <p id="resumeText">Hemos recuperado tu sala, tu perfil y el estado actual. Puedes seguir jugando o empezar desde cero.</p>
-      <div class="actions between">
-        <button class="btn btnGhost" id="btnResumeNew" type="button">Empezar nueva partida</button>
-        <button class="btn btnPrimary" id="btnResumeContinue" type="button">Continuar juego</button>
-      </div>
-    </div>
-  </div>
-  <div class="overlay" id="durationModal">
-    <div class="modalCard">
-      <span class="kicker" id="durationModalKicker">Duracion</span>
-      <h2 class="subtitle" id="durationModalTitle">Configura la duracion</h2>
-      <div class="miniForm">
-        <div class="field" id="durationMinutesField">
-          <label for="durationMinutesInput" id="durationMinutesLabel">Minutos de partida</label>
-          <input id="durationMinutesInput" type="number" min="5" max="180" value="15" />
-        </div>
-        <div class="field" id="durationQuestionsField">
-          <label for="durationQuestionsInput" id="durationQuestionsLabel">Numero de preguntas</label>
-          <input id="durationQuestionsInput" type="number" min="5" max="60" value="15" />
-        </div>
-      </div>
-      <div class="actions between">
-        <button class="btn btnGhost" id="btnCloseDuration" type="button">Cancelar</button>
-        <button class="btn btnPrimary" id="btnAcceptDuration" type="button">Aceptar</button>
-      </div>
-    </div>
-  </div>
-  <div class="overlay" id="customModal">
-    <div class="modalCard">
-      <span class="kicker" id="customKicker">Personalizado</span>
-      <h2 class="subtitle" id="customTitle">Define el estilo de la ronda</h2>
-      <div class="miniForm">
-        <div class="field">
-          <label for="customThemeInput" id="customThemeLabel">Tema</label>
-          <input id="customThemeInput" maxlength="80" placeholder="Ejemplo: ciencia, cine, actualidad, videojuegos" />
-        </div>
-        <div class="choiceBlock">
-          <label id="customToneLabel">Tono</label>
-          <div class="pillChoices" id="customToneChoices">
-            <button class="pillChoice" data-tone="divertido" type="button">Divertido</button>
-            <button class="pillChoice" data-tone="televisivo" type="button">Televisivo</button>
-            <button class="pillChoice" data-tone="serio" type="button">Serio</button>
-            <button class="pillChoice" data-tone="familiar" type="button">Familiar</button>
-          </div>
-        </div>
-        <div class="choiceBlock">
-          <label id="customDifficultyLabel">Dificultad</label>
-          <div class="pillChoices" id="customDifficultyChoices">
-            <button class="pillChoice" data-difficulty="facil" type="button">Facil</button>
-            <button class="pillChoice" data-difficulty="media" type="button">Media</button>
-            <button class="pillChoice" data-difficulty="dificil" type="button">Dificil</button>
-          </div>
-        </div>
-        <div class="field">
-          <label for="customPromptInput" id="customPromptLabel">Indicacion extra</label>
-          <textarea id="customPromptInput" rows="4" placeholder="Ejemplo: evita preguntas repetidas y busca datos sorprendentes"></textarea>
-        </div>
-      </div>
-      <div class="actions between">
-        <button class="btn btnGhost" id="btnCloseCustom" type="button">Cancelar</button>
-        <button class="btn btnPrimary" id="btnAcceptCustom" type="button">Guardar</button>
-      </div>
-    </div>
-  </div>
-  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
     const SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk";
     const FRAME_SRC = "/shared/assets/brand/participantes-frame.png";
@@ -1041,7 +214,7 @@
         correctOrder:"Orden correcto",
         answerLoading:"Preparando respuestas...",
         speedMode:"Modo Velociraptor!",
-        languageLabelEs:"Español",
+        languageLabelEs:"Espa�ol",
         languageLabelEn:"English",
         tone_divertido:"Divertido",
         tone_televisivo:"Televisivo",
@@ -1232,7 +405,7 @@
         correctOrder:"Correct order",
         answerLoading:"Preparing answers...",
         speedMode:"Velociraptor Mode!",
-        languageLabelEs:"Español",
+        languageLabelEs:"Espa�ol",
         languageLabelEn:"English",
         tone_divertido:"Fun",
         tone_televisivo:"Showtime",
@@ -1325,9 +498,9 @@
       setText(ui.castVolumeLabel, t("castVolume"));
       setText(ui.castDeviceName, t("noDevice"));
       setText(ui.castDeviceHint, t("castHintReady"));
-      if(ui.btnCastConnect) ui.btnCastConnect.innerHTML = `<span class="btnIcon">📺</span>${t("sendToTv")}`;
-      if(ui.btnCastMute) ui.btnCastMute.innerHTML = `<span class="btnIcon">🔇</span>${t("muteTv")}`;
-      if(ui.btnCastDisconnect) ui.btnCastDisconnect.innerHTML = `<span class="btnIcon">⏹</span>${t("disconnect")}`;
+      if(ui.btnCastConnect) ui.btnCastConnect.innerHTML = `<span class="btnIcon">??</span>${t("sendToTv")}`;
+      if(ui.btnCastMute) ui.btnCastMute.innerHTML = `<span class="btnIcon">??</span>${t("muteTv")}`;
+      if(ui.btnCastDisconnect) ui.btnCastDisconnect.innerHTML = `<span class="btnIcon">?</span>${t("disconnect")}`;
       setAriaLabel(ui.menuBtn, t("openMenu"));
       setAriaLabel(ui.soundChip, t("audioSettings"));
       setAriaLabel(ui.btnAvatarPrev, t("avatarPrev"));
@@ -1501,7 +674,7 @@
       {category:"Arte y musica",prompt:"\u00BFCual de estas figuras musicales dura mas?",answers:["Negra","Corchea","Redonda","Blanca","Semicorchea"],correct:2},
       {category:"Lengua y cultura",prompt:"\u00BFCual es el plural correcto de 'luz'?",answers:["Luzes","Luces","Luzs","Luzos","Luzeses"],correct:1},
       {category:"Lengua y cultura",prompt:"\u00BFCual de estas palabras lleva tilde?",answers:["Facil","Dificil","Joven","Azul","Pared"],correct:1},
-      {category:"Lengua y cultura",prompt:"\u00BFCual de estos signos se usa para preguntar en espanol?",answers:["! !","? ?","¿ ?","; ;",": :"],correct:2},
+      {category:"Lengua y cultura",prompt:"\u00BFCual de estos signos se usa para preguntar en espanol?",answers:["! !","? ?","� ?","; ;",": :"],correct:2},
       {category:"Lengua y cultura",prompt:"\u00BFCual es un sinonimo de 'rapido'?",answers:["Lento","Veloz","Torpe","Callado","Suave"],correct:1},
       {category:"Lengua y cultura",prompt:"\u00BFCual de estas obras escribio Cervantes?",answers:["La Celestina","Don Quijote de la Mancha","La Regenta","El Lazarillo","Fuenteovejuna"],correct:1},
       {category:"Lengua y cultura",prompt:"\u00BFCual es la palabra correcta para una coleccion de poemas?",answers:["Novela","Poemario","Ensayo","Guion","F\u00E1bula"],correct:1},
@@ -1675,9 +848,9 @@
       otros:{src:"/trivialodon/assets/otros.png", keywords:[]}
     };
     const VERSUS_MOVES = [
-      {id:"rock",label:{es:"Piedra",en:"Rock"},glyph:"✊"},
-      {id:"paper",label:{es:"Papel",en:"Paper"},glyph:"✋"},
-      {id:"scissors",label:{es:"Tijera",en:"Scissors"},glyph:"✌️"}
+      {id:"rock",label:{es:"Piedra",en:"Rock"},glyph:"?"},
+      {id:"paper",label:{es:"Papel",en:"Paper"},glyph:"?"},
+      {id:"scissors",label:{es:"Tijera",en:"Scissors"},glyph:"??"}
     ];
     const VERSUS_INTRO_SECONDS = 4;
     const VERSUS_BONUS_POINTS = 20;
@@ -2069,7 +1242,7 @@
     }
     function updateSoundChip(){
       ui.soundChip.hidden = !state.role;
-      ui.soundChipGlyph.textContent = audioState.muted ? "🔇" : (audioState.volume < .45 ? "🔉" : "🔊");
+      ui.soundChipGlyph.textContent = audioState.muted ? "??" : (audioState.volume < .45 ? "??" : "??");
       ui.btnToggleMute.textContent = audioState.muted ? t("unmute") : t("mute");
     }
     refreshAudioTargets();
@@ -2283,13 +1456,13 @@
       refreshCastSessionData();
       ui.castDeviceName.textContent = castState.connected ? (castState.deviceName || t("chromecastConnected")) : t("noDevice");
       ui.castDeviceHint.textContent = castState.connected ? t("castingRoom", {code: state.roomCode || "----"}) : (roomReady ? t("findChromecast") : t("joinRoomFirst"));
-      ui.btnCastConnect.innerHTML = castState.connected ? `<span class="btnIcon">📺</span>${t("reconnectTv")}` : `<span class="btnIcon">📺</span>${t("sendToTv")}`;
+      ui.btnCastConnect.innerHTML = castState.connected ? `<span class="btnIcon">??</span>${t("reconnectTv")}` : `<span class="btnIcon">??</span>${t("sendToTv")}`;
       ui.btnCastConnect.disabled = !roomReady || isIosLike();
       ui.btnCastDisconnect.disabled = !castState.connected;
       ui.btnCastMute.disabled = !castState.connected;
       ui.castVolumeInput.disabled = !castState.connected;
       ui.castVolumeInput.value = String(Math.round((castState.volume || 0) * 100));
-      ui.btnCastMute.innerHTML = castState.muted ? `<span class="btnIcon">🔊</span>${t("unmuteTv")}` : `<span class="btnIcon">🔇</span>${t("muteTv")}`;
+      ui.btnCastMute.innerHTML = castState.muted ? `<span class="btnIcon">??</span>${t("unmuteTv")}` : `<span class="btnIcon">??</span>${t("muteTv")}`;
       if(ui.settingsCast) ui.settingsCast.hidden = isIosLike();
       if(isIosLike()) setCastStatus(t("iosCastWarning"), "danger");
       else if(!castState.available) setCastStatus(t("castNotAvailable"), "danger");
@@ -2754,13 +1927,13 @@
     }
     function renderPausedScene(){ ui.pausedTitle.textContent = t("gamePaused"); ui.pausedCopy.textContent = state.role === "host" ? t("pausedHost") : t("pausedGuest"); ui.pausedActions.innerHTML = state.role === "host" ? `<button class="btn btnPrimary" id="btnResumeGame" type="button">${t("resume")}</button>` : ""; if(state.role === "host" && $("btnResumeGame")) $("btnResumeGame").onclick = async () => { state.game.phase = "countdown"; state.game.countdownEndAt = Date.now() + Math.max(1000, Number(state.game.pausedRemainingMs || 4000)); state.game.pausedRemainingMs = 0; await broadcastGame(); renderCurrentScene(); }; }
     function renderAnswerScene(){ const question = state.game.question; const choices = Array.isArray(question.choices) ? question.choices : []; ui.answerCorrect.textContent = choices[question.correct] || ""; ui.answerPrompt.textContent = question.prompt; }
-    function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? t("currentLeader") : t("inRace")}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>${t("noScoresYet")}</p>`; if(finished){ ui.scoresTitle.textContent = win ? t("victory") : t("defeat"); ui.scoresLead.textContent = win ? t("championText", {score: myScore}) : t("defeatText"); } else { ui.scoresTitle.textContent = leader ? t("leadsGame", {name: leader.name}) : t("scoreRound"); ui.scoresLead.textContent = leader ? t("accumulatedPoints", {score: leader.score}) : t("noScoresYet"); } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">${t("continueSession")}</button><button class="btn btnGhost" id="btnNewGame" type="button">${t("newSession")}</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); }; } }
+    function renderScoresScene(){ const entries = scoreEntries(); const leader = entries[0]; const finished = !!state.game.finished; const myScore = Number((state.game.scores || {})[state.playerId] || 0); const win = leader && leader.playerId === state.playerId; const rows = entries.map((entry, index) => { const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0); return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "\uD83E\uDD96"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong><span class="playerSub">${index === 0 ? t("currentLeader") : t("inRace")}</span></div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">?</span>` : ""}<strong>${entry.score}</strong></div></article>`; }).join("") || `<p>${t("noScoresYet")}</p>`; if(finished){ ui.scoresTitle.textContent = win ? t("victory") : t("defeat"); ui.scoresLead.textContent = win ? t("championText", {score: myScore}) : t("defeatText"); } else { ui.scoresTitle.textContent = leader ? t("leadsGame", {name: leader.name}) : t("scoreRound"); ui.scoresLead.textContent = leader ? t("accumulatedPoints", {score: leader.score}) : t("noScoresYet"); } ui.scoresRows.innerHTML = rows; ui.scoreModalRows.innerHTML = rows; const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000; ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">${t("continueSession")}</button><button class="btn btnGhost" id="btnNewGame" type="button">${t("newSession")}</button>` : ""; if(showButtons){ $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); }; $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); }; } }
     function renderVersusPlayerCard(playerId, activeId, visibleChoiceId){
       const player = findPlayer(playerId);
       const choice = visibleChoiceId ? versusMoveById(visibleChoiceId) : null;
       const waitingText = playerId === state.playerId ? t("waitingForYourMark") : t("hiddenChoice");
       const choiceLabel = choice ? versusMoveLabel(choice) : "";
-      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><strong class="versusPlayerName">${esc(player?.name || t("player"))}</strong><span class="versusPlayerSub">${playerId === state.playerId ? t("yourDuel") : t("inDuel")}</span><div class="versusChoice">${choice ? `${choice.glyph} ${esc(choiceLabel)}` : (activeId === playerId ? t("markNow") : waitingText)}</div>`;
+      return `<div class="versusAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "??"}</div><strong class="versusPlayerName">${esc(player?.name || t("player"))}</strong><span class="versusPlayerSub">${playerId === state.playerId ? t("yourDuel") : t("inDuel")}</span><div class="versusChoice">${choice ? `${choice.glyph} ${esc(choiceLabel)}` : (activeId === playerId ? t("markNow") : waitingText)}</div>`;
     }
     function renderVersusIntroScene(){
       const versus = state.game.versus || {};
@@ -2808,7 +1981,7 @@
       ui.versusScoreline.innerHTML = contenderIds.map(playerId => {
         const player = findPlayer(playerId);
         const wins = Number(versus.wins?.[playerId] || 0);
-        const target = "●".repeat(wins) + "○".repeat(Math.max(0, neededWins - wins));
+        const target = "?".repeat(wins) + "?".repeat(Math.max(0, neededWins - wins));
         return `<span class="versusPill">${esc(player?.name || t("player"))} <strong>${wins}</strong> <span>${target}</span></span>`;
       }).join("") || `<span class="versusPill">${t("bestOfThree")}</span>`;
       ui.versusTimer.textContent = String(countdown);
@@ -3169,7 +2342,7 @@
     ui.btnAvatarNext.onclick = () => { shiftAvatar(1); setStatus("","info"); };
     ui.btnReady.onclick = async () => { ensureAudioReady(); const name = ui.nameInput.value.trim(); if(!name){ setStatus(t("yourName") + " " + t("required"), "danger"); return; } if(!(state.avatar.rendered || state.avatar.src)){ setStatus(t("chooseAvatar"), "danger"); return; } state.name = name; state.ready = true; await updatePresence(); syncPlayers(); setStatus("","info"); renderCurrentScene(); };
     ui.btnToSetup.onclick = async () => { if(!hostCanContinue() || state.role !== "host") return; state.game.phase = "setup"; state.game.selectedMode = ""; state.game.selectedDuration = ""; state.game.selectedDurationValue = 15; state.game.questionIndex = 0; state.game.questionSet = []; state.game.questionLeadSeconds = 6; state.game.answerSeconds = 15; state.game.lastRoundScores = {}; state.game.tieTracker = {streak:0,pair:[]}; state.game.versus = null; state.game.hostNotice = ""; await broadcastGame(); renderCurrentScene(); };
-    function renderCountdownScene(){ const now = sharedNow(); const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - now) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `${t("speedMode")} · ${translateCategory(next?.category || t("surpriseCategory"))}` : translateCategory(next?.category || t("surpriseCategory")); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = translateCategory(next?.category || t("surpriseCategory")); ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">${t("pause")}</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
+    function renderCountdownScene(){ const now = sharedNow(); const left = state.game.countdownEndAt ? Math.max(1, Math.ceil((state.game.countdownEndAt - now) / 1000)) : 4; const next = activeQuestionSet()[state.game.questionIndex || 0]; const categoryLabel = next?.type === "speed" ? `${t("speedMode")} � ${translateCategory(next?.category || t("surpriseCategory"))}` : translateCategory(next?.category || t("surpriseCategory")); const art = categoryArtFor(next?.category || ""); ui.countdownCategory.textContent = categoryLabel; if(ui.countdownCategoryArt){ ui.countdownCategoryArt.src = art.src; ui.countdownCategoryArt.alt = translateCategory(next?.category || t("surpriseCategory")); ui.countdownCategoryArt.hidden = false; } ui.countdownValue.textContent = String(left); ui.countdownActions.innerHTML = state.role === "host" ? `<button class="btn btnGhost" id="btnPauseGame" type="button">${t("pause")}</button>` : ""; if(state.role === "host" && $("btnPauseGame")) $("btnPauseGame").onclick = async () => { const remaining = Math.max(1000, (state.game.countdownEndAt || Date.now()) - Date.now()); state.game.pausedRemainingMs = remaining; state.game.phase = "paused"; await broadcastGame(); renderCurrentScene(); }; }
     function renderQuestionScene(){
       const now = sharedNow();
       const question = state.game.question || {prompt:"",choices:[],correct:0,endAt:now,revealed:false,responses:{}};
@@ -3228,8 +2401,8 @@
       }).join("");
 
       const ranking = isSpeed && question.revealed
-        ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">${t("correctOrder")}</span><strong>${esc(translateCategory(question.category || t("speedMode")))}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} ${t("pointsShort")})`).join(" · ")}</p></article>`
-        : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">✦ ✨ ★ ✨ ✦</div>` : ""}<span class="kicker">${t("funFact")}</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : "");
+        ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">? ? ? ? ?</div>` : ""}<span class="kicker">${t("correctOrder")}</span><strong>${esc(translateCategory(question.category || t("speedMode")))}</strong><p>${(question.ranking || []).map(item => `${item.rank}. ${item.text} (${item.score} ${t("pointsShort")})`).join(" � ")}</p></article>`
+        : (question.revealed ? `<article class="factCard">${wasCorrect ? `<div class="sparkles">? ? ? ? ?</div>` : ""}<span class="kicker">${t("funFact")}</span><strong>${esc(choices[question.correct] || "")}</strong><p>${esc(fallbackFact(question)).split(/\s+/).slice(0,42).join(" ")}</p></article>` : "");
 
       ui.questionAnswers.innerHTML = ranking + cards;
       ui.questionAnswers.querySelectorAll("[data-answer]").forEach(btn => {
@@ -3406,9 +2579,4 @@
         if(ok) showResumeModal();
       }, 120);
     }
-  </script>
-</body>
-</html>
-
-
-
+  
