@@ -749,11 +749,14 @@
     function translateLiveCategory(category){
       const raw = String(category || "").trim();
       if(!raw) return tLive("surpriseCategory");
-      if(liveLang() === "en"){
-        return CATEGORY_LABELS[raw]?.en || raw;
-      }
-      const match = Object.entries(CATEGORY_LABELS).find(([es, labels]) => raw === es || raw === labels.en);
-      return match ? match[0] : raw;
+      const normalized = normalizeCategory(raw);
+      const direct = Object.entries(CATEGORY_LABELS).find(([es, labels]) => {
+        const en = String(labels?.en || "").trim();
+        return normalizeCategory(es) === normalized || normalizeCategory(en) === normalized;
+      });
+      if(!direct) return raw;
+      const [es, labels] = direct;
+      return liveLang() === "en" ? (labels?.en || es) : es;
     }
     function moveLabel(move){
       if(!move) return "";
@@ -1825,6 +1828,296 @@
           ? (question.revealed ? `${Number(question.scores?.[index] || 0)} ${tLive("pointsShort")}` : (locked ? tLive("taken") : tLive("free")))
           : (question.revealed ? (revealCorrect ? tLive("correct") : `${voters.length} ${voteLabel(voters.length)}`) : `${voters.length} ${voteLabel(voters.length)}`);
         const visibleVoters = voters.slice(0, 6).map(player => avatarBubble(player)).join("");
+        const overflow = voters.length > 6 ? `<span class="voteMore">+${voters.length - 6}</span>` : "";
+        return `<article class="answer ${locked ? "selected" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""}">
+          <div class="answerTop">
+            <div class="aText"><span class="aKey">${String.fromCharCode(65 + index)}</span>${esc(choice)}</div>
+            <div class="aState">${esc(stateLine)}</div>
+          </div>
+          <div class="voteCloud">${visibleVoters}${overflow}</div>
+        </article>`;
+      }).join("");
+      ui.answers.className = `answers questionBoard${justRevealed ? " revealed" : ""}`;
+      ui.answers.innerHTML = cards || `<div class="empty" style="grid-column:1/-1">${tLive("questionSoon")}</div>`;
+      if(question.revealed && isSpeed && Array.isArray(question.ranking) && question.ranking.length){
+        ui.fact.classList.remove("hidden");
+        ui.factKick.textContent = tLive("correctOrder");
+        ui.factText.textContent = question.ranking.map(item => `${item.rank}. ${item.text} (${item.score} ${tLive("pointsShort")})`).join(" · ");
+      } else if(question.revealed && question.explanation){
+        ui.fact.classList.remove("hidden");
+        ui.factKick.textContent = tLive("funFact");
+        ui.factText.textContent = question.explanation;
+      } else {
+        ui.fact.classList.add("hidden");
+      }
+    }
+    function versusGlyph(choiceId){
+      return ({rock:"✊", paper:"✋", scissors:"✌️"})[choiceId] || "✊";
+    }
+    function liveRankLabel(position){
+      return `#${position}`;
+    }
+    function liveAvatarFallbackMarkup(cssClass = "avatar", player = null){
+      return player?.avatarSrc
+        ? `<span class="${cssClass}"><img src="${player.avatarSrc}" alt="${esc(playerLabel(player))}"></span>`
+        : `<span class="${cssClass}">🦖</span>`;
+    }
+    function renderScoresPhaseTranslated(){
+      ui.hero.className = "hero scores";
+      lastAnswersVisible = false;
+      ui.category.textContent = tLive("scoreboard");
+      ui.prompt.textContent = game.finished ? tLive("finalPodium") : tLive("roundScore");
+      ui.copy.textContent = "";
+      setTimer("", 0, false);
+      setHeaderPrompt({active:false});
+      ui.hero.innerHTML = "";
+      ui.fact.classList.add("hidden");
+      const rows = scoreRows();
+      if(!rows.length){
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = `<div class="empty" style="grid-column:1/-1">${tLive("scoreboardSoon")}</div>`;
+        return;
+      }
+      const isVertical = document.body.classList.contains("vertical");
+      const leader = rows[0];
+      if(game.finished){
+        if(isVertical){
+          const topThree = rows.slice(0, 3);
+          const classes = ["first","second","third"];
+          const remainder = rows.slice(3, 7);
+          ui.hero.className = "hero scores center";
+          ui.hero.innerHTML = `<div class="titleWrap">
+                <span class="kick">${tLive("scoreboard")}</span>
+                <h1 class="title">${tLive("finalPodium")}</h1>
+              </div>
+              <div class="podiumBoard">
+                <div class="podium">
+                  ${topThree.map((player, index) => `<article class="podiumCard ${classes[index]}"><div class="podiumRank">${liveRankLabel(index + 1)}</div><div class="podiumAvatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div class="podiumName">${esc(playerLabel(player))}</div><div class="podiumMeta">${esc(roleLabel(player))}</div><div class="podiumPoints">${player.score}</div></article>`).join("")}
+                </div>
+                ${remainder.length ? `<div class="restBoard">${remainder.map((player, index) => `<article class="roundRow"><div class="rank">${liveRankLabel(index + 4)}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(playerLabel(player))}</div><div class="playerSub">${esc(roleLabel(player))}</div></div><div class="points">${player.score}</div></article>`).join("")}${rows.length > 7 ? `<div class="moreLine">+${rows.length - 7} ${tLive("morePlayers")}</div>` : ""}</div>` : ""}
+              </div>`;
+          ui.answers.className = "answers";
+          ui.answers.innerHTML = "";
+          return;
+        }
+        const podiumEntries = [
+          rows[1] ? { player: rows[1], cls: "second", rank: liveRankLabel(2) } : null,
+          rows[0] ? { player: rows[0], cls: "first", rank: liveRankLabel(1) } : null,
+          rows[2] ? { player: rows[2], cls: "third", rank: liveRankLabel(3) } : null
+        ].filter(Boolean);
+        const remainder = rows.slice(3, 11);
+        const podiumMode = podiumEntries.length === 1 ? "solo" : podiumEntries.length === 2 ? "duo" : "trio";
+        ui.hero.className = "hero scores center";
+        ui.hero.innerHTML = `<div class="tvPodiumStage">
+            <div class="tvPodiumHero">
+              <span class="kick">${tLive("scoreboard")}</span>
+              <h2>${tLive("finalPodium")}</h2>
+              <p>${tLive("closesFront", {name: esc(playerLabel(leader)), score: leader.score})}</p>
+            </div>
+            <div class="tvPodium ${podiumMode}">
+              ${podiumEntries.map((entry) => `<article class="tvPodiumCard ${entry.cls}"><div class="tvPodiumRank">${entry.rank}</div><div class="tvPodiumAvatar">${entry.player.avatarSrc ? `<img src="${entry.player.avatarSrc}" alt="">` : "🦖"}</div><div class="tvPodiumName">${esc(playerLabel(entry.player))}</div><div class="tvPodiumMeta">${esc(roleLabel(entry.player))}</div><div class="tvPodiumPoints">${entry.player.score}</div></article>`).join("")}
+            </div>
+            ${remainder.length ? `<div class="tvRestGrid">${remainder.map((player, index) => `<article class="tvRestCard"><div class="rank">${liveRankLabel(index + 4)}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(playerLabel(player))}</div><div class="playerSub">${esc(roleLabel(player))}</div></div><div class="points">${player.score}</div></article>`).join("")}</div>` : ""}${rows.length > 11 ? `<div class="moreLine">+${rows.length - 11} ${tLive("morePlayers")}</div>` : ""}
+          </div>`;
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = "";
+        return;
+      }
+      if(isVertical){
+        const visible = rows.slice(0, 10);
+        const rest = visible.slice(1);
+        ui.hero.className = "hero scores center";
+        ui.hero.innerHTML = `<div class="titleWrap">
+              <span class="kick">${tLive("scoreboard")}</span>
+              <h1 class="title">${tLive("roundScore")}</h1>
+            </div>
+            <div class="roundBoard">
+              <article class="roundHeadline">
+                <strong>${tLive("leadsNow", {name: esc(playerLabel(leader))})}</strong>
+                <span>${tLive("pointsAccumulated", {score: leader.score})}${rest.length ? ` · ${tLive("chasingPressure")}` : ""}</span>
+              </article>
+              <div class="roundGrid">
+                <article class="roundRow leader">
+                  <div class="rank">${liveRankLabel(1)}</div>
+                  <div class="avatar">${leader.avatarSrc ? `<img src="${leader.avatarSrc}" alt="">` : "🦖"}</div>
+                  <div><div class="playerName">${esc(playerLabel(leader))}</div><div class="playerSub">${esc(roleLabel(leader))}</div></div>
+                  <div class="points">${leader.score}</div>
+                </article>
+                ${rest.map((player, index) => `<article class="roundRow"><div class="rank">${liveRankLabel(index + 2)}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(playerLabel(player))}</div><div class="playerSub">${esc(roleLabel(player))}</div></div><div class="points">${player.score}</div></article>`).join("")}
+              </div>
+              ${rows.length > 10 ? `<div class="moreLine">+${rows.length - 10} ${tLive("morePlayers")}</div>` : ""}
+            </div>`;
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = "";
+        return;
+      }
+      const visible = rows.slice(0, 9);
+      const rest = visible.slice(1);
+      ui.hero.className = "hero scores center";
+      ui.hero.innerHTML = `<div class="tvScoreWrap">
+          <div class="tvScoreHero">
+            <article class="tvLeaderHero">
+              <span class="kick">${tLive("scoreboard")}</span>
+              <h2>${tLive("leadsNow", {name: esc(playerLabel(leader))})}</h2>
+              <p>${tLive("pointsAccumulated", {score: leader.score})}${rest.length ? ` · ${tLive("tablePressure")}` : ""}</p>
+            </article>
+            <article class="tvLeaderBadge">
+              <div class="avatar">${leader.avatarSrc ? `<img src="${leader.avatarSrc}" alt="">` : "🦖"}</div>
+              <div><div class="playerName">${esc(playerLabel(leader))}</div><div class="playerSub">${esc(roleLabel(leader))}</div></div>
+              <div class="points">${leader.score}</div>
+            </article>
+          </div>
+          ${rest.length ? `<div class="tvRankGrid">${rest.map((player, index) => `<article class="tvRankCard"><div class="rank">${liveRankLabel(index + 2)}</div><div class="avatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div><div><div class="playerName">${esc(playerLabel(player))}</div><div class="playerSub">${esc(roleLabel(player))}</div></div><div class="points">${player.score}</div></article>`).join("")}</div>` : ""}${rows.length > 9 ? `<div class="moreLine">+${rows.length - 9} ${tLive("morePlayers")}</div>` : ""}
+        </div>`;
+      ui.answers.className = "answers";
+      ui.answers.innerHTML = "";
+    }
+    function renderVersusIntroTranslated(){
+      const versus = game.versus || {};
+      const names = (versus.pair || [])
+        .map(playerId => players.find(player => player.playerId === playerId)?.name)
+        .filter(Boolean);
+      const left = Math.max(1, countSeconds(versus.introEndsAt || Date.now()));
+      setHeaderPrompt({active:false});
+      ui.hero.className = "hero center";
+      ui.category.textContent = "";
+      ui.prompt.textContent = "";
+      ui.copy.textContent = "";
+      setTimer("", 0, false);
+      ui.fact.classList.add("hidden");
+      ui.answers.className = "answers";
+      ui.answers.innerHTML = "";
+      const introCopy = names.length === 2
+        ? `${names[0]} ${liveLang() === "en" ? "and" : "y"} ${names[1]} ${tLive("twoDinosTie").toLowerCase()}`
+        : tLive("twoDinosTie");
+      ui.hero.innerHTML = `<div class="versusLiveIntro">
+        <div class="versusLiveHead">
+          <span class="kick">${tLive("tiebreakKick")}</span>
+          <h1 class="title">${tLive("versusTitle")}</h1>
+          <p class="copy">${esc(introCopy)}</p>
+        </div>
+        ${names.length ? `<div class="versusLiveIntroNames">${names.map(name => `<span class="versusLivePill">${esc(name)}</span>`).join("")}</div>` : ""}
+        <div class="versusLiveCount">${left}</div>
+      </div>`;
+    }
+    function renderVersusLivePlayerTranslated(playerId, activeId, visibleChoiceId, championId){
+      const player = players.find(item => item.playerId === playerId);
+      const choice = visibleChoiceId ? versusMoveById(visibleChoiceId) : null;
+      const status = choice ? `${versusGlyph(choice.id)} ${versusChoiceLabel(choice.id)}` : (activeId === playerId ? tLive("marking") : tLive("hiddenChoice"));
+      return `<article class="versusLivePlayer ${activeId === playerId ? "active" : ""} ${championId === playerId ? "champion" : ""}">
+        <div class="versusLiveAvatar">${player?.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div>
+        <strong class="versusLiveName">${esc(playerLabel(player))}</strong>
+        <span class="versusLiveSub">${esc(roleLabel(player))}</span>
+        <span class="versusLiveChoice">${esc(status)}</span>
+      </article>`;
+    }
+    function renderVersusTranslated(){
+      const versus = game.versus || {};
+      const [playerA, playerB] = versus.pair || [];
+      const now = Date.now();
+      const revealActive = Number(versus.revealUntil || 0) > now || !!versus.roundWinnerId || !!versus.finalWinnerId;
+      const visibleChoiceA = revealActive ? ((versus.revealChoices || {})[playerA] || "") : "";
+      const visibleChoiceB = revealActive ? ((versus.revealChoices || {})[playerB] || "") : "";
+      const winsA = Number(versus.wins?.[playerA] || 0);
+      const winsB = Number(versus.wins?.[playerB] || 0);
+      const neededWins = Math.ceil(Number(versus.bestOf || 3) / 2);
+      const roundLeft = Math.max(0, countSeconds(versus.roundDeadline || Date.now()));
+      const championId = versus.finalWinnerId || "";
+      const roundWinnerId = versus.roundWinnerId || "";
+      const playerAData = players.find(player => player.playerId === playerA);
+      const playerBData = players.find(player => player.playerId === playerB);
+      let copy = tLive("watchingOnly");
+      if(championId){
+        copy = tLive("winnerWins", {name: players.find(player => player.playerId === championId)?.name || tLive("player")});
+      } else if(roundWinnerId){
+        copy = tLive("handWin", {name: players.find(player => player.playerId === roundWinnerId)?.name || tLive("player")});
+      } else if(revealActive){
+        copy = tLive("tieAgain");
+      }
+      setHeaderPrompt({active:false});
+      ui.hero.className = "hero center";
+      ui.category.textContent = "";
+      ui.prompt.textContent = "";
+      ui.copy.textContent = "";
+      setTimer("", 0, false);
+      ui.fact.classList.add("hidden");
+      ui.answers.className = "answers";
+      ui.answers.innerHTML = "";
+      ui.hero.innerHTML = `<div class="versusLiveStage">
+        <div class="versusLiveHead">
+          <span class="kick">${tLive("combat")}</span>
+          <h1 class="title">${tLive("decideWithHands")}</h1>
+          <p class="copy">${esc(playerLabel(playerAData))} vs ${esc(playerLabel(playerBData))}</p>
+        </div>
+        <div class="versusLiveScoreline">
+          <span class="versusLivePill">${esc(playerLabel(playerAData))} <strong>${winsA}</strong> <span>${"●".repeat(winsA)}${"○".repeat(Math.max(0, neededWins - winsA))}</span></span>
+          <span class="versusLivePill">${esc(playerLabel(playerBData))} <strong>${winsB}</strong> <span>${"●".repeat(winsB)}${"○".repeat(Math.max(0, neededWins - winsB))}</span></span>
+        </div>
+        <div class="versusLiveArena">
+          ${renderVersusLivePlayerTranslated(playerA, roundWinnerId, visibleChoiceA, championId)}
+          <div class="versusLiveCenter">
+            <div class="versusLiveHands">
+              <div class="versusLiveMove">${visibleChoiceA ? versusGlyph(versusMoveById(visibleChoiceA).id) : "✊"}</div>
+              <div class="versusLiveBurst">VS</div>
+              <div class="versusLiveMove">${visibleChoiceB ? versusGlyph(versusMoveById(visibleChoiceB).id) : "✊"}</div>
+            </div>
+            <div class="versusLiveCount">${championId ? "🏆" : roundLeft}</div>
+            <p class="versusLiveCopy">${esc(copy)}</p>
+          </div>
+          ${renderVersusLivePlayerTranslated(playerB, roundWinnerId, visibleChoiceB, championId)}
+        </div>
+      </div>`;
+    }
+    function renderQuestionTranslated(){
+      const question = game.question || {};
+      const isSpeed = question.type === "speed";
+      const art = categoryArtFor(question.category || "");
+      const answersVisible = !question.answersVisibleAt || Date.now() >= question.answersVisibleAt;
+      const headerPromptMode = answersVisible && (castMode || document.body.classList.contains("vertical"));
+      const justRevealed = answersVisible && !lastAnswersVisible;
+      lastAnswersVisible = answersVisible;
+      const leadLeft = countSeconds(question.answersVisibleAt || Date.now());
+      const answerLeft = countSeconds(question.endAt || Date.now());
+      const total = answersVisible ? Math.max(1, Number(game.answerSeconds || 15)) : Math.max(1, Number(game.questionLeadSeconds || 6));
+      const left = answersVisible ? answerLeft : leadLeft;
+      const translatedCategory = translateLiveCategory(question.category || tLive("surpriseCategory"));
+      const categoryLabel = isSpeed ? `${tLive("speedMode")} · ${translatedCategory}` : (translatedCategory || tLive("generalKnowledge"));
+      const copyLabel = !answersVisible ? tLive("readQuestion") : (isSpeed ? tLive("speedReadQuestion") : "");
+      ui.category.textContent = categoryLabel;
+      ui.prompt.textContent = question.prompt || tLive("waitingQuestion");
+      ui.copy.textContent = copyLabel;
+      setHeaderPrompt({
+        active: headerPromptMode,
+        prompt: question.prompt || tLive("waitingQuestion"),
+        category: categoryLabel
+      });
+      setTimer(String(left), Math.max(0, Math.min(1, left / total)), true);
+      ui.hero.className = `hero ${answersVisible ? "compact" : "lead"}${justRevealed ? " revealed" : ""}${headerPromptMode ? " headerPrompt" : ""}`;
+      ui.hero.innerHTML = `<div class="titleWrap">
+            <span class="kick" id="category">${esc(categoryLabel)}</span>
+            ${!answersVisible ? `<img class="categorySplash" src="${art.src}" alt="${esc(translatedCategory)}">` : ""}
+            <h1 class="title" id="prompt">${esc(question.prompt || tLive("waitingQuestion"))}</h1>
+            <p class="copy" id="copy">${esc(copyLabel)}</p>
+          </div>
+          <div class="timer${left || left === 0 ? "" : " hidden"}" id="timerRing" style="--timer:${Math.max(0, Math.min(1, left / total))}">
+            <div class="timerInner" id="timer">${esc(String(left))}</div>
+          </div>`;
+      if(!answersVisible){
+        ui.fact.classList.add("hidden");
+        ui.answers.className = "answers";
+        ui.answers.innerHTML = "";
+        return;
+      }
+      const votes = voteMap(question);
+      const cards = (question.choices || []).map((choice, index) => {
+        const voters = votes[index] || [];
+        const locked = isSpeed && voters.length > 0;
+        const revealCorrect = !isSpeed && question.revealed && question.correct === index;
+        const revealWrong = isSpeed && question.revealed && Number(question.scores?.[index] || 0) === 0;
+        const stateLine = isSpeed
+          ? (question.revealed ? `${Number(question.scores?.[index] || 0)} ${tLive("pointsShort")}` : (locked ? tLive("taken") : tLive("free")))
+          : (question.revealed ? (revealCorrect ? tLive("correct") : `${voters.length} ${voteLabel(voters.length)}`) : `${voters.length} ${voteLabel(voters.length)}`);
+        const visibleVoters = voters.slice(0, 6).map(player => player?.avatarSrc ? `<span class="voteAvatar"><img src="${player.avatarSrc}" alt="${esc(playerLabel(player))}"></span>` : `<span class="voteAvatar">🦖</span>`).join("");
         const overflow = voters.length > 6 ? `<span class="voteMore">+${voters.length - 6}</span>` : "";
         return `<article class="answer ${locked ? "selected" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""}">
           <div class="answerTop">

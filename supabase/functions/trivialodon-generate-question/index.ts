@@ -112,6 +112,80 @@ function normalizeQuestion(raw, answerCount) {
   };
 }
 
+function buildTranslatePrompt(input) {
+  const english = input.language === "en";
+  return [
+    english
+      ? "Translate the following trivia questions into English."
+      : "Traduce las siguientes preguntas de trivia al espanol.",
+    english
+      ? "Return only valid JSON. Keep the same structure and the same number of items."
+      : "Devuelve solo JSON valido. Manten la misma estructura y la misma cantidad de elementos.",
+    english
+      ? "Preserve type, correct_index, score, rank, and array order."
+      : "Conserva type, correct_index, score, rank y el orden de los arrays.",
+    english
+      ? "Translate question, choices text, explanation, category, and difficulty naturally."
+      : "Traduce de forma natural question, choices text, explanation, category y difficulty.",
+    english
+      ? "Do not invent or remove answers."
+      : "No inventes ni elimines respuestas.",
+    JSON.stringify(input.questions || []),
+  ].join("\n");
+}
+
+function localizedFallbacks(language) {
+  return language === "en"
+    ? { category: "Custom", difficulty: "medium" }
+    : { category: "Personalizado", difficulty: "media" };
+}
+
+function normalizeQuestion(raw, answerCount, language = "es") {
+  const fallback = localizedFallbacks(language);
+  const type = String(raw.type || "standard").trim();
+  if (type === "speed") {
+    const choices = Array.isArray(raw.choices) ? raw.choices : [];
+    if (choices.length !== answerCount) {
+      throw new Error(language === "en"
+        ? `Gemini returned ${choices.length} speed options but we expected ${answerCount}.`
+        : `Gemini devolvio ${choices.length} opciones speed y esperabamos ${answerCount}.`);
+    }
+    return {
+      type: "speed",
+      question: String(raw.question || "").trim(),
+      choices: choices.map((item) => ({
+        text: String(item?.text || "").trim(),
+        score: Number(item?.score || 0),
+        rank: Number(item?.rank || 0),
+      })),
+      explanation: String(raw.explanation || "").trim(),
+      category: String(raw.category || fallback.category).trim(),
+      difficulty: String(raw.difficulty || fallback.difficulty).trim(),
+    };
+  }
+  const choices = Array.isArray(raw.choices) ? raw.choices.filter(Boolean).map(String) : [];
+  if (choices.length !== answerCount) {
+    throw new Error(language === "en"
+      ? `Gemini returned ${choices.length} options but we expected ${answerCount}.`
+      : `Gemini devolvio ${choices.length} opciones y esperabamos ${answerCount}.`);
+  }
+  const correctIndex = Number(raw.correct_index);
+  if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= choices.length) {
+    throw new Error(language === "en"
+      ? "Gemini returned an invalid correct_index."
+      : "Gemini devolvio un correct_index invalido.");
+  }
+  return {
+    type: "standard",
+    question: String(raw.question || "").trim(),
+    choices,
+    correct_index: correctIndex,
+    explanation: String(raw.explanation || "").trim(),
+    category: String(raw.category || fallback.category).trim(),
+    difficulty: String(raw.difficulty || fallback.difficulty).trim(),
+  };
+}
+
 async function callGemini(input) {
   if (!GEMINI_API_KEY) {
     throw new Error("Falta GEMINI_API_KEY en los secrets de Supabase.");
@@ -156,17 +230,21 @@ async function callGemini(input) {
   const parsed = JSON.parse(text);
   if (input.mode === "translate") {
     if (!Array.isArray(parsed) || parsed.length !== input.questions.length) {
-      throw new Error("Gemini no devolvio la cantidad exacta de preguntas traducidas.");
+      throw new Error(input.language === "en"
+        ? "Gemini did not return the exact number of translated questions."
+        : "Gemini no devolvio la cantidad exacta de preguntas traducidas.");
     }
-    return parsed.map((item) => normalizeQuestion(item, input.answerCount));
+    return parsed.map((item) => normalizeQuestion(item, input.answerCount, input.language));
   }
   if (input.questionCount > 1) {
     if (!Array.isArray(parsed) || parsed.length !== input.questionCount) {
-      throw new Error("Gemini no devolvio la cantidad exacta de preguntas.");
+      throw new Error(input.language === "en"
+        ? "Gemini did not return the exact number of questions."
+        : "Gemini no devolvio la cantidad exacta de preguntas.");
     }
-    return parsed.map((item) => normalizeQuestion(item, input.answerCount));
+    return parsed.map((item) => normalizeQuestion(item, input.answerCount, input.language));
   }
-  return normalizeQuestion(parsed, input.answerCount);
+  return normalizeQuestion(parsed, input.answerCount, input.language);
 }
 
 Deno.serve(async (request) => {
@@ -180,12 +258,13 @@ Deno.serve(async (request) => {
 
   try {
     const body = await request.json().catch(() => ({}));
+    const language = body?.language === "en" ? "en" : "es";
     const input = {
       mode: body?.mode === "translate" ? "translate" : "generate",
-      language: body?.language === "en" ? "en" : "es",
-      theme: String(body?.theme || "conocimiento general"),
-      tone: String(body?.tone || "divertido"),
-      difficulty: String(body?.difficulty || "media"),
+      language,
+      theme: String(body?.theme || (language === "en" ? "general knowledge" : "conocimiento general")),
+      tone: String(body?.tone || (language === "en" ? "fun" : "divertido")),
+      difficulty: String(body?.difficulty || (language === "en" ? "medium" : "media")),
       audience: String(body?.audience || "general"),
       answerCount: Math.max(4, Math.min(5, Number(body?.answerCount || 5))),
       questionCount: Math.max(1, Math.min(60, Number(body?.questionCount || 1))),
@@ -194,7 +273,7 @@ Deno.serve(async (request) => {
     };
 
     if (input.mode === "translate" && !input.questions.length) {
-      throw new Error("No he recibido preguntas para traducir.");
+      throw new Error(language === "en" ? "I did not receive any questions to translate." : "No he recibido preguntas para traducir.");
     }
 
     const result = await callGemini(input);
@@ -207,7 +286,7 @@ Deno.serve(async (request) => {
     return json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "No he podido generar la pregunta.",
+        error: error instanceof Error ? error.message : (language === "en" ? "I could not generate the question." : "No he podido generar la pregunta."),
       },
       { status: 500 },
     );
