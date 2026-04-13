@@ -2364,25 +2364,28 @@
       while(cur<=to){ out.push(cur); cur=addMonthsStr(cur,1); }
       return out;
     }
-    function debtDescription(d){
+    function debtDescription(d, ym = ''){
       if(d.settledMonth){
         return `Deuda saldada · ${prettyMonthLabel(d.settledMonth)}`;
       }
       const label = debtInstrumentName(d) || debtPaymentModeLabel(d.paymentMode || d.cardSubtype) || debtInstrumentTypeLabel(d.instrumentType || d.debtKind);
+      const effectiveCharge = ym ? Number(getDebtAmountForMonth(d, ym) || 0) : Number(d.monthlyPayment || 0);
       if((d.instrumentType || d.debtKind || 'loan') === 'loan'){
         return d.lastMonth
-          ? `${label} · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
-          : `${label} · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
+          ? `${label} · cuota ${euros(effectiveCharge)} · hasta ${d.lastMonth}`
+          : `${label} · cuota ${euros(effectiveCharge)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
       }
       if((d.paymentMode || d.cardSubtype || 'revolving') === 'revolving'){
-        return `${label} · deuda ${euros(d.currentDebt||0)} · cuota ${euros(d.currentPayment||0)} · TIN ${Number(d.tin||0)}% · TAE ${Number(d.tae||0)}%`;
+        const revolvingCharge = ym ? Number(getDebtAmountForMonth(d, ym) || 0) : Number(d.currentPayment || 0);
+        return `${label} · deuda ${euros(d.currentDebt||0)} · cuota ${euros(revolvingCharge)} · TIN ${Number(d.tin||0)}% · TAE ${Number(d.tae||0)}%`;
       }
       if((d.paymentMode || d.cardSubtype) === 'pay_end_month'){
-        return `${label} · ${euros(d.amount||0)} · ${d.periodicity==='one_time'?'puntual':'periodica'}`;
+        const endMonthCharge = ym ? Number(getDebtAmountForMonth(d, ym) || 0) : Number(d.amount || 0);
+        return `${label} · ${euros(endMonthCharge)} · ${d.periodicity==='one_time'?'puntual':'periodica'}`;
       }
       return d.lastMonth
-        ? `${label} · cuota ${euros(d.monthlyPayment||0)} · hasta ${d.lastMonth}`
-        : `${label} · cuota ${euros(d.monthlyPayment||0)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
+        ? `${label} · cuota ${euros(effectiveCharge)} · hasta ${d.lastMonth}`
+        : `${label} · cuota ${euros(effectiveCharge)} · ${Number(d.remainingInstallments||0)} cuotas restantes`;
     }
     function amountForSchedule(item, ym){
       const start = item.startMonth || state.defaultStartMonth;
@@ -2752,9 +2755,9 @@
       return getDebtMonthState(d, ym).recoveredAmount;
     }
 
-    function debtBaseDisplayAmount(d){
+    function debtBaseDisplayAmount(d, ym = state.defaultStartMonth){
       if(d.settledMonth) return 0;
-      return getDebtMonthlyCharge(d, state.defaultStartMonth);
+      return getDebtAmountForMonth(d, ym || state.defaultStartMonth);
     }
     function buildForecastMonthSnapshot(ym){
       const adj = adjustmentForMonth(ym);
@@ -2893,7 +2896,7 @@
         <div class="miniItem ${item.settled ? 'settledDebt' : ''}">
           <div class="miniMeta">
             <div class="miniName">${escapeHtml(debtDisplayName(item))}${item.settled ? ' · saldada' : ''}</div>
-            <div class="miniSub">${escapeHtml(item.settled ? 'Deuda ya liquidada' : debtDescription(item))}</div>
+            <div class="miniSub">${escapeHtml(item.settled ? 'Deuda ya liquidada' : debtDescription(item, ym))}</div>
           </div>
           <div class="money">${euros(item.monthAmount || 0)}</div>
         </div>`);
@@ -4374,7 +4377,7 @@
           <div class="miniItem ${it.settled ? 'settledDebt' : ''}">
             <div class="miniMeta">
               <div class="miniName" style="${it.settled ? 'color:#4ade80' : ''}">${escapeHtml(debtDisplayName(it))}${it.settled ? ' · saldada' : ''}</div>
-              <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it))}${debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)) ? ` · ${escapeHtml(debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)))}` : ''}</div>
+              <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it, ym))}${debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)) ? ` · ${escapeHtml(debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)))}` : ''}</div>
             </div>
             <div class="miniActions">
               ${it.settled ? '' : `
@@ -4924,8 +4927,8 @@
       }
       if(type==='debt'){
         displayName = debtDisplayName(item);
-        desc = debtDescription(item);
-        money = debtBaseDisplayAmount(item);
+        desc = debtDescription(item, state.defaultStartMonth);
+        money = debtBaseDisplayAmount(item, state.defaultStartMonth);
         const estimatedEnd = getDebtEstimatedEndMonth(item, todayMonth());
         extraHtml = `<div class="debtInsights">
           <div class="debtPills">
