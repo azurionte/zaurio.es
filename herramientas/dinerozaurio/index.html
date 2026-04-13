@@ -8,9 +8,10 @@
   <script src="./version.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
-  <link rel="manifest" href="/herramientas/dinerozaurio/manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="/herramientas/dinerozaurio/assets/piggy-app-icon-192.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./assets/piggy-app-icon-192.png" />
   <meta name="theme-color" content="#2a0046" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="DineroZaurio" />
@@ -2529,6 +2530,12 @@
       }
       return amount;
     }
+    function getDebtRecurringAmountForMonth(d, ym){
+      const override = getDebtOverrideForMonth(d.id, ym);
+      if(override?.mode === 'custom') return Number(override.amount || 0);
+      if(override?.mode === 'skip') return 0;
+      return Number(getDebtMonthlyCharge(d, ym) || 0);
+    }
     function getDebtFundingForMonth(d, ym){
       const override = getDebtOverrideForMonth(d.id, ym);
       const amount = Number(getDebtAmountForMonth(d, ym) || 0);
@@ -2545,13 +2552,10 @@
     function getDebtRecoveredForMonth(d, ym){
       const paidMonth = getDebtPaidMonth(d.id);
       if(paidMonth && ym === addMonthsStr(paidMonth, 1)){
-        if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype || '') === 'revolving'){
-          return Number(d.currentPayment || 0);
-        }
-        if((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype || '') === 'pay_end_month'){
-          return Number(d.amount || 0);
-        }
-        return Number(d.monthlyPayment || 0);
+        const start = d.startMonth || state.defaultStartMonth;
+        const previousMonth = addMonthsStr(paidMonth, -1);
+        const referenceMonth = previousMonth >= start ? previousMonth : paidMonth;
+        return Number(getDebtRecurringAmountForMonth(d, referenceMonth) || 0);
       }
       return getDebtMonthState(d, ym).recoveredAmount;
     }
@@ -2716,11 +2720,7 @@
       const paidMonth = getDebtPaidMonth(d.id);
       if(paidMonth && ym > paidMonth){
         const recoveredAmount = ym === addMonthsStr(paidMonth, 1)
-          ? ((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype || '') === 'revolving'
-            ? Number(d.currentPayment || 0)
-            : ((d.instrumentType || d.debtKind) === 'card' && (d.paymentMode || d.cardSubtype || '') === 'pay_end_month'
-              ? Number(d.amount || 0)
-              : Number(d.monthlyPayment || 0)))
+          ? Number(getDebtRecoveredForMonth(d, ym) || 0)
           : 0;
         return { visible: recoveredAmount > 0, active:false, settled: recoveredAmount > 0, recoveredAmount, monthAmount:0 };
       }
@@ -2738,7 +2738,7 @@
         ? (paidMonth === ym ? getDebtPayoffAmount(d, ym) : getDebtMonthlyCharge(d, ym))
         : 0;
       const recoveredAmount = settled
-        ? Number(((d.instrumentType || d.debtKind) === 'loan' || (d.paymentMode || d.cardSubtype) === 'installment') ? (d.monthlyPayment || 0) : (d.amount || 0))
+        ? Number(getDebtRecurringAmountForMonth(d, end || ym) || 0)
         : 0;
       return { visible: active || settled || monthCardEntries.length > 0 || monthCardTransfers.length > 0, active: active || monthCardEntries.length > 0 || monthCardTransfers.length > 0, settled, recoveredAmount, monthAmount };
     }
