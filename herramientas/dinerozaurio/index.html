@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DineroZaurio · Base estable</title>
+  <script src="./version.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
   <link rel="manifest" href="/herramientas/dinerozaurio/manifest.webmanifest" />
@@ -41,6 +42,139 @@
       color:var(--text);
       background:radial-gradient(circle at top,var(--bg1) 0%,var(--bg2) 35%,var(--bg3) 100%);
     }
+    .dzNavShell{
+      position:sticky;top:0;z-index:180;padding:14px 18px 0;
+    }
+    .dzNav{
+      width:min(1400px,100%);
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      align-items:center;
+      gap:14px;
+      padding:12px 16px;
+      border-radius:24px;
+      background:rgba(16,11,34,.88);
+      border:1px solid rgba(255,255,255,.1);
+      box-shadow:0 20px 48px rgba(0,0,0,.28);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+    }
+    .dzNavStart,.dzNavEnd{display:flex;align-items:center;gap:10px}
+    .dzNavCenter{display:flex;align-items:center;justify-content:center;min-width:0}
+    .dzMenu{position:relative}
+    .dzMenuTrigger{
+      display:inline-flex;align-items:center;gap:10px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      padding:8px 12px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.16s ease all;
+    }
+    .dzMenuTrigger:hover,.dzMenu.open .dzMenuTrigger{
+      background:rgba(255,255,255,.1);
+      transform:translateY(-1px);
+    }
+    .dzLogoTrigger{
+      width:50px;height:50px;padding:0;justify-content:center;
+      background:linear-gradient(135deg,rgba(255,255,255,.1),rgba(255,255,255,.04));
+    }
+    .dzMenuChevron{
+      width:10px;height:10px;display:inline-block;
+      border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+      transform:rotate(45deg) translateY(-2px);
+      opacity:.75;
+    }
+    .dzLogoIcon{
+      width:28px;height:28px;border-radius:10px;display:block;
+    }
+    .dzAppBrand{
+      display:inline-flex;align-items:center;gap:12px;
+      padding:8px 14px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      text-decoration:none;color:#fff;
+      max-width:100%;
+    }
+    .dzAppBrand img{
+      width:34px;height:34px;border-radius:10px;display:block;
+      box-shadow:0 10px 24px rgba(255,0,170,.16);
+    }
+    .dzAppBrandTitle{display:block;font-weight:900;letter-spacing:.01em}
+    .dzAppBrandSub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+    .dzProfileAvatar{
+      width:34px;height:34px;border-radius:50%;
+      object-fit:cover;display:block;border:2px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.08);
+    }
+    .dzProfileCopy{
+      display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+      min-width:0;
+    }
+    .dzProfileLabel{font-size:11px;color:var(--muted);font-weight:700}
+    .dzProfileName{
+      max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      font-size:14px;font-weight:900;
+    }
+    .dzDropdown{
+      position:absolute;top:calc(100% + 10px);left:0;min-width:250px;
+      padding:12px;border-radius:18px;
+      background:rgba(15,22,48,.98);
+      border:1px solid rgba(255,255,255,.1);
+      box-shadow:0 24px 48px rgba(0,0,0,.32);
+      opacity:0;pointer-events:none;transform:translateY(8px);
+      transition:.16s ease all;
+    }
+    .dzDropdown.right{left:auto;right:0;min-width:290px}
+    .dzMenu.open .dzDropdown{
+      opacity:1;pointer-events:auto;transform:translateY(0);
+    }
+    .dzDropdownList{display:flex;flex-direction:column;gap:8px}
+    .dzDropdownItem,.dzDropdownStatic{
+      display:flex;align-items:center;gap:12px;
+      padding:10px 12px;border-radius:14px;
+      text-decoration:none;color:#fff;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      font-size:14px;
+    }
+    .dzDropdownItem:hover{background:rgba(255,255,255,.1)}
+    .dzDropdownItem img,.dzDropdownStatic img{
+      width:28px;height:28px;border-radius:10px;object-fit:cover;display:block;
+    }
+    .dzDropdownGroupLabel{
+      font-size:11px;color:var(--muted);font-weight:800;
+      text-transform:uppercase;letter-spacing:.08em;padding:4px 6px 0;
+    }
+    .dzProfileCard{
+      display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;
+      padding:12px;border-radius:16px;background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);margin-bottom:10px;
+    }
+    .dzProfileCard img{
+      width:46px;height:46px;border-radius:50%;object-fit:cover;display:block;
+      border:2px solid rgba(255,255,255,.12);
+    }
+    .dzProfileCardName{font-weight:900}
+    .dzProfileCardEmail{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-word}
+    .dzVersionPill{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:10px 12px;border-radius:14px;margin-bottom:10px;
+      background:rgba(34,211,238,.08);
+      border:1px solid rgba(34,211,238,.22);
+      font-size:13px;
+    }
+    .dzVersionPill strong{font-weight:900}
+    .profileMenuAction{
+      width:100%;
+      justify-content:flex-start;
+      border-radius:14px;
+      padding:11px 14px;
+    }
+    .profileMenuAction.hidden{display:none !important}
     .wrap{width:min(720px,92vw);margin:18px auto 28px}
     .topMenu{
       position:sticky;top:10px;z-index:50;
@@ -339,6 +473,35 @@
     @media (max-width:1100px){
       .compactGrid{grid-template-columns:1fr}
     }
+    @media (max-width:900px){
+      .dzNav{
+        grid-template-columns:1fr;
+        justify-items:stretch;
+      }
+      .dzNavStart,.dzNavEnd,.dzNavCenter{
+        justify-content:center;
+      }
+      .dzAppBrand{
+        width:100%;
+        justify-content:center;
+      }
+      .dzProfileName{
+        max-width:220px;
+      }
+      .dzDropdown{
+        left:50%;
+        right:auto;
+        transform:translate(-50%, 8px);
+        width:min(92vw,320px);
+      }
+      .dzMenu.open .dzDropdown{
+        transform:translate(-50%, 0);
+      }
+      .dzDropdown.right{
+        left:50%;
+        right:auto;
+      }
+    }
 
     .warnDetails{margin-top:10px;padding-left:18px;color:var(--muted)}
     .month{cursor:pointer;transition:.16s ease all}
@@ -376,7 +539,91 @@
   </style>
 </head>
 <body data-zaurio-nav="herramientas">
-  <div data-zaurio-nav data-active="herramientas"></div>
+  <div class="dzNavShell">
+    <nav class="dzNav" aria-label="Navegacion de DineroZaurio">
+      <div class="dzNavStart">
+        <div class="dzMenu" data-dz-menu>
+          <button id="zaurioSiteMenuBtn" class="dzMenuTrigger dzLogoTrigger" type="button" aria-expanded="false" aria-label="Abrir menu de Zaurio">
+            <img class="dzLogoIcon" src="/shared/assets/brand/favicon-32x32.png" alt="Zaurio">
+          </button>
+          <div class="dzDropdown" role="menu" aria-label="Menu de Zaurio">
+            <div class="dzDropdownGroupLabel">Zaurio</div>
+            <div class="dzDropdownList">
+              <a class="dzDropdownItem" href="https://zaurio.es">
+                <img src="/shared/assets/brand/favicon-32x32.png" alt="">
+                <span>Inicio Zaurio</span>
+              </a>
+              <a class="dzDropdownItem" href="https://miercoles.zaurio.es">
+                <img src="/shared/assets/brand/miercoles.png" alt="">
+                <span>Miercoles</span>
+              </a>
+              <a class="dzDropdownItem" href="https://secretos.zaurio.es">
+                <img src="/shared/assets/brand/confesion.png" alt="">
+                <span>Secretos</span>
+              </a>
+              <a class="dzDropdownItem" href="https://herramientas.zaurio.es">
+                <img src="/shared/assets/apps/toolbox.png" alt="">
+                <span>Herramientas</span>
+              </a>
+              <a class="dzDropdownItem" href="https://herramientas.zaurio.es/velocichef/">
+                <img src="https://herramientas.zaurio.es/velocichef/assets/store_icon.png" alt="">
+                <span>VelociChef</span>
+              </a>
+              <a class="dzDropdownItem" href="https://herramientas.zaurio.es/emprezaurio/">
+                <img src="/shared/assets/brand/emprezaurio-icono.png" alt="">
+                <span>Emprezaurio</span>
+              </a>
+              <a class="dzDropdownItem" href="https://herramientas.zaurio.es/dinerozaurio/">
+                <img src="/shared/assets/apps/dinerozaurio.png" alt="">
+                <span>DineroZaurio</span>
+              </a>
+              <a class="dzDropdownItem" href="https://juegos.zaurio.es/trivialodon/">
+                <img src="/shared/assets/brand/trivialodon-icono.png" alt="">
+                <span>Trivialodon</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dzNavCenter">
+        <a class="dzAppBrand" href="https://herramientas.zaurio.es/dinerozaurio/" aria-label="Ir a DineroZaurio">
+          <img src="/shared/assets/apps/dinerozaurio.png" alt="DineroZaurio">
+          <span>
+            <span class="dzAppBrandTitle">DineroZaurio</span>
+            <span class="dzAppBrandSub">Planifica y ajusta cada mes con contexto real</span>
+          </span>
+        </a>
+      </div>
+      <div class="dzNavEnd">
+        <div class="dzMenu" data-dz-menu>
+          <button id="profileMenuBtn" class="dzMenuTrigger" type="button" aria-expanded="false" aria-label="Abrir menu de perfil">
+            <img id="profileMenuAvatar" class="dzProfileAvatar" src="/shared/assets/brand/favicon-32x32.png" alt="Perfil">
+            <span class="dzProfileCopy">
+              <span class="dzProfileLabel">Perfil</span>
+              <span id="profileMenuName" class="dzProfileName">Invitado</span>
+            </span>
+            <span class="dzMenuChevron" aria-hidden="true"></span>
+          </button>
+          <div class="dzDropdown right" role="menu" aria-label="Menu de perfil">
+            <div class="dzProfileCard">
+              <img id="profileCardAvatar" src="/shared/assets/brand/favicon-32x32.png" alt="Perfil">
+              <div>
+                <div id="profileCardName" class="dzProfileCardName">Sin sesion</div>
+                <div id="profileCardEmail" class="dzProfileCardEmail">Accede con Google para guardar tus datos.</div>
+              </div>
+            </div>
+            <div class="dzVersionPill">
+              <span>Version</span>
+              <strong id="profileVersionText">2.1.dev</strong>
+            </div>
+            <button id="exportDebugJsonBtn" class="btn ghost profileMenuAction hidden">Exportar JSON</button>
+            <button id="resetToWizardBtn" class="btn ghost profileMenuAction hidden">Volver al wizard</button>
+            <button id="logoutBtn" class="btn danger profileMenuAction hidden">Salir</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
   <div class="page">
     <section id="authGate" class="centerGate">
       <img src="/shared/assets/apps/dinerozaurio.png" alt="DineroZaurio" class="logo-main" />
@@ -475,9 +722,6 @@
             </button>
             <div id="saveStateText" class="saveState">Sin cambios pendientes</div>
           </div>
-          <button id="exportDebugJsonBtn" class="btn ghost hidden">Exportar JSON</button>
-          <button id="resetToWizardBtn" class="btn ghost">Volver al wizard</button>
-          <button id="logoutBtn" class="btn danger">Salir</button>
         </div>
       </div>
 
@@ -1294,10 +1538,85 @@
     function canUseDebugExport(){
       return String(state.session?.user?.email || '').trim().toLowerCase() === DEBUG_EXPORT_EMAIL;
     }
+    function getAppVersionLabel(){
+      const version = window.__DINEROZAURIO_VERSION__ || {};
+      return String(version.label || '2.1.dev').trim() || '2.1.dev';
+    }
+    function topNavProfileData(){
+      const user = state.session?.user || null;
+      const meta = user?.user_metadata || {};
+      const fullName = meta.full_name || meta.name || user?.email || 'Invitado';
+      const firstName = fullName.split(' ')[0] || fullName;
+      const avatarUrl = meta.avatar_url || '/shared/assets/brand/favicon-32x32.png';
+      return {
+        isLoggedIn: !!user,
+        fullName,
+        firstName,
+        email: user?.email || 'Accede con Google para guardar tus datos.',
+        avatarUrl
+      };
+    }
+    function updateTopNavUi(){
+      const profile = topNavProfileData();
+      const triggerName = document.getElementById('profileMenuName');
+      const cardName = document.getElementById('profileCardName');
+      const cardEmail = document.getElementById('profileCardEmail');
+      const triggerAvatar = document.getElementById('profileMenuAvatar');
+      const cardAvatar = document.getElementById('profileCardAvatar');
+      const versionEl = document.getElementById('profileVersionText');
+      const resetBtn = document.getElementById('resetToWizardBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      if(triggerName) triggerName.textContent = profile.isLoggedIn ? profile.firstName : 'Perfil';
+      if(cardName) cardName.textContent = profile.fullName;
+      if(cardEmail) cardEmail.textContent = profile.email;
+      if(triggerAvatar) triggerAvatar.src = profile.avatarUrl;
+      if(cardAvatar) cardAvatar.src = profile.avatarUrl;
+      if(versionEl) versionEl.textContent = getAppVersionLabel();
+      if(resetBtn) resetBtn.classList.toggle('hidden', !profile.isLoggedIn);
+      if(logoutBtn) logoutBtn.classList.toggle('hidden', !profile.isLoggedIn);
+    }
     function updateDebugExportUi(){
       const btn = document.getElementById('exportDebugJsonBtn');
       if(!btn) return;
       btn.classList.toggle('hidden', !canUseDebugExport());
+    }
+    function bindTopNavMenus(){
+      const menus = Array.from(document.querySelectorAll('[data-dz-menu]'));
+      if(!menus.length) return;
+      const closeMenus = (except = null) => {
+        menus.forEach(menu => {
+          if(except && menu === except) return;
+          menu.classList.remove('open');
+          const trigger = menu.querySelector('.dzMenuTrigger');
+          if(trigger) trigger.setAttribute('aria-expanded', 'false');
+        });
+      };
+      menus.forEach(menu => {
+        const trigger = menu.querySelector('.dzMenuTrigger');
+        if(!trigger || trigger.dataset.bound === 'true') return;
+        trigger.dataset.bound = 'true';
+        trigger.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const willOpen = !menu.classList.contains('open');
+          closeMenus(menu);
+          menu.classList.toggle('open', willOpen);
+          trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+      });
+      document.addEventListener('click', (event) => {
+        menus.forEach(menu => {
+          if(!menu.contains(event.target)){
+            menu.classList.remove('open');
+            const trigger = menu.querySelector('.dzMenuTrigger');
+            if(trigger) trigger.setAttribute('aria-expanded', 'false');
+          }
+        });
+      });
+      document.addEventListener('keydown', (event) => {
+        if(event.key !== 'Escape') return;
+        closeMenus();
+      });
     }
     function buildDebugExportPayload(){
       const persistable = snapshotPersistableState();
@@ -1666,12 +1985,30 @@
           const afterAmount = Number(afterMap[id]?.amount || 0);
           const beforeSource = beforeMap[id]?.source || 'salary';
           const afterSource = afterMap[id]?.source || 'salary';
+          const afterScope = afterMap[id]?.scope === 'from_here' ? ` desde ${prettyMonth}` : '';
           if(afterMode === 'custom' || beforeMode === 'custom'){
             title = `Se ha cambiado el pago de deuda en ${itemName} para ${prettyMonth}`;
-            desc = `Se ha cambiado de ${euros(beforeAmount)} a ${euros(afterAmount)} y ahora ${spendingSourceLabel(afterSource, afterMap[id]?.savingsGoalId).toLowerCase()}.`;
+            desc = `Se ha cambiado de ${euros(beforeAmount)} a ${euros(afterAmount)}${afterScope} y ahora ${spendingSourceLabel(afterSource, afterMap[id]?.savingsGoalId).toLowerCase()}.`;
           } else if(afterMode || beforeMode){
             title = `Se ha cambiado el estado de deuda en ${itemName} para ${prettyMonth}`;
             desc = `Se ha cambiado de ${beforeMode || 'sin ajuste'} a ${afterMode || 'sin ajuste'}${afterMode === 'paid' || afterMode === 'custom' ? ` y ahora ${spendingSourceLabel(afterSource, afterMap[id]?.savingsGoalId).toLowerCase()}` : ''}.`;
+          }
+        } else {
+          const beforeOverride = normalizeScopedAmountOverrideValue(beforeMap[id]);
+          const afterOverride = normalizeScopedAmountOverrideValue(afterMap[id]);
+          const beforeAmount = beforeOverride ? Number(beforeOverride.amount || 0) : 0;
+          const afterAmount = afterOverride ? Number(afterOverride.amount || 0) : 0;
+          const scopeLabel = (target) => {
+            if(!target) return 'sin ajuste';
+            if(target.mode === 'from_here') return `desde ${prettyMonth}`;
+            if(target.mode === 'remove_from_here') return `eliminado desde ${prettyMonth}`;
+            return `solo en ${prettyMonth}`;
+          };
+          title = `Se ha cambiado ${itemName} en ${prettyMonth}`;
+          if(afterOverride?.mode === 'remove_from_here'){
+            desc = `Se ha eliminado ${itemName} ${scopeLabel(afterOverride)}.`;
+          } else if(beforeOverride || afterOverride){
+            desc = `Se ha cambiado de ${euros(beforeAmount)} a ${euros(afterAmount)} ${scopeLabel(afterOverride)}.`;
           }
         }
         changes.push(createMonthOpsChange(
@@ -2073,6 +2410,43 @@
     function getExpenseMonthlyCharge(item, ym){
       return amountForSchedule(item, ym);
     }
+    function normalizeScopedAmountOverrideValue(raw){
+      if(raw === undefined || raw === null) return null;
+      if(raw && typeof raw === 'object' && !Array.isArray(raw)){
+        const mode = ['this_month','from_here','remove_from_here'].includes(raw.mode) ? raw.mode : 'this_month';
+        return {
+          mode,
+          amount: mode === 'remove_from_here' ? 0 : Number(raw.amount || 0)
+        };
+      }
+      return { mode:'this_month', amount:Number(raw || 0) };
+    }
+    function isPersistentScopedOverride(mode){
+      return mode === 'from_here' || mode === 'remove_from_here';
+    }
+    function monthAdjustmentView(ym){
+      return normalizeMonthAdjustmentShape(state.monthAdjustments?.[ym] || {}, ym);
+    }
+    function getScopedAmountOverrideForMonth(overrideKey, itemId, ym){
+      const direct = normalizeScopedAmountOverrideValue(monthAdjustmentView(ym)?.[overrideKey]?.[itemId]);
+      if(direct && !isPersistentScopedOverride(direct.mode)) return direct;
+      let persistent = direct && isPersistentScopedOverride(direct.mode) ? direct : null;
+      const start = state.defaultStartMonth || ym;
+      if(ym < start) return direct || persistent;
+      monthsInRange(start, ym).forEach(monthKey => {
+        const candidate = normalizeScopedAmountOverrideValue(monthAdjustmentView(monthKey)?.[overrideKey]?.[itemId]);
+        if(candidate && isPersistentScopedOverride(candidate.mode)){
+          persistent = candidate;
+        }
+      });
+      return direct || persistent;
+    }
+    function getScopedAmountForMonth(overrideKey, itemId, ym, fallbackAmount){
+      const override = getScopedAmountOverrideForMonth(overrideKey, itemId, ym);
+      if(!override) return Number(fallbackAmount || 0);
+      if(override.mode === 'remove_from_here') return 0;
+      return Number(override.amount || 0);
+    }
 
     function debtEndMonth(d){
       const start = d.startMonth || state.defaultStartMonth;
@@ -2102,6 +2476,21 @@
       const override = state.monthAdjustments?.[monthKey]?.debtOverrides?.[debtId];
       return override?.mode === 'paid' ? { monthKey, amount: Number(override.amount || 0) } : { monthKey, amount: 0 };
     }
+    function getDebtOverrideForMonth(debtId, ym){
+      const direct = cloneData(monthAdjustmentView(ym)?.debtOverrides?.[debtId] || null);
+      if(direct && direct.mode === 'custom' && direct.scope === 'from_here') return direct;
+      if(direct) return direct;
+      let persistent = null;
+      const start = state.defaultStartMonth || ym;
+      if(ym < start) return null;
+      monthsInRange(start, ym).forEach(monthKey => {
+        const candidate = cloneData(monthAdjustmentView(monthKey)?.debtOverrides?.[debtId] || null);
+        if(candidate?.mode === 'custom' && candidate.scope === 'from_here'){
+          persistent = candidate;
+        }
+      });
+      return persistent;
+    }
     function getDebtPayoffAmount(d, ym){
       const start = d.startMonth || state.defaultStartMonth;
       const paymentMode = d.paymentMode || d.cardSubtype || '';
@@ -2127,7 +2516,7 @@
     }
     function getDebtAmountForMonth(d, ym){
       const paidMonth = getDebtPaidMonth(d.id);
-      const override = adjustmentForMonth(ym).debtOverrides?.[d.id];
+      const override = getDebtOverrideForMonth(d.id, ym);
       if(paidMonth && ym > paidMonth) return 0;
       if(override?.mode === 'paid') return Number(override.amount || getDebtPayoffAmount(d, ym) || 0);
       let amount = getDebtMonthlyCharge(d, ym);
@@ -2138,7 +2527,7 @@
       return amount;
     }
     function getDebtFundingForMonth(d, ym){
-      const override = adjustmentForMonth(ym).debtOverrides?.[d.id];
+      const override = getDebtOverrideForMonth(d.id, ym);
       const amount = Number(getDebtAmountForMonth(d, ym) || 0);
       const source = override?.source || 'salary';
       if(amount <= 0) return { salaryAmount:0, reserveAmount:0, savingsAmount:0, source:'salary', savingsGoalId:'' };
@@ -2371,13 +2760,11 @@
       const adj = adjustmentForMonth(ym);
       const reserveTransferAmount = Number(adj.reserveTransferAmount || 0);
       const income = state.incomes.reduce((sum, item) => {
-        const override = adj.incomeOverrides[item.id];
-        return sum + (override !== undefined ? Number(override) : getIncomeMonthlyCharge(item, ym));
+        return sum + getScopedAmountForMonth('incomeOverrides', item.id, ym, getIncomeMonthlyCharge(item, ym));
       }, 0) + Number(adj.extraIncomeAmount || 0) + reserveTransferAmount + monthCardTransfersTotal(ym);
       const expenseItems = state.expenses
         .map(item => {
-          const override = adj.expenseOverrides[item.id];
-          return { ...item, monthAmount: override !== undefined ? Number(override) : getExpenseMonthlyCharge(item, ym) };
+          return { ...item, monthAmount: getScopedAmountForMonth('expenseOverrides', item.id, ym, getExpenseMonthlyCharge(item, ym)) };
         })
         .filter(item => item.monthAmount !== 0);
       const expense = expenseItems.reduce((sum, item) => sum + Number(item.monthAmount || 0), 0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(ym);
@@ -2393,10 +2780,9 @@
       let remainingAvailable = income - expense - debt;
       let savings = Number(adj.extraSavingAmount || 0);
       state.goals.forEach(goal => {
-        const override = adj.goalOverrides[goal.id];
+        const override = getScopedAmountOverrideForMonth('goalOverrides', goal.id, ym);
         let amount = 0;
-        if(override && override.mode === 'remove_from_here') amount = 0;
-        else if(override && override.mode === 'this_month') amount = Number(override.amount || 0);
+        if(override && (override.mode === 'remove_from_here' || override.mode === 'this_month' || override.mode === 'from_here')) amount = Number(override.amount || 0);
         else amount = getGoalMonthlyCharge(goal, ym, remainingAvailable).amount;
         savings += amount;
         remainingAvailable -= amount;
@@ -3276,23 +3662,20 @@
       return (goal.goalType||'fixed') === 'fixed' ? Number(goal.monthlyAmount||0) : 0;
     }
     function monthlyActiveItems(ym){
-      const adj = adjustmentForMonth(ym);
-
       const incomes = state.incomes.map(it => ({
         ...it,
-        monthAmount: adj.incomeOverrides[it.id] !== undefined ? Number(adj.incomeOverrides[it.id]) : getIncomeMonthlyCharge(it, ym)
+        monthAmount: getScopedAmountForMonth('incomeOverrides', it.id, ym, getIncomeMonthlyCharge(it, ym))
       })).filter(it => it.monthAmount !== 0);
 
       const expenses = state.expenses.map(it => ({
         ...it,
-        monthAmount: adj.expenseOverrides[it.id] !== undefined ? Number(adj.expenseOverrides[it.id]) : getExpenseMonthlyCharge(it, ym)
+        monthAmount: getScopedAmountForMonth('expenseOverrides', it.id, ym, getExpenseMonthlyCharge(it, ym))
       })).filter(it => it.monthAmount !== 0);
 
       const goals = state.goals.map(it => {
-        const ov = adj.goalOverrides[it.id];
+        const ov = getScopedAmountOverrideForMonth('goalOverrides', it.id, ym);
         let monthAmount = 0;
-        if(ov && ov.mode === 'this_month') monthAmount = Number(ov.amount || 0);
-        else if(ov && ov.mode === 'remove_from_here') monthAmount = 0;
+        if(ov && (ov.mode === 'this_month' || ov.mode === 'from_here' || ov.mode === 'remove_from_here')) monthAmount = Number(ov.amount || 0);
         else monthAmount = getGoalMonthlyCharge(it, ym, 999999999).amount;
         return { ...it, monthAmount, active: monthAmount !== 0 };
       }).filter(it => it.active);
@@ -3894,6 +4277,28 @@
         if(!entry?.source) return '';
         return spendingSourceLabel(entry.source, entry.savingsGoalId);
       }
+      function recurringScopeOptions(selected = 'this_month'){
+        return `
+          <option value="this_month" ${selected === 'this_month' ? 'selected' : ''}>Solo este mes</option>
+          <option value="from_here" ${selected === 'from_here' ? 'selected' : ''}>Desde este mes en adelante</option>
+        `;
+      }
+      function commitScopedCollectionAmount(overrideKey, itemId, scope, amount){
+        commitMonthAdjustment(nextAdj => {
+          if(scope === 'from_here'){
+            nextAdj[overrideKey][itemId] = { mode:'from_here', amount };
+          } else {
+            nextAdj[overrideKey][itemId] = amount;
+          }
+        });
+      }
+      function commitScopedGoalAmount(goalId, scope, amount){
+        commitMonthAdjustment(nextAdj => {
+          nextAdj.goalOverrides[goalId] = scope === 'from_here'
+            ? { mode:'from_here', amount }
+            : { mode:'this_month', amount };
+        });
+      }
 
       function incomeListHtml(){
         const base = current.incomes.length ? current.incomes.map(it => `
@@ -3969,7 +4374,7 @@
           <div class="miniItem ${it.settled ? 'settledDebt' : ''}">
             <div class="miniMeta">
               <div class="miniName" style="${it.settled ? 'color:#4ade80' : ''}">${escapeHtml(debtDisplayName(it))}${it.settled ? ' · saldada' : ''}</div>
-              <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it))}${debtPaymentLabel(adjustmentForMonth(ym).debtOverrides?.[it.id]) ? ` · ${escapeHtml(debtPaymentLabel(adjustmentForMonth(ym).debtOverrides?.[it.id]))}` : ''}</div>
+              <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it))}${debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)) ? ` · ${escapeHtml(debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)))}` : ''}</div>
             </div>
             <div class="miniActions">
               ${it.settled ? '' : `
@@ -4163,24 +4568,27 @@
 
       root.querySelectorAll('[data-income-edit]').forEach(btn => btn.onclick = () => {
         const item = current.incomes.find(x=>x.id===btn.dataset.incomeEdit);
+        const effectiveOverride = getScopedAmountOverrideForMonth('incomeOverrides', item.id, ym);
         mountInlineForm('monthIncomeForm', 'Editar ingreso de este mes', [
-          { id:'mi_amount', label:'Monto', type:'number', step:'0.01', value:item.monthAmount }
+          { id:'mi_amount', label:'Monto', type:'number', step:'0.01', value:item.monthAmount },
+          { id:'mi_scope', label:'Aplicar cambio', type:'select', options: recurringScopeOptions(effectiveOverride?.mode === 'from_here' ? 'from_here' : 'this_month') }
         ], () => {
           const amount = Number(document.getElementById('mi_amount').value||0);
-          adj.incomeOverrides[item.id] = amount;
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+          const scope = document.getElementById('mi_scope').value || 'this_month';
+          commitScopedCollectionAmount('incomeOverrides', item.id, scope, amount);
         });
       });
 
       root.querySelectorAll('[data-expense-edit]').forEach(btn => btn.onclick = () => {
         const item = current.expenses.find(x=>x.id===btn.dataset.expenseEdit);
+        const effectiveOverride = getScopedAmountOverrideForMonth('expenseOverrides', item.id, ym);
         mountInlineForm('monthExpenseForm', 'Editar gasto de este mes', [
-          { id:'me_amount', label:'Monto', type:'number', step:'0.01', value:item.monthAmount }
+          { id:'me_amount', label:'Monto', type:'number', step:'0.01', value:item.monthAmount },
+          { id:'me_scope', label:'Aplicar cambio', type:'select', options: recurringScopeOptions(effectiveOverride?.mode === 'from_here' ? 'from_here' : 'this_month') }
         ], () => {
           const amount = Number(document.getElementById('me_amount').value||0);
-          commitMonthAdjustment(nextAdj => {
-            nextAdj.expenseOverrides[item.id] = amount;
-          });
+          const scope = document.getElementById('me_scope').value || 'this_month';
+          commitScopedCollectionAmount('expenseOverrides', item.id, scope, amount);
         });
       });
       root.querySelectorAll('[data-expense-remove]').forEach(btn => btn.onclick = () => {
@@ -4193,30 +4601,21 @@
           `}
         ], () => {
           const mode = document.getElementById('me_remove_mode').value;
-          if(mode === 'remove_from_here'){
-            const sourceExpense = state.expenses.find(entry => entry.id === item.id);
-            if(sourceExpense){
-              if((sourceExpense.startMonth || state.defaultStartMonth) >= ym){
-                state.expenses = state.expenses.filter(entry => entry.id !== item.id);
-              } else {
-                sourceExpense.endMonth = addMonthsStr(ym, -1);
-              }
-            }
-            touchState({ reopenMonth: ym });
-            return;
-          }
           commitMonthAdjustment(nextAdj => {
-            nextAdj.expenseOverrides[item.id] = 0;
+            nextAdj.expenseOverrides[item.id] = mode === 'remove_from_here'
+              ? { mode:'remove_from_here', amount:0 }
+              : 0;
           });
         });
       });
 
       root.querySelectorAll('[data-debt-custom]').forEach(btn => btn.onclick = () => {
         const debt = current.debts.find(x=>x.id===btn.dataset.debtCustom);
-        const currentOverride = adj.debtOverrides?.[debt.id] || {};
+        const currentOverride = getDebtOverrideForMonth(debt.id, ym) || {};
         const shouldShowSavingsPicker = availableSavingsGoals.length > 1;
         mountInlineForm('monthDebtForm', 'Editar deuda de este mes', [
           { id:'md_amount', label:'Monto', type:'number', step:'0.01', value:debt.monthAmount },
+          { id:'md_scope', label:'Aplicar cambio', type:'select', options: recurringScopeOptions(currentOverride.scope === 'from_here' ? 'from_here' : 'this_month') },
           { id:'md_source', label:'Como lo pagas', type:'select', options:`
             <option value="salary" ${(currentOverride.source || 'salary') === 'salary' ? 'selected' : ''}>Con sueldo</option>
             <option value="reserve" ${currentOverride.source === 'reserve' ? 'selected' : ''}>Con colchón</option>
@@ -4230,6 +4629,7 @@
           }] : [])
         ], () => {
           const amount = Number(document.getElementById('md_amount').value||0);
+          const scope = document.getElementById('md_scope').value || 'this_month';
           const source = document.getElementById('md_source').value || 'salary';
           const savingsGoalId = source === 'savings'
             ? (document.getElementById('md_savings_goal')?.value || (availableSavingsGoals.length === 1 ? availableSavingsGoals[0].id : ''))
@@ -4243,7 +4643,7 @@
             return;
           }
           commitMonthAdjustment(nextAdj => {
-            nextAdj.debtOverrides[debt.id] = { mode:'custom', amount, source, savingsGoalId };
+            nextAdj.debtOverrides[debt.id] = { mode:'custom', amount, source, savingsGoalId, scope };
           });
         });
         const sourceEl = document.getElementById('md_source');
@@ -4323,12 +4723,14 @@
 
       root.querySelectorAll('[data-goal-edit]').forEach(btn => btn.onclick = () => {
         const goal = current.goals.find(x=>x.id===btn.dataset.goalEdit);
+        const effectiveOverride = getScopedAmountOverrideForMonth('goalOverrides', goal.id, ym);
         mountInlineForm('monthSavingForm', 'Modificar ahorro de este mes', [
-          { id:'ms_amount', label:'Monto', type:'number', step:'0.01', value:goal.monthAmount }
+          { id:'ms_amount', label:'Monto', type:'number', step:'0.01', value:goal.monthAmount },
+          { id:'ms_scope', label:'Aplicar cambio', type:'select', options: recurringScopeOptions(effectiveOverride?.mode === 'from_here' ? 'from_here' : 'this_month') }
         ], () => {
           const amount = Number(document.getElementById('ms_amount').value||0);
-          adj.goalOverrides[goal.id] = { mode:'this_month', amount };
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+          const scope = document.getElementById('ms_scope').value || 'this_month';
+          commitScopedGoalAmount(goal.id, scope, amount);
         });
       });
       root.querySelectorAll('[data-goal-remove]').forEach(btn => btn.onclick = () => {
@@ -4340,10 +4742,11 @@
           `}
         ], () => {
           const mode = document.getElementById('ms_remove_mode').value;
-          adj.goalOverrides[goalId] = mode === 'remove_from_here'
-            ? { mode:'remove_from_here' }
-            : { mode:'this_month', amount:0 };
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+          commitMonthAdjustment(nextAdj => {
+            nextAdj.goalOverrides[goalId] = mode === 'remove_from_here'
+              ? { mode:'remove_from_here', amount:0 }
+              : { mode:'this_month', amount:0 };
+          });
         });
       });
 
@@ -4366,9 +4769,10 @@
           { id:'ams_name', label:'Nombre', type:'text', value:adj.extraSavingName||'' },
           { id:'ams_amount', label:'Monto', type:'number', step:'0.01', value:adj.extraSavingAmount||0 }
         ], () => {
-          adj.extraSavingName = document.getElementById('ams_name').value.trim();
-          adj.extraSavingAmount = Number(document.getElementById('ams_amount').value||0);
-          closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+          commitMonthAdjustment(nextAdj => {
+            nextAdj.extraSavingName = document.getElementById('ams_name').value.trim();
+            nextAdj.extraSavingAmount = Number(document.getElementById('ams_amount').value||0);
+          });
         });
       };
       document.getElementById('addMonthDebtBtn').onclick = () => {
@@ -4470,9 +4874,10 @@
       if(editExtraSavingBtn) editExtraSavingBtn.onclick = () => document.getElementById('addMonthSavingBtn').click();
       const removeExtraSavingBtn = document.getElementById('removeExtraSavingBtn');
       if(removeExtraSavingBtn) removeExtraSavingBtn.onclick = () => {
-        adj.extraSavingName = '';
-        adj.extraSavingAmount = 0;
-        closeModal(); persistAndRefresh({ reopenMonth: ym }).catch(err => console.error(err));
+        commitMonthAdjustment(nextAdj => {
+          nextAdj.extraSavingName = '';
+          nextAdj.extraSavingAmount = 0;
+        });
       };
     }
 
@@ -4655,13 +5060,11 @@
         const reserveTransferIn = Number(adj.reserveTransferAmount || 0);
 
         const income = state.incomes.reduce((a,b)=>{
-          const ov = adj.incomeOverrides[b.id];
-          return a + (ov !== undefined ? Number(ov) : getIncomeMonthlyCharge(b, m));
+          return a + getScopedAmountForMonth('incomeOverrides', b.id, m, getIncomeMonthlyCharge(b, m));
         },0) + Number(adj.extraIncomeAmount || 0) + reserveTransferIn + transferIn;
 
         const expense = state.expenses.reduce((a,b)=>{
-          const ov = adj.expenseOverrides[b.id];
-          return a + (ov !== undefined ? Number(ov) : getExpenseMonthlyCharge(b, m));
+          return a + getScopedAmountForMonth('expenseOverrides', b.id, m, getExpenseMonthlyCharge(b, m));
         },0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(m);
 
         let debt = 0;
@@ -4680,11 +5083,9 @@
         let remainingAvailable = income - expense - debt;
 
         state.goals.forEach(goal => {
-          const ov = adj.goalOverrides[goal.id];
+          const ov = getScopedAmountOverrideForMonth('goalOverrides', goal.id, m);
           let amount = 0;
-          if(ov && ov.mode === 'remove_from_here'){
-            amount = 0;
-          } else if(ov && ov.mode === 'this_month'){
+          if(ov && (ov.mode === 'remove_from_here' || ov.mode === 'this_month' || ov.mode === 'from_here')){
             amount = Number(ov.amount || 0);
           } else {
             const r = getGoalMonthlyCharge(goal, m, remainingAvailable);
@@ -4791,12 +5192,15 @@
       document.getElementById('forecastFrom').value = state.forecast.from;
       document.getElementById('forecastTo').value = state.forecast.to;
 
+      bindTopNavMenus();
+      updateTopNavUi();
       bindUi();
 
       if(client){
         const { data: { session } } = await client.auth.getSession();
         state.session = session;
         updateDebugExportUi();
+        updateTopNavUi();
         if(session){
           try{
             await loadFromSupabase();
@@ -4810,10 +5214,12 @@
           if(sessionNow && state.session && state.session.user && sessionNow.user && state.session.user.id === sessionNow.user.id && flowStateGet()){
             state.session = sessionNow;
             updateDebugExportUi();
+            updateTopNavUi();
             return;
           }
           state.session = sessionNow;
           updateDebugExportUi();
+          updateTopNavUi();
           if(sessionNow){
             try{
               await loadFromSupabase();
@@ -4902,7 +5308,7 @@
 
       document.getElementById('resetToWizardBtn').addEventListener('click', () => {
         flowStateSet('wizard');
-        hide('appShell'); show('wizard'); showWizardStep(0);
+        hide('choiceGate'); hide('appShell'); hide('authGate'); show('wizard'); showWizardStep(0);
       });
       document.getElementById('saveChangesBtn').addEventListener('click', () => {
         openSaveModal();
@@ -4915,6 +5321,7 @@
         if(window.dzSupabase){ await window.dzSupabase.auth.signOut(); }
         state.session = null;
         updateDebugExportUi();
+        updateTopNavUi();
         flowStateClear();
         hide('choiceGate'); hide('wizard'); hide('appShell'); show('authGate');
       });
@@ -5052,8 +5459,5 @@
     window.state = state;
     start();
   </script>
-  <script src="/shared/js/zaurio-nav.js"></script>
 </body>
 </html>
-
-
