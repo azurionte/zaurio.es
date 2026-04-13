@@ -5937,6 +5937,34 @@ function renderPill(option, group, activeValues, helper = "") {
   `;
 }
 
+function renderHouseholdCountStepper(labelId = "householdCountLabel") {
+  const count = Math.max(1, Math.min(8, Number(state.profile?.householdCount || 1)));
+  return `
+    <div class="vc-household-stepper" role="group" aria-labelledby="${escapeHtml(labelId)}">
+      <button
+        class="vc-household-stepper-button"
+        type="button"
+        data-action="change-household-count"
+        data-delta="-1"
+        aria-label="Quitar una persona"
+        ${count <= 1 ? "disabled" : ""}
+      >-</button>
+      <div class="vc-household-stepper-value" aria-live="polite">
+        <strong>${count}</strong>
+        <span>${count === 1 ? "persona" : "personas"}</span>
+      </div>
+      <button
+        class="vc-household-stepper-button"
+        type="button"
+        data-action="change-household-count"
+        data-delta="1"
+        aria-label="Añadir una persona"
+        ${count >= 8 ? "disabled" : ""}
+      >+</button>
+    </div>
+  `;
+}
+
 function renderMealChoice(option, activeValues) {
   const active = activeValues.includes(option.key);
   return `
@@ -6038,8 +6066,8 @@ function renderOnboarding() {
       copy: "Puedes decirle a cada persona si come lo mismo que tú o si tiene reglas especiales.",
       content: `
         <div class="vc-field vc-step-section">
-          <label class="vc-label" for="householdCount">Personas que comen regularmente contigo</label>
-          <input id="householdCount" class="vc-input" type="number" min="1" max="8" data-field="householdCount" value="${state.profile.householdCount}">
+          <label class="vc-label" id="householdCountLabel">Personas que comen regularmente contigo</label>
+          ${renderHouseholdCountStepper("householdCountLabel")}
         </div>
         <div class="vc-member-list vc-step-section">
           ${state.profile.householdMembers.map((member, index) => `
@@ -6906,8 +6934,8 @@ function renderProfileView() {
                 <input id="profile-name" class="vc-input" type="text" data-field="displayName" value="${escapeHtml(state.profile.displayName || "")}">
               </div>
               <div class="vc-field">
-                <label class="vc-label" for="profile-household-count">Personas que comen regularmente contigo</label>
-                <input id="profile-household-count" class="vc-input" type="number" min="1" max="8" data-field="householdCount" value="${state.profile.householdCount}">
+                <label class="vc-label" id="profile-household-count-label">Personas que comen regularmente contigo</label>
+                ${renderHouseholdCountStepper("profile-household-count-label")}
               </div>
             </div>
           `,
@@ -8577,6 +8605,18 @@ async function handleAction(action, trigger) {
       await openPlanningStartModal("first-week");
       break;
 
+    case "change-household-count": {
+      if (!state.profile) break;
+      const delta = Number(trigger.dataset.delta || 0);
+      if (!delta) break;
+      const nextCount = Math.max(1, Math.min(8, Number(state.profile.householdCount || 1) + delta));
+      if (nextCount === Number(state.profile.householdCount || 1)) break;
+      state.profile.householdCount = nextCount;
+      syncHouseholdMembers(state.profile);
+      render();
+      break;
+    }
+
     case "plan-new-week":
       clearCookingMicHintTimer();
       stopHandsFreeMode();
@@ -9497,7 +9537,6 @@ document.addEventListener("input", (event) => {
     if (field === "householdCount") {
       state.profile.householdCount = Math.max(1, Math.min(8, Number(event.target.value || 1)));
       syncHouseholdMembers(state.profile);
-      render();
       return;
     }
     state.profile[field] = event.target.type === "checkbox" ? event.target.checked : event.target.value;
@@ -9525,6 +9564,12 @@ document.addEventListener("change", (event) => {
 
   const field = event.target.dataset.field;
   if (field && state.profile) {
+    if (field === "householdCount") {
+      state.profile.householdCount = Math.max(1, Math.min(8, Number(event.target.value || 1)));
+      syncHouseholdMembers(state.profile);
+      render();
+      return;
+    }
     state.profile[field] = event.target.type === "checkbox" ? event.target.checked : event.target.value;
     if (field === "lunchPrepNightBefore") render();
   }
