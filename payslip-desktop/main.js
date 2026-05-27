@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain, net, protocol } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, net, protocol } = require('electron');
 const { autoUpdater } = require('electron-updater');
+const fs = require('fs/promises');
 const path = require('path');
 const { pathToFileURL } = require('url');
 
@@ -105,6 +106,28 @@ function registerUpdaterEvents() {
   });
 }
 
+function registerDesktopFilePicker() {
+  ipcMain.handle('pdf:select', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select payslip PDF',
+      properties: ['openFile'],
+      filters: [{ name: 'PDF files', extensions: ['pdf'] }]
+    });
+
+    if (result.canceled || !result.filePaths.length) {
+      return { canceled: true };
+    }
+
+    const filePath = result.filePaths[0];
+    const data = await fs.readFile(filePath);
+    return {
+      canceled: false,
+      fileName: path.basename(filePath),
+      base64: data.toString('base64')
+    };
+  });
+}
+
 /**
  * Create the main application window. This loads the bundled HTML
  * payslip converter into an Electron BrowserWindow. The window is sized
@@ -155,6 +178,7 @@ function createMainWindow() {
 app.whenReady().then(() => {
   registerAppProtocol();
   registerUpdaterEvents();
+  registerDesktopFilePicker();
   createMainWindow();
 
   // On macOS it's common to re-create a window when the dock icon is clicked

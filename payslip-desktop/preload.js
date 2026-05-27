@@ -13,6 +13,10 @@ const updaterApi = {
 
 contextBridge.exposeInMainWorld('payslipUpdater', updaterApi);
 
+contextBridge.exposeInMainWorld('payslipDesktop', {
+  selectPdf: () => ipcRenderer.invoke('pdf:select')
+});
+
 window.addEventListener('DOMContentLoaded', () => {
   const headerRight = document.querySelector('#header > div:last-child');
   if (!headerRight || document.getElementById('desktopUpdatePanel')) return;

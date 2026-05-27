@@ -2215,6 +2215,42 @@ function bytesToArrayBuffer(bytes) {
     return new Uint8Array(bytes || []).buffer;
 }
 
+function base64ToArrayBuffer(base64) {
+    var binary = atob(base64 || '');
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+
+async function selectPdfWithDesktopPicker() {
+    if (!window.payslipDesktop || typeof window.payslipDesktop.selectPdf !== 'function') return false;
+    var drop = document.getElementById('v49Drop');
+    var dropLabel = drop ? drop.querySelector('b') : null;
+    if (dropLabel) dropLabel.textContent = 'Opening file picker...';
+
+    var result = await window.payslipDesktop.selectPdf();
+    if (!result || result.canceled) {
+        if (dropLabel) dropLabel.textContent = 'Drop a file or click here to select';
+        return true;
+    }
+
+    importedFileName = result.fileName || 'payslip.pdf';
+    var introEl = document.getElementById('intro-overlay');
+    if (introEl) introEl.style.display = 'none';
+    var splashEl = document.getElementById('splash');
+    if (splashEl) splashEl.style.display = 'none';
+    var loadingOverlayEl = document.getElementById('loading-overlay');
+    if (loadingOverlayEl) {
+        loadingOverlayEl.style.display = 'flex';
+        loadingOverlayEl.textContent = 'Reading PDF...';
+    }
+
+    await processPdf(base64ToArrayBuffer(result.base64));
+    return true;
+}
+
 
 // (import-choice overlay is deprecated; hierarchical tabs handle multiple slips)
 
@@ -3674,7 +3710,7 @@ function generatePayslipHTML(d) {
 <script id="v49fix-script">
 (function(){
   'use strict';
-  var VERSION='V4.9.3';
+  var VERSION='V4.9.4';
   var countries={India:{code:'IN',name:'India',desc:'ADP Celergo India payslip'},UK:{code:'GB',name:'UK',desc:'UK demo payslip layout'},Brazil:{code:'BR',name:'Brazil',desc:'Demonstrativo de Pagamento'},Australia:{code:'AU',name:'Australia',desc:'PayForce Australia payslip'}};
   function el(id){return document.getElementById(id)}
   function all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel))}
@@ -3727,6 +3763,17 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   function bindLanding(){all('.v49-country').forEach(function(btn){btn.addEventListener('click',function(){chooseCountry(btn.getAttribute('data-country'))})});var dz=el('v49Drop');if(!dz)return;dz.addEventListener('click',function(){openFileChooser()});dz.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openFileChooser()}});['dragenter','dragover'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.add('dragover')})});['dragleave','dragend'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.remove('dragover')})});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('dragover');var files=e.dataTransfer&&e.dataTransfer.files;if(files&&files.length){useDroppedFiles(files)}})}
   function showWorkspace(){var intro=el('intro-overlay');if(intro)intro.style.display='none';var splash=el('splash');if(splash)splash.style.display='none';var main=el('main');if(main){main.style.display='flex';main.classList.remove('workspace-enter-v49');void main.offsetWidth;main.classList.add('workspace-enter-v49')}}
   function openFileChooser(){
+    if(window.payslipDesktop&&typeof window.payslipDesktop.selectPdf==='function'&&typeof selectPdfWithDesktopPicker==='function'){
+      selectPdfWithDesktopPicker().catch(function(err){
+        console.error(err);
+        var loadingOverlay=el('loading-overlay');
+        if(loadingOverlay)loadingOverlay.style.display='none';
+        var drop=el('v49Drop');
+        if(drop&&drop.querySelector('b'))drop.querySelector('b').textContent='Drop a file or click here to select';
+        alert('Could not import that PDF. Please try again or choose another file.');
+      });
+      return;
+    }
     var input = el('importFile');
     if(!input) return;
     // Reset the input so selecting the same file twice in a row still triggers
