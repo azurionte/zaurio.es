@@ -8,4 +8,3 @@
 # Node/Electron build output
 node_modules/
 payslip-desktop/dist/
-payslip-updates/
