@@ -467,7 +467,12 @@ async function fetchPayslipUpdateAsset(request, env, path) {
     return new Response("No encontrado", { status: 404 });
   }
 
-  if (objectName.endsWith(".nsis.7z") || /^(PayslipCreatorSetup|DemoBuildingToolsSetup)-\d+\.\d+\.\d+\.exe$/i.test(objectName)) {
+  if (
+    objectName === "latest.yml" ||
+    objectName.endsWith(".blockmap") ||
+    objectName.endsWith(".nsis.7z") ||
+    /^(PayslipCreatorSetup|DemoBuildingToolsSetup)-\d+\.\d+\.\d+\.exe$/i.test(objectName)
+  ) {
     return Response.redirect(`${PAYSLIP_UPDATES_GITHUB_RAW}${encodeURIComponent(objectName)}`, 302);
   }
 
