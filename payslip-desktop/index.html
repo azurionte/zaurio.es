@@ -7705,6 +7705,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   }
   function updateShellStatus(status){
     var text = el('v5UpdateText');
+    window.__v5LastUpdateStatus = status || null;
     if (!text) return;
     if (!status || !status.state || status.state === 'idle' || status.state === 'current') {
       text.innerHTML = '<i class="fa-solid fa-circle-check"></i> Up to date';
@@ -7755,6 +7756,31 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     all('[data-v5-check-updates]').forEach(function(button){
       button.addEventListener('click', function(e){
         e.preventDefault();
+        var current = window.__v5LastUpdateStatus || {};
+        if (current.state === 'available' && window.payslipUpdater.download) {
+          button.disabled = true;
+          button.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Downloading...';
+          window.payslipUpdater.download().then(function(status){
+            button.disabled = false;
+            button.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Check for updates';
+            updateShellStatus(status);
+          }).catch(function(){
+            button.disabled = false;
+            button.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Check for updates';
+            updateShellStatus({ state: 'error', message: 'Update download failed' });
+          });
+          return;
+        }
+        if (current.state === 'downloaded' && window.payslipUpdater.install) {
+          button.disabled = true;
+          button.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Installing...';
+          window.payslipUpdater.install().catch(function(){
+            button.disabled = false;
+            button.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Check for updates';
+            updateShellStatus({ state: 'error', message: 'Update install failed' });
+          });
+          return;
+        }
         window.payslipUpdater.check().then(updateShellStatus).catch(function(){ updateShellStatus({ state: 'error', message: 'Update check failed' }); });
       });
     });
