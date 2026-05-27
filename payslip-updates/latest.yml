@@ -1,9 +1,9 @@
 version: 4.9.3
 files:
-  - url: Payslip Creator Web Setup 4.9.3.exe
-    sha512: 95h0Hm3BInla2VMHH/+11nGdnburtElEeUUS95k+J8Hp1/QHLMB+uN6WmRVTqVYAcO43zQtGU/rtK1Xp40wO0g==
-path: Payslip Creator Web Setup 4.9.3.exe
-sha512: 95h0Hm3BInla2VMHH/+11nGdnburtElEeUUS95k+J8Hp1/QHLMB+uN6WmRVTqVYAcO43zQtGU/rtK1Xp40wO0g==
+  - url: PayslipCreatorWebSetup-4.9.3.exe
+    sha512: tE9VstcIQ55mowYCzWud5qprfsDeKMFIuqXNPfCuVSv/4urZZz7nOKYFV6gBH4n/Q4VFKPVvrUdyPIjzrFxxEg==
+path: PayslipCreatorWebSetup-4.9.3.exe
+sha512: tE9VstcIQ55mowYCzWud5qprfsDeKMFIuqXNPfCuVSv/4urZZz7nOKYFV6gBH4n/Q4VFKPVvrUdyPIjzrFxxEg==
 packages:
   x64:
     size: 100683076
@@ -11,4 +11,4 @@ packages:
     blockMapSize: 105749
     path: payslip-desktop-4.9.3-x64.nsis.7z
     file: payslip-desktop-4.9.3-x64.nsis.7z
-releaseDate: '2026-05-27T12:17:16.498Z'
+releaseDate: '2026-05-27T12:21:08.184Z'
