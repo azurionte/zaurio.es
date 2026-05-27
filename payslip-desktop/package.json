@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "4.9.6",
+  "version": "4.9.7",
   "main": "main.js",
   "description": "Zaurio payslip converter",
   "author": "Zaurio",
@@ -33,7 +33,8 @@
     "nsis": {
       "perMachine": false,
       "oneClick": true,
-      "allowToChangeInstallationDirectory": false
+      "allowToChangeInstallationDirectory": false,
+      "artifactName": "PayslipCreatorSetup-${version}.${ext}"
     },
     "nsisWeb": {
       "perMachine": false,
@@ -42,7 +43,7 @@
       "artifactName": "PayslipCreatorWebSetup-${version}.${ext}"
     },
     "win": {
-      "target": "nsis-web",
+      "target": "nsis",
       "signAndEditExecutable": false
     }
   }
