@@ -1,8 +1,8 @@
-version: 4.9.10
+version: 5.0.0
 files:
-  - url: PayslipCreatorSetup-4.9.10.exe
-    sha512: w0zRdBfpxXUCMsM3thHXlusaSzgTOS8zKHygLGyVoZcJ4WCGBriEDS+VbCuZp7NQS4uthH5lqmfpk0yHNsBCfA==
-    size: 101129036
-path: PayslipCreatorSetup-4.9.10.exe
-sha512: w0zRdBfpxXUCMsM3thHXlusaSzgTOS8zKHygLGyVoZcJ4WCGBriEDS+VbCuZp7NQS4uthH5lqmfpk0yHNsBCfA==
-releaseDate: '2026-05-27T15:28:01.392Z'
+  - url: DemoBuildingToolsSetup-5.0.0.exe
+    sha512: T+QVjFjGxxPCAQdTeL5QqOTfAzGQ05GGo81k4MrQqnZg3cRVuJc/oCc1qIKXNn/mC/ERSQQW+ubjXXYKDogGEQ==
+    size: 101131667
+path: DemoBuildingToolsSetup-5.0.0.exe
+sha512: T+QVjFjGxxPCAQdTeL5QqOTfAzGQ05GGo81k4MrQqnZg3cRVuJc/oCc1qIKXNn/mC/ERSQQW+ubjXXYKDogGEQ==
+releaseDate: '2026-05-27T16:28:16.166Z'

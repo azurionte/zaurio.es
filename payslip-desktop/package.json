@@ -1,8 +1,8 @@
 {
   "name": "payslip-desktop",
-  "version": "4.9.10",
+  "version": "5.0.0",
   "main": "main.js",
-  "description": "Zaurio payslip converter",
+  "description": "Zaurio demo building tools",
   "author": "Zaurio",
   "license": "UNLICENSED",
   "private": true,
@@ -19,7 +19,7 @@
   },
   "build": {
     "appId": "es.zaurio.payslip",
-    "productName": "Payslip Creator",
+    "productName": "Demo Building Tools",
     "files": [
       "index.html",
       "main.js",
@@ -34,13 +34,13 @@
       "perMachine": false,
       "oneClick": true,
       "allowToChangeInstallationDirectory": false,
-      "artifactName": "PayslipCreatorSetup-${version}.${ext}"
+      "artifactName": "DemoBuildingToolsSetup-${version}.${ext}"
     },
     "nsisWeb": {
       "perMachine": false,
       "oneClick": true,
       "allowToChangeInstallationDirectory": false,
-      "artifactName": "PayslipCreatorWebSetup-${version}.${ext}"
+      "artifactName": "DemoBuildingToolsWebSetup-${version}.${ext}"
     },
     "win": {
       "target": "nsis",
