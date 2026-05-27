@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Demo Resources Tool v2 — Resumes, Receipts & Degrees (Offline)</title>
+<title>Demo Building Tools - Resource Generators</title>
 
 <!-- Fonts + Materialize -->
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
@@ -170,13 +170,46 @@ select.browser-default.dark-select:focus, input.dark-select:focus{ outline:none;
 
 /* hide default materialize datepicker input underline style */
 input.datepicker{ border-bottom:none !important; }
+
+/* ===== DBT unified shell styling ===== */
+html,body{background:#07111f;color:#e5edf8;font-family:Inter,Roboto,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;}
+.container{max-width:min(1180px,calc(100vw - 32px));background:#0c1729;border:1px solid rgba(148,163,184,.24);box-shadow:none;border-radius:8px;padding:26px;margin-top:18px;margin-bottom:32px;}
+h4,h5,h6{color:#fff;font-weight:900;letter-spacing:0;}
+label.small-text,.small-text{color:#aebbd0!important;}
+select.browser-default.dark-select,input.browser-default.dark-select,input[type="text"].dark-select,input[type="number"].dark-select{background:#071024;border:1px solid rgba(148,163,184,.32);border-radius:8px;color:#f8fafc;}
+select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#60a5fa;box-shadow:0 0 0 1px rgba(96,165,250,.32);}
+.btn,.btn.green,.btn-small{background:#60a5fa!important;color:#05111f!important;border-radius:999px!important;text-transform:none;font-weight:950;box-shadow:none!important;}
+.btn.green{background:#86efac!important;color:#052e16!important;}
+.file-field .btn{height:38px;line-height:38px;}
+.dbt-photo-panel{display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px auto 24px;padding:20px;border:1px solid rgba(148,163,184,.22);background:#101827;border-radius:8px;}
+.dbt-photo-panel h5{margin:0;}
+.dbt-photo-upload{width:min(520px,100%);margin:0;}
+#photo-crop-container{width:188px;height:188px;border-radius:999px;border:1px solid rgba(96,165,250,.35);background:#071024;display:grid;place-items:center;overflow:hidden;}
+#photo-canvas{width:188px;height:188px;border-radius:999px;}
+.dbt-resume-controls{margin-top:8px;}
+.collapsible{border:1px solid rgba(148,163,184,.24)!important;box-shadow:none!important;}
+.collapsible-header{background:#101827!important;color:#fff!important;border-bottom:1px solid rgba(148,163,184,.18)!important;font-weight:900;}
+.collapsible-body{background:#071024!important;border-bottom:0!important;}
+.chips{border-bottom:1px solid rgba(148,163,184,.32)!important;}
+.chips .chip{background:#1d4ed8;color:#fff;}
+.randomize-btn{border-radius:999px!important;background:#1d4ed8!important;color:#dbeafe!important;}
+.footer-note{display:none!important;}
+.modal{width:100vw!important;max-height:100vh!important;height:100vh!important;top:0!important;border-radius:0!important;background:#07111f!important;color:#e5edf8!important;}
+.modal.modal-fixed-footer{padding-bottom:64px!important;}
+.modal .modal-content{height:calc(100vh - 64px)!important;padding:16px!important;}
+.modal .modal-content h4{display:none;}
+#preview-frame{height:calc(100vh - 96px)!important;border-radius:8px!important;background:#fff!important;}
+.modal .modal-footer{height:64px!important;background:#0c1729!important;border-top:1px solid rgba(148,163,184,.24)!important;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:10px 16px!important;}
+.modal-close.btn-flat{background:rgba(148,163,184,.16)!important;color:#e5edf8!important;border-radius:999px!important;text-transform:none;font-weight:900;}
+.modal-close.btn-flat:before{content:"\00d7";font-size:18px;margin-right:6px;}
+.ticket,.degree{box-shadow:none;border:1px solid rgba(148,163,184,.24);}
 </style>
 </head>
 <body>
 
 <!-- Top bar -->
 <div id="topbar">
-  <div class="brand">Demo Resources Tool v2</div>
+  <div class="brand">Demo Building Tools</div>
   <div class="nav">
     <a href="#" class="tab" data-target="resume">Resume Builder</a>
     <a href="#" class="tab" data-target="receipt">Receipt Generator</a>
@@ -193,7 +226,7 @@ input.datepicker{ border-bottom:none !important; }
 <!-- ===== WELCOME ===== -->
 <main id="welcome" class="container">
   <div class="hero">
-    <h4 style="margin:0 0 4px">Welcome to the Demo Resources Tool v2</h4>
+    <h4 style="margin:0 0 4px">Demo Building Tools</h4>
     <div style="opacity:.85">Choose what you need</div>
   </div>
   <div class="cards">
@@ -219,8 +252,26 @@ input.datepicker{ border-bottom:none !important; }
 <main id="screen-resume" class="container" style="display:none">
   <h4 class="center" style="margin-top:0">Resume Generator</h4>
 
-  <!-- Adjusted to 4 columns to accommodate Gender selection -->
-  <div class="controls-row-4">
+  <section class="dbt-photo-panel">
+    <h5>Profile photo</h5>
+    <div id="photo-crop-container" tabindex="0">
+      <canvas id="photo-canvas" width="200" height="200"></canvas>
+    </div>
+    <div class="file-field input-field dbt-photo-upload">
+      <div class="btn"><span>Choose image</span><input type="file" id="photo-input" accept="image/*" /></div>
+      <div class="file-path-wrapper"><input class="file-path validate" type="text" placeholder="Optional profile photo" /></div>
+    </div>
+    <p class="small-text">Drag inside the circle to reposition, use mouse wheel / pinch to zoom.</p>
+  </section>
+
+  <div class="controls-row-4 dbt-resume-controls">
+    <div>
+      <label for="gender-select" class="small-text">Gender</label>
+      <select id="gender-select" class="browser-default dark-select">
+        <option value="male" selected>Male</option>
+        <option value="female">Female</option>
+      </select>
+    </div>
     <div>
       <label for="country-select" class="small-text">Country</label>
       <select id="country-select" class="browser-default dark-select">
@@ -260,32 +311,12 @@ input.datepicker{ border-bottom:none !important; }
         <option value="hr-business-partner">HR Business Partner</option>
       </select>
     </div>
-    <!-- New gender selection control -->
-    <div>
-      <label for="gender-select" class="small-text">Gender</label>
-      <select id="gender-select" class="browser-default dark-select">
-        <option value="male" selected>Male</option>
-        <option value="female">Female</option>
-      </select>
-    </div>
   </div>
 
-  <section style="margin-top:10px">
-    <h5>Upload and Crop Photo</h5>
-    <div id="photo-crop-container" tabindex="0">
-      <canvas id="photo-canvas" width="200" height="200"></canvas>
-    </div>
-    <div class="file-field input-field">
-      <div class="btn"><span>Upload</span><input type="file" id="photo-input" accept="image/*" /></div>
-      <div class="file-path-wrapper"><input class="file-path validate" type="text" placeholder="Upload a profile photo" /></div>
-    </div>
-    <p class="small-text">Drag inside the circle to reposition, use mouse wheel / pinch to zoom.</p>
-  </section>
-
-  <!-- Advanced collapsible -->
+  <!-- Profile tuning -->
   <ul class="collapsible" id="adv-collapse" style="border-radius:10px; overflow:hidden; margin-top:18px">
     <li>
-      <div class="collapsible-header" style="background:#181818;color:#ddd"><i class="material-icons">edit</i>Advanced — Manually change details for this resume</div>
+      <div class="collapsible-header" style="background:#181818;color:#ddd"><i class="material-icons">edit</i>Fine tune profile</div>
       <div class="collapsible-body" style="background:#141414">
         <div class="row" style="margin-top:10px">
           <div class="input-field col s12 m6">
@@ -328,7 +359,7 @@ input.datepicker{ border-bottom:none !important; }
   </ul>
 
   <div class="center" style="margin-top:1.2rem;">
-    <button id="preview-btn" type="button" class="btn">Preview Resume</button>
+    <button id="preview-btn" type="button" class="btn">Preview resume</button>
   </div>
 </main>
 
@@ -489,7 +520,7 @@ input.datepicker{ border-bottom:none !important; }
 </main>
 
 <!-- Footer (global) -->
-<div class="footer-note">Demo Resource Tool v2 — 2025 — By Max Robles</div>
+<div class="footer-note"></div>
 
 <!-- ===== DATA (DB) for Resumes with translations ===== -->
 <script id="db-json" type="application/json">
@@ -1407,7 +1438,7 @@ input.datepicker{ border-bottom:none !important; }
         @page{size:auto;margin:10mm}
       </style></head><body>
         <div class="ticket-wrap">${node}</div>
-        <div style="text-align:center;color:#555;margin-top:6px;font:12px Roboto,Arial">Demo Resource Tool v2 — 2025 — By Max Robles</div>
+        <div style="text-align:center;color:#555;margin-top:6px;font:12px Roboto,Arial">Demo Building Tools</div>
       </body></html>
     `);
     w.document.close(); w.focus();
@@ -1594,7 +1625,7 @@ input.datepicker{ border-bottom:none !important; }
         @page{size:auto;margin:10mm}
       </style></head><body>
         <div class="degree-wrap">${node}</div>
-        <div style="text-align:center;color:#555;margin-top:6px;font:12px Roboto,Arial">Demo Resource Tool v2 — 2025 — By Max Robles</div>
+        <div style="text-align:center;color:#555;margin-top:6px;font:12px Roboto,Arial">Demo Building Tools</div>
       </body></html>
     `);
     w.document.close(); w.focus();

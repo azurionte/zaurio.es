@@ -1,9 +1,11 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.6",
+  "version": "5.0.7",
   "main": "main.js",
-  "description": "Zaurio demo building tools",
-  "author": "Zaurio",
+  "description": "Demo Building Tools desktop app for ADP demo document preparation",
+  "author": "Maximiliano Robles",
+  "companyName": "ADP",
+  "copyright": "Copyright © 2026 ADP. Built by Maximiliano Robles.",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
@@ -24,6 +26,7 @@
     "files": [
       "index.html",
       "demo-resources-v2.html",
+      "assets/**/*",
       "main.js",
       "preload.js",
       "package.json"
@@ -46,6 +49,8 @@
     },
     "win": {
       "target": "nsis",
+      "icon": "assets/dbt-icon.ico",
+      "legalTrademarks": "ADP",
       "signAndEditExecutable": true
     }
   }

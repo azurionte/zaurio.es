@@ -155,6 +155,7 @@ function registerDesktopFilePicker() {
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     title: 'Demo Building Tools',
+    icon: path.join(__dirname, 'assets', 'dbt-icon.ico'),
     width: 1280,
     height: 900,
     webPreferences: {

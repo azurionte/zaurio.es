@@ -4487,7 +4487,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V4.9.10';
+var TOOL_VERSION='V5.1';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -4778,7 +4778,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V4.9.10';
+var TOOL_VERSION='V5.1';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -4980,7 +4980,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V4.9.10';
+    var FINAL_VERSION = 'V5.1';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7188,7 +7188,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V4.9.10';
+    var TOOL_VERSION = 'V5.1';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7464,7 +7464,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 <script id="v49fix-script">
 (function(){
   'use strict';
-  var VERSION='V4.9.10';
+  var VERSION='V5.1';
   var countries={India:{code:'IN',name:'India',desc:'ADP Celergo India payslip'},UK:{code:'GB',name:'UK',desc:'UK demo payslip layout'},Brazil:{code:'BR',name:'Brazil',desc:'Demonstrativo de Pagamento'},Australia:{code:'AU',name:'Australia',desc:'PayForce Australia payslip'}};
   function el(id){return document.getElementById(id)}
   function all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel))}
@@ -7671,13 +7671,13 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 <script id="v500-demo-tools-shell">
 (function(){
   'use strict';
-  var SHELL_VERSION = 'v1.2';
-  var PAYSLIP_VERSION = 'V5.0';
+  var SHELL_VERSION = 'v1.3';
+  var PAYSLIP_VERSION = 'V5.1';
   var countries = {
-    India: { code: 'IN', flag: '🇮🇳', label: 'India', detail: 'Celergo India payslip' },
-    UK: { code: 'UK', flag: '🇬🇧', label: 'United Kingdom', detail: 'Celergo UK payslip' },
-    Brazil: { code: 'BR', flag: '🇧🇷', label: 'Brazil', detail: 'Celergo Brazil payslip' },
-    Australia: { code: 'AU', flag: '🇦🇺', label: 'Australia', detail: 'PayForce Australia payslip' }
+    India: { code: 'IN', flag: '&#x1F1EE;&#x1F1F3;', label: 'India', detail: 'Celergo India payslip' },
+    UK: { code: 'UK', flag: '&#x1F1EC;&#x1F1E7;', label: 'United Kingdom', detail: 'Celergo UK payslip' },
+    Brazil: { code: 'BR', flag: '&#x1F1E7;&#x1F1F7;', label: 'Brazil', detail: 'Celergo Brazil payslip' },
+    Australia: { code: 'AU', flag: '&#x1F1E6;&#x1F1FA;', label: 'Australia', detail: 'PayForce Australia payslip' }
   };
   var folders = [
     { key: 'ihcm', title: 'iHCM Specific tools', detail: 'Placeholder folder' },
@@ -7685,9 +7685,9 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     { key: 'celergo', title: 'Celergo Specific tools', detail: 'Payslip converter lives here' }
   ];
   var appCards = [
-    { key: 'resume', title: 'Resume Generator', version: 'V2', icon: 'fa-id-card', detail: 'Build localized demo resumes with PDF export.' },
-    { key: 'receipt', title: 'Receipt Generator', version: 'V2', icon: 'fa-receipt', detail: 'Create printable demo receipts by country and type.' },
-    { key: 'degree', title: 'Degree diploma Generator', version: 'V2', icon: 'fa-graduation-cap', detail: 'Generate UK and NL diploma-style degree documents.' }
+    { key: 'resume', title: 'Resume Generator', version: 'V3', icon: 'fa-id-card', detail: 'Build localized demo resumes with PDF export.' },
+    { key: 'receipt', title: 'Receipt Generator', version: 'V2.1', icon: 'fa-receipt', detail: 'Create printable demo receipts by country and type.' },
+    { key: 'degree', title: 'Degree diploma Generator', version: 'V2.1', icon: 'fa-graduation-cap', detail: 'Generate UK and NL diploma-style degree documents.' }
   ];
 
   function el(id){ return document.getElementById(id); }
@@ -7763,7 +7763,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   function shellUpdateButton(){ return '<button type="button" class="v5-shell-update" data-v5-check-updates><i class="fa-solid fa-arrows-rotate"></i> Check for updates</button>'; }
   function renderTopBar(canGoBack){
     var back = '<button type="button" class="v5-nav-button '+(canGoBack ? '' : 'is-disabled')+'" id="v5BackBtn" title="Back" '+(canGoBack ? '' : 'disabled')+'><i class="fa-solid fa-arrow-left"></i></button>';
-    return '<div class="v5-topbar"><div class="v5-brand"><span class="v5-adp-logo" aria-label="ADP logo"><svg viewBox="0 0 126 45" role="img" aria-label="ADP"><path d="M0 45 27 0h69c16 0 30 6 30 22s-14 23-30 23H69V27h25c6 0 11-1 11-5s-5-5-11-5H77v28H51V17H39L22 45H0Zm36-15h15V17L36 30Z"/></svg></span>'+back+'<button type="button" class="v5-nav-button" id="v5HomeBtn" title="Home"><i class="fa-solid fa-house"></i></button><strong>Demo Building Tools '+SHELL_VERSION+'</strong><span id="v5UpdateText" class="v5-update-ok"><i class="fa-solid fa-circle-check"></i> Up to date</span>'+shellUpdateButton()+'</div><span class="v5-contact">Contact Max Robles for bugs or changes</span></div>';
+    return '<div class="v5-topbar"><div class="v5-brand"><span class="v5-adp-logo" aria-label="ADP logo"><img src="assets/adp-logo.png" alt="ADP"></span>'+back+'<button type="button" class="v5-nav-button" id="v5HomeBtn" title="Home"><i class="fa-solid fa-house"></i></button><strong>Demo Building Tools '+SHELL_VERSION+'</strong><span id="v5UpdateText" class="v5-update-ok"><i class="fa-solid fa-circle-check"></i> Up to date</span>'+shellUpdateButton()+'</div><span class="v5-contact">Contact Max Robles for bugs or changes</span></div>';
   }
   function renderAppChrome(canGoBack){
     return '<div id="v5AppChrome" class="v5-app-chrome">'+renderTopBar(!!canGoBack)+'</div>';
@@ -7787,7 +7787,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     modal.innerHTML = renderAppChrome(false) + '<main class="v5-home"><section><h1>Choose a tool</h1><p>Folders group the specialist tools. App cards can carry their own versions so we can update a mini-app without reinstalling the full desktop shell.</p></section><section><h2>Folders</h2><div class="v5-grid">'+folders.map(folderCard).join('')+'</div></section><section><h2>Apps</h2><div class="v5-grid">'+appCards.map(plainAppCard).join('')+'</div></section></main>';
     all('[data-folder="celergo"]', modal).forEach(function(button){ button.addEventListener('click', renderCelergoFolder); });
     all('[data-folder]:not([data-folder="celergo"])', modal).forEach(function(button){ button.addEventListener('click', function(){ button.classList.add('v5-shake'); setTimeout(function(){ button.classList.remove('v5-shake'); }, 360); }); });
-    all('[data-mini-update]', modal).forEach(function(button){ button.addEventListener('click', function(){ button.textContent = 'No app package yet'; button.disabled = true; setTimeout(function(){ button.disabled = false; button.textContent = 'Check app updates'; }, 1400); }); });
+    all('[data-mini-update]', modal).forEach(function(button){ button.addEventListener('click', function(){ button.textContent = 'No app package yet'; button.disabled = true; setTimeout(function(){ button.disabled = false; button.textContent = 'Check for updates'; }, 1400); }); });
     all('.v5-open-resource', modal).forEach(function(card){
       card.addEventListener('click', function(e){
         if (e.target && e.target.closest && e.target.closest('[data-mini-update]')) return;
@@ -7797,19 +7797,20 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     wireUpdater();
   }
   function resourceTitle(app){
-    if (app === 'receipt') return 'Receipt Generator V2';
-    if (app === 'degree') return 'Degree diploma Generator V2';
-    return 'Resume Generator V2';
+    if (app === 'receipt') return 'Receipt Generator';
+    if (app === 'degree') return 'Degree diploma Generator';
+    return 'Resume Generator';
   }
   function renderResourceApp(app){
     var overlay = el('intro-overlay'), modal = el('intro-modal');
     if (!overlay || !modal) return;
+    var appInfo = appCards.filter(function(item){ return item.key === app; })[0] || { version: 'V2' };
     overlay.className = 'v5-shell-overlay';
     overlay.style.setProperty('display', 'flex', 'important');
     overlay.style.removeProperty('visibility');
     overlay.style.removeProperty('pointer-events');
     modal.className = 'v5-shell-modal';
-    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell"><div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version">V2</span>'+toolUpdateButton(app)+'</div><iframe class="v5-resource-frame" src="demo-resources-v2.html?app='+app+'" title="'+resourceTitle(app)+'"></iframe></main>';
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell"><div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version">'+appInfo.version+'</span>'+toolUpdateButton(app)+'</div><iframe class="v5-resource-frame" src="demo-resources-v2.html?app='+app+'" title="'+resourceTitle(app)+'"></iframe></main>';
     bindBack(renderDashboard);
     all('[data-mini-update]', modal).forEach(function(button){
       button.addEventListener('click', function(){ button.innerHTML = '<i class="fa-solid fa-circle-check"></i> Up to date'; setTimeout(function(){ button.innerHTML = '<i class="fa-solid fa-rotate"></i> Check for updates'; }, 1600); });
@@ -7819,7 +7820,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   function renderCelergoFolder(){
     var modal = el('intro-modal');
     if (!modal) return;
-    modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>Celergo Specific tools</h1><p>Tools for Celergo demo document preparation.</p></section><section><div class="v5-grid"><div class="v5-card v5-app v5-open-payslip" id="v5OpenPayslip"><strong><i class="fa-solid fa-file-invoice"></i> Payslip converter</strong><span class="v5-version">'+PAYSLIP_VERSION+'</span><small>Multi-country payslip converter for India, UK, Brazil, and Australia.</small><div class="v5-card-actions"><button type="button" class="v5-launch" id="v5LaunchPayslip"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton('payslip-converter')+'</div></div></div></section></main>';
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>Celergo Specific tools</h1><p>Tools for Celergo demo document preparation.</p></section><section><div class="v5-grid"><div class="v5-card v5-app v5-open-payslip" id="v5OpenPayslip"><strong><i class="fa-solid fa-file-invoice"></i> Payslip converter</strong><span class="v5-version">'+PAYSLIP_VERSION+'</span><small>Multi-country payslip converter for India, UK, Brazil, and Australia.</small><div class="v5-card-actions"><button type="button" class="v5-launch" id="v5LaunchPayslip"><i class="fa-solid fa-up-right-from-square"></i> Open</button></div></div></div></section></main>';
     bindBack(renderDashboard);
     var home = el('v5HomeBtn');
     if (home) home.addEventListener('click', renderDashboard);
@@ -7827,7 +7828,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     if (card) card.addEventListener('click', function(e){ if (e.target && e.target.closest && e.target.closest('button')) return; renderPayslipLanding(); });
     var launch = el('v5LaunchPayslip');
     if (launch) launch.addEventListener('click', renderPayslipLanding);
-    all('[data-mini-update]', modal).forEach(function(button){ button.addEventListener('click', function(e){ e.stopPropagation(); button.textContent = 'Payslip '+PAYSLIP_VERSION+' installed'; setTimeout(function(){ button.textContent = 'Check app updates'; }, 1600); }); });
+    all('[data-mini-update]', modal).forEach(function(button){ button.addEventListener('click', function(e){ e.stopPropagation(); button.textContent = 'Payslip '+PAYSLIP_VERSION+' installed'; setTimeout(function(){ button.textContent = 'Check for updates'; }, 1600); }); });
     wireUpdater();
   }
   function countryCard(country){
@@ -7890,14 +7891,14 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     overlay.style.removeProperty('pointer-events');
     modal.className = 'v49fix-modal';
     modal.removeAttribute('style');
-    modal.innerHTML = renderAppChrome(true) + '<div class="v49-shell"><section class="v49-left"><div><div class="v49-pill"><span class="tool-version-badge">'+PAYSLIP_VERSION+'</span><span>Multi-country demo payslip studio</span></div><h1 class="v49-title">Turn payroll<br>statements into demo-ready <span>payslips.</span></h1><p class="v49-sub">Import a Celergo earning statement, choose the target country template, edit every detected field, then export clean payslips for demos or testing.</p></div><div><div class="v49-stats"><div class="v49-stat"><b><i class="fa-solid fa-globe"></i> 4</b><span>country templates</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-pdf"></i> PDF</b><span>batch import</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-zipper"></i> ZIP</b><span>bulk export</span></div></div><div class="v49-steps" style="margin-top:32px"><div class="v49-step"><b>1. Select</b><span>Choose the output country.</span></div><div class="v49-step"><b>2. Import</b><span>Drop or browse a pay statement PDF.</span></div><div class="v49-step"><b>3. Edit & export</b><span>Fine-tune values and save.</span></div></div></div></section><section class="v49-right"><div class="v49-panel"><h2>Start a workspace</h2><p>Select the country template before importing. The selected template stays locked during conversion.</p><div class="v5-country-grid">'+Object.keys(countries).map(countryCard).join('')+'</div><div id="v5PayslipDrop" class="v49-drop" tabindex="0" role="button"><span class="v49-orb"><span class="v49-file"></span></span><span><b><i class="fa-solid fa-file-arrow-up"></i> Drop a file or click here to select</b><span>PDF pay statement only.</span></span></div><div class="v5-card-actions"><button type="button" class="v5-back" id="v5BackToCelergo"><i class="fa-solid fa-arrow-left"></i> Back to tools</button>'+toolUpdateButton('payslip-converter')+'</div></div></section></div>';
+    modal.innerHTML = renderAppChrome(true) + '<div class="v49-shell"><section class="v49-left"><div><div class="v49-pill"><span class="tool-version-badge">'+PAYSLIP_VERSION+'</span><span>Multi-country demo payslip studio</span></div><h1 class="v49-title">Turn payroll<br>statements into demo-ready <span>payslips.</span></h1><p class="v49-sub">Import a Celergo earning statement, choose the target country template, edit every detected field, then export clean payslips for demos or testing.</p></div><div><div class="v49-stats"><div class="v49-stat"><b><i class="fa-solid fa-globe"></i> 4</b><span>country templates</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-pdf"></i> PDF</b><span>batch import</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-zipper"></i> ZIP</b><span>bulk export</span></div></div><div class="v49-steps" style="margin-top:32px"><div class="v49-step"><b>1. Select</b><span>Choose the output country.</span></div><div class="v49-step"><b>2. Import</b><span>Drop or browse a pay statement PDF.</span></div><div class="v49-step"><b>3. Edit & export</b><span>Fine-tune values and save.</span></div></div></div></section><section class="v49-right"><div class="v49-panel"><h2>Start a workspace</h2><p>Select the country template before importing. The selected template stays locked during conversion.</p><div class="v5-country-grid">'+Object.keys(countries).map(countryCard).join('')+'</div><div id="v5PayslipDrop" class="v49-drop" tabindex="0" role="button"><span class="v49-orb"><span class="v49-file"></span></span><span><b><i class="fa-solid fa-file-arrow-up"></i> Drop a file or click here to select</b><span>PDF pay statement only.</span></span></div><div class="v5-card-actions"><button type="button" class="v5-back" id="v5BackToCelergo"><i class="fa-solid fa-arrow-left"></i> Back to tools</button></div></div></section></div>';
     bindBack(renderCelergoFolder);
     all('.v5-country', modal).forEach(function(button){ button.addEventListener('click', function(){ setCountry(button.getAttribute('data-country')); }); });
     var drop = el('v5PayslipDrop');
     if (drop) drop.addEventListener('click', openSelectedPayslipFile);
     var back = el('v5BackToCelergo');
     if (back) back.addEventListener('click', function(e){ e.preventDefault(); renderCelergoFolder(); });
-    all('[data-mini-update]', modal).forEach(function(button){ button.addEventListener('click', function(e){ e.stopPropagation(); button.textContent = 'Payslip '+PAYSLIP_VERSION+' installed'; setTimeout(function(){ button.textContent = 'Check app updates'; }, 1600); }); });
+    all('[data-mini-update]', modal).forEach(function(button){ button.addEventListener('click', function(e){ e.stopPropagation(); button.textContent = 'Payslip '+PAYSLIP_VERSION+' installed'; setTimeout(function(){ button.textContent = 'Check for updates'; }, 1600); }); });
     wireUpdater();
   }
   function ensureImportModal(){
@@ -7977,7 +7978,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 .v5-shell-overlay{position:fixed!important;inset:0!important;display:flex!important;align-items:stretch!important;justify-content:center!important;z-index:70000!important;background:#07111f!important;color:#e5edf8!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;overflow:auto!important}
 .v5-shell-modal{width:100%!important;min-height:100vh!important;background:linear-gradient(180deg,#081525,#0b1020)!important;color:#e5edf8!important;padding:0!important;border:0!important;box-shadow:none!important}
 .v5-topbar{height:auto;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 22px;border-bottom:1px solid rgba(148,163,184,.24);background:rgba(2,6,23,.58);position:sticky;top:0;z-index:2;backdrop-filter:blur(12px)}
-.v5-brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.v5-brand strong{font-size:15px;color:#fff}.v5-brand button,.v5-mini-update,.v5-shell-update{border:1px solid rgba(96,165,250,.36);background:rgba(37,99,235,.14);color:#eaf2ff;border-radius:999px;padding:8px 11px;font-weight:900;cursor:pointer}.v5-nav-button{width:36px;height:36px;display:grid;place-items:center;background:rgba(148,163,184,.12)!important;padding:0!important}.v5-nav-button.is-disabled{opacity:.35;cursor:default}.v5-adp-logo{display:inline-flex;align-items:center;justify-content:center;width:58px;height:28px;border-radius:5px;background:#e31837;color:#fff}.v5-adp-logo svg{width:50px;height:18px;fill:#fff}.v5-update-ok{display:inline-flex;align-items:center;gap:6px;color:#86efac;font-weight:950}.v5-update-busy{display:inline-flex;align-items:center;gap:6px;color:#bfdbfe;font-weight:950}.v5-update-error{display:inline-flex;align-items:center;gap:6px;color:#fecaca;font-weight:950}.v5-update-alert{display:inline-flex;align-items:center;gap:6px;color:#facc15;font-weight:950}.v5-update-action{border:1px solid rgba(250,204,21,.42);background:rgba(250,204,21,.16);color:#fef08a;border-radius:999px;padding:8px 11px;font-weight:950;cursor:pointer}.v5-update-action:disabled{opacity:.72;cursor:wait}.v5-update-busy .fa-arrows-rotate,.v5-shell-update:active .fa-arrows-rotate,.v5-update-action:disabled .fa-arrows-rotate{animation:v5Spin .8s linear infinite}.v5-contact{font-size:13px;color:#b7c4d8;font-weight:800}
+.v5-brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.v5-brand strong{font-size:15px;color:#fff}.v5-brand button,.v5-mini-update,.v5-shell-update{border:1px solid rgba(96,165,250,.36);background:rgba(37,99,235,.14);color:#eaf2ff;border-radius:999px;padding:8px 11px;font-weight:900;cursor:pointer}.v5-nav-button{width:36px;height:36px;display:grid;place-items:center;background:rgba(148,163,184,.12)!important;padding:0!important}.v5-nav-button.is-disabled{opacity:.35;cursor:default}.v5-adp-logo{display:inline-flex;align-items:center;justify-content:center;width:64px;height:30px;border-radius:5px;background:#fff;overflow:hidden}.v5-adp-logo img{width:58px;height:24px;object-fit:contain;display:block}.v5-update-ok{display:inline-flex;align-items:center;gap:6px;color:#86efac;font-weight:950}.v5-update-busy{display:inline-flex;align-items:center;gap:6px;color:#bfdbfe;font-weight:950}.v5-update-error{display:inline-flex;align-items:center;gap:6px;color:#fecaca;font-weight:950}.v5-update-alert{display:inline-flex;align-items:center;gap:6px;color:#facc15;font-weight:950}.v5-update-action{border:1px solid rgba(250,204,21,.42);background:rgba(250,204,21,.16);color:#fef08a;border-radius:999px;padding:8px 11px;font-weight:950;cursor:pointer}.v5-update-action:disabled{opacity:.72;cursor:wait}.v5-update-busy .fa-arrows-rotate,.v5-shell-update:active .fa-arrows-rotate,.v5-update-action:disabled .fa-arrows-rotate{animation:v5Spin .8s linear infinite}.v5-contact{font-size:13px;color:#b7c4d8;font-weight:800}
 .v5-home{width:min(1120px,calc(100vw - 36px));margin:0 auto;padding:36px 0 56px}.v5-home h1{margin:0;color:#fff;font-size:42px;letter-spacing:0;line-height:1.05}.v5-home h2{margin:28px 0 12px;color:#fff;font-size:18px}.v5-home p{max-width:720px;color:#b7c4d8;line-height:1.55}.v5-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.v5-card{border:1px solid rgba(148,163,184,.25);background:#0c1729;color:#fff;border-radius:8px;padding:18px;text-align:left;min-height:142px;display:flex;flex-direction:column;gap:8px;transition:transform .16s ease,border-color .16s ease,background .16s ease}.v5-card strong{font-size:19px}.v5-card small{color:#9fb0c9;line-height:1.4}.v5-card:hover{transform:translateY(-2px);border-color:rgba(96,165,250,.58);background:#101f36}.v5-folder,.v5-open-payslip{cursor:pointer}.v5-folder-icon{width:42px;height:30px;border-radius:6px;background:linear-gradient(180deg,#60a5fa,#2563eb);position:relative}.v5-folder-icon:before{content:"";position:absolute;left:4px;top:-7px;width:20px;height:9px;border-radius:5px 5px 0 0;background:#93c5fd}.v5-version{width:max-content;border:1px solid rgba(134,239,172,.34);background:rgba(22,163,74,.13);color:#bbf7d0;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:950}.v5-card-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto}.v5-mini-update,.v5-launch{width:max-content;font-size:12px;padding:7px 10px;border:1px solid rgba(96,165,250,.36);background:rgba(37,99,235,.14);color:#eaf2ff;border-radius:999px;font-weight:900;cursor:pointer}.v5-launch{background:#60a5fa;color:#05111f;border-color:#60a5fa}
 .v5-import-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.72);backdrop-filter:blur(10px);z-index:80000;padding:18px}.v5-import-card{width:min(560px,96vw);border:1px solid rgba(148,163,184,.28);border-radius:8px;background:#0b1426;color:#fff;box-shadow:0 28px 80px rgba(0,0,0,.5);padding:22px}.v5-import-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.v5-import-head h2{margin:0;font-size:24px}.v5-import-head p{margin:5px 0 0;color:#aebbd0}.v5-close{border:0;background:rgba(148,163,184,.14);color:#fff;border-radius:8px;width:34px;height:34px;font-weight:950;cursor:pointer}.v5-country-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:20px 0}.v5-country{border:1px solid rgba(148,163,184,.26);background:#071024;color:#fff;border-radius:8px;padding:14px;text-align:left;cursor:pointer;min-height:98px}.v5-real-flag{display:block;margin-bottom:10px;font-size:30px;line-height:1}.v5-country strong{display:block;margin-top:8px;font-size:18px}.v5-country small{display:block;margin-top:4px;color:#9fb0c9}.v5-country.active{border-color:#86efac;box-shadow:0 0 0 1px rgba(134,239,172,.38);background:#0d1f22}.v5-import-actions{display:flex;justify-content:flex-end}.v5-primary{border:0;border-radius:999px;padding:12px 18px;background:#60a5fa;color:#05111f;font-weight:950;cursor:pointer}.v5-editor-topbar{position:sticky;top:0;z-index:30000}.v5-shake{animation:v5Shake .32s ease}@keyframes v5Shake{0%,100%{transform:translateX(0)}35%{transform:translateX(-4px)}70%{transform:translateX(4px)}}
 .v5-app-chrome{position:sticky;top:0;z-index:40000}.v5-app-chrome .v5-topbar{position:relative;top:auto}.v5-payslip-toolbar{position:sticky!important;top:58px!important;z-index:35000!important;background:#111827!important;border-bottom:1px solid rgba(148,163,184,.24)!important}.v5-payslip-toolbar .title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.v5-payslip-toolbar #desktopUpdatePanel,.v5-payslip-toolbar #contactMaxV49,.v5-payslip-toolbar #versionBadge{display:none!important}.v5-payslip-toolbar .tool-version-badge{display:none!important}
