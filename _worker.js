@@ -4,6 +4,7 @@ const VELOCICHEF_PUSH_SEND_PATH = "/api/velocichef/push/send-due";
 const VELOCICHEF_STEP_IMAGE_PATH = "/api/velocichef/step-image";
 const PAYSLIP_UPDATES_PATH = "/payslip-updates/";
 const PAYSLIP_UPDATES_BUCKET = "payslip-updates";
+const PAYSLIP_UPDATES_GITHUB_RAW = "https://raw.githubusercontent.com/azurionte/zaurio.es/main/payslip-updates/";
 const VELOCICHEF_DEFAULT_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 const VELOCICHEF_MAX_IMAGE_PROMPT_LENGTH = 1600;
 const VELOCICHEF_MAX_SCENE_GOAL_LENGTH = 260;
@@ -464,6 +465,10 @@ async function fetchPayslipUpdateAsset(request, env, path) {
   const objectName = decodeURIComponent(path.slice(PAYSLIP_UPDATES_PATH.length)).replace(/^\/+/, "");
   if (!objectName || objectName.includes("..")) {
     return new Response("No encontrado", { status: 404 });
+  }
+
+  if (objectName.endsWith(".nsis.7z")) {
+    return Response.redirect(`${PAYSLIP_UPDATES_GITHUB_RAW}${encodeURIComponent(objectName)}`, 302);
   }
 
   const supabaseUrl = env.SUPABASE_URL || DEFAULT_SUPABASE_URL;
