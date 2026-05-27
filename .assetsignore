@@ -10,3 +10,9 @@ _tmp*
 _tmp*/**
 supabase/.temp
 supabase/.temp/**
+supabase
+supabase/**
+payslip-desktop
+payslip-desktop/**
+payslip-updates
+payslip-updates/**

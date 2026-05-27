@@ -1,0 +1,43 @@
+{
+  "name": "payslip-desktop",
+  "version": "4.9.3",
+  "main": "main.js",
+  "description": "Zaurio payslip converter",
+  "author": "Zaurio",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  },
+  "devDependencies": {
+    "electron": "^42.3.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "es.zaurio.payslip",
+    "productName": "Payslip Creator",
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "publish": {
+      "provider": "generic",
+      "url": "https://zaurio.es/payslip-updates/"
+    },
+    "nsis": {
+      "perMachine": false,
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false
+    },
+    "win": {
+      "target": "nsis",
+      "signAndEditExecutable": false
+    }
+  }
+}

@@ -2,6 +2,8 @@ const DEFAULT_SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
 const VELOCICHEF_PUSH_KEY_PATH = "/api/velocichef/push-public-key";
 const VELOCICHEF_PUSH_SEND_PATH = "/api/velocichef/push/send-due";
 const VELOCICHEF_STEP_IMAGE_PATH = "/api/velocichef/step-image";
+const PAYSLIP_UPDATES_PATH = "/payslip-updates/";
+const PAYSLIP_UPDATES_BUCKET = "payslip-updates";
 const VELOCICHEF_DEFAULT_IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
 const VELOCICHEF_MAX_IMAGE_PROMPT_LENGTH = 1600;
 const VELOCICHEF_MAX_SCENE_GOAL_LENGTH = 260;
@@ -289,6 +291,219 @@ async function readSupabaseJson(env, path) {
     throw new Error(`Supabase devolvio ${response.status} al leer ${path}.`);
   }
   return response.json();
+}
+
+function getPayslipUpdateContentType(fileName) {
+  const lower = fileName.toLowerCase();
+  if (lower.endsWith(".yml") || lower.endsWith(".yaml")) return "text/yaml; charset=utf-8";
+  if (lower.endsWith(".json")) return "application/json; charset=utf-8";
+  if (lower.endsWith(".exe")) return "application/vnd.microsoft.portable-executable";
+  if (lower.endsWith(".dmg")) return "application/x-apple-diskimage";
+  if (lower.endsWith(".zip")) return "application/zip";
+  if (lower.endsWith(".blockmap")) return "application/octet-stream";
+  return "application/octet-stream";
+}
+
+function payslipStorageObjectUrl(supabaseUrl, objectName) {
+  return `${supabaseUrl}/storage/v1/object/${PAYSLIP_UPDATES_BUCKET}/${encodeURIComponent(objectName)}`;
+}
+
+function parseSingleByteRange(rangeHeader, totalSize) {
+  const match = String(rangeHeader || "").match(/^bytes=(\d*)-(\d*)$/);
+  if (!match || !Number.isFinite(totalSize) || totalSize <= 0) return null;
+  let start;
+  let end;
+  if (match[1] === "" && match[2] === "") return null;
+  if (match[1] === "") {
+    const suffixLength = Number(match[2]);
+    if (!Number.isFinite(suffixLength) || suffixLength <= 0) return null;
+    start = Math.max(0, totalSize - suffixLength);
+    end = totalSize - 1;
+  } else {
+    start = Number(match[1]);
+    end = match[2] === "" ? totalSize - 1 : Number(match[2]);
+  }
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || start > end || start >= totalSize) return null;
+  return {
+    start,
+    end: Math.min(end, totalSize - 1),
+  };
+}
+
+function createCompositePayslipHeaders(objectName, manifest, range = null) {
+  const headers = new Headers();
+  headers.set("Content-Type", manifest.contentType || getPayslipUpdateContentType(objectName));
+  headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  headers.set("Access-Control-Allow-Origin", "*");
+  headers.set("Accept-Ranges", "bytes");
+  if (range) headers.set("Content-Range", `bytes ${range.start}-${range.end}/${manifest.totalSize}`);
+  return headers;
+}
+
+async function fetchPayslipManifest(supabaseUrl, serviceRoleKey, objectName) {
+  const response = await fetch(payslipStorageObjectUrl(supabaseUrl, `${objectName}.parts.json`), {
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+    },
+  });
+  if (!response.ok) return null;
+  let manifest;
+  try {
+    const text = await response.text();
+    manifest = JSON.parse(text.replace(/^\uFEFF/, ""));
+  } catch (error) {
+    console.error("No pude leer el manifiesto troceado de Payslip.", error);
+    return null;
+  }
+  if (!manifest || !Array.isArray(manifest.parts) || !Number.isFinite(manifest.totalSize)) return null;
+  let offset = 0;
+  manifest.parts = manifest.parts.map((part) => {
+    const size = Number(part.size || 0);
+    const normalized = {
+      name: String(part.name || ""),
+      size,
+      start: offset,
+      end: offset + size - 1,
+    };
+    offset += size;
+    return normalized;
+  });
+  if (offset !== manifest.totalSize || manifest.parts.some((part) => !part.name || part.size <= 0)) return null;
+  return manifest;
+}
+
+async function fetchPayslipPartStream(supabaseUrl, serviceRoleKey, partName, start, end) {
+  const response = await fetch(payslipStorageObjectUrl(supabaseUrl, partName), {
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      Range: `bytes=${start}-${end}`,
+    },
+  });
+  if (!response.ok && response.status !== 206) {
+    throw new Error(`No pude leer la parte ${partName}.`);
+  }
+  return response.body;
+}
+
+function streamCompositePayslipObject(supabaseUrl, serviceRoleKey, manifest, range) {
+  const selected = manifest.parts
+    .filter((part) => part.end >= range.start && part.start <= range.end)
+    .map((part) => ({
+      part,
+      start: Math.max(0, range.start - part.start),
+      end: Math.min(part.size - 1, range.end - part.start),
+    }));
+
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        for (const item of selected) {
+          const body = await fetchPayslipPartStream(
+            supabaseUrl,
+            serviceRoleKey,
+            item.part.name,
+            item.start,
+            item.end,
+          );
+          const reader = body.getReader();
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              controller.enqueue(value);
+            }
+          } finally {
+            reader.releaseLock();
+          }
+        }
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      }
+    },
+  });
+}
+
+async function fetchCompositePayslipUpdateAsset(request, env, objectName, supabaseUrl, serviceRoleKey) {
+  const manifest = await fetchPayslipManifest(supabaseUrl, serviceRoleKey, objectName);
+  if (!manifest) return null;
+
+  const requestedRange = request.headers.get("Range");
+  const range = requestedRange
+    ? parseSingleByteRange(requestedRange, manifest.totalSize)
+    : { start: 0, end: manifest.totalSize - 1 };
+
+  if (!range) {
+    return new Response(null, {
+      status: 416,
+      headers: {
+        "Content-Range": `bytes */${manifest.totalSize}`,
+        "Accept-Ranges": "bytes",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  }
+
+  const headers = createCompositePayslipHeaders(objectName, manifest, requestedRange ? range : null);
+  if (request.method === "HEAD") {
+    return new Response(null, {
+      status: requestedRange ? 206 : 200,
+      headers,
+    });
+  }
+
+  return new Response(streamCompositePayslipObject(supabaseUrl, serviceRoleKey, manifest, range), {
+    status: requestedRange ? 206 : 200,
+    headers,
+  });
+}
+
+async function fetchPayslipUpdateAsset(request, env, path) {
+  const objectName = decodeURIComponent(path.slice(PAYSLIP_UPDATES_PATH.length)).replace(/^\/+/, "");
+  if (!objectName || objectName.includes("..")) {
+    return new Response("No encontrado", { status: 404 });
+  }
+
+  const supabaseUrl = env.SUPABASE_URL || DEFAULT_SUPABASE_URL;
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return new Response("Actualizaciones no configuradas", { status: 503 });
+  }
+
+  const storageUrl = payslipStorageObjectUrl(supabaseUrl, objectName);
+  const requestHeaders = {
+    apikey: serviceRoleKey,
+    Authorization: `Bearer ${serviceRoleKey}`,
+  };
+  const range = request.headers.get("Range");
+  if (range) requestHeaders.Range = range;
+
+  const response = await fetch(storageUrl, {
+    method: request.method === "HEAD" ? "HEAD" : "GET",
+    headers: requestHeaders,
+  });
+
+  if (!response.ok) {
+    try {
+      const composite = await fetchCompositePayslipUpdateAsset(request, env, objectName, supabaseUrl, serviceRoleKey);
+      if (composite) return composite;
+    } catch (error) {
+      console.error("No pude servir la actualizacion troceada de Payslip.", error);
+    }
+    return new Response("No encontrado", { status: response.status === 404 ? 404 : response.status });
+  }
+
+  const headers = new Headers(response.headers);
+  headers.set("Content-Type", response.headers.get("Content-Type") || getPayslipUpdateContentType(objectName));
+  headers.set("Cache-Control", objectName === "latest.yml" ? "no-store" : "public, max-age=31536000, immutable");
+  headers.set("Access-Control-Allow-Origin", "*");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 async function fetchDueReminders(env, limit = 50) {
@@ -928,6 +1143,10 @@ export default {
     if (path.startsWith("/api/velocichef/")) {
       const response = await handleVelocichefApi(request, env, path);
       if (response) return response;
+    }
+
+    if (path.startsWith(PAYSLIP_UPDATES_PATH)) {
+      return fetchPayslipUpdateAsset(request, env, path);
     }
 
     if (path === "/admin" || path === "/admin/" || path === "/admin.html") {

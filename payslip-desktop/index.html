@@ -1,0 +1,3770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Demo Payslip Creator</title>
+<style>
+/* Dark mode layout */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #eee;
+}
+#header {
+    background-color: #1f1f1f;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+#header .title {
+    font-size: 20px;
+    font-weight: bold;
+}
+#header button {
+    background-color: #0066cc;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+#header button:hover {
+    background-color: #005bb5;
+}
+
+/* Accent color for import buttons */
+.accent-import {
+    background-color: #e67e22 !important;
+    color: #fff !important;
+}
+.accent-import:hover {
+    background-color: #d35400 !important;
+}
+
+/* Card component for panels */
+.card {
+    background-color: #1e1e1e;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    margin-bottom: 15px;
+}
+
+/* Format select dropdown */
+.format-select {
+    background-color: #2b2b2b;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 14px;
+    margin: 0 10px;
+}
+
+/* Disabled options styling */
+.format-select option:disabled {
+    color: #777;
+}
+
+/* Intro modal morphing */
+#intro-modal,
+.intro-modal {
+    transition: all 0.5s ease;
+    width: 280px;
+    padding: 30px 40px;
+}
+#intro-modal.expanded,
+.intro-modal.expanded {
+    width: 480px;
+}
+
+/* Modal */
+#modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 90;
+}
+#modal {
+    background-color: #1f1f1f;
+    padding: 20px 30px;
+    border-radius: 8px;
+    color: #fff;
+    text-align: center;
+    width: 300px;
+}
+#modal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+#modal button {
+    display: inline-block;
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #0066cc;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+#modal button:hover {
+    background-color: #005bb5;
+}
+
+/* Main layout */
+#main {
+    display: none;
+    height: calc(100vh - 50px);
+}
+#sidebar {
+    width: 100%;
+    background-color: #1f1f1f;
+    padding: 20px;
+    overflow-y: auto;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+/* Ensure sidebars inside the sidebar-wrapper take full width of the wrapper */
+#sidebar-wrapper #sidebar,
+#sidebar-wrapper #sidebarUK {
+    width: 100%;
+}
+#sidebar h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+#sidebar label {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+}
+#sidebar input[type="text"] {
+    width: 100%;
+    padding: 6px 8px;
+    margin-top: 4px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #2a2a2a;
+    color: #eee;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+#sidebar .section {
+    margin-bottom: 20px;
+}
+#sidebar button#createBtn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+#sidebar button#createBtn:hover {
+    background-color: #218838;
+}
+
+/* Hierarchy navigation styles */
+#hierarchyContainer {
+    font-size: 12px;
+}
+#hierarchyContainer .hierarchy-name {
+    font-weight: bold;
+    margin-top: 10px;
+}
+#hierarchyContainer .hierarchy-period-list {
+    margin-left: 10px;
+    margin-top: 5px;
+}
+#hierarchyContainer .hierarchy-period {
+    cursor: pointer;
+    padding: 2px 5px;
+    margin: 2px 0;
+    border-radius: 4px;
+}
+#hierarchyContainer .hierarchy-period:hover {
+    background-color: #333;
+}
+#hierarchyContainer .hierarchy-period.active {
+    background-color: #0066cc;
+    color: #fff;
+}
+
+#content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+}
+
+/* Payslip preview */
+/* Styles for individual payslip preview, reused for imported slips.  
+   We adjust the layout to closely resemble the provided sample: a crisp black border, 
+   smaller font sizes, uppercase headings and horizontal/vertical lines separating sections. */
+#payslip, .payslip {
+    background-color: #ffffff;
+    color: #000;
+    padding: 16px 20px;
+    /* Narrower slip width to better reflect the sample; leaving generous page margins */
+    width: 620px;
+    border: 1px solid #000;
+    box-sizing: border-box;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    margin: 0 auto 24px auto;
+    font-family: Arial, sans-serif;
+    position: relative;
+}
+#payslip h2, .payslip h2 {
+    text-align: center;
+    margin: 0;
+    font-size: 22px;
+    font-weight: bold;
+}
+#payslip p.subtitle, .payslip p.subtitle {
+    text-align: center;
+    margin: 2px 0 8px;
+    font-size: 12px;
+    font-weight: normal;
+}
+#payslip table, .payslip table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+}
+/* Detail table: top and bottom borders only, no inner row lines */
+/* Detail table: grid lines like the sample (vertical line separating columns and horizontal lines between rows) */
+/* Detail table border: add left and right borders to fully enclose the table */
+#payslip .detail-table, .payslip .detail-table {
+    border: 1px solid #000;
+    margin-top: 10px;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+#payslip .detail-table tr, .payslip .detail-table tr {
+    border-bottom: 1px solid #000;
+}
+#payslip .detail-table tr:last-child, .payslip .detail-table tr:last-child {
+    border-bottom: none;
+}
+#payslip .detail-table td, .payslip .detail-table td {
+    padding: 3px 4px;
+    vertical-align: top;
+    font-size: 9px;
+    width: 50%;
+}
+#payslip .detail-table td:nth-child(1), .payslip .detail-table td:nth-child(1) {
+    border-right: 1px solid #000;
+}
+/* Detail labels and values: use consistent font sizing to better mirror the sample */
+#payslip .detail-table .label, .payslip .detail-table .label {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 9px;
+}
+#payslip .detail-table .value, .payslip .detail-table .value {
+    font-size: 9px;
+}
+/* Earnings/Deductions table: vertical lines between columns and horizontal lines for each row */
+#payslip .earnings-table, .payslip .earnings-table {
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    margin-top: 12px;
+}
+#payslip .earnings-table th, .payslip .earnings-table th {
+    font-weight: bold;
+    text-transform: uppercase;
+    border-bottom: 1px solid #000;
+    padding: 4px;
+    font-size: 9px;
+    /* Light background for header rows to match the sample slip */
+    background-color: #f2f2f2;
+}
+#payslip .earnings-table td, .payslip .earnings-table td {
+    border-bottom: 1px solid #000;
+    border-left: 1px solid #000;
+    padding: 3px 4px;
+    font-size: 9px;
+    vertical-align: top;
+}
+/* Last column border right */
+#payslip .earnings-table tr td:last-child, .payslip .earnings-table tr td:last-child,
+#payslip .earnings-table tr th:last-child, .payslip .earnings-table tr th:last-child {
+    border-right: 1px solid #000;
+}
+/* Align numeric columns to the right */
+#payslip .earnings-table td:nth-child(2),
+#payslip .earnings-table td:nth-child(3),
+#payslip .earnings-table td:nth-child(5),
+#payslip .earnings-table td:nth-child(6),
+.payslip .earnings-table td:nth-child(2),
+.payslip .earnings-table td:nth-child(3),
+.payslip .earnings-table td:nth-child(5),
+.payslip .earnings-table td:nth-child(6) {
+    text-align: right;
+}
+/* Assign proportional widths to each column in the earnings/deductions table to mirror the sample layout */
+#payslip .earnings-table th:nth-child(1), .payslip .earnings-table td:nth-child(1) { width: 30%; }
+#payslip .earnings-table th:nth-child(2), .payslip .earnings-table td:nth-child(2) { width: 10%; }
+#payslip .earnings-table th:nth-child(3), .payslip .earnings-table td:nth-child(3) { width: 10%; }
+#payslip .earnings-table th:nth-child(4), .payslip .earnings-table td:nth-child(4) { width: 30%; }
+#payslip .earnings-table th:nth-child(5), .payslip .earnings-table td:nth-child(5) { width: 10%; }
+#payslip .earnings-table th:nth-child(6), .payslip .earnings-table td:nth-child(6) { width: 10%; }
+/* Remove the left border on the first column; the outer slip border will suffice */
+#payslip .earnings-table td:first-child, .payslip .earnings-table th:first-child {
+    border-left: none;
+}
+/* Reimbursements table styling */
+#payslip .reimburse-table, .payslip .reimburse-table {
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    margin-top: 12px;
+}
+#payslip .reimburse-table th, .payslip .reimburse-table th {
+    font-weight: bold;
+    text-transform: uppercase;
+    border-bottom: 1px solid #000;
+    padding: 4px;
+    font-size: 9px;
+    /* Light background for header row */
+    background-color: #f2f2f2;
+}
+#payslip .reimburse-table td, .payslip .reimburse-table td {
+    border-bottom: 1px solid #000;
+    border-left: 1px solid #000;
+    padding: 3px 4px;
+    font-size: 9px;
+    vertical-align: top;
+}
+#payslip .reimburse-table tr td:last-child, .payslip .reimburse-table tr td:last-child,
+#payslip .reimburse-table tr th:last-child, .payslip .reimburse-table tr th:last-child {
+    border-right: 1px solid #000;
+}
+/* Column widths for reimbursements: Description 60%, Amount 20%, YTD 20% */
+#payslip .reimburse-table th:nth-child(1), .payslip .reimburse-table td:nth-child(1) { width: 60%; }
+#payslip .reimburse-table th:nth-child(2), .payslip .reimburse-table td:nth-child(2) { width: 20%; text-align: right; }
+#payslip .reimburse-table th:nth-child(3), .payslip .reimburse-table td:nth-child(3) { width: 20%; text-align: right; }
+/* Remove left border on first column; slip border covers it */
+#payslip .reimburse-table td:first-child, .payslip .reimburse-table th:first-child {
+    border-left: none;
+}
+/* Summary table styling */
+#payslip .summary-table, .payslip .summary-table {
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    margin-top: 10px;
+}
+
+/* ======================
+   UK Payslip Styles
+   These rules define the look and feel for the UK payslip preview.  They
+   approximate the grouping and sizing seen in the ADP UK sample: a
+   narrower slip with clear sections, grouped tables and minimal grid
+   lines.  Each UK slip is enclosed in a .uk-slip container.  Tables
+   share consistent typography and spacing.  */
+
+/* Container for UK payslip */
+.uk-slip {
+    background-color: #ffffff;
+    color: #000000;
+    padding: 16px 20px;
+    width: 620px;
+    border: 1px solid #000;
+    box-sizing: border-box;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    margin: 0 auto 24px auto;
+    font-family: Arial, sans-serif;
+    position: relative;
+    font-size: 10px;
+}
+
+/* Top section containing the white address box and employer location */
+.uk-slip .uk-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+}
+.uk-slip .uk-address-box {
+    width: 60%;
+    background-color: #ffffff;
+    border: 1px solid #000;
+    padding: 4px 6px;
+    font-size: 9px;
+    line-height: 1.2;
+    white-space: pre-line;
+    min-height: 48px;
+}
+.uk-slip .uk-top .uk-employer-location {
+    width: 40%;
+    font-size: 9px;
+    line-height: 1.2;
+    text-align: right;
+    padding-top: 4px;
+    min-height: 48px;
+}
+
+/* Private & Confidential label */
+/* Updated styling for the “Private & Confidential” bar */
+.uk-slip .uk-private {
+    background-color: #cfe2f3;
+    border: 1px solid #000;
+    color: #000;
+    font-weight: bold;
+    font-size: 9px;
+    padding: 6px 4px;
+    margin: 6px 0;
+    text-align: center;
+}
+
+/* Message area containing company, pay group and personal messages */
+/* Updated styling for the messages area */
+.uk-slip .uk-messages {
+    border: 1px solid #b3d7f3;
+    background-color: #e8f3fc;
+    padding: 4px 6px;
+    margin-top: 4px;
+    margin-bottom: 6px;
+    font-size: 9px;
+    line-height: 1.3;
+}
+
+/* Individual message lines inside messages */
+.uk-slip .uk-messages div {
+    margin-bottom: 2px;
+}
+
+/* Info tables for employee and employer */
+/* The employee and employer tables mirror the sample payslip layout: a single
+   horizontal band containing three fields with a vertical divider between each.
+   The table itself has a border and internal vertical dividers, but no grid lines
+   around every cell. */
+.uk-slip .uk-info-table,
+.uk-slip .uk-employer-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+    font-size: 9px;
+    border: 1px solid #000;
+}
+.uk-slip .uk-info-table td,
+.uk-slip .uk-employer-table td {
+    padding: 3px 4px;
+    vertical-align: top;
+    text-align: left;
+}
+/* vertical dividers between columns */
+.uk-slip .uk-info-table td:not(:last-child),
+.uk-slip .uk-employer-table td:not(:last-child) {
+    border-right: 1px solid #000;
+}
+/* align second and third columns */
+.uk-slip .uk-info-table td:nth-child(2),
+.uk-slip .uk-employer-table td:nth-child(2) {
+    text-align: center;
+}
+.uk-slip .uk-info-table td:nth-child(3),
+.uk-slip .uk-employer-table td:nth-child(3) {
+    text-align: right;
+}
+
+/* Earnings & Deductions table */
+.uk-slip .uk-earnings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 9px;
+    border: 1px solid #000;
+}
+/* Header row styling */
+.uk-slip .uk-earnings-table th {
+    padding: 4px 3px;
+    background-color: #f2f2f2;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-right: 1px solid #000;
+}
+/* Remove right border on last header cell */
+.uk-slip .uk-earnings-table th:last-child {
+    border-right: none;
+}
+/* Data cell styling */
+.uk-slip .uk-earnings-table td {
+    padding: 3px 3px;
+    vertical-align: top;
+    border-right: 1px solid #000;
+}
+.uk-slip .uk-earnings-table td:last-child {
+    border-right: none;
+}
+/* Horizontal separators between rows */
+.uk-slip .uk-earnings-table tr:not(:first-child) td {
+    border-top: 1px solid #000;
+}
+/* Column widths and alignment */
+.uk-slip .uk-earnings-table th:nth-child(1),
+.uk-slip .uk-earnings-table td:nth-child(1) { width: 30%; }
+.uk-slip .uk-earnings-table th:nth-child(2),
+.uk-slip .uk-earnings-table td:nth-child(2) { width: 8%; text-align: right; }
+.uk-slip .uk-earnings-table th:nth-child(3),
+.uk-slip .uk-earnings-table td:nth-child(3) { width: 12%; text-align: right; }
+.uk-slip .uk-earnings-table th:nth-child(4),
+.uk-slip .uk-earnings-table td:nth-child(4) { width: 15%; text-align: right; }
+.uk-slip .uk-earnings-table th:nth-child(5),
+.uk-slip .uk-earnings-table td:nth-child(5) { width: 25%; text-align: left; }
+.uk-slip .uk-earnings-table th:nth-child(6),
+.uk-slip .uk-earnings-table td:nth-child(6) { width: 10%; text-align: right; }
+
+/* Running totals table */
+/* Running totals table */
+.uk-slip .uk-running-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 9px;
+    border: 1px solid #000;
+}
+.uk-slip .uk-running-table th {
+    padding: 4px 3px;
+    background-color: #f2f2f2;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-right: 1px solid #000;
+}
+.uk-slip .uk-running-table th:last-child {
+    border-right: none;
+}
+.uk-slip .uk-running-table td {
+    padding: 3px 3px;
+    vertical-align: top;
+    text-align: right;
+    border-right: 1px solid #000;
+}
+.uk-slip .uk-running-table td:last-child {
+    border-right: none;
+}
+.uk-slip .uk-running-table td:first-child {
+    text-align: left;
+}
+.uk-slip .uk-running-table tr:not(:first-child) td {
+    border-top: 1px solid #000;
+}
+
+/* Payment summary table */
+/* Payment summary table */
+.uk-slip .uk-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 9px;
+    border: 1px solid #000;
+}
+.uk-slip .uk-summary-table td {
+    padding: 3px 3px;
+    vertical-align: top;
+    border-right: 1px solid #000;
+}
+.uk-slip .uk-summary-table td:first-child {
+    font-weight: bold;
+}
+.uk-slip .uk-summary-table td:last-child {
+    border-right: none;
+}
+.uk-slip .uk-summary-table tr:not(:last-child) td {
+    border-top: 1px solid #000;
+}
+
+/* Employer contributions table */
+/* Employer contributions table */
+.uk-slip .uk-contrib-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 9px;
+    border: 1px solid #000;
+}
+.uk-slip .uk-contrib-table th {
+    padding: 4px 3px;
+    background-color: #f2f2f2;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-right: 1px solid #000;
+}
+.uk-slip .uk-contrib-table th:last-child {
+    border-right: none;
+}
+.uk-slip .uk-contrib-table td {
+    padding: 3px 3px;
+    vertical-align: top;
+    border-right: 1px solid #000;
+}
+.uk-slip .uk-contrib-table td:last-child {
+    border-right: none;
+}
+.uk-slip .uk-contrib-table tr:not(:last-child) td {
+    border-top: 1px solid #000;
+}
+
+/* Salary and NI table */
+/* Salary and NI table */
+.uk-slip .uk-salary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 9px;
+    border: 1px solid #000;
+}
+.uk-slip .uk-salary-table td {
+    padding: 3px 3px;
+    vertical-align: top;
+    border-right: 1px solid #000;
+}
+.uk-slip .uk-salary-table td:last-child {
+    border-right: none;
+}
+.uk-slip .uk-salary-table td:first-child {
+    font-weight: bold;
+}
+.uk-slip .uk-salary-table tr:not(:last-child) td {
+    border-top: 1px solid #000;
+}
+
+/* Final amount section */
+.uk-slip .uk-final {
+    text-align: right;
+    font-weight: bold;
+    margin-top: 12px;
+    font-size: 12px;
+}
+
+/* Layout for lower section of UK payslip: left column (running totals) and right column (summary, contributions, salary, final amount). */
+.uk-slip .uk-lower-section {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+.uk-slip .uk-left-column {
+    width: 60%;
+}
+.uk-slip .uk-right-column {
+    width: 38%;
+    border-left: 1px solid #000;
+    padding-left: 6px;
+}
+.uk-slip .uk-right-column table {
+    margin-top: 6px;
+}
+.uk-slip .uk-right-column .uk-final {
+    margin-top: 12px;
+    text-align: right;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+/* Enhance appearance of UK payslip to better match sample */
+/* Private & Confidential bar across the width */
+.uk-slip .uk-private {
+    background-color: #cfe2f3;
+    padding: 6px 4px;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid #000;
+    margin-top: 6px;
+}
+/* Message box for company/pay group/personal messages */
+.uk-slip .uk-messages {
+    background-color: #e8f3fc;
+    border: 1px solid #b3d7f3;
+    padding: 4px 6px;
+    margin-top: 4px;
+    margin-bottom: 6px;
+    font-size: 9px;
+}
+.uk-slip .uk-messages div {
+    margin-bottom: 2px;
+}
+/* Light blue header backgrounds for tables */
+.uk-slip table th {
+    background-color: #e6f1fb;
+}
+/* Outer border for slip content */
+.uk-slip {
+    /* Override only specific properties; preserve width and other layout from earlier definition */
+    background: linear-gradient(to bottom, #dfeffc, #f6fbff);
+    border: 1px solid #000;
+    padding: 16px 20px;
+    width: 620px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    color: #000;
+    margin: 0 auto 24px auto;
+    position: relative;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+}
+
+#payslip .summary-table td, .payslip .summary-table td {
+    padding: 4px 4px;
+    font-size: 10px;
+    font-weight: bold;
+}
+/* Footnote */
+#payslip .footnote, .payslip .footnote {
+    font-size: 8px;
+    text-align: center;
+    margin-top: 8px;
+}
+
+/* Net pay, net transfer and in-words rows outside tables */
+#payslip .net-pay, .payslip .net-pay,
+#payslip .net-transfer, .payslip .net-transfer,
+#payslip .in-words, .payslip .in-words {
+    border-top: 1px solid #000;
+    padding: 4px 0;
+    font-size: 10px;
+    margin: 0;
+}
+
+/* Net pay table styling (two columns) */
+#payslip .netpay-table, .payslip .netpay-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: 1px solid #000;
+    margin-top: 6px;
+}
+#payslip .netpay-table td, .payslip .netpay-table td {
+    padding: 4px 4px;
+    font-size: 10px;
+    font-weight: bold;
+    vertical-align: top;
+}
+#payslip .netpay-table td:nth-child(1), .payslip .netpay-table td:nth-child(1) {
+    width: 50%;
+}
+#payslip .netpay-table td:nth-child(2), .payslip .netpay-table td:nth-child(2) {
+    width: 50%;
+    border-left: 1px solid #000;
+}
+
+/* Custom rows for NET PAY, NET TRANSFER and IN WORDS
+   Using flex layout and full left/right borders to mirror the sample slip.
+   Each row starts with a top border to separate it from the previous section. */
+#payslip .net-pay-row, #payslip .net-transfer-row, #payslip .in-words-row,
+.payslip .net-pay-row, .payslip .net-transfer-row, .payslip .in-words-row {
+    display: flex;
+    border-top: 1px solid #000;
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    width: 100%;
+    font-size: 10px;
+    padding: 4px 4px;
+    box-sizing: border-box;
+}
+#payslip .net-pay-row .label, #payslip .net-transfer-row .label, #payslip .in-words-row .label,
+.payslip .net-pay-row .label, .payslip .net-transfer-row .label, .payslip .in-words-row .label {
+    font-weight: bold;
+    text-transform: uppercase;
+    flex: 0 0 40%;
+}
+/* The IN WORDS row uses a narrower label to allow more space for the long text */
+#payslip .in-words-row .label, .payslip .in-words-row .label {
+    flex: 0 0 30%;
+}
+#payslip .net-pay-row .value, #payslip .net-transfer-row .value,
+.payslip .net-pay-row .value, .payslip .net-transfer-row .value {
+    flex: 1;
+    text-align: right;
+    font-weight: bold;
+}
+#payslip .in-words-row .value, .payslip .in-words-row .value {
+    flex: 1;
+    text-align: left;
+    font-weight: normal;
+}
+
+/* Pay Slip label at top right */
+#payslip .pay-slip-label, .payslip .pay-slip-label {
+    position: absolute;
+    top: -18px;
+    right: 0;
+    text-align: right;
+    font-weight: bold;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Print styles: hide the editor and header when printing so only
+   the payslip preview appears on the printed document. */
+@media print {
+    /* Hide UI components */
+    #header,
+    #sidebar,
+    #modal-overlay {
+        display: none !important;
+    }
+    body {
+        background: #ffffff;
+        color: #000000;
+        margin: 0;
+    }
+    #main {
+        display: block !important;
+    }
+    #content {
+        padding: 0 !important;
+    }
+    /* Maintain the payslip border and width when printing to mirror the on-screen preview */
+    #payslip {
+        border: 1px solid #000 !important;
+        /* Match on‑screen slip width in print */
+        width: 620px !important;
+        margin: 0 auto !important;
+        box-shadow: none !important;
+    }
+
+    /* Ensure each slip in combined view starts on a new page */
+    #combinedContainer .payslip {
+        page-break-after: always;
+    }
+    #combinedContainer {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+/* Tabs styling for multiple payslips */
+.names-tabs .tab-name, .period-tabs .tab-period {
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    user-select: none;
+    white-space: nowrap;
+}
+.names-tabs .tab-name {
+    background-color: #2b2b2b;
+    color: #ccc;
+    border: 1px solid #444;
+}
+.names-tabs .tab-name:hover {
+    background-color: #333;
+}
+.names-tabs .tab-name.active {
+    background-color: #0066cc;
+    color: #fff;
+    border-color: #0066cc;
+}
+.period-tabs .tab-period {
+    background-color: #333;
+    color: #bbb;
+    border: 1px solid #444;
+    margin-top: 3px;
+}
+.period-tabs .tab-period:hover {
+    background-color: #444;
+}
+.period-tabs .tab-period.active {
+    background-color: #007acc;
+    color: #fff;
+    border-color: #007acc;
+}
+.v49-update{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px;padding:12px 14px;border:1px solid rgba(96,165,250,.28);border-radius:16px;background:rgba(37,99,235,.12);color:#dbeafe}.v49-update span{font-size:13px;font-weight:900}.v49-update button{border:1px solid rgba(96,165,250,.38);border-radius:999px;background:rgba(15,23,42,.72);color:#fff;padding:8px 12px;font-weight:950;cursor:pointer}.v49-update button:last-child{border:0;background:#facc15;color:#07111f}
+.v49-pill{flex-wrap:wrap!important;max-width:100%!important}.v49-pill .v49-update-inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.v49-pill .v49-update-inline span{color:#dbeafe;font-weight:900}.v49-pill .v49-update-inline button{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:5px 9px;font-weight:950;cursor:pointer}.v49-pill .v49-update-inline button:hover{background:rgba(255,255,255,.22)}
+#intro-overlay.v49fix-overlay{overflow:auto!important;align-items:flex-start!important}.v49fix-overlay *{min-width:0}.v49-shell{grid-template-columns:minmax(0,1fr) minmax(320px,.82fr)!important;min-height:min(600px,calc(100vh - 72px))!important}.v49-left{padding:clamp(24px,3.8vw,44px)!important}.v49-right{padding:clamp(18px,2.6vw,26px)!important}.v49-title{font-size:clamp(34px,4.2vw,56px)!important;line-height:1.02!important;letter-spacing:0!important;overflow-wrap:normal!important;max-width:100%}.v49-sub{max-width:64ch}.v49-update{max-width:100%;align-items:flex-start}.v49-update span{flex:1 1 320px;overflow-wrap:anywhere;line-height:1.35}.v49-stats,.v49-steps{grid-template-columns:repeat(3,minmax(0,1fr))!important}.v49-panel{max-width:100%!important;min-height:auto!important}.v49-drop{margin-top:clamp(22px,5vw,58px)!important}.v49-country-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.v49-country{min-height:96px!important}#intro-modal.v49fix-modal{width:min(1080px,calc(100vw - 32px))!important;max-height:calc(100vh - 48px)!important;overflow:auto!important}#main{max-width:100vw;overflow:auto}@media(max-width:1120px){.v49-shell{grid-template-columns:1fr!important}.v49-right{border-left:0!important;border-top:1px solid var(--v49-line)!important}.v49-title{font-size:clamp(32px,6vw,48px)!important}.v49-stats,.v49-steps{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media(max-width:720px){.v49-stats,.v49-steps,.v49-country-grid{grid-template-columns:1fr!important}.v49-update button{width:100%}.v49-pill{width:100%;justify-content:center;white-space:normal}.v49-title{font-size:34px!important}}
+</style>
+<!-- Override some v4.9 styles for version 4.9.1.  By adding this extra
+     style block after the main v49fix stylesheet, we ensure our
+     adjustments take precedence without having to modify the original
+     minified line.  These rules hide the two‑letter country codes,
+     enlarge the drag‑and‑drop area and adjust its vertical spacing. -->
+<style>
+/* Hide two-letter codes on country cards */
+.v49-code { display: none !important; }
+/* Make the drop area taller and vertically centered with more padding */
+.v49-drop {
+  /* Increase top margin and also add bottom margin so the drop zone sits
+     roughly centered between the country grid above and the contact link below. */
+  margin-top: 60px !important;
+  margin-bottom: 40px !important;
+  /* Add generous padding around the upload icon and text */
+  padding: 36px 24px !important;
+  /* Raise the minimum height so the dotted squircle feels substantial */
+  min-height: 180px !important;
+}
+
+/* Full-screen overlay shown while the PDF is being processed */
+#loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  color: #ffffff;
+  font-size: 22px;
+  font-family: Arial, sans-serif;
+}
+
+/* Hide the legacy intro text and buttons that caused a brief flash on load */
+#intro-text,
+#intro-buttons,
+.v49fix-legacy {
+  display: none !important;
+}
+</style>
+<!-- Load pdf.js library for importing payslips from PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.min.js"></script>
+<script>
+// Configure pdf.js worker src for proper parsing in browser
+if (typeof pdfjsLib !== 'undefined') {
+    // Always use the hosted worker for PDF.js.  Using a remote worker avoids
+    // Chrome's file:// cross‑origin restrictions.  Earlier versions attempted
+    // to disable the worker or set an empty workerSrc when the page was
+    // loaded locally, but that caused the browser to try loading this HTML
+    // file as a worker, resulting in "Unsafe attempt to load URL file:///…"
+    // errors and blocked PDF processing.  Loading the official worker
+    // directly from a CDN works reliably across file and HTTP contexts.
+    // When running as a local file, disable the PDF.js worker entirely and
+    // clear the workerSrc.  This forces all parsing to occur on the main
+    // thread and prevents the browser from trying to load worker scripts
+    // from a different file origin, which would otherwise trigger
+    // "Not allowed to load local resource" errors.  The PDF.js worker is
+    // still available when this tool is served over HTTP.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js';
+    pdfjsLib.disableWorker = false;
+}
+</script>
+
+<!-- Global helper to show the workspace when a file is selected.  Because
+    the existing showWorkspace() function is defined within a closure and
+    unavailable on the global scope, we mirror its logic here.  The
+    onchange handler on the hidden file input will call this function to
+    transition from the splash screen into the main payslip editor as soon
+    as a PDF is chosen. -->
+<script>
+function showWorkspacePublic(){
+  try{
+    var intro=document.getElementById('intro-overlay');
+    if(intro) intro.style.display='none';
+    var splash=document.getElementById('splash');
+    if(splash) splash.style.display='none';
+    var main=document.getElementById('main');
+    if(main){
+      main.style.display='flex';
+      main.classList.remove('workspace-enter-v49');
+      void main.offsetWidth;
+      main.classList.add('workspace-enter-v49');
+    }
+  }catch(e){
+    // If anything goes wrong, silently fail; the original script may still show the workspace
+  }
+}
+</script>
+
+<!-- Removed force-reveal script.  In V4.9.2 the workspace is not shown until
+     a PDF has been selected and processed.  We leave an empty DOMContentLoaded
+     listener to preserve the structure. -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // revealWorkspace listeners removed in V4.9.2
+});
+</script>
+<!-- Additional libraries for generating PDFs and ZIP archives -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+<div id="header">
+    <div class="title">Demo Payslip Creator</div>
+    <div>
+        <input type="file" id="importFile" accept="application/pdf" style="display:none">
+        <button id="importBtn" class="accent-import">Import</button>
+        <button id="saveBtn">Save</button>
+        <!-- Format selector for future country formats -->
+        <label for="formatSelect" style="margin-left:15px; color:#fff; font-size:14px; vertical-align:middle;">Format:</label>
+        <select id="formatSelect" class="format-select" style="vertical-align:middle;">
+            <option value="India" selected>India</option>
+            <option value="USA" disabled>USA (coming soon)</option>
+            <option value="UK">UK</option>
+            <option value="Brazil">Brazil</option>
+            <option value="Australia">Australia</option>
+        </select>
+    </div>
+</div>
+
+<!-- Intro overlay shows welcome message and initial options -->
+<div id="intro-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:100;">
+    <div id="intro-modal" class="intro-modal" style="background-color:#1f1f1f; padding:40px 50px; border-radius:12px; text-align:center; color:#fff; transition:all 0.5s ease; max-width:80%;">
+        <h1 id="intro-text" style="margin:0; font-size:32px; line-height:1.3;">
+            <span>Welcome to</span><br>
+            <span>the Demo</span><br>
+            <span>Payslip Creator</span>
+        </h1>
+        <div id="intro-buttons" style="display:none; margin-top:20px; gap:10px; justify-content:center;">
+            <button id="introImportBtn" class="accent-import" style="padding:10px 20px; font-size:14px; border:none; border-radius:6px; cursor:pointer;">Import</button>
+            <button id="introSampleBtn" style="padding:10px 20px; font-size:14px; background-color:#0066cc; color:#fff; border:none; border-radius:6px; cursor:pointer;">Load Sample</button>
+            <button id="introScratchBtn" style="padding:10px 20px; font-size:14px; background-color:#0066cc; color:#fff; border:none; border-radius:6px; cursor:pointer;">Start from Scratch</button>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay shown when user wants to download payslips -->
+<div id="download-options-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; z-index:90;">
+    <div style="background-color:#1f1f1f; padding:20px 30px; border-radius:8px; color:#fff; text-align:center; max-width:90%; position:relative;">
+        <!-- Close button -->
+        <button id="downloadCloseBtn" style="position:absolute; top:8px; right:8px; background:none; border:none; color:#fff; font-size:18px; cursor:pointer;">×</button>
+        <h2>Download Payslips</h2>
+        <p>Select which payslip(s) to download:</p>
+        <div id="downloadList" style="margin:15px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:10px;"></div>
+        <div id="downloadCombinedContainer" style="margin-top:10px;"></div>
+    </div>
+</div>
+
+<!-- Overlay used when multiple payslips are detected during import -->
+<div id="import-choice-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:90; align-items:center; justify-content:center;">
+    <div style="background:#1f1f1f; padding:20px 30px; border-radius:8px; color:#fff; text-align:center; width:350px; position:relative;">
+        <!-- Close button -->
+        <button id="importChoiceCloseBtn" style="position:absolute; top:8px; right:8px; background:none; border:none; color:#fff; font-size:18px; cursor:pointer;">×</button>
+        <h2>Multiple Payslips Detected</h2>
+        <p>How would you like to preview them?</p>
+        <button id="importSingleFileBtn" style="margin:10px; padding:10px 20px; background-color:#0066cc; border:none; border-radius:4px; color:#fff; cursor:pointer;">All in one file</button>
+        <button id="importMultiFileBtn" style="margin:10px; padding:10px 20px; background-color:#0066cc; border:none; border-radius:4px; color:#fff; cursor:pointer;">Separate files</button>
+    </div>
+</div>
+
+<!-- Modal for country detection.  This overlay appears after importing a PDF and informs the user
+     about the detected country of the payslip(s).  It lets the user decide whether to use the
+     detected template or keep their current selection, or simply acknowledges when the country
+     cannot be determined or is unsupported. -->
+<div id="country-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index:10000;">
+    <div id="country-modal" style="background-color:#ffffff; color:#000000; padding:20px; border-radius:6px; max-width:420px; width:80%; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.4); font-size:14px; position:relative;">
+        <!-- Close button -->
+        <button id="countryModalCloseBtn" style="position:absolute; top:8px; right:8px; background:none; border:none; color:#000; font-size:18px; cursor:pointer;">×</button>
+        <p id="countryModalText" style="margin-bottom:20px; line-height:1.4;"></p>
+        <div id="country-modal-buttons" style="display:flex; justify-content:center; gap:12px; margin-top:16px;">
+            <button id="countryYesBtn" style="background-color:#0066cc; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:14px;">Yes</button>
+            <button id="countryNoBtn" style="background-color:#0066cc; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:14px;">No</button>
+            <button id="countryOkBtn" style="background-color:#0066cc; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:14px;">OK</button>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <!-- Start of sidebar wrapper. This container stacks the hierarchy tabs and whichever sidebar is visible.
+         It takes the same width as the sidebars and ensures the tabs sit above the form fields. -->
+    <div id="sidebar-wrapper" style="display:flex; flex-direction:column; width:35%; box-sizing:border-box;">
+    <!-- Hierarchical navigation for multiple payslips. This container is shown when multiple employees or pay periods are imported. -->
+    <div id="hierarchyContainer" class="card" style="display:none; width:100%; flex-basis:100%;">
+        <div id="namesTabs" class="names-tabs" style="display:flex; gap:5px; flex-wrap:wrap; overflow-x:auto;"></div>
+        <div id="periodTabs" class="period-tabs" style="display:flex; gap:5px; flex-wrap:wrap; overflow-x:auto;"></div>
+    </div>
+    <div id="sidebar">
+        <div class="card">
+        <h3>Company & Employee Info</h3>
+        <div class="section">
+            <label>Company Name<input type="text" id="compName"></label>
+            <label>Pay Slip Month<input type="text" id="payMonth"></label>
+            <label>Employee Code<input type="text" id="empcode"></label>
+            <label>UAN No<input type="text" id="uanNo"></label>
+            <label>Employee Name<input type="text" id="empName"></label>
+            <label>Designation<input type="text" id="designation"></label>
+            <label>PF Number<input type="text" id="pfNo"></label>
+            <label>ESI Number<input type="text" id="esiNo"></label>
+            <label>Date of Joining<input type="text" id="doj"></label>
+            <label>Standard Days<input type="text" id="stdDays"></label>
+            <label>Grade<input type="text" id="grade"></label>
+            <label>Working Days<input type="text" id="workDays"></label>
+            <label>PAN<input type="text" id="pan"></label>
+            <label>LOP Days<input type="text" id="lopDays"></label>
+            <label>Department<input type="text" id="department"></label>
+            <label>Bank Name<input type="text" id="bankName"></label>
+            <label>Location<input type="text" id="location"></label>
+            <label>Account Number<input type="text" id="accNo"></label>
+        </div><!-- end section -->
+        </div><!-- end card -->
+        <div class="card">
+        <h3>Earnings</h3>
+        <div class="section">
+            <label>Basic Pay (Current)<input type="text" id="basicPayAmt"></label>
+            <label>Basic Pay (YTD)<input type="text" id="basicPayYTD"></label>
+            <label>HRA (Current)<input type="text" id="hraAmt"></label>
+            <label>HRA (YTD)<input type="text" id="hraYTD"></label>
+            <label>Special Allowance (Current)<input type="text" id="specialAllowanceAmt"></label>
+            <label>Special Allowance (YTD)<input type="text" id="specialAllowanceYTD"></label>
+            <label>Conveyance Allowance (Current)<input type="text" id="conveyanceAllowanceAmt"></label>
+            <label>Conveyance Allowance (YTD)<input type="text" id="conveyanceAllowanceYTD"></label>
+            <label>Leave Travel Allowance (Current)<input type="text" id="leaveTravelAllowanceAmt"></label>
+            <label>Leave Travel Allowance (YTD)<input type="text" id="leaveTravelAllowanceYTD"></label>
+            <label>Other Earnings (Current)<input type="text" id="otherEarningsAmt"></label>
+            <label>Other Earnings (YTD)<input type="text" id="otherEarningsYTD"></label>
+            <label>Meal Card (Current)<input type="text" id="mealCardAmt"></label>
+            <label>Meal Card (YTD)<input type="text" id="mealCardYTD"></label>
+            <label>Gross Earnings (Current)<input type="text" id="grossEarningsCurrent"></label>
+            <label>Gross Earnings (YTD)<input type="text" id="grossEarningsYTD"></label>
+        </div><!-- end section -->
+        </div><!-- end card -->
+        <div class="card">
+        <h3>Deductions</h3>
+        <div class="section">
+            <label>Provident Fund (Current)<input type="text" id="pfAmt"></label>
+            <label>Provident Fund (YTD)<input type="text" id="pfYTD"></label>
+            <label>Income Tax (Current)<input type="text" id="incomeTaxAmt"></label>
+            <label>Income Tax (YTD)<input type="text" id="incomeTaxYTD"></label>
+            <label>Other Deduction (Current)<input type="text" id="otherDeductionAmt"></label>
+            <label>Other Deduction (YTD)<input type="text" id="otherDeductionYTD"></label>
+            <label>Salary Hold (Current)<input type="text" id="salaryHoldAmt"></label>
+            <label>Salary Hold (YTD)<input type="text" id="salaryHoldYTD"></label>
+            <label>Labour Welfare Fund (Current)<input type="text" id="labourWelfareFundAmt"></label>
+            <label>Labour Welfare Fund (YTD)<input type="text" id="labourWelfareFundYTD"></label>
+            <label>Meal Card Deduction (Current)<input type="text" id="mealCardDeductionAmt"></label>
+            <label>Meal Card Deduction (YTD)<input type="text" id="mealCardDeductionYTD"></label>
+            <label>Gross Deduction (Current)<input type="text" id="grossDeductionCurrent"></label>
+            <label>Gross Deduction (YTD)<input type="text" id="grossDeductionYTD"></label>
+        </div><!-- end section -->
+        </div><!-- end card -->
+        <div class="card">
+        <h3>Reimbursements & Summary</h3>
+        <div class="section">
+            <label>Telephone Reimbursement (Current)<input type="text" id="telephoneReimbursementAmt"></label>
+            <label>Telephone Reimbursement (YTD)<input type="text" id="telephoneReimbursementYTD"></label>
+            <label>Total Reimbursement (Current)<input type="text" id="totalReimbursementCurrent"></label>
+            <label>Total Reimbursement (YTD)<input type="text" id="totalReimbursementYTD"></label>
+            <label>Net Pay<input type="text" id="netPay"></label>
+            <label>Net Transfer<input type="text" id="netTransfer"></label>
+            <label>In Words<input type="text" id="inWords"></label>
+        </div><!-- end section -->
+        </div><!-- end card -->
+        <button type="button" id="createBtn" style="margin-top:10px;">Create</button>
+    </div>
+    <!-- UK sidebar (hidden by default) -->
+    <div id="sidebarUK" style="display:none; background-color:#1f1f1f; padding:20px; overflow-y:auto; color:#fff; box-sizing:border-box;">
+        <!-- Employee address and optional message -->
+        <div class="card">
+            <h3>Employee Address &amp; Messages (UK)</h3>
+            <div class="section">
+                <label>Address Line 1<input type="text" id="ukAddress1"></label>
+                <label>Address Line 2<input type="text" id="ukAddress2"></label>
+                <label>Address Line 3<input type="text" id="ukAddress3"></label>
+                <label>Address Line 4<input type="text" id="ukAddress4"></label>
+                <label>Employer Location<input type="text" id="ukEmployerLocation"></label>
+                <label>Company Message<input type="text" id="ukCompanyMsg"></label>
+                <label>Pay Group Message<input type="text" id="ukPayGroupMsg"></label>
+                <label>Personal Message<input type="text" id="ukPersonalMsg"></label>
+            </div>
+        </div>
+        <!-- Employee and employer information -->
+        <div class="card">
+            <h3>Employee &amp; Employer Info (UK)</h3>
+            <div class="section">
+                <label>Employee Number<input type="text" id="ukEmployeeNumber"></label>
+                <label>Employee Name<input type="text" id="ukEmployeeName"></label>
+                <label>Pay Date<input type="text" id="ukPayDate"></label>
+                <label>Employer Name<input type="text" id="ukEmployerName"></label>
+                <label>Tax Month<input type="text" id="ukTaxMonth"></label>
+                <label>Pay Group<input type="text" id="ukPayGroup"></label>
+            </div>
+        </div>
+        <!-- Earnings section -->
+        <div class="card">
+            <h3>Earnings (UK)</h3>
+            <div class="section">
+                <!-- Up to five earnings entries -->
+                <label>Description 1<input type="text" id="ukEarnDesc1"></label>
+                <label>Units 1<input type="text" id="ukEarnUnits1"></label>
+                <label>Rate 1<input type="text" id="ukEarnRate1"></label>
+                <label>Amount 1<input type="text" id="ukEarnAmt1"></label>
+                <label>Description 2<input type="text" id="ukEarnDesc2"></label>
+                <label>Units 2<input type="text" id="ukEarnUnits2"></label>
+                <label>Rate 2<input type="text" id="ukEarnRate2"></label>
+                <label>Amount 2<input type="text" id="ukEarnAmt2"></label>
+                <label>Description 3<input type="text" id="ukEarnDesc3"></label>
+                <label>Units 3<input type="text" id="ukEarnUnits3"></label>
+                <label>Rate 3<input type="text" id="ukEarnRate3"></label>
+                <label>Amount 3<input type="text" id="ukEarnAmt3"></label>
+                <label>Description 4<input type="text" id="ukEarnDesc4"></label>
+                <label>Units 4<input type="text" id="ukEarnUnits4"></label>
+                <label>Rate 4<input type="text" id="ukEarnRate4"></label>
+                <label>Amount 4<input type="text" id="ukEarnAmt4"></label>
+                <label>Description 5<input type="text" id="ukEarnDesc5"></label>
+                <label>Units 5<input type="text" id="ukEarnUnits5"></label>
+                <label>Rate 5<input type="text" id="ukEarnRate5"></label>
+                <label>Amount 5<input type="text" id="ukEarnAmt5"></label>
+                <label>Total Hours<input type="text" id="ukTotalHours"></label>
+                <label>Total Earnings<input type="text" id="ukTotalEarnings"></label>
+            </div>
+        </div>
+        <!-- Deductions section -->
+        <div class="card">
+            <h3>Deductions (UK)</h3>
+            <div class="section">
+                <!-- Up to five deduction entries -->
+                <label>Description 1<input type="text" id="ukDedDesc1"></label>
+                <label>Amount 1<input type="text" id="ukDedAmt1"></label>
+                <label>Description 2<input type="text" id="ukDedDesc2"></label>
+                <label>Amount 2<input type="text" id="ukDedAmt2"></label>
+                <label>Description 3<input type="text" id="ukDedDesc3"></label>
+                <label>Amount 3<input type="text" id="ukDedAmt3"></label>
+                <label>Description 4<input type="text" id="ukDedDesc4"></label>
+                <label>Amount 4<input type="text" id="ukDedAmt4"></label>
+                <label>Description 5<input type="text" id="ukDedDesc5"></label>
+                <label>Amount 5<input type="text" id="ukDedAmt5"></label>
+                <label>Total Deductions<input type="text" id="ukTotalDeductions"></label>
+            </div>
+        </div>
+
+        <!-- Running Totals section -->
+        <div class="card">
+            <h3>Running Totals (UK)</h3>
+            <div class="section">
+                <!-- Up to six running total rows -->
+                <label>Description 1<input type="text" id="ukRunDesc1"></label>
+                <label>YTD 1<input type="text" id="ukRunYTD1"></label>
+                <label>This Employment 1<input type="text" id="ukRunThis1"></label>
+                <label>Accumulations 1<input type="text" id="ukRunAccum1"></label>
+                <label>Description 2<input type="text" id="ukRunDesc2"></label>
+                <label>YTD 2<input type="text" id="ukRunYTD2"></label>
+                <label>This Employment 2<input type="text" id="ukRunThis2"></label>
+                <label>Accumulations 2<input type="text" id="ukRunAccum2"></label>
+                <label>Description 3<input type="text" id="ukRunDesc3"></label>
+                <label>YTD 3<input type="text" id="ukRunYTD3"></label>
+                <label>This Employment 3<input type="text" id="ukRunThis3"></label>
+                <label>Accumulations 3<input type="text" id="ukRunAccum3"></label>
+                <label>Description 4<input type="text" id="ukRunDesc4"></label>
+                <label>YTD 4<input type="text" id="ukRunYTD4"></label>
+                <label>This Employment 4<input type="text" id="ukRunThis4"></label>
+                <label>Accumulations 4<input type="text" id="ukRunAccum4"></label>
+                <label>Description 5<input type="text" id="ukRunDesc5"></label>
+                <label>YTD 5<input type="text" id="ukRunYTD5"></label>
+                <label>This Employment 5<input type="text" id="ukRunThis5"></label>
+                <label>Accumulations 5<input type="text" id="ukRunAccum5"></label>
+                <label>Description 6<input type="text" id="ukRunDesc6"></label>
+                <label>YTD 6<input type="text" id="ukRunYTD6"></label>
+                <label>This Employment 6<input type="text" id="ukRunThis6"></label>
+                <label>Accumulations 6<input type="text" id="ukRunAccum6"></label>
+            </div>
+        </div>
+        <!-- Payment summary -->
+        <div class="card">
+            <h3>Payment Summary (UK)</h3>
+            <div class="section">
+                <label>Earnings<input type="text" id="ukSummaryEarnings"></label>
+                <label>Deductions<input type="text" id="ukSummaryDeductions"></label>
+                <label>Net Pay<input type="text" id="ukSummaryNetPay"></label>
+                <label>Brought Forward<input type="text" id="ukSummaryBroughtForward"></label>
+                <label>Amount Paid<input type="text" id="ukSummaryAmountPaid"></label>
+                <label>Carried Forward<input type="text" id="ukSummaryCarriedForward"></label>
+                <label>Payment Method<input type="text" id="ukSummaryPaymentMethod"></label>
+            </div>
+        </div>
+        <!-- Employer contributions -->
+        <div class="card">
+            <h3>Employer Contributions (UK)</h3>
+            <div class="section">
+                <label>Description 1<input type="text" id="ukContribDesc1"></label>
+                <label>Amount 1<input type="text" id="ukContribAmt1"></label>
+                <label>Description 2<input type="text" id="ukContribDesc2"></label>
+                <label>Amount 2<input type="text" id="ukContribAmt2"></label>
+                <label>Description 3<input type="text" id="ukContribDesc3"></label>
+                <label>Amount 3<input type="text" id="ukContribAmt3"></label>
+            </div>
+        </div>
+        <!-- Salary and NI information -->
+        <div class="card">
+            <h3>Salary &amp; NI (UK)</h3>
+            <div class="section">
+                <label>Annual Salary<input type="text" id="ukAnnualSalary"></label>
+                <label>NI Number<input type="text" id="ukNINumber"></label>
+            </div>
+        </div>
+        <!-- Final amount -->
+        <div class="card">
+            <h3>Final Amount (UK)</h3>
+            <div class="section">
+                <label>Final Amount<input type="text" id="ukFinalAmount"></label>
+            </div>
+        </div>
+        <button type="button" id="createBtnUK" style="margin-top:10px; width:100%; padding:10px; background-color:#28a745; border:none; border-radius:4px; color:#fff; font-size:16px; cursor:pointer;">Create</button>
+    </div>
+
+    </div> <!-- end sidebar-wrapper -->
+    <div id="content">
+        <div id="payslip">
+            <h2 id="previewCompanyName">Company Name</h2>
+            <div class="pay-slip-label">Pay Slip</div>
+            <p class="subtitle" id="previewPayMonth">Pay Slip for the Month of </p>
+            <!-- Employee details table with a single vertical divider and grouped rows -->
+            <table class="detail-table">
+                <tr>
+                    <td><span class="label">EMPCODE</span> <span class="value" id="preview_empcode"></span></td>
+                    <td><span class="label">UAN NO</span> <span class="value" id="preview_uanNo"></span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">EMPNAME</span> <span class="value" id="preview_empName"></span></td>
+                    <td><span class="label">PF NO</span> <span class="value" id="preview_pfNo"></span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">DESIGNATION</span> <span class="value" id="preview_designation"></span></td>
+                    <td><span class="label">ESI NO</span> <span class="value" id="preview_esiNo"></span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">DOJ</span> <span class="value" id="preview_doj"></span></td>
+                    <td><span class="label">STD DAYS</span> <span class="value" id="preview_stdDays"></span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">GRADE</span> <span class="value" id="preview_grade"></span></td>
+                    <td><span class="label">WRKDAYS</span> <span class="value" id="preview_workDays"></span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">PAN</span> <span class="value" id="preview_pan"></span></td>
+                    <td><span class="label">LOP DAYS</span> <span class="value" id="preview_lopDays"></span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">DEPARTMENT</span> <span class="value" id="preview_department"></span></td>
+                    <td><span class="label">BANK NAME</span> <span class="value" id="preview_bankName"></span></td>
+                </tr>
+                <tr>
+                    <td><span class="label">LOCATION</span> <span class="value" id="preview_location"></span></td>
+                    <td><span class="label">ACCOUNT NO</span> <span class="value" id="preview_accNo"></span></td>
+                </tr>
+            </table>
+
+            <!-- Earnings and Deductions table with proper column grouping -->
+            <table class="earnings-table">
+                <tr>
+                    <th colspan="3">EARNINGS</th>
+                    <th colspan="3">DEDUCTIONS</th>
+                </tr>
+                <tr>
+                    <th>Description</th><th>Amount</th><th>YTD</th>
+                    <th>Description</th><th>Amount</th><th>YTD</th>
+                </tr>
+                <tr>
+                    <td>BASIC PAY</td><td id="preview_basicPayAmt"></td><td id="preview_basicPayYTD"></td>
+                    <td>PROVIDENT FUND</td><td id="preview_pfAmt"></td><td id="preview_pfYTD"></td>
+                </tr>
+                <tr>
+                    <td>HRA</td><td id="preview_hraAmt"></td><td id="preview_hraYTD"></td>
+                    <td>INCOME TAX</td><td id="preview_incomeTaxAmt"></td><td id="preview_incomeTaxYTD"></td>
+                </tr>
+                <tr>
+                    <td>SPECIAL ALLOWANCE</td><td id="preview_specialAllowanceAmt"></td><td id="preview_specialAllowanceYTD"></td>
+                    <td>OTHER DEDUCTION</td><td id="preview_otherDeductionAmt"></td><td id="preview_otherDeductionYTD"></td>
+                </tr>
+                <tr>
+                    <td>CONVEYANCE ALLOWANCE</td><td id="preview_conveyanceAllowanceAmt"></td><td id="preview_conveyanceAllowanceYTD"></td>
+                    <td>SALARY HOLD</td><td id="preview_salaryHoldAmt"></td><td id="preview_salaryHoldYTD"></td>
+                </tr>
+                <tr>
+                    <td>LEAVE TRAVEL ALLOWANCE</td><td id="preview_leaveTravelAllowanceAmt"></td><td id="preview_leaveTravelAllowanceYTD"></td>
+                    <td>LABOUR WELFARE FUND</td><td id="preview_labourWelfareFundAmt"></td><td id="preview_labourWelfareFundYTD"></td>
+                </tr>
+                <tr>
+                    <td>OTHER EARNINGS</td><td id="preview_otherEarningsAmt"></td><td id="preview_otherEarningsYTD"></td>
+                    <td>MEAL CARD DEDUCTION</td><td id="preview_mealCardDeductionAmt"></td><td id="preview_mealCardDeductionYTD"></td>
+                </tr>
+                <tr>
+                    <td>MEAL CARD</td><td id="preview_mealCardAmt"></td><td id="preview_mealCardYTD"></td>
+                    <td></td><td></td><td></td>
+                </tr>
+                <tr>
+                    <td><strong>GROSS EARNINGS</strong></td><td id="preview_grossEarningsCurrent"></td><td id="preview_grossEarningsYTD"></td>
+                    <td><strong>GROSS DEDUCTION</strong></td><td id="preview_grossDeductionCurrent"></td><td id="preview_grossDeductionYTD"></td>
+                </tr>
+            </table>
+
+            <!-- Net Pay row separate from the earnings/deductions table -->
+            <div class="net-pay-row">
+                <div class="label">NET PAY :</div>
+                <div class="value" id="preview_netPay"></div>
+            </div>
+
+            <!-- Reimbursements table -->
+            <table class="reimburse-table">
+                <tr>
+                    <th colspan="3">REIMBURSEMENTS</th>
+                </tr>
+                <tr>
+                    <th>Description</th><th>Amount</th><th>YTD</th>
+                </tr>
+                <tr>
+                    <td>TELEPHONE REIMBURSEMENT</td><td id="preview_telephoneReimbursementAmt"></td><td id="preview_telephoneReimbursementYTD"></td>
+                </tr>
+                <tr>
+                    <td><strong>TOTAL REIMBURSEMENT</strong></td><td id="preview_totalReimbursementCurrent"></td><td id="preview_totalReimbursementYTD"></td>
+                </tr>
+            </table>
+
+            <!-- Net Transfer and In Words rows following reimbursements table -->
+            <div class="net-transfer-row">
+                <div class="label">NET TRANSFER :</div>
+                <div class="value" id="preview_netTransfer"></div>
+            </div>
+            <div class="in-words-row">
+                <div class="label">IN WORDS :</div>
+                <div class="value" id="preview_inWords"></div>
+            </div>
+
+            <div class="footnote">This is a computer generated document, hence no signature is required.</div>
+        </div>
+        <!-- Container for rendering multiple payslips when importing a PDF with many employees -->
+        <div id="combinedContainer" style="display:none; flex-direction:column; align-items:center; width:100%;"></div>
+        <!-- UK payslip preview container (hidden by default) -->
+        <div id="payslipUK" style="display:none; width:100%; display:flex; justify-content:center;">
+            <div class="uk-slip">
+                <!-- Top section: white address box on left and employer location on right -->
+                <div class="uk-top">
+                    <div class="uk-address-box"><div id="preview_ukAddress"></div></div>
+                    <div class="uk-employer-location" id="preview_ukEmployerLocation"></div>
+                </div>
+                <!-- Confidential label -->
+                <div class="uk-private">PRIVATE &amp; CONFIDENTIAL</div>
+                <!-- Company and personal messages -->
+                <div class="uk-messages">
+                    <div id="preview_ukCompanyMsg"></div>
+                    <div id="preview_ukPayGroupMsg"></div>
+                    <div id="preview_ukPersonalMsg"></div>
+                </div>
+                <table class="uk-info-table">
+                    <tr><td id="preview_ukEmployeeNumber"></td><td id="preview_ukEmployeeName"></td><td id="preview_ukPayDate"></td></tr>
+                </table>
+                <table class="uk-employer-table">
+                    <tr><td id="preview_ukEmployerName"></td><td id="preview_ukTaxMonth"></td><td id="preview_ukPayGroup"></td></tr>
+                </table>
+                <table class="uk-earnings-table">
+                    <tr>
+                        <th colspan="4">Earnings</th>
+                        <th colspan="2">Deductions</th>
+                    </tr>
+                    <tr>
+                        <th>Description</th><th>Units</th><th>Rate</th><th>Amount</th><th>Description</th><th>Amount</th>
+                    </tr>
+                    <tr>
+                        <td id="preview_ukEarnDesc1"></td><td id="preview_ukEarnUnits1"></td><td id="preview_ukEarnRate1"></td><td id="preview_ukEarnAmt1"></td><td id="preview_ukDedDesc1"></td><td id="preview_ukDedAmt1"></td>
+                    </tr>
+                    <tr>
+                        <td id="preview_ukEarnDesc2"></td><td id="preview_ukEarnUnits2"></td><td id="preview_ukEarnRate2"></td><td id="preview_ukEarnAmt2"></td><td id="preview_ukDedDesc2"></td><td id="preview_ukDedAmt2"></td>
+                    </tr>
+                    <tr>
+                        <td id="preview_ukEarnDesc3"></td><td id="preview_ukEarnUnits3"></td><td id="preview_ukEarnRate3"></td><td id="preview_ukEarnAmt3"></td><td id="preview_ukDedDesc3"></td><td id="preview_ukDedAmt3"></td>
+                    </tr>
+                    <tr>
+                        <td id="preview_ukEarnDesc4"></td><td id="preview_ukEarnUnits4"></td><td id="preview_ukEarnRate4"></td><td id="preview_ukEarnAmt4"></td><td id="preview_ukDedDesc4"></td><td id="preview_ukDedAmt4"></td>
+                    </tr>
+                    <tr>
+                        <td id="preview_ukEarnDesc5"></td><td id="preview_ukEarnUnits5"></td><td id="preview_ukEarnRate5"></td><td id="preview_ukEarnAmt5"></td><td id="preview_ukDedDesc5"></td><td id="preview_ukDedAmt5"></td>
+                    </tr>
+                    <!-- Total row: displays total hours, total earnings and total deductions in grouped cells -->
+                    <tr class="uk-total-row">
+                        <!-- First two columns merged for the label "Total" -->
+                        <td colspan="2" style="text-align:left;"><strong>Total</strong></td>
+                        <!-- Hours column: label and value combined -->
+                        <td colspan="1" style="text-align:left;"><strong>Hours</strong> <span id="preview_ukTotalHours"></span></td>
+                        <!-- Earnings column: label and value combined -->
+                        <td style="text-align:left;"><strong>Earnings</strong> <span id="preview_ukTotalEarnings"></span></td>
+                        <!-- Last two columns merged for total deductions -->
+                        <td colspan="2" style="text-align:left;"><strong>Total Deductions</strong> <span id="preview_ukTotalDeductions"></span></td>
+                    </tr>
+                </table>
+
+                <!-- Lower section: running totals on the left and summary/contributions/salary on the right -->
+                <div class="uk-lower-section">
+                    <div class="uk-left-column">
+                        <table class="uk-running-table">
+                            <tr>
+                                <th colspan="4">Running Totals</th>
+                            </tr>
+                            <tr>
+                                <th>Description</th><th>YTD</th><th>This Employment</th><th>Accumulations</th>
+                            </tr>
+                            <tr>
+                                <td id="preview_ukRunDesc1"></td><td id="preview_ukRunYTD1"></td><td id="preview_ukRunThis1"></td><td id="preview_ukRunAccum1"></td>
+                            </tr>
+                            <tr>
+                                <td id="preview_ukRunDesc2"></td><td id="preview_ukRunYTD2"></td><td id="preview_ukRunThis2"></td><td id="preview_ukRunAccum2"></td>
+                            </tr>
+                            <tr>
+                                <td id="preview_ukRunDesc3"></td><td id="preview_ukRunYTD3"></td><td id="preview_ukRunThis3"></td><td id="preview_ukRunAccum3"></td>
+                            </tr>
+                            <tr>
+                                <td id="preview_ukRunDesc4"></td><td id="preview_ukRunYTD4"></td><td id="preview_ukRunThis4"></td><td id="preview_ukRunAccum4"></td>
+                            </tr>
+                            <tr>
+                                <td id="preview_ukRunDesc5"></td><td id="preview_ukRunYTD5"></td><td id="preview_ukRunThis5"></td><td id="preview_ukRunAccum5"></td>
+                            </tr>
+                            <tr>
+                                <td id="preview_ukRunDesc6"></td><td id="preview_ukRunYTD6"></td><td id="preview_ukRunThis6"></td><td id="preview_ukRunAccum6"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="uk-right-column">
+                        <table class="uk-summary-table">
+                            <tr><td>Earnings</td><td id="preview_ukSummaryEarnings"></td></tr>
+                            <tr><td>Deductions</td><td id="preview_ukSummaryDeductions"></td></tr>
+                            <tr><td>Net Pay</td><td id="preview_ukSummaryNetPay"></td></tr>
+                            <tr><td>Brought Forward</td><td id="preview_ukSummaryBroughtForward"></td></tr>
+                            <tr><td>Amount Paid</td><td id="preview_ukSummaryAmountPaid"></td></tr>
+                            <tr><td>Carried Forward</td><td id="preview_ukSummaryCarriedForward"></td></tr>
+                            <tr><td>Payment Method</td><td id="preview_ukSummaryPaymentMethod"></td></tr>
+                        </table>
+                        <table class="uk-contrib-table">
+                            <tr><th>Description</th><th>Amount</th></tr>
+                            <tr><td id="preview_ukContribDesc1"></td><td id="preview_ukContribAmt1" style="text-align:right;"></td></tr>
+                            <tr><td id="preview_ukContribDesc2"></td><td id="preview_ukContribAmt2" style="text-align:right;"></td></tr>
+                            <tr><td id="preview_ukContribDesc3"></td><td id="preview_ukContribAmt3" style="text-align:right;"></td></tr>
+                        </table>
+                        <table class="uk-salary-table">
+                            <tr><td>Annual Salary</td><td id="preview_ukAnnualSalary"></td></tr>
+                            <tr><td>NI Number</td><td id="preview_ukNINumber"></td></tr>
+                        </table>
+                        <div class="uk-final">Amount Paid: <span id="preview_ukFinalAmount"></span></div>
+                    </div>
+                </div>
+                <div class="footnote">This is a computer generated document, hence no signature is required.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Intro overlay animations and button handling
+window.addEventListener('load', function() {
+    var introOverlay = document.getElementById('intro-overlay');
+    var introText = document.getElementById('intro-text');
+    var introButtons = document.getElementById('intro-buttons');
+    // After a brief delay, fade the text and show buttons
+    setTimeout(function() {
+        introText.style.opacity = '0';
+        // After fade, show buttons and expand modal
+        setTimeout(function() {
+            introText.style.display = 'none';
+            introButtons.style.display = 'flex';
+            // expand the intro modal for morphing effect
+            var modal = document.getElementById('intro-modal');
+            if (modal) modal.classList.add('expanded');
+        }, 500);
+    }, 1500);
+});
+
+// Format switching logic: toggles visibility of India vs UK forms and previews
+function switchFormat() {
+    var formatSelect = document.getElementById('formatSelect');
+    if (!formatSelect) return;
+    var format = formatSelect.value;
+    var indiaSidebar = document.getElementById('sidebar');
+    var ukSidebar = document.getElementById('sidebarUK');
+    var indiaPreview = document.getElementById('payslip');
+    var ukPreview = document.getElementById('payslipUK');
+    var combined = document.getElementById('combinedContainer');
+    if (format === 'UK') {
+        if (indiaSidebar) indiaSidebar.style.display = 'none';
+        if (ukSidebar) ukSidebar.style.display = 'block';
+        if (indiaPreview) indiaPreview.style.display = 'none';
+        if (ukPreview) ukPreview.style.display = 'block';
+        // Hide combined preview when switching formats
+        if (combined) combined.style.display = 'none';
+    } else {
+        // Default to India format
+        if (indiaSidebar) indiaSidebar.style.display = 'block';
+        if (ukSidebar) ukSidebar.style.display = 'none';
+        if (indiaPreview) indiaPreview.style.display = 'block';
+        if (ukPreview) ukPreview.style.display = 'none';
+        if (combined) combined.style.display = 'none';
+    }
+
+    // After changing format, place the hierarchy container into the visible sidebar.
+    if (typeof placeHierarchy === 'function') {
+        placeHierarchy();
+    }
+}
+
+function previewFormatValue() {
+    var formatSelect = document.getElementById('formatSelect');
+    return formatSelect && formatSelect.value === 'UK' ? 'UK' : 'India';
+}
+
+// Move the hierarchy container inside the currently visible sidebar so that the tabs
+// appear above the form fields. This function checks which sidebar (India or UK) is
+// currently shown and inserts the hierarchy container as the first child of that sidebar.
+function placeHierarchy() {
+    var hc = document.getElementById('hierarchyContainer');
+    if (!hc) return;
+    var indiaSidebar = document.getElementById('sidebar');
+    var ukSidebar = document.getElementById('sidebarUK');
+    // Determine which sidebar is visible
+    if (indiaSidebar && indiaSidebar.style.display !== 'none') {
+        if (indiaSidebar.firstChild !== hc) {
+            indiaSidebar.insertBefore(hc, indiaSidebar.firstChild);
+        }
+        hc.style.display = 'block';
+    } else if (ukSidebar && ukSidebar.style.display !== 'none') {
+        if (ukSidebar.firstChild !== hc) {
+            ukSidebar.insertBefore(hc, ukSidebar.firstChild);
+        }
+        hc.style.display = 'block';
+    }
+}
+
+// Update UK payslip preview based on form inputs
+function updatePreviewUK() {
+    function setText(id, val) {
+        var elem = document.getElementById(id);
+        if (elem) {
+            elem.textContent = val || '';
+        }
+    }
+    // Address box: include employee name on the first line followed by address lines.
+    var addrParts = [];
+    // If employee name is provided, include it at the top of the address box
+    var empNameVal = document.getElementById('ukEmployeeName').value;
+    if (empNameVal) {
+        addrParts.push(empNameVal);
+    }
+    // Append up to four address lines
+    for (var i = 1; i <= 4; i++) {
+        var val = document.getElementById('ukAddress' + i).value;
+        if (val) addrParts.push(val);
+    }
+    var addressText = addrParts.join('\n');
+    var addrElem = document.getElementById('preview_ukAddress');
+    if (addrElem) addrElem.textContent = addressText;
+    // Employer location
+    setText('preview_ukEmployerLocation', document.getElementById('ukEmployerLocation').value);
+    // Company, pay group and personal messages
+    setText('preview_ukCompanyMsg', document.getElementById('ukCompanyMsg').value);
+    setText('preview_ukPayGroupMsg', document.getElementById('ukPayGroupMsg').value);
+    setText('preview_ukPersonalMsg', document.getElementById('ukPersonalMsg').value);
+    // Info rows
+    setText('preview_ukEmployeeNumber', document.getElementById('ukEmployeeNumber').value);
+    setText('preview_ukEmployeeName', document.getElementById('ukEmployeeName').value);
+    setText('preview_ukPayDate', document.getElementById('ukPayDate').value);
+    setText('preview_ukEmployerName', document.getElementById('ukEmployerName').value);
+    setText('preview_ukTaxMonth', document.getElementById('ukTaxMonth').value);
+    setText('preview_ukPayGroup', document.getElementById('ukPayGroup').value);
+    // Earnings & deductions rows
+    for (var i = 1; i <= 5; i++) {
+        setText('preview_ukEarnDesc' + i, document.getElementById('ukEarnDesc' + i).value);
+        setText('preview_ukEarnUnits' + i, document.getElementById('ukEarnUnits' + i).value);
+        setText('preview_ukEarnRate' + i, document.getElementById('ukEarnRate' + i).value);
+        setText('preview_ukEarnAmt' + i, document.getElementById('ukEarnAmt' + i).value);
+        setText('preview_ukDedDesc' + i, document.getElementById('ukDedDesc' + i).value);
+        setText('preview_ukDedAmt' + i, document.getElementById('ukDedAmt' + i).value);
+    }
+    setText('preview_ukTotalHours', document.getElementById('ukTotalHours').value);
+    setText('preview_ukTotalEarnings', document.getElementById('ukTotalEarnings').value);
+    setText('preview_ukTotalDeductions', document.getElementById('ukTotalDeductions').value);
+    // Summary
+    setText('preview_ukSummaryEarnings', document.getElementById('ukSummaryEarnings').value);
+    setText('preview_ukSummaryDeductions', document.getElementById('ukSummaryDeductions').value);
+    setText('preview_ukSummaryNetPay', document.getElementById('ukSummaryNetPay').value);
+    setText('preview_ukSummaryBroughtForward', document.getElementById('ukSummaryBroughtForward').value);
+    setText('preview_ukSummaryAmountPaid', document.getElementById('ukSummaryAmountPaid').value);
+    setText('preview_ukSummaryCarriedForward', document.getElementById('ukSummaryCarriedForward').value);
+    setText('preview_ukSummaryPaymentMethod', document.getElementById('ukSummaryPaymentMethod').value);
+    // Contributions
+    for (var j = 1; j <= 3; j++) {
+        setText('preview_ukContribDesc' + j, document.getElementById('ukContribDesc' + j).value);
+        setText('preview_ukContribAmt' + j, document.getElementById('ukContribAmt' + j).value);
+    }
+    // Salary & NI
+    setText('preview_ukAnnualSalary', document.getElementById('ukAnnualSalary').value);
+    setText('preview_ukNINumber', document.getElementById('ukNINumber').value);
+    // Final amount
+    setText('preview_ukFinalAmount', document.getElementById('ukFinalAmount').value);
+
+    // Running totals
+    for (var k = 1; k <= 6; k++) {
+        setText('preview_ukRunDesc' + k, document.getElementById('ukRunDesc' + k).value);
+        setText('preview_ukRunYTD' + k, document.getElementById('ukRunYTD' + k).value);
+        setText('preview_ukRunThis' + k, document.getElementById('ukRunThis' + k).value);
+        setText('preview_ukRunAccum' + k, document.getElementById('ukRunAccum' + k).value);
+    }
+}
+
+// Attach event listeners for format change and UK create button
+document.addEventListener('DOMContentLoaded', function() {
+    var formatSelectElem = document.getElementById('formatSelect');
+    if (formatSelectElem) {
+        formatSelectElem.addEventListener('change', switchFormat);
+    }
+    var createUkBtn = document.getElementById('createBtnUK');
+    if (createUkBtn) {
+        createUkBtn.addEventListener('click', function() {
+            updatePreviewUK();
+        });
+    }
+    // Call switchFormat once on load to set initial visibility
+    switchFormat();
+});
+
+// References to main elements
+var mainDiv = document.getElementById('main');
+var introOverlay = document.getElementById('intro-overlay');
+
+// Intro button actions
+var introImportBtn = document.getElementById('introImportBtn');
+var introSampleBtn = document.getElementById('introSampleBtn');
+var introScratchBtn = document.getElementById('introScratchBtn');
+
+introImportBtn.addEventListener('click', function() {
+    // Hide intro overlay and trigger file input
+    introOverlay.style.display = 'none';
+    // Hide splash when starting application
+    var splashEl = document.getElementById('splash');
+    if (splashEl) splashEl.style.display = 'none';
+    mainDiv.style.display = 'flex';
+    importFileInput.value = '';
+    importFileInput.click();
+});
+introSampleBtn.addEventListener('click', function() {
+    introOverlay.style.display = 'none';
+    var splashEl = document.getElementById('splash');
+    if (splashEl) splashEl.style.display = 'none';
+    mainDiv.style.display = 'flex';
+    loadSampleData();
+});
+introScratchBtn.addEventListener('click', function() {
+    introOverlay.style.display = 'none';
+    var splashEl = document.getElementById('splash');
+    if (splashEl) splashEl.style.display = 'none';
+    mainDiv.style.display = 'flex';
+    clearForm();
+});
+
+// Save button behavior: for imported payslips, show download options; otherwise print
+var saveBtn = document.getElementById('saveBtn');
+var downloadOptionsOverlay = document.getElementById('download-options-overlay');
+saveBtn.addEventListener('click', function() {
+    if (importedSlips.length > 1) {
+        // Show modal with individual download buttons and combined option
+        showDownloadOptions();
+    } else if (importedSlips.length === 1) {
+        // Only one imported slip: directly download PDF
+        downloadSlip(0);
+    } else {
+        // No imported slip: use browser print as fallback
+        window.print();
+    }
+});
+
+
+// Create/Update preview
+var createBtn = document.getElementById('createBtn');
+createBtn.addEventListener('click', function() {
+    updatePreview();
+});
+
+function getValue(id) {
+    return document.getElementById(id).value;
+}
+
+function setText(id, value) {
+    document.getElementById(id).textContent = value || '';
+}
+
+function updatePreview() {
+    // Company and header
+    setText('previewCompanyName', getValue('compName'));
+    var monthVal = getValue('payMonth');
+    setText('previewPayMonth', 'Pay Slip for the Month of ' + (monthVal || ''));
+
+    // Details
+    setText('preview_empcode', getValue('empcode'));
+    setText('preview_uanNo', getValue('uanNo'));
+    setText('preview_empName', getValue('empName'));
+    setText('preview_pfNo', getValue('pfNo'));
+    // Designation: read directly from the form field with id "designation"
+    setText('preview_designation', getValue('designation'));
+    setText('preview_esiNo', getValue('esiNo'));
+    setText('preview_doj', getValue('doj'));
+    setText('preview_stdDays', getValue('stdDays'));
+    setText('preview_grade', getValue('grade'));
+    setText('preview_workDays', getValue('workDays'));
+    setText('preview_pan', getValue('pan'));
+    setText('preview_lopDays', getValue('lopDays'));
+    setText('preview_department', getValue('department'));
+    setText('preview_bankName', getValue('bankName'));
+    setText('preview_location', getValue('location'));
+    setText('preview_accNo', getValue('accNo'));
+    // Earnings
+    setText('preview_basicPayAmt', getValue('basicPayAmt'));
+    setText('preview_basicPayYTD', getValue('basicPayYTD'));
+    setText('preview_hraAmt', getValue('hraAmt'));
+    setText('preview_hraYTD', getValue('hraYTD'));
+    setText('preview_specialAllowanceAmt', getValue('specialAllowanceAmt'));
+    setText('preview_specialAllowanceYTD', getValue('specialAllowanceYTD'));
+    setText('preview_conveyanceAllowanceAmt', getValue('conveyanceAllowanceAmt'));
+    setText('preview_conveyanceAllowanceYTD', getValue('conveyanceAllowanceYTD'));
+    setText('preview_leaveTravelAllowanceAmt', getValue('leaveTravelAllowanceAmt'));
+    setText('preview_leaveTravelAllowanceYTD', getValue('leaveTravelAllowanceYTD'));
+    setText('preview_otherEarningsAmt', getValue('otherEarningsAmt'));
+    setText('preview_otherEarningsYTD', getValue('otherEarningsYTD'));
+    setText('preview_mealCardAmt', getValue('mealCardAmt'));
+    setText('preview_mealCardYTD', getValue('mealCardYTD'));
+    setText('preview_grossEarningsCurrent', getValue('grossEarningsCurrent'));
+    setText('preview_grossEarningsYTD', getValue('grossEarningsYTD'));
+
+    // Deductions
+    setText('preview_pfAmt', getValue('pfAmt'));
+    setText('preview_pfYTD', getValue('pfYTD'));
+    setText('preview_incomeTaxAmt', getValue('incomeTaxAmt'));
+    setText('preview_incomeTaxYTD', getValue('incomeTaxYTD'));
+    setText('preview_otherDeductionAmt', getValue('otherDeductionAmt'));
+    setText('preview_otherDeductionYTD', getValue('otherDeductionYTD'));
+    setText('preview_salaryHoldAmt', getValue('salaryHoldAmt'));
+    setText('preview_salaryHoldYTD', getValue('salaryHoldYTD'));
+    setText('preview_labourWelfareFundAmt', getValue('labourWelfareFundAmt'));
+    setText('preview_labourWelfareFundYTD', getValue('labourWelfareFundYTD'));
+    setText('preview_mealCardDeductionAmt', getValue('mealCardDeductionAmt'));
+    setText('preview_mealCardDeductionYTD', getValue('mealCardDeductionYTD'));
+    setText('preview_grossDeductionCurrent', getValue('grossDeductionCurrent'));
+    setText('preview_grossDeductionYTD', getValue('grossDeductionYTD'));
+
+    // Reimbursements and summary
+    setText('preview_telephoneReimbursementAmt', getValue('telephoneReimbursementAmt'));
+    setText('preview_telephoneReimbursementYTD', getValue('telephoneReimbursementYTD'));
+    setText('preview_totalReimbursementCurrent', getValue('totalReimbursementCurrent'));
+    setText('preview_totalReimbursementYTD', getValue('totalReimbursementYTD'));
+    setText('preview_netPay', getValue('netPay'));
+    setText('preview_netTransfer', getValue('netTransfer'));
+    setText('preview_inWords', getValue('inWords'));
+}
+
+function clearForm() {
+    var inputs = document.querySelectorAll('#sidebar input[type="text"]');
+    inputs.forEach(function(input) { input.value = ''; });
+    updatePreview();
+}
+
+function loadSampleData() {
+    // Sample data based on the uploaded payslip
+    document.getElementById('compName').value = 'ABC Limited';
+    document.getElementById('payMonth').value = 'December 2020';
+    document.getElementById('empcode').value = '1234567891';
+    document.getElementById('uanNo').value = '100218852000';
+    document.getElementById('empName').value = 'Parthasarathy';
+    document.getElementById('designation').value = 'Senior Commercial Manager (Lv1)';
+    document.getElementById('pfNo').value = 'GNGLZ1445072000/0000100';
+    document.getElementById('esiNo').value = '';
+    document.getElementById('doj').value = '29/07/2014';
+    document.getElementById('stdDays').value = '21.00';
+    document.getElementById('grade').value = '10';
+    document.getElementById('workDays').value = '21.00';
+    document.getElementById('pan').value = 'ABCPA9284Q';
+    document.getElementById('lopDays').value = '0.00';
+    document.getElementById('department').value = 'Commercial';
+    document.getElementById('bankName').value = 'HDFC Bank';
+    document.getElementById('location').value = 'Gurgaon';
+    document.getElementById('accNo').value = '0069900002200000';
+    // Earnings sample
+    document.getElementById('basicPayAmt').value = '73,546.00';
+    document.getElementById('basicPayYTD').value = '579,174.00';
+    document.getElementById('hraAmt').value = '36,773.00';
+    document.getElementById('hraYTD').value = '289,587.00';
+    document.getElementById('specialAllowanceAmt').value = '28,225.00';
+    document.getElementById('specialAllowanceYTD').value = '267,972.00';
+    document.getElementById('conveyanceAllowanceAmt').value = '1,600.00';
+    document.getElementById('conveyanceAllowanceYTD').value = '14,400.00';
+    document.getElementById('leaveTravelAllowanceAmt').value = '18,387.00';
+    document.getElementById('leaveTravelAllowanceYTD').value = '144,798.00';
+    document.getElementById('otherEarningsAmt').value = '0.00';
+    document.getElementById('otherEarningsYTD').value = '10,000.00';
+    document.getElementById('mealCardAmt').value = '2,000.00';
+    document.getElementById('mealCardYTD').value = '4,000.00';
+    document.getElementById('grossEarningsCurrent').value = '160,531.00';
+    document.getElementById('grossEarningsYTD').value = '1,309,931.00';
+    // Deductions sample
+    document.getElementById('pfAmt').value = '1,800.00';
+    document.getElementById('pfYTD').value = '16,200.00';
+    document.getElementById('incomeTaxAmt').value = '10,599.00';
+    document.getElementById('incomeTaxYTD').value = '88,370.00';
+    document.getElementById('otherDeductionAmt').value = '0.00';
+    document.getElementById('otherDeductionYTD').value = '19,082.00';
+    document.getElementById('salaryHoldAmt').value = '0.00';
+    document.getElementById('salaryHoldYTD').value = '9,541.00';
+    document.getElementById('labourWelfareFundAmt').value = '25.00';
+    document.getElementById('labourWelfareFundYTD').value = '225.00';
+    document.getElementById('mealCardDeductionAmt').value = '2,000.00';
+    document.getElementById('mealCardDeductionYTD').value = '4,000.00';
+    document.getElementById('grossDeductionCurrent').value = '14,424.00';
+    document.getElementById('grossDeductionYTD').value = '137,418.00';
+    // Reimbursements and summary sample
+    document.getElementById('telephoneReimbursementAmt').value = '3,194.00';
+    document.getElementById('telephoneReimbursementYTD').value = '3,194.00';
+    document.getElementById('totalReimbursementCurrent').value = '3,194.00';
+    document.getElementById('totalReimbursementYTD').value = '3,194.00';
+    document.getElementById('netPay').value = '146,107.00';
+    document.getElementById('netTransfer').value = '149,301.00';
+    document.getElementById('inWords').value = 'Rupees One Lacs Forty-Nine Thousand Three Hundred and One Only';
+
+    updatePreview();
+}
+
+// ===========================
+// Import functionality
+// ===========================
+
+// Hold parsed payslips from imported PDF
+var importedSlips = [];
+
+// Name of the imported PDF file (used for saving)
+var importedFileName = '';
+
+// ========= Country detection and modal ========
+// Temporarily store imported slips and filename while waiting for user confirmation
+var pendingImportedSlips = null;
+var pendingImportedFileName = '';
+// The country detected from the PDF ('India', 'UK', 'Unknown', or others)
+var pendingDetectedCountry = '';
+// Mode for the country modal: 'detected', 'unknown', 'unavailable'
+var countryModalMode = '';
+
+/**
+ * Detect the likely country of the payslip by scanning the text lines for keywords.
+ * Returns 'India' if Indian-specific keywords are more common, 'UK' if UK keywords dominate,
+ * or 'Unknown' if detection is inconclusive.
+ * @param {string[]} lines Array of text lines extracted from the PDF.
+ * @returns {string} Detected country code ('India', 'UK', or 'Unknown').
+ */
+function detectCountryFromLines(lines) {
+    var indiaKeywords = ['Payments', 'PF', 'HRA', 'UAN', 'Provident Fund', 'EPF', 'ESI', 'Grade', 'UAN No', 'PF Number'];
+    var ukKeywords = ['Tax Month', 'NI Number', 'Pay Day', 'Pay Date', 'Employer Name', 'Annual Salary', 'Running Totals', 'Brought Forward', 'Net Pay', 'Employee Number', 'United Kingdom', 'NI EE', 'PAYE', 'Pension', 'Season Tickets', 'GBP', 'Payroll : United Kingdom'];
+    var indiaCount = 0;
+    var ukCount = 0;
+    lines.forEach(function(l) {
+        var lower = l.toLowerCase();
+        indiaKeywords.forEach(function(k) {
+            if (lower.includes(k.toLowerCase())) {
+                indiaCount++;
+            }
+        });
+        ukKeywords.forEach(function(k) {
+            if (lower.includes(k.toLowerCase())) {
+                ukCount++;
+            }
+        });
+    });
+    // Determine based on counts; require at least one match
+    if (indiaCount > ukCount && indiaCount > 0) return 'India';
+    if (ukCount > indiaCount && ukCount > 0) return 'UK';
+    return 'Unknown';
+}
+
+/**
+ * Show the country modal with a specific message and configure buttons based on mode.
+ * @param {string} message The message to display in the modal.
+ * @param {string} mode The modal mode: 'detected', 'unknown', or 'unavailable'.
+ * @param {string} [detected] The detected country (used in 'detected' mode).
+ */
+function showCountryModal(message, mode, detected) {
+    var overlay = document.getElementById('country-modal-overlay');
+    var textEl = document.getElementById('countryModalText');
+    var yesBtn = document.getElementById('countryYesBtn');
+    var noBtn = document.getElementById('countryNoBtn');
+    var okBtn = document.getElementById('countryOkBtn');
+    countryModalMode = mode;
+    pendingDetectedCountry = detected || '';
+    // Set text
+    if (textEl) textEl.textContent = message;
+    // Show/hide buttons based on mode
+    if (mode === 'detected') {
+        if (yesBtn) yesBtn.style.display = 'inline-block';
+        if (noBtn) noBtn.style.display = 'inline-block';
+        if (okBtn) okBtn.style.display = 'none';
+    } else {
+        // unknown or unavailable: only OK button
+        if (yesBtn) yesBtn.style.display = 'none';
+        if (noBtn) noBtn.style.display = 'none';
+        if (okBtn) okBtn.style.display = 'inline-block';
+    }
+    if (overlay) overlay.style.display = 'flex';
+}
+
+/**
+ * Finish the import process after the user responds to the country modal.
+ * This function updates global importedSlips, groups them, and populates the UI.
+ */
+function finishImport() {
+    if (!pendingImportedSlips || pendingImportedSlips.length === 0) {
+        // nothing to import
+        return;
+    }
+    // Assign imported slips and file name
+    importedSlips = pendingImportedSlips;
+    importedFileName = pendingImportedFileName;
+    // Hide modal
+    var overlay = document.getElementById('country-modal-overlay');
+    if (overlay) overlay.style.display = 'none';
+    // Hide any intro or other modals
+    var mEl = document.getElementById('modal-overlay');
+    if (mEl) mEl.style.display = 'none';
+    var introEl = document.getElementById('intro-overlay');
+    if (introEl) introEl.style.display = 'none';
+    var splashEl = document.getElementById('splash');
+    if (splashEl) splashEl.style.display = 'none';
+    // Show main layout
+    var mainDivLocal = document.getElementById('main');
+    if (mainDivLocal) mainDivLocal.style.display = 'flex';
+
+    // Ensure the workspace enters with the correct animation.  If
+    // showWorkspace() or showWorkspacePublic() exists, invoke it to
+    // perform the same class toggling as the landing page transitions.
+    try {
+        if (typeof showWorkspacePublic === 'function') {
+            showWorkspacePublic();
+        } else if (typeof showWorkspace === 'function') {
+            showWorkspace();
+        }
+    } catch (ignore) {}
+
+    // Hide the loading overlay now that parsing is complete
+    var loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+    // Group slips and build UI
+    groupSlips();
+    buildHierarchyUI();
+    // Place the hierarchy container into the visible sidebar now that tabs are built
+    if (typeof placeHierarchy === 'function') {
+        placeHierarchy();
+    }
+    // Select first slip by default if exists
+    if (importedSlips.length > 0) {
+        var firstName = Object.keys(groupedSlips)[0];
+        var firstPeriod = Object.keys(groupedSlips[firstName])[0];
+        currentName = firstName;
+        currentPeriod = firstPeriod;
+        // Populate form for first slip without overriding current format selection
+        populateFormFromData(groupedSlips[firstName][firstPeriod], false);
+        // Update preview based on current selection
+        if (previewFormatValue() === 'UK') {
+            updatePreviewUK();
+        } else {
+            updatePreview();
+        }
+    }
+    // Clear pending variables
+    pendingImportedSlips = null;
+    pendingImportedFileName = '';
+    pendingDetectedCountry = '';
+    countryModalMode = '';
+}
+
+// Event handlers for country modal buttons
+function onCountryYes() {
+    // User chooses to use the detected template
+    var fmtSel = document.getElementById('formatSelect');
+    if (fmtSel && pendingDetectedCountry) {
+        fmtSel.value = pendingDetectedCountry;
+        // Trigger change event on format selector to switch forms/previews
+        fmtSel.dispatchEvent(new Event('change'));
+    }
+    finishImport();
+}
+
+function onCountryNo() {
+    // User chooses not to switch; keep current template
+    finishImport();
+}
+
+function onCountryOk() {
+    // Unknown or unavailable: hide modal and focus template selection
+    var fmtSel = document.getElementById('formatSelect');
+    finishImport();
+    if (fmtSel) {
+        // Focus format select to draw attention
+        fmtSel.focus();
+        // Optionally open the dropdown
+        try {
+            // Some browsers support showPicker()
+            if (typeof fmtSel.showPicker === 'function') {
+                fmtSel.showPicker();
+            } else {
+                // fallback: simulate click
+                fmtSel.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            }
+        } catch (e) {
+            // ignore if not supported
+        }
+    }
+}
+
+// Attach event listeners after DOM has loaded
+window.addEventListener('DOMContentLoaded', function() {
+    var yesBtn = document.getElementById('countryYesBtn');
+    var noBtn = document.getElementById('countryNoBtn');
+    var okBtn = document.getElementById('countryOkBtn');
+    if (yesBtn) yesBtn.addEventListener('click', onCountryYes);
+    if (noBtn) noBtn.addEventListener('click', onCountryNo);
+    if (okBtn) okBtn.addEventListener('click', onCountryOk);
+
+    // Attach close button handlers for modals. These cancel the current action and hide the overlay.
+    var downloadCloseBtn = document.getElementById('downloadCloseBtn');
+    if (downloadCloseBtn) {
+        downloadCloseBtn.addEventListener('click', function() {
+            var overlay = document.getElementById('download-options-overlay');
+            if (overlay) overlay.style.display = 'none';
+        });
+    }
+    var importChoiceCloseBtn = document.getElementById('importChoiceCloseBtn');
+    if (importChoiceCloseBtn) {
+        importChoiceCloseBtn.addEventListener('click', function() {
+            var overlay = document.getElementById('import-choice-overlay');
+            if (overlay) overlay.style.display = 'none';
+        });
+    }
+    var countryModalCloseBtn = document.getElementById('countryModalCloseBtn');
+    if (countryModalCloseBtn) {
+        countryModalCloseBtn.addEventListener('click', function() {
+            // Cancel any pending import and simply hide the modal
+            pendingImportedSlips = [];
+            pendingImportedFileName = '';
+            pendingDetectedCountry = '';
+            countryModalMode = '';
+            var overlay = document.getElementById('country-modal-overlay');
+            if (overlay) overlay.style.display = 'none';
+        });
+    }
+});
+
+// Hierarchical structure: groupedSlips[name][period] = slip
+var groupedSlips = {};
+
+// Currently selected name and period in the hierarchy
+var currentName = null;
+var currentPeriod = null;
+
+// Trigger the hidden file input when clicking the Import button
+var importBtn = document.getElementById('importBtn');
+var importFileInput = document.getElementById('importFile');
+importBtn.addEventListener('click', function() {
+    importFileInput.value = '';
+    importFileInput.click();
+});
+
+// When user selects a PDF file, read and parse it
+importFileInput.addEventListener('change', function(event) {
+    var file = event.target.files[0];
+    if (!file) {
+        var dropCanceled = document.getElementById('v49Drop');
+        if (dropCanceled) dropCanceled.querySelector('b').textContent = 'Drop a file or click here to select';
+        return;
+    }
+    // Transition from the landing page to a loading overlay.  Hide the
+    // intro/splash and show the loading indicator while processing the
+    // selected PDF.  Do not show the workspace yet; it will appear
+    // after finishImport() runs.
+    var introEl = document.getElementById('intro-overlay');
+    if (introEl) introEl.style.display = 'none';
+    var splashEl = document.getElementById('splash');
+    if (splashEl) splashEl.style.display = 'none';
+    var loadingOverlayEl = document.getElementById('loading-overlay');
+    if (loadingOverlayEl) {
+        loadingOverlayEl.style.display = 'flex';
+        loadingOverlayEl.textContent = 'Reading PDF...';
+    }
+    // Determine selected format. Import can process both India and UK formats; for UK the parsing function may be limited.
+    var formatSelectElem = document.getElementById('formatSelect');
+    var currentFormat = formatSelectElem ? formatSelectElem.value : 'India';
+    importedFileName = file.name || '';
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var arrayBuffer = e.target.result;
+        processPdf(arrayBuffer);
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+function bytesToArrayBuffer(bytes) {
+    if (bytes instanceof ArrayBuffer) return bytes;
+    if (bytes && bytes.buffer instanceof ArrayBuffer) {
+        return bytes.buffer.slice(bytes.byteOffset || 0, (bytes.byteOffset || 0) + bytes.byteLength);
+    }
+    return new Uint8Array(bytes || []).buffer;
+}
+
+
+// (import-choice overlay is deprecated; hierarchical tabs handle multiple slips)
+
+// Utility: convert number string to float (removes commas)
+function parseNumber(str) {
+    if (!str) return 0;
+    var value = String(str).replace(/[^\d,.-]/g, '').trim();
+    if (value.indexOf(',') !== -1 && value.indexOf('.') !== -1) {
+        value = value.replace(/,/g, '');
+    } else if (value.indexOf(',') !== -1) {
+        value = value.replace(/\./g, '').replace(',', '.');
+    }
+    return parseFloat(value) || 0;
+}
+
+function formatCurrencyAmount(value, locale) {
+    var num = parseNumber(value);
+    return num.toLocaleString(locale || 'en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function createFallbackSlipData(lines, selectedFormat) {
+    if (!lines || !lines.length) return null;
+    var joined = lines.join(' ');
+    var data = {
+        format: selectedFormat === 'UK' ? 'UK' : 'India',
+        compName: 'Imported payslip',
+        payMonth: '',
+        empcode: '',
+        uanNo: '',
+        empName: 'Imported employee',
+        designation: '',
+        pfNo: '',
+        esiNo: '',
+        doj: '',
+        stdDays: '',
+        grade: '',
+        workDays: '',
+        pan: '',
+        lopDays: '',
+        department: selectedFormat || '',
+        bankName: '',
+        location: '',
+        accNo: '',
+        basicPayAmt: '0.00',
+        basicPayYTD: '0.00',
+        hraAmt: '0.00',
+        hraYTD: '0.00',
+        specialAllowanceAmt: '0.00',
+        specialAllowanceYTD: '0.00',
+        conveyanceAllowanceAmt: '0.00',
+        conveyanceAllowanceYTD: '0.00',
+        leaveTravelAllowanceAmt: '0.00',
+        leaveTravelAllowanceYTD: '0.00',
+        otherEarningsAmt: '0.00',
+        otherEarningsYTD: '0.00',
+        mealCardAmt: '0.00',
+        mealCardYTD: '0.00',
+        grossEarningsCurrent: '0.00',
+        grossEarningsYTD: '0.00',
+        pfAmt: '0.00',
+        pfYTD: '0.00',
+        incomeTaxAmt: '0.00',
+        incomeTaxYTD: '0.00',
+        otherDeductionAmt: '0.00',
+        otherDeductionYTD: '0.00',
+        salaryHoldAmt: '0.00',
+        salaryHoldYTD: '0.00',
+        labourWelfareFundAmt: '0.00',
+        labourWelfareFundYTD: '0.00',
+        mealCardDeductionAmt: '0.00',
+        mealCardDeductionYTD: '0.00',
+        grossDeductionCurrent: '0.00',
+        grossDeductionYTD: '0.00',
+        telephoneReimbursementAmt: '0.00',
+        telephoneReimbursementYTD: '0.00',
+        totalReimbursementCurrent: '0.00',
+        totalReimbursementYTD: '0.00',
+        netPay: '0.00',
+        netTransfer: '0.00',
+        inWords: ''
+    };
+
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i] || '';
+        var employeeMatch = line.match(/(?:Employee|Empregado|Colaborador|Nome)\s*(?:Name|Nome)?\s*:?\s*(.+)/i);
+        if (employeeMatch && employeeMatch[1] && employeeMatch[1].length > 2) {
+            data.empName = employeeMatch[1].trim();
+        }
+        var companyMatch = line.match(/(?:Company|Empresa|Employer)\s*(?:Name|Nome)?\s*:?\s*(.+)/i);
+        if (companyMatch && companyMatch[1] && companyMatch[1].length > 2) {
+            data.compName = companyMatch[1].trim();
+        }
+        var idMatch = line.match(/(?:Employee\s+ID|Employee\s+Code|Matricula|Matrícula|ID)\s*:?\s*([A-Z0-9.-]+)/i);
+        if (idMatch) data.empcode = idMatch[1].trim();
+        var periodMatch = line.match(/(?:Pay\s+Period|Periodo|Período|Competencia|Competência)\s*:?\s*(.+)/i);
+        if (periodMatch && periodMatch[1]) data.payMonth = periodMatch[1].trim();
+    }
+
+    if (!data.payMonth) {
+        var dateMatch = joined.match(/\b(0?[1-9]|1[0-2])\/(\d{4})\b|\b([A-Za-z]+)\s+(\d{4})\b/);
+        if (dateMatch) data.payMonth = dateMatch[0];
+    }
+
+    var moneyMatches = joined.match(/(?:R\$|BRL|INR|GBP|\$)?\s*\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/g) || [];
+    if (moneyMatches.length) {
+        var largest = moneyMatches.reduce(function(best, item) {
+            return parseNumber(item) > parseNumber(best) ? item : best;
+        }, moneyMatches[0]);
+        data.grossEarningsCurrent = formatCurrencyAmount(largest);
+        data.netPay = formatCurrencyAmount(moneyMatches[moneyMatches.length - 1]);
+        data.netTransfer = data.netPay;
+        data.otherEarningsAmt = data.grossEarningsCurrent;
+    }
+
+    if (selectedFormat === 'Brazil') {
+        data.department = 'Brazil';
+        data.inWords = 'Brazil import fallback - review extracted fields before exporting.';
+    } else if (selectedFormat === 'Australia') {
+        data.department = 'Australia';
+        data.inWords = 'Australia import fallback - review extracted fields before exporting.';
+    }
+
+    return data;
+}
+
+// Clean extracted PDF text by replacing non-breaking spaces and collapsing
+// multiple whitespace characters into a single space.  This matches
+// the behaviour of earlier versions which normalised strings before
+// parsing.  Without this, some PDFs produce weird spacing or
+// undefined characters.
+function cleanText(s) {
+    return String(s == null ? '' : s).replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Convert numbers to words (Indian currency style)
+// Source: simple implementation, handles up to crore level
+function numberToWords(num) {
+    if (num === 0) return 'Zero';
+    var ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+        'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    var tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    function toWords(n) {
+        var word = '';
+        if (n > 19) {
+            word += tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+        } else {
+            word += ones[n];
+        }
+        return word;
+    }
+    function twoDigits(n) {
+        if (n === 0) return '';
+        if (n < 20) return ones[n];
+        return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+    }
+    var output = '';
+    var crore = Math.floor(num / 10000000);
+    num = num % 10000000;
+    var lakh = Math.floor(num / 100000);
+    num = num % 100000;
+    var thousand = Math.floor(num / 1000);
+    num = num % 1000;
+    var hundred = Math.floor(num / 100);
+    var remainder = num % 100;
+    if (crore) output += toWords(crore) + ' Crore ';
+    if (lakh) output += toWords(lakh) + ' Lakh ';
+    if (thousand) output += toWords(thousand) + ' Thousand ';
+    if (hundred) output += ones[hundred] + ' Hundred ';
+    if (remainder) {
+        if (output !== '') output += 'and ';
+        output += twoDigits(remainder) + ' ';
+    }
+    return output.trim();
+}
+
+// Parse PDF arrayBuffer and extract payslip data
+function setImportStatus(message) {
+    var loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) loadingOverlay.textContent = message || 'Processing PDF...';
+}
+
+function pdfLoadOptions(arrayBuffer, disableWorker) {
+    return {
+        data: arrayBuffer.slice(0),
+        disableAutoFetch: true,
+        disableStream: true,
+        disableFontFace: true,
+        isEvalSupported: false,
+        stopAtErrors: false,
+        verbosity: pdfjsLib.VerbosityLevel ? pdfjsLib.VerbosityLevel.ERRORS : 0,
+        disableWorker: !!disableWorker
+    };
+}
+
+async function loadPdfDocument(arrayBuffer) {
+    try {
+        return await pdfjsLib.getDocument(pdfLoadOptions(arrayBuffer, false)).promise;
+    } catch (firstError) {
+        console.warn('PDF worker parse failed, retrying without worker.', firstError);
+        return pdfjsLib.getDocument(pdfLoadOptions(arrayBuffer, true)).promise;
+    }
+}
+
+async function extractPageLines(page, pageNum) {
+    var attempts = [
+        { normalizeWhitespace: true, disableCombineTextItems: false },
+        { normalizeWhitespace: false, disableCombineTextItems: true },
+    ];
+    for (var attempt = 0; attempt < attempts.length; attempt++) {
+        try {
+            var content = await page.getTextContent(attempts[attempt]);
+            return content.items.map(function(item) {
+                return cleanText(item.str);
+            }).filter(Boolean);
+        } catch (err) {
+            console.warn('Failed to extract text content from page', pageNum, err);
+        }
+    }
+    return [];
+}
+
+async function processPdf(arrayBuffer) {
+    try {
+        if (typeof pdfjsLib === 'undefined') {
+            alert('PDF.js is not loaded.');
+            return;
+        }
+        setImportStatus('Reading PDF...');
+        const pdf = await loadPdfDocument(arrayBuffer);
+        let allLines = [];
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            setImportStatus('Reading page ' + pageNum + ' of ' + pdf.numPages + '...');
+            const page = await pdf.getPage(pageNum);
+            allLines = allLines.concat(await extractPageLines(page, pageNum));
+            // Free resources if possible
+            if (page.cleanup) page.cleanup();
+        }
+        if (!allLines.length) {
+            var loadingOverlayNoText = document.getElementById('loading-overlay');
+            if (loadingOverlayNoText) loadingOverlayNoText.style.display = 'none';
+            alert('I could open the PDF, but could not extract readable text from it. This usually means the PDF is scanned, encrypted, or uses an unsupported compression stream.');
+            return;
+        }
+        setImportStatus('Converting payslip...');
+        // Split into payslip segments.
+        // For India payslips, split by "Payments" heading.
+        // For UK payslips (no "Payments" heading), split whenever we detect a line starting with an employee number followed by name and "Pay Day/Pay Date".
+        var slips = [];
+        var current = [];
+        var hasPayments = allLines.some(function(l) { return l === 'Payments'; });
+        var ukHeaderRegex = /^(\d+)\s+.+\s+(?:Pay\s+Day|Pay\s+Date)/i;
+        for (var i = 0; i < allLines.length; i++) {
+            var line = allLines[i];
+            if (hasPayments) {
+                // India: start new slip at each 'Payments' line (except first occurrence)
+                if (line === 'Payments' && current.length > 0) {
+                    slips.push(current);
+                    current = [];
+                }
+            } else {
+                // UK: start new slip when encountering a new employee header line
+                if (ukHeaderRegex.test(line) && current.length > 0) {
+                    slips.push(current);
+                    current = [];
+                }
+            }
+            current.push(line);
+        }
+        if (current.length > 0) slips.push(current);
+        // If we are in UK mode (no "Payments" lines) and no slip boundaries were detected,
+        // treat the entire document as a single slip.
+        if (!hasPayments && slips.length === 0 && allLines.length > 0) {
+            slips = [allLines];
+        }
+        // Parse each slip lines into structured data but do not commit yet
+        var selectedImportFormat = (document.getElementById('formatSelect') || { value: 'India' }).value;
+        var candidateSlips = slips.map(function(lines) {
+            return parseSlipLines(lines) || createFallbackSlipData(lines, selectedImportFormat);
+        }).filter(function(slip) { return slip !== null; });
+        if (candidateSlips.length === 0) {
+            var loadingOverlayEmpty = document.getElementById('loading-overlay');
+            if (loadingOverlayEmpty) loadingOverlayEmpty.style.display = 'none';
+            alert('No payslips detected in the selected PDF.');
+            return;
+        }
+        // Store candidate slips and current file name
+        // Always proceed to import the slips using the currently selected
+        // template without running country detection.  This ensures that
+        // unsupported or unknown formats do not block the conversion.  Users
+        // can still change the template manually after import via the format
+        // selector.
+        pendingImportedSlips = candidateSlips;
+        pendingImportedFileName = importedFileName;
+        // Set the detected country to the currently selected format
+        pendingDetectedCountry = selectedImportFormat;
+        // Finish import immediately
+        finishImport();
+        return;
+    } catch (e) {
+        console.error(e);
+        // Hide loading overlay if an error occurs
+        var loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        alert('Failed to process PDF. Make sure the file is a valid payslip PDF.');
+    }
+}
+
+// Group imported slips into a nested object keyed by employee name and pay period
+function groupSlips() {
+    groupedSlips = {};
+    importedSlips.forEach(function(slip) {
+        var name = (slip.empName || 'Unknown').trim();
+        var period = (slip.payMonth || 'Unknown').trim();
+        if (!groupedSlips[name]) groupedSlips[name] = {};
+        groupedSlips[name][period] = slip;
+    });
+}
+
+// Build hierarchical navigation UI for names and periods
+function buildHierarchyUI() {
+    var container = document.getElementById('hierarchyContainer');
+    var namesTabs = document.getElementById('namesTabs');
+    var periodTabs = document.getElementById('periodTabs');
+    if (!namesTabs || !periodTabs) return;
+    namesTabs.innerHTML = '';
+    periodTabs.innerHTML = '';
+    var names = Object.keys(groupedSlips);
+    // Show hierarchy card only if multiple names or multiple periods for a name
+    if (names.length > 1 || (names.length === 1 && Object.keys(groupedSlips[names[0]]).length > 1)) {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+    // Build tabs for names
+    names.forEach(function(name) {
+        var tab = document.createElement('div');
+        tab.className = 'tab-name';
+        tab.textContent = name;
+        tab.dataset.name = name;
+        tab.addEventListener('click', function() {
+            currentName = this.dataset.name;
+            // reset current period to first period of this name
+            var periods = Object.keys(groupedSlips[currentName]);
+            currentPeriod = periods[0];
+            // Populate form without overriding format; update preview based on current selection
+            populateFormFromData(groupedSlips[currentName][currentPeriod], false);
+            if (previewFormatValue() === 'UK') {
+                updatePreviewUK();
+            } else {
+                updatePreview();
+            }
+            // rebuild period tabs for this name
+            updatePeriodTabs();
+            updateTabsHighlight();
+        });
+        namesTabs.appendChild(tab);
+    });
+    // Set defaults if not already defined
+    if (names.length > 0) {
+        if (!currentName) currentName = names[0];
+        if (!currentPeriod) currentPeriod = Object.keys(groupedSlips[currentName])[0];
+    }
+    // Build period tabs for currentName
+    updatePeriodTabs();
+    updateTabsHighlight();
+}
+
+// Build period tabs based on currentName
+function updatePeriodTabs() {
+    var periodTabs = document.getElementById('periodTabs');
+    if (!periodTabs) return;
+    periodTabs.innerHTML = '';
+    if (!currentName || !groupedSlips[currentName]) return;
+    var periods = Object.keys(groupedSlips[currentName]);
+    periods.forEach(function(period) {
+        var pt = document.createElement('div');
+        pt.className = 'tab-period';
+        pt.textContent = period;
+        pt.dataset.name = currentName;
+        pt.dataset.period = period;
+        pt.addEventListener('click', function() {
+            currentName = this.dataset.name;
+            currentPeriod = this.dataset.period;
+            // Populate form without changing format
+            populateFormFromData(groupedSlips[currentName][currentPeriod], false);
+            // Update preview according to current format selection
+            if (previewFormatValue() === 'UK') {
+                updatePreviewUK();
+            } else {
+                updatePreview();
+            }
+            updateTabsHighlight();
+        });
+        periodTabs.appendChild(pt);
+    });
+}
+
+// Highlight active name and period tabs
+function updateTabsHighlight() {
+    var namesTabs = document.getElementById('namesTabs');
+    var periodTabs = document.getElementById('periodTabs');
+    if (namesTabs) {
+        namesTabs.querySelectorAll('.tab-name').forEach(function(n) {
+            if (n.dataset.name === currentName) {
+                n.classList.add('active');
+            } else {
+                n.classList.remove('active');
+            }
+        });
+    }
+    if (periodTabs) {
+        periodTabs.querySelectorAll('.tab-period').forEach(function(p) {
+            if (p.dataset.name === currentName && p.dataset.period === currentPeriod) {
+                p.classList.add('active');
+            } else {
+                p.classList.remove('active');
+            }
+        });
+    }
+}
+
+// Apply active class to the selected hierarchy items
+// Note: highlightActiveHierarchy is no longer used; replaced by updateTabsHighlight().
+
+// ===========================
+// Save/Download functionality
+// ===========================
+
+// Generate a single combined PDF containing all imported payslips
+async function downloadSinglePdf() {
+    try {
+        // Access jsPDF constructor from the global jspdf instance
+        const jsPDF = window.jspdf.jsPDF;
+        var doc = new jsPDF('p', 'pt', 'a4');
+        var first = true;
+        // Loop through each slip in order and add as a separate page
+        for (const slip of importedSlips) {
+            // Generate HTML for slip
+            var htmlString = generatePayslipHTML(slip);
+            // Create temporary container offscreen
+            var tempDiv = document.createElement('div');
+            tempDiv.style.width = '700px';
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-10000px';
+            tempDiv.style.top = '0';
+            tempDiv.innerHTML = htmlString;
+            document.body.appendChild(tempDiv);
+            // Convert to canvas
+            var canvas = await html2canvas(tempDiv, { scale: 2 });
+            var imgData = canvas.toDataURL('image/png');
+            var pageWidth = doc.internal.pageSize.getWidth();
+            var pageHeight = doc.internal.pageSize.getHeight();
+            var imgWidth = pageWidth;
+            var imgHeight = canvas.height * (pageWidth / canvas.width);
+            if (imgHeight > pageHeight - 40) {
+                // scale down if height exceeds page height minus margins
+                imgHeight = pageHeight - 40;
+                imgWidth = canvas.width * (imgHeight / canvas.height);
+            }
+            if (!first) doc.addPage();
+            // Center horizontally and leave top margin
+            var xOffset = (pageWidth - imgWidth) / 2;
+            doc.addImage(imgData, 'PNG', xOffset, 20, imgWidth, imgHeight);
+            document.body.removeChild(tempDiv);
+            first = false;
+        }
+        // Determine filename
+        var filename;
+        if (importedFileName) {
+            // Insert _converted before extension
+            filename = importedFileName.replace(/\.pdf$/i, '') + '_converted.pdf';
+        } else {
+            filename = 'payslip_converted.pdf';
+        }
+        doc.save(filename);
+    } catch (err) {
+        console.error(err);
+        alert('Failed to generate PDF.');
+    }
+}
+
+// Generate separate PDFs for each payslip and download as a ZIP
+async function downloadSeparatePdfs() {
+    try {
+        const jsPDF = window.jspdf.jsPDF;
+        var zip = new JSZip();
+        for (const slip of importedSlips) {
+            var doc = new jsPDF('p', 'pt', 'a4');
+            var htmlString = generatePayslipHTML(slip);
+            var tempDiv = document.createElement('div');
+            tempDiv.style.width = '700px';
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-10000px';
+            tempDiv.style.top = '0';
+            tempDiv.innerHTML = htmlString;
+            document.body.appendChild(tempDiv);
+            var canvas = await html2canvas(tempDiv, { scale: 2 });
+            var imgData = canvas.toDataURL('image/png');
+            var pageWidth = doc.internal.pageSize.getWidth();
+            var pageHeight = doc.internal.pageSize.getHeight();
+            var imgWidth = pageWidth;
+            var imgHeight = canvas.height * (pageWidth / canvas.width);
+            if (imgHeight > pageHeight - 40) {
+                imgHeight = pageHeight - 40;
+                imgWidth = canvas.width * (imgHeight / canvas.height);
+            }
+            var xOffset = (pageWidth - imgWidth) / 2;
+            doc.addImage(imgData, 'PNG', xOffset, 20, imgWidth, imgHeight);
+            document.body.removeChild(tempDiv);
+            var pdfBlob = doc.output('blob');
+            // Construct filename as Name_lastname_period.pdf
+            var name = (slip.empName || 'Employee').trim();
+            // Remove comma and replace spaces with underscores
+            var nameSlug = name.replace(/,/g, '').replace(/\s+/g, '_');
+            var period = (slip.payMonth || 'Period').trim();
+            var periodSlug = period.replace(/\s+/g, '_');
+            var fileName = nameSlug + '_' + periodSlug + '.pdf';
+            zip.file(fileName, pdfBlob);
+        }
+        // Generate zip with compression to reduce size and avoid potential security flags
+        // Generate compressed zip as Uint8Array then wrap in Blob with proper MIME type
+        var zipData = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+        var zipBlob = new Blob([zipData], { type: 'application/zip' });
+        // Determine base for zip filename
+        var baseName;
+        if (importedFileName) {
+            baseName = importedFileName.replace(/\.pdf$/i, '') + '_converted_slips.zip';
+        } else {
+            baseName = 'payslips.zip';
+        }
+        var zipUrl = URL.createObjectURL(zipBlob);
+        var link = document.createElement('a');
+        link.href = zipUrl;
+        link.download = baseName;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(function() {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(zipUrl);
+        }, 100);
+    } catch (err) {
+        console.error(err);
+        alert('Failed to generate ZIP of PDFs.');
+    }
+}
+
+// Display download options for multiple payslips.  
+// This function builds a list of buttons corresponding to each imported slip and an optional combined download.
+function showDownloadOptions() {
+    var overlay = document.getElementById('download-options-overlay');
+    var listContainer = document.getElementById('downloadList');
+    var combinedContainer = document.getElementById('downloadCombinedContainer');
+    // Clear previous contents
+    listContainer.innerHTML = '';
+    combinedContainer.innerHTML = '';
+    // Build individual download buttons
+    importedSlips.forEach(function(slip, index) {
+        var btn = document.createElement('button');
+        // Button label: Employee Name - Pay Month or Slip number if missing
+        var label = '';
+        if (slip.empName) {
+            label = slip.empName.trim();
+        } else {
+            label = 'Slip ' + (index + 1);
+        }
+        if (slip.payMonth) {
+            label += ' - ' + slip.payMonth;
+        }
+        btn.textContent = label;
+        btn.style.backgroundColor = '#0066cc';
+        btn.style.color = '#fff';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '4px';
+        btn.style.padding = '8px 12px';
+        btn.style.fontSize = '12px';
+        btn.style.cursor = 'pointer';
+        btn.addEventListener('click', function() {
+            overlay.style.display = 'none';
+            downloadSlip(index);
+        });
+        listContainer.appendChild(btn);
+    });
+    // Add combined download option if more than one slip
+    if (importedSlips.length > 1) {
+        var combinedBtn = document.createElement('button');
+        combinedBtn.textContent = 'Download Combined';
+        combinedBtn.style.backgroundColor = '#28a745';
+        combinedBtn.style.color = '#fff';
+        combinedBtn.style.border = 'none';
+        combinedBtn.style.borderRadius = '4px';
+        combinedBtn.style.padding = '8px 12px';
+        combinedBtn.style.fontSize = '12px';
+        combinedBtn.style.cursor = 'pointer';
+        combinedBtn.addEventListener('click', function() {
+            overlay.style.display = 'none';
+            downloadSinglePdf();
+        });
+        combinedContainer.appendChild(combinedBtn);
+    }
+    // Display overlay
+    overlay.style.display = 'flex';
+}
+
+// Download a single payslip at the given index as a PDF. If index is undefined or invalid,
+// the function will generate a PDF from the current preview on the page (useful for non-imported slips).
+async function downloadSlip(index) {
+    try {
+        const jsPDF = window.jspdf.jsPDF;
+        var doc = new jsPDF('p', 'pt', 'a4');
+        var slipData = null;
+        // Determine whether this is an imported slip or the current form data
+        if (typeof index === 'number' && importedSlips && importedSlips[index]) {
+            slipData = importedSlips[index];
+        }
+        if (slipData) {
+            // If slip has a format property and is UK, render from the existing UK preview instead of generating India HTML
+            if (slipData.format && slipData.format === 'UK') {
+                // Populate the form with the slip data to ensure preview reflects the data
+                // Populate form and force format override for accurate PDF capture
+                populateFormFromData(slipData, true);
+                // Capture only the UK slip element
+                var ukPrev = document.getElementById('payslipUK');
+                if (ukPrev) {
+                    var slipEl = ukPrev.querySelector('.uk-slip');
+                    var canvasUK = await html2canvas(slipEl, { scale: 3 });
+                    var imgDataUK = canvasUK.toDataURL('image/png');
+                    var pageWidthUK = doc.internal.pageSize.getWidth();
+                    var pageHeightUK = doc.internal.pageSize.getHeight();
+                    var imgWidthUK = pageWidthUK;
+                    var imgHeightUK = canvasUK.height * (pageWidthUK / canvasUK.width);
+                    if (imgHeightUK > pageHeightUK - 40) {
+                        imgHeightUK = pageHeightUK - 40;
+                        imgWidthUK = canvasUK.width * (imgHeightUK / canvasUK.height);
+                    }
+                    var xOffUK = (pageWidthUK - imgWidthUK) / 2;
+                    doc.addImage(imgDataUK, 'PNG', xOffUK, 20, imgWidthUK, imgHeightUK);
+                    // Construct filename using employee name and pay date
+                    var nameUK = (slipData.ukEmployeeName || slipData.empName || 'Employee').trim();
+                    var nameSlugUK = nameUK.replace(/,/g, '').replace(/\s+/g, '_');
+                    var periodUK = (slipData.payMonth || slipData.ukPayDate || 'Period').trim();
+                    var periodSlugUK = periodUK.replace(/\s+/g, '_');
+                    var fileNameUK = nameSlugUK + '_' + periodSlugUK + '.pdf';
+                    doc.save(fileNameUK);
+                }
+            } else {
+                // India format: generate payslip HTML using slip data
+                var htmlString = generatePayslipHTML(slipData);
+                var tempDiv = document.createElement('div');
+                tempDiv.style.width = '620px';
+                tempDiv.style.position = 'absolute';
+                tempDiv.style.left = '-10000px';
+                tempDiv.style.top = '0';
+                tempDiv.innerHTML = htmlString;
+                document.body.appendChild(tempDiv);
+                var canvas = await html2canvas(tempDiv, { scale: 3 });
+                var imgData = canvas.toDataURL('image/png');
+                var pageWidth = doc.internal.pageSize.getWidth();
+                var pageHeight = doc.internal.pageSize.getHeight();
+                var imgWidth = pageWidth;
+                var imgHeight = canvas.height * (pageWidth / canvas.width);
+                if (imgHeight > pageHeight - 40) {
+                    imgHeight = pageHeight - 40;
+                    imgWidth = canvas.width * (imgHeight / canvas.height);
+                }
+                var xOffset = (pageWidth - imgWidth) / 2;
+                doc.addImage(imgData, 'PNG', xOffset, 20, imgWidth, imgHeight);
+                document.body.removeChild(tempDiv);
+                // Construct filename for India slip
+                var name = (slipData.empName || 'Employee').trim();
+                var nameSlug = name.replace(/,/g, '').replace(/\s+/g, '_');
+                var period = (slipData.payMonth || 'Period').trim();
+                var periodSlug = period.replace(/\s+/g, '_');
+                var fileName = nameSlug + '_' + periodSlug + '.pdf';
+                doc.save(fileName);
+            }
+        } else {
+            // If no specific slip data, capture on-screen preview according to current format
+            var fmtSelect2 = document.getElementById('formatSelect');
+            var currentFmt = fmtSelect2 ? fmtSelect2.value : 'India';
+            if (currentFmt === 'UK') {
+                var ukPrev2 = document.getElementById('payslipUK');
+                if (ukPrev2) {
+                    var slipEl2 = ukPrev2.querySelector('.uk-slip');
+                    var canvas2 = await html2canvas(slipEl2, { scale: 3 });
+                    var imgData2 = canvas2.toDataURL('image/png');
+                    var pw2 = doc.internal.pageSize.getWidth();
+                    var ph2 = doc.internal.pageSize.getHeight();
+                    var iW2 = pw2;
+                    var iH2 = canvas2.height * (pw2 / canvas2.width);
+                    if (iH2 > ph2 - 40) {
+                        iH2 = ph2 - 40;
+                        iW2 = canvas2.width * (iH2 / canvas2.height);
+                    }
+                    var x2 = (pw2 - iW2) / 2;
+                    doc.addImage(imgData2, 'PNG', x2, 20, iW2, iH2);
+                    doc.save('payslip.pdf');
+                }
+            } else {
+                var previewIndia = document.getElementById('payslip');
+                if (previewIndia) {
+                    var slipEl3 = previewIndia.querySelector('.payslip');
+                    var canvas3 = await html2canvas(slipEl3, { scale: 3 });
+                    var imgData3 = canvas3.toDataURL('image/png');
+                    var pw3 = doc.internal.pageSize.getWidth();
+                    var ph3 = doc.internal.pageSize.getHeight();
+                    var iW3 = pw3;
+                    var iH3 = canvas3.height * (pw3 / canvas3.width);
+                    if (iH3 > ph3 - 40) {
+                        iH3 = ph3 - 40;
+                        iW3 = canvas3.width * (iH3 / canvas3.height);
+                    }
+                    var x3 = (pw3 - iW3) / 2;
+                    doc.addImage(imgData3, 'PNG', x3, 20, iW3, iH3);
+                    doc.save('payslip.pdf');
+                }
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Failed to generate PDF.');
+    }
+}
+
+// Parse a single payslip's lines into our form data structure
+function parseSlipLines(lines) {
+    try {
+        // Determine whether this slip is in the India format (with a Payments section) or UK format.
+        // Some UK slips also contain a "Payments" section (e.g., ADP UK payslips), so we also look
+        // for UK-specific keywords. If both are present, we treat as UK.
+        var hasPayments = false;
+        var hasUK = false;
+        for (var t = 0; t < lines.length; t++) {
+            var lineLower = lines[t].toLowerCase();
+            if (lines[t] === 'Payments') {
+                hasPayments = true;
+            }
+            // Check for UK-specific indicators (United Kingdom, NI EE, PAYE, Pension, Season Tickets, UK Local)
+            if (/united\s+kingdom/i.test(lines[t]) || /ni\s+ee/i.test(lineLower) || /paye/i.test(lineLower) || /pension/i.test(lineLower) || /season\s+tickets/i.test(lineLower) || /uk\s*-?\s*\d+/i.test(lineLower) || /payroll\s*:\s*united\s*kingdom/i.test(lineLower)) {
+                hasUK = true;
+            }
+        }
+        // A slip is considered India if it has a Payments section and no UK indicators
+        var isIndia = hasPayments && !hasUK;
+        // Initialize data object with default values. This object is shared across India and UK formats.
+        var data = {
+            compName: 'Company',
+            payMonth: '',
+            empcode: '',
+            uanNo: '',
+            empName: '',
+            designation: '',
+            pfNo: '',
+            esiNo: '',
+            doj: '',
+            stdDays: '',
+            grade: '',
+            workDays: '',
+            pan: '',
+            lopDays: '',
+            department: '',
+            bankName: '',
+            location: '',
+            accNo: '',
+            // earnings
+            basicPayAmt: '0.00',
+            basicPayYTD: '0.00',
+            hraAmt: '0.00',
+            hraYTD: '0.00',
+            specialAllowanceAmt: '0.00',
+            specialAllowanceYTD: '0.00',
+            conveyanceAllowanceAmt: '0.00',
+            conveyanceAllowanceYTD: '0.00',
+            leaveTravelAllowanceAmt: '0.00',
+            leaveTravelAllowanceYTD: '0.00',
+            otherEarningsAmt: '0.00',
+            otherEarningsYTD: '0.00',
+            mealCardAmt: '0.00',
+            mealCardYTD: '0.00',
+            grossEarningsCurrent: '0.00',
+            grossEarningsYTD: '0.00',
+            // deductions
+            pfAmt: '0.00',
+            pfYTD: '0.00',
+            incomeTaxAmt: '0.00',
+            incomeTaxYTD: '0.00',
+            otherDeductionAmt: '0.00',
+            otherDeductionYTD: '0.00',
+            salaryHoldAmt: '0.00',
+            salaryHoldYTD: '0.00',
+            labourWelfareFundAmt: '0.00',
+            labourWelfareFundYTD: '0.00',
+            mealCardDeductionAmt: '0.00',
+            mealCardDeductionYTD: '0.00',
+            grossDeductionCurrent: '0.00',
+            grossDeductionYTD: '0.00',
+            // reimbursements
+            telephoneReimbursementAmt: '0.00',
+            telephoneReimbursementYTD: '0.00',
+            totalReimbursementCurrent: '0.00',
+            totalReimbursementYTD: '0.00',
+            netPay: '0.00',
+            netTransfer: '0.00',
+            inWords: ''
+        };
+        // Default format is India unless detected otherwise
+        data.format = 'India';
+        // If not India, parse as UK slip
+        if (!isIndia) {
+            // Additional extraction for UK payslips: look for Employee ID, Pay Date and Pay Period on their own lines.
+            // ADP UK statements may include lines like "Employee ID : 4100" and "Pay Date : 2025-12-31" and "Pay Period : 2025-Monthly-12".
+            // We use these to populate the employee number (ukEmployeeNumber/empcode), pay date (ukPayDate) and pay month (payMonth).
+            for (var x = 0; x < lines.length; x++) {
+                var li = lines[x] || '';
+                // Employee ID line
+                var empMatch = li.match(/Employee\s+ID\s*:\s*(\S+)/i);
+                if (empMatch) {
+                    data.ukEmployeeNumber = empMatch[1];
+                    data.empcode = empMatch[1];
+                }
+                // Pay Date line (format YYYY-MM-DD)
+                var dateMatch = li.match(/Pay\s+Date\s*:\s*(\d{4}-\d{2}-\d{2})/i);
+                if (dateMatch) {
+                    data.ukPayDate = dateMatch[1];
+                }
+                // Pay Period line (format YYYY-Monthly-MM)
+                var periodMatch = li.match(/Pay\s+Period\s*:\s*(\d{4})-Monthly-(\d{2})/i);
+                if (periodMatch) {
+                    var year = periodMatch[1];
+                    var mon = parseInt(periodMatch[2], 10);
+                    var monthsArr = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                    if (!isNaN(mon) && mon >= 1 && mon <= 12) {
+                        data.payMonth = monthsArr[mon - 1] + ' ' + year;
+                    }
+                }
+            }
+            // Switch format flag for UK
+            data.format = 'UK';
+            // Initialize UK-specific fields
+            data.ukEmployeeNumber = '';
+            data.ukEmployeeName = '';
+            data.ukPayDate = '';
+            data.ukEmployerName = '';
+            data.ukTaxMonth = '';
+            data.ukPayGroup = '';
+            data.ukTotalHours = '';
+            data.ukTotalEarnings = '';
+            data.ukTotalDeductions = '';
+            data.ukSummaryEarnings = '';
+            data.ukSummaryDeductions = '';
+            data.ukSummaryNetPay = '';
+            data.ukSummaryBroughtForward = '';
+            data.ukSummaryAmountPaid = '';
+            data.ukSummaryCarriedForward = '';
+            data.ukSummaryPaymentMethod = '';
+            data.ukAnnualSalary = '';
+            data.ukNINumber = '';
+            data.ukFinalAmount = '';
+            // Attempt to detect employee number, name and pay date in a line like "101006 Miss Michele Ward Pay Day 31/01/2013"
+            for (var m = 0; m < lines.length; m++) {
+                var l = lines[m];
+                var match = l.match(/^(\d+)\s+(.+?)\s+(?:Pay\s+Day|Pay\s+Date)\s*(\d{2}\/\d{2}\/\d{4})/i);
+                if (match) {
+                    data.ukEmployeeNumber = match[1].trim();
+                    data.ukEmployeeName = match[2].trim();
+                    data.ukPayDate = match[3].trim();
+                    // Also populate generic fields for backward compatibility
+                    data.empcode = match[1].trim();
+                    data.empName = match[2].trim();
+                    // Derive month and year for payMonth using pay date
+                    var dateParts = match[3].split('/');
+                    var day = dateParts[0];
+                    var monthNum = parseInt(dateParts[1], 10);
+                    var year = dateParts[2];
+                    var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                    if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
+                        data.payMonth = months[monthNum - 1] + ' ' + year;
+                    }
+                    break;
+                }
+            }
+            // Attempt to find employer/company name by searching for lines containing 'Limited' or 'Ltd'
+            for (var n = 0; n < lines.length; n++) {
+                var line = lines[n];
+                if (/\b(Limited|Ltd)\b/i.test(line)) {
+                    data.ukEmployerName = line.trim();
+                    data.compName = line.trim();
+                    break;
+                }
+            }
+            // Attempt to parse Tax Month and Pay Group
+            for (var p = 0; p < lines.length; p++) {
+                var l2 = lines[p];
+                var tm = l2.match(/Tax\s+Month\s+(\d+)/i);
+                if (tm) {
+                    data.ukTaxMonth = tm[1];
+                }
+                var pg = l2.match(/Pay\s+Group\s*:?\s*(.+)/i);
+                if (pg) {
+                    data.ukPayGroup = pg[1].trim();
+                }
+            }
+            // Function to extract number after a label; searches current and next lines for numeric pattern
+            function getNextNumber(index) {
+                var regexNum = /([\d,]+\.\d{2})/;
+                // Check current line
+                var ln = lines[index] || '';
+                var m = regexNum.exec(ln);
+                if (m) return m[1].replace(/,/g, '');
+                // Check next two lines
+                for (var q = 1; q <= 2; q++) {
+                    var ln2 = lines[index + q] || '';
+                    var m2 = regexNum.exec(ln2);
+                    if (m2) return m2[1].replace(/,/g, '');
+                }
+                return '';
+            }
+            // Parse summary fields
+            for (var r = 0; r < lines.length; r++) {
+                var curr = lines[r].trim();
+                if (/^Earnings\b/i.test(curr)) {
+                    data.ukSummaryEarnings = getNextNumber(r);
+                } else if (/^Deductions\b/i.test(curr)) {
+                    data.ukSummaryDeductions = getNextNumber(r);
+                } else if (/^Net\s+Pay\b/i.test(curr)) {
+                    data.ukSummaryNetPay = getNextNumber(r);
+                } else if (/^Brought\s+Forward\b/i.test(curr)) {
+                    data.ukSummaryBroughtForward = getNextNumber(r);
+                } else if (/^Amount\s+Paid\b/i.test(curr)) {
+                    data.ukSummaryAmountPaid = getNextNumber(r);
+                } else if (/^Carried\s+Forward\b/i.test(curr)) {
+                    data.ukSummaryCarriedForward = getNextNumber(r);
+                } else if (/^Payment\s+Method\b/i.test(curr)) {
+                    // Payment method might be on same line or next
+                    var pm = curr.replace(/Payment\s+Method\s*/i, '').trim();
+                    if (pm) {
+                        data.ukSummaryPaymentMethod = pm;
+                    } else {
+                        data.ukSummaryPaymentMethod = (lines[r+1] || '').trim();
+                    }
+                } else if (/Annual\s+Salary/i.test(curr)) {
+                    data.ukAnnualSalary = getNextNumber(r);
+                } else if (/NI\s+Number/i.test(curr)) {
+                    // NI number may be alphanumeric; capture after label
+                    var niMatch = curr.match(/NI\s+Number\s*:?\s*(\S+)/i);
+                    if (niMatch) {
+                        data.ukNINumber = niMatch[1];
+                    } else {
+                        // maybe in next line
+                        var ni = (lines[r+1] || '').trim();
+                        if (ni && !/\d/.test(ni)) data.ukNINumber = ni;
+                    }
+                }
+                // Parse final amount paid row (at bottom of slip)
+                if (/Amount\s+Paid/i.test(curr) && /Cheque|Bank|Cash|BAC/i.test(curr)) {
+                    // Possibly final row contains method and amount; parse last number on line
+                    var numMatch = curr.match(/([\d,]+\.\d{2})/);
+                    if (numMatch) {
+                        data.ukFinalAmount = numMatch[1].replace(/,/g, '');
+                    }
+                }
+            }
+            // Attempt to parse total hours, earnings and total deductions from totals row (Hours 4.00 Earnings 3869.17 Total Deductions 1217.50)
+            for (var s = 0; s < lines.length; s++) {
+                var lineTS = lines[s];
+                var hoursMatch = lineTS.match(/Hours\s+([\d,.]+)/i);
+                var earnMatch = lineTS.match(/Earnings\s+([\d,.]+)/i);
+                var dedMatch = lineTS.match(/Total\s+Deductions\s+([\d,.]+)/i);
+                if (hoursMatch) {
+                    data.ukTotalHours = hoursMatch[1].replace(/,/g, '');
+                }
+                if (earnMatch) {
+                    data.ukTotalEarnings = earnMatch[1].replace(/,/g, '');
+                }
+                if (dedMatch) {
+                    data.ukTotalDeductions = dedMatch[1].replace(/,/g, '');
+                }
+            }
+
+            // Additional parsing for UK slips: extract earnings, deductions, contributions, address and net pay.
+            // Parse the Payments section: description, current and YTD amounts (up to five entries).
+            var pIdx = lines.indexOf('Payments');
+            if (pIdx >= 0) {
+                var idxP = pIdx + 1;
+                if (lines[idxP] === 'Current Amount') idxP++;
+                if (lines[idxP] === 'YTD Amount') idxP++;
+                var earnCounter = 1;
+                while (idxP < lines.length && lines[idxP] !== 'Payment Total' && earnCounter <= 5) {
+                    var descP = lines[idxP++] || '';
+                    var currValP = (lines[idxP++] || '').replace(/,/g, '');
+                    var ytdValP = (lines[idxP++] || '').replace(/,/g, '');
+                    data['ukEarnDesc' + earnCounter] = descP;
+                    data['ukEarnUnits' + earnCounter] = '';
+                    data['ukEarnRate' + earnCounter] = '';
+                    data['ukEarnAmt' + earnCounter] = currValP;
+                    earnCounter++;
+                }
+                // Skip "Payment Total" label and currency and set summary earnings
+                if (idxP < lines.length && lines[idxP] === 'Payment Total') idxP++;
+                if (idxP < lines.length) idxP++; // skip currency label
+                if (idxP < lines.length) {
+                    data.ukSummaryEarnings = (lines[idxP++] || '').replace(/,/g, '');
+                }
+            }
+            // Parse the Deductions section: description and amounts (up to five entries).
+            var dIdx2 = lines.indexOf('Deductions');
+            if (dIdx2 >= 0) {
+                var idxD = dIdx2 + 1;
+                if (lines[idxD] === 'Current Amount') idxD++;
+                if (lines[idxD] === 'YTD Amount') idxD++;
+                var dedCounter = 1;
+                while (idxD < lines.length && lines[idxD] !== 'DeductionTotal' && dedCounter <= 5) {
+                    var descD = lines[idxD++] || '';
+                    var currValD = (lines[idxD++] || '').replace(/,/g, '');
+                    var ytdValD = (lines[idxD++] || '').replace(/,/g, '');
+                    data['ukDedDesc' + dedCounter] = descD;
+                    data['ukDedAmt' + dedCounter] = currValD;
+                    dedCounter++;
+                }
+                if (idxD < lines.length && lines[idxD] === 'DeductionTotal') idxD++;
+                if (idxD < lines.length) idxD++; // skip currency
+                if (idxD < lines.length) {
+                    data.ukSummaryDeductions = (lines[idxD++] || '').replace(/,/g, '');
+                }
+            }
+            // Parse Employer Contributions section (up to three entries).
+            var cIdx2 = lines.indexOf('Employer Contributions');
+            if (cIdx2 >= 0) {
+                var idxC = cIdx2 + 1;
+                if (lines[idxC] === 'Current Amount') idxC++;
+                if (lines[idxC] === 'YTD Amount') idxC++;
+                var contribCounter = 1;
+                while (idxC < lines.length && lines[idxC] !== 'Employer Contributions Total' && contribCounter <= 3) {
+                    var descC = lines[idxC++] || '';
+                    var currValC = (lines[idxC++] || '').replace(/,/g, '');
+                    var ytdValC = (lines[idxC++] || '').replace(/,/g, '');
+                    data['ukContribDesc' + contribCounter] = descC;
+                    data['ukContribAmt' + contribCounter] = currValC;
+                    contribCounter++;
+                }
+            }
+            // Extract address lines preceding the "NetPay" line (up to four lines).
+            var nIdx = lines.indexOf('NetPay');
+            if (nIdx >= 0) {
+                var addrCollected = [];
+                for (var ai = nIdx - 4; ai < nIdx; ai++) {
+                    if (ai >= 0) {
+                        var aLine = (lines[ai] || '').trim();
+                        if (aLine && !/^[\d,.]+$/.test(aLine) && !/^(GBP|INR)$/i.test(aLine)) {
+                            addrCollected.push(aLine);
+                        }
+                    }
+                }
+                addrCollected = addrCollected.slice(-4);
+                data.ukAddress1 = addrCollected[0] || '';
+                data.ukAddress2 = addrCollected[1] || '';
+                data.ukAddress3 = addrCollected[2] || '';
+                data.ukAddress4 = addrCollected[3] || '';
+            }
+            // Net Pay value and Final Amount (line after "NetPay")
+            if (nIdx >= 0 && nIdx + 1 < lines.length) {
+                var netVal2 = (lines[nIdx + 1] || '').replace(/,/g, '');
+                if (!data.ukSummaryNetPay) data.ukSummaryNetPay = netVal2;
+                if (!data.ukSummaryAmountPaid) data.ukSummaryAmountPaid = netVal2;
+                if (!data.ukFinalAmount) data.ukFinalAmount = netVal2;
+            }
+            // Payment method: look for "Account1" followed by digits
+            var a1Idx = lines.indexOf('Account1');
+            if (a1Idx >= 0 && a1Idx + 1 < lines.length) {
+                var digits = (lines[a1Idx + 1] || '').trim();
+                data.ukSummaryPaymentMethod = 'Account1 ' + digits;
+                // If Amount Paid not yet set, get next numeric line
+                if (!data.ukSummaryAmountPaid && a1Idx + 2 < lines.length && /[\d,.]+/.test(lines[a1Idx + 2])) {
+                    data.ukSummaryAmountPaid = (lines[a1Idx + 2] || '').replace(/,/g, '');
+                }
+            }
+            // Set employee and employer names if still blank
+            if (!data.ukEmployeeName) {
+                for (var ni = 0; ni < lines.length - 1; ni++) {
+                    if (/^[A-Za-z]+,/.test(lines[ni])) {
+                        data.ukEmployeeName = lines[ni].trim();
+                        data.empName = lines[ni].trim();
+                        break;
+                    }
+                }
+            }
+            if (!data.ukEmployerName) {
+                for (var ei = 0; ei < lines.length; ei++) {
+                    if (/adp|demo|solutions|limited|ltd/i.test(lines[ei])) {
+                        data.ukEmployerName = lines[ei].trim();
+                        data.compName = lines[ei].trim();
+                        break;
+                    }
+                }
+            }
+            // Return UK data
+            return data;
+        }
+        // Extract Payment section
+        var i = 0;
+        // skip until 'Payments'
+        while (i < lines.length && lines[i] !== 'Payments') i++;
+        if (i >= lines.length) return null;
+        i++; // skip 'Payments'
+        // expect 'Current Amount', 'YTD Amount'
+        if (lines[i] === 'Current Amount') i++;
+        if (lines[i] === 'YTD Amount') i++;
+        // Read payment categories until 'Payment Total'
+        var paymentMap = {};
+        var paymentMapYTD = {};
+        while (i < lines.length && lines[i] !== 'Payment Total') {
+            var desc = lines[i++];
+            var currentAmt = '';
+            var ytdAmt = '';
+            if (i < lines.length) currentAmt = lines[i++];
+            if (i < lines.length) ytdAmt = lines[i++];
+            paymentMap[desc] = currentAmt;
+            paymentMapYTD[desc] = ytdAmt;
+        }
+        // Skip 'Payment Total' and currency label and totals
+        if (i < lines.length && lines[i] === 'Payment Total') i++;
+        if (i < lines.length) i++; // currency label 'INR'
+        var grossCurr = ''; var grossYTD = '';
+        if (i < lines.length) { grossCurr = lines[i++]; }
+        if (i < lines.length) { grossYTD = lines[i++]; }
+        data.grossEarningsCurrent = grossCurr;
+        data.grossEarningsYTD = grossYTD;
+        // Next line should be Name
+        if (i < lines.length) data.empName = lines[i++];
+        // Attempt to capture company name from the next line (often appears after employee name)
+        if (i < lines.length) {
+            data.compName = lines[i++];
+        }
+        // Scan subsequent lines until we reach 'Deductions' to extract additional metadata
+        while (i < lines.length && lines[i] !== 'Deductions') {
+            var line = lines[i];
+            // Employee ID line
+            if (line.indexOf('Employee ID') !== -1) {
+                var parts = line.split(':');
+                if (parts.length > 1) data.empcode = parts[1].trim();
+            }
+            // Pay Period line for deriving pay month (e.g., "Pay Period : 2025-Monthly-11")
+            if (line.indexOf('Pay Period') !== -1) {
+                var partsPeriod = line.split(':');
+                if (partsPeriod.length > 1) {
+                    var periodStr = partsPeriod[1].trim();
+                    var segs = periodStr.split('-');
+                    if (segs.length >= 2) {
+                        var yearPart = segs[0];
+                        var monthPart = segs[segs.length - 1];
+                        var monthNum = parseInt(monthPart, 10);
+                        var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                        if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
+                            data.payMonth = monthNames[monthNum - 1] + ' ' + yearPart;
+                        }
+                    }
+                }
+            }
+            i++;
+        }
+        // Move past 'Deductions' label when we break the loop
+        // The while loop stops when lines[i] === 'Deductions' or i >= len
+        // We don't increment i here; parsing of deductions section will handle it
+        if (i < lines.length && lines[i] === 'Deductions') {
+            i++; // skip 'Deductions'
+            if (lines[i] === 'Current Amount') i++;
+            if (lines[i] === 'YTD Amount') i++;
+            var pf = 0, pfY = 0, income = 0, incomeY = 0, other = 0, otherY = 0;
+            while (i < lines.length && lines[i] !== 'DeductionTotal') {
+                var ddesc = lines[i++];
+                var damt = '';
+                var dYTD = '';
+                if (i < lines.length) damt = lines[i++];
+                if (i < lines.length) dYTD = lines[i++];
+                var amt = parseNumber(damt);
+                var yamt = parseNumber(dYTD);
+                var ldesc = ddesc.toLowerCase();
+                if (ldesc.indexOf('epf') !== -1 || ldesc.indexOf('pf') !== -1) {
+                    pf += amt;
+                    pfY += yamt;
+                } else if (ldesc.indexOf('income tax') !== -1) {
+                    income += amt;
+                    incomeY += yamt;
+                } else if (ldesc.indexOf('salary hold') !== -1) {
+                    // salary hold
+                    data.salaryHoldAmt = (parseNumber(data.salaryHoldAmt) + amt).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+                    data.salaryHoldYTD = (parseNumber(data.salaryHoldYTD) + yamt).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+                } else if (ldesc.indexOf('labour welfare') !== -1) {
+                    data.labourWelfareFundAmt = (parseNumber(data.labourWelfareFundAmt) + amt).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+                    data.labourWelfareFundYTD = (parseNumber(data.labourWelfareFundYTD) + yamt).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+                } else if (ldesc.indexOf('meal card') !== -1) {
+                    data.mealCardDeductionAmt = (parseNumber(data.mealCardDeductionAmt) + amt).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+                    data.mealCardDeductionYTD = (parseNumber(data.mealCardDeductionYTD) + yamt).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+                } else {
+                    other += amt;
+                    otherY += yamt;
+                }
+            }
+            // Skip 'DeductionTotal' and currency label and totals
+            if (i < lines.length && lines[i] === 'DeductionTotal') i++;
+            if (i < lines.length) i++; // currency label
+            var grossDcur = ''; var grossDytd = '';
+            if (i < lines.length) grossDcur = lines[i++];
+            if (i < lines.length) grossDytd = lines[i++];
+            data.grossDeductionCurrent = grossDcur;
+            data.grossDeductionYTD = grossDytd;
+            data.pfAmt = pf.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+            data.pfYTD = pfY.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+            data.incomeTaxAmt = income.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+            data.incomeTaxYTD = incomeY.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+            data.otherDeductionAmt = other.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+            data.otherDeductionYTD = otherY.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
+        // Map payment categories to fields
+        var otherE = 0, otherEY = 0;
+        for (var key in paymentMap) {
+            var amt = parseNumber(paymentMap[key]);
+            var ytd = parseNumber(paymentMapYTD[key]);
+            var fieldMapped = false;
+            var lc = key.toLowerCase();
+            if (lc === 'salary' || lc === 'basic pay') {
+                // Basic Pay
+                data.basicPayAmt = paymentMap[key];
+                data.basicPayYTD = paymentMapYTD[key];
+                fieldMapped = true;
+            } else if (lc === 'house rent allowance' || lc === 'hra') {
+                // HRA
+                data.hraAmt = paymentMap[key];
+                data.hraYTD = paymentMapYTD[key];
+                fieldMapped = true;
+            } else if (lc === 'special allowance') {
+                data.specialAllowanceAmt = paymentMap[key];
+                data.specialAllowanceYTD = paymentMapYTD[key];
+                fieldMapped = true;
+            } else if (lc === 'conveyance allowance' || lc === 'transportation allowance' || lc === 'transport allowance') {
+                // treat transportation as conveyance
+                var curCA = parseNumber(data.conveyanceAllowanceAmt);
+                var ytdCA = parseNumber(data.conveyanceAllowanceYTD);
+                data.conveyanceAllowanceAmt = (curCA + amt).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+                data.conveyanceAllowanceYTD = (ytdCA + ytd).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+                fieldMapped = true;
+            } else if (lc === 'leave travel allowance' || lc === 'lta') {
+                data.leaveTravelAllowanceAmt = paymentMap[key];
+                data.leaveTravelAllowanceYTD = paymentMapYTD[key];
+                fieldMapped = true;
+            } else if (lc === 'meal card') {
+                data.mealCardAmt = paymentMap[key];
+                data.mealCardYTD = paymentMapYTD[key];
+                fieldMapped = true;
+            } else if (lc === 'bonus' || lc === 'annual bonus' || lc === 'commission' || lc === 'cost of living allowance' || lc === 'medical allowance') {
+                // group these as other earnings
+                otherE += amt;
+                otherEY += ytd;
+                fieldMapped = true;
+            } else if (lc === 'expense reimbursement' || lc === 'telephone reimbursement') {
+                // treat expense reimbursement as telephone reimbursement
+                data.telephoneReimbursementAmt = paymentMap[key];
+                data.telephoneReimbursementYTD = paymentMapYTD[key];
+                data.totalReimbursementCurrent = paymentMap[key];
+                data.totalReimbursementYTD = paymentMapYTD[key];
+                fieldMapped = true;
+            }
+            if (!fieldMapped) {
+                otherE += amt;
+                otherEY += ytd;
+            }
+        }
+        data.otherEarningsAmt = otherE.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+        data.otherEarningsYTD = otherEY.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+        // If telephone reimbursement wasn't set by categories, set to 0
+        if (!data.telephoneReimbursementAmt) {
+            data.telephoneReimbursementAmt = '0.00';
+            data.telephoneReimbursementYTD = '0.00';
+            data.totalReimbursementCurrent = '0.00';
+            data.totalReimbursementYTD = '0.00';
+        }
+        // Net pay: Payment total minus deduction total
+        var grossCurNum = parseNumber(grossCurr);
+        var grossDNum = parseNumber(data.grossDeductionCurrent);
+        var net = grossCurNum - grossDNum;
+        data.netPay = net.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+        data.netTransfer = data.netPay;
+        var words = numberToWords(Math.round(net));
+        if (words) {
+            data.inWords = 'Rupees ' + words + ' Only';
+        }
+        return data;
+    } catch (err) {
+        console.error(err);
+        return null;
+    }
+}
+
+// Populate form fields from parsed slip data
+function populateFormFromData(data, overrideFormat) {
+    // Populate all matching input fields with values from data.  If overrideFormat
+    // is true (default), this function will also set the Format dropdown to
+    // match the slip's format and immediately refresh the visible form by
+    // calling switchFormat().  If overrideFormat is false, the current
+    // format selection is preserved and no preview update is triggered.  It is
+    // the caller's responsibility to invoke the appropriate preview update.
+    function setVal(id, val) {
+        var elem = document.getElementById(id);
+        if (elem) elem.value = val || '';
+    }
+    // Assign values to matching form fields
+    for (var key in data) {
+        setVal(key, data[key]);
+    }
+    // Default overrideFormat to true
+    if (overrideFormat === undefined) overrideFormat = true;
+    var formatSelect = document.getElementById('formatSelect');
+    if (overrideFormat && formatSelect) {
+        // Set the format dropdown to the slip's format
+        if (data.format === 'UK') {
+            formatSelect.value = 'UK';
+        } else {
+            formatSelect.value = 'India';
+        }
+        // Toggle the form visibility based on new format
+        switchFormat();
+        // Call the appropriate preview update
+        if (data.format === 'UK') {
+            updatePreviewUK();
+        } else {
+            updatePreview();
+        }
+    }
+}
+
+// Show slip selector and populate with multiple slips
+function showSlipSelector(slips) {
+    var selectorContainer = document.getElementById('slipSelectorContainer');
+    var selector = document.getElementById('slipSelector');
+    selector.innerHTML = '';
+    for (var idx = 0; idx < slips.length; idx++) {
+        var option = document.createElement('option');
+        var name = slips[idx].empName || ('Employee ' + (idx + 1));
+        option.value = idx;
+        option.textContent = name;
+        selector.appendChild(option);
+    }
+    selectorContainer.style.display = 'block';
+    selector.onchange = function() {
+        var selected = parseInt(this.value, 10);
+        if (!isNaN(selected)) {
+            // Preserve current format when selecting a slip
+            populateFormFromData(importedSlips[selected], false);
+            var fmtSel4 = document.getElementById('formatSelect');
+            if (fmtSel4 && fmtSel4.value === 'UK') {
+                updatePreviewUK();
+            } else {
+                updatePreview();
+            }
+        }
+    };
+    // Populate form with first slip by default, preserving current format
+    populateFormFromData(importedSlips[0], false);
+    var fmtSel5 = document.getElementById('formatSelect');
+    if (fmtSel5 && fmtSel5.value === 'UK') {
+        updatePreviewUK();
+    } else {
+        updatePreview();
+    }
+    // Ensure combined container is hidden and single preview is shown
+    document.getElementById('combinedContainer').style.display = 'none';
+    document.getElementById('payslip').style.display = 'block';
+}
+
+// Render all payslips in one combined container
+function renderAllPayslips(slips) {
+    var combined = document.getElementById('combinedContainer');
+    combined.innerHTML = '';
+    // Hide slip selector and single preview
+    document.getElementById('slipSelectorContainer').style.display = 'none';
+    document.getElementById('payslip').style.display = 'none';
+    combined.style.display = 'flex';
+    combined.style.flexDirection = 'column';
+    // For each slip, insert its payslip HTML with some spacing
+    slips.forEach(function(sl) {
+        var container = document.createElement('div');
+        container.innerHTML = generatePayslipHTML(sl);
+        // Add margin around each payslip
+        container.style.margin = '20px auto';
+        combined.appendChild(container);
+    });
+}
+
+// Generate HTML string for a payslip using same structure as preview
+function generatePayslipHTML(d) {
+    function text(val) { return val || ''; }
+    return '<div class="payslip">' +
+        '<h2>' + text(d.compName) + '</h2>' +
+        '<div class="pay-slip-label">Pay Slip</div>' +
+        '<p class="subtitle">Pay Slip for the Month of ' + text(d.payMonth) + '</p>' +
+        '<table class="detail-table">' +
+        '<tr><td><span class="label">EMPCODE</span> <span class="value">' + text(d.empcode) + '</span></td>' +
+        '<td><span class="label">UAN NO</span> <span class="value">' + text(d.uanNo) + '</span></td></tr>' +
+        '<tr><td><span class="label">EMPNAME</span> <span class="value">' + text(d.empName) + '</span></td>' +
+        '<td><span class="label">PF NO</span> <span class="value">' + text(d.pfNo) + '</span></td></tr>' +
+        '<tr><td><span class="label">DESIGNATION</span> <span class="value">' + text(d.designation) + '</span></td>' +
+        '<td><span class="label">ESI NO</span> <span class="value">' + text(d.esiNo) + '</span></td></tr>' +
+        '<tr><td><span class="label">DOJ</span> <span class="value">' + text(d.doj) + '</span></td>' +
+        '<td><span class="label">STD DAYS</span> <span class="value">' + text(d.stdDays) + '</span></td></tr>' +
+        '<tr><td><span class="label">GRADE</span> <span class="value">' + text(d.grade) + '</span></td>' +
+        '<td><span class="label">WRKDAYS</span> <span class="value">' + text(d.workDays) + '</span></td></tr>' +
+        '<tr><td><span class="label">PAN</span> <span class="value">' + text(d.pan) + '</span></td>' +
+        '<td><span class="label">LOP DAYS</span> <span class="value">' + text(d.lopDays) + '</span></td></tr>' +
+        '<tr><td><span class="label">DEPARTMENT</span> <span class="value">' + text(d.department) + '</span></td>' +
+        '<td><span class="label">BANK NAME</span> <span class="value">' + text(d.bankName) + '</span></td></tr>' +
+        '<tr><td><span class="label">LOCATION</span> <span class="value">' + text(d.location) + '</span></td>' +
+        '<td><span class="label">ACCOUNT NO</span> <span class="value">' + text(d.accNo) + '</span></td></tr>' +
+        '</table>' +
+        '<table class="earnings-table">' +
+        '<tr><th colspan="3">EARNINGS</th><th colspan="3">DEDUCTIONS</th></tr>' +
+        '<tr><th>Description</th><th>Amount</th><th>YTD</th><th>Description</th><th>Amount</th><th>YTD</th></tr>' +
+        '<tr><td>BASIC PAY</td><td>' + text(d.basicPayAmt) + '</td><td>' + text(d.basicPayYTD) + '</td>' +
+        '<td>PROVIDENT FUND</td><td>' + text(d.pfAmt) + '</td><td>' + text(d.pfYTD) + '</td></tr>' +
+        '<tr><td>HRA</td><td>' + text(d.hraAmt) + '</td><td>' + text(d.hraYTD) + '</td>' +
+        '<td>INCOME TAX</td><td>' + text(d.incomeTaxAmt) + '</td><td>' + text(d.incomeTaxYTD) + '</td></tr>' +
+        '<tr><td>SPECIAL ALLOWANCE</td><td>' + text(d.specialAllowanceAmt) + '</td><td>' + text(d.specialAllowanceYTD) + '</td>' +
+        '<td>OTHER DEDUCTION</td><td>' + text(d.otherDeductionAmt) + '</td><td>' + text(d.otherDeductionYTD) + '</td></tr>' +
+        '<tr><td>CONVEYANCE ALLOWANCE</td><td>' + text(d.conveyanceAllowanceAmt) + '</td><td>' + text(d.conveyanceAllowanceYTD) + '</td>' +
+        '<td>SALARY HOLD</td><td>' + text(d.salaryHoldAmt) + '</td><td>' + text(d.salaryHoldYTD) + '</td></tr>' +
+        '<tr><td>LEAVE TRAVEL ALLOWANCE</td><td>' + text(d.leaveTravelAllowanceAmt) + '</td><td>' + text(d.leaveTravelAllowanceYTD) + '</td>' +
+        '<td>LABOUR WELFARE FUND</td><td>' + text(d.labourWelfareFundAmt) + '</td><td>' + text(d.labourWelfareFundYTD) + '</td></tr>' +
+        '<tr><td>OTHER EARNINGS</td><td>' + text(d.otherEarningsAmt) + '</td><td>' + text(d.otherEarningsYTD) + '</td>' +
+        '<td>MEAL CARD DEDUCTION</td><td>' + text(d.mealCardDeductionAmt) + '</td><td>' + text(d.mealCardDeductionYTD) + '</td></tr>' +
+        '<tr><td>MEAL CARD</td><td>' + text(d.mealCardAmt) + '</td><td>' + text(d.mealCardYTD) + '</td>' +
+        '<td></td><td></td><td></td></tr>' +
+        '<tr><td><strong>GROSS EARNINGS</strong></td><td>' + text(d.grossEarningsCurrent) + '</td><td>' + text(d.grossEarningsYTD) + '</td>' +
+        '<td><strong>GROSS DEDUCTION</strong></td><td>' + text(d.grossDeductionCurrent) + '</td><td>' + text(d.grossDeductionYTD) + '</td></tr>' +
+        '</table>' +
+        '<table class="netpay-table"><tr><td><strong>NET PAY :</strong> ' + text(d.netPay) + '</td><td></td></tr></table>' +
+        '<table class="reimburse-table">' +
+        '<tr><th colspan="3">REIMBURSEMENTS</th></tr>' +
+        '<tr><th>Description</th><th>Amount</th><th>YTD</th></tr>' +
+        '<tr><td>TELEPHONE REIMBURSEMENT</td><td>' + text(d.telephoneReimbursementAmt) + '</td><td>' + text(d.telephoneReimbursementYTD) + '</td></tr>' +
+        '<tr><td><strong>TOTAL REIMBURSEMENT</strong></td><td>' + text(d.totalReimbursementCurrent) + '</td><td>' + text(d.totalReimbursementYTD) + '</td></tr>' +
+        '</table>' +
+        '<p class="net-transfer"><strong>NET TRANSFER :</strong> ' + text(d.netTransfer) + '</p>' +
+        '<p class="in-words"><strong>IN WORDS :</strong> ' + text(d.inWords) + '</p>' +
+        '<div class="footnote">This is a computer generated document, hence no signature is required.</div>' +
+        '</div>';
+}
+</script>
+
+
+<!-- V4.9 FIX: stable modern splash/import layer. Appended as the final UI owner. -->
+<style id="v49fix-style">
+:root{--v49-bg:#07111f;--v49-card:#0b1426;--v49-card2:#101c33;--v49-line:rgba(148,163,184,.22);--v49-text:#f8fafc;--v49-muted:#aebbd0;--v49-blue:#60a5fa;--v49-gold:#facc15;--v49-orange:#fb923c;--v49-pink:#fb7185;--v49-ease:cubic-bezier(.2,.8,.2,1)}
+#intro-overlay.v49fix-overlay{position:fixed!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;z-index:50000!important;padding:18px!important;box-sizing:border-box!important;background:radial-gradient(circle at 13% 12%,rgba(59,130,246,.28),transparent 34%),radial-gradient(circle at 93% 16%,rgba(245,158,11,.16),transparent 32%),linear-gradient(135deg,#06101f,#090e1c 52%,#15110c)!important;color:var(--v49-text)!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;}
+#intro-modal.v49fix-modal{width:min(1080px,96vw)!important;max-width:1080px!important;min-height:600px!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;border-radius:30px!important;text-align:left!important;color:var(--v49-text)!important;overflow:hidden!important;box-shadow:0 34px 100px rgba(0,0,0,.52)!important;transition:none!important;}
+#intro-modal.v49fix-modal.expanded{width:min(1080px,96vw)!important;}
+.v49fix-legacy{display:none!important;visibility:hidden!important;width:0!important;height:0!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important;position:absolute!important;}
+.v49-shell{display:grid;grid-template-columns:1.08fr .92fr;min-height:600px;border:1px solid var(--v49-line);border-radius:30px;overflow:hidden;background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(2,6,23,.96));position:relative;isolation:isolate}.v49-shell:before{content:"";position:absolute;inset:0;background:radial-gradient(560px 360px at 21% 18%,rgba(96,165,250,.16),transparent 64%);pointer-events:none;z-index:-1}.v49-left{padding:44px;display:flex;flex-direction:column;justify-content:space-between;gap:28px;animation:v49Left .72s var(--v49-ease) both}.v49-right{padding:26px;display:flex;align-items:center;justify-content:center;border-left:1px solid var(--v49-line);background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(2,6,23,.36));animation:v49Right .88s var(--v49-ease) .34s both}.v49-pill{display:inline-flex;width:max-content;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid rgba(96,165,250,.5);background:rgba(37,99,235,.18);color:#bfdbfe;font-weight:900;font-size:13px;letter-spacing:.01em}.v49-title{margin:26px 0 14px;font-weight:950;letter-spacing:-.055em;font-size:clamp(42px,5vw,60px);line-height:.95;color:#fff}.v49-title span{background:linear-gradient(90deg,#bfdbfe,#fef9c3);-webkit-background-clip:text;background-clip:text;color:transparent}.v49-sub{max-width:570px;margin:0;color:#cbd5e1;font-size:17px;line-height:1.55}.v49-stats,.v49-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.v49-stat,.v49-step{border:1px solid var(--v49-line);background:rgba(15,23,42,.56);border-radius:17px;padding:14px}.v49-stat b{display:block;color:#fff;font-size:21px}.v49-stat span,.v49-step span{display:block;margin-top:4px;color:#9fb0c9;font-size:12px;font-weight:800}.v49-step b{display:block;font-size:13px;color:#fff}.v49-panel{width:100%;max-width:460px;min-height:520px;border:1px solid var(--v49-line);border-radius:24px;background:rgba(15,23,42,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);padding:24px}.v49-panel h2{margin:0 0 8px;font-size:24px;letter-spacing:-.02em;color:#fff}.v49-panel p{margin:0;color:#aebbd0;line-height:1.5}.v49-country-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0}.v49-country{position:relative;text-align:left;border:1px solid var(--v49-line);border-radius:18px;padding:15px;min-height:110px;background:#071024;color:#fff;cursor:pointer;overflow:hidden;transition:transform .18s var(--v49-ease),border-color .18s var(--v49-ease),background .18s var(--v49-ease),box-shadow .18s var(--v49-ease)}.v49-country:after{content:"";position:absolute;right:-22px;bottom:-30px;width:92px;height:92px;border-radius:50%;background:rgba(37,99,235,.24)}.v49-country:hover{transform:translateY(-2px);border-color:rgba(96,165,250,.6);box-shadow:0 14px 34px rgba(0,0,0,.22)}.v49-country.active{border-color:#f59e0b;background:linear-gradient(135deg,rgba(251,146,60,.14),rgba(7,16,36,.98));box-shadow:0 0 0 1px rgba(245,158,11,.45),0 18px 40px rgba(245,158,11,.09)}.v49-country-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.v49-code{font-weight:950;letter-spacing:.05em;color:#cbd5e1}.v49-country strong{display:block;margin-top:12px;font-size:19px}.v49-country small{display:block;margin-top:5px;color:#aebbd0;font-weight:800}.v49-drop{margin-top:88px;border:1.5px dashed rgba(148,163,184,.42);border-radius:20px;padding:24px 16px;display:flex;gap:15px;align-items:center;justify-content:center;text-align:left;color:#dbeafe;cursor:pointer;background:rgba(2,6,23,.34);transition:transform .18s var(--v49-ease),border-color .18s var(--v49-ease),background .18s var(--v49-ease)}.v49-drop:hover,.v49-drop.dragover{transform:translateY(-2px);border-color:#60a5fa;background:rgba(37,99,235,.12)}.v49-orb{width:64px;height:64px;min-width:64px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(96,165,250,.24),rgba(251,113,133,.16));border:1px solid rgba(96,165,250,.38);animation:v49Orb 2.2s ease-in-out infinite}.v49-file{width:33px;height:42px;background:#e0f2fe;border-radius:8px 8px 10px 10px;position:relative;box-shadow:0 10px 20px rgba(0,0,0,.22);animation:v49File 1.7s ease-in-out infinite}.v49-file:before{content:"";position:absolute;right:0;top:0;border-left:12px solid transparent;border-bottom:12px solid #93c5fd}.v49-file:after{content:"";position:absolute;left:7px;right:7px;top:20px;height:3px;background:#2563eb;border-radius:999px;box-shadow:0 8px 0 #2563eb}.v49-drop b{display:block;color:#fff;font-size:16px}.v49-drop span{display:block;margin-top:4px;color:#9fb0c9;font-size:13px}.v49-contact{display:inline-flex;align-items:center;gap:8px;margin-top:18px;color:#bfdbfe;text-decoration:none;font-weight:850;font-size:13px}.v49-contact-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.36)}.v49-modal-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.72);backdrop-filter:blur(10px);z-index:60000;padding:18px}.v49-modal-card{width:min(520px,96vw);border:1px solid var(--v49-line);border-radius:24px;background:#0b1426;color:#fff;box-shadow:0 28px 80px rgba(0,0,0,.5);padding:22px;animation:v49Pop .22s var(--v49-ease) both}.v49-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.v49-modal-head h2{margin:0;font-size:24px}.v49-modal-head p{margin:5px 0 0;color:#aebbd0;line-height:1.45}.v49-modal-close{appearance:none;border:0;background:rgba(148,163,184,.12);color:#fff;border-radius:12px;width:36px;height:36px;font-size:22px;cursor:pointer}.v49-modal-actions{display:flex;justify-content:flex-end;margin-top:16px}.v49-continue{border:0;border-radius:999px;padding:12px 18px;font-weight:950;cursor:pointer;color:#07111f;background:linear-gradient(135deg,#fb923c,#fb7185)}.header-contact-v49{display:inline-flex;align-items:center;gap:7px;margin-right:10px;padding:7px 10px;border:1px solid rgba(96,165,250,.28);border-radius:999px;background:rgba(37,99,235,.12);color:#dbeafe;text-decoration:none;font-size:12px;vertical-align:middle}.header-contact-v49 b{color:#fff}.tool-version-badge{display:inline-flex;align-items:center;margin-left:8px;padding:3px 7px;border-radius:999px;background:#0b75e5;color:#fff;font-size:11px;font-weight:900;vertical-align:middle}.workspace-enter-v49{animation:v49Workspace .32s var(--v49-ease) both}.flag-v49{display:inline-block;width:30px;height:20px;border-radius:5px;box-shadow:0 0 0 1px rgba(255,255,255,.24) inset,0 3px 10px rgba(0,0,0,.22);position:relative;overflow:hidden;background:#1e40af}.flag-IN-v49{background:linear-gradient(#ff9933 0 33%,#fff 33% 66%,#138808 66%)}.flag-IN-v49:after{content:"";position:absolute;left:50%;top:50%;width:7px;height:7px;border:1px solid #1e3a8a;border-radius:50%;transform:translate(-50%,-50%)}.flag-GB-v49{background:linear-gradient(90deg,transparent 43%,#fff 43% 57%,transparent 57%),linear-gradient(transparent 38%,#fff 38% 62%,transparent 62%),#1e3a8a}.flag-GB-v49:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 46%,#dc2626 46% 54%,transparent 54%),linear-gradient(transparent 43%,#dc2626 43% 57%,transparent 57%)}.flag-BR-v49{background:#16a34a}.flag-BR-v49:before{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;background:#facc15;transform:translate(-50%,-50%) rotate(45deg)}.flag-BR-v49:after{content:"";position:absolute;left:50%;top:50%;width:9px;height:9px;border-radius:50%;background:#1e3a8a;transform:translate(-50%,-50%)}.flag-AU-v49{background:#1e3a8a}.flag-AU-v49:before{content:"✦";position:absolute;right:4px;bottom:1px;color:#fff;font-size:10px}.flag-AU-v49:after{content:"";position:absolute;left:0;top:0;width:14px;height:10px;background:linear-gradient(90deg,transparent 42%,#fff 42% 58%,transparent 58%),linear-gradient(transparent 38%,#fff 38% 62%,transparent 62%),#1e3a8a}.flag-AU-v49.small,.flag-v49.small{width:24px;height:16px;border-radius:4px}@keyframes v49Left{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}@keyframes v49Right{0%{opacity:0;transform:translateX(-58%);filter:blur(10px)}62%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none;filter:blur(0)}}@keyframes v49Orb{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes v49File{0%,100%{transform:rotate(-4deg) translateY(0)}50%{transform:rotate(5deg) translateY(-3px)}}@keyframes v49Pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}@keyframes v49Workspace{from{opacity:.45;transform:translateY(8px)}to{opacity:1;transform:none}}@media(max-width:860px){#intro-modal.v49fix-modal{min-height:auto}.v49-shell{grid-template-columns:1fr}.v49-right{border-left:0;border-top:1px solid var(--v49-line);animation:v49Left .55s var(--v49-ease) .2s both}.v49-left{padding:28px}.v49-stats,.v49-steps{grid-template-columns:1fr}.v49-drop{margin-top:28px}.v49-panel{min-height:auto}.v49-title{font-size:42px}}
+</style>
+<script id="v49fix-script">
+(function(){
+  'use strict';
+  var VERSION='V4.9.3';
+  var countries={India:{code:'IN',name:'India',desc:'ADP Celergo India payslip'},UK:{code:'GB',name:'UK',desc:'UK demo payslip layout'},Brazil:{code:'BR',name:'Brazil',desc:'Demonstrativo de Pagamento'},Australia:{code:'AU',name:'Australia',desc:'PayForce Australia payslip'}};
+  function el(id){return document.getElementById(id)}
+  function all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel))}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function currentCountry(){var f=el('formatSelect');return f&&f.value?f.value:'India'}
+  function flag(code,small){return '<span class="flag-v49 flag-'+esc(code)+'-v49 '+(small?'small':'')+'"></span>'}
+  function ensureFormatOptions(){var s=el('formatSelect');if(!s)return;Object.keys(countries).forEach(function(k){var exists=Array.prototype.some.call(s.options,function(o){return o.value===k});if(!exists){var o=document.createElement('option');o.value=k;o.textContent=k;s.appendChild(o)}})}
+  function chooseCountry(country){ensureFormatOptions();window.__selectedImportTemplateV31=country;var s=el('formatSelect');if(s){s.value=country;try{s.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}}if(typeof window.switchFormat==='function'){try{window.switchFormat()}catch(e){}}updateCountryCards()}
+// Adjust countryCard so only the flag is shown (no two‑letter code)
+function countryCard(country,extraClass){var c=countries[country];return '<button type="button" class="v49-country '+(extraClass||'')+'" data-country="'+esc(country)+'"><div class="v49-country-top">'+flag(c.code)+'</div><strong>'+esc(c.name)+'</strong><small>'+esc(c.desc)+'</small></button>'}
+  function updateCountryCards(){var cur=currentCountry();all('[data-country]').forEach(function(node){node.classList.toggle('active',node.getAttribute('data-country')===cur)})}
+  function renderLanding(){var overlay=el('intro-overlay'),modal=el('intro-modal');if(!overlay||!modal)return;overlay.className='v49fix-overlay';overlay.style.display='flex';modal.className='v49fix-modal';modal.removeAttribute('style');modal.innerHTML='<div id="intro-text" class="v49fix-legacy"></div><div id="intro-buttons" class="v49fix-legacy"></div><div class="v49-shell"><section class="v49-left"><div><div class="v49-pill"><span class="tool-version-badge">'+VERSION+'</span><span>Multi-country demo payslip studio</span></div><h1 class="v49-title">Turn payroll<br>statements into demo-ready <span>payslips.</span></h1><p class="v49-sub">Import a Celergo earning statement, choose the target country template, edit every detected field, then export clean payslips for demos or testing. Built as a single portable HTML tool.</p></div><div><div id="v49UpdatePanel" class="v49-update"><span id="v49UpdateStatus">Version status loading...</span><button id="v49UpdateCheck" type="button">Look for updates</button><button id="v49UpdateInstall" type="button" style="display:none">Restart to install</button></div><div class="v49-stats"><div class="v49-stat"><b>4</b><span>country templates</span></div><div class="v49-stat"><b>PDF</b><span>batch import</span></div><div class="v49-stat"><b>ZIP</b><span>bulk export</span></div></div><div class="v49-steps" style="margin-top:32px"><div class="v49-step"><b>1. Select</b><span>Choose the output country.</span></div><div class="v49-step"><b>2. Import</b><span>Drop or browse a pay statement PDF.</span></div><div class="v49-step"><b>3. Edit & export</b><span>Fine-tune values and save.</span></div></div></div></section><section class="v49-right"><div class="v49-panel"><h2>Start a workspace</h2><p>Select the country template before importing. The selected template stays locked during conversion.</p><div class="v49-country-grid">'+Object.keys(countries).map(function(k){return countryCard(k)}).join('')+'</div><div id="v49Drop" class="v49-drop" tabindex="0" role="button"><span class="v49-orb"><span class="v49-file"></span></span><span><b>Drop a file or click here to select</b><span>PDF pay statement only. No blank workspace button. No old intro box.</span></span></div><a class="v49-contact" href="mailto:max.robles.gonzalez@adp.com?subject=Demo%20Payslip%20Creator%20feedback"><span class="v49-contact-icon">✉</span><span>If you need changes to this tool or report bugs, contact <b>max.robles.gonzalez@adp.com</b></span></a></div></section></div>';
+    bindLanding();bindLandingUpdater();updateCountryCards();
+  }
+  function bindLandingUpdater(){
+    if(!window.payslipUpdater)return;
+    var pill=document.querySelector('.v49-pill');
+    if(pill&&!el('v49InlineUpdate')){
+      var inline=document.createElement('span');
+      inline.id='v49InlineUpdate';
+      inline.className='v49-update-inline';
+      inline.innerHTML='<span id="v49UpdateStatus">Demo tools '+VERSION+' - Not checked yet.</span><button id="v49UpdateCheck" type="button">Check for updates</button><button id="v49UpdateInstall" type="button" style="display:none">Restart to install</button>';
+      pill.innerHTML='';
+      pill.appendChild(inline);
+    }
+    var oldPanel=el('v49UpdatePanel');
+    if(oldPanel)oldPanel.style.display='none';
+    var status=el('v49UpdateStatus'),check=el('v49UpdateCheck'),install=el('v49UpdateInstall');
+    if(!status||!check||!install)return;
+    function ago(iso){
+      if(!iso)return 'not checked yet';
+      var diff=Math.max(0,Date.now()-new Date(iso).getTime());
+      var mins=Math.floor(diff/60000);
+      if(mins<1)return 'just now';
+      if(mins===1)return '1 minute ago';
+      return mins+' minutes ago';
+    }
+    function render(s){
+      var state=s&&s.state==='current'?'Updated':(s&&s.state==='downloaded'?'Update ready':(s&&s.state==='error'?'Update unavailable':'Update status'));
+      status.textContent='Demo tools '+VERSION+' - '+state+'. Last checked '+ago(s&&s.checkedAt)+'.';
+      install.style.display=s&&s.state==='downloaded'?'inline-block':'none';
+      check.disabled=!!(s&&(s.state==='checking'||s.state==='downloading'));
+      check.style.opacity=check.disabled?'.55':'1';
+    }
+    window.payslipUpdater.onStatus(render);
+    window.payslipUpdater.getStatus().then(render).catch(function(){status.textContent='Update status unavailable.'});
+    check.onclick=function(){status.textContent='Demo tools '+VERSION+' - Checking for updates...';window.payslipUpdater.check().then(render).catch(function(){status.textContent='Demo tools '+VERSION+' - Update unavailable. Last checked just now.'})};
+    install.onclick=function(){window.payslipUpdater.install()};
+  }
+  function bindLanding(){all('.v49-country').forEach(function(btn){btn.addEventListener('click',function(){chooseCountry(btn.getAttribute('data-country'))})});var dz=el('v49Drop');if(!dz)return;dz.addEventListener('click',function(){openFileChooser()});dz.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openFileChooser()}});['dragenter','dragover'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.add('dragover')})});['dragleave','dragend'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.remove('dragover')})});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('dragover');var files=e.dataTransfer&&e.dataTransfer.files;if(files&&files.length){useDroppedFiles(files)}})}
+  function showWorkspace(){var intro=el('intro-overlay');if(intro)intro.style.display='none';var splash=el('splash');if(splash)splash.style.display='none';var main=el('main');if(main){main.style.display='flex';main.classList.remove('workspace-enter-v49');void main.offsetWidth;main.classList.add('workspace-enter-v49')}}
+  function openFileChooser(){
+    var input = el('importFile');
+    if(!input) return;
+    // Reset the input so selecting the same file twice in a row still triggers
+    // the change event.
+    input.value = '';
+    var drop=el('v49Drop');
+    if(drop)drop.querySelector('b').textContent='Choose a PDF file...';
+    // Open the file dialog
+    input.click();
+  }
+  function useDroppedFiles(files){var input=el('importFile');if(!input)return;try{var dt=new DataTransfer();Array.prototype.forEach.call(files,function(f){dt.items.add(f)});input.files=dt.files;showWorkspace();input.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){openFileChooser()}}
+  function ensureModal(){var m=el('v49ImportModal');if(!m){m=document.createElement('div');m.id='v49ImportModal';m.className='v49-modal-overlay';document.body.appendChild(m)}m.innerHTML='<div class="v49-modal-card"><div class="v49-modal-head"><div><h2>Import pay statement</h2><p>Choose the target country template first. Then select your source PDF.</p></div><button type="button" class="v49-modal-close" aria-label="Close">×</button></div><div class="v49-country-grid">'+Object.keys(countries).map(function(k){return countryCard(k)}).join('')+'</div><div class="v49-modal-actions"><button type="button" class="v49-continue">Select PDF</button></div></div>';m.querySelector('.v49-modal-close').onclick=function(){m.style.display='none'};m.addEventListener('click',function(e){if(e.target===m)m.style.display='none'});all('.v49-country',m).forEach(function(btn){btn.addEventListener('click',function(){chooseCountry(btn.getAttribute('data-country'))})});m.querySelector('.v49-continue').onclick=function(){m.style.display='none';openFileChooser()};updateCountryCards();return m}
+  function openImportModal(e){if(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation()}var m=ensureModal();m.style.display='flex'}
+  function fixHeader(){var title=document.querySelector('#header .title');if(title){title.innerHTML='Demo Payslip Creator <span id="versionBadge" class="tool-version-badge">'+VERSION+'</span>'}var right=document.querySelector('#header > div:last-child');if(right&&!el('contactMaxV49')){var a=document.createElement('a');a.id='contactMaxV49';a.className='header-contact-v49';a.href='mailto:max.robles.gonzalez@adp.com?subject=Demo%20Payslip%20Creator%20feedback';a.innerHTML='<span>✉</span><span>Changes or bugs? <b>Contact Max</b></span>';right.insertBefore(a,right.firstChild)}var old=el('importBtn');if(old&&!old.dataset.v49fix){var clone=old.cloneNode(true);clone.dataset.v49fix='true';clone.addEventListener('click',openImportModal,true);old.parentNode.replaceChild(clone,old)}}
+  // Disable the automatic showWorkspace on file change.  We let the
+  // dedicated import handler (attached elsewhere) manage parsing and
+  // transitioning to the workspace.
+  function bindInput(){
+    var input = el('importFile');
+    if(input && !input.dataset.v49fix){
+      input.dataset.v49fix = 'true';
+      // Do not attach a redundant change handler here.
+    }
+  }
+  // Initialise the landing page exactly once.  Previously this code repeated
+  // init() via load and timer events, which caused a flash on load. In
+  // version 4.9.1 we bind init() only to DOMContentLoaded (or run immediately
+  // if the DOM is already ready). Duplicate init calls and timers have been removed.
+  function init(){ensureFormatOptions();fixHeader();bindInput();ensureModal();renderLanding();}
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+  <!-- Loading overlay to indicate PDF processing progress -->
+  <div id="loading-overlay">Processing PDF…</div>
+</body>
+</html>

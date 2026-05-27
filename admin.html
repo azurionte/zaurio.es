@@ -138,6 +138,41 @@
       margin-top:10px;
     }
 
+    .fileField{
+      display:block;
+      width:100%;
+      margin-top:10px;
+      padding:12px;
+      border:1px dashed rgba(255,255,255,.22);
+      border-radius:16px;
+      background:rgba(0,0,0,.18);
+      color:#fff;
+    }
+
+    .fileList{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .fileRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.05);
+    }
+
+    .fileRow a{
+      color:#fff;
+      font-weight:1000;
+      text-decoration:none;
+      overflow-wrap:anywhere;
+    }
+
     .btn{
       border:none;
       cursor:pointer;
@@ -342,6 +377,7 @@
         <button class="admin-tab on" data-admin-tab="miercoles" type="button">Miércoles</button>
         <button class="admin-tab" data-admin-tab="participantes" type="button">Participantes</button>
         <button class="admin-tab" data-admin-tab="secretos" type="button">Secretos</button>
+        <button class="admin-tab" data-admin-tab="payslip" type="button">Payslip updates</button>
       </div>
     </section>
 
@@ -363,6 +399,7 @@
           <div class="pill">Participantes pendientes: <span id="countParts">0</span></div>
           <div class="pill">Secretos pendientes: <span id="countSecretPend">0</span></div>
           <div class="pill">Secretos en live: <span id="countSecretLive">0</span></div>
+          <div class="pill">Payslip files: <span id="countPayslipFiles">0</span></div>
         </div>
         <div class="stack">
           <button id="btnRefresh" class="btn btnGhost" type="button">Actualizar</button>
@@ -418,6 +455,26 @@
           </div>
         </div>
       </section>
+
+      <section id="sectionPayslip" class="admin-section">
+        <div class="section">
+          <h2>Payslip updates</h2>
+          <div class="subsection">
+            <h3>Subir build</h3>
+            <p style="color:var(--muted);line-height:1.5;">Sube los artefactos generados por <strong>npm run build</strong>. Los instaladores grandes se trocean automaticamente para esquivar el limite de 50 MB.</p>
+            <input id="payslipFiles" class="fileField" type="file" multiple />
+            <div class="actions">
+              <button id="btnUploadPayslip" class="btn btnPrimary" type="button">Subir archivos</button>
+              <button id="btnRefreshPayslip" class="btn btnGhost" type="button">Actualizar lista</button>
+            </div>
+            <div id="payslipMsg" class="status"></div>
+          </div>
+          <div class="subsection">
+            <h3>Archivos publicados</h3>
+            <div id="payslipFileList" class="fileList"></div>
+          </div>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -440,6 +497,7 @@
     const sectionMiercoles = document.getElementById("sectionMiercoles");
     const sectionParticipantes = document.getElementById("sectionParticipantes");
     const sectionSecretos = document.getElementById("sectionSecretos");
+    const sectionPayslip = document.getElementById("sectionPayslip");
 
     const gridMsgs = document.getElementById("gridMsgs");
     const countMsgs = document.getElementById("countMsgs");
@@ -458,6 +516,14 @@
     const gridSecretOk = document.getElementById("gridSecretOk");
     const countSecretPend = document.getElementById("countSecretPend");
     const countSecretLive = document.getElementById("countSecretLive");
+    const countPayslipFiles = document.getElementById("countPayslipFiles");
+    const payslipFiles = document.getElementById("payslipFiles");
+    const btnUploadPayslip = document.getElementById("btnUploadPayslip");
+    const btnRefreshPayslip = document.getElementById("btnRefreshPayslip");
+    const payslipMsg = document.getElementById("payslipMsg");
+    const payslipFileList = document.getElementById("payslipFileList");
+    const payslipBucket = "payslip-updates";
+    const payslipChunkSize = 45 * 1024 * 1024;
 
     function esc(value){
       return (value || "")
@@ -483,6 +549,8 @@
       sectionMiercoles.classList.toggle("on", name === "miercoles");
       sectionParticipantes.classList.toggle("on", name === "participantes");
       sectionSecretos.classList.toggle("on", name === "secretos");
+      sectionPayslip.classList.toggle("on", name === "payslip");
+      if (name === "payslip") cargarPayslipUpdates();
     }
 
     adminTabs.forEach((tab) => {
@@ -832,12 +900,157 @@
       await cargarSecretos();
     }
 
+    function payslipPublicUrl(fileName){
+      return `/payslip-updates/${encodeURIComponent(fileName)}`;
+    }
+
+    function payslipUploadContentType(file){
+      if (file.type) return file.type;
+      if (file.name.toLowerCase().endsWith(".exe")) return "application/vnd.microsoft.portable-executable";
+      if (file.name.toLowerCase().endsWith(".yml")) return "text/yaml; charset=utf-8";
+      return "application/octet-stream";
+    }
+
+    function payslipDisplayFileName(fileName){
+      return fileName.endsWith(".parts.json")
+        ? fileName.slice(0, -".parts.json".length)
+        : fileName;
+    }
+
+    function shouldHidePayslipStorageFile(fileName){
+      return /\.part\d+$/i.test(fileName);
+    }
+
+    function formatBytes(bytes){
+      if (!Number.isFinite(bytes)) return "";
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    async function cargarPayslipUpdates(){
+      payslipMsg.textContent = "Cargando archivos...";
+      const result = await supabaseClient.storage
+        .from(payslipBucket)
+        .list("", { limit: 100, sortBy: { column: "updated_at", order: "desc" } });
+
+      if (result.error){
+        payslipMsg.textContent = result.error.message;
+        payslipFileList.innerHTML = renderEmpty("No se pudieron cargar los archivos.");
+        return;
+      }
+
+      const files = (result.data || []).filter((item) => item.name && item.id !== null && !shouldHidePayslipStorageFile(item.name));
+      countPayslipFiles.textContent = String(files.length);
+      payslipMsg.textContent = files.length ? "" : "No hay archivos publicados todavia.";
+      payslipFileList.innerHTML = files.length
+        ? files.map((file) => {
+            const displayName = payslipDisplayFileName(file.name);
+            const isChunked = file.name.endsWith(".parts.json");
+            return `
+            <div class="fileRow">
+              <div>
+                <a href="${payslipPublicUrl(displayName)}" target="_blank" rel="noopener">${esc(displayName)}</a>
+                <div class="meta">
+                  <span>${isChunked ? "troceado" : formatBytes(file.metadata?.size || 0)}</span>
+                  <span>${file.updated_at ? new Date(file.updated_at).toLocaleString() : ""}</span>
+                </div>
+              </div>
+              <button class="btn btnDanger" data-payslip-delete="${esc(file.name)}" type="button">Borrar</button>
+            </div>
+          `;
+          }).join("")
+        : renderEmpty("No hay archivos publicados.");
+    }
+
+    async function uploadPayslipObject(path, body, options = {}){
+      const result = await supabaseClient.storage
+        .from(payslipBucket)
+        .upload(path, body, {
+          cacheControl: options.cacheControl || "31536000",
+          contentType: options.contentType || "application/octet-stream",
+          upsert: true
+        });
+
+      if (result.error) throw result.error;
+    }
+
+    async function uploadPayslipFile(file){
+      const contentType = payslipUploadContentType(file);
+      if (file.size <= payslipChunkSize){
+        await uploadPayslipObject(file.name, file, {
+          cacheControl: file.name === "latest.yml" ? "0" : "31536000",
+          contentType
+        });
+        return;
+      }
+
+      const parts = [];
+      const partCount = Math.ceil(file.size / payslipChunkSize);
+      for (let index = 0; index < partCount; index += 1){
+        const start = index * payslipChunkSize;
+        const end = Math.min(file.size, start + payslipChunkSize);
+        const partName = `${file.name}.part${String(index).padStart(3, "0")}`;
+        payslipMsg.textContent = `Subiendo ${file.name}: parte ${index + 1}/${partCount}...`;
+        await uploadPayslipObject(partName, file.slice(start, end, contentType), {
+          contentType: "application/octet-stream"
+        });
+        parts.push({ name: partName, size: end - start });
+      }
+
+      const manifest = {
+        fileName: file.name,
+        totalSize: file.size,
+        contentType,
+        parts
+      };
+      await uploadPayslipObject(
+        `${file.name}.parts.json`,
+        new Blob([JSON.stringify(manifest)], { type: "application/json" }),
+        { contentType: "application/json; charset=utf-8" }
+      );
+    }
+
+    async function subirPayslipUpdates(){
+      const files = Array.from(payslipFiles.files || []);
+      if (!files.length){
+        payslipMsg.textContent = "Selecciona al menos un archivo.";
+        return;
+      }
+
+      try {
+        for (let index = 0; index < files.length; index += 1){
+          const file = files[index];
+          payslipMsg.textContent = `Subiendo ${file.name} (${index + 1}/${files.length})...`;
+          await uploadPayslipFile(file);
+        }
+      } catch (error) {
+          payslipMsg.textContent = `Error subiendo archivo: ${error.message || error}`;
+          return;
+      }
+
+      payslipFiles.value = "";
+      payslipMsg.textContent = "Build publicado.";
+      await cargarPayslipUpdates();
+    }
+
+    async function borrarPayslipUpdate(fileName){
+      if (!confirm(`Borrar ${fileName}?`)) return;
+      const result = await supabaseClient.storage.from(payslipBucket).remove([fileName]);
+      if (result.error){
+        payslipMsg.textContent = result.error.message;
+        return;
+      }
+      await cargarPayslipUpdates();
+    }
+
     async function refreshAll(){
       await cargarConsigna();
       await Promise.all([
         cargarMensajes(),
         cargarParticipantes(),
-        cargarSecretos()
+        cargarSecretos(),
+        cargarPayslipUpdates()
       ]);
     }
 
@@ -904,6 +1117,13 @@
     });
     btnSaveConsigna.addEventListener("click", guardarConsigna);
     btnClearLive.addEventListener("click", limpiarLive);
+    btnUploadPayslip.addEventListener("click", subirPayslipUpdates);
+    btnRefreshPayslip.addEventListener("click", cargarPayslipUpdates);
+    payslipFileList.addEventListener("click", async (event) => {
+      const button = event.target.closest("button");
+      if (!button?.dataset.payslipDelete) return;
+      await borrarPayslipUpdate(button.dataset.payslipDelete);
+    });
 
     (async () => {
       const session = await supabaseClient.auth.getSession();
