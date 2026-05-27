@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const updaterApi = {
   getStatus: () => ipcRenderer.invoke('updater:get-status'),
   check: () => ipcRenderer.invoke('updater:check'),
+  download: () => ipcRenderer.invoke('updater:download'),
   install: () => ipcRenderer.invoke('updater:install'),
   onStatus: (callback) => {
     const listener = (_event, status) => callback(status);

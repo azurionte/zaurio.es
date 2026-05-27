@@ -70,12 +70,12 @@ function readableUpdateError(error) {
 }
 
 function registerUpdaterEvents() {
-  autoUpdater.autoDownload = true;
+  autoUpdater.autoDownload = false;
   autoUpdater.on('checking-for-update', () => {
     sendUpdateStatus('checking', 'Checking for updates...');
   });
   autoUpdater.on('update-available', (info) => {
-    sendUpdateStatus('available', `Downloading version ${info.version}...`, { updateVersion: info.version });
+    sendUpdateStatus('available', `Version ${info.version} is available.`, { updateVersion: info.version });
   });
   autoUpdater.on('update-not-available', () => {
     sendUpdateStatus('current', `Version ${app.getVersion()} is the latest.`);
@@ -103,8 +103,25 @@ function registerUpdaterEvents() {
     }
     return lastUpdateStatus;
   });
+  ipcMain.handle('updater:download', async () => {
+    if (!app.isPackaged) {
+      sendUpdateStatus('dev', `Version ${app.getVersion()} is running in development mode.`);
+      return lastUpdateStatus;
+    }
+    try {
+      sendUpdateStatus('downloading', 'Downloading update 0%...');
+      await autoUpdater.downloadUpdate();
+    } catch (error) {
+      sendUpdateStatus('error', readableUpdateError(error));
+    }
+    return lastUpdateStatus;
+  });
   ipcMain.handle('updater:install', () => {
+    if (lastUpdateStatus.state !== 'downloaded') {
+      return lastUpdateStatus;
+    }
     autoUpdater.quitAndInstall(false, true);
+    return lastUpdateStatus;
   });
 }
 
@@ -160,10 +177,10 @@ function createMainWindow() {
   // the "publish" field. See electron-updater docs for configuration.
   mainWindow.once('ready-to-show', () => {
     // In corporate environments without internet access, this call will
-    // safely fail; in open environments it will automatically download
-    // and install updates in the background (per-user installation).
+    // safely fail. When an update exists, the renderer shows a button so
+    // the user can choose when to download and restart.
     if (!app.isPackaged) return;
-    autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+    autoUpdater.checkForUpdates().catch((err) => {
       // swallow update errors silently; updates are optional
       console.warn('Auto update error:', err);
     });

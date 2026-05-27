@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.5",
+  "version": "5.0.6",
   "main": "main.js",
   "description": "Zaurio demo building tools",
   "author": "Zaurio",
@@ -8,7 +8,8 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "build:unsigned": "electron-builder -c.win.signAndEditExecutable=false"
   },
   "dependencies": {
     "electron-updater": "^6.8.3"
@@ -45,7 +46,7 @@
     },
     "win": {
       "target": "nsis",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": true
     }
   }
 }
