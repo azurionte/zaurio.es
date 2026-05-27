@@ -2564,6 +2564,14 @@ async function loadPdfDocument(arrayBuffer) {
     }
 }
 
+async function loadPdfDocumentFromBytes(bytes) {
+    if (bytes instanceof ArrayBuffer) return loadPdfDocument(bytes);
+    if (bytes && bytes.buffer instanceof ArrayBuffer) {
+        return loadPdfDocument(bytes.buffer.slice(bytes.byteOffset || 0, (bytes.byteOffset || 0) + bytes.byteLength));
+    }
+    return loadPdfDocument(new Uint8Array(bytes || []).buffer);
+}
+
 async function extractPageLines(page, pageNum) {
     var attempts = [
         { normalizeWhitespace: true, disableCombineTextItems: false },
@@ -4169,7 +4177,7 @@ function generatePayslipHTML(d) {
     async function parseBrazilPdfV3(arrayBuffer){
         if (typeof pdfjsLib === 'undefined') { alert('PDF.js is not loaded. Please check your internet connection and reload the tool.'); return; }
         var data = arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
-        var pdf = await pdfjsLib.getDocument({data:data, disableAutoFetch:true, disableStream:true, isEvalSupported:false}).promise;
+        var pdf = await loadPdfDocumentFromBytes(data);
         var pages = [];
         for (var pageNum=1; pageNum<=pdf.numPages; pageNum++) {
             var page = await pdf.getPage(pageNum);
@@ -4464,7 +4472,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V4.9.7';
+var TOOL_VERSION='V4.9.8';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -4653,7 +4661,7 @@ function parseAustraliaPageV42(rowLines,rawLines,pageIndex,pageCount){
 async function parseAustraliaPdfV42(arrayBuffer){
     if(typeof pdfjsLib==='undefined')throw new Error('PDF.js is not loaded');
     var data=arrayBuffer instanceof Uint8Array?arrayBuffer:new Uint8Array(arrayBuffer.slice?arrayBuffer.slice(0):arrayBuffer);
-    var pdf=await pdfjsLib.getDocument({data:data,disableAutoFetch:true,disableStream:true,isEvalSupported:false}).promise; var slips=[];
+    setImportStatus('Reading PDF with safe parser...'); setImportStatus('Reading PDF with safe parser...'); var pdf=await loadPdfDocumentFromBytes(data); var slips=[];
     for(var pageNum=1;pageNum<=pdf.numPages;pageNum++){var page=await pdf.getPage(pageNum);var content=await page.getTextContent({normalizeWhitespace:true,disableCombineTextItems:false});var rows=groupRowsV42(content.items||[]);var rowLines=rows.map(function(r){return r.text;});var rawLines=(content.items||[]).map(function(it){return cleanV42(it.str);}).filter(Boolean);var slip=parseAustraliaPageV42(rowLines,rawLines,pageNum-1,pdf.numPages);if(slip)slips.push(slip);if(page.cleanup)page.cleanup();}
     if(!slips.length){alert('No Australia payslips detected in the selected PDF. Please confirm this is an Australia earning statement.');return;}
     window.pendingImportedSlips=slips; try{pendingImportedSlips=slips;}catch(e){} window.pendingImportedFileName=window.importedFileName||(typeof importedFileName!=='undefined'?importedFileName:'')||'Australia_PeopleEarningStatement.pdf'; try{pendingImportedFileName=window.pendingImportedFileName;}catch(e){} window.pendingDetectedCountry='Australia'; try{pendingDetectedCountry='Australia';}catch(e){}
@@ -4755,7 +4763,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V4.9.7';
+var TOOL_VERSION='V4.9.8';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -4957,7 +4965,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V4.9.7';
+    var FINAL_VERSION = 'V4.9.8';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -5172,8 +5180,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
                 return;
             }
             var data = arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
-            var loadingTask = pdfjsLib.getDocument({ data: data, disableAutoFetch: true, disableStream: true, isEvalSupported: false });
-            var pdf = await loadingTask.promise;
+            var pdf = await loadPdfDocumentFromBytes(data);
             var pages = [];
             var allLines = [];
             for (var pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -5572,7 +5579,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
         try {
             if (typeof pdfjsLib === 'undefined') { alert('PDF.js is not loaded. Please check your internet connection and reload the tool.'); return; }
             var data = arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
-            var pdf = await pdfjsLib.getDocument({ data:data, disableAutoFetch:true, disableStream:true, isEvalSupported:false }).promise;
+            var pdf = await loadPdfDocumentFromBytes(data);
             var pages=[], allLines=[];
             for (var pageNum=1; pageNum<=pdf.numPages; pageNum++) {
                 var page = await pdf.getPage(pageNum);
@@ -5868,7 +5875,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
     async function parseBrazilCelergoPdfBR31(arrayBuffer){
         if (typeof pdfjsLib === 'undefined') { alert('PDF.js is not loaded. Please reload the tool.'); return; }
         var data = arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
-        var pdf = await pdfjsLib.getDocument({data:data, disableAutoFetch:true, disableStream:true, isEvalSupported:false}).promise;
+        var pdf = await loadPdfDocumentFromBytes(data);
         var slips = [];
         for (var pageNum=1; pageNum<=pdf.numPages; pageNum++) {
             var page = await pdf.getPage(pageNum);
@@ -6727,7 +6734,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
             try{
                 if(typeof pdfjsLib==='undefined') throw new Error('PDF.js is not loaded');
                 var data=arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
-                var pdf=await pdfjsLib.getDocument({data:data,disableAutoFetch:true,disableStream:true,isEvalSupported:false}).promise;
+                setImportStatus('Reading PDF with safe parser...'); var pdf=await loadPdfDocumentFromBytes(data);
                 var slips=[];
                 for(var pageNum=1;pageNum<=pdf.numPages;pageNum++){
                     var page=await pdf.getPage(pageNum);
@@ -7134,7 +7141,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     async function parseAustraliaPdf(arrayBuffer){
         if(typeof pdfjsLib==='undefined') throw new Error('PDF.js is not loaded');
         var data=arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
-        var pdf=await pdfjsLib.getDocument({data:data,disableAutoFetch:true,disableStream:true,isEvalSupported:false}).promise;
+        setImportStatus('Reading PDF with safe parser...'); var pdf=await loadPdfDocumentFromBytes(data);
         var slips=[];
         for(var pageNum=1;pageNum<=pdf.numPages;pageNum++){ var page=await pdf.getPage(pageNum); var content=await page.getTextContent({normalizeWhitespace:true,disableCombineTextItems:false}); var rows=groupRows(content.items||[]); var rowLines=rows.map(function(r){return r.text;}); var rawLines=(content.items||[]).map(function(it){return clean(it.str);}).filter(Boolean); var slip=parseAustraliaPage(rowLines,pageNum-1,pdf.numPages) || parseAustraliaPage(rawLines,pageNum-1,pdf.numPages); if(slip) slips.push(slip); if(page.cleanup) page.cleanup(); }
         if(!slips.length){ alert('No Australia payslips detected in the selected PDF. Please confirm this is an Australia earning statement.'); return; }
@@ -7166,7 +7173,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V4.9.7';
+    var TOOL_VERSION = 'V4.9.8';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7442,7 +7449,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 <script id="v49fix-script">
 (function(){
   'use strict';
-  var VERSION='V4.9.7';
+  var VERSION='V4.9.8';
   var countries={India:{code:'IN',name:'India',desc:'ADP Celergo India payslip'},UK:{code:'GB',name:'UK',desc:'UK demo payslip layout'},Brazil:{code:'BR',name:'Brazil',desc:'Demonstrativo de Pagamento'},Australia:{code:'AU',name:'Australia',desc:'PayForce Australia payslip'}};
   function el(id){return document.getElementById(id)}
   function all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel))}

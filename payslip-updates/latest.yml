@@ -1,8 +1,8 @@
-version: 4.9.7
+version: 4.9.8
 files:
-  - url: PayslipCreatorSetup-4.9.7.exe
-    sha512: DtNrUiAI7YdhWZPihvm35gfAaezcBPEor7wJlWaIdtP4gIadFrtPaNRGGxlZ6v3BkozIGpnCtwZZS4lNH4FqpQ==
-    size: 101128559
-path: PayslipCreatorSetup-4.9.7.exe
-sha512: DtNrUiAI7YdhWZPihvm35gfAaezcBPEor7wJlWaIdtP4gIadFrtPaNRGGxlZ6v3BkozIGpnCtwZZS4lNH4FqpQ==
-releaseDate: '2026-05-27T14:45:04.820Z'
+  - url: PayslipCreatorSetup-4.9.8.exe
+    sha512: FqVDll7wnvRGoe7VvDxQ+a+NnyvVUEvUiEMujE+LxAax21/f8Z3BvfXFFA6zSkFmW8uPnxaHpgiAGqgzIx1F3A==
+    size: 101128554
+path: PayslipCreatorSetup-4.9.8.exe
+sha512: FqVDll7wnvRGoe7VvDxQ+a+NnyvVUEvUiEMujE+LxAax21/f8Z3BvfXFFA6zSkFmW8uPnxaHpgiAGqgzIx1F3A==
+releaseDate: '2026-05-27T14:56:29.665Z'
