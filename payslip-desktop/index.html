@@ -2556,11 +2556,25 @@ function pdfLoadOptions(arrayBuffer, disableWorker) {
 }
 
 async function loadPdfDocument(arrayBuffer) {
+    function withTimeout(promise, ms, label) {
+        return Promise.race([
+            promise,
+            new Promise(function(_resolve, reject) {
+                setTimeout(function() {
+                    reject(new Error(label + ' timed out after ' + ms + 'ms'));
+                }, ms);
+            })
+        ]);
+    }
     try {
-        return await pdfjsLib.getDocument(pdfLoadOptions(arrayBuffer, false)).promise;
+        if (window.payslipDesktop) {
+            throw new Error('Desktop import uses no-worker PDF parsing.');
+        }
+        return await withTimeout(pdfjsLib.getDocument(pdfLoadOptions(arrayBuffer, false)).promise, 8000, 'PDF worker parse');
     } catch (firstError) {
         console.warn('PDF worker parse failed, retrying without worker.', firstError);
-        return pdfjsLib.getDocument(pdfLoadOptions(arrayBuffer, true)).promise;
+        setImportStatus('Reading PDF without worker...');
+        return withTimeout(pdfjsLib.getDocument(pdfLoadOptions(arrayBuffer, true)).promise, 30000, 'PDF no-worker parse');
     }
 }
 
@@ -4472,7 +4486,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V4.9.8';
+var TOOL_VERSION='V4.9.9';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -4763,7 +4777,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V4.9.8';
+var TOOL_VERSION='V4.9.9';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -4965,7 +4979,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V4.9.8';
+    var FINAL_VERSION = 'V4.9.9';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7173,7 +7187,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V4.9.8';
+    var TOOL_VERSION = 'V4.9.9';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7449,7 +7463,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 <script id="v49fix-script">
 (function(){
   'use strict';
-  var VERSION='V4.9.8';
+  var VERSION='V4.9.9';
   var countries={India:{code:'IN',name:'India',desc:'ADP Celergo India payslip'},UK:{code:'GB',name:'UK',desc:'UK demo payslip layout'},Brazil:{code:'BR',name:'Brazil',desc:'Demonstrativo de Pagamento'},Australia:{code:'AU',name:'Australia',desc:'PayForce Australia payslip'}};
   function el(id){return document.getElementById(id)}
   function all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel))}
