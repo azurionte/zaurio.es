@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Demo Building Tools</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
 /* Dark mode layout */
 body {
@@ -7670,7 +7671,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 <script id="v500-demo-tools-shell">
 (function(){
   'use strict';
-  var SHELL_VERSION = 'V1.0';
+  var SHELL_VERSION = 'v1.1';
   var PAYSLIP_VERSION = 'V5.0';
   var countries = {
     India: { code: 'IN', label: 'India', detail: 'Celergo India payslip' },
@@ -7706,8 +7707,13 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     var text = el('v5UpdateText');
     if (!text) return;
     if (!status || !status.state || status.state === 'idle' || status.state === 'current') {
-      text.textContent = 'Up to date';
+      text.innerHTML = '<i class="fa-solid fa-circle-check"></i> Up to date';
       text.className = 'v5-update-ok';
+      return;
+    }
+    if (status.state === 'available' || status.state === 'downloaded') {
+      text.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Get new update';
+      text.className = 'v5-update-alert';
       return;
     }
     text.textContent = status.message || 'Checking';
@@ -7724,13 +7730,18 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
       });
     });
   }
-  function toolUpdateButton(tool){ return '<button type="button" class="v5-mini-update" data-mini-update="'+tool+'">Check app updates</button>'; }
-  function shellUpdateButton(){ return '<button type="button" class="v5-shell-update" data-v5-check-updates>Check Electron app updates</button>'; }
-  function renderTopBar(){
-    return '<div class="v5-topbar"><div class="v5-brand"><button type="button" class="v5-back" id="v5HomeBtn" title="Home">Home</button><strong>Demo building tools '+SHELL_VERSION+'</strong><span id="v5UpdateText" class="v5-update-ok">Electron app up to date</span>'+shellUpdateButton()+'</div><span class="v5-contact">Contact Max Robles for bugs or changes</span></div>';
+  function toolUpdateButton(tool){ return '<button type="button" class="v5-mini-update" data-mini-update="'+tool+'"><i class="fa-solid fa-rotate"></i> Check app updates</button>'; }
+  function shellUpdateButton(){ return '<button type="button" class="v5-shell-update" data-v5-check-updates><i class="fa-solid fa-arrows-rotate"></i> Check for updates</button>'; }
+  function renderTopBar(canGoBack){
+    var back = canGoBack ? '<button type="button" class="v5-back" id="v5BackBtn" title="Back"><i class="fa-solid fa-arrow-left"></i></button>' : '';
+    return '<div class="v5-topbar"><div class="v5-brand"><span class="v5-adp-logo" aria-label="ADP logo">ADP</span>'+back+'<strong>Demo Building Tools '+SHELL_VERSION+'</strong><span id="v5UpdateText" class="v5-update-ok"><i class="fa-solid fa-circle-check"></i> Up to date</span>'+shellUpdateButton()+'</div><span class="v5-contact">Contact Max Robles for bugs or changes</span></div>';
   }
-  function renderAppChrome(){
-    return '<div id="v5AppChrome" class="v5-app-chrome">'+renderTopBar()+'</div>';
+  function renderAppChrome(canGoBack){
+    return '<div id="v5AppChrome" class="v5-app-chrome">'+renderTopBar(!!canGoBack)+'</div>';
+  }
+  function bindBack(target){
+    var back = el('v5BackBtn');
+    if (back) back.addEventListener('click', target);
   }
   function folderCard(folder){ return '<button type="button" class="v5-card v5-folder" data-folder="'+folder.key+'"><span class="v5-folder-icon"></span><strong>'+folder.title+'</strong><small>'+folder.detail+'</small></button>'; }
   function plainAppCard(app){ return '<div class="v5-card v5-app"><strong>'+app.title+'</strong><span class="v5-version">'+app.version+'</span><small>'+app.detail+'</small>'+toolUpdateButton(app.key)+'</div>'; }
@@ -7742,7 +7753,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     overlay.style.removeProperty('visibility');
     overlay.style.removeProperty('pointer-events');
     modal.className = 'v5-shell-modal';
-    modal.innerHTML = renderAppChrome() + '<main class="v5-home"><section><h1>Choose a tool</h1><p>Folders group the specialist tools. App cards can carry their own versions so we can update a mini-app without reinstalling the full desktop shell.</p></section><section><h2>Folders</h2><div class="v5-grid">'+folders.map(folderCard).join('')+'</div></section><section><h2>Apps</h2><div class="v5-grid">'+appCards.map(plainAppCard).join('')+'</div></section></main>';
+    modal.innerHTML = renderAppChrome(false) + '<main class="v5-home"><section><h1>Choose a tool</h1><p>Folders group the specialist tools. App cards can carry their own versions so we can update a mini-app without reinstalling the full desktop shell.</p></section><section><h2>Folders</h2><div class="v5-grid">'+folders.map(folderCard).join('')+'</div></section><section><h2>Apps</h2><div class="v5-grid">'+appCards.map(plainAppCard).join('')+'</div></section></main>';
     all('[data-folder="celergo"]', modal).forEach(function(button){ button.addEventListener('click', renderCelergoFolder); });
     all('[data-folder]:not([data-folder="celergo"])', modal).forEach(function(button){ button.addEventListener('click', function(){ button.classList.add('v5-shake'); setTimeout(function(){ button.classList.remove('v5-shake'); }, 360); }); });
     all('[data-mini-update]', modal).forEach(function(button){ button.addEventListener('click', function(){ button.textContent = 'No app package yet'; button.disabled = true; setTimeout(function(){ button.disabled = false; button.textContent = 'Check app updates'; }, 1400); }); });
@@ -7751,7 +7762,8 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   function renderCelergoFolder(){
     var modal = el('intro-modal');
     if (!modal) return;
-    modal.innerHTML = renderAppChrome() + '<main class="v5-home"><section><h1>Celergo Specific tools</h1><p>Tools for Celergo demo document preparation.</p></section><section><div class="v5-grid"><div class="v5-card v5-app v5-open-payslip" id="v5OpenPayslip"><strong>Payslip converter</strong><span class="v5-version">'+PAYSLIP_VERSION+'</span><small>Multi-country payslip converter for India, UK, Brazil, and Australia.</small><div class="v5-card-actions"><button type="button" class="v5-launch" id="v5LaunchPayslip">Open</button>'+toolUpdateButton('payslip-converter')+'</div></div></div></section></main>';
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>Celergo Specific tools</h1><p>Tools for Celergo demo document preparation.</p></section><section><div class="v5-grid"><div class="v5-card v5-app v5-open-payslip" id="v5OpenPayslip"><strong><i class="fa-solid fa-file-invoice"></i> Payslip converter</strong><span class="v5-version">'+PAYSLIP_VERSION+'</span><small>Multi-country payslip converter for India, UK, Brazil, and Australia.</small><div class="v5-card-actions"><button type="button" class="v5-launch" id="v5LaunchPayslip"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton('payslip-converter')+'</div></div></div></section></main>';
+    bindBack(renderDashboard);
     var home = el('v5HomeBtn');
     if (home) home.addEventListener('click', renderDashboard);
     var card = el('v5OpenPayslip');
@@ -7795,16 +7807,20 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     if (!header) return;
     header.classList.add('v5-payslip-toolbar');
     var title = header.querySelector('.title');
-    if (title) title.innerHTML = 'Payslip converter <span class="v5-version">'+PAYSLIP_VERSION+'</span><button type="button" class="v5-mini-update" data-mini-update="payslip-converter" id="v5PayslipToolbarUpdate">Check Payslip app updates</button>';
+    if (title) title.innerHTML = '<i class="fa-solid fa-file-invoice"></i> Payslip converter <span class="v5-version">'+PAYSLIP_VERSION+'</span><button type="button" class="v5-mini-update" data-mini-update="payslip-converter" id="v5PayslipToolbarUpdate"><i class="fa-solid fa-rotate"></i> Check Payslip app updates</button>';
     var right = header.querySelector('div:last-child');
     if (right) {
       var existing = el('v5PayslipToolbarUpdate');
       if (existing && existing.parentNode !== right) right.insertBefore(existing, right.firstChild);
     }
+    var importBtn = el('importBtn');
+    if (importBtn && !importBtn.dataset.v5Icon) { importBtn.dataset.v5Icon = 'true'; importBtn.innerHTML = '<i class="fa-solid fa-file-import"></i> Import'; }
+    var saveBtn = el('saveBtn');
+    if (saveBtn && !saveBtn.dataset.v5Icon) { saveBtn.dataset.v5Icon = 'true'; saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save'; }
     var button = el('v5PayslipToolbarUpdate');
     if (button && !button.dataset.bound) {
       button.dataset.bound = 'true';
-      button.addEventListener('click', function(){ button.textContent = 'Payslip '+PAYSLIP_VERSION+' installed'; setTimeout(function(){ button.textContent = 'Check Payslip app updates'; }, 1600); });
+      button.addEventListener('click', function(){ button.innerHTML = '<i class="fa-solid fa-circle-check"></i> Payslip '+PAYSLIP_VERSION+' installed'; setTimeout(function(){ button.innerHTML = '<i class="fa-solid fa-rotate"></i> Check Payslip app updates'; }, 1600); });
     }
   }
   function renderPayslipLanding(){
@@ -7816,7 +7832,8 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     overlay.style.removeProperty('pointer-events');
     modal.className = 'v49fix-modal';
     modal.removeAttribute('style');
-    modal.innerHTML = renderAppChrome() + '<div class="v49-shell"><section class="v49-left"><div><div class="v49-pill"><span class="tool-version-badge">'+PAYSLIP_VERSION+'</span><span>Multi-country demo payslip studio</span></div><h1 class="v49-title">Turn payroll<br>statements into demo-ready <span>payslips.</span></h1><p class="v49-sub">Import a Celergo earning statement, choose the target country template, edit every detected field, then export clean payslips for demos or testing.</p></div><div><div class="v49-stats"><div class="v49-stat"><b>4</b><span>country templates</span></div><div class="v49-stat"><b>PDF</b><span>batch import</span></div><div class="v49-stat"><b>ZIP</b><span>bulk export</span></div></div><div class="v49-steps" style="margin-top:32px"><div class="v49-step"><b>1. Select</b><span>Choose the output country.</span></div><div class="v49-step"><b>2. Import</b><span>Drop or browse a pay statement PDF.</span></div><div class="v49-step"><b>3. Edit & export</b><span>Fine-tune values and save.</span></div></div></div></section><section class="v49-right"><div class="v49-panel"><h2>Start a workspace</h2><p>Select the country template before importing. The selected template stays locked during conversion.</p><div class="v5-country-grid">'+Object.keys(countries).map(countryCard).join('')+'</div><div id="v5PayslipDrop" class="v49-drop" tabindex="0" role="button"><span class="v49-orb"><span class="v49-file"></span></span><span><b>Drop a file or click here to select</b><span>PDF pay statement only.</span></span></div><div class="v5-card-actions"><button type="button" class="v5-back" id="v5BackToCelergo">Back to tools</button>'+toolUpdateButton('payslip-converter')+'</div></div></section></div>';
+    modal.innerHTML = renderAppChrome(true) + '<div class="v49-shell"><section class="v49-left"><div><div class="v49-pill"><span class="tool-version-badge">'+PAYSLIP_VERSION+'</span><span>Multi-country demo payslip studio</span></div><h1 class="v49-title">Turn payroll<br>statements into demo-ready <span>payslips.</span></h1><p class="v49-sub">Import a Celergo earning statement, choose the target country template, edit every detected field, then export clean payslips for demos or testing.</p></div><div><div class="v49-stats"><div class="v49-stat"><b><i class="fa-solid fa-globe"></i> 4</b><span>country templates</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-pdf"></i> PDF</b><span>batch import</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-zipper"></i> ZIP</b><span>bulk export</span></div></div><div class="v49-steps" style="margin-top:32px"><div class="v49-step"><b>1. Select</b><span>Choose the output country.</span></div><div class="v49-step"><b>2. Import</b><span>Drop or browse a pay statement PDF.</span></div><div class="v49-step"><b>3. Edit & export</b><span>Fine-tune values and save.</span></div></div></div></section><section class="v49-right"><div class="v49-panel"><h2>Start a workspace</h2><p>Select the country template before importing. The selected template stays locked during conversion.</p><div class="v5-country-grid">'+Object.keys(countries).map(countryCard).join('')+'</div><div id="v5PayslipDrop" class="v49-drop" tabindex="0" role="button"><span class="v49-orb"><span class="v49-file"></span></span><span><b><i class="fa-solid fa-file-arrow-up"></i> Drop a file or click here to select</b><span>PDF pay statement only.</span></span></div><div class="v5-card-actions"><button type="button" class="v5-back" id="v5BackToCelergo"><i class="fa-solid fa-arrow-left"></i> Back to tools</button>'+toolUpdateButton('payslip-converter')+'</div></div></section></div>';
+    bindBack(renderCelergoFolder);
     all('.v5-country', modal).forEach(function(button){ button.addEventListener('click', function(){ setCountry(button.getAttribute('data-country')); }); });
     var drop = el('v5PayslipDrop');
     if (drop) drop.addEventListener('click', openSelectedPayslipFile);
@@ -7833,7 +7850,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
       modal.className = 'v5-import-overlay';
       document.body.appendChild(modal);
     }
-    modal.innerHTML = '<div class="v5-import-card"><div class="v5-import-head"><div><h2>Import pay statement</h2><p>Select the country template, then choose the source PDF.</p></div><button type="button" class="v5-close" title="Close">x</button></div><div class="v5-country-grid">'+Object.keys(countries).map(countryCard).join('')+'</div><div class="v5-import-actions"><button type="button" class="v5-primary" id="v5SelectPdf">Choose PDF file</button></div></div>';
+    modal.innerHTML = '<div class="v5-import-card"><div class="v5-import-head"><div><h2><i class="fa-solid fa-file-import"></i> Import pay statement</h2><p>Select the country template, then choose the source PDF.</p></div><button type="button" class="v5-close" title="Close"><i class="fa-solid fa-xmark"></i></button></div><div class="v5-country-grid">'+Object.keys(countries).map(countryCard).join('')+'</div><div class="v5-import-actions"><button type="button" class="v5-primary" id="v5SelectPdf"><i class="fa-solid fa-file-arrow-up"></i> Choose PDF file</button></div></div>';
     all('.v5-country', modal).forEach(function(button){ button.addEventListener('click', function(){ setCountry(button.getAttribute('data-country')); }); });
     var close = modal.querySelector('.v5-close');
     if (close) close.addEventListener('click', function(){ modal.style.display = 'none'; });
@@ -7902,10 +7919,11 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 .v5-shell-overlay{position:fixed!important;inset:0!important;display:flex!important;align-items:stretch!important;justify-content:center!important;z-index:70000!important;background:#07111f!important;color:#e5edf8!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;overflow:auto!important}
 .v5-shell-modal{width:100%!important;min-height:100vh!important;background:linear-gradient(180deg,#081525,#0b1020)!important;color:#e5edf8!important;padding:0!important;border:0!important;box-shadow:none!important}
 .v5-topbar{height:auto;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 22px;border-bottom:1px solid rgba(148,163,184,.24);background:rgba(2,6,23,.58);position:sticky;top:0;z-index:2;backdrop-filter:blur(12px)}
-.v5-brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.v5-brand strong{font-size:15px;color:#fff}.v5-brand button,.v5-back,.v5-mini-update{border:1px solid rgba(96,165,250,.36);background:rgba(37,99,235,.14);color:#eaf2ff;border-radius:999px;padding:8px 11px;font-weight:900;cursor:pointer}.v5-back{background:rgba(148,163,184,.12)}.v5-update-ok{color:#86efac;font-weight:950}.v5-update-busy{color:#bfdbfe;font-weight:950}.v5-update-error{color:#fecaca;font-weight:950}.v5-contact{font-size:13px;color:#b7c4d8;font-weight:800}
+.v5-brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.v5-brand strong{font-size:15px;color:#fff}.v5-brand button,.v5-back,.v5-mini-update,.v5-shell-update{border:1px solid rgba(96,165,250,.36);background:rgba(37,99,235,.14);color:#eaf2ff;border-radius:999px;padding:8px 11px;font-weight:900;cursor:pointer}.v5-back{width:36px;height:36px;display:grid;place-items:center;background:rgba(148,163,184,.12);padding:0}.v5-adp-logo{display:inline-flex;align-items:center;justify-content:center;width:58px;height:28px;border-radius:5px;background:#e31837;color:#fff;font-weight:1000;letter-spacing:-.08em;font-size:21px;line-height:1}.v5-update-ok{display:inline-flex;align-items:center;gap:6px;color:#86efac;font-weight:950}.v5-update-busy{display:inline-flex;align-items:center;gap:6px;color:#bfdbfe;font-weight:950}.v5-update-error{display:inline-flex;align-items:center;gap:6px;color:#fecaca;font-weight:950}.v5-update-alert{display:inline-flex;align-items:center;gap:6px;color:#facc15;font-weight:950}.v5-update-busy .fa-arrows-rotate,.v5-shell-update:active .fa-arrows-rotate{animation:v5Spin .8s linear infinite}.v5-contact{font-size:13px;color:#b7c4d8;font-weight:800}
 .v5-home{width:min(1120px,calc(100vw - 36px));margin:0 auto;padding:36px 0 56px}.v5-home h1{margin:0;color:#fff;font-size:42px;letter-spacing:0;line-height:1.05}.v5-home h2{margin:28px 0 12px;color:#fff;font-size:18px}.v5-home p{max-width:720px;color:#b7c4d8;line-height:1.55}.v5-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.v5-card{border:1px solid rgba(148,163,184,.25);background:#0c1729;color:#fff;border-radius:8px;padding:18px;text-align:left;min-height:142px;display:flex;flex-direction:column;gap:8px;transition:transform .16s ease,border-color .16s ease,background .16s ease}.v5-card strong{font-size:19px}.v5-card small{color:#9fb0c9;line-height:1.4}.v5-card:hover{transform:translateY(-2px);border-color:rgba(96,165,250,.58);background:#101f36}.v5-folder,.v5-open-payslip{cursor:pointer}.v5-folder-icon{width:42px;height:30px;border-radius:6px;background:linear-gradient(180deg,#60a5fa,#2563eb);position:relative}.v5-folder-icon:before{content:"";position:absolute;left:4px;top:-7px;width:20px;height:9px;border-radius:5px 5px 0 0;background:#93c5fd}.v5-version{width:max-content;border:1px solid rgba(134,239,172,.34);background:rgba(22,163,74,.13);color:#bbf7d0;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:950}.v5-card-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto}.v5-mini-update,.v5-launch{width:max-content;font-size:12px;padding:7px 10px;border:1px solid rgba(96,165,250,.36);background:rgba(37,99,235,.14);color:#eaf2ff;border-radius:999px;font-weight:900;cursor:pointer}.v5-launch{background:#60a5fa;color:#05111f;border-color:#60a5fa}
 .v5-import-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.72);backdrop-filter:blur(10px);z-index:80000;padding:18px}.v5-import-card{width:min(560px,96vw);border:1px solid rgba(148,163,184,.28);border-radius:8px;background:#0b1426;color:#fff;box-shadow:0 28px 80px rgba(0,0,0,.5);padding:22px}.v5-import-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.v5-import-head h2{margin:0;font-size:24px}.v5-import-head p{margin:5px 0 0;color:#aebbd0}.v5-close{border:0;background:rgba(148,163,184,.14);color:#fff;border-radius:8px;width:34px;height:34px;font-weight:950;cursor:pointer}.v5-country-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:20px 0}.v5-country{border:1px solid rgba(148,163,184,.26);background:#071024;color:#fff;border-radius:8px;padding:14px;text-align:left;cursor:pointer;min-height:98px}.v5-country .flag-v49{display:block;margin-bottom:10px}.v5-country strong{display:block;margin-top:8px;font-size:18px}.v5-country small{display:block;margin-top:4px;color:#9fb0c9}.v5-country.active{border-color:#86efac;box-shadow:0 0 0 1px rgba(134,239,172,.38);background:#0d1f22}.v5-import-actions{display:flex;justify-content:flex-end}.v5-primary{border:0;border-radius:999px;padding:12px 18px;background:#60a5fa;color:#05111f;font-weight:950;cursor:pointer}.v5-editor-topbar{position:sticky;top:0;z-index:30000}.v5-shake{animation:v5Shake .32s ease}@keyframes v5Shake{0%,100%{transform:translateX(0)}35%{transform:translateX(-4px)}70%{transform:translateX(4px)}}
 .v5-app-chrome{position:sticky;top:0;z-index:40000}.v5-app-chrome .v5-topbar{position:relative;top:auto}.v5-payslip-toolbar{position:sticky!important;top:58px!important;z-index:35000!important;background:#111827!important;border-bottom:1px solid rgba(148,163,184,.24)!important}.v5-payslip-toolbar .title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.v5-payslip-toolbar #desktopUpdatePanel,.v5-payslip-toolbar #contactMaxV49{display:none!important}.v5-payslip-toolbar .tool-version-badge{display:none!important}
+@keyframes v5Spin{to{transform:rotate(360deg)}}
 @media(max-width:860px){.v5-topbar{align-items:flex-start;flex-direction:column}.v5-grid{grid-template-columns:1fr}.v5-home h1{font-size:34px}.v5-country-grid{grid-template-columns:1fr}}
 </style>
 
