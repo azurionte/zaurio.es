@@ -1,14 +1,14 @@
-version: 4.9.5
+version: 4.9.6
 files:
-  - url: PayslipCreatorWebSetup-4.9.5.exe
-    sha512: CiPZx3HUY3ktBvlDW66Jd5KEffHR+5LahLccik3txlimKyTPpn+7JdURSWbPIgFh3Gnpdvp3PQc1cPNNJAsnAA==
-path: PayslipCreatorWebSetup-4.9.5.exe
-sha512: CiPZx3HUY3ktBvlDW66Jd5KEffHR+5LahLccik3txlimKyTPpn+7JdURSWbPIgFh3Gnpdvp3PQc1cPNNJAsnAA==
+  - url: PayslipCreatorWebSetup-4.9.6.exe
+    sha512: IAiZ0FMrj/T+LjDAI26YbjwAPAXbENttkTcaLAnoGl5xDY6C1zbSBQ63vCe5O4ApxJPDZqGRnmgW0N6TMz1kWQ==
+path: PayslipCreatorWebSetup-4.9.6.exe
+sha512: IAiZ0FMrj/T+LjDAI26YbjwAPAXbENttkTcaLAnoGl5xDY6C1zbSBQ63vCe5O4ApxJPDZqGRnmgW0N6TMz1kWQ==
 packages:
   x64:
-    size: 100683846
-    sha512: W6wPj6SkWwu5LTFldOmHURUP34HMQkcVDi7iNB/M2gKmUmTWViRL03u59+gknPMgqiwu0wJlD89BHxyyzIdCWQ==
-    blockMapSize: 105752
-    path: payslip-desktop-4.9.5-x64.nsis.7z
-    file: payslip-desktop-4.9.5-x64.nsis.7z
-releaseDate: '2026-05-27T14:14:50.051Z'
+    size: 100685139
+    sha512: b9jXZgkGc5DhD7XD9A6uciXQexYwfdaEv/17YCAuJnc+Or8I8Ve00+8Gt9Ycx3syn7OrpK1+S6UiREdfTxOxoA==
+    blockMapSize: 105795
+    path: payslip-desktop-4.9.6-x64.nsis.7z
+    file: payslip-desktop-4.9.6-x64.nsis.7z
+releaseDate: '2026-05-27T14:26:15.961Z'

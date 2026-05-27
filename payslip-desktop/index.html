@@ -900,6 +900,7 @@ body {
 .v49-update{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px;padding:12px 14px;border:1px solid rgba(96,165,250,.28);border-radius:16px;background:rgba(37,99,235,.12);color:#dbeafe}.v49-update span{font-size:13px;font-weight:900}.v49-update button{border:1px solid rgba(96,165,250,.38);border-radius:999px;background:rgba(15,23,42,.72);color:#fff;padding:8px 12px;font-weight:950;cursor:pointer}.v49-update button:last-child{border:0;background:#facc15;color:#07111f}
 .v49-pill{flex-wrap:wrap!important;max-width:100%!important}.v49-pill .v49-update-inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.v49-pill .v49-update-inline span{color:#dbeafe;font-weight:900}.v49-pill .v49-update-inline button{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:5px 9px;font-weight:950;cursor:pointer}.v49-pill .v49-update-inline button:hover{background:rgba(255,255,255,.22)}
 #intro-overlay.v49fix-overlay{overflow:auto!important;align-items:flex-start!important}.v49fix-overlay *{min-width:0}.v49-shell{grid-template-columns:minmax(0,1fr) minmax(320px,.82fr)!important;min-height:min(600px,calc(100vh - 72px))!important}.v49-left{padding:clamp(24px,3.8vw,44px)!important}.v49-right{padding:clamp(18px,2.6vw,26px)!important}.v49-title{font-size:clamp(34px,4.2vw,56px)!important;line-height:1.02!important;letter-spacing:0!important;overflow-wrap:normal!important;max-width:100%}.v49-sub{max-width:64ch}.v49-update{max-width:100%;align-items:flex-start}.v49-update span{flex:1 1 320px;overflow-wrap:anywhere;line-height:1.35}.v49-stats,.v49-steps{grid-template-columns:repeat(3,minmax(0,1fr))!important}.v49-panel{max-width:100%!important;min-height:auto!important}.v49-drop{margin-top:clamp(22px,5vw,58px)!important}.v49-country-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.v49-country{min-height:96px!important}#intro-modal.v49fix-modal{width:min(1080px,calc(100vw - 32px))!important;max-height:calc(100vh - 48px)!important;overflow:auto!important}#main{max-width:100vw;overflow:auto}@media(max-width:1120px){.v49-shell{grid-template-columns:1fr!important}.v49-right{border-left:0!important;border-top:1px solid var(--v49-line)!important}.v49-title{font-size:clamp(32px,6vw,48px)!important}.v49-stats,.v49-steps{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media(max-width:720px){.v49-stats,.v49-steps,.v49-country-grid{grid-template-columns:1fr!important}.v49-update button{width:100%}.v49-pill{width:100%;justify-content:center;white-space:normal}.v49-title{font-size:34px!important}}
+.template-brazil .pay-slip-label,.template-brazil .earnings-table th,.template-brazil .reimburse-table th{background:#0f7a3a!important;color:#fff!important}.template-brazil h2{color:#0f7a3a!important}.template-brazil .detail-table,.template-brazil .earnings-table,.template-brazil .reimburse-table{border-color:#0f7a3a!important}.template-australia .pay-slip-label,.template-australia .earnings-table th,.template-australia .reimburse-table th{background:#123c7c!important;color:#fff!important}.template-australia h2{color:#123c7c!important}.template-australia .detail-table,.template-australia .earnings-table,.template-australia .reimburse-table{border-color:#123c7c!important}
 </style>
 <!-- Override some v4.9 styles for version 4.9.1.  By adding this extra
      style block after the main v49fix stylesheet, we ensure our
@@ -1020,7 +1021,8 @@ document.addEventListener('DOMContentLoaded', function(){
         <!-- Format selector for future country formats -->
         <label for="formatSelect" style="margin-left:15px; color:#fff; font-size:14px; vertical-align:middle;">Format:</label>
         <select id="formatSelect" class="format-select" style="vertical-align:middle;">
-            <option value="India" selected>India</option>
+            <option value="" selected disabled>Select country</option>
+            <option value="India">India</option>
             <option value="USA" disabled>USA (coming soon)</option>
             <option value="UK">UK</option>
             <option value="Brazil">Brazil</option>
@@ -1586,7 +1588,8 @@ window.addEventListener('load', function() {
 function switchFormat() {
     var formatSelect = document.getElementById('formatSelect');
     if (!formatSelect) return;
-    var format = formatSelect.value;
+    var format = previewFormatValue();
+    if (!format) return;
     var indiaSidebar = document.getElementById('sidebar');
     var ukSidebar = document.getElementById('sidebarUK');
     var indiaPreview = document.getElementById('payslip');
@@ -1618,7 +1621,21 @@ function switchFormat() {
 
 function previewFormatValue() {
     var formatSelect = document.getElementById('formatSelect');
-    return formatSelect && formatSelect.value ? formatSelect.value : 'India';
+    return (window.__selectedImportTemplateV31 || (formatSelect && formatSelect.value) || '');
+}
+
+function selectedTemplateOrPrompt() {
+    var selected = previewFormatValue();
+    if (selected) return selected;
+    alert('Choose a country template before selecting the PDF.');
+    return '';
+}
+
+function setLabelForValue(valueId, label) {
+    var valueEl = document.getElementById(valueId);
+    if (!valueEl) return;
+    var labelEl = valueEl.parentElement ? valueEl.parentElement.querySelector('.label') : null;
+    if (labelEl) labelEl.textContent = label;
 }
 
 function applyCountryTemplateLabels(format) {
@@ -1626,15 +1643,68 @@ function applyCountryTemplateLabels(format) {
     var subtitle = document.getElementById('previewPayMonth');
     var monthVal = getValue('payMonth');
     if (!label || !subtitle) return;
+    var root = document.getElementById('payslip');
+    if (root) {
+        root.classList.remove('template-india', 'template-brazil', 'template-australia');
+        root.classList.add('template-' + String(format || '').toLowerCase());
+    }
     if (format === 'Brazil') {
         label.textContent = 'Demonstrativo de Pagamento';
         subtitle.textContent = 'Periodo de pagamento ' + (monthVal || '');
+        setLabelForValue('preview_empcode', 'MATRICULA');
+        setLabelForValue('preview_uanNo', 'CPF');
+        setLabelForValue('preview_empName', 'NOME');
+        setLabelForValue('preview_pfNo', 'PIS');
+        setLabelForValue('preview_designation', 'CARGO');
+        setLabelForValue('preview_esiNo', 'CTPS');
+        setLabelForValue('preview_doj', 'ADMISSAO');
+        setLabelForValue('preview_stdDays', 'DIAS BASE');
+        setLabelForValue('preview_grade', 'NIVEL');
+        setLabelForValue('preview_workDays', 'DIAS TRAB.');
+        setLabelForValue('preview_pan', 'CPF');
+        setLabelForValue('preview_lopDays', 'FALTAS');
+        setLabelForValue('preview_department', 'DEPARTAMENTO');
+        setLabelForValue('preview_bankName', 'BANCO');
+        setLabelForValue('preview_location', 'LOCALIDADE');
+        setLabelForValue('preview_accNo', 'CONTA');
     } else if (format === 'Australia') {
         label.textContent = 'Payslip';
         subtitle.textContent = 'Payslip for pay period ' + (monthVal || '');
+        setLabelForValue('preview_empcode', 'EMPLOYEE ID');
+        setLabelForValue('preview_uanNo', 'TAX FILE NO');
+        setLabelForValue('preview_empName', 'EMPLOYEE');
+        setLabelForValue('preview_pfNo', 'SUPER FUND');
+        setLabelForValue('preview_designation', 'POSITION');
+        setLabelForValue('preview_esiNo', 'PAYROLL ID');
+        setLabelForValue('preview_doj', 'START DATE');
+        setLabelForValue('preview_stdDays', 'ORDINARY DAYS');
+        setLabelForValue('preview_grade', 'CLASSIFICATION');
+        setLabelForValue('preview_workDays', 'DAYS WORKED');
+        setLabelForValue('preview_pan', 'ABN');
+        setLabelForValue('preview_lopDays', 'UNPAID LEAVE');
+        setLabelForValue('preview_department', 'DEPARTMENT');
+        setLabelForValue('preview_bankName', 'BANK');
+        setLabelForValue('preview_location', 'WORK LOCATION');
+        setLabelForValue('preview_accNo', 'ACCOUNT');
     } else {
         label.textContent = 'Pay Slip';
         subtitle.textContent = 'Pay Slip for the Month of ' + (monthVal || '');
+        setLabelForValue('preview_empcode', 'EMPCODE');
+        setLabelForValue('preview_uanNo', 'UAN NO');
+        setLabelForValue('preview_empName', 'EMPNAME');
+        setLabelForValue('preview_pfNo', 'PF NO');
+        setLabelForValue('preview_designation', 'DESIGNATION');
+        setLabelForValue('preview_esiNo', 'ESI NO');
+        setLabelForValue('preview_doj', 'DOJ');
+        setLabelForValue('preview_stdDays', 'STD DAYS');
+        setLabelForValue('preview_grade', 'GRADE');
+        setLabelForValue('preview_workDays', 'WRKDAYS');
+        setLabelForValue('preview_pan', 'PAN');
+        setLabelForValue('preview_lopDays', 'LOP DAYS');
+        setLabelForValue('preview_department', 'DEPARTMENT');
+        setLabelForValue('preview_bankName', 'BANK NAME');
+        setLabelForValue('preview_location', 'LOCATION');
+        setLabelForValue('preview_accNo', 'ACCOUNT NO');
     }
 }
 
@@ -2233,7 +2303,8 @@ importFileInput.addEventListener('change', function(event) {
     }
     // Determine selected format. Import can process both India and UK formats; for UK the parsing function may be limited.
     var formatSelectElem = document.getElementById('formatSelect');
-    var currentFormat = formatSelectElem ? formatSelectElem.value : 'India';
+    var currentFormat = selectedTemplateOrPrompt();
+    if (!currentFormat) return;
     importedFileName = file.name || '';
     var reader = new FileReader();
     reader.onload = function(e) {
@@ -2565,7 +2636,13 @@ async function processPdf(arrayBuffer) {
             slips = [allLines];
         }
         // Parse each slip lines into structured data but do not commit yet
-        var selectedImportFormat = (document.getElementById('formatSelect') || { value: 'India' }).value;
+        var selectedImportFormat = previewFormatValue();
+        if (!selectedImportFormat) {
+            var loadingOverlayNoTemplate = document.getElementById('loading-overlay');
+            if (loadingOverlayNoTemplate) loadingOverlayNoTemplate.style.display = 'none';
+            alert('Choose a country template before importing the PDF.');
+            return;
+        }
         var candidateSlips = slips.map(function(lines) {
             var slip = parseSlipLines(lines) || createFallbackSlipData(lines, selectedImportFormat);
             if (slip) {
@@ -3663,33 +3740,81 @@ function renderAllPayslips(slips) {
     });
 }
 
+function countryTemplateMeta(format) {
+    if (format === 'Brazil') {
+        return {
+            cls: 'template-brazil',
+            title: 'Demonstrativo de Pagamento',
+            subtitle: 'Periodo de pagamento ',
+            net: 'LIQUIDO A RECEBER :',
+            transfer: 'VALOR CREDITADO :',
+            words: 'OBSERVACOES :',
+            earnings: 'PROVENTOS',
+            deductions: 'DESCONTOS',
+            reimbursements: 'REEMBOLSOS',
+            labels: ['MATRICULA','CPF','NOME','PIS','CARGO','CTPS','ADMISSAO','DIAS BASE','NIVEL','DIAS TRAB.','CPF','FALTAS','DEPARTAMENTO','BANCO','LOCALIDADE','CONTA'],
+            footnote: 'Documento gerado para demonstracao, sem validade fiscal.'
+        };
+    }
+    if (format === 'Australia') {
+        return {
+            cls: 'template-australia',
+            title: 'Payslip',
+            subtitle: 'Payslip for pay period ',
+            net: 'NET PAY :',
+            transfer: 'PAYMENT AMOUNT :',
+            words: 'NOTES :',
+            earnings: 'EARNINGS',
+            deductions: 'DEDUCTIONS',
+            reimbursements: 'ALLOWANCES / REIMBURSEMENTS',
+            labels: ['EMPLOYEE ID','TAX FILE NO','EMPLOYEE','SUPER FUND','POSITION','PAYROLL ID','START DATE','ORDINARY DAYS','CLASSIFICATION','DAYS WORKED','ABN','UNPAID LEAVE','DEPARTMENT','BANK','WORK LOCATION','ACCOUNT'],
+            footnote: 'This payslip was generated for demo use.'
+        };
+    }
+    return {
+        cls: 'template-india',
+        title: 'Pay Slip',
+        subtitle: 'Pay Slip for the Month of ',
+        net: 'NET PAY :',
+        transfer: 'NET TRANSFER :',
+        words: 'IN WORDS :',
+        earnings: 'EARNINGS',
+        deductions: 'DEDUCTIONS',
+        reimbursements: 'REIMBURSEMENTS',
+        labels: ['EMPCODE','UAN NO','EMPNAME','PF NO','DESIGNATION','ESI NO','DOJ','STD DAYS','GRADE','WRKDAYS','PAN','LOP DAYS','DEPARTMENT','BANK NAME','LOCATION','ACCOUNT NO'],
+        footnote: 'This is a computer generated document, hence no signature is required.'
+    };
+}
+
 // Generate HTML string for a payslip using same structure as preview
 function generatePayslipHTML(d) {
     function text(val) { return val || ''; }
-    return '<div class="payslip">' +
+    var meta = countryTemplateMeta(d.format || previewFormatValue());
+    var labels = meta.labels;
+    return '<div class="payslip ' + meta.cls + '">' +
         '<h2>' + text(d.compName) + '</h2>' +
-        '<div class="pay-slip-label">Pay Slip</div>' +
-        '<p class="subtitle">Pay Slip for the Month of ' + text(d.payMonth) + '</p>' +
+        '<div class="pay-slip-label">' + meta.title + '</div>' +
+        '<p class="subtitle">' + meta.subtitle + text(d.payMonth) + '</p>' +
         '<table class="detail-table">' +
-        '<tr><td><span class="label">EMPCODE</span> <span class="value">' + text(d.empcode) + '</span></td>' +
-        '<td><span class="label">UAN NO</span> <span class="value">' + text(d.uanNo) + '</span></td></tr>' +
-        '<tr><td><span class="label">EMPNAME</span> <span class="value">' + text(d.empName) + '</span></td>' +
-        '<td><span class="label">PF NO</span> <span class="value">' + text(d.pfNo) + '</span></td></tr>' +
-        '<tr><td><span class="label">DESIGNATION</span> <span class="value">' + text(d.designation) + '</span></td>' +
-        '<td><span class="label">ESI NO</span> <span class="value">' + text(d.esiNo) + '</span></td></tr>' +
-        '<tr><td><span class="label">DOJ</span> <span class="value">' + text(d.doj) + '</span></td>' +
-        '<td><span class="label">STD DAYS</span> <span class="value">' + text(d.stdDays) + '</span></td></tr>' +
-        '<tr><td><span class="label">GRADE</span> <span class="value">' + text(d.grade) + '</span></td>' +
-        '<td><span class="label">WRKDAYS</span> <span class="value">' + text(d.workDays) + '</span></td></tr>' +
-        '<tr><td><span class="label">PAN</span> <span class="value">' + text(d.pan) + '</span></td>' +
-        '<td><span class="label">LOP DAYS</span> <span class="value">' + text(d.lopDays) + '</span></td></tr>' +
-        '<tr><td><span class="label">DEPARTMENT</span> <span class="value">' + text(d.department) + '</span></td>' +
-        '<td><span class="label">BANK NAME</span> <span class="value">' + text(d.bankName) + '</span></td></tr>' +
-        '<tr><td><span class="label">LOCATION</span> <span class="value">' + text(d.location) + '</span></td>' +
-        '<td><span class="label">ACCOUNT NO</span> <span class="value">' + text(d.accNo) + '</span></td></tr>' +
+        '<tr><td><span class="label">' + labels[0] + '</span> <span class="value">' + text(d.empcode) + '</span></td>' +
+        '<td><span class="label">' + labels[1] + '</span> <span class="value">' + text(d.uanNo) + '</span></td></tr>' +
+        '<tr><td><span class="label">' + labels[2] + '</span> <span class="value">' + text(d.empName) + '</span></td>' +
+        '<td><span class="label">' + labels[3] + '</span> <span class="value">' + text(d.pfNo) + '</span></td></tr>' +
+        '<tr><td><span class="label">' + labels[4] + '</span> <span class="value">' + text(d.designation) + '</span></td>' +
+        '<td><span class="label">' + labels[5] + '</span> <span class="value">' + text(d.esiNo) + '</span></td></tr>' +
+        '<tr><td><span class="label">' + labels[6] + '</span> <span class="value">' + text(d.doj) + '</span></td>' +
+        '<td><span class="label">' + labels[7] + '</span> <span class="value">' + text(d.stdDays) + '</span></td></tr>' +
+        '<tr><td><span class="label">' + labels[8] + '</span> <span class="value">' + text(d.grade) + '</span></td>' +
+        '<td><span class="label">' + labels[9] + '</span> <span class="value">' + text(d.workDays) + '</span></td></tr>' +
+        '<tr><td><span class="label">' + labels[10] + '</span> <span class="value">' + text(d.pan) + '</span></td>' +
+        '<td><span class="label">' + labels[11] + '</span> <span class="value">' + text(d.lopDays) + '</span></td></tr>' +
+        '<tr><td><span class="label">' + labels[12] + '</span> <span class="value">' + text(d.department) + '</span></td>' +
+        '<td><span class="label">' + labels[13] + '</span> <span class="value">' + text(d.bankName) + '</span></td></tr>' +
+        '<tr><td><span class="label">' + labels[14] + '</span> <span class="value">' + text(d.location) + '</span></td>' +
+        '<td><span class="label">' + labels[15] + '</span> <span class="value">' + text(d.accNo) + '</span></td></tr>' +
         '</table>' +
         '<table class="earnings-table">' +
-        '<tr><th colspan="3">EARNINGS</th><th colspan="3">DEDUCTIONS</th></tr>' +
+        '<tr><th colspan="3">' + meta.earnings + '</th><th colspan="3">' + meta.deductions + '</th></tr>' +
         '<tr><th>Description</th><th>Amount</th><th>YTD</th><th>Description</th><th>Amount</th><th>YTD</th></tr>' +
         '<tr><td>BASIC PAY</td><td>' + text(d.basicPayAmt) + '</td><td>' + text(d.basicPayYTD) + '</td>' +
         '<td>PROVIDENT FUND</td><td>' + text(d.pfAmt) + '</td><td>' + text(d.pfYTD) + '</td></tr>' +
@@ -3708,16 +3833,16 @@ function generatePayslipHTML(d) {
         '<tr><td><strong>GROSS EARNINGS</strong></td><td>' + text(d.grossEarningsCurrent) + '</td><td>' + text(d.grossEarningsYTD) + '</td>' +
         '<td><strong>GROSS DEDUCTION</strong></td><td>' + text(d.grossDeductionCurrent) + '</td><td>' + text(d.grossDeductionYTD) + '</td></tr>' +
         '</table>' +
-        '<table class="netpay-table"><tr><td><strong>NET PAY :</strong> ' + text(d.netPay) + '</td><td></td></tr></table>' +
+        '<table class="netpay-table"><tr><td><strong>' + meta.net + '</strong> ' + text(d.netPay) + '</td><td></td></tr></table>' +
         '<table class="reimburse-table">' +
-        '<tr><th colspan="3">REIMBURSEMENTS</th></tr>' +
+        '<tr><th colspan="3">' + meta.reimbursements + '</th></tr>' +
         '<tr><th>Description</th><th>Amount</th><th>YTD</th></tr>' +
         '<tr><td>TELEPHONE REIMBURSEMENT</td><td>' + text(d.telephoneReimbursementAmt) + '</td><td>' + text(d.telephoneReimbursementYTD) + '</td></tr>' +
         '<tr><td><strong>TOTAL REIMBURSEMENT</strong></td><td>' + text(d.totalReimbursementCurrent) + '</td><td>' + text(d.totalReimbursementYTD) + '</td></tr>' +
         '</table>' +
-        '<p class="net-transfer"><strong>NET TRANSFER :</strong> ' + text(d.netTransfer) + '</p>' +
-        '<p class="in-words"><strong>IN WORDS :</strong> ' + text(d.inWords) + '</p>' +
-        '<div class="footnote">This is a computer generated document, hence no signature is required.</div>' +
+        '<p class="net-transfer"><strong>' + meta.transfer + '</strong> ' + text(d.netTransfer) + '</p>' +
+        '<p class="in-words"><strong>' + meta.words + '</strong> ' + text(d.inWords) + '</p>' +
+        '<div class="footnote">' + meta.footnote + '</div>' +
         '</div>';
 }
 </script>
@@ -3735,15 +3860,15 @@ function generatePayslipHTML(d) {
 <script id="v49fix-script">
 (function(){
   'use strict';
-  var VERSION='V4.9.5';
+  var VERSION='V4.9.6';
   var countries={India:{code:'IN',name:'India',desc:'ADP Celergo India payslip'},UK:{code:'GB',name:'UK',desc:'UK demo payslip layout'},Brazil:{code:'BR',name:'Brazil',desc:'Demonstrativo de Pagamento'},Australia:{code:'AU',name:'Australia',desc:'PayForce Australia payslip'}};
   function el(id){return document.getElementById(id)}
   function all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel))}
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-  function currentCountry(){var f=el('formatSelect');return f&&f.value?f.value:'India'}
+  function currentCountry(){var f=el('formatSelect');return window.__selectedImportTemplateV31||(f&&f.value)||''}
   function flag(code,small){return '<span class="flag-v49 flag-'+esc(code)+'-v49 '+(small?'small':'')+'"></span>'}
   function ensureFormatOptions(){var s=el('formatSelect');if(!s)return;Object.keys(countries).forEach(function(k){var exists=Array.prototype.some.call(s.options,function(o){return o.value===k});if(!exists){var o=document.createElement('option');o.value=k;o.textContent=k;s.appendChild(o)}})}
-  function chooseCountry(country){ensureFormatOptions();window.__selectedImportTemplateV31=country;var s=el('formatSelect');if(s){s.value=country;try{s.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}}if(typeof window.switchFormat==='function'){try{window.switchFormat()}catch(e){}}updateCountryCards()}
+  function chooseCountry(country){ensureFormatOptions();window.__selectedImportTemplateV31=country;var s=el('formatSelect');if(s){s.value=country;try{s.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}}if(typeof window.switchFormat==='function'){try{window.switchFormat()}catch(e){}}if(typeof window.refreshPreviewForSelectedTemplate==='function'){try{window.refreshPreviewForSelectedTemplate()}catch(e){}}updateCountryCards()}
 // Adjust countryCard so only the flag is shown (no two‑letter code)
 function countryCard(country,extraClass){var c=countries[country];return '<button type="button" class="v49-country '+(extraClass||'')+'" data-country="'+esc(country)+'"><div class="v49-country-top">'+flag(c.code)+'</div><strong>'+esc(c.name)+'</strong><small>'+esc(c.desc)+'</small></button>'}
   function updateCountryCards(){var cur=currentCountry();all('[data-country]').forEach(function(node){node.classList.toggle('active',node.getAttribute('data-country')===cur)})}
@@ -3788,6 +3913,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   function bindLanding(){all('.v49-country').forEach(function(btn){btn.addEventListener('click',function(){chooseCountry(btn.getAttribute('data-country'))})});var dz=el('v49Drop');if(!dz)return;dz.addEventListener('click',function(){openFileChooser()});dz.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openFileChooser()}});['dragenter','dragover'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.add('dragover')})});['dragleave','dragend'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.remove('dragover')})});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('dragover');var files=e.dataTransfer&&e.dataTransfer.files;if(files&&files.length){useDroppedFiles(files)}})}
   function showWorkspace(){var intro=el('intro-overlay');if(intro){intro.style.setProperty('display','none','important');intro.style.setProperty('pointer-events','none','important')}var splash=el('splash');if(splash)splash.style.setProperty('display','none','important');var main=el('main');if(main){main.style.display='flex';main.classList.remove('workspace-enter-v49');void main.offsetWidth;main.classList.add('workspace-enter-v49')}}
   function openFileChooser(){
+    if(!currentCountry()){alert('Choose a country template before selecting the PDF.');return;}
     if(window.payslipDesktop&&typeof window.payslipDesktop.selectPdf==='function'&&typeof selectPdfWithDesktopPicker==='function'){
       selectPdfWithDesktopPicker().catch(function(err){
         console.error(err);

@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "4.9.5",
+  "version": "4.9.6",
   "main": "main.js",
   "description": "Zaurio payslip converter",
   "author": "Zaurio",
