@@ -15,5 +15,6 @@ const updaterApi = {
 contextBridge.exposeInMainWorld('payslipUpdater', updaterApi);
 
 contextBridge.exposeInMainWorld('payslipDesktop', {
-  selectPdf: () => ipcRenderer.invoke('pdf:select')
+  selectPdf: () => ipcRenderer.invoke('pdf:select'),
+  saveHtmlAsPdf: (payload) => ipcRenderer.invoke('pdf:save-html', payload)
 });

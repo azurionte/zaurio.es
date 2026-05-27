@@ -145,6 +145,40 @@ function registerDesktopFilePicker() {
       base64: data.toString('base64')
     };
   });
+
+  ipcMain.handle('pdf:save-html', async (_event, payload = {}) => {
+    const title = String(payload.title || 'Demo Building Tools document').replace(/[\\/:*?"<>|]+/g, '-');
+    const html = String(payload.html || '');
+    if (!html.trim()) return { canceled: true };
+
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Save PDF',
+      defaultPath: `${title}.pdf`,
+      filters: [{ name: 'PDF files', extensions: ['pdf'] }]
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+
+    const printWindow = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true
+      }
+    });
+    try {
+      await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+      const pdf = await printWindow.webContents.printToPDF({
+        printBackground: true,
+        marginsType: 0,
+        pageSize: 'A4'
+      });
+      await fs.writeFile(result.filePath, pdf);
+      return { canceled: false, filePath: result.filePath };
+    } finally {
+      if (!printWindow.isDestroyed()) printWindow.destroy();
+    }
+  });
 }
 
 /**

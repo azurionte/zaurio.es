@@ -172,7 +172,7 @@ select.browser-default.dark-select:focus, input.dark-select:focus{ outline:none;
 input.datepicker{ border-bottom:none !important; }
 
 /* ===== DBT unified shell styling ===== */
-html,body{background:#07111f;color:#e5edf8;font-family:Inter,Roboto,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;}
+html,body{height:100%;background:#07111f;color:#e5edf8;font-family:Inter,Roboto,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;overflow:auto;}
 .container{max-width:min(1180px,calc(100vw - 32px));background:#0c1729;border:1px solid rgba(148,163,184,.24);box-shadow:none;border-radius:8px;padding:26px;margin-top:18px;margin-bottom:32px;}
 h4,h5,h6{color:#fff;font-weight:900;letter-spacing:0;}
 label.small-text,.small-text{color:#aebbd0!important;}
@@ -184,8 +184,15 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
 .dbt-photo-panel{display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px auto 24px;padding:20px;border:1px solid rgba(148,163,184,.22);background:#101827;border-radius:8px;}
 .dbt-photo-panel h5{margin:0;}
 .dbt-photo-upload{width:min(520px,100%);margin:0;}
-#photo-crop-container{width:188px;height:188px;border-radius:999px;border:1px solid rgba(96,165,250,.35);background:#071024;display:grid;place-items:center;overflow:hidden;}
-#photo-canvas{width:188px;height:188px;border-radius:999px;}
+#photo-crop-container{width:188px;height:188px;border-radius:999px;border:1px solid rgba(96,165,250,.35);background:#071024;display:grid;place-items:center;overflow:hidden;position:relative;cursor:pointer;}
+#photo-canvas{width:188px;height:188px;border-radius:999px;grid-area:1/1;}
+#photo-plus{grid-area:1/1;width:56px;height:56px;border:1px solid rgba(96,165,250,.42);border-radius:999px;background:rgba(96,165,250,.18);color:#dbeafe;font-size:34px;font-weight:900;line-height:1;cursor:pointer;z-index:2;}
+#photo-crop-container.has-photo #photo-plus{opacity:0;pointer-events:none;}
+.dbt-pencil{display:inline-flex;align-items:center;justify-content:center;margin-right:8px;font-size:16px;color:#93c5fd;font-weight:900;}
+.controls-row-2{align-items:end;}
+.inline-field{display:flex;flex-direction:column;gap:0;position:relative;}
+.inline-field input{padding-right:112px!important;box-sizing:border-box;}
+.inline-field .btn-inside{top:auto!important;bottom:6px!important;right:6px!important;height:32px!important;line-height:32px!important;padding:0 12px!important;font-size:12px!important;}
 .dbt-resume-controls{margin-top:8px;}
 .collapsible{border:1px solid rgba(148,163,184,.24)!important;box-shadow:none!important;}
 .collapsible-header{background:#101827!important;color:#fff!important;border-bottom:1px solid rgba(148,163,184,.18)!important;font-weight:900;}
@@ -194,11 +201,11 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
 .chips .chip{background:#1d4ed8;color:#fff;}
 .randomize-btn{border-radius:999px!important;background:#1d4ed8!important;color:#dbeafe!important;}
 .footer-note{display:none!important;}
-.modal{width:100vw!important;max-height:100vh!important;height:100vh!important;top:0!important;border-radius:0!important;background:#07111f!important;color:#e5edf8!important;}
+.modal{width:100vw!important;max-height:100vh!important;height:100vh!important;top:0!important;border-radius:0!important;background:#07111f!important;color:#e5edf8!important;overflow:hidden!important;}
 .modal.modal-fixed-footer{padding-bottom:64px!important;}
-.modal .modal-content{height:calc(100vh - 64px)!important;padding:16px!important;}
+.modal .modal-content{height:calc(100vh - 64px)!important;padding:16px!important;overflow:hidden!important;}
 .modal .modal-content h4{display:none;}
-#preview-frame{height:calc(100vh - 96px)!important;border-radius:8px!important;background:#fff!important;}
+#preview-frame{height:calc(100vh - 96px)!important;border-radius:8px!important;background:#fff!important;display:block;}
 .modal .modal-footer{height:64px!important;background:#0c1729!important;border-top:1px solid rgba(148,163,184,.24)!important;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:10px 16px!important;}
 .modal-close.btn-flat{background:rgba(148,163,184,.16)!important;color:#e5edf8!important;border-radius:999px!important;text-transform:none;font-weight:900;}
 .modal-close.btn-flat:before{content:"\00d7";font-size:18px;margin-right:6px;}
@@ -254,12 +261,10 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
 
   <section class="dbt-photo-panel">
     <h5>Profile photo</h5>
-    <div id="photo-crop-container" tabindex="0">
+    <div id="photo-crop-container" tabindex="0" role="button" aria-label="Choose profile photo">
       <canvas id="photo-canvas" width="200" height="200"></canvas>
-    </div>
-    <div class="file-field input-field dbt-photo-upload">
-      <div class="btn"><span>Choose image</span><input type="file" id="photo-input" accept="image/*" /></div>
-      <div class="file-path-wrapper"><input class="file-path validate" type="text" placeholder="Optional profile photo" /></div>
+      <button type="button" id="photo-plus" aria-label="Choose profile photo">+</button>
+      <input type="file" id="photo-input" accept="image/*" hidden />
     </div>
     <p class="small-text">Drag inside the circle to reposition, use mouse wheel / pinch to zoom.</p>
   </section>
@@ -316,7 +321,7 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
   <!-- Profile tuning -->
   <ul class="collapsible" id="adv-collapse" style="border-radius:10px; overflow:hidden; margin-top:18px">
     <li>
-      <div class="collapsible-header" style="background:#181818;color:#ddd"><i class="material-icons">edit</i>Fine tune profile</div>
+      <div class="collapsible-header" style="background:#181818;color:#ddd"><span class="dbt-pencil" aria-hidden="true">✎</span>Fine tune profile</div>
       <div class="collapsible-body" style="background:#141414">
         <div class="row" style="margin-top:10px">
           <div class="input-field col s12 m6">
@@ -359,7 +364,7 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
   </ul>
 
   <div class="center" style="margin-top:1.2rem;">
-    <button id="preview-btn" type="button" class="btn">Preview resume</button>
+    <button id="preview-btn" type="button" class="btn"><span class="dbt-pencil" aria-hidden="true">✎</span> Preview resume</button>
   </div>
 </main>
 
@@ -371,8 +376,8 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
   </div>
   <div class="modal-footer">
     <button class="modal-close btn-flat">Close</button>
-    <button id="download-pretty-btn" type="button" class="btn">Download colorful PDF</button>
-    <button id="download-btn" type="button" class="btn green">Download simplified PDF</button>
+    <button id="download-pretty-btn" type="button" class="btn">Save colorful PDF</button>
+    <button id="download-btn" type="button" class="btn green">Save simplified PDF</button>
   </div>
 </div>
 
@@ -414,7 +419,7 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
 
   <div class="center" style="margin-top:18px">
     <button id="rcpt-generate" class="btn">Preview Receipt</button>
-    <button id="rcpt-print" class="btn green" style="display:none">Print / Save PDF</button>
+    <button id="rcpt-print" class="btn green" style="display:none">Save PDF</button>
   </div>
 
   <!-- Preview -->
@@ -514,7 +519,7 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
       </div>
     </div>
     <div class="center" style="margin-top:12px">
-      <button id="deg-download" class="btn green">Print / Save PDF</button>
+      <button id="deg-download" class="btn green">Save PDF</button>
     </div>
   </div>
 </main>
@@ -1015,7 +1020,10 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
 
     // photo cropper
     document.getElementById('photo-input').addEventListener('change', onPhotoChosen);
+    document.getElementById('photo-plus').addEventListener('click', (e)=>{ e.stopPropagation(); document.getElementById('photo-input').click(); });
+    document.getElementById('photo-crop-container').addEventListener('click', (e)=>{ if(!photo.drag) document.getElementById('photo-input').click(); });
     setupCanvas();
+    drawPhoto();
 
     // email auto from name
     document.getElementById('input-fullname').addEventListener('input', syncEmailFromName);
@@ -1096,12 +1104,13 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
 
   // photo crop
   const canvas=document.getElementById('photo-canvas'); const ctx=canvas.getContext('2d',{willReadFrequently:true});
-  function onPhotoChosen(e){ const f=e.target.files?.[0]; if(!f) return; const img=new Image(); img.onload=()=>{ photo.img=img;
+  function onPhotoChosen(e){ const f=e.target.files?.[0]; if(!f) return; const img=new Image(); img.onload=()=>{ photo.img=img; document.getElementById('photo-crop-container').classList.add('has-photo');
       const sx=canvas.width/img.width, sy=canvas.height/img.height; photo.minScale=Math.max(sx,sy); photo.scale=photo.minScale;
       photo.x=(canvas.width-img.width*photo.scale)/2; photo.y=(canvas.height-img.height*photo.scale)/2; drawPhoto(); };
     img.src=URL.createObjectURL(f); }
   function drawPhoto(){ ctx.clearRect(0,0,200,200); ctx.save(); ctx.beginPath(); ctx.arc(100,100,100,0,Math.PI*2); ctx.clip();
     if(photo.img){ ctx.imageSmoothingQuality='high'; ctx.drawImage(photo.img,photo.x,photo.y,photo.img.width*photo.scale,photo.img.height*photo.scale); }
+    else { ctx.fillStyle='#0b1426'; ctx.fillRect(0,0,200,200); }
     ctx.restore(); ctx.beginPath(); ctx.arc(100,100,97,0,Math.PI*2); ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke(); }
   function setupCanvas(){
     canvas.addEventListener('mousedown',e=>{ photo.drag=true; photo.dx=e.clientX-photo.x; photo.dy=e.clientY-photo.y; canvas.style.cursor='grabbing'; });
@@ -1113,6 +1122,10 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
   function avatarDataUrl(){ const off=document.createElement('canvas'); off.width=200; off.height=200; const o=off.getContext('2d');
     o.save(); o.beginPath(); o.arc(100,100,100,0,Math.PI*2); o.clip(); if(photo.img){ o.imageSmoothingQuality='high'; o.drawImage(photo.img,photo.x,photo.y,photo.img.width*photo.scale,photo.img.height*photo.scale); }
     o.restore(); return off.toDataURL('image/png'); }
+  function saveHtmlPdf(payload){
+    const api = window.payslipDesktop || window.parent?.payslipDesktop;
+    return api?.saveHtmlAsPdf ? api.saveHtmlAsPdf(payload) : null;
+  }
 
   // PREVIEW (pretty HTML inside iframe)
   function stars(n){ return '<span style="display:inline-flex;gap:2px;vertical-align:middle">'+Array.from({length:n}).map(()=>ICONS.star).join('')+'</span>'; }
@@ -1204,6 +1217,13 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
   function downloadPdfPretty(){
     const frame=document.getElementById('preview-frame');
     if(!frame.contentWindow){ M.toast({html:'Open the preview first',classes:'orange'}); return; }
+    const html = frame.srcdoc || frame.contentDocument?.documentElement?.outerHTML || '';
+    const safe=(document.getElementById('input-fullname').value||'resume').replace(/[^\w\-]+/g,'_');
+    const saveJob = saveHtmlPdf({ title: safe + '_colorful_resume', html });
+    if(saveJob){
+      saveJob.then(r=>{ if(!r?.canceled) M.toast({html:'PDF saved',classes:'teal'}); });
+      return;
+    }
     setTimeout(()=>{ frame.contentWindow.focus(); frame.contentWindow.print(); }, 150);
   }
 
@@ -1428,8 +1448,7 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
     const node = byId('rcpt-ticket').outerHTML;
     const t = window.__APP__.THEMES[window.__APP__.getTheme()];
     const styleBlob = document.querySelector('style').innerHTML;
-    const w = window.open('','_blank');
-    w.document.write(`
+    const html = `
       <html><head><meta charset="utf-8"><title>Receipt</title>
       <style>
         html,body{margin:0;padding:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:Roboto,Arial}
@@ -1440,7 +1459,13 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
         <div class="ticket-wrap">${node}</div>
         <div style="text-align:center;color:#555;margin-top:6px;font:12px Roboto,Arial">Demo Building Tools</div>
       </body></html>
-    `);
+    `;
+    if((window.payslipDesktop || window.parent?.payslipDesktop)?.saveHtmlAsPdf){
+      (window.payslipDesktop || window.parent?.payslipDesktop).saveHtmlAsPdf({ title: 'receipt', html }).then(r=>{ if(!r?.canceled) M.toast({html:'PDF saved',classes:'teal'}); });
+      return;
+    }
+    const w = window.open('','_blank');
+    w.document.write(html);
     w.document.close(); w.focus();
     setTimeout(()=>w.print(),150);
   });
@@ -1610,12 +1635,10 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
   });
 
   byId('deg-download').addEventListener('click', ()=>{
-    // Open print window (vector, selectable text)
     const t = window.__APP__.THEMES[window.__APP__.getTheme()];
     const styleBlob = document.querySelector('style').innerHTML;
     const node = byId('degree-canvas').outerHTML;
-    const w = window.open('','_blank');
-    w.document.write(`
+    const html = `
       <html><head><meta charset="utf-8"><title>Degree</title>
       <style>
         html,body{margin:0;padding:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -1627,7 +1650,13 @@ select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#6
         <div class="degree-wrap">${node}</div>
         <div style="text-align:center;color:#555;margin-top:6px;font:12px Roboto,Arial">Demo Building Tools</div>
       </body></html>
-    `);
+    `;
+    if((window.payslipDesktop || window.parent?.payslipDesktop)?.saveHtmlAsPdf){
+      (window.payslipDesktop || window.parent?.payslipDesktop).saveHtmlAsPdf({ title: 'degree', html }).then(r=>{ if(!r?.canceled) M.toast({html:'PDF saved',classes:'teal'}); });
+      return;
+    }
+    const w = window.open('','_blank');
+    w.document.write(html);
     w.document.close(); w.focus();
     setTimeout(()=>w.print(),150);
   });
