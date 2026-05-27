@@ -978,9 +978,12 @@ if (typeof pdfjsLib !== 'undefined') {
 function showWorkspacePublic(){
   try{
     var intro=document.getElementById('intro-overlay');
-    if(intro) intro.style.display='none';
+    if(intro){
+      intro.style.setProperty('display','none','important');
+      intro.style.setProperty('pointer-events','none','important');
+    }
     var splash=document.getElementById('splash');
-    if(splash) splash.style.display='none';
+    if(splash) splash.style.setProperty('display','none','important');
     var main=document.getElementById('main');
     if(main){
       main.style.display='flex';
@@ -1597,12 +1600,14 @@ function switchFormat() {
         // Hide combined preview when switching formats
         if (combined) combined.style.display = 'none';
     } else {
-        // Default to India format
+        // India, Brazil and Australia share the editable field set while
+        // the preview labels and exported template copy stay country-specific.
         if (indiaSidebar) indiaSidebar.style.display = 'block';
         if (ukSidebar) ukSidebar.style.display = 'none';
         if (indiaPreview) indiaPreview.style.display = 'block';
         if (ukPreview) ukPreview.style.display = 'none';
         if (combined) combined.style.display = 'none';
+        applyCountryTemplateLabels(format);
     }
 
     // After changing format, place the hierarchy container into the visible sidebar.
@@ -1613,7 +1618,34 @@ function switchFormat() {
 
 function previewFormatValue() {
     var formatSelect = document.getElementById('formatSelect');
-    return formatSelect && formatSelect.value === 'UK' ? 'UK' : 'India';
+    return formatSelect && formatSelect.value ? formatSelect.value : 'India';
+}
+
+function applyCountryTemplateLabels(format) {
+    var label = document.querySelector('#payslip .pay-slip-label');
+    var subtitle = document.getElementById('previewPayMonth');
+    var monthVal = getValue('payMonth');
+    if (!label || !subtitle) return;
+    if (format === 'Brazil') {
+        label.textContent = 'Demonstrativo de Pagamento';
+        subtitle.textContent = 'Periodo de pagamento ' + (monthVal || '');
+    } else if (format === 'Australia') {
+        label.textContent = 'Payslip';
+        subtitle.textContent = 'Payslip for pay period ' + (monthVal || '');
+    } else {
+        label.textContent = 'Pay Slip';
+        subtitle.textContent = 'Pay Slip for the Month of ' + (monthVal || '');
+    }
+}
+
+function refreshPreviewForSelectedTemplate() {
+    var format = previewFormatValue();
+    if (format === 'UK') {
+        updatePreviewUK();
+    } else {
+        updatePreview();
+        applyCountryTemplateLabels(format);
+    }
 }
 
 // Move the hierarchy container inside the currently visible sidebar so that the tabs
@@ -1723,7 +1755,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var createUkBtn = document.getElementById('createBtnUK');
     if (createUkBtn) {
         createUkBtn.addEventListener('click', function() {
-            updatePreviewUK();
+            refreshPreviewForSelectedTemplate();
         });
     }
     // Call switchFormat once on load to set initial visibility
@@ -1741,7 +1773,8 @@ var introScratchBtn = document.getElementById('introScratchBtn');
 
 introImportBtn.addEventListener('click', function() {
     // Hide intro overlay and trigger file input
-    introOverlay.style.display = 'none';
+    introOverlay.style.setProperty('display', 'none', 'important');
+    introOverlay.style.setProperty('pointer-events', 'none', 'important');
     // Hide splash when starting application
     var splashEl = document.getElementById('splash');
     if (splashEl) splashEl.style.display = 'none';
@@ -1750,14 +1783,16 @@ introImportBtn.addEventListener('click', function() {
     importFileInput.click();
 });
 introSampleBtn.addEventListener('click', function() {
-    introOverlay.style.display = 'none';
+    introOverlay.style.setProperty('display', 'none', 'important');
+    introOverlay.style.setProperty('pointer-events', 'none', 'important');
     var splashEl = document.getElementById('splash');
     if (splashEl) splashEl.style.display = 'none';
     mainDiv.style.display = 'flex';
     loadSampleData();
 });
 introScratchBtn.addEventListener('click', function() {
-    introOverlay.style.display = 'none';
+    introOverlay.style.setProperty('display', 'none', 'important');
+    introOverlay.style.setProperty('pointer-events', 'none', 'important');
     var splashEl = document.getElementById('splash');
     if (splashEl) splashEl.style.display = 'none';
     mainDiv.style.display = 'flex';
@@ -1784,7 +1819,7 @@ saveBtn.addEventListener('click', function() {
 // Create/Update preview
 var createBtn = document.getElementById('createBtn');
 createBtn.addEventListener('click', function() {
-    updatePreview();
+    refreshPreviewForSelectedTemplate();
 });
 
 function getValue(id) {
@@ -1866,7 +1901,7 @@ function updatePreview() {
 function clearForm() {
     var inputs = document.querySelectorAll('#sidebar input[type="text"]');
     inputs.forEach(function(input) { input.value = ''; });
-    updatePreview();
+    refreshPreviewForSelectedTemplate();
 }
 
 function loadSampleData() {
@@ -1930,7 +1965,7 @@ function loadSampleData() {
     document.getElementById('netTransfer').value = '149,301.00';
     document.getElementById('inWords').value = 'Rupees One Lacs Forty-Nine Thousand Three Hundred and One Only';
 
-    updatePreview();
+    refreshPreviewForSelectedTemplate();
 }
 
 // ===========================
@@ -2032,9 +2067,12 @@ function finishImport() {
     var mEl = document.getElementById('modal-overlay');
     if (mEl) mEl.style.display = 'none';
     var introEl = document.getElementById('intro-overlay');
-    if (introEl) introEl.style.display = 'none';
+    if (introEl) {
+        introEl.style.setProperty('display', 'none', 'important');
+        introEl.style.setProperty('pointer-events', 'none', 'important');
+    }
     var splashEl = document.getElementById('splash');
-    if (splashEl) splashEl.style.display = 'none';
+    if (splashEl) splashEl.style.setProperty('display', 'none', 'important');
     // Show main layout
     var mainDivLocal = document.getElementById('main');
     if (mainDivLocal) mainDivLocal.style.display = 'flex';
@@ -2068,12 +2106,7 @@ function finishImport() {
         currentPeriod = firstPeriod;
         // Populate form for first slip without overriding current format selection
         populateFormFromData(groupedSlips[firstName][firstPeriod], false);
-        // Update preview based on current selection
-        if (previewFormatValue() === 'UK') {
-            updatePreviewUK();
-        } else {
-            updatePreview();
-        }
+        refreshPreviewForSelectedTemplate();
     }
     // Clear pending variables
     pendingImportedSlips = null;
@@ -2187,9 +2220,12 @@ importFileInput.addEventListener('change', function(event) {
     // selected PDF.  Do not show the workspace yet; it will appear
     // after finishImport() runs.
     var introEl = document.getElementById('intro-overlay');
-    if (introEl) introEl.style.display = 'none';
+    if (introEl) {
+        introEl.style.setProperty('display', 'none', 'important');
+        introEl.style.setProperty('pointer-events', 'none', 'important');
+    }
     var splashEl = document.getElementById('splash');
-    if (splashEl) splashEl.style.display = 'none';
+    if (splashEl) splashEl.style.setProperty('display', 'none', 'important');
     var loadingOverlayEl = document.getElementById('loading-overlay');
     if (loadingOverlayEl) {
         loadingOverlayEl.style.display = 'flex';
@@ -2238,9 +2274,12 @@ async function selectPdfWithDesktopPicker() {
 
     importedFileName = result.fileName || 'payslip.pdf';
     var introEl = document.getElementById('intro-overlay');
-    if (introEl) introEl.style.display = 'none';
+    if (introEl) {
+        introEl.style.setProperty('display', 'none', 'important');
+        introEl.style.setProperty('pointer-events', 'none', 'important');
+    }
     var splashEl = document.getElementById('splash');
-    if (splashEl) splashEl.style.display = 'none';
+    if (splashEl) splashEl.style.setProperty('display', 'none', 'important');
     var loadingOverlayEl = document.getElementById('loading-overlay');
     if (loadingOverlayEl) {
         loadingOverlayEl.style.display = 'flex';
@@ -2528,7 +2567,14 @@ async function processPdf(arrayBuffer) {
         // Parse each slip lines into structured data but do not commit yet
         var selectedImportFormat = (document.getElementById('formatSelect') || { value: 'India' }).value;
         var candidateSlips = slips.map(function(lines) {
-            return parseSlipLines(lines) || createFallbackSlipData(lines, selectedImportFormat);
+            var slip = parseSlipLines(lines) || createFallbackSlipData(lines, selectedImportFormat);
+            if (slip) {
+                slip.format = selectedImportFormat;
+                if (selectedImportFormat === 'Brazil' || selectedImportFormat === 'Australia') {
+                    slip.department = selectedImportFormat;
+                }
+            }
+            return slip;
         }).filter(function(slip) { return slip !== null; });
         if (candidateSlips.length === 0) {
             var loadingOverlayEmpty = document.getElementById('loading-overlay');
@@ -2597,11 +2643,7 @@ function buildHierarchyUI() {
             currentPeriod = periods[0];
             // Populate form without overriding format; update preview based on current selection
             populateFormFromData(groupedSlips[currentName][currentPeriod], false);
-            if (previewFormatValue() === 'UK') {
-                updatePreviewUK();
-            } else {
-                updatePreview();
-            }
+            refreshPreviewForSelectedTemplate();
             // rebuild period tabs for this name
             updatePeriodTabs();
             updateTabsHighlight();
@@ -2637,11 +2679,7 @@ function updatePeriodTabs() {
             // Populate form without changing format
             populateFormFromData(groupedSlips[currentName][currentPeriod], false);
             // Update preview according to current format selection
-            if (previewFormatValue() === 'UK') {
-                updatePreviewUK();
-            } else {
-                updatePreview();
-            }
+            refreshPreviewForSelectedTemplate();
             updateTabsHighlight();
         });
         periodTabs.appendChild(pt);
@@ -3566,17 +3604,14 @@ function populateFormFromData(data, overrideFormat) {
         // Set the format dropdown to the slip's format
         if (data.format === 'UK') {
             formatSelect.value = 'UK';
+        } else if (data.format === 'Brazil' || data.format === 'Australia') {
+            formatSelect.value = data.format;
         } else {
             formatSelect.value = 'India';
         }
         // Toggle the form visibility based on new format
         switchFormat();
-        // Call the appropriate preview update
-        if (data.format === 'UK') {
-            updatePreviewUK();
-        } else {
-            updatePreview();
-        }
+        refreshPreviewForSelectedTemplate();
     }
 }
 
@@ -3598,22 +3633,12 @@ function showSlipSelector(slips) {
         if (!isNaN(selected)) {
             // Preserve current format when selecting a slip
             populateFormFromData(importedSlips[selected], false);
-            var fmtSel4 = document.getElementById('formatSelect');
-            if (fmtSel4 && fmtSel4.value === 'UK') {
-                updatePreviewUK();
-            } else {
-                updatePreview();
-            }
+            refreshPreviewForSelectedTemplate();
         }
     };
     // Populate form with first slip by default, preserving current format
     populateFormFromData(importedSlips[0], false);
-    var fmtSel5 = document.getElementById('formatSelect');
-    if (fmtSel5 && fmtSel5.value === 'UK') {
-        updatePreviewUK();
-    } else {
-        updatePreview();
-    }
+    refreshPreviewForSelectedTemplate();
     // Ensure combined container is hidden and single preview is shown
     document.getElementById('combinedContainer').style.display = 'none';
     document.getElementById('payslip').style.display = 'block';
@@ -3710,7 +3735,7 @@ function generatePayslipHTML(d) {
 <script id="v49fix-script">
 (function(){
   'use strict';
-  var VERSION='V4.9.4';
+  var VERSION='V4.9.5';
   var countries={India:{code:'IN',name:'India',desc:'ADP Celergo India payslip'},UK:{code:'GB',name:'UK',desc:'UK demo payslip layout'},Brazil:{code:'BR',name:'Brazil',desc:'Demonstrativo de Pagamento'},Australia:{code:'AU',name:'Australia',desc:'PayForce Australia payslip'}};
   function el(id){return document.getElementById(id)}
   function all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel))}
@@ -3761,7 +3786,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     install.onclick=function(){window.payslipUpdater.install()};
   }
   function bindLanding(){all('.v49-country').forEach(function(btn){btn.addEventListener('click',function(){chooseCountry(btn.getAttribute('data-country'))})});var dz=el('v49Drop');if(!dz)return;dz.addEventListener('click',function(){openFileChooser()});dz.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openFileChooser()}});['dragenter','dragover'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.add('dragover')})});['dragleave','dragend'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.remove('dragover')})});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('dragover');var files=e.dataTransfer&&e.dataTransfer.files;if(files&&files.length){useDroppedFiles(files)}})}
-  function showWorkspace(){var intro=el('intro-overlay');if(intro)intro.style.display='none';var splash=el('splash');if(splash)splash.style.display='none';var main=el('main');if(main){main.style.display='flex';main.classList.remove('workspace-enter-v49');void main.offsetWidth;main.classList.add('workspace-enter-v49')}}
+  function showWorkspace(){var intro=el('intro-overlay');if(intro){intro.style.setProperty('display','none','important');intro.style.setProperty('pointer-events','none','important')}var splash=el('splash');if(splash)splash.style.setProperty('display','none','important');var main=el('main');if(main){main.style.display='flex';main.classList.remove('workspace-enter-v49');void main.offsetWidth;main.classList.add('workspace-enter-v49')}}
   function openFileChooser(){
     if(window.payslipDesktop&&typeof window.payslipDesktop.selectPdf==='function'&&typeof selectPdfWithDesktopPicker==='function'){
       selectPdfWithDesktopPicker().catch(function(err){
