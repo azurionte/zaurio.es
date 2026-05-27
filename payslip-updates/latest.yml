@@ -1,8 +1,8 @@
-version: 5.0.1
+version: 5.0.2
 files:
-  - url: DemoBuildingToolsSetup-5.0.1.exe
-    sha512: xmObMqkybB9Brk8tS1AKinyGROD0OXh9hMMxmvneHld21nv3cPwZkzUQ0sxnbokH6S4pSlXbe2iaYifNzzprtw==
-    size: 101131855
-path: DemoBuildingToolsSetup-5.0.1.exe
-sha512: xmObMqkybB9Brk8tS1AKinyGROD0OXh9hMMxmvneHld21nv3cPwZkzUQ0sxnbokH6S4pSlXbe2iaYifNzzprtw==
-releaseDate: '2026-05-27T16:53:44.122Z'
+  - url: DemoBuildingToolsSetup-5.0.2.exe
+    sha512: IOEhmdmAF6zHZ7uRbi0kJuJksa/P1X3tknFxzxrnoFYhOfgr8KvLHn6+/w6R3xahrK573U6TGAYtFjAaSS82gA==
+    size: 101132107
+path: DemoBuildingToolsSetup-5.0.2.exe
+sha512: IOEhmdmAF6zHZ7uRbi0kJuJksa/P1X3tknFxzxrnoFYhOfgr8KvLHn6+/w6R3xahrK573U6TGAYtFjAaSS82gA==
+releaseDate: '2026-05-27T18:30:26.001Z'

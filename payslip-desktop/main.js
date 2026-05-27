@@ -4,6 +4,8 @@ const fs = require('fs/promises');
 const path = require('path');
 const { pathToFileURL } = require('url');
 
+app.setName('Demo Building Tools');
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -135,6 +137,7 @@ function registerDesktopFilePicker() {
  */
 function createMainWindow() {
   mainWindow = new BrowserWindow({
+    title: 'Demo Building Tools',
     width: 1280,
     height: 900,
     webPreferences: {
