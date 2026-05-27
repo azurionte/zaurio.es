@@ -35,8 +35,14 @@
       "oneClick": true,
       "allowToChangeInstallationDirectory": false
     },
+    "nsisWeb": {
+      "perMachine": false,
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "artifactName": "PayslipCreatorWebSetup-${version}.${ext}"
+    },
     "win": {
-      "target": "nsis",
+      "target": "nsis-web",
       "signAndEditExecutable": false
     }
   }
