@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Demo Building Tools - Resource Generators</title>
+
+<!-- Fonts + Materialize -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet" />
+
+<!-- pdfmake (selectable-text PDF for “simplified” resume option) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.11/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.11/vfs_fonts.js"></script>
+
+<style>
+/* ===== App Shell (dark) ===== */
+:root{
+  --bg:#121212; --panel:#1e1e1e; --text:#e0e0e0; --muted:#9aa0a6;
+  --accent:#ff7b54; --heroA:#ffd166; --heroB:#ff7b54;  /* themeable */
+}
+html,body{ background:var(--bg); color:var(--text); font-family:Roboto, system-ui, -apple-system, Segoe UI, Ubuntu, Arial, sans-serif; }
+.container{ background:var(--panel); box-shadow:0 0 15px rgba(0,0,0,.7); border-radius:14px; padding:24px 24px 30px; max-width:980px; }
+
+/* top nav */
+#topbar{
+  display:none; align-items:center; justify-content:space-between;
+  margin:0 auto 14px; max-width:980px; padding:10px 12px;
+  background:#1b1b1b; border-radius:10px; box-shadow:0 6px 16px rgba(0,0,0,.25);
+}
+#topbar .brand{ font-weight:800; letter-spacing:.3px; }
+#topbar .nav{ display:flex; gap:8px; align-items:center; }
+#topbar .nav .tab{
+  border-radius:8px; padding:8px 12px; color:#ddd; background:#2a2a2a; text-decoration:none;
+}
+#topbar .nav .tab.active{ background:var(--accent); color:#212121; font-weight:700; }
+#theme-select-top{ margin-left:8px; background:#141414; color:#e0e0e0; border:1px solid #444; border-radius:8px; padding:.35rem .6rem; height:auto; }
+
+/* Welcome */
+#welcome .hero{
+  background: linear-gradient(135deg, var(--heroA), var(--heroB));
+  border-radius:14px; padding:28px; text-align:center; color:#1e293b;
+}
+#welcome .cards{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:16px; }
+@media(max-width:980px){ #welcome .cards{ grid-template-columns:1fr; } }
+#welcome .card-choice{
+  background:#181818; border:1px solid #2a2a2a; border-radius:12px; padding:20px;
+}
+#welcome .card-choice h5{ margin:0 0 8px; }
+#welcome .card-choice .btn{ margin-top:8px; }
+
+/* stable, dark selects/inputs */
+.controls-row{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; }
+.controls-row-2{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+.controls-row-4{ display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:16px; }
+@media(max-width:720px){ .controls-row,.controls-row-2,.controls-row-4{ grid-template-columns:1fr; } }
+
+label.small-text{ color:#bbb; font-size:.9rem; margin-bottom:.25rem; display:block; }
+select.browser-default.dark-select, input.browser-default.dark-select, input[type="text"].dark-select, input[type="number"].dark-select{
+  width:100%; padding:.7rem .8rem; border-radius:8px; border:1px solid #444;
+  background:#141414; color:#e0e0e0; appearance:auto; height:auto;
+}
+select.browser-default.dark-select:focus, input.dark-select:focus{ outline:none; border-color:var(--accent); }
+
+.input-field input{ color:#e0e0e0; }
+.input-field label{ color:#bbb; }
+.randomize-btn{ background:#333; color:var(--accent); min-width:36px; min-height:36px; line-height:36px; margin-top:12px; }
+.randomize-btn:hover{ background:var(--accent); color:#212121; }
+.btn{ background:var(--accent) !important; color:#212121 !important; }
+.btn.green{ background:#2e7d32 !important; }
+
+/* photo cropper */
+#photo-crop-container{ width:200px; height:200px; user-select:none; cursor:grab; outline:none; }
+#photo-canvas{ background:#222; border-radius:100px; }
+
+/* modal */
+.modal{ background:#222; color:#e0e0e0; border-radius:10px; max-height:90vh; }
+.modal .modal-footer{ background:#181818; border-top:1px solid #444; }
+
+/* ===== Receipt aesthetic (thermal ticket) ===== */
+.ticket-wrap{ display:flex; justify-content:center; }
+.ticket{
+  width:420px; margin:0 auto; background:#fff; color:#111; border-radius:12px;
+  box-shadow:0 10px 24px rgba(0,0,0,.25); overflow:hidden;
+  font-family:"Roboto", Arial, sans-serif;
+}
+.ticket .hero{
+  padding:14px 18px; color:#1f2937;
+  background: linear-gradient(135deg, var(--heroA), var(--heroB));
+}
+.ticket .brandline{ display:flex; align-items:center; gap:12px; }
+.ticket .logo{ width:32px; height:32px; border-radius:6px; display:grid; place-items:center; font-weight:800; color:#111; background:#fff; }
+.ticket .content{ padding:16px 18px 18px; }
+.ticket .mono{ font-family:"Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.ticket .row{ display:flex; justify-content:space-between; margin:6px 0; }
+.ticket .pill{ display:inline-block; padding:2px 8px; border:1px dashed #999; border-radius:999px; font-size:11px; }
+.ticket .dash{ border-top:1px dashed #cfcfcf; margin:10px 0; }
+.ticket .item{ display:flex; justify-content:space-between; padding:4px 0; }
+.ticket .total{ display:flex; justify-content:space-between; padding:8px 0; font-weight:800; }
+.ticket .barcode{ display:block; width:100%; margin:10px auto 0; }
+
+/* resume preview sheet */
+.sheet{width:794px;height:1123px;margin:0 auto;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+
+/* ===== Degree Certificate (UK + NL) ===== */
+.degree-wrap{ display:flex; justify-content:center; }
+.degree{
+  width:820px; background:#fff; color:#111; border-radius:12px; overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  font-family: "Times New Roman", Georgia, Cambria, "Roboto", serif;
+  position:relative;
+}
+.degree .frame{
+  margin:18px; border:4px double #c9c9c9; border-radius:10px; padding:24px; position:relative;
+}
+.degree .crest{
+  position:absolute; right:32px; top:24px; width:96px; height:96px; opacity:.95;
+}
+.degree .crest svg{ width:100%; height:100%; display:block; }
+.degree .header{
+  text-align:center; margin-top:8px; margin-bottom:10px;
+}
+.degree .uni-name{
+  font-size:28px; font-weight:800; letter-spacing:.5px;
+}
+.degree .subhead{ font-size:14px; color:#444; margin-top:2px; }
+.degree .title{ text-align:center; font-size:22px; margin:16px 0 6px; font-weight:700; }
+.degree .body{
+  padding: 0 28px; font-size:16px; line-height:1.55; color:#222; text-align:center;
+}
+.degree .student{
+  display:inline-block; font-weight:800; font-size:22px; padding:2px 8px; border-bottom:2px solid #333;
+  margin:6px 4px 0;
+}
+.degree .degline{ font-weight:700; font-size:18px; margin-top:8px; }
+.degree .date{ margin-top:16px; font-style:italic; color:#333; }
+.degree .seals{
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  margin:22px 28px 6px;
+}
+.degree .sig{
+  display:flex; flex-direction:column; align-items:center; gap:4px; width:40%;
+}
+.degree .sig-line{
+  width:100%; border-top:1.5px solid #333; margin-top:34px; }
+.degree .sig-name{ font-weight:700 }
+.degree .sig-title{ font-size:13px; color:#444 }
+.degree .footerbar{
+  height:10px; background: linear-gradient(90deg, var(--heroA) 0%, var(--heroB) 100%);
+  border-radius:0 0 8px 8px; margin-top:18px;
+}
+
+/* Footer */
+.footer-note{ color:#9aa0a6; text-align:center; margin:16px auto -2px; padding-top:6px; border-top:1px solid #2a2a2a; max-width:980px;}
+
+.tooltip-icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:18px; height:18px; border-radius:999px; background:#2a2a2a; color:#eee; font-weight:700; font-size:12px;
+  margin-left:6px; cursor:default;
+}
+
+/* --- small UI touches --- */
+.inline-field{ position:relative; }
+.inline-field .btn-inside{
+  position:absolute; right:6px; top:6px; height:32px; padding:0 10px;
+  background:#2a2a2a !important; color:#ddd !important;
+  border-radius:6px;
+}
+.center-actions{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+
+/* hide default materialize datepicker input underline style */
+input.datepicker{ border-bottom:none !important; }
+
+/* ===== DBT unified shell styling ===== */
+html,body{height:100%;background:#07111f;color:#e5edf8;font-family:Inter,Roboto,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;overflow:auto;}
+.container{max-width:min(1180px,calc(100vw - 32px));background:#0c1729;border:1px solid rgba(148,163,184,.24);box-shadow:none;border-radius:8px;padding:26px;margin-top:18px;margin-bottom:32px;}
+h4,h5,h6{color:#fff;font-weight:900;letter-spacing:0;}
+label.small-text,.small-text{color:#aebbd0!important;}
+select.browser-default.dark-select,input.browser-default.dark-select,input[type="text"].dark-select,input[type="number"].dark-select{background:#071024;border:1px solid rgba(148,163,184,.32);border-radius:8px;color:#f8fafc;}
+select.browser-default.dark-select:focus,input.dark-select:focus{border-color:#60a5fa;box-shadow:0 0 0 1px rgba(96,165,250,.32);}
+.btn,.btn.green,.btn-small{background:#60a5fa!important;color:#05111f!important;border-radius:999px!important;text-transform:none;font-weight:950;box-shadow:none!important;}
+.btn.green{background:#86efac!important;color:#052e16!important;}
+.file-field .btn{height:38px;line-height:38px;}
+.dbt-photo-panel{display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px auto 24px;padding:20px;border:1px solid rgba(148,163,184,.22);background:#101827;border-radius:8px;}
+.dbt-photo-panel h5{margin:0;}
+.dbt-photo-upload{width:min(520px,100%);margin:0;}
+#photo-crop-container{width:188px;height:188px;border-radius:999px;border:1px solid rgba(96,165,250,.35);background:#071024;display:grid;place-items:center;overflow:hidden;position:relative;cursor:pointer;}
+#photo-canvas{width:188px;height:188px;border-radius:999px;grid-area:1/1;}
+#photo-plus{grid-area:1/1;width:56px;height:56px;border:1px solid rgba(96,165,250,.42);border-radius:999px;background:rgba(96,165,250,.18);color:#dbeafe;font-size:34px;font-weight:900;line-height:1;cursor:pointer;z-index:2;}
+#photo-crop-container.has-photo #photo-plus{opacity:0;pointer-events:none;}
+.dbt-pencil{display:inline-flex;align-items:center;justify-content:center;margin-right:8px;font-size:16px;color:#93c5fd;font-weight:900;}
+.controls-row-2{align-items:end;min-width:0;}
+.controls-row-2 > div{min-width:0;}
+.inline-field{display:flex;flex-direction:column;gap:0;position:relative;min-width:0;}
+.inline-field input{width:100%!important;max-width:100%!important;padding-right:116px!important;box-sizing:border-box;}
+.inline-field .btn-inside{position:absolute!important;top:auto!important;bottom:6px!important;right:6px!important;height:32px!important;line-height:32px!important;padding:0 12px!important;font-size:12px!important;z-index:2;}
+.inline-field .btn-inside:hover{transform:none!important;}
+.dbt-resume-controls{margin-top:8px;}
+.collapsible{border:1px solid rgba(148,163,184,.24)!important;box-shadow:none!important;}
+.collapsible-header{background:#101827!important;color:#fff!important;border-bottom:1px solid rgba(148,163,184,.18)!important;font-weight:900;}
+.collapsible-body{background:#071024!important;border-bottom:0!important;}
+.chips{border-bottom:1px solid rgba(148,163,184,.32)!important;}
+.chips .chip{background:#1d4ed8;color:#fff;}
+.randomize-btn{border-radius:999px!important;background:#1d4ed8!important;color:#dbeafe!important;}
+.footer-note{display:none!important;}
+.modal{width:100vw!important;max-height:100vh!important;height:100vh!important;top:0!important;border-radius:0!important;background:#07111f!important;color:#e5edf8!important;overflow:hidden!important;}
+.modal.modal-fixed-footer{padding-bottom:64px!important;}
+.modal .modal-content{height:calc(100vh - 64px)!important;padding:16px!important;overflow:hidden!important;}
+.modal .modal-content h4{display:none;}
+#preview-frame{height:calc(100vh - 96px)!important;border-radius:8px!important;background:#fff!important;display:block;}
+.modal .modal-footer{height:64px!important;background:#0c1729!important;border-top:1px solid rgba(148,163,184,.24)!important;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:10px 16px!important;}
+.modal-close.btn-flat{background:rgba(148,163,184,.16)!important;color:#e5edf8!important;border-radius:999px!important;text-transform:none;font-weight:900;}
+.modal-close.btn-flat:before{content:"\00d7";font-size:18px;margin-right:6px;}
+.ticket,.degree{box-shadow:none;border:1px solid rgba(148,163,184,.24);}
+#screen-receipt{overflow:hidden;}
+#screen-receipt .controls-row-2{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+#screen-receipt #rcpt-preview{max-width:100%;overflow:auto;padding-bottom:8px;}
+#screen-receipt .ticket-wrap{max-width:100%;overflow:visible;}
+#screen-receipt .ticket{width:min(420px,100%);}
+@media(max-width:720px){
+  #screen-receipt .controls-row-2{grid-template-columns:1fr;}
+  .inline-field input{padding-right:108px!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div id="topbar">
+  <div class="brand">Demo Building Tools</div>
+  <div class="nav">
+    <a href="#" class="tab" data-target="resume">Resume Builder</a>
+    <a href="#" class="tab" data-target="receipt">Receipt Generator</a>
+    <a href="#" class="tab" data-target="degree">University Degree</a>
+    <span style="margin-left:10px;color:#bbb">Theme:</span>
+    <select id="theme-select-top">
+      <option value="coral" selected>Coral</option>
+      <option value="sea">Sea</option>
+      <option value="city">City</option>
+    </select>
+  </div>
+</div>
+
+<!-- ===== WELCOME ===== -->
+<main id="welcome" class="container">
+  <div class="hero">
+    <h4 style="margin:0 0 4px">Demo Building Tools</h4>
+    <div style="opacity:.85">Choose what you need</div>
+  </div>
+  <div class="cards">
+    <div class="card-choice">
+      <h5>Generate receipts for expenses</h5>
+      <p class="small-text">Create narrow, printable receipts with date picker, barcode and brand logos.</p>
+      <button class="btn" data-go="receipt">Open Receipt Generator</button>
+    </div>
+    <div class="card-choice">
+      <h5>Generate demo resumes</h5>
+      <p class="small-text">Build a themed resume with translations and two PDF options.</p>
+      <button class="btn" data-go="resume">Open Resume Builder</button>
+    </div>
+    <div class="card-choice">
+      <h5>Create university degrees</h5>
+      <p class="small-text">Generate UK or NL degree certificates with selectable text and embedded seals.</p>
+      <button class="btn" data-go="degree">Open Degree Generator</button>
+    </div>
+  </div>
+</main>
+
+<!-- ===== RESUME BUILDER (kept as in your “fixed” version) ===== -->
+<main id="screen-resume" class="container" style="display:none">
+  <h4 class="center" style="margin-top:0">Resume Generator</h4>
+
+  <section class="dbt-photo-panel">
+    <h5>Profile photo</h5>
+    <div id="photo-crop-container" tabindex="0" role="button" aria-label="Choose profile photo">
+      <canvas id="photo-canvas" width="200" height="200"></canvas>
+      <button type="button" id="photo-plus" aria-label="Choose profile photo">+</button>
+      <input type="file" id="photo-input" accept="image/*" hidden />
+    </div>
+    <p class="small-text">Drag inside the circle to reposition, use mouse wheel / pinch to zoom.</p>
+  </section>
+
+  <div class="controls-row-4 dbt-resume-controls">
+    <div>
+      <label for="gender-select" class="small-text">Gender</label>
+      <select id="gender-select" class="browser-default dark-select">
+        <option value="male" selected>Male</option>
+        <option value="female">Female</option>
+      </select>
+    </div>
+    <div>
+      <label for="country-select" class="small-text">Country</label>
+      <select id="country-select" class="browser-default dark-select">
+        <option value="" selected>Choose your country</option>
+        <option value="us">United States</option>
+        <option value="uk">United Kingdom</option>
+        <option value="nl">Netherlands</option>
+        <option value="fr">France</option>
+        <option value="es">Spain</option>
+        <option value="ca">Canada</option>
+      </select>
+    </div>
+    <div>
+      <label for="lang-select" class="small-text">Language</label>
+      <select id="lang-select" class="browser-default dark-select">
+        <option value="en" selected>English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="nl">Nederlands</option>
+      </select>
+    </div>
+    <div>
+      <label for="profile-select" class="small-text">Profile <span class="tooltip-icon" title="Select what kind of experience you want this profile to have">i</span></label>
+      <select id="profile-select" class="browser-default dark-select">
+        <option value="" selected>Select Profile</option>
+        <option value="it">IT Specialist</option>
+        <option value="payroll">Payroll Specialist</option>
+        <option value="finance">Finance</option>
+        <option value="marketing">Marketing</option>
+        <option value="hr-generalist">HR Generalist</option>
+        <option value="executive-assistant">Executive Assistant</option>
+        <option value="recruiting-assistant">Recruiting Assistant</option>
+        <option value="payroll-manager">Payroll Manager</option>
+        <option value="director-total-rewards">Director of Total Rewards</option>
+        <option value="benefits-analyst">Benefits Analyst</option>
+        <option value="admin-assistant">Admin Assistant</option>
+        <option value="hr-business-partner">HR Business Partner</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Profile tuning -->
+  <ul class="collapsible" id="adv-collapse" style="border-radius:10px; overflow:hidden; margin-top:18px">
+    <li>
+      <div class="collapsible-header" style="background:#181818;color:#ddd"><span class="dbt-pencil" aria-hidden="true">✎</span>Fine tune profile</div>
+      <div class="collapsible-body" style="background:#141414">
+        <div class="row" style="margin-top:10px">
+          <div class="input-field col s12 m6">
+            <input id="input-fullname" type="text" /><label for="input-fullname">Full Name</label>
+          </div>
+          <div class="col s12 m6 right-align" style="margin-top:16px">
+            <button type="button" class="btn-small randomize-btn" data-field="fullname" aria-label="Randomize name">↻</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="input-field col s12 m6">
+            <input id="input-email" type="email" /><label for="input-email">Email</label>
+          </div>
+          <div class="col s12 m6 right-align" style="margin-top:16px">
+            <button type="button" class="btn-small randomize-btn" data-field="email" aria-label="Randomize email">↻</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="input-field col s12 m6">
+            <input id="input-phone" type="tel" /><label for="input-phone">Phone</label>
+          </div>
+          <div class="col s12 m6 right-align" style="margin-top:16px">
+            <button type="button" class="btn-small randomize-btn" data-field="phone" aria-label="Randomize phone">↻</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="input-field col s12 m6">
+            <input id="input-address" type="text" /><label for="input-address">Address</label>
+          </div>
+          <div class="col s12 m6 right-align" style="margin-top:16px">
+            <button type="button" class="btn-small randomize-btn" data-field="address" aria-label="Randomize address">↻</button>
+          </div>
+        </div>
+
+        <h6 style="margin-top:10px">Skills (from profile)</h6>
+        <div id="skills-chips" class="chips chips-initial"></div>
+        <p class="small-text">Choose a profile to auto-fill skills. You can edit chips.</p>
+      </div>
+    </li>
+  </ul>
+
+  <div class="center" style="margin-top:1.2rem;">
+    <button id="preview-btn" type="button" class="btn"><span class="dbt-pencil" aria-hidden="true">✎</span> Preview resume</button>
+  </div>
+</main>
+
+<!-- Resume Preview Modal -->
+<div id="preview-modal" class="modal modal-fixed-footer">
+  <div class="modal-content">
+    <h4>Resume Preview</h4>
+    <iframe id="preview-frame" title="Resume Preview" style="width:100%; height:70vh; border:none; background:#fff;"></iframe>
+  </div>
+  <div class="modal-footer">
+    <button class="modal-close btn-flat">Close</button>
+    <button id="download-pretty-btn" type="button" class="btn">Save colorful PDF</button>
+    <button id="download-btn" type="button" class="btn green">Save simplified PDF</button>
+  </div>
+</div>
+
+<!-- ===== RECEIPT GENERATOR (as in your last working version) ===== -->
+<main id="screen-receipt" class="container" style="display:none">
+  <h4 class="center" style="margin-top:0">Receipt Generator</h4>
+
+  <div class="controls-row-2">
+    <div>
+      <label class="small-text">Country</label>
+      <select id="rcpt-country" class="browser-default dark-select">
+        <option value="UK">UK</option><option value="US">US</option><option value="ES">ES</option><option value="FR">FR</option>
+        <option value="SE">SE</option><option value="NL">NL</option><option value="DE">DE</option>
+        <option value="IT">IT</option><option value="AU">AU</option><option value="CN">CN</option>
+      </select>
+    </div>
+    <div>
+      <label class="small-text">Receipt Type</label>
+      <select id="rcpt-type" class="browser-default dark-select">
+        <option value="oilGas">Oil & Gas</option>
+        <option value="hotel">Hotel</option>
+        <option value="meal">Meal</option>
+        <option value="officeSupplies">Office Supplies</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="controls-row-2" style="margin-top:10px">
+    <div>
+      <label class="small-text">Date</label>
+      <input id="rcpt-date" type="text" class="datepicker dark-select" placeholder="Pick a date" />
+    </div>
+    <div class="inline-field">
+      <label class="small-text">Price</label>
+      <input id="rcpt-price" type="number" step="0.01" min="8.02" max="269.22" class="dark-select" />
+      <button id="rcpt-price-rand" class="btn btn-inside" type="button">Randomize</button>
+    </div>
+  </div>
+
+  <div class="center" style="margin-top:18px">
+    <button id="rcpt-generate" class="btn">Preview Receipt</button>
+    <button id="rcpt-print" class="btn green" style="display:none">Save PDF</button>
+  </div>
+
+  <!-- Preview -->
+  <div id="rcpt-preview" style="margin-top:18px; display:none">
+    <div class="ticket-wrap">
+      <div class="ticket" id="rcpt-ticket">
+        <div class="hero">
+          <div class="brandline">
+            <div class="logo" id="rcpt-logo">⛽</div>
+            <div>
+              <div id="rcpt-store" style="font-weight:800"></div>
+              <div id="rcpt-address" style="opacity:.9; font-size:.9rem"></div>
+            </div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="row mono" id="rcpt-date-no"></div>
+          <div class="row mono" id="rcpt-pay" style="flex-direction:column; align-items:flex-start; gap:4px"></div>
+          <div class="dash"></div>
+          <div id="rcpt-items" style="display:grid; gap:6px"></div>
+          <div class="dash"></div>
+          <div class="total"><span id="rcpt-taxlabel">Tax</span><span id="rcpt-tax"></span></div>
+          <div class="total"><span id="rcpt-totlabel">Total</span><span id="rcpt-total"></span></div>
+          <div class="dash"></div>
+          <div class="center" style="opacity:.85; text-align:center" id="rcpt-thanks"></div>
+          <div style="display:flex; justify-content:center">
+            <svg id="rcpt-barcode" class="barcode" height="56" viewBox="0 0 420 56" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== DEGREE GENERATOR (NEW) ===== -->
+<main id="screen-degree" class="container" style="display:none">
+  <h4 class="center" style="margin-top:0">University Degree Generator</h4>
+
+  <div class="controls-row-2">
+    <div>
+      <label class="small-text">Country</label>
+      <select id="deg-country" class="browser-default dark-select">
+        <option value="UK" selected>United Kingdom</option>
+        <option value="NL">Netherlands</option>
+      </select>
+    </div>
+    <div>
+      <label class="small-text">Degree Title</label>
+      <select id="deg-title" class="browser-default dark-select">
+        <!-- filled by country -->
+      </select>
+    </div>
+  </div>
+
+  <div class="controls-row-2" style="margin-top:10px">
+    <div>
+      <label class="small-text">Full Name</label>
+      <input id="deg-name" type="text" class="dark-select" />
+    </div>
+    <div>
+      <label class="small-text">Graduation Date</label>
+      <input id="deg-date" type="text" class="datepicker dark-select" placeholder="Pick a date" />
+    </div>
+  </div>
+
+  <div class="controls-row-2" style="margin-top:10px">
+    <div>
+      <label class="small-text">Signatory (Left) — Name</label>
+      <input id="deg-sig1-name" type="text" class="dark-select" />
+    </div>
+    <div>
+      <label class="small-text">Signatory (Left) — Title</label>
+      <input id="deg-sig1-title" type="text" class="dark-select" />
+    </div>
+  </div>
+
+  <div class="controls-row-2" style="margin-top:10px">
+    <div>
+      <label class="small-text">Signatory (Right) — Name</label>
+      <input id="deg-sig2-name" type="text" class="dark-select" />
+    </div>
+    <div>
+      <label class="small-text">Signatory (Right) — Title</label>
+      <input id="deg-sig2-title" type="text" class="dark-select" />
+    </div>
+  </div>
+
+  <div class="center" style="margin-top:16px">
+    <button id="deg-preview" class="btn">Preview Degree</button>
+  </div>
+
+  <!-- Degree Preview (below form) -->
+  <div id="deg-preview-area" style="margin-top:18px; display:none">
+    <div class="degree-wrap">
+      <div class="degree" id="degree-canvas">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+    <div class="center" style="margin-top:12px">
+      <button id="deg-download" class="btn green">Save PDF</button>
+    </div>
+  </div>
+</main>
+
+<!-- Footer (global) -->
+<div class="footer-note"></div>
+
+<!-- ===== DATA (DB) for Resumes with translations ===== -->
+<script id="db-json" type="application/json">
+{
+  "countries": {
+    "us": {
+      
+      "male_first_names": ["James","John","Michael","Robert","William","David","Richard","Joseph"],
+      "female_first_names": ["Mary","Patricia","Jennifer","Linda","Elizabeth","Barbara","Susan","Jessica"],
+      "middle_names": ["Allen","Lee","Grace","Marie","Lynn"],
+      "last_names": ["Smith","Johnson","Brown","Williams","Jones","Miller","Davis","Garcia"],
+      "emails": ["john.smith@example.com","emily.johnson@mail.com","michael.brown@domain.com","jessica.davis@workmail.com","david.wilson@email.com"],
+      "phones": ["+1 202-555-0147","+1 415-555-0136","+1 212-555-0199","+1 617-555-0112","+1 310-555-0173"],
+      "addresses": ["123 Maple St, Springfield, IL","456 Oak Ave, Boston, MA","789 Pine Rd, New York, NY","321 Cedar Ln, San Francisco, CA","654 Birch Blvd, Seattle, WA"]
+    },
+    "uk": {
+      
+      "male_first_names": ["Oliver","George","Harry","Jack","Jacob","Charlie","Thomas","James"],
+      "female_first_names": ["Olivia","Amelia","Isla","Ava","Emily","Poppy","Sophie","Jessica"],
+      "middle_names": ["James","Louise","Grace","Rose","Lee"],
+      "last_names": ["Smith","Jones","Taylor","Brown","Williams","Wilson","Davies","Evans"],
+      "emails": ["oliver.smith@mail.co.uk","amelia.jones@gmail.com","harry.williams@outlook.com","jessica.taylor@live.co.uk","george.brown@yahoo.co.uk"],
+      "phones": ["+44 020 7946 0958","+44 0161 496 0999","+44 0131 496 0932","+44 020 7946 0955","+44 0141 496 0911"],
+      "addresses": ["12 Baker St, London","34 High St, Manchester","56 Queen Rd, Edinburgh","78 King St, Liverpool","90 Market St, Glasgow"]
+    },
+    "nl": {
+      
+      "male_first_names": ["Jan","Kees","Henk","Pieter","Johan","Dirk","Bram","Lucas"],
+      "female_first_names": ["Anna","Sanne","Emma","Sophie","Lisa","Julia","Noa","Kim"],
+      "middle_names": ["Jan","Maria","Anne","Johannes","Pieter"],
+      "last_names": ["de Vries","Jansen","Bakker","Visser","Meijer","Smit","de Boer","van Dijk"],
+      "emails": ["jan.vries@example.nl","anna.jansen@mail.nl","kees.bakker@domain.nl","sanne.visser@workmail.nl","pieter.meijer@email.nl"],
+      "phones": ["+31 20 555 1234","+31 10 555 5678","+31 30 555 9876","+31 40 555 4321","+31 50 555 8765"],
+      "addresses": ["Keizersgracht 123, Amsterdam","Langestraat 45, Rotterdam","Stationsplein 7, Utrecht","Markt 8, Eindhoven","Grote Markt 1, Groningen"]
+    },
+    "fr": {
+      
+      "male_first_names": ["Jean","Pierre","Michel","Alain","Marc","Louis","François","Jacques"],
+      "female_first_names": ["Marie","Sophie","Nathalie","Isabelle","Catherine","Julie","Anne","Christine"],
+      "middle_names": ["Jean","Marie","Anne","Pierre","Luc"],
+      "last_names": ["Dupont","Martin","Bernard","Thomas","Robert","Durand","Leroy","Moreau"],
+      "emails": ["jean.dupont@example.fr","marie.martin@mail.fr","pierre.durand@domain.fr","sophie.bernard@workmail.fr","luc.moreau@email.fr"],
+      "phones": ["+33 1 23 45 67 89","+33 4 56 78 90 12","+33 2 34 56 78 90","+33 5 67 89 01 23","+33 3 45 67 89 01"],
+      "addresses": ["10 Rue de Rivoli, Paris","5 Place Bellecour, Lyon","3 Avenue Victor Hugo, Marseille","12 Boulevard Haussmann, Lille","7 Rue Saint-Michel, Bordeaux"]
+    },
+    "es": {
+      
+      "male_first_names": ["Juan","Carlos","Luis","Miguel","José","Antonio","Manuel","Pedro"],
+      "female_first_names": ["María","Ana","Carmen","Laura","Isabel","Lucía","Sara","Paula"],
+      "middle_names": ["José","María","Antonio","Ángel","Luis"],
+      "last_names": ["Pérez","García","López","Martínez","Rodríguez","Sánchez","Fernández","Gómez"],
+      "emails": ["juan.perez@example.es","maria.lopez@mail.es","carlos.garcia@domain.es","ana.martinez@workmail.es","luis.fernandez@email.es"],
+      "phones": ["+34 600 123 456","+34 912 345 678","+34 655 987 654","+34 933 111 222","+34 622 333 444"],
+      "addresses": ["Calle Mayor 1, Madrid","Avenida Diagonal 200, Barcelona","Paseo de Gracia 45, Barcelona","Calle Alcalá 23, Madrid","Plaza Mayor 5, Sevilla"]
+    }
+    ,"ca": {
+      
+      "male_first_names": ["Liam","Noah","Oliver","Ethan","Lucas","William","Jack","Benjamin"],
+      "female_first_names": ["Olivia","Emma","Charlotte","Sophia","Amelia","Mia","Isla","Hannah"],
+      "middle_names": ["James","Lee","Marie","Grace","Rose"],
+      "last_names": ["Smith","Brown","Tremblay","Martin","Roy","Campbell","Thomson","Johnson"],
+      "emails": ["olivia.martin@example.ca","ethan.brown@mail.ca","liam.walker@domain.ca","emma.thompson@workmail.ca","noah.johnson@email.ca"],
+      "phones": ["+1 416-555-0123","+1 604-555-0198","+1 514-555-0175","+1 780-555-0142","+1 905-555-0119"],
+      "addresses": ["100 King St W, Toronto, ON","123 Main St, Vancouver, BC","567 Rue Sainte-Catherine, Montreal, QC","789 Robson St, Vancouver, BC","222 Bloor St, Toronto, ON"]
+    }
+  },
+  "profiles": {
+    "it": {
+      "skills": ["JavaScript","React","Node.js","Docker","AWS"],
+      "experiences": [
+        {"title":"Senior Software Engineer","years":"2022-present","description":"Lead features for high-traffic web apps (React, Node.js). Scaled CI/CD, implemented design system and a11y audits, mentored devs and coordinated with Product to ship outcomes.","company":"TechCorp"},
+        {"title":"Software Engineer","years":"2019-2022","description":"Developed customer-facing apps with React and Node.js, introduced reusable components, automated testing, and performance budgets.","company":"TechCorp"},
+        {"title":"IT Support Specialist","years":"2017-2019","description":"Provided L2 support across Windows/macOS fleets, automated ticket workflows with scripts, and reduced resolution time with a shared KB.","company":"NetSolutions"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Ingeniero/a de Software Senior","description":"Lideré funcionalidades para aplicaciones web de alto tráfico (React, Node.js). Escalé CI/CD, implanté un design system y auditorías de accesibilidad, guié a desarrolladores y coordiné con Producto para entregar resultados."},
+          {"title":"Ingeniero/a de Software","description":"Desarrollé apps de cara al cliente con React y Node.js, creé componentes reutilizables, pruebas automatizadas y presupuestos de rendimiento."},
+          {"title":"Especialista de Soporte TI","description":"Soporte de nivel 2 para flotas Windows/macOS, automatización de tickets con scripts y reducción de tiempos con una base de conocimiento compartida."}
+        ],
+        "fr": [
+          {"title":"Ingénieur logiciel senior","description":"Pilotage de fonctionnalités pour des applications web à fort trafic (React, Node.js). CI/CD à l’échelle, design system, audits d’accessibilité, mentorat et coordination avec le Produit."},
+          {"title":"Ingénieur logiciel","description":"Applications orientées client avec React et Node.js, composants réutilisables, tests automatisés et budgets de performance."},
+          {"title":"Spécialiste support IT","description":"Support N2 pour parcs Windows/macOS, automatisation des tickets via scripts et réduction des délais avec une base de connaissances partagée."}
+        ],
+        "nl": [
+          {"title":"Senior software engineer","description":"Leidde features voor high-traffic webapps (React, Node.js). CI/CD opgeschaald, design system en a11y-audits opgezet, devs gementord en met Product samengewerkt."},
+          {"title":"Software engineer","description":"Apps gebouwd met React en Node.js; herbruikbare componenten, geautomatiseerde tests en performance-budgetten geïntroduceerd."},
+          {"title":"IT-supportspecialist","description":"L2-support voor Windows/macOS; ticketworkflows geautomatiseerd met scripts en oplostijden verlaagd met een gedeelde kennisbank."}
+        ]
+      }
+    },
+    "payroll": {
+      "skills": ["Payroll Management","ADP","SAP HR","Excel","Compliance"],
+      "experiences": [
+        {"title":"Payroll Lead","years":"2022-present","description":"Own payroll strategy and oversight for multi-entity operations. Implement controls, migrate providers, and deliver timely, compliant payrolls. Coach team and partner with HRIS on data quality.","company":"PayMasters"},
+        {"title":"Payroll Specialist","years":"2018-2022","description":"End-to-end payroll cycles for 500+ employees; designed audit checks, ensured compliance, and improved onboarding data quality.","company":"PayMasters"},
+        {"title":"HR Assistant","years":"2015-2018","description":"Supported payroll & benefits administration, reconciled reports, and met SLA on employee inquiries.","company":"WorkForce"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Líder de Nómina","description":"Estrategia y supervisión de nómina para múltiples entidades. Controles, migración de proveedores y pagos puntuales y conformes. Formación del equipo y colaboración con HRIS en calidad de datos."},
+          {"title":"Especialista de Nómina","description":"Ciclos end-to-end para 500+ empleados; controles de auditoría, cumplimiento y mejora de calidad de datos de onboarding."},
+          {"title":"Asistente de RR. HH.","description":"Apoyo a nómina y beneficios, conciliación de reportes y cumplimiento de SLA en consultas de empleados."}
+        ],
+        "fr": [
+          {"title":"Responsable Paie","description":"Stratégie paie multi-entités. Contrôles, migration de prestataires et paies conformes et ponctuelles. Coaching de l’équipe et partenariat avec le SIRH sur la qualité des données."},
+          {"title":"Spécialiste Paie","description":"Gestion complète de la paie pour 500+ collaborateurs ; contrôles d’audit, conformité et amélioration des données d’onboarding."},
+          {"title":"Assistant RH","description":"Support paie & avantages, rapprochements et respect des SLA pour les demandes des employés."}
+        ],
+        "nl": [
+          {"title":"Payroll Lead","description":"Payrollstrategie en toezicht voor meerdere entiteiten. Controles ingevoerd, leveranciers gemigreerd en tijdige, conforme loonverwerking geleverd. Team gecoacht en met HRIS aan datakwaliteit gewerkt."},
+          {"title":"Payroll Specialist","description":"End-to-end payroll voor 500+ medewerkers; auditcontroles ontworpen, compliance geborgd en datakwaliteit bij onboarding verbeterd."},
+          {"title":"HR-assistent","description":"Ondersteuning bij payroll en benefits, rapportages gereconcilieerd en SLA’s gehaald voor medewerkersvragen."}
+        ]
+      }
+    },
+    "finance": {
+      "skills": ["Financial Analysis","Excel","SAP","Budgeting","Forecasting"],
+      "experiences": [
+        {"title":"Senior Financial Analyst","years":"2022-present","description":"Own forecasting and strategic modeling for product lines. Build driver-based plans, run sensitivity analysis, and advise leadership on trade-offs.","company":"MoneyCorp"},
+        {"title":"Financial Analyst","years":"2017-2022","description":"Built dashboards and variance analyses to inform investment and headcount planning.","company":"MoneyCorp"},
+        {"title":"Accountant","years":"2014-2017","description":"Managed AR/AP, close, and reconciliations; partnered with auditors to streamline year-end.","company":"FinServe"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Analista Financiero Senior","description":"Pronósticos y modelado estratégico por líneas. Planes basados en drivers, análisis de sensibilidad y asesoría a dirección."},
+          {"title":"Analista Financiero","description":"Cuadros de mando y análisis de desviaciones para inversiones y planificación de plantilla."},
+          {"title":"Contable","description":"Gestión de cobros/pagos, cierres y conciliaciones; colaboración con auditores para agilizar el cierre anual."}
+        ],
+        "fr": [
+          {"title":"Analyste financier senior","description":"Prévisions et modélisation stratégique par gamme. Plans pilotés par inducteurs, analyses de sensibilité et recommandations à la direction."},
+          {"title":"Analyste financier","description":"Tableaux de bord et analyses d’écarts pour investissements et planification des effectifs."},
+          {"title":"Comptable","description":"Gestion clients/fournisseurs, clôtures et rapprochements ; collaboration avec les auditeurs pour fluidifier l’arrêté annuel."}
+        ],
+        "nl": [
+          {"title":"Senior financieel analist","description":"Forecasting en strategische modellen per productlijn. Driver-based plannen, gevoeligheidsanalyses en advies aan leadership."},
+          {"title":"Financieel analist","description":"Dashboards en variantie-analyses voor investeringen en formatieplanning."},
+          {"title":"Boekhouder","description":"Debiteuren/crediteuren, afsluiting en reconciliaties; met auditors samengewerkt voor een vlot jaareinde."}
+        ]
+      }
+    },
+    "marketing": {
+      "skills": ["SEO","Content Marketing","Google Analytics","Social Media","Campaign Management"],
+      "experiences": [
+        {"title":"Head of Digital","years":"2022-present","description":"Lead digital strategy and experimentation. Scale paid channels, lifecycle, and CRO programs; align brand and growth initiatives.","company":"BrandCo"},
+        {"title":"Marketing Manager","years":"2018-2022","description":"Ran integrated campaigns across search, social, and email; improved conversion by 30% via experimentation.","company":"BrandCo"},
+        {"title":"Social Media Specialist","years":"2015-2018","description":"Launched channels, built content calendars, and partnered with creators to grow an engaged community.","company":"SocialBuzz"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Responsable de Digital","description":"Estrategia y experimentación digital. Escalado de canales de pago, lifecycle y CRO; alineación de marca y crecimiento."},
+          {"title":"Responsable de Marketing","description":"Campañas integradas en búsqueda, social y email; +30% de conversión mediante experimentación."},
+          {"title":"Especialista en Redes Sociales","description":"Lanzamiento de canales, calendarios de contenido y alianzas con creadores para una comunidad activa."}
+        ],
+        "fr": [
+          {"title":"Responsable digital","description":"Stratégie et expérimentation digitales. Montée en charge des canaux payants, lifecycle et CRO ; alignement marque/croissance."},
+          {"title":"Responsable Marketing","description":"Campagnes intégrées search/social/email ; +30% de conversion via l’expérimentation."},
+          {"title":"Spécialiste social media","description":"Lancement des canaux, calendriers éditoriaux et partenariats avec créateurs pour une communauté engagée."}
+        ],
+        "nl": [
+          {"title":"Hoofd Digital","description":"Digitale strategie en experimenten geleid. Betaalde kanalen, lifecycle en CRO opgeschaald; merk en groei afgestemd."},
+          {"title":"Marketingmanager","description":"Geïntegreerde campagnes (search, social, e-mail); conversie +30% via experimenteren."},
+          {"title":"Socialmediaspecialist","description":"Kanalen opgezet, contentkalenders gemaakt en met creators samengewerkt voor een betrokken community."}
+        ]
+      }
+    },
+    "hr-generalist": {
+      "skills": ["Employee Relations","Recruitment","Onboarding","HR Policies","Performance Management"],
+      "experiences": [
+        {"title":"HR Generalist","years":"2022-present","description":"Provide comprehensive HR support including employee relations, recruitment, onboarding and policy administration. Foster a positive workplace culture.","company":"PeopleFirst"},
+        {"title":"HR Coordinator","years":"2018-2022","description":"Coordinated hiring processes and employee policies while offering administrative and operational support.","company":"PeopleFirst"},
+        {"title":"HR Assistant","years":"2015-2018","description":"Supported payroll and benefits administration, maintained records and assisted the HR team.","company":"StaffingHub"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Generalista de Recursos Humanos","description":"Gestión integral de RRHH: relaciones laborales, reclutamiento, onboarding y políticas. Promoción de un entorno de trabajo positivo."},
+          {"title":"Coordinador/a de RRHH","description":"Coordinación de procesos de contratación y políticas de personal; apoyo administrativo y operativo."},
+          {"title":"Asistente de RRHH","description":"Soporte administrativo en nóminas y beneficios, seguimiento de documentos y soporte al equipo de RRHH."}
+        ],
+        "fr": [
+          {"title":"Généraliste RH","description":"Gestion globale RH : relations employés, recrutement, onboarding et politiques. Promotion d’un environnement de travail positif."},
+          {"title":"Coordinateur RH","description":"Coordination des recrutements et politiques du personnel ; soutien administratif et opérationnel."},
+          {"title":"Assistant RH","description":"Support administratif pour la paie et les avantages, suivi des dossiers et assistance à l’équipe RH."}
+        ],
+        "nl": [
+          {"title":"HR-generalist","description":"Algehele HR-ondersteuning: medewerkerrelaties, recruitment, onboarding en beleid. Bevordering van een positieve werkomgeving."},
+          {"title":"HR-coördinator","description":"Coördinatie van wervingsprocessen en personeelsbeleid; administratieve en operationele ondersteuning."},
+          {"title":"HR-assistent","description":"Administratieve ondersteuning bij loonadministratie en benefits, dossieropvolging en hulp aan het HR-team."}
+        ]
+      }
+    },
+    "executive-assistant": {
+      "skills": ["Calendar Management","Travel Coordination","Meeting Planning","Communication","Organization"],
+      "experiences": [
+        {"title":"Executive Assistant","years":"2021-present","description":"Manage executive schedules, coordinate travel and meetings, prepare reports and handle communications.","company":"GlobalCorp"},
+        {"title":"Administrative Assistant","years":"2017-2021","description":"Provided administrative support; organized meetings and maintained documentation.","company":"GlobalCorp"},
+        {"title":"Office Coordinator","years":"2015-2017","description":"Managed office operations and supported staff.","company":"OfficeWorks"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Asistente Ejecutivo","description":"Gestión de agenda, viajes y comunicaciones para ejecutivos. Preparación de informes y coordinación de reuniones."},
+          {"title":"Asistente Administrativo","description":"Apoyo administrativo; organización de reuniones y mantenimiento de documentación."},
+          {"title":"Coordinador/a de Oficina","description":"Gestión de operaciones de oficina y soporte al personal."}
+        ],
+        "fr": [
+          {"title":"Assistant(e) de direction","description":"Gestion de l’agenda, des déplacements et des communications pour des dirigeants. Préparation de rapports et coordination de réunions."},
+          {"title":"Assistant administratif","description":"Soutien administratif ; organisation de réunions et tenue de dossiers."},
+          {"title":"Coordinateur de bureau","description":"Gestion des opérations de bureau et soutien au personnel."}
+        ],
+        "nl": [
+          {"title":"Directieassistent","description":"Agenda-, reis- en communicatiebeheer voor leidinggevenden. Rapporten voorbereiden en vergaderingen coördineren."},
+          {"title":"Administratief assistent","description":"Administratieve ondersteuning; vergaderingen plannen en documenten bijhouden."},
+          {"title":"Officecoördinator","description":"Beheer van kantooractiviteiten en ondersteuning van personeel."}
+        ]
+      }
+    },
+    "recruiting-assistant": {
+      "skills": ["Talent Sourcing","Interview Scheduling","Applicant Tracking Systems","Onboarding","Communication"],
+      "experiences": [
+        {"title":"Recruiting Assistant","years":"2021-present","description":"Support recruiters with sourcing, screening and coordination; maintain ATS and assist with orientation.","company":"TalentWorks"},
+        {"title":"HR Intern","years":"2019-2021","description":"Assisted in recruiting events and administrative tasks.","company":"TalentWorks"},
+        {"title":"Administrative Assistant","years":"2017-2019","description":"Provided administrative support to the HR team.","company":"OfficeWorks"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Asistente de Reclutamiento","description":"Apoyo a reclutadores con sourcing, preselección y coordinación; mantenimiento del ATS y apoyo en orientaciones."},
+          {"title":"Becario de RRHH","description":"Asistencia en eventos de reclutamiento y tareas administrativas."},
+          {"title":"Asistente Administrativo","description":"Soporte administrativo al equipo de RRHH."}
+        ],
+        "fr": [
+          {"title":"Assistant recrutement","description":"Soutien aux recruteurs pour le sourcing, le screening et la coordination ; maintien de l’ATS et soutien à l’onboarding."},
+          {"title":"Stagiaire RH","description":"Assistance lors des événements de recrutement et des tâches administratives."},
+          {"title":"Assistant administratif","description":"Soutien administratif à l’équipe RH."}
+        ],
+        "nl": [
+          {"title":"Recruitmentassistent","description":"Ondersteuning voor recruiters bij sourcing, screening en coördinatie; onderhouden van ATS en ondersteuning bij onboarding."},
+          {"title":"HR-stagiair","description":"Assistentie bij wervingsevenementen en administratieve taken."},
+          {"title":"Administratief assistent","description":"Administratieve ondersteuning voor het HR-team."}
+        ]
+      }
+    },
+    "payroll-manager": {
+      "skills": ["Payroll Processing","Compliance","ADP","Data Analysis","People Management"],
+      "experiences": [
+        {"title":"Payroll Manager","years":"2022-present","description":"Manage payroll operations for multi-state employees; ensure compliance; lead team and implement improvements.","company":"PayMasters"},
+        {"title":"Senior Payroll Specialist","years":"2018-2022","description":"Processed payroll cycles and tax filings; updated systems and ensured accuracy.","company":"PayMasters"},
+        {"title":"Payroll Specialist","years":"2015-2018","description":"Processed payroll and benefits and assisted employees with inquiries.","company":"WorkForce"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Gerente de Nómina","description":"Dirección de las operaciones de nómina multijurisdiccionales; cumplimiento normativo, liderazgo de equipo e implementación de mejoras."},
+          {"title":"Especialista Senior de Nómina","description":"Procesamiento de nóminas y declaraciones de impuestos; actualización de sistemas."},
+          {"title":"Especialista de Nómina","description":"Procesamiento de nóminas y beneficios; asistencia a empleados."}
+        ],
+        "fr": [
+          {"title":"Responsable Paie","description":"Gestion des opérations de paie multi-états ; conformité réglementaire, management d’équipe et mise en place d’améliorations."},
+          {"title":"Spécialiste Paie Senior","description":"Traitement de la paie et des déclarations fiscales ; mise à jour des systèmes."},
+          {"title":"Spécialiste Paie","description":"Traitement de la paie et des avantages ; assistance aux employés."}
+        ],
+        "nl": [
+          {"title":"Payrollmanager","description":"Leiding over multistate loonadministratie; compliance, teamleiding en doorvoeren van verbeteringen."},
+          {"title":"Senior payrollspecialist","description":"Verwerking van salarissen en belastingaangiften; systeemupdates."},
+          {"title":"Payrollspecialist","description":"Verwerking van lonen en benefits; ondersteuning aan medewerkers."}
+        ]
+      }
+    },
+    "director-total-rewards": {
+      "skills": ["Compensation Strategy","Benefits Design","Executive Compensation","HR Analytics","Leadership"],
+      "experiences": [
+        {"title":"Director of Total Rewards","years":"2021-present","description":"Develop compensation and benefits strategies; oversee salary structures and incentive programs aligned with business goals.","company":"RewardCo"},
+        {"title":"Compensation & Benefits Manager","years":"2016-2021","description":"Managed salary surveys, benefits vendors and pay analyses; ensured compliance.","company":"RewardCo"},
+        {"title":"HR Analyst","years":"2013-2016","description":"Collected HR data and assisted with compensation benchmarking.","company":"PeopleFirst"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Director/a de Compensaciones y Beneficios","description":"Desarrollo de estrategias de compensación y beneficios; supervisión de estructuras salariales y programas de incentivos alineados a objetivos de negocio."},
+          {"title":"Gerente de Compensaciones y Beneficios","description":"Gestión de encuestas salariales, proveedores de beneficios y análisis de retribuciones; garantizar el cumplimiento."},
+          {"title":"Analista de RRHH","description":"Recopilación de datos de RRHH y apoyo en estudios salariales."}
+        ],
+        "fr": [
+          {"title":"Directeur Total Rewards","description":"Élaboration des stratégies de rémunération et avantages ; supervision des grilles salariales et des programmes d’incitation alignés sur les objectifs."},
+          {"title":"Responsable Rémunération & Avantages","description":"Gestion des enquêtes salariales, des prestataires et des analyses de rémunération ; conformité assurée."},
+          {"title":"Analyste RH","description":"Collecte des données RH et participation aux benchmarks de rémunération."}
+        ],
+        "nl": [
+          {"title":"Director Total Rewards","description":"Ontwikkelen van belonings- en benefitstrategieën; toezicht op salarisschalen en incentiveprogramma’s afgestemd op bedrijfsdoelen."},
+          {"title":"Manager Compensatie & Benefits","description":"Beheer van salarisenquêtes, benefitsleveranciers en salarisanalyses; compliance garanderen."},
+          {"title":"HR-analist","description":"Verzameling van HR-data en ondersteuning bij benchmarkstudies."}
+        ]
+      }
+    },
+    "benefits-analyst": {
+      "skills": ["Benefits Administration","Data Analysis","Compliance","Vendor Management","Communication"],
+      "experiences": [
+        {"title":"Benefits Analyst","years":"2022-present","description":"Analyze benefits programs; monitor utilization and costs; communicate changes and ensure compliance.","company":"BenefitPros"},
+        {"title":"Benefits Specialist","years":"2018-2022","description":"Administered health and retirement plans; responded to employee inquiries and prepared reports.","company":"BenefitPros"},
+        {"title":"HR Assistant","years":"2015-2018","description":"Supported benefits enrollment and recordkeeping.","company":"PeopleFirst"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Analista de Beneficios","description":"Análisis de programas de beneficios; seguimiento de uso y costes; comunicación de cambios y garantía de cumplimiento."},
+          {"title":"Especialista de Beneficios","description":"Administración de planes de salud y jubilación; respuesta a consultas y elaboración de informes."},
+          {"title":"Asistente de RRHH","description":"Apoyo en la inscripción y registro de beneficios."}
+        ],
+        "fr": [
+          {"title":"Analyste avantages","description":"Analyse des programmes d’avantages ; suivi de l’utilisation et des coûts ; communication des changements et conformité."},
+          {"title":"Spécialiste avantages","description":"Administration des régimes de santé et de retraite ; réponses aux questions et préparation de rapports."},
+          {"title":"Assistant RH","description":"Soutien à l’inscription et à la tenue des dossiers d’avantages."}
+        ],
+        "nl": [
+          {"title":"Benefitsanalist","description":"Analyse van benefitsprogramma’s; monitoring van gebruik en kosten; communicatie van wijzigingen en naleving garanderen."},
+          {"title":"Benefitspecialist","description":"Beheer van gezondheids- en pensioenregelingen; beantwoorden van vragen en rapportages opstellen."},
+          {"title":"HR-assistent","description":"Ondersteuning bij registratie en administratie van benefits."}
+        ]
+      }
+    },
+    "admin-assistant": {
+      "skills": ["Administrative Support","Scheduling","Document Management","Customer Service","Communication"],
+      "experiences": [
+        {"title":"Administrative Assistant","years":"2020-present","description":"Provide administrative support to multiple departments; manage calendars and prepare correspondence.","company":"OfficeWorks"},
+        {"title":"Receptionist","years":"2017-2020","description":"Managed front-desk operations; greeted visitors and maintained office supplies.","company":"OfficeWorks"},
+        {"title":"Customer Service Representative","years":"2015-2017","description":"Provided support to clients; answered inquiries and processed transactions.","company":"ServiceHub"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Asistente Administrativo","description":"Soporte administrativo a diversos departamentos; gestión de agendas y preparación de correspondencia."},
+          {"title":"Recepcionista","description":"Gestión de la recepción; atención de visitantes y mantenimiento de suministros."},
+          {"title":"Representante de Atención al Cliente","description":"Soporte a clientes; respuesta a consultas y procesamiento de transacciones."}
+        ],
+        "fr": [
+          {"title":"Assistant administratif","description":"Soutien administratif pour différents services ; gestion d’agendas et préparation de courriers."},
+          {"title":"Réceptionniste","description":"Gestion de l’accueil ; accueil des visiteurs et gestion des fournitures."},
+          {"title":"Représentant du service client","description":"Assistance aux clients ; réponse aux questions et traitement des transactions."}
+        ],
+        "nl": [
+          {"title":"Administratief assistent","description":"Administratieve ondersteuning voor verschillende afdelingen; agendabeheer en correspondentie opstellen."},
+          {"title":"Receptionist","description":"Beheer van de receptie; bezoekers ontvangen en voorraden beheren."},
+          {"title":"Klantenservicevertegenwoordiger","description":"Klanten ondersteunen; vragen beantwoorden en transacties verwerken."}
+        ]
+      }
+    },
+    "hr-business-partner": {
+      "skills": ["Strategic HR","Employee Relations","Talent Management","Organizational Development","Data Analysis"],
+      "experiences": [
+        {"title":"HR Business Partner","years":"2022-present","description":"Partner with leadership on workforce planning; develop talent strategies; advise managers on HR policies and manage performance review processes.","company":"PeopleFirst"},
+        {"title":"Senior HR Advisor","years":"2018-2022","description":"Provided guidance on HR matters; implemented projects and supported change management.","company":"PeopleFirst"},
+        {"title":"HR Generalist","years":"2014-2018","description":"Delivered HR services including employee relations, recruiting and training programs.","company":"WorkForce"}
+      ],
+      "i18n": {
+        "es": [
+          {"title":"Socio de Negocios de RRHH","description":"Colaboración con la dirección en la planificación de la plantilla; desarrollo de estrategias de talento; asesoría en políticas y gestión del rendimiento."},
+          {"title":"Asesor Senior de RRHH","description":"Orientación en temas de RRHH; implementación de proyectos y apoyo en gestión del cambio."},
+          {"title":"Generalista de RRHH","description":"Prestación de servicios de RRHH; relaciones laborales, reclutamiento y programas de formación."}
+        ],
+        "fr": [
+          {"title":"Business Partner RH","description":"Collaboration avec la direction sur la planification des effectifs ; élaboration de stratégies de talents ; conseil en politiques et gestion de la performance."},
+          {"title":"Conseiller RH Senior","description":"Conseils sur les sujets RH ; mise en œuvre de projets et accompagnement du changement."},
+          {"title":"Généraliste RH","description":"Services RH ; relations employés, recrutement et programmes de formation."}
+        ],
+        "nl": [
+          {"title":"HR Business Partner","description":"Samenwerking met het management bij personeelsplanning; ontwikkeling van talentstrategieën; advisering over HR-beleid en prestatiebeheer."},
+          {"title":"Senior HR-adviseur","description":"Advies over HR-aangelegenheden; projecten implementeren en veranderingsprocessen ondersteunen."},
+          {"title":"HR-generalist","description":"HR-diensten leveren; werknemerrelaties, werving en trainingsprogramma’s."}
+        ]
+      }
+    }
+  }
+}
+</script>
+
+<!-- Materialize JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+<script>
+/* ========================================================================
+   SPA NAV + THEME
+======================================================================== */
+(() => {
+  const THEMES = {
+    coral:{ accent:"#ff7b54", heroA:"#ffd166", heroB:"#ff7b54" },
+    sea:{   accent:"#4facfe", heroA:"#a0e7ff", heroB:"#4facfe" },
+    city:{  accent:"#34d399", heroA:"#cde7d7", heroB:"#34d399" }
+  };
+  let currentTheme = 'coral';
+
+  const setTheme = (name) => {
+    currentTheme = THEMES[name] ? name : 'coral';
+    const t = THEMES[currentTheme];
+    document.documentElement.style.setProperty('--accent', t.accent);
+    document.documentElement.style.setProperty('--heroA', t.heroA);
+    document.documentElement.style.setProperty('--heroB', t.heroB);
+  };
+  setTheme('coral');
+
+  const $ = s => document.querySelector(s);
+  function showScreen(which){
+    $('#topbar').style.display = 'none';
+    $('#welcome').style.display = (which==='welcome') ? 'block' : 'none';
+    $('#screen-resume').style.display = (which==='resume') ? 'block' : 'none';
+    $('#screen-receipt').style.display = (which==='receipt') ? 'block' : 'none';
+    $('#screen-degree').style.display = (which==='degree') ? 'block' : 'none';
+    document.querySelectorAll('#topbar .tab').forEach(a=>a.classList.toggle('active', a.dataset.target===which));
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+
+  document.addEventListener('click', (e)=>{
+    const go = e.target.closest('[data-go]');
+    if(go){ showScreen(go.dataset.go); }
+  });
+  document.querySelectorAll('#topbar .tab').forEach(a=>{
+    a.addEventListener('click', (e)=>{ e.preventDefault(); showScreen(a.dataset.target); });
+  });
+  document.getElementById('theme-select-top').addEventListener('change', (e)=> setTheme(e.target.value));
+
+  window.__APP__ = { setTheme, getTheme:()=>currentTheme, THEMES, showScreen };
+  const params = new URLSearchParams(window.location.search);
+  const requested = params.get('app') || 'welcome';
+  showScreen(['resume','receipt','degree'].includes(requested) ? requested : 'welcome');
+})();
+</script>
+
+<script>
+/* ========================================================================
+   RESUME BUILDER (unchanged behavior, fixed & working)
+======================================================================== */
+(() => {
+  let DB=null,currentCountry=null,currentProfile=null,currentLang='en';
+  // Track current gender and used name combinations
+  let currentGender='male';
+  // usedCombos[country] = { male:Set, female:Set } to avoid repeating name combinations within a session
+  const usedCombos = {};
+  const photo={img:null,scale:1,minScale:1,x:0,y:0,drag:false,dx:0,dy:0};
+
+  const I18N = {
+    en:{languages:"Languages",knowledge:"Knowledge & Tools",highlights:"Highlights",work:"Work Experience",course:"Courses & Training",problem:"Problem Solving",team:"Team Player",present:"Present"},
+    es:{languages:"Idiomas",knowledge:"Conocimientos y Herramientas",highlights:"Puntos destacados",work:"Experiencia Laboral",course:"Cursos y Formación",problem:"Resolución de problemas",team:"Trabajo en equipo",present:"Presente"},
+    fr:{languages:"Langues",knowledge:"Connaissances & Outils",highlights:"Points forts",work:"Expérience Professionnelle",course:"Cours et Formations",problem:"Résolution de problèmes",team:"Esprit d’équipe",present:"Présent"},
+    nl:{languages:"Talen",knowledge:"Kennis & Tools",highlights:"Hoogtepunten",work:"Werkervaring",course:"Cursussen & Training",problem:"Probleemoplossend vermogen",team:"Teamspeler",present:"Heden"}
+  };
+
+  const ICONS = {
+    mail:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" ry="2"/><polyline points="3 7 12 13 21 7"/></svg>',
+    phone:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.1 5.18 2 2 0 0 1 5 3h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L9 10a16 16 0 0 0 5 5l.54-.54a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/></svg>',
+    mapPin:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+    linkedin:'<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM3 8.98h4v12.02H3zM9 9h3.8v1.64h.05c.53-.96 1.83-1.98 3.77-1.98 4.03 0 4.78 2.65 4.78 6.09v6.25h-4V15.9c0-1.48-.03-3.38-2.06-3.38-2.06 0-2.38 1.61-2.38 3.27v5.21H9z"/></svg>',
+    star:'<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>'
+  };
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    DB = JSON.parse(document.getElementById('db-json').textContent);
+    M.Modal.init(document.querySelectorAll('.modal'),{preventScrolling:true});
+    M.Chips.init(document.getElementById('skills-chips'),{placeholder:'Add a skill',secondaryPlaceholder:'+skill'});
+    M.Collapsible.init(document.querySelectorAll('.collapsible'));
+
+    const countrySel = document.getElementById('country-select');
+    const profileSel = document.getElementById('profile-select');
+    const langSel    = document.getElementById('lang-select');
+    const genderSel  = document.getElementById('gender-select');
+
+    document.getElementById('preview-btn').addEventListener('click', renderPreview);
+    document.getElementById('download-pretty-btn').addEventListener('click', downloadPdfPretty);
+    document.getElementById('download-btn').addEventListener('click', downloadPdfSelectable);
+
+    document.querySelectorAll('.randomize-btn').forEach(b=>b.addEventListener('click',()=>randomizeField(b.dataset.field)));
+
+    // country -> auto populate + default language
+    countrySel.addEventListener('change',()=>{
+      currentCountry = countrySel.value;
+      const langMap = { us:'en', uk:'en', nl:'nl', fr:'fr', es:'es', ca:'en' };
+      const newLang = langMap[currentCountry] || 'en';
+      currentLang = newLang; langSel.value = newLang;
+
+      randomizeField('fullname', true);
+      randomizeField('phone', true);
+      randomizeField('address', true);
+      syncEmailFromName();
+      M.toast({html:'Fields populated', classes:'teal'});
+    });
+
+    profileSel.addEventListener('change',()=>{ currentProfile=profileSel.value; fillSkillsFromProfile(); });
+    langSel.addEventListener('change',()=>{ currentLang=langSel.value; });
+
+    // gender -> update currentGender and randomize name
+    currentGender = genderSel.value || 'male';
+    genderSel.addEventListener('change',()=>{
+      currentGender = genderSel.value;
+      // regenerate name when gender changes
+      randomizeField('fullname', true);
+      syncEmailFromName();
+    });
+
+    // photo cropper
+    document.getElementById('photo-input').addEventListener('change', onPhotoChosen);
+    document.getElementById('photo-plus').addEventListener('click', (e)=>{ e.stopPropagation(); document.getElementById('photo-input').click(); });
+    document.getElementById('photo-crop-container').addEventListener('click', (e)=>{ if(!photo.drag) document.getElementById('photo-input').click(); });
+    setupCanvas();
+    drawPhoto();
+
+    // email auto from name
+    document.getElementById('input-fullname').addEventListener('input', syncEmailFromName);
+  });
+
+  function getRandomFrom(list){ return list[Math.floor(Math.random()*list.length)]; }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+  function localizeYears(str){ return String(str||'').replace(/\s*-\s*/g,'–').replace(/present/i,(I18N[currentLang]||I18N.en).present); }
+
+  function normalizeNameParts(name){
+    const parts=name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z\s]/g,' ').trim().split(/\s+/).filter(Boolean);
+    if(!parts.length) return {first:'', last:''};
+    return { first:parts[0], last: parts.length>1 ? parts.at(-1) : '' };
+  }
+  function buildEmailFromName(name){ const {first,last}=normalizeNameParts(name); if(!first&&!last) return ''; return `${last?`${first}.${last}`:first}@gmail.com`; }
+  function buildLinkedIn(name){ const {first,last}=normalizeNameParts(name); if(!first) return 'linkedin.com/in/your.name'; return `linkedin.com/in/${first}.${(last||'user')}`; }
+  function syncEmailFromName(){ const name=document.getElementById('input-fullname').value||''; const f=document.getElementById('input-email'); f.value=buildEmailFromName(name); M.updateTextFields(); }
+
+  function randomizeField(field,silent=false){
+    if(!DB||!currentCountry||!DB.countries[currentCountry]){ if(!silent) M.toast({html:'Select a country first',classes:'orange darken-3'}); return; }
+    const c=DB.countries[currentCountry];
+    if(field==='fullname'){
+      // Use custom full name generator that respects gender and avoids repeats
+      document.getElementById('input-fullname').value = randomizeFullName();
+      syncEmailFromName();
+    }
+    if(field==='phone')  document.getElementById('input-phone').value=getRandomFrom(c.phones);
+    if(field==='address')document.getElementById('input-address').value=getRandomFrom(c.addresses);
+    M.updateTextFields(); if(!silent) M.toast({html:'Randomized '+field,classes:'teal'});
+  }
+
+  // Generate a full name from first, middle and last name lists based on selected gender and country.
+  // Ensures each combination is unique within a session. When all combinations are used, it resets.
+  function randomizeFullName(){
+    // If DB not loaded or country not selected, bail
+    if(!DB || !currentCountry || !DB.countries[currentCountry]){
+      return '';
+    }
+    const c = DB.countries[currentCountry];
+    // Determine lists based on gender
+    const firstList  = currentGender === 'female' ? c.female_first_names : c.male_first_names;
+    const middleList = c.middle_names || [];
+    const lastList   = c.last_names || [];
+    // Fallback to simple names if lists are missing
+    if(!firstList || !firstList.length || !middleList.length || !lastList.length){
+      return getRandomFrom(c.names || []);
+    }
+    // Initialise used combination tracking
+    if(!usedCombos[currentCountry]) usedCombos[currentCountry] = { male:new Set(), female:new Set() };
+    if(!usedCombos[currentCountry][currentGender]) usedCombos[currentCountry][currentGender] = new Set();
+    const usedSet = usedCombos[currentCountry][currentGender];
+    const totalCombos = firstList.length * middleList.length * lastList.length;
+    // Reset if all combinations have been used
+    if(usedSet.size >= totalCombos) usedSet.clear();
+    let name = '';
+    // Try to generate an unused combination
+    for(let attempt=0; attempt<1000; attempt++){
+      const first  = getRandomFrom(firstList);
+      const middle = getRandomFrom(middleList);
+      const last   = getRandomFrom(lastList);
+      name = `${first} ${middle} ${last}`;
+      if(!usedSet.has(name)){
+        usedSet.add(name);
+        return name;
+      }
+    }
+    // If unique name not found after many attempts, return last generated one
+    usedSet.add(name);
+    return name;
+  }
+
+  function fillSkillsFromProfile(){
+    const el=document.getElementById('skills-chips'); el.innerHTML='';
+    M.Chips.init(el,{placeholder:'Add a skill',secondaryPlaceholder:'+skill'});
+    const inst=M.Chips.getInstance(el);
+    (DB?.profiles?.[currentProfile]?.skills||[]).forEach(s=>inst.addChip({tag:s}));
+  }
+
+  // photo crop
+  const canvas=document.getElementById('photo-canvas'); const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  function onPhotoChosen(e){ const f=e.target.files?.[0]; if(!f) return; const img=new Image(); img.onload=()=>{ photo.img=img; document.getElementById('photo-crop-container').classList.add('has-photo');
+      const sx=canvas.width/img.width, sy=canvas.height/img.height; photo.minScale=Math.max(sx,sy); photo.scale=photo.minScale;
+      photo.x=(canvas.width-img.width*photo.scale)/2; photo.y=(canvas.height-img.height*photo.scale)/2; drawPhoto(); };
+    img.src=URL.createObjectURL(f); }
+  function drawPhoto(){ ctx.clearRect(0,0,200,200); ctx.save(); ctx.beginPath(); ctx.arc(100,100,100,0,Math.PI*2); ctx.clip();
+    if(photo.img){ ctx.imageSmoothingQuality='high'; ctx.drawImage(photo.img,photo.x,photo.y,photo.img.width*photo.scale,photo.img.height*photo.scale); }
+    else { ctx.fillStyle='#0b1426'; ctx.fillRect(0,0,200,200); }
+    ctx.restore(); ctx.beginPath(); ctx.arc(100,100,97,0,Math.PI*2); ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke(); }
+  function setupCanvas(){
+    canvas.addEventListener('mousedown',e=>{ photo.drag=true; photo.dx=e.clientX-photo.x; photo.dy=e.clientY-photo.y; canvas.style.cursor='grabbing'; });
+    window.addEventListener('mouseup',()=>{ photo.drag=false; canvas.style.cursor='grab'; });
+    window.addEventListener('mousemove',e=>{ if(!photo.drag) return; photo.x=e.clientX-photo.dx; photo.y=e.clientY-photo.dy; drawPhoto(); });
+    canvas.addEventListener('wheel',e=>{ if(!photo.img)return; e.preventDefault(); const d=e.deltaY<0?1.05:0.95; const ps=photo.scale; let ns=ps*d; if(ns<photo.minScale)ns=photo.minScale; if(ns>5)ns=5;
+      const r=canvas.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top; const dx=(mx-photo.x)/ps, dy=(my-photo.y)/ps; photo.x=mx-dx*ns; photo.y=my-dy*ns; photo.scale=ns; drawPhoto(); },{passive:false});
+  }
+  function avatarDataUrl(){ const off=document.createElement('canvas'); off.width=200; off.height=200; const o=off.getContext('2d');
+    o.save(); o.beginPath(); o.arc(100,100,100,0,Math.PI*2); o.clip(); if(photo.img){ o.imageSmoothingQuality='high'; o.drawImage(photo.img,photo.x,photo.y,photo.img.width*photo.scale,photo.img.height*photo.scale); }
+    o.restore(); return off.toDataURL('image/png'); }
+  function saveHtmlPdf(payload){
+    const api = window.payslipDesktop || window.parent?.payslipDesktop;
+    return api?.saveHtmlAsPdf ? api.saveHtmlAsPdf(payload) : null;
+  }
+
+  // PREVIEW (pretty HTML inside iframe)
+  function stars(n){ return '<span style="display:inline-flex;gap:2px;vertical-align:middle">'+Array.from({length:n}).map(()=>ICONS.star).join('')+'</span>'; }
+  function chipHTML(txt){ return `<span class="pill" style="background:#eef2ff;margin:2px">${escapeHtml(txt)}</span>`; }
+
+  function buildPreviewHTML(data){
+    const t=I18N[currentLang]||I18N.en;
+    const theme=window.__APP__.THEMES[window.__APP__.getTheme()];
+    const skills=data.skills.map(chipHTML).join('');
+    const langs=data.languages.map(l=>`<div style="margin:6px 0"><strong>${escapeHtml(l.name)}</strong> ${stars(l.stars)}</div>`).join('');
+    const exps=data.experiences.map(e=>`
+      <div style="position:relative;background:#fff7f3;border-radius:14px;padding:12px 14px;margin:12px 0;box-shadow:0 1px 0 rgba(0,0,0,.06) inset,0 1px 3px rgba(0,0,0,.05);">
+        <div style="position:absolute;left:14px;top:8px;width:12px;height:12px;background:${theme.accent};border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 3px rgba(0,0,0,.07)"></div>
+        <span style="margin-left:36px;background:#FFE3DC;color:#7c2d12;border:1px solid rgba(0,0,0,.05);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;display:inline-block">${escapeHtml(localizeYears(e.years))}</span>
+        <div style="margin-top:6px;font-weight:800">${escapeHtml(e.title||'')}</div>
+        ${e.company?`<div style="font-weight:700;color:#374151">@${escapeHtml(e.company)}</div>`:''}
+        <div style="font-size:13px;color:#374151;margin-top:4px">${escapeHtml(e.description||'')}</div>
+      </div>`).join('');
+
+    return `<!doctype html><html><head><meta charset="utf-8"><style>
+      html,body{margin:0;padding:0;background:#fff;color:#222;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .sheet{width:794px;height:1123px;margin:0 auto;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.15)}
+    </style></head><body>
+      <div class="sheet">
+        <div style="position:relative;background:linear-gradient(135deg, ${theme.heroA}, ${theme.heroB});padding:18px 24px 90px">
+          <h1 style="text-align:center;margin:0;font-size:34px;font-weight:800">${escapeHtml(data.fullName)}</h1>
+          <div style="max-width:560px;margin:8px auto 0;display:flex;justify-content:space-between;gap:28px;font-size:14px">
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+              <span>${ICONS.mail} ${escapeHtml(data.email)}</span>
+              <span>${ICONS.phone} ${escapeHtml(data.phone)}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+              <span>${ICONS.mapPin} ${escapeHtml(data.address)}</span>
+              <span>${ICONS.linkedin} ${escapeHtml(data.linkedin)}</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:-76px;width:150px;height:150px;border-radius:999px;border:6px solid #fff;overflow:hidden;box-shadow:0 10px 32px rgba(0,0,0,.24);background:#ddd">
+            <img src="${data.photoDataUrl}" alt="" style="width:100%;height:100%;object-fit:cover"/>
+          </div>
+        </div>
+        <div style="padding:96px 24px 24px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;text-align:center">
+            <div><div style="font-weight:800;border-bottom:3px solid ${theme.accent};display:inline-block;padding-bottom:4px;margin-bottom:8px">${t.languages}</div>${langs}</div>
+            <div><div style="font-weight:800;border-bottom:3px solid ${theme.accent};display:inline-block;padding-bottom:4px;margin-bottom:8px">${t.knowledge}</div><div>${skills}</div></div>
+            <div><div style="font-weight:800;border-bottom:3px solid ${theme.accent};display:inline-block;padding-bottom:4px;margin-bottom:8px">${t.highlights}</div>
+                <div>${chipHTML(t.course)}${chipHTML(t.problem)}${chipHTML(t.team)}</div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:18px"><span style="font-weight:800;border-bottom:3px solid ${theme.accent};display:inline-block;padding-bottom:4px">${t.work}</span></div>
+          <div>${exps}</div>
+        </div>
+      </div>
+    </body></html>`;
+  }
+
+  function getLocalizedExperiences(profileKey, lang){
+    const P=DB?.profiles?.[profileKey]; if(!P) return [];
+    const base=P.experiences||[]; const loc=P.i18n?.[lang]; if(!loc) return base;
+    return base.map((e,i)=>({ ...e, title:loc[i]?.title||e.title, description:loc[i]?.description||e.description }));
+  }
+
+  function collectData(){
+    const fullName=document.getElementById('input-fullname').value||'Your Name';
+    const email=document.getElementById('input-email').value||buildEmailFromName(fullName)||'email@gmail.com';
+    const phone=document.getElementById('input-phone').value||'—';
+    const address=document.getElementById('input-address').value||'—';
+    const chips=M.Chips.getInstance(document.getElementById('skills-chips'));
+    const skills=(chips?.chipsData||[]).map(c=>c.tag);
+    const experiences=currentProfile?getLocalizedExperiences(currentProfile,currentLang):[];
+    const languages=[
+      {name:(currentLang==='es'?'Inglés':currentLang==='fr'?'Anglais':currentLang==='nl'?'Engels':'English'),stars:5},
+      {name:(currentLang==='es'?'Español':currentLang==='fr'?'Espagnol':currentLang==='nl'?'Spaans':'Spanish'),stars:5},
+      {name:(currentLang==='es'?'Portugués':currentLang==='fr'?'Portugais':currentLang==='nl'?'Portugees':'Portuguese'),stars:4}
+    ];
+    return {
+      fullName, email, phone, address,
+      linkedin: buildLinkedIn(fullName),
+      skills, experiences, languages,
+      photoDataUrl: avatarDataUrl()
+    };
+  }
+
+  function renderPreview(){
+    const data=collectData();
+    document.getElementById('preview-frame').srcdoc=buildPreviewHTML(data);
+    M.Modal.getInstance(document.getElementById('preview-modal')).open();
+  }
+
+  function downloadPdfPretty(){
+    const frame=document.getElementById('preview-frame');
+    if(!frame.contentWindow){ M.toast({html:'Open the preview first',classes:'orange'}); return; }
+    const html = frame.srcdoc || frame.contentDocument?.documentElement?.outerHTML || '';
+    const safe=(document.getElementById('input-fullname').value||'resume').replace(/[^\w\-]+/g,'_');
+    const saveJob = saveHtmlPdf({ title: safe + '_colorful_resume', html });
+    if(saveJob){
+      saveJob.then(r=>{ if(!r?.canceled) M.toast({html:'PDF saved',classes:'teal'}); });
+      return;
+    }
+    setTimeout(()=>{ frame.contentWindow.focus(); frame.contentWindow.print(); }, 150);
+  }
+
+  // Simplified selectable-text PDF
+  function downloadPdfSelectable(){
+    const theme = window.__APP__.THEMES[window.__APP__.getTheme()];
+    const t = I18N[currentLang] || I18N.en;
+    const data = collectData();
+    const bulletLangs = data.languages.map(l => `${l.name}  ${'★'.repeat(l.stars)}`).join('\n');
+
+    const simpleExp = data.experiences.map(e => ([
+      { text: localizeYears(e.years), bold:true, color:'#555' },
+      { text: e.title || '', bold:true },
+      e.company ? { text: '@' + e.company, bold:true, color:'#333' } : '',
+      { text: e.description || '', margin:[0,2,0,8] }
+    ])).flat();
+
+    const doc = {
+      pageSize:'A4', pageMargins:[40,50,40,50],
+      content:[
+        { text: data.fullName, fontSize:22, bold:true, alignment:'center', margin:[0,0,0,6] },
+        { columns:[
+            { text: `${data.email}\n${data.phone}`, alignment:'right' },
+            { text: `${data.address}\n${data.linkedin}`, alignment:'left' }
+          ], columnGap:18, margin:[0,0,0,10]
+        },
+        { canvas:[{ type:'rect', x:0, y:0, w:515, h:1, color: theme.accent }], margin:[0,8,0,12] },
+
+        { columns:[
+            { width:'33%', stack:[ {text:t.languages, bold:true, decoration:'underline'}, {text:bulletLangs} ] },
+            { width:'33%', stack:[ {text:t.knowledge, bold:true, decoration:'underline'}, { ul: data.skills, margin:[0,4,0,0] } ] },
+            { width:'34%', stack:[ {text:t.highlights, bold:true, decoration:'underline'},
+              { ul:[t.course, t.problem, t.team], margin:[0,4,0,0] } ] }
+          ], columnGap:12, margin:[0,0,0,12]
+        },
+
+        { text:t.work, bold:true, decoration:'underline', alignment:'center', margin:[0,6,0,6] },
+        ...simpleExp
+      ],
+      defaultStyle:{ font:'Roboto', fontSize:11 }
+    };
+
+    const safe=(data.fullName||'resume').replace(/[^\w\-]+/g,'_');
+    pdfMake.createPdf(doc).download(`${safe}.pdf`);
+  }
+})();
+</script>
+
+<script>
+/* ========================================================================
+   RECEIPT GENERATOR – styled date picker, logos, barcode, translations
+   (kept working; added centering, richer items, US + addresses, inner button)
+======================================================================== */
+(() => {
+  const $ = s => document.querySelector(s);
+  const byId = id => document.getElementById(id);
+
+  // Materialize Datepicker
+  document.addEventListener('DOMContentLoaded', () => {
+    M.Datepicker.init(document.querySelectorAll('.datepicker'), {
+      autoClose:true, format:'yyyy-mm-dd', showClearBtn:true, firstDay:1
+    });
+  });
+
+  // Translations
+  const i18n = {
+    date:{ UK:"Date", US:"Date", ES:"Fecha", FR:"Date", SE:"Datum", NL:"Datum", DE:"Datum", IT:"Data", AU:"Date", CN:"日期" },
+    rece:{ UK:"Receipt No.", US:"Receipt No.", ES:"Recibo Nº", FR:"N° de reçu", SE:"Kvitto nr", NL:"Bon nr.", DE:"Beleg Nr.", IT:"Ricevuta n.", AU:"Receipt No.", CN:"收据号" },
+    paid:{ UK:"Paid with", US:"Paid with", ES:"Pagado con", FR:"Payé avec", SE:"Betalt med", NL:"Betaald met", DE:"Bezahlt mit", IT:"Pagato con", AU:"Paid with", CN:"支付方式" },
+    item:{ UK:"Item", US:"Item", ES:"Artículo", FR:"Article", SE:"Artikel", NL:"Item", DE:"Artikel", IT:"Oggetto", AU:"Item", CN:"项目" },
+    tax:{ UK:"Tax", US:"Tax", ES:"Impuesto", FR:"Impôt", SE:"Skatt", NL:"Belasting", DE:"Steuer", IT:"Imposta", AU:"Tax", CN:"税" },
+    total:{ UK:"Total", US:"Total", ES:"Total", FR:"Total", SE:"Total", NL:"Totaal", DE:"Gesamt", IT:"Totale", AU:"Total", CN:"合计" },
+    thanks:{ UK:"Thank you for your purchase!", US:"Thank you for your purchase!", ES:"¡Gracias por su compra!", FR:"Merci pour votre achat !", SE:"Tack för ditt köp!", NL:"Bedankt voor uw aankoop!", DE:"Vielen Dank für Ihren Kauf!", IT:"Grazie per il tuo acquisto!", AU:"Thank you for your purchase!", CN:"感谢您的购买！" }
+  };
+
+  // Fake brand logos (SVG) + names by type
+  const brands = {
+    oilGas:[
+      {name:"Shella Fuel", svg:'<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#ffdd55"/><path d="M6 18h20l-2 6H8z" fill="#ff7b54"/></svg>'},
+      {name:"Exzon", svg:'<svg viewBox="0 0 32 32"><rect x="4" y="6" width="24" height="20" rx="3" fill="#111"/><text x="16" y="20" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">EX</text></svg>'}
+    ],
+    hotel:[
+      {name:"Hiltona", svg:'<svg viewBox="0 0 32 32"><rect x="6" y="6" width="20" height="20" rx="4" fill="#fff"/><text x="16" y="20" text-anchor="middle" font-size="12" font-weight="800" fill="#111">H</text></svg>'},
+      {name:"Marriette", svg:'<svg viewBox="0 0 32 32"><circle cx="10" cy="16" r="6" fill="#fff"/><circle cx="22" cy="16" r="6" fill="#fff"/></svg>'}
+    ],
+    meal:[
+      {name:"Casa Bonita", svg:'<svg viewBox="0 0 32 32"><path d="M8 8h4v16H8zM20 8h4v16h-4z" fill="#fff"/></svg>'},
+      {name:"Urban Fork", svg:'<svg viewBox="0 0 32 32"><path d="M12 6v20M20 6v20" stroke="#fff" stroke-width="4"/></svg>'}
+    ],
+    officeSupplies:[
+      {name:"Staplez", svg:'<svg viewBox="0 0 32 32"><rect x="6" y="12" width="20" height="8" rx="4" fill="#fff"/></svg>'},
+      {name:"Quilo", svg:'<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="8" fill="#fff"/></svg>'}
+    ]
+  };
+
+  const addresses = {
+    UK:"10 Downing Street, London, SW1A 2AA, United Kingdom",
+    US:"350 5th Ave, New York, NY 10118, USA",
+    ES:"Calle de Alcalá, 190, 28009 Madrid, Spain",
+    FR:"3 Avenue Victor Hugo, 13001 Marseille, France",
+    SE:"Sveavägen 44, 111 34 Stockholm, Sweden",
+    NL:"Markt 8, Eindhoven, Netherlands",
+    DE:"Pariser Platz, 10117 Berlin, Germany",
+    IT:"Via dei Fori Imperiali, 00186 Roma, Italy",
+    AU:"Bennelong Point, Sydney NSW 2000, Australia",
+    CN:"Tiananmen Square, Dongcheng, Beijing, China"
+  };
+  const currency = { UK:"£", US:"$", ES:"€", FR:"€", SE:"kr", NL:"€", DE:"€", IT:"€", AU:"$", CN:"¥" };
+
+  // Richer items by type with quantity logic
+  const itemPool = {
+    oilGas:[ {n:"Fuel (Unleaded)", p:[20,80]}, {n:"Fuel (Diesel)", p:[20,80]}, {n:"Car Wash", p:[6,12]}, {n:"Windshield Fluid", p:[4,8]}, {n:"Snacks", p:[3,10]} ],
+    hotel:[ {n:"Room Night", p:[60,160]}, {n:"Breakfast Buffet", p:[8,20]}, {n:"City Tax", p:[2,8]}, {n:"Mini Bar", p:[6,18]}, {n:"Parking", p:[10,25]} ],
+    meal:[ {n:"Main Course", p:[8,24]}, {n:"Starter", p:[4,12]}, {n:"Dessert", p:[3,10]}, {n:"Beverage", p:[2,8]}, {n:"Coffee/Tea", p:[2,4]} ],
+    officeSupplies:[ {n:"Printer Paper (Ream)", p:[4,8]}, {n:"Ballpoint Pens (Pack)", p:[2,6]}, {n:"Stapler", p:[6,12]}, {n:"Desk Organizer", p:[6,15]}, {n:"Notepad", p:[1,4]} ]
+  };
+
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  const fmt  = (n,c) => `${n.toFixed(2)} ${c}`;
+
+  // Simple Code39 barcode (offline)
+  const code39Map = {
+    0:"101001101101", 1:"110100101011", 2:"101100101011", 3:"110110010101", 4:"101001101011",
+    5:"110100110101", 6:"101100110101", 7:"101001011011", 8:"110100101101", 9:"101100101101",
+    A:"110101001011", B:"101101001011", C:"110110100101", D:"101011001011", E:"110101100101",
+    F:"101101100101", G:"101010011011", H:"110101001101", I:"101101001101", J:"101011001101",
+    K:"110101010011", L:"101101010011", M:"110110101001", N:"101011010011", O:"110101101001",
+    P:"101101101001", Q:"101010110011", R:"110101011001", S:"101101011001", T:"101011011001",
+    U:"110010101011", V:"100110101011", W:"110011010101", X:"100101101011", Y:"110010110101",
+    Z:"100110110101", "-":"100101011011", ".":"110010101101", " ":"100110101101",
+    "$":"100100100101", "/":"100100101001", "+":"100101001001", "%":"101001001001", "*":"100101101101"
+  };
+  function drawCode39(svgEl, text){
+    const ctx = text.toUpperCase().replace(/[^0-9A-Z\-\.\ \$\/\+\%]/g,'');
+    const full = `*${ctx}*`.split('').map(ch=>code39Map[ch]).join('0');
+    const w = svgEl.viewBox.baseVal.width || 420;
+    const h = svgEl.viewBox.baseVal.height || 56;
+    svgEl.innerHTML='';
+    let x=10, barW = Math.max(1, Math.floor((w-20)/full.length));
+    for(let i=0;i<full.length;i++){
+      if(full[i]==='1'){
+        const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+        r.setAttribute('x', x); r.setAttribute('y', 4);
+        r.setAttribute('width', barW); r.setAttribute('height', h-12);
+        r.setAttribute('fill', '#111'); svgEl.appendChild(r);
+      }
+      x+=barW;
+    }
+  }
+
+  byId('rcpt-price-rand').addEventListener('click', ()=>{
+    const min=8.02, max=269.22;
+    byId('rcpt-price').value = (Math.random()*(max-min)+min).toFixed(2);
+  });
+
+  byId('rcpt-generate').addEventListener('click', ()=>{
+    const type = byId('rcpt-type').value;
+    const cc   = byId('rcpt-country').value;
+
+    const dateStr = byId('rcpt-date').value || new Date().toISOString().slice(0,10);
+    const dt = new Date(dateStr+'T00:00:00');
+
+    const totalTarget = parseFloat(byId('rcpt-price').value||'0') || 0;
+    const brand = pick(brands[type]);
+    const addr  = addresses[cc] || '';
+    const cur   = currency[cc] || '';
+    const taxRate = Math.round( (Math.random()*9+5) * 100 ) / 100; // 5–14%
+    const receiptNo = Math.floor(Math.random()*1_000_000);
+
+    // Header + logo
+    byId('rcpt-logo').innerHTML = brand.svg;
+    byId('rcpt-store').textContent = brand.name;
+    byId('rcpt-address').textContent = addr;
+
+    // Meta
+    byId('rcpt-date-no').textContent =
+      `${(i18n.date[cc]||'Date')}: ${dt.toLocaleDateString()}    ${(i18n.rece[cc]||'Receipt No.')} ${receiptNo}`;
+    byId('rcpt-pay').innerHTML =
+      `${(i18n.paid[cc]||'Paid with')}: Credit Card • **** ${String(1000+Math.floor(Math.random()*8999))}<br/>AUTH: ${Math.floor(Math.random()*900000)+100000}`;
+
+    // Items with quantity & prices to reach target
+    const pool = itemPool[type].slice();
+    const ul = byId('rcpt-items'); ul.innerHTML='';
+    let subtotal=0;
+    let loops=0;
+    while(subtotal < totalTarget*0.92 && loops<10){
+      loops++;
+      const it = pick(pool);
+      const [minP,maxP]=it.p;
+      const price = +(Math.random()*(maxP-minP)+minP).toFixed(2);
+      const qty = Math.max(1, Math.round( (totalTarget/price) > 5 ? Math.random()*3+1 : Math.random()*2+1 ));
+      const line = +(price*qty).toFixed(2);
+
+      // prevent overshoot
+      if(subtotal + line > totalTarget*1.05) continue;
+
+      subtotal += line;
+
+      const row = document.createElement('div'); row.className='item mono';
+      row.innerHTML = `<span>${it.n} × ${qty}</span><span>${fmt(line,cur)}</span>`;
+      ul.appendChild(row);
+    }
+
+    const tax = +(subtotal*taxRate/100).toFixed(2);
+    const total = +(subtotal+tax).toFixed(2);
+
+    byId('rcpt-taxlabel').textContent = `${(i18n.tax[cc]||'Tax')} (${taxRate}%)`;
+    byId('rcpt-tax').textContent = fmt(tax,cur);
+    byId('rcpt-totlabel').textContent = (i18n.total[cc]||'Total');
+    byId('rcpt-total').textContent = fmt(total,cur);
+    byId('rcpt-thanks').textContent = i18n.thanks[cc] || i18n.thanks.UK;
+
+    drawCode39(byId('rcpt-barcode'), String(receiptNo));
+
+    byId('rcpt-preview').style.display='block';
+    byId('rcpt-print').style.display='inline-block';
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  // Print/save ticket
+  byId('rcpt-print').addEventListener('click', ()=>{
+    const node = byId('rcpt-ticket').outerHTML;
+    const t = window.__APP__.THEMES[window.__APP__.getTheme()];
+    const styleBlob = document.querySelector('style').innerHTML;
+    const html = `
+      <html><head><meta charset="utf-8"><title>Receipt</title>
+      <style>
+        html,body{margin:0;padding:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:Roboto,Arial}
+        :root{--heroA:${t.heroA};--heroB:${t.heroB}}
+        ${styleBlob}
+        @page{size:auto;margin:10mm}
+      </style></head><body>
+        <div class="ticket-wrap">${node}</div>
+        <div style="text-align:center;color:#555;margin-top:6px;font:12px Roboto,Arial">Demo Building Tools</div>
+      </body></html>
+    `;
+    if((window.payslipDesktop || window.parent?.payslipDesktop)?.saveHtmlAsPdf){
+      (window.payslipDesktop || window.parent?.payslipDesktop).saveHtmlAsPdf({ title: 'receipt', html }).then(r=>{ if(!r?.canceled) M.toast({html:'PDF saved',classes:'teal'}); });
+      return;
+    }
+    const w = window.open('','_blank');
+    w.document.write(html);
+    w.document.close(); w.focus();
+    setTimeout(()=>w.print(),150);
+  });
+})();
+</script>
+
+<script>
+/* ========================================================================
+   DEGREE GENERATOR (UK + NL) — selectable text, inline SVG seals
+======================================================================== */
+(() => {
+  const $ = s => document.querySelector(s);
+  const byId = id => document.getElementById(id);
+
+  // Datepicker for degree
+  document.addEventListener('DOMContentLoaded', () => {
+    M.Datepicker.init(document.querySelectorAll('#deg-date'), {
+      autoClose:true, format:'yyyy-mm-dd', showClearBtn:true, firstDay:1
+    });
+  });
+
+  // Names per country (random)
+  const names = {
+    UK: ["Oliver Smith","Amelia Jones","Harry Williams","Jessica Taylor","George Brown","Sophia Clarke","James Wilson","Charlotte Harris"],
+    NL: ["Jan de Vries","Anna Jansen","Kees Bakker","Sanne Visser","Pieter Meijer","Lotte de Boer","Daan Smit","Fleur van Dijk"]
+  };
+
+  // Degree options (localized realistic)
+  const opts = {
+    UK: [
+      "Bachelor of Science in Marketing",
+      "Bachelor of Science in Finance",
+      "Bachelor of Arts in Human Resources",
+      "Bachelor of Science in Information Technology"
+    ],
+    NL: [
+      "Bachelor Bedrijfskunde Marketing",
+      "Bachelor Bedrijfseconomie Financiën",
+      "Bachelor Human Resources Management",
+      "Bachelor Informatica"
+    ]
+  };
+
+  // Default signatories per country
+  const sigs = {
+    UK: { lName:"Dr. Eleanor Wright", lTitle:"Dean of Faculty", rName:"Prof. Thomas Reed", rTitle:"Registrar" },
+    NL: { lName:"Dr. Marieke Janssen", lTitle:"Decaan Faculteit", rName:"Prof. Tom de Groot", rTitle:"Registrator" }
+  };
+
+  // Seals (inline SVG crest) per country (designed to echo PPT look)
+  const crestUK = `
+  <svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="g1" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#ffe7cc"/><stop offset="100%" stop-color="#ffbf80"/></radialGradient>
+    </defs>
+    <circle cx="70" cy="70" r="66" fill="url(#g1)" stroke="#8a5a1f" stroke-width="4"/>
+    <circle cx="70" cy="70" r="48" fill="none" stroke="#8a5a1f" stroke-width="2" stroke-dasharray="4 4"/>
+    <path d="M70 36 l16 16 -16 16 -16 -16 16 -16z" fill="#8a5a1f"/>
+    <path d="M54 80 h32 v18 a5 5 0 0 1 -5 5 h-22 a5 5 0 0 1 -5 -5 z" fill="#8a5a1f"/>
+    <text x="70" y="122" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#7b4a12">UNIVERSITY</text>
+  </svg>`;
+
+  const crestNL = `
+  <svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="nl1" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#e6fffb"/><stop offset="100%" stop-color="#b3f2e7"/></radialGradient>
+    </defs>
+    <circle cx="70" cy="70" r="66" fill="url(#nl1)" stroke="#1c7c5e" stroke-width="4"/>
+    <circle cx="70" cy="70" r="48" fill="none" stroke="#1c7c5e" stroke-width="2" stroke-dasharray="4 4"/>
+    <rect x="52" y="40" width="36" height="22" rx="4" fill="#1c7c5e"/>
+    <path d="M45 82 h50 v20 a6 6 0 0 1 -6 6 h-38 a6 6 0 0 1 -6 -6 z" fill="#1c7c5e"/>
+    <text x="70" y="122" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="#175743">UNIVERSITEIT</text>
+  </svg>`;
+
+  function setDegreeOptions(cc){
+    const list = opts[cc] || opts.UK;
+    const sel = byId('deg-title');
+    sel.innerHTML = list.map(t=>`<option value="${t}">${t}</option>`).join('');
+  }
+
+  function randomName(cc){
+    const pool = names[cc] || names.UK;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  function seedByCountry(cc){
+    setDegreeOptions(cc);
+    byId('deg-name').value = randomName(cc);
+    const s = sigs[cc] || sigs.UK;
+    byId('deg-sig1-name').value = s.lName;
+    byId('deg-sig1-title').value = s.lTitle;
+    byId('deg-sig2-name').value = s.rName;
+    byId('deg-sig2-title').value = s.rTitle;
+  }
+
+  // Initial seed
+  seedByCountry('UK');
+
+  byId('deg-country').addEventListener('change', (e)=>{
+    seedByCountry(e.target.value);
+  });
+
+  // Degree HTML builder (selectable text)
+  function buildDegreeHTML(data){
+    const isUK = data.country === 'UK';
+    const crest = isUK ? crestUK : crestNL;
+
+    // Headings per language
+    const uniName = isUK ? "University of Albion" : "Universiteit van Nederland";
+    const subhead = isUK ? "Office of the Registrar" : "Bureau van de Registrator";
+    const certLine = isUK ? "This is to certify that" : "Hierbij wordt verklaard dat";
+    const hasConferred = isUK ? "has successfully completed the requirements for the degree of" : "heeft met succes voldaan aan de vereisten voor de graad";
+    const onThisDay = isUK ? "on this day" : "op deze datum";
+
+    return `
+      <div class="frame">
+        <div class="crest">${crest}</div>
+        <div class="header">
+          <div class="uni-name">${uniName}</div>
+          <div class="subhead">${subhead}</div>
+        </div>
+        <div class="title">${isUK ? "Degree Certificate" : "Getuigschrift"}</div>
+        <div class="body">
+          ${certLine}<br/>
+          <span class="student">${data.name}</span><br/>
+          ${hasConferred}<br/>
+          <div class="degline">${data.title}</div>
+          <div class="date">${onThisDay}: ${data.date}</div>
+        </div>
+        <div class="seals">
+          <div class="sig">
+            <div class="sig-line"></div>
+            <div class="sig-name">${data.sig1Name}</div>
+            <div class="sig-title">${data.sig1Title}</div>
+          </div>
+          <div class="sig">
+            <div class="sig-line"></div>
+            <div class="sig-name">${data.sig2Name}</div>
+            <div class="sig-title">${data.sig2Title}</div>
+          </div>
+        </div>
+        <div class="footerbar"></div>
+      </div>
+    `;
+  }
+
+  function collectDegree(){
+    const cc = byId('deg-country').value;
+    const d  = byId('deg-date').value || new Date().toISOString().slice(0,10);
+    return {
+      country: cc,
+      title: byId('deg-title').value || (opts[cc]||opts.UK)[0],
+      name: byId('deg-name').value || randomName(cc),
+      date: d,
+      sig1Name: byId('deg-sig1-name').value || (sigs[cc]||sigs.UK).lName,
+      sig1Title: byId('deg-sig1-title').value || (sigs[cc]||sigs.UK).lTitle,
+      sig2Name: byId('deg-sig2-name').value || (sigs[cc]||sigs.UK).rName,
+      sig2Title: byId('deg-sig2-title').value || (sigs[cc]||sigs.UK).rTitle
+    };
+  }
+
+  byId('deg-preview').addEventListener('click', ()=>{
+    const data = collectDegree();
+    byId('degree-canvas').innerHTML = buildDegreeHTML(data);
+    byId('deg-preview-area').style.display = 'block';
+    window.scrollTo({top: byId('deg-preview-area').offsetTop - 20, behavior:'smooth'});
+  });
+
+  byId('deg-download').addEventListener('click', ()=>{
+    const t = window.__APP__.THEMES[window.__APP__.getTheme()];
+    const styleBlob = document.querySelector('style').innerHTML;
+    const node = byId('degree-canvas').outerHTML;
+    const html = `
+      <html><head><meta charset="utf-8"><title>Degree</title>
+      <style>
+        html,body{margin:0;padding:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        :root{--heroA:${t.heroA};--heroB:${t.heroB}}
+        ${styleBlob}
+        .degree-wrap{ display:flex; justify-content:center; }
+        @page{size:auto;margin:10mm}
+      </style></head><body>
+        <div class="degree-wrap">${node}</div>
+        <div style="text-align:center;color:#555;margin-top:6px;font:12px Roboto,Arial">Demo Building Tools</div>
+      </body></html>
+    `;
+    if((window.payslipDesktop || window.parent?.payslipDesktop)?.saveHtmlAsPdf){
+      (window.payslipDesktop || window.parent?.payslipDesktop).saveHtmlAsPdf({ title: 'degree', html }).then(r=>{ if(!r?.canceled) M.toast({html:'PDF saved',classes:'teal'}); });
+      return;
+    }
+    const w = window.open('','_blank');
+    w.document.write(html);
+    w.document.close(); w.focus();
+    setTimeout(()=>w.print(),150);
+  });
+
+  // Seed initial options
+  setTimeout(()=>{ setDegreeOptions('UK'); }, 0);
+})();
+</script>
+
+</body>
+</html>

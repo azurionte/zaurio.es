@@ -7671,7 +7671,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 <script id="v500-demo-tools-shell">
 (function(){
   'use strict';
-  var SHELL_VERSION = 'v1.4';
+  var SHELL_VERSION = 'v1.5';
   var PAYSLIP_VERSION = 'V5.2';
   var countries = {
     India: { code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
@@ -7684,14 +7684,93 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     { key: 'lyrics', title: 'Lyrics Specific Tools', detail: 'Placeholder folder' },
     { key: 'celergo', title: 'Celergo Specific tools', detail: 'Payslip converter lives here' }
   ];
+  var MINI_APP_BASE = 'https://zaurio.es/payslip-updates/apps/';
+  var MINI_APP_STORAGE_KEY = 'dbtInstalledMiniAppsV1';
   var appCards = [
-    { key: 'resume', title: 'Resume Generator', version: 'V4', icon: 'fa-id-card', detail: 'Build localized demo resumes with PDF export.' },
-    { key: 'receipt', title: 'Receipt Generator', version: 'V2.3', icon: 'fa-receipt', detail: 'Create printable demo receipts by country and type.' },
-    { key: 'degree', title: 'Degree diploma Generator', version: 'V2.2', icon: 'fa-graduation-cap', detail: 'Generate UK and NL diploma-style degree documents.' }
+    { key: 'resume', slug: 'resume-generator', title: 'Resume Generator', version: 'V4', rawVersion: '4', icon: 'fa-id-card', detail: 'Build localized demo resumes with PDF export.', bundledEntry: 'mini-apps/resume-generator.html?app=resume' },
+    { key: 'receipt', slug: 'receipt-generator', title: 'Receipt Generator', version: 'V2.2', rawVersion: '2.2', icon: 'fa-receipt', detail: 'Create printable demo receipts by country and type.', bundledEntry: 'mini-apps/receipt-generator.html?app=receipt' },
+    { key: 'degree', slug: 'degree-generator', title: 'Degree diploma Generator', version: 'V2.2', rawVersion: '2.2', icon: 'fa-graduation-cap', detail: 'Generate UK and NL diploma-style degree documents.', bundledEntry: 'mini-apps/degree-generator.html?app=degree' }
   ];
 
   function el(id){ return document.getElementById(id); }
   function all(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function getAppInfo(app){ return appCards.filter(function(item){ return item.key === app; })[0] || null; }
+  function normalizeVersion(version){ return String(version || '').replace(/^v/i, '').trim(); }
+  function displayVersion(version){ return 'V' + normalizeVersion(version || '0'); }
+  function compareVersions(a, b){
+    var aa = normalizeVersion(a).split('.').map(function(part){ return parseInt(part, 10) || 0; });
+    var bb = normalizeVersion(b).split('.').map(function(part){ return parseInt(part, 10) || 0; });
+    for (var i = 0; i < Math.max(aa.length, bb.length); i++) {
+      var diff = (aa[i] || 0) - (bb[i] || 0);
+      if (diff) return diff;
+    }
+    return 0;
+  }
+  function readInstalledMiniApps(){
+    try { return JSON.parse(localStorage.getItem(MINI_APP_STORAGE_KEY) || '{}') || {}; }
+    catch(e) { return {}; }
+  }
+  function writeInstalledMiniApps(apps){
+    try { localStorage.setItem(MINI_APP_STORAGE_KEY, JSON.stringify(apps || {})); } catch(e) {}
+  }
+  function installedMiniApp(app){ return readInstalledMiniApps()[app] || null; }
+  function appCurrentVersion(info){
+    var installed = info && installedMiniApp(info.key);
+    return (installed && installed.version) || (info && info.rawVersion) || '0';
+  }
+  function appEntryUrl(info){
+    if (!info) return '';
+    var installed = installedMiniApp(info.key);
+    if (installed && installed.entry) {
+      return MINI_APP_BASE + installed.entry + (installed.entry.indexOf('?') === -1 ? '?' : '&') + 'miniVersion=' + encodeURIComponent(installed.version || '');
+    }
+    return info.bundledEntry;
+  }
+  function setMiniButtonState(button, html, disabled){
+    if (!button) return;
+    button.disabled = !!disabled;
+    button.innerHTML = html;
+  }
+  function refreshMiniAppVersion(app, version, root){
+    all('[data-mini-version="'+app+'"]', root || document).forEach(function(node){ node.textContent = displayVersion(version); });
+  }
+  function fetchMiniManifest(info){
+    if (!info || !info.slug) return Promise.reject(new Error('No mini-app package yet'));
+    return fetch(MINI_APP_BASE + info.slug + '.json?ts=' + Date.now(), { cache: 'no-store' }).then(function(response){
+      if (!response.ok) throw new Error('No mini-app package yet');
+      return response.json();
+    });
+  }
+  function applyMiniManifest(info, manifest, frame){
+    var installed = readInstalledMiniApps();
+    installed[info.key] = {
+      version: normalizeVersion(manifest.version),
+      entry: manifest.entry,
+      updatedAt: manifest.updatedAt || new Date().toISOString()
+    };
+    writeInstalledMiniApps(installed);
+    refreshMiniAppVersion(info.key, manifest.version);
+    if (frame) frame.src = appEntryUrl(info);
+  }
+  function checkMiniAppUpdate(app, button, frame){
+    var info = getAppInfo(app);
+    if (!info) return;
+    setMiniButtonState(button, '<i class="fa-solid fa-arrows-rotate"></i> Checking...', true);
+    fetchMiniManifest(info).then(function(manifest){
+      var current = appCurrentVersion(info);
+      if (manifest && manifest.version && manifest.entry && compareVersions(manifest.version, current) > 0) {
+        applyMiniManifest(info, manifest, frame);
+        setMiniButtonState(button, '<i class="fa-solid fa-circle-check"></i> Updated to '+displayVersion(manifest.version), true);
+        setTimeout(function(){ setMiniButtonState(button, '<i class="fa-solid fa-rotate"></i> Check for updates', false); }, 1800);
+        return;
+      }
+      setMiniButtonState(button, '<i class="fa-solid fa-circle-check"></i> Up to date', true);
+      setTimeout(function(){ setMiniButtonState(button, '<i class="fa-solid fa-rotate"></i> Check for updates', false); }, 1500);
+    }).catch(function(){
+      setMiniButtonState(button, '<i class="fa-solid fa-triangle-exclamation"></i> No package found', true);
+      setTimeout(function(){ setMiniButtonState(button, '<i class="fa-solid fa-rotate"></i> Check for updates', false); }, 1800);
+    });
+  }
   function selectedCountry(){ var f = el('formatSelect'); return window.__selectedImportTemplateV31 || (f && f.value) || 'India'; }
   function setCountry(country){
     window.__selectedImportTemplateV31 = country;
@@ -7799,7 +7878,10 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     all('#v5HomeBtn').forEach(function(home){ home.addEventListener('click', renderDashboard); });
   }
   function folderCard(folder){ return '<button type="button" class="v5-card v5-folder" data-folder="'+folder.key+'"><span class="v5-folder-icon"></span><strong>'+folder.title+'</strong><small>'+folder.detail+'</small></button>'; }
-  function plainAppCard(app){ return '<div class="v5-card v5-app v5-open-resource" data-resource-app="'+app.key+'"><strong><i class="fa-solid '+app.icon+'"></i> '+app.title+'</strong><span class="v5-version">'+app.version+'</span><small>'+app.detail+'</small><div class="v5-card-actions"><button type="button" class="v5-launch" data-resource-app="'+app.key+'"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton(app.key)+'</div></div>'; }
+  function plainAppCard(app){
+    var version = displayVersion(appCurrentVersion(app));
+    return '<div class="v5-card v5-app v5-open-resource" data-resource-app="'+app.key+'"><strong><i class="fa-solid '+app.icon+'"></i> '+app.title+'</strong><span class="v5-version" data-mini-version="'+app.key+'">'+version+'</span><small>'+app.detail+'</small><div class="v5-card-actions"><button type="button" class="v5-launch" data-resource-app="'+app.key+'"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton(app.key)+'</div></div>';
+  }
   function renderDashboard(){
     var overlay = el('intro-overlay'), modal = el('intro-modal');
     if (!overlay || !modal) return;
@@ -7811,7 +7893,13 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     modal.innerHTML = renderAppChrome(false) + '<main class="v5-home"><section><h1>Choose a tool</h1><p>Folders group the specialist tools. App cards can carry their own versions so we can update a mini-app without reinstalling the full desktop shell.</p></section><section><h2>Folders</h2><div class="v5-grid">'+folders.map(folderCard).join('')+'</div></section><section><h2>Apps</h2><div class="v5-grid">'+appCards.map(plainAppCard).join('')+'</div></section></main>';
     all('[data-folder="celergo"]', modal).forEach(function(button){ button.addEventListener('click', renderCelergoFolder); });
     all('[data-folder]:not([data-folder="celergo"])', modal).forEach(function(button){ button.addEventListener('click', function(){ button.classList.add('v5-shake'); setTimeout(function(){ button.classList.remove('v5-shake'); }, 360); }); });
-    all('[data-mini-update]', modal).forEach(function(button){ button.addEventListener('click', function(){ button.textContent = 'No app package yet'; button.disabled = true; setTimeout(function(){ button.disabled = false; button.textContent = 'Check for updates'; }, 1400); }); });
+    all('[data-mini-update]', modal).forEach(function(button){
+      button.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        checkMiniAppUpdate(button.getAttribute('data-mini-update'), button, null);
+      });
+    });
     all('.v5-open-resource', modal).forEach(function(card){
       card.addEventListener('click', function(e){
         if (e.target && e.target.closest && e.target.closest('[data-mini-update]')) return;
@@ -7832,16 +7920,19 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   function renderResourceApp(app){
     var overlay = el('intro-overlay'), modal = el('intro-modal');
     if (!overlay || !modal) return;
-    var appInfo = appCards.filter(function(item){ return item.key === app; })[0] || { version: 'V2' };
+    var appInfo = getAppInfo(app) || { key: app, rawVersion: '2', bundledEntry: '' };
     overlay.className = 'v5-shell-overlay';
     overlay.style.setProperty('display', 'flex', 'important');
     overlay.style.removeProperty('visibility');
     overlay.style.removeProperty('pointer-events');
     modal.className = 'v5-shell-modal';
-    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell"><div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version">'+appInfo.version+'</span>'+toolUpdateButton(app)+'</div><iframe class="v5-resource-frame" src="demo-resources-v2.html?app='+app+'" title="'+resourceTitle(app)+'"></iframe></main>';
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell"><div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version" data-mini-version="'+app+'">'+displayVersion(appCurrentVersion(appInfo))+'</span>'+toolUpdateButton(app)+'</div><iframe class="v5-resource-frame" src="'+appEntryUrl(appInfo)+'" title="'+resourceTitle(app)+'"></iframe></main>';
     bindBack(renderDashboard);
     all('[data-mini-update]', modal).forEach(function(button){
-      button.addEventListener('click', function(){ button.innerHTML = '<i class="fa-solid fa-circle-check"></i> Up to date'; setTimeout(function(){ button.innerHTML = '<i class="fa-solid fa-rotate"></i> Check for updates'; }, 1600); });
+      button.addEventListener('click', function(e){
+        e.preventDefault();
+        checkMiniAppUpdate(button.getAttribute('data-mini-update'), button, modal.querySelector('.v5-resource-frame'));
+      });
     });
     wireUpdater();
   }
