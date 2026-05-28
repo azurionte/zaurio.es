@@ -7814,7 +7814,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 <script id="v500-demo-tools-shell">
 (function(){
   'use strict';
-  var SHELL_VERSION = 'v1.6';
+  var SHELL_VERSION = 'v1.7';
   var PAYSLIP_VERSION = 'V5.3';
   var countries = {
     India: { code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
@@ -7823,7 +7823,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     Australia: { code: 'AU', flagClass: 'flag-AU-v49', label: 'Australia', detail: 'PayForce Australia payslip' }
   };
   var folders = [
-    { key: 'ihcm', title: 'iHCM Specific tools', detail: 'Placeholder folder' },
+    { key: 'ihcm', title: 'iHCM Specific tools', detail: 'Leave and workforce planning tools' },
     { key: 'lyrics', title: 'Lyrics Specific Tools', detail: 'Placeholder folder' },
     { key: 'celergo', title: 'Celergo Specific tools', detail: 'Payslip converter lives here' }
   ];
@@ -7834,10 +7834,24 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     { key: 'receipt', slug: 'receipt-generator', title: 'Receipt Generator', version: 'V2.4', rawVersion: '2.4', icon: 'fa-receipt', detail: 'Create printable demo receipts by country and type.', bundledEntry: 'mini-apps/receipt-generator.html?app=receipt' },
     { key: 'degree', slug: 'degree-generator', title: 'Degree diploma Generator', version: 'V2.2', rawVersion: '2.2', icon: 'fa-graduation-cap', detail: 'Generate UK and NL diploma-style degree documents.', bundledEntry: 'mini-apps/degree-generator.html?app=degree' }
   ];
+  var folderApps = {
+    ihcm: [
+      { key: 'uk-leave-scheduler', slug: 'uk-leave-scheduler', title: 'UK Leave Scheduler', version: 'V2', rawVersion: '2', icon: 'fa-calendar-days', detail: 'Plan UK annual leave with sickness, maternity, bank holidays and CSV export.', bundledEntry: 'mini-apps/uk-leave-scheduler.html' }
+    ]
+  };
 
   function el(id){ return document.getElementById(id); }
   function all(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
-  function getAppInfo(app){ return appCards.filter(function(item){ return item.key === app; })[0] || null; }
+  function getAppInfo(app){
+    var found = appCards.filter(function(item){ return item.key === app; })[0];
+    if (found) return found;
+    var keys = Object.keys(folderApps);
+    for (var i = 0; i < keys.length; i++) {
+      found = folderApps[keys[i]].filter(function(item){ return item.key === app; })[0];
+      if (found) return found;
+    }
+    return null;
+  }
   function normalizeVersion(version){ return String(version || '').replace(/^v/i, '').trim(); }
   function displayVersion(version){ return 'V' + normalizeVersion(version || '0'); }
   function compareVersions(a, b){
@@ -8035,7 +8049,8 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     modal.className = 'v5-shell-modal';
     modal.innerHTML = renderAppChrome(false) + '<main class="v5-home"><section><h1>Choose a tool</h1><p>Folders group the specialist tools. App cards can carry their own versions so we can update a mini-app without reinstalling the full desktop shell.</p></section><section><h2>Folders</h2><div class="v5-grid">'+folders.map(folderCard).join('')+'</div></section><section><h2>Apps</h2><div class="v5-grid">'+appCards.map(plainAppCard).join('')+'</div></section></main>';
     all('[data-folder="celergo"]', modal).forEach(function(button){ button.addEventListener('click', renderCelergoFolder); });
-    all('[data-folder]:not([data-folder="celergo"])', modal).forEach(function(button){ button.addEventListener('click', function(){ button.classList.add('v5-shake'); setTimeout(function(){ button.classList.remove('v5-shake'); }, 360); }); });
+    all('[data-folder="ihcm"]', modal).forEach(function(button){ button.addEventListener('click', function(){ renderMiniAppFolder('ihcm', 'iHCM Specific tools', 'Tools for iHCM demo scheduling and workforce planning.'); }); });
+    all('[data-folder]:not([data-folder="celergo"]):not([data-folder="ihcm"])', modal).forEach(function(button){ button.addEventListener('click', function(){ button.classList.add('v5-shake'); setTimeout(function(){ button.classList.remove('v5-shake'); }, 360); }); });
     all('[data-mini-update]', modal).forEach(function(button){
       button.addEventListener('click', function(e){
         e.preventDefault();
@@ -8056,9 +8071,32 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     if (home) { e.preventDefault(); renderDashboard(); }
   }, true);
   function resourceTitle(app){
+    var info = getAppInfo(app);
+    if (info && info.title) return info.title;
     if (app === 'receipt') return 'Receipt Generator';
     if (app === 'degree') return 'Degree diploma Generator';
     return 'Resume Generator';
+  }
+  function renderMiniAppFolder(folderKey, title, detail){
+    var modal = el('intro-modal');
+    if (!modal) return;
+    var apps = folderApps[folderKey] || [];
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>'+title+'</h1><p>'+detail+'</p></section><section><div class="v5-grid">'+apps.map(plainAppCard).join('')+'</div></section></main>';
+    bindBack(renderDashboard);
+    all('[data-mini-update]', modal).forEach(function(button){
+      button.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        checkMiniAppUpdate(button.getAttribute('data-mini-update'), button, null);
+      });
+    });
+    all('.v5-open-resource', modal).forEach(function(card){
+      card.addEventListener('click', function(e){
+        if (e.target && e.target.closest && e.target.closest('[data-mini-update]')) return;
+        renderResourceApp(card.getAttribute('data-resource-app'));
+      });
+    });
+    wireUpdater();
   }
   function renderResourceApp(app){
     var overlay = el('intro-overlay'), modal = el('intro-modal');

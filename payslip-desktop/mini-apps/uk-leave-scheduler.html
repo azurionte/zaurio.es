@@ -1,0 +1,3201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UK Leave Scheduler V2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The CSS and HTML structure remain largely unchanged.  This version includes fixes to the scheduling logic
+     to ensure that employees are never double-booked on the same day, that sickness blocks annual leave,
+     and that quotas are driven to zero whenever possible. -->
+<style>
+  :root{
+    --bg:#07111f; --panel:#0c1729; --ink:#e5edf8; --muted:#aebbd0; --line:rgba(148,163,184,.24);
+    --ok:#22c55e; --warn:#facc15; --bad:#ef4444;
+    --belinda:#93c5fd; --daniel:#fca5a5; --sick:#fde68a; --mat:#f0abfc;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;overflow-x:hidden}
+  header{padding:16px 20px;border-bottom:1px solid var(--line);background:#101827;position:sticky;top:0;z-index:10}
+  h1{margin:0;font-size:22px;font-weight:950;letter-spacing:0}
+  .sub{color:var(--muted);font-size:13px;margin-top:3px}
+
+  main{display:grid;grid-template-columns:minmax(560px, 780px) 1fr;gap:16px;align-items:start;padding:16px;max-width:1560px;margin:0 auto}
+  @media (max-width:1200px){ main{grid-template-columns:1fr} }
+
+  .card{border:1px solid var(--line);border-radius:8px;background:#0c1729;padding:0 0 10px;box-shadow:none;overflow:hidden;}
+  .card h2{margin:0;font-size:16.5px;letter-spacing:0;color:#fff;font-weight:900;text-shadow:none;padding:14px 16px;border-bottom:1px solid var(--line);}
+
+  .tabs{display:flex;gap:6px;padding:10px 10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;background:linear-gradient(180deg,rgba(30,41,59,.6),rgba(17,24,39,.4))}
+  .tab{padding:8px 10px;border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;background:#071024;cursor:pointer;font-weight:900;color:#cbd5e1}
+  .tab.active{background:#1d4ed8;color:#fff;}
+  .tab .stepno{opacity:.9;color:#9aa4b5;margin-right:6px}
+  .tab-panels{padding:12px 14px;}
+  .panel{display:none}
+  .panel.show{display:block}
+
+  .row{display:grid;gap:10px;grid-template-columns:1fr;}
+  .row.cols2{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:end;gap:14px;}
+  .row.cols3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+
+  label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#cbd5e1;font-weight:500;min-width:0}
+  .label-line{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
+  .label-line span, .label-line strong{white-space:nowrap}
+  input, select, button, textarea{background:#0b1220;border:1px solid var(--line);color:#e6e8ef;padding:9px 10px;border-radius:10px;transition:box-shadow .15s,border-color .15s;width:100%;min-width:0}
+  input:focus, select:focus, textarea:focus{outline:none;border-color:#60a5fa;box-shadow:0 0 0 2px #60a5fa44;}
+  input[type="checkbox"]{width:18px;height:18px;margin:0;vertical-align:middle;accent-color:#60a5fa;cursor:pointer;border-radius:6px;box-shadow:0 1px 2px #0002;width:auto;}
+  /* Grey out disabled checkboxes in More people in section */
+  #moreWeekWrap input[type="checkbox"]:disabled + span {
+    opacity: 0.5;
+  }
+  .small{font-size:12px;color:#9aa4b5}
+  .btn{cursor:pointer;width:auto}
+  .btn.primary{background:#1d4ed8;border-color:#60a5fa;color:#fff}
+  .btn.run{background:#15803d;border-color:#22c55e;color:#fff}
+  .btn.export{background:#2563eb;border-color:#60a5fa;color:#fff}
+  .btn.icon{padding:6px 8px;font-size:12px}
+  .btn.round{width:38px;height:38px;border-radius:50%}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .divider{height:1px;background:#1f2937;margin:10px 0}
+  /* Section wrapper for clear separation */
+  .section-wrap{
+    /* Encapsulate sections with a soft "squircle" style and blue border */
+    border:1px solid #3b82f6;
+    border-radius:20px;
+    padding:12px 14px;
+    margin:14px 0;
+  }
+
+  /* Scheduled state styling for confirm buttons */
+  .btn.scheduled{
+    background:#065f46;
+    border-color:#064e3b;
+    color:#d1fae5;
+  }
+
+  /* Calendar month tabs */
+  .calendar-tabs button.active{
+    background:#172132;
+    border-color:#1f2937;
+  }
+
+  .info{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#23304a;color:#cbd5e1;font-size:11px;line-height:1;margin-left:2px;cursor:help;position:relative;flex:0 0 auto}
+  .info::before{content:"i";font-weight:700}
+  .info:hover::after,.info:focus::after{content:attr(data-tip);position:absolute;left:50%;bottom:140%;transform:translateX(-50%);background:#0b1220;border:1px solid var(--line);color:#e6e8ef;padding:8px 10px;border-radius:10px;box-shadow:0 8px 24px #0009;min-width:240px;max-width:74vw;z-index:80;white-space:normal}
+
+  .table-wrap{ overflow-x:auto; max-width:100%; }
+  table{width:100%;border-collapse:separate;border-spacing:0 6px;min-width:760px;}
+  th,td{padding:8px 10px;text-align:left;vertical-align:middle;}
+  thead th{color:#cbd5e1;font-weight:600;border-bottom:1px solid var(--line)}
+  tbody tr{background:#0b1220}
+  tbody td{border-top:1px solid #101827;border-bottom:1px solid #101827}
+
+  .legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px}
+  .legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .tag{border-radius:999px;padding:4px 8px;font-size:12px;border:1px solid transparent;white-space:nowrap;cursor:default}
+
+  /* Adjust sick/LTS tag colours for better readability */
+  .tag.sick{
+    background:rgba(253,230,138,0.35);
+    border-color:var(--sick);
+    color:#ffffff;
+  }
+  .tag.mat{
+    background:rgba(240,171,252,.2);
+    border-color:var(--mat);
+    color:#ffffff;
+  }
+
+  /* Layout for LTS participant rows */
+  .lts-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:flex-start;
+    padding:8px;
+  }
+  .lts-row label{
+    flex:1;
+    min-width:160px;
+  }
+  .lts-row select.ltsPeriodSel{
+    width:120px;
+  }
+  .lts-row .ltsDateDisplay{
+    flex-basis:100%;
+    margin-top:4px;
+  }
+
+  /* Hide default number input spinners across browsers */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  input[type=number]{
+    -moz-appearance:textfield;
+  }
+
+  /* Hamburger menu for small screens */
+  .hamburger{
+    display:none;
+    background:none;
+    border:none;
+    color:var(--ink);
+    font-size:20px;
+    padding:8px;
+    cursor:pointer;
+  }
+  @media (max-width: 800px){
+    .hamburger{ display:block; }
+    #leftCard{
+      position:fixed;
+      left:0;
+      top:0;
+      bottom:0;
+      width:80%;
+      max-width:360px;
+      transform:translateX(-100%);
+      transition:transform .3s ease-in-out;
+      z-index:100;
+      overflow-y:auto;
+    }
+    #leftCard.open{
+      transform:translateX(0);
+    }
+    main{
+      grid-template-columns:1fr;
+    }
+  }
+
+  /* Number control: embed minus/plus buttons and center the value */
+  .num-control{
+    display:flex;
+    align-items:center;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#0b1220;
+    color:#e6e8ef;
+    overflow:hidden;
+    height:32px;
+  }
+  .num-control input{
+    flex:1;
+    height:100%;
+    text-align:center;
+    border:none;
+    background:none;
+    color:#e6e8ef;
+    font-size:14px;
+    padding:0;
+  }
+  .num-control button{
+    flex:0 0 32px;
+    height:100%;
+    border:none;
+    background:none;
+    color:#9aa4b5;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+  }
+
+  /* Limit width of LTS person and period selects to improve layout */
+  #ltsPoolSelect select.ltsPersonSel,
+  #ltsPoolSelect select.ltsPeriodSel{
+    max-width:160px;
+    width:auto;
+  }
+
+  .preview-controls{display:flex;align-items:center;gap:8px;padding:8px 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{background:#0b1220;border:none;padding:6px 10px;color:#cbd5e1;cursor:pointer}
+  .seg button.active{background:#172132}
+  .dow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;color:#cbd5e1aa;text-transform:uppercase;font-size:12px;letter-spacing:.06em;padding:8px 16px}
+  .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;padding:8px 16px 16px}
+  .day{border:1px solid var(--line);background:#0b1220;border-radius:12px;min-height:120px;padding:8px;display:flex;flex-direction:column;gap:6px}
+  .date{display:flex;justify-content:space-between;color:#cbd5e1;font-size:12px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+  .hint{color:#9aa4b5;font-size:12.5px;margin-top:4px;line-height:1.5;padding:0 16px}
+
+  .toasts{position:fixed;bottom:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:50}
+  .toast{background:#0b1220;border:1px solid #34415a;color:#e6e8ef;padding:10px 12px;border-radius:10px;box-shadow:0 8px 24px #0009;max-width:360px;animation:pop .15s ease-out}
+  .toast.ok{border-color:#164e2e}
+  .toast.warn{border-color:#5a4a16}
+  .toast.bad{border-color:#6b1a1a}
+  @keyframes pop{from{transform:translateY(6px);opacity:.0}to{transform:translateY(0);opacity:1}}
+
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:60;}
+  .modal.show{display:flex}
+  .modal-card{width:min(720px,94vw);background:linear-gradient(180deg,rgba(30,41,59,.98),var(--panel));border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 10px 30px #0009}
+  .modal-card h3{margin:0 0 8px;font-size:16px}
+  .modal-actions{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
+  .modal-actions .right{display:flex;gap:8px}
+
+  /* DBT adaptation */
+  body{background:#07111f;color:#e5edf8;min-height:100vh;}
+  body.dbt-mini-app header{display:none;}
+  body.dbt-mini-app main{padding-top:18px;}
+  body.dbt-mini-app main:before{
+    content:"UK Leave Scheduler";
+    grid-column:1 / -1;
+    display:flex;
+    align-items:center;
+    min-height:44px;
+    padding:0 2px;
+    color:#fff;
+    font-size:24px;
+    font-weight:950;
+    letter-spacing:0;
+  }
+  .section-wrap{border-color:rgba(96,165,250,.38);border-radius:8px;background:rgba(7,16,36,.34);}
+  input,select,textarea{border-color:rgba(148,163,184,.32);background:#071024;color:#f8fafc;border-radius:8px;}
+  input:focus, select:focus, textarea:focus{border-color:#60a5fa;box-shadow:0 0 0 1px rgba(96,165,250,.35);}
+  button,.btn{border-radius:999px;font-weight:900;}
+  .day{border-color:rgba(148,163,184,.24);background:#071024;border-radius:8px;}
+  .toast,.modal-card{border-color:rgba(148,163,184,.24);background:#0c1729;box-shadow:none;}
+  .preview-controls{background:#0c1729;}
+</style>
+</head>
+<body class="dbt-mini-app">
+<header>
+  <h1>UK Leave Scheduler V2</h1>
+  <div class="sub">Steps, UK bank holidays, sickness &amp; maternity with flexible strategies. Import/export CSV. Balanced days with soft caps.</div>
+  <!-- Hamburger menu for mobile screens -->
+  <button id="menuToggle" class="hamburger" type="button">☰</button>
+</header>
+
+<main>
+  <!-- SIDEBAR -->
+  <section class="card" id="leftCard">
+    <div class="tabs" id="sidebarTabs">
+      <div class="tab active" data-tab="step1"><span class="stepno">1.</span> People &amp; Quotas</div>
+      <div class="tab" data-tab="step2"><span class="stepno">2.</span> Sickness &amp; Maternity</div>
+      <div class="tab" data-tab="step3"><span class="stepno">3.</span> Annual leave strategy</div>
+      <div class="tab" data-tab="step4"><span class="stepno">4.</span> Import / Export</div>
+    </div>
+    <div class="tab-panels">
+
+      <!-- Step 1: People -->
+      <div class="panel show" id="tab-step1">
+        <!-- Period section -->
+        <h3 style="margin:8px 0 4px">Period</h3>
+        <div class="section-wrap">
+          <div class="row cols2">
+            <label>
+              <div class="label-line"><span>Select year to schedule</span></div>
+              <select id="scheduleYear"></select>
+            </label>
+            <div class="btn-row" style="align-self:end">
+              <button class="btn" id="toggleManualRange" type="button">Manual range selection</button>
+            </div>
+          </div>
+          <div id="manualRangeWrap" style="display:none;margin-top:8px">
+            <div class="row cols2">
+              <label>
+                <div class="label-line"><span>Start date</span><span class="info" data-tip="First business day included in the scheduling window."></span></div>
+                <input type="date" id="start">
+              </label>
+              <label>
+                <div class="label-line"><span>End date</span><span class="info" data-tip="Last business day included in the scheduling window."></span></div>
+                <input type="date" id="end">
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Employees section -->
+        <h3 style="margin:16px 0 4px">Employees</h3>
+        <div class="section-wrap">
+          <div class="row" style="gap:8px">
+            <button class="btn" id="seedEmp" type="button" title="Load demo users">Load demo users</button>
+            <button class="btn" id="toggleManualEmp" type="button">Manual employee addition</button>
+            <button class="btn" id="clearEmp" type="button">Clear list</button>
+          </div>
+          <div id="manualEmpWrap" style="display:none;margin-top:8px">
+            <div class="row cols3">
+              <label><div class="label-line"><span>Employee name</span></div><input type="text" id="empName" placeholder="e.g., Ben Pickles"></label>
+              <label><div class="label-line"><span>Employee ID</span></div><input type="text" id="empId" placeholder="e.g., 1984"></label>
+              <label><div class="label-line"><span>Remaining days</span><span class="info" data-tip="Quota to place within the selected window (days)."></span></div><input type="number" id="empDays" min="0" step="1"></label>
+            </div>
+            <div class="row cols2" style="margin-top:8px">
+              <label>
+                <div class="label-line"><span>Manager</span><span class="info" data-tip="Determines chip colour + team limits. Choose ‘Other…’ to type a name."></span></div>
+                <div class="row cols2">
+                  <select id="empMgr">
+                    <option>Belinda Newton</option>
+                    <option>Daniel Harrison</option>
+                    <option value="__OTHER__">Other…</option>
+                  </select>
+                  <input id="otherMgr" placeholder="Type manager name" style="display:none">
+                </div>
+              </label>
+              <div class="btn-row" style="align-items:flex-end">
+                <button class="btn primary" id="addEmp" type="button">Add employee</button>
+              </div>
+            </div>
+            <div class="btn-row" style="margin-top:6px">
+              <input type="file" id="empCsvFile" accept=".csv" style="display:none">
+              <button class="btn" id="loadEmpCsv" type="button" title="Import an employees CSV">Load employees CSV</button>
+              <button class="btn" id="dlEmpTpl" type="button" title="Download employees CSV template">Download template</button>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <div class="table-wrap">
+              <table id="empTable">
+                <thead>
+                  <tr>
+                    <th>Manager</th><th>Employee</th><th>ID</th><th>Days</th><th></th>
+                  </tr>
+                </thead>
+                <tbody><tr><td colspan="5" class="small" style="padding:12px 10px;color:#94a3b8;">No employees yet. Click “Load demo users” or add manually.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Sick & Maternity -->
+      <div class="panel" id="tab-step2">
+        <!-- Sickness Section -->
+        <div class="divider"></div>
+        <h3 style="margin:8px 0 4px">Sickness configuration</h3>
+        <div class="section-wrap">
+          <div class="row cols1">
+            <label>
+              <div class="label-line" style="display:flex;align-items:center;gap:8px">
+                <span>Sickness</span>
+                <input type="checkbox" id="sickEnabled" checked>
+              </div>
+            </label>
+          </div>
+          <div id="sickControls" style="margin-top:8px">
+            <div class="row cols3">
+              <label>
+                <div class="label-line"><span>Strategy</span></div>
+                <select id="sickStrategy">
+                  <option value="everyOtherWeek">Every other week</option>
+                  <option value="everyWeek">Every week</option>
+                  <option value="everyMonth">Every month</option>
+                  <option value="everyQuarter">Every quarter</option>
+                </select>
+              </label>
+              <label>
+                <div class="label-line"><span>People per period</span></div>
+                <!-- Custom number control with up/down arrows -->
+                <div class="num-control">
+                  <button type="button" class="dec" data-target="sickPeopleCount">−</button>
+                  <input type="number" id="sickPeopleCount" min="1" max="10" value="1">
+                  <button type="button" class="inc" data-target="sickPeopleCount">+</button>
+                </div>
+              </label>
+              <div style="display:flex;flex-direction:row;gap:6px;align-items:flex-end;flex-wrap:wrap">
+                <button class="btn" id="sickRandomBtn" type="button">Randomize</button>
+                <button class="btn" id="sickAdvBtn" type="button">Advanced controls</button>
+              </div>
+            </div>
+            <div id="sickPeopleList" class="small" style="margin-top:6px;color:#cbd5e1;"></div>
+          </div>
+        </div>
+        <!-- LTS Summary -->
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px">
+          <h3 style="margin:0">Long‑term sickness summary</h3>
+          <button class="btn" id="openLtsConfig" type="button">Configure LTS</button>
+        </div>
+        <div class="section-wrap">
+          <div id="ltsSummary" class="small" style="margin-bottom:6px;color:#cbd5e1;"></div>
+          <div style="margin-bottom:8px;display:flex;gap:8px">
+            <button class="btn" id="clearLts" type="button">Clear LTS</button>
+          </div>
+        </div>
+        <!-- Maternity Summary -->
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px">
+          <h3 style="margin:0">Maternity summary</h3>
+          <button class="btn" id="openMatConfig" type="button">Configure Maternity</button>
+        </div>
+        <div class="section-wrap">
+          <div id="matSummary" class="small" style="margin-bottom:6px;color:#cbd5e1;"></div>
+          <div style="margin-bottom:8px;display:flex;gap:8px">
+            <button class="btn" id="clearMat" type="button">Clear MAT</button>
+          </div>
+        </div>
+        <!-- Hidden defaults for maternity logic -->
+        <input type="hidden" id="maxMatDays" value="52">
+      </div>
+
+      <!-- Step 3: Strategy & Generate -->
+      <div class="panel" id="tab-step3">
+        <div class="row cols3">
+          <label>
+            <div class="label-line"><span>Avoid UK bank holidays</span></div>
+            <select id="avoidUKHolidays"><option value="on" selected>On</option><option value="off">Off</option></select>
+          </label>
+          <label>
+            <div class="label-line"><span>Prefer Fri→Mon clusters</span></div>
+            <select id="preferFriMon"><option value="on" selected>On</option><option value="off">Off</option></select>
+          </label>
+          <label>
+            <div class="label-line"><span>Allow consecutive days</span></div>
+            <select id="allowConsecutive"><option value="on" selected>On</option><option value="off">Off</option></select>
+          </label>
+        </div>
+        <div class="row cols3" style="margin-top:8px">
+          <!-- Global daily cap for annual leave. Default changed from 6 to 2 as requested -->
+          <label>
+            <div class="label-line"><span>Max AL per day (soft cap)</span></div>
+            <div class="num-control">
+              <button type="button" class="dec" data-target="maxPerDay">−</button>
+              <input type="number" id="maxPerDay" min="1" value="2">
+              <button type="button" class="inc" data-target="maxPerDay">+</button>
+            </div>
+          </label>
+          <label>
+            <div class="label-line"><span>Base daily intensity (1–5)</span></div>
+            <div class="num-control">
+              <button type="button" class="dec" data-target="baseIntensity">−</button>
+              <input type="number" id="baseIntensity" min="1" max="5" value="2">
+              <button type="button" class="inc" data-target="baseIntensity">+</button>
+            </div>
+          </label>
+          <label>
+            <div class="label-line"><span>Randomness (0–100)</span></div>
+            <div class="num-control">
+              <button type="button" class="dec" data-target="randomness">−</button>
+              <input type="number" id="randomness" min="0" max="100" value="35">
+              <button type="button" class="inc" data-target="randomness">+</button>
+            </div>
+          </label>
+        </div>
+        <div class="hint"><strong>Hard guarantees:</strong> every week and every month has leave, and all quotas are reduced to zero by the end date.</div>
+
+        <!-- More people in: allow increasing leave intensity on selected weeks within a month -->
+        <h3 style="margin-top:16px">More people in</h3>
+        <div class="section-wrap">
+          <div class="row cols2">
+            <label>
+              <div class="label-line"><span>Select month</span></div>
+              <select id="moreMonth"></select>
+            </label>
+            <div>
+              <div class="label-line" style="margin-bottom:4px"><span>Select weeks</span></div>
+              <div id="moreWeekWrap" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            </div>
+          </div>
+          <div class="row cols2" style="margin-top:8px">
+            <label>
+              <div class="label-line"><span>Intensity</span></div>
+              <select id="moreIntensity">
+                <option value="normal" selected>Normal</option>
+                <option value="all">All workforce</option>
+              </select>
+            </label>
+          </div>
+          <div class="small" style="margin-top:6px;color:#9aa4b5">Choose a month and specific weeks to boost annual leave intensity by scheduling extra people on leave.</div>
+        </div>
+
+        <!-- Seed and generate row moved here so that More days in comes before -->
+        <div class="row cols2" style="margin-top:8px">
+          <label><div class="label-line"><span>Seed (optional)</span><span class="info" data-tip="Set a seed to reproduce the same random choices. Leave blank for a fresh seed."></span></div><input type="text" id="seed" placeholder="auto"></label>
+          <div class="btn-row">
+            <button class="btn run" id="run" type="button">Generate schedule</button>
+            <button class="btn" id="reshuffle" type="button" title="New random seed, same settings">Reshuffle</button>
+          </div>
+        </div>
+
+        <!-- Availability summary after schedule generation -->
+        <h3 style="margin-top:16px">Availability Summary</h3>
+        <div id="availSummary" class="small" style="overflow-x:auto; margin-bottom:8px"></div>
+
+        <!-- (More days in markup moved below) -->
+      </div>
+
+      <!-- Step 4: Import / Export -->
+      <div class="panel" id="tab-step4">
+        <div class="row cols3">
+          <label><div class="label-line"><span>AL Absence Code</span></div><input type="text" id="alCode" value="UKVAC"></label>
+          <label><div class="label-line"><span>Maternity Code</span></div><input type="text" id="matCode" value="MAT"></label>
+          <label>
+            <div class="label-line"><span>Hours per AL day</span><span class="info" data-tip="Used for CSV Duration In Hours. UK typical 7.5."></span></div>
+            <div class="num-control">
+              <button type="button" class="dec" data-target="hoursPerDay">−</button>
+              <input type="number" id="hoursPerDay" min="1" step="0.5" value="7.5">
+              <button type="button" class="inc" data-target="hoursPerDay">+</button>
+            </div>
+          </label>
+        </div>
+        <label>
+          <div class="label-line"><span>Start/End time (HH:MM → HH:MM)</span></div>
+          <div class="row cols2"><input type="time" id="startTime" value="09:00"><input type="time" id="endTime" value="17:30"></div>
+        </label>
+        <div class="row cols2" style="margin-top:8px">
+          <div class="btn-row"><button class="btn export" id="exportBtn" type="button" disabled>Download Import CSV</button></div>
+          <div class="btn-row">
+            <input type="file" id="csvFile" accept=".csv" style="display:none">
+            <button class="btn" id="importBtn" type="button">Load Calendar CSV → Preview</button>
+          </div>
+        </div>
+        <div class="hint">Export includes AL and Maternity rows. Import merges into the preview (<strong>AL rows only</strong>).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREVIEW -->
+  <section class="card">
+    <h2>Preview (Calendar)</h2>
+    <div class="legend" id="legend"></div>
+    <div class="preview-controls">
+      <div class="seg" id="viewMode">
+        <button data-mode="full" class="active">Full Range</button>
+        <button data-mode="months">Months</button>
+      </div>
+      <button class="btn icon" id="enforceWeeksBtn" title="Ensure each week has at least one absence">Enforce all weeks having absences</button>
+      <div style="flex:1"></div>
+      <div id="status" class="small"></div>
+    </div>
+    <div id="calWrap" class="small" style="padding:16px;color:#94a3b8;">No calendar yet. Add people and generate, or import a CSV.</div>
+  </section>
+</main>
+
+<!-- Toasts -->
+<div class="toasts" id="toasts"></div>
+
+<!-- Range modal (reused for manual blocks) -->
+<div class="modal" id="rangeModal" aria-hidden="true">
+  <div class="modal-card">
+    <h3 id="rangeTitle">Set range</h3>
+    <div class="row cols3" style="margin-top:6px">
+      <label>From <input type="date" id="rangeFrom"></label>
+      <label>To <input type="date" id="rangeTo"></label>
+      <div class="small" style="align-self:end;opacity:.9">Pick both dates (inclusive).</div>
+    </div>
+    <div class="modal-actions">
+      <div class="small" id="rangeHint" style="opacity:.9">Valid business days will display in the calendar.</div>
+      <div class="right">
+        <button class="btn" id="rangeCancel" type="button">Cancel</button>
+        <button class="btn primary" id="rangeApply" type="button">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Special leaves modal -->
+<div class="modal" id="leavesModal" aria-hidden="true">
+  <div class="modal-card">
+    <h3>Add special leaves</h3>
+    <div class="row cols2">
+      <label>
+        <div class="label-line"><span>Type</span></div>
+        <select id="leaveType">
+          <option value="lts">Long-term sickness (LTS)</option>
+          <option value="mat">Maternity</option>
+        </select>
+      </label>
+      <!-- Removed old maternity max days control; new configuration appears under Maternity section -->
+    </div>
+
+    <div id="ltsStrategyWrap">
+      <div class="divider"></div>
+      <!-- LTS strategy and randomize button row -->
+      <div class="row cols2" id="ltsStratRow">
+        <label>
+          <div class="label-line"><span>LTS strategy</span><span class="info" data-tip="Pick how many people rotate on long‑term sickness and over what cycle."></span></div>
+          <select id="ltsStrategy">
+            <option value="1py">1 person per year</option>
+            <option value="2py">2 people per year</option>
+            <option value="4p2y">4 people every two years</option>
+          </select>
+        </label>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn" id="ltsRandom" type="button">Randomize</button>
+        </div>
+      </div>
+      <!-- Cycle participants will be inserted here -->
+      <div id="ltsPoolSelect" style="display:flex;flex-direction:column;gap:6px"></div>
+      <!-- Confirm button for LTS plan -->
+      <div class="modal-actions" id="ltsActions" style="margin-top:8px">
+        <button class="btn primary" id="ltsConfirm" type="button">Confirm LTS plan</button>
+      </div>
+    </div>
+
+    <div id="matStrategyWrap" style="display:none">
+      <div class="divider"></div>
+      <!-- Maternity configuration -->
+      <div class="row cols3">
+        <label>
+          <div class="label-line"><span>Max maternity days</span><span class="info" data-tip="Maximum length of each maternity block. UK typical 52."></span></div>
+          <div class="num-control">
+            <button type="button" class="dec" data-target="matMaxDays">−</button>
+            <input type="number" id="matMaxDays" min="1" value="52">
+            <button type="button" class="inc" data-target="matMaxDays">+</button>
+          </div>
+        </label>
+        <label>
+          <div class="label-line"><span>Strategy</span><span class="info" data-tip="Select how to distribute maternity across the window."></span></div>
+          <select id="matStrategy">
+            <option value="">Select…</option>
+            <option value="fillYear">Fill the year</option>
+            <option value="3perYear">3 per year</option>
+            <option value="4perYear">4 per year</option>
+          </select>
+        </label>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn" id="matRandom" type="button">Randomize</button>
+        </div>
+      </div>
+      <!-- Participant selectors for maternity -->
+      <div id="matPoolSelect" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+      <!-- Confirm button for maternity plan -->
+      <div class="modal-actions" id="matActions" style="margin-top:8px">
+        <button class="btn primary" id="matConfirm" type="button">Confirm Maternity plan</button>
+      </div>
+    </div>
+    <!-- Footer actions for modal (close only) -->
+    <div class="modal-actions">
+      <div class="small" id="leavesHint">Configure LTS or Maternity and confirm to schedule.</div>
+      <div class="right">
+        <button class="btn" id="leavesCancel" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sickness Advanced Controls Modal -->
+<div class="modal" id="sickAdvancedModal" aria-hidden="true">
+  <div class="modal-card">
+    <h3>Sickness Advanced Controls (Beta)</h3>
+    <div class="small" style="margin-top:4px;color:#9aa4b5">
+      Configure how sickness blocks are generated for monthly and quarterly strategies. “Blocks per period” determines the number of sick leave blocks scheduled in each period. “Block length (days)” sets the minimum and maximum length of each block.
+    </div>
+    <div class="row cols2" style="margin-top:6px">
+      <label>
+        <div class="label-line"><span>Blocks per period</span></div>
+        <div class="num-control">
+          <button type="button" class="dec" data-target="sickBlocksPerPeriod">−</button>
+          <input type="number" id="sickBlocksPerPeriod" min="1" max="10" value="2">
+          <button type="button" class="inc" data-target="sickBlocksPerPeriod">+</button>
+        </div>
+      </label>
+      <label>
+        <div class="label-line"><span>Block length (days)</span></div>
+        <div class="row cols2">
+          <div class="num-control">
+            <button type="button" class="dec" data-target="sickMinLen">−</button>
+            <input type="number" id="sickMinLen" min="1" max="10" value="2">
+            <button type="button" class="inc" data-target="sickMinLen">+</button>
+          </div>
+          <div class="num-control">
+            <button type="button" class="dec" data-target="sickMaxLen">−</button>
+            <input type="number" id="sickMaxLen" min="1" max="10" value="5">
+            <button type="button" class="inc" data-target="sickMaxLen">+</button>
+          </div>
+        </div>
+      </label>
+    </div>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="btn" id="sickAdvCancel" type="button">Close</button>
+      <button class="btn primary" id="sickAdvSave" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ========= Toasts ========= */
+  function toast(msg, type){
+    var box=document.getElementById('toasts');
+    var el=document.createElement('div');
+    el.className='toast'+(type?(' '+type):'');
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(6px)'; }, 3000);
+    setTimeout(()=>{ el.remove(); }, 3600);
+  }
+
+  /* ========= Manager colours & registry ========= */
+  const basePalette = [
+    '#93c5fd', '#fca5a5', '#34d399', '#fbbf24', '#a78bfa',
+    '#f472b6', '#60a5fa', '#f59e0b', '#22d3ee', '#c084fc',
+    '#f87171', '#4ade80', '#fda4af', '#facc15', '#2dd4bf'
+  ];
+  const managerColors = new Map([
+    ['Belinda Newton', '#93c5fd'],
+    ['Daniel Harrison', '#fca5a5']
+  ]);
+
+  function ensureManager(name){
+    if(!name || name==='__OTHER__') return null;
+    if(!managerColors.has(name)){
+      // pick next unused colour
+      const used = new Set([...managerColors.values()]);
+      const next = basePalette.find(c=>!used.has(c)) || '#9ca3af';
+      managerColors.set(name, next);
+      rebuildManagerSelects();
+      buildLegend();
+    }
+    return name;
+  }
+
+  function colorStyles(name){
+    const c = managerColors.get(name) || '#9ca3af';
+    return `background:${hex2rgba(c,0.22)};border-color:${c};`;
+  }
+  function dotStyle(name){
+    const c = managerColors.get(name) || '#9ca3af';
+    return `background:${c};`;
+  }
+  function hex2rgba(hex, a){
+    const m = hex.replace('#','');
+    const r = parseInt(m.substring(0,2),16),
+          g = parseInt(m.substring(2,4),16),
+          b = parseInt(m.substring(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  // Global object to hold user-adjusted availability targets per team and month. Values are ratios (0–1).
+  window.AVAILABILITY_TARGETS = {};
+
+  // Global object for advanced sickness controls
+  window.SICK_ADVANCED_CONFIG = { blocksPerPeriod: 2, minLen: 2, maxLen: 5 };
+
+  // Global object for 'More days in' selection: maps month index to array of week indices (0=first week)
+  window.MORE_DAYS_IN = {};
+
+  function buildLegend(){
+    const box = document.getElementById('legend');
+    box.innerHTML='';
+    // Managers
+    managerColors.forEach((c,name)=>{
+      const span = document.createElement('span');
+      span.innerHTML = `<span class="dot" style="${dotStyle(name)}"></span> ${name}`;
+      box.appendChild(span);
+    });
+    // Sick & Mat
+    const sick = document.createElement('span');
+    sick.innerHTML = `<span class="dot" style="background:var(--sick)"></span> Sick / LTS`;
+    const mat = document.createElement('span');
+    mat.innerHTML = `<span class="dot" style="background:var(--mat)"></span> Maternity`;
+    box.appendChild(sick); box.appendChild(mat);
+  }
+
+  function rebuildManagerSelects(){
+    const sel = document.getElementById('empMgr');
+    const cur = sel.value;
+    sel.innerHTML='';
+    [...managerColors.keys()].forEach(n=>{
+      const opt=document.createElement('option'); opt.textContent=n; opt.value=n; sel.appendChild(opt);
+    });
+    const o=document.createElement('option'); o.value='__OTHER__'; o.textContent='Other…'; sel.appendChild(o);
+    sel.value = managerColors.has(cur) ? cur : 'Belinda Newton';
+  }
+
+  /* ========= Constants ========= */
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const DEFAULT_LIST = [
+    {id:'*1984', last:'Pickles', first:'Ben', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'1', last:'Harrison', first:'Daniel', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'1234', last:'Ofmen', first:'Manuela', mgr:'Belinda Newton', days:22, mat:'Y'},
+    {id:'1875', last:'Turkington', first:'Brendan', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'9980', last:'Flack', first:'Brenda', mgr:'Belinda Newton', days:22, mat:'Y'},
+    {id:'ADL10013', last:'Robinson', first:'Jack', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'ADL10020', last:'White', first:'Adam', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'ADL10022', last:'Turner', first:'Noah', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'ADL10024', last:'Morris', first:'Daniel', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'ADL10025', last:'Walker', first:'Olivia', mgr:'Belinda Newton', days:22, mat:'Y'},
+    {id:'ADL10028', last:'Phillips', first:'Logan', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'ADL10030', last:'Wright', first:'Benjamin', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'ADL1007', last:'Taylor', first:'Henry', mgr:'Belinda Newton', days:22, mat:'N'},
+    {id:'LITE006', last:'Pederson', first:'Samantha', mgr:'Belinda Newton', days:25, mat:'Y'},
+    {id:'LITE007', last:'Newton', first:'Belinda', mgr:'Belinda Newton', days:22, mat:'Y'},
+    {id:'LITE40', last:'Burton', first:'Harry', mgr:'Belinda Newton', days:22, mat:'N'},
+
+    {id:'*18894', last:'Elliot', first:'Peter', mgr:'Daniel Harrison', days:22, mat:'N'},
+    {id:'2', last:'Evans', first:'Gary', mgr:'Daniel Harrison', days:22, mat:'N'},
+    {id:'1875A', last:'Graham', first:'Danny', mgr:'Daniel Harrison', days:25, mat:'N'},
+    {id:'LITE043', last:'Scott', first:'Jean', mgr:'Daniel Harrison', days:22, mat:'Y'},
+    {id:'LITE045', last:'Ward', first:'Helen', mgr:'Daniel Harrison', days:22, mat:'Y'},
+    {id:'LITE048', last:'Moore', first:'Alecia', mgr:'Daniel Harrison', days:22, mat:'Y'},
+    {id:'LITE290', last:'Newman', first:'Maria', mgr:'Daniel Harrison', days:22, mat:'Y'},
+    {id:'LITE41', last:'Booth', first:'Shirley', mgr:'Daniel Harrison', days:22, mat:'Y'}
+  ].map(r=>({manager:r.mgr,name:`${r.first} ${r.last}`, days:r.days, id:r.id, lts:false, ltsFrom:null, ltsTo:null, mat:(r.mat==='Y'), matFrom:null, matTo:null}));
+
+  /* ========= State ========= */
+  let EMPLOYEES = [];
+  // ymd -> { AL:[{team,person,id}], sick:[{team,person,id,lts?:true}], mat:[{team,person,id}] }
+  let SCHEDULE = new Map();
+  let RANGE_TARGET = null; // {type:'lts'|'mat', index}
+
+  /* ========= Utils ========= */
+  function pad(n){ return (n<10?'0':'')+n; }
+  function ymd(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function dmy(d){ return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(); }
+  function parseDMY(s){ var p=(s||'').split('/'); if(p.length!==3) return new Date('invalid'); return new Date(+p[2], +p[1]-1, +p[0]); }
+  function parseISODateInput(s){ if(!s) return new Date('invalid'); var p=s.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+  function isBiz(d){ var g=d.getDay(); return g>=1 && g<=5; }
+  function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
+  function mondayOf(d){ var x=new Date(d); var wd=(x.getDay()+6)%7; x.setDate(x.getDate()-wd); return x; }
+  function sundayOf(d){ return addDays(mondayOf(d),6); }
+  function buildDays(start,end){ var out=[], t=new Date(start); while(t<=end){ if(isBiz(t)) out.push(new Date(t)); t=addDays(t,1);} return out; }
+  function buildWeeks(start,end){ var weeks=[], cur=mondayOf(start); while(cur<=end){ weeks.push([new Date(cur), addDays(cur,6)]); cur=addDays(cur,7);} return weeks; }
+  function ensureDay(k){ if(!SCHEDULE.has(k)) SCHEDULE.set(k,{AL:[],sick:[],mat:[]}); return SCHEDULE.get(k); }
+  function nextBusinessDay(d){ var x=addDays(d,1); while(!isBiz(x)) x=addDays(x,1); return x; }
+  function teamLimit(activeCount){ if(activeCount<=0) return 0; if(activeCount===1) return 1; var lim=Math.floor(activeCount*0.8); return Math.max(1,lim); }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+  /* ========= UK (England & Wales) Bank Holidays ========= */
+  function easterSunday(y){
+    var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3);
+    var h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+    var month=Math.floor((h+l-7*m+114)/31), day=((h+l-7*m+114)%31)+1; return new Date(y,month-1,day);
+  }
+  function firstMonday(year, month){ let d=new Date(year,month,1); while(d.getDay()!==1) d=addDays(d,1); return d; }
+  function lastMonday(year, month){ let d=new Date(year,month+1,0); while(d.getDay()!==1) d=addDays(d,-1); return d; }
+  function subIfWeekend(d){
+    let wd=d.getDay();
+    if(wd===6) return addDays(d,2);
+    if(wd===0) return addDays(d,1);
+    return d;
+  }
+  function ukHolidaysForYear(y){
+    const s=new Set();
+    s.add(ymd(subIfWeekend(new Date(y,0,1))));
+    const es=easterSunday(y);
+    s.add(ymd(addDays(es,-2)));
+    s.add(ymd(addDays(es,1)));
+    s.add(ymd(firstMonday(y,4)));
+    s.add(ymd(lastMonday(y,4)));
+    s.add(ymd(lastMonday(y,7)));
+    const xmas=subIfWeekend(new Date(y,11,25));
+    const boxing=subIfWeekend(new Date(y,11,26));
+    s.add(ymd(xmas)); s.add(ymd(boxing));
+    return s;
+  }
+  function mergeHolidaySets(years){ const out=new Set(); years.forEach(y=>ukHolidaysForYear(y).forEach(k=>out.add(k))); return out; }
+
+  /* ========= Tabs ========= */
+  function switchTab(id){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.getAttribute('data-tab')===id));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', p.id==='tab-'+id));
+  }
+  document.getElementById('sidebarTabs').addEventListener('click', function(e){
+    var el=e.target.closest('.tab'); if(!el) return; switchTab(el.getAttribute('data-tab'));
+  });
+
+  /* ========= Employees table ========= */
+  function renderEmpTable(){
+    var empBody = document.querySelector('#empTable tbody');
+    var table = document.getElementById('empTable');
+    empBody.innerHTML='';
+    // Hide or show the entire table depending on whether employees exist
+    if(EMPLOYEES.length===0){
+      // Hide table when no employees loaded; show a placeholder message inside tbody
+      table.style.display = 'none';
+      var tr=document.createElement('tr');
+      tr.innerHTML = '<td colspan="5" class="small" style="padding:12px 10px;color:#94a3b8;">No employees yet. Click “Load demo users” or add manually.</td>';
+      empBody.appendChild(tr);
+      return;
+    }
+    // Show table now that we have employees
+    table.style.display = '';
+    EMPLOYEES.forEach(function(e,i){
+      var tr=document.createElement('tr');
+      tr.innerHTML =
+        '<td>'+e.manager+'</td>'+
+        '<td>'+e.name+'</td>'+
+        '<td>'+e.id+'</td>'+
+        '<td><input type="number" min="0" step="1" class="days-input" data-i="'+i+'" value="'+(e.days||0)+'" style="width:92px"></td>'+
+        '<td><button class="btn" type="button" data-remove="'+i+'">Remove</button></td>';
+      empBody.appendChild(tr);
+    });
+  }
+  function addEmployee(){
+    var name = document.getElementById('empName').value.trim();
+    var id = document.getElementById('empId').value.trim();
+    var daysRaw = document.getElementById('empDays').value;
+    var managerSel = document.getElementById('empMgr').value;
+    var other = document.getElementById('otherMgr').value.trim();
+    var manager = managerSel==='__OTHER__' ? other : managerSel;
+    if(managerSel==='__OTHER__' && !other){ alert('Type a manager name.'); return; }
+    if(!name){ alert('Please enter a name.'); return; }
+    var days = Number(daysRaw); if(isNaN(days)||days<0){ alert('Please enter remaining days (number).'); return; }
+    ensureManager(manager);
+    EMPLOYEES.push({name, id, days:Math.round(days), manager, lts:false, ltsFrom:null, ltsTo:null, mat:false, matFrom:null, matTo:null});
+    document.getElementById('empName').value=''; document.getElementById('empId').value=''; document.getElementById('empDays').value='';
+    if(managerSel==='__OTHER__'){ document.getElementById('otherMgr').value=''; document.getElementById('empMgr').value=manager; document.getElementById('otherMgr').style.display='none'; }
+    renderEmpTable(); buildLegend();
+    toast('Added: '+name+' ('+manager+'), days: '+days, 'ok');
+  }
+  function clearEmployees(){ EMPLOYEES=[]; renderEmpTable(); toast('Employees cleared.','warn'); }
+
+  function seedEmployees(){
+    EMPLOYEES = DEFAULT_LIST.map(x=>Object.assign({},x));
+    // ensure managers are registered
+    new Set(EMPLOYEES.map(e=>e.manager)).forEach(ensureManager);
+    renderEmpTable(); buildLegend();
+    toast('UK list loaded.','ok');
+    // Update availability summary after loading employees
+    const s=parseISODateInput(document.getElementById('start').value);
+    const e=parseISODateInput(document.getElementById('end').value);
+    if(!isNaN(s) && !isNaN(e) && s<=e){ computeAvailabilitySummary(s,e); }
+  }
+
+  // Manager select other toggle
+  document.getElementById('empMgr').addEventListener('change', function(){
+    const v=this.value; const box=document.getElementById('otherMgr');
+    box.style.display = (v==='__OTHER__') ? '' : 'none';
+    if(v!=='__OTHER__') ensureManager(v);
+  });
+
+  /* ========= Employees CSV (import + template) ========= */
+  function parseCSV(text){
+    var lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim().length>0);
+    if(!lines.length) return [];
+    function splitLine(l){
+      var out=[], cur='', i=0, inQ=false;
+      while(i<l.length){
+        var ch=l[i];
+        if(ch==='\"'){ if(inQ && l[i+1]==='\"'){ cur+='\"'; i+=2; continue; } inQ=!inQ; i++; continue; }
+        if(ch===',' && !inQ){ out.push(cur); cur=''; i++; continue; }
+        cur+=ch; i++;
+      }
+      out.push(cur); return out;
+    }
+    var header=splitLine(lines[0]).map(s=>s.trim().toLowerCase());
+    var rows=[];
+    for(var i=1;i<lines.length;i++){
+      var cells=splitLine(lines[i]);
+      if(!cells.length) continue;
+      var row={}; for(var c=0;c<header.length;c++){ row[header[c]]=(cells[c]||'').trim(); }
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function downloadEmpTemplate(){
+    const header = ['Manager','Employee','ID','Days','Maternity (Y/N)'];
+    const sample = [
+      ['Belinda Newton','Alex Stone','ID123', '22', 'N'],
+      ['Other Manager','Pat Lee','ID124', '25', 'Y']
+    ];
+    const rows = [header].concat(sample).map(r=>r.map(v=>`"${String(v).replace(/\"/g,'\"\"')}"`).join(',')).join('\r\n');
+    const blob=new Blob([rows], {type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='employees-template.csv'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 300);
+  }
+
+  function importEmployeesCSV(){
+    const input = document.getElementById('empCsvFile');
+    input.onchange=function(){
+      const f=input.files[0]; if(!f) return;
+      const reader=new FileReader();
+      reader.onload=function(){
+        try{
+          const rows=parseCSV(String(reader.result||''));
+          if(!rows.length){ toast('No rows in employees CSV.','warn'); return; }
+          let added=0;
+          rows.forEach(r=>{
+            const manager = r['manager'] || r['mgr'] || '';
+            const name = r['employee'] || r['name'] || '';
+            const id = r['id'] || '';
+            const days = Number(r['days']||'0')||0;
+            const mat = ((r['maternity (y/n)']||r['maternity']||'N').trim().toUpperCase()==='Y');
+            if(!name) return;
+            const mgr = manager && manager.trim().length ? manager.trim() : 'Belinda Newton';
+            ensureManager(mgr);
+            EMPLOYEES.push({name, id, days:Math.max(0,Math.round(days)), manager:mgr, lts:false, ltsFrom:null, ltsTo:null, mat:mat, matFrom:null, matTo:null});
+            added++;
+          });
+          renderEmpTable(); buildLegend();
+          toast('Imported '+added+' employee(s).','ok');
+        }catch(e){ console.error(e); toast('Employees CSV error: '+e.message,'bad'); }
+        finally{ input.value=''; }
+      };
+      reader.readAsText(f);
+    };
+    input.click();
+  }
+
+  /* ========= Preview rendering ========= */
+  function buildMonthGrid(monthStart, monthEnd, UK_HOLS){
+    var frag=document.createDocumentFragment();
+    var dow=document.createElement('div'); dow.className='dow';
+    ['Mon','Tue','Wed','Thu','Fri'].forEach(function(t){ var d=document.createElement('div'); d.textContent=t; dow.appendChild(d); });
+    frag.appendChild(dow);
+
+    var grid=document.createElement('div'); grid.className='grid';
+    var wStart = mondayOf(monthStart);
+    while(wStart <= monthEnd){
+      for(var i=0;i<5;i++){
+        var d = addDays(wStart,i);
+        var cell = document.createElement('div'); cell.className='day';
+        // highlight UK bank holidays with a red border
+        if(UK_HOLS && UK_HOLS.has(ymd(d))){
+          cell.style.borderColor = '#ef4444';
+        }
+        if(d.getMonth()!==monthStart.getMonth()) cell.style.opacity=.35;
+        var head = document.createElement('div'); head.className='date';
+        head.innerHTML = '<span>'+d.getDate()+'</span><span>'+MONTH_NAMES[d.getMonth()]+'</span>';
+        cell.appendChild(head);
+
+        var box = document.createElement('div'); box.className='tags';
+        var rec = SCHEDULE.get(ymd(d));
+        if(rec){
+          (rec.AL||[]).forEach(function(x){
+            var tag=document.createElement('span');
+            const style = colorStyles(x.team);
+            tag.className='tag';
+            tag.setAttribute('style', style);
+            tag.textContent = x.person+' ('+firstWord(x.team)+')';
+            box.appendChild(tag);
+          });
+          (rec.sick||[]).forEach(function(x){
+            var tag=document.createElement('span');
+            tag.className='tag sick';
+            tag.textContent=(x.lts?'LTS: ':'SICK: ')+x.person+' ('+firstWord(x.team)+')';
+            box.appendChild(tag);
+          });
+          (rec.mat||[]).forEach(function(x){
+            var tag=document.createElement('span');
+            tag.className='tag mat';
+            tag.textContent='MAT: '+x.person;
+            box.appendChild(tag);
+          });
+        }
+        cell.appendChild(box); grid.appendChild(cell);
+      }
+      wStart = addDays(wStart,7);
+    }
+    frag.appendChild(grid);
+    return frag;
+  }
+  function firstWord(s){ return String(s||'').split(' ')[0]; }
+
+  // Current calendar display mode: 'full' shows all months; 'months' shows tabs per month
+  var calendarMode = 'full';
+
+  function buildCalendarPreview(start,end){
+    var wrap=document.getElementById('calWrap');
+    wrap.innerHTML='';
+    if(!start||!end||isNaN(start)||isNaN(end)){
+      wrap.textContent='No calendar yet. Add people and generate, or import a CSV.'; return;
+    }
+    // Compute UK holidays for border highlighting
+    var years=[]; for(var y=start.getFullYear(); y<=end.getFullYear(); y++){ years.push(y); }
+    var UK_HOLS = mergeHolidaySets(years);
+    var monthNodes=[];
+    var labels=[];
+    var cursor=new Date(start.getFullYear(), start.getMonth(), 1);
+    var index=0;
+    while(cursor<=end){
+      var monthStart=new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+      var monthEnd=new Date(cursor.getFullYear(), cursor.getMonth()+1, 0);
+      // month container
+      var monthDiv=document.createElement('div'); monthDiv.setAttribute('data-idx', index);
+      var title=document.createElement('div'); title.style.margin='12px 16px 6px'; title.innerHTML='<strong>'+MONTH_NAMES[monthStart.getMonth()]+' '+monthStart.getFullYear()+'</strong>';
+      monthDiv.appendChild(title);
+      monthDiv.appendChild(buildMonthGrid(monthStart, monthEnd, UK_HOLS));
+      monthNodes.push(monthDiv);
+      labels.push({idx:index, text:MONTH_NAMES[monthStart.getMonth()]+' '+monthStart.getFullYear()});
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth()+1, 1);
+      index++;
+    }
+    if(calendarMode==='months' && monthNodes.length>1){
+      // build tab nav
+      var nav=document.createElement('div'); nav.className='calendar-tabs'; nav.style.display='flex'; nav.style.flexWrap='wrap'; nav.style.gap='4px'; nav.style.padding='8px 16px';
+      labels.forEach(function(lbl,i){
+        var b=document.createElement('button'); b.className='btn'; b.textContent=lbl.text; b.setAttribute('data-tab-idx', i);
+        if(i===0) b.classList.add('active');
+        b.addEventListener('click', function(){
+          var idx=Number(this.getAttribute('data-tab-idx'));
+          // update active class
+          nav.querySelectorAll('button').forEach(btn=>btn.classList.toggle('active', Number(btn.getAttribute('data-tab-idx'))===idx));
+          // show/hide month divs
+          monthNodes.forEach(function(div){ div.style.display=(Number(div.getAttribute('data-idx'))===idx?'block':'none'); });
+        });
+        nav.appendChild(b);
+      });
+      wrap.appendChild(nav);
+      monthNodes.forEach(function(div,i){ div.style.display=(i===0?'block':'none'); wrap.appendChild(div); });
+    } else {
+      // full mode: append all months
+      monthNodes.forEach(function(div){ wrap.appendChild(div); });
+    }
+  }
+
+  /* ========= RNG (seeded) ========= */
+  function makePRNG(seedStr){
+    function xmur3(str){ for(var i=0,h=1779033703^str.length;i<str.length;i++){ h=Math.imul(h^str.charCodeAt(i),3432918353); h=h<<13|h>>>19; } return function(){ h=Math.imul(h^h>>>16,2246822507); h=Math.imul(h^h>>>13,3266489909); return (h^h>>>16)>>>0; } }
+    function sfc32(a,b,c,d){ return function(){ a|=0;b|=0;c|=0;d|=0; var t=(a+b|0)+d|0; d=d+1|0; a=b^b>>>9; b=c+(c<<3)|0; c=(c<<21|c>>>11); c=c+t|0; return (t>>>0)/4294967296; } }
+    var seed = (seedStr && String(seedStr).trim().length) ? seedStr : (Date.now().toString(36)+Math.random().toString(36).slice(2));
+    var seeder=xmur3(seed); var prng=sfc32(seeder(),seeder(),seeder(),seeder()); prng._seed=seed; return prng;
+  }
+
+  /* ========= Scheduling ========= */
+  function generate(){
+    try{
+      SCHEDULE.clear();
+
+      var sVal=document.getElementById('start').value;
+      var eVal=document.getElementById('end').value;
+      if(!sVal||!eVal){ alert('Please set start/end dates.'); return; }
+      var start=parseISODateInput(sVal), end=parseISODateInput(eVal);
+      if(isNaN(start.getTime())||isNaN(end.getTime())||start>end){ alert('Invalid date range.'); return; }
+      if(EMPLOYEES.length===0){ alert('Please add at least one employee.'); return; }
+
+      // Knobs
+      var avoidUKHolidays = (document.getElementById('avoidUKHolidays').value||'on')==='on';
+      var preferFriMon = (document.getElementById('preferFriMon').value||'on')==='on';
+      var allowConsec = (document.getElementById('allowConsecutive').value||'on')==='on';
+      var maxPerDaySoft = Math.max(1, Number(document.getElementById('maxPerDay').value)||6);
+      var baseIntensity = Math.max(1, Math.min(5, Number(document.getElementById('baseIntensity').value)||2));
+      var randomness = clamp(Number(document.getElementById('randomness').value)||35, 0, 100);
+      // Read sickness settings from new UI
+      var sickEnabledEl = document.getElementById('sickEnabled');
+      var autoSick = !!(sickEnabledEl && sickEnabledEl.checked);
+      var strategyEl = document.getElementById('sickStrategy');
+      var stratVal = strategyEl ? strategyEl.value : 'everyMonth';
+      // Number of people to schedule per sickness period
+      var peoplePerPeriod = Math.max(1, parseInt((document.getElementById('sickPeopleCount')||{}).value)||1);
+      // Map strategy to approximate sick per month (per team)
+      var sickPerMonth;
+      switch(stratVal){
+        case 'everyWeek': sickPerMonth = 4; break;
+        case 'everyOtherWeek': sickPerMonth = 2; break;
+        case 'everyQuarter': sickPerMonth = 0.5; break;
+        case 'everyMonth':
+        default: sickPerMonth = 1;
+      }
+      // Intensity for More people in (normal or all workforce)
+      var moreIntensity = (document.getElementById('moreIntensity')||{}).value || 'normal';
+      var prng = makePRNG(document.getElementById('seed').value); document.getElementById('seed').value = prng._seed;
+      function rand(){ return prng(); }
+
+      // Years + holidays
+      var YEARS=[]; for(var y=start.getFullYear(); y<=end.getFullYear(); y++) YEARS.push(y);
+      var UK_HOLS = mergeHolidaySets(YEARS);
+
+      // Days & weeks
+      var DAYS_LIST = buildDays(start,end);
+      if(avoidUKHolidays){ DAYS_LIST = DAYS_LIST.filter(d=>!UK_HOLS.has(ymd(d))); }
+      var WEEKS = buildWeeks(start,end);
+
+      // Determine extra days ("More people in" selections) to increase AL cap on selected weeks
+      const extraDaySet=new Set();
+      if(window.MORE_DAYS_IN){
+        const mdi=window.MORE_DAYS_IN;
+        for(let yr=start.getFullYear(); yr<=end.getFullYear(); yr++){
+          for(const mStr in mdi){
+            const m=parseInt(mStr);
+            const weeks=mdi[m]||[];
+            if(!Array.isArray(weeks) || !weeks.length) continue;
+            const firstDay=new Date(yr, m, 1);
+            let firstMon=mondayOf(firstDay);
+            for(const wi of weeks){
+              const monday=addDays(firstMon, wi*7);
+              for(let dOff=0; dOff<5; dOff++){
+                const d=addDays(monday,dOff);
+                if(d < start || d > end) continue;
+                if(!isBiz(d)) continue;
+                extraDaySet.add(ymd(d));
+              }
+            }
+          }
+        }
+      }
+
+      // Split employees
+      var LTS = EMPLOYEES.filter(e=>!!e.lts && e.ltsFrom && e.ltsTo);
+      var MAT = EMPLOYEES.filter(e=>!!e.mat && e.matFrom && e.matTo);
+      var ACTIVE = EMPLOYEES.filter(e=>!e.lts && !(e.mat && e.matFrom && e.matTo));
+      // register managers colours
+      new Set(EMPLOYEES.map(e=>e.manager)).forEach(ensureManager);
+
+      var byTeam={}; managerColors.forEach((_,name)=>{ byTeam[name]=[]; });
+      ACTIVE.forEach(function(e){ if(byTeam[e.manager]) byTeam[e.manager].push({name:e.name,id:e.id,days:e.days,manager:e.manager}); });
+
+      var activeCounts={}; Object.keys(byTeam).forEach(t=>activeCounts[t]=(byTeam[t]||[]).length);
+
+      // Place Maternity (full range, capped by max days if requested)
+      var maxMatDays = Math.max(1, Number(document.getElementById('maxMatDays').value)||130);
+      if(MAT.length){
+        for(const x of MAT){
+          let count=0;
+          for(const d of DAYS_LIST){
+            if(d<x.matFrom || d>x.matTo) continue;
+            if(count>=maxMatDays) break;
+            var rec=ensureDay(ymd(d));
+            rec.mat.push({team:x.manager, person:x.name, id:x.id||''});
+            count++;
+          }
+        }
+      }
+
+      // Place LTS
+      if(LTS.length){
+        for(const d2 of DAYS_LIST){
+          const k=ymd(d2), rec=ensureDay(k);
+          for(const x of LTS){
+            if(d2>=x.ltsFrom && d2<=x.ltsTo){
+              rec.sick.push({team:x.manager, person:x.name, id:x.id||'', lts:true});
+            }
+          }
+        }
+      }
+
+      // Sickness scheduling: assign 2–5 day blocks according to strategy
+      if(autoSick){
+        // Determine all available employees (exclude those on LTS or MAT)
+        const allAvail = ACTIVE.filter(e=>!e.lts && !e.mat);
+        // Determine selectedIds for monthly/quarterly strategies
+        const selectedIds = (sickSelectedIds && sickSelectedIds.length) ? sickSelectedIds.slice() : null;
+        if(!allAvail.length){ /* no one to assign */ }
+        if(stratVal==='everyWeek' || stratVal==='everyOtherWeek'){
+          const skipEveryOther = (stratVal==='everyOtherWeek');
+          let rrIdx=0;
+          for(let w=0; w<WEEKS.length; w++){
+            if(skipEveryOther && (w % 2 === 1)) continue;
+            const weekMon=WEEKS[w][0];
+            if(!allAvail.length) break;
+            // schedule multiple people per period
+            for(let p=0; p<Math.min(peoplePerPeriod, allAvail.length); p++){
+              const emp = allAvail[(rrIdx + p) % allAvail.length];
+              // assign random 2–5 day block within week (Mon-Fri)
+              const len=2 + Math.floor(rand()*4);
+              const offset = Math.floor(rand() * (5 - len));
+              for(let d0=0; d0<len; d0++){
+                const d=addDays(weekMon, offset + d0);
+                if(d<start || d>end) continue;
+                const rec=ensureDay(ymd(d));
+                let conflict=false;
+                if((rec.sick||[]).some(s=>s.person===emp.name)) conflict=true;
+                if((rec.mat||[]).some(m=>m.person===emp.name)) conflict=true;
+                if((rec.AL||[]).some(a=>a.person===emp.name)) conflict=true;
+                if(!conflict){ rec.sick.push({team:emp.manager, person:emp.name, id:emp.id||'', lts:false}); }
+              }
+            }
+            rrIdx += peoplePerPeriod;
+          }
+        } else {
+          // Build periods (monthly or quarterly)
+          const periods=[];
+          if(stratVal==='everyMonth'){
+            let cur=new Date(start.getFullYear(), start.getMonth(), 1);
+            while(cur<=end){
+              const sP=new Date(cur);
+              const eP=new Date(cur.getFullYear(), cur.getMonth()+1, 0);
+              periods.push({start:sP,end:eP});
+              cur=new Date(cur.getFullYear(), cur.getMonth()+1,1);
+            }
+          }else if(stratVal==='everyQuarter'){
+            let cur=new Date(start.getFullYear(), start.getMonth(),1);
+            while(cur<=end){
+              const sP=new Date(cur);
+              const eP=new Date(cur.getFullYear(), cur.getMonth()+3,0);
+              periods.push({start:sP,end:eP});
+              cur=new Date(cur.getFullYear(), cur.getMonth()+3,1);
+            }
+          }
+          // Determine list of candidates: if monthly/quarterly and selectedIds exist, map them to employees; else full pool
+          const candidates = selectedIds ? selectedIds.map(id=>getEmpByKey(id)).filter(Boolean) : allAvail;
+          let rrIdx=0;
+          periods.forEach(function(period){
+            if(!candidates.length) return;
+            // Determine how many employees to schedule per period
+            const cfg=window.SICK_ADVANCED_CONFIG||{};
+            // Use peoplePerPeriod as preferred blocks
+            const blocks = Math.max(1, parseInt(cfg.blocksPerPeriod||peoplePerPeriod)||peoplePerPeriod);
+            const minLen = Math.max(1, parseInt(cfg.minLen)||2);
+            const maxLen = Math.max(minLen, parseInt(cfg.maxLen)||5);
+            for(let b=0; b<Math.min(blocks, candidates.length); b++){
+              const emp=candidates[(rrIdx + b) % candidates.length];
+              // Get business days in period
+              const daysInPeriod=buildDays(period.start, period.end);
+              if(!daysInPeriod.length) continue;
+              const len=minLen + Math.floor(rand() * (maxLen - minLen + 1));
+              const possibleStarts=[];
+              for(let iStart=0; iStart<=daysInPeriod.length - len; iStart++){
+                possibleStarts.push(iStart);
+              }
+              if(!possibleStarts.length) continue;
+              const startIndex = possibleStarts[Math.floor(rand()*possibleStarts.length)];
+              for(let j=0; j<len; j++){
+                const d=daysInPeriod[startIndex + j];
+                if(d<start || d>end) continue;
+                const rec=ensureDay(ymd(d));
+                let conflict=false;
+                if((rec.sick||[]).some(s=>s.person===emp.name)) conflict=true;
+                if((rec.mat||[]).some(m=>m.person===emp.name)) conflict=true;
+                if((rec.AL||[]).some(a=>a.person===emp.name)) conflict=true;
+                if(!conflict){ rec.sick.push({team:emp.manager, person:emp.name, id:emp.id||'', lts:false}); }
+              }
+            }
+            rrIdx += blocks;
+          });
+        }
+      }
+
+      // Balances & cursors
+      var balances=new Map(), rr={};
+      Object.keys(byTeam).forEach(function(t){ rr[t]=0; (byTeam[t]||[]).forEach(p=>balances.set(t+'|'+p.name+'|'+(p.id||''), Math.max(0, Number(p.days)||0))); });
+
+      function canPlaceAL(team, person, id, k){
+        const rec0=SCHEDULE.get(k) || {AL:[],sick:[],mat:[]};
+        // Do not allow annual leave if the person is sick or on maternity that day.
+        for (const s of rec0.sick || []) {
+          if (s.person === person) return false;
+        }
+        for (const m of rec0.mat || []) {
+          if (m.person === person) return false;
+        }
+        // Prevent duplicating the same person on annual leave on the same day.
+        for (const a of rec0.AL || []) {
+          if (a.person === person) return false;
+        }
+        return true;
+      }
+
+      // Scoring (simple)
+      function scoreOf(d){
+        let score=1, dow=d.getDay();
+        if(preferFriMon && (dow===1||dow===5)) score *= 1.25;
+        return score;
+      }
+      var dayScores=new Map(); DAYS_LIST.forEach(d=>dayScores.set(ymd(d), scoreOf(d)));
+      var dayOrder=DAYS_LIST.slice().sort((a,b)=> (dayScores.get(ymd(b)) - dayScores.get(ymd(a))) || (a-b));
+
+      function maybeCluster(d){
+        if(rand() > randomness/100) return [d];
+        if(preferFriMon && d.getDay()===5) return [d, nextBusinessDay(d)];
+        const len = 1 + Math.floor(rand()*3);
+        const dates=[d]; let cur=d;
+        for(let i=1;i<len;i++){ cur=nextBusinessDay(cur); dates.push(cur); }
+        return dates;
+      }
+
+      let totalRemaining=0; balances.forEach(v=>totalRemaining+=v);
+
+      // MAIN PASS (soft caps)
+      for(const d of dayOrder){
+        const k=ymd(d);
+        const recToday=ensureDay(k);
+
+        // If this day is in the extra set and intensity is 'all', schedule all available employees (who are not sick or on maternity) on annual leave
+        if(extraDaySet.has(k) && moreIntensity==='all'){
+          for(const t of Object.keys(byTeam)){
+            const arr=byTeam[t]; if(!arr||!arr.length) continue;
+            for(const e of arr){
+              const key=t+'|'+e.name+'|'+(e.id||'');
+              let left=Number(balances.get(key))||0;
+              if(left<=0) continue;
+              // skip if already scheduled on this day
+              if((recToday.AL||[]).some(a=>a.person===e.name)) continue;
+              // skip if sick or mat on this day
+              const conflicts = (recToday.sick||[]).some(s=>s.person===e.name) || (recToday.mat||[]).some(m=>m.person===e.name);
+              if(conflicts) continue;
+              recToday.AL.push({team:t, person:e.name, id:e.id||''});
+              balances.set(key, left-1);
+              totalRemaining--;
+            }
+          }
+        }
+
+        // Base cap for this day
+        var cap=Math.round(Math.max(maxPerDaySoft, baseIntensity));
+        // If this day is flagged for "more people in", add one extra slot
+        if(extraDaySet.has(k)) cap += 1;
+        // Apply a global cap rather than per-team cap: each team can place up to the global limit
+        var teamCap={}; Object.keys(byTeam).forEach(t=>teamCap[t]=cap);
+
+        const todayKeys=new Set(); let assigned=0;
+
+        function assignFromTeam(team){
+          const arr=byTeam[team]; if(!arr||!arr.length) return false;
+          // Try a few randoms
+          let tries=Math.min(arr.length,3);
+          while(tries--){
+            const e=arr[Math.floor(rand()*arr.length)];
+            const key=team+'|'+e.name+'|'+(e.id||'');
+            let left=Number(balances.get(key))||0; if(left<=0) continue;
+            if(todayKeys.has(team+'|'+e.name)) continue;
+            if(!allowConsec){
+              const ystr=ymd(addDays(d,-1));
+              const prev=SCHEDULE.get(ystr); const hadPrev = !!(prev && (prev.AL||[]).some(a=>a.team===team && a.person===e.name));
+              if(hadPrev) continue;
+            }
+            const clusterDates = maybeCluster(d);
+            let placedAny=false;
+            for(const dt of clusterDates){
+              const kk=ymd(dt);
+              if(avoidUKHolidays && UK_HOLS.has(kk)) continue;
+              if(!canPlaceAL(team,e.name,e.id,kk)) continue;
+              const rec=ensureDay(kk);
+              const curTeamCount=rec.AL.filter(a=>a.team===team).length;
+              if(curTeamCount >= teamCap[team]) continue;
+              rec.AL.push({team, person:e.name, id:e.id||''});
+              left--; balances.set(key,left); totalRemaining--;
+              placedAny=true;
+              if(left<=0) break;
+            }
+            if(placedAny){
+              todayKeys.add(team+'|'+e.name); assigned++; return true;
+            }
+          }
+          // round-robin
+          let i=0;
+          while(i < arr.length){
+            const e=arr[(rr[team]++) % arr.length];
+            const key=team+'|'+e.name+'|'+(e.id||'');
+            let left=Number(balances.get(key))||0; if(left<=0){i++; continue;}
+            if(todayKeys.has(team+'|'+e.name)){i++; continue;}
+            if(!allowConsec){
+              const y2=ymd(addDays(d,-1)); const prev2=SCHEDULE.get(y2);
+              const had2 = !!(prev2 && (prev2.AL||[]).some(a=>a.team===team && a.person===e.name));
+              if(had2){i++; continue;}
+            }
+            if(!canPlaceAL(team,e.name,e.id,k)){i++; continue;}
+            recToday.AL.push({team, person:e.name, id:e.id||''});
+            balances.set(key, left-1); totalRemaining--;
+            todayKeys.add(team+'|'+e.name); assigned++; return true;
+          }
+          return false;
+        }
+
+        while(assigned < cap && totalRemaining>0){
+          let picked=false;
+          for(const t of Object.keys(byTeam)){ if(assignFromTeam(t)){ picked=true; break; } }
+          if(!picked) break;
+        }
+      }
+
+      // Enforce weekly >=1 (HARD)
+      enforceWeeklyHard(start,end,UK_HOLS,byTeam,balances);
+
+      // Enforce monthly >=1 (HARD)
+      enforceMonthlyHard(start,end,UK_HOLS,byTeam,balances);
+
+      // Drain remaining balances to zero (progressively relax caps)
+      drainToZero(start,end,UK_HOLS,byTeam,balances);
+
+      // Status
+      var left=0; balances.forEach(v=>left+=v);
+      var statusEl=document.getElementById('status');
+      statusEl.innerHTML = left===0 ? '<span class="ok">All quotas used ✔</span>' : '<span class="warn">'+left+' day(s) unplaced.</span>';
+
+      // Enable export if any AL or MAT
+      let any=false; SCHEDULE.forEach(r=>{ if((r.AL||[]).length || (r.mat||[]).length) any=true; });
+      document.getElementById('exportBtn').disabled = !any;
+
+      // Render
+      buildCalendarPreview(start,end);
+
+      // Compute and display availability summary per team per month
+      computeAvailabilitySummary(start,end);
+      toast('Schedule generated.','ok');
+    }catch(err){
+      console.error(err);
+      toast('Error: '+(err&&err.message?err.message:String(err)),'bad');
+    }
+  }
+
+  function enforceWeeklyHard(start,end,UK_HOLS,byTeam,balances){
+    const weeks=buildWeeks(start,end);
+    for(const [mon,sun] of weeks){
+      let any=false, day=null;
+      for(let d=new Date(mon); d<=sun; d=addDays(d,1)){
+        if(!isBiz(d)) continue; const rec=SCHEDULE.get(ymd(d));
+        if(rec && rec.AL && rec.AL.length){ any=true; break; }
+        if(!day && (!UK_HOLS.has(ymd(d)))) day=new Date(d);
+      }
+      if(any || !day) continue;
+      const rec=ensureDay(ymd(day));
+      if(!forcePick(rec, byTeam, balances)) continue;
+    }
+  }
+
+  function enforceMonthlyHard(start,end,UK_HOLS,byTeam,balances){
+    let cur=new Date(start.getFullYear(), start.getMonth(), 1);
+    while(cur<=end){
+      const mStart = new Date(cur.getFullYear(), cur.getMonth(), 1);
+      const mEnd   = new Date(cur.getFullYear(), cur.getMonth()+1, 0);
+      let has=false, firstBiz=null;
+      for(let d=new Date(mStart); d<=mEnd; d=addDays(d,1)){
+        if(!isBiz(d)) continue;
+        const rec=SCHEDULE.get(ymd(d));
+        if(rec && rec.AL && rec.AL.length){ has=true; break; }
+        if(!firstBiz && !UK_HOLS.has(ymd(d))) firstBiz=new Date(d);
+      }
+      if(!has && firstBiz){
+        const rec=ensureDay(ymd(firstBiz));
+        forcePick(rec, byTeam, balances);
+      }
+      cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+    }
+  }
+
+  function forcePick(rec, byTeam, balances){
+    for(const team of Object.keys(byTeam)){
+      const pool=byTeam[team]; if(!pool||!pool.length) continue;
+      for(const e of pool){
+        const key=team+'|'+e.name+'|'+(e.id||''); const left=Number(balances.get(key))||0;
+        if(left<=0) continue;
+        const dup = rec.AL.some(a=>a.person===e.name);
+        const sickHere = (rec.sick||[]).some(s=>s.person===e.name);
+        const matHere  = (rec.mat||[]).some(m=>m.person===e.name);
+        if(dup||sickHere||matHere) continue;
+        rec.AL.push({team, person:e.name, id:e.id||''});
+        balances.set(key, left-1);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function drainToZero(start,end,UK_HOLS,byTeam,balances){
+    let left=0; balances.forEach(v=>left+=v);
+    if(left<=0) return;
+    const allDays = buildDays(start,end).filter(d=>!UK_HOLS.has(ymd(d)));
+    // Keep looping until no more assignments can be made or all balances are used up
+    let progress=true;
+    while(left>0 && progress){
+      progress=false;
+      for(const d of allDays){
+        if(left<=0) break;
+        const k=ymd(d);
+        const rec=ensureDay(k);
+        for(const team of Object.keys(byTeam)){
+          for(const e of byTeam[team]){
+            const key=team+'|'+e.name+'|'+(e.id||''); let rem=Number(balances.get(key))||0;
+            if(rem<=0) continue;
+            // Skip if already on AL, sick or mat on this day
+            const dup = rec.AL.some(a=>a.person===e.name);
+            const sickHere = (rec.sick||[]).some(s=>s.person===e.name);
+            const matHere  = (rec.mat||[]).some(m=>m.person===e.name);
+            if(dup||sickHere||matHere) continue;
+            rec.AL.push({team, person:e.name, id:e.id||''});
+            balances.set(key, rem-1);
+            left--;
+            progress=true;
+            if(left<=0) break;
+          }
+          if(left<=0) break;
+        }
+      }
+    }
+  }
+
+  /* ========= Availability summary (per team per month) ========= */
+  // Computes the average percentage of available (not on leave/sick/mat/LTS) employees per team per month
+  function computeAvailabilitySummary(start,end){
+    var container=document.getElementById('availSummary');
+    if(!container){ return; }
+    // Clear previous summary
+    container.innerHTML='';
+    if(!start||!end||isNaN(start)||isNaN(end)||start>end){ return; }
+    // Build teams list from managers colours
+    const teams = Array.from(managerColors.keys());
+    if(!teams.length){ return; }
+    // Determine team sizes
+    const teamSizes = {};
+    teams.forEach(t=>{ teamSizes[t] = EMPLOYEES.filter(e=>e.manager===t).length; });
+    // Data structure: monthKey -> team -> {totalDays, totalAvail}
+    const data = {};
+    // Iterate over business days
+    for(let d=new Date(start); d<=end; d=addDays(d,1)){
+      if(!isBiz(d)) continue;
+      const mKey = d.getFullYear() + '-' + pad(d.getMonth()+1);
+      if(!data[mKey]){ data[mKey] = {}; teams.forEach(t=>{ data[mKey][t] = {totalDays:0,totalAvail:0}; }); }
+      const rec = SCHEDULE.get(ymd(d)) || {AL:[],sick:[],mat:[]};
+      const unavailableByTeam = {};
+      teams.forEach(t=>{ unavailableByTeam[t] = new Set(); });
+      (rec.AL||[]).forEach(a=>{ if(unavailableByTeam[a.team]) unavailableByTeam[a.team].add(a.person); });
+      (rec.sick||[]).forEach(s=>{ if(unavailableByTeam[s.team]) unavailableByTeam[s.team].add(s.person); });
+      (rec.mat||[]).forEach(m=>{ if(unavailableByTeam[m.team]) unavailableByTeam[m.team].add(m.person); });
+      teams.forEach(t=>{
+        const size = teamSizes[t];
+        // If no employees in team, treat as fully available (100%)
+        if(size>0){
+          const unavail = unavailableByTeam[t].size;
+          const ratio = Math.max(0, Math.min(1, (size - unavail) / size));
+          data[mKey][t].totalDays++;
+          data[mKey][t].totalAvail += ratio;
+        } else {
+          data[mKey][t].totalDays++;
+          data[mKey][t].totalAvail += 1;
+        }
+      });
+    }
+    // Build sorted list of month keys
+    const monthKeys = Object.keys(data).sort();
+    // Create table with months as rows and teams as columns
+    const tbl=document.createElement('table');
+    tbl.style.width='100%'; tbl.style.borderCollapse='collapse';
+    const thead=document.createElement('thead');
+    const hdrRow=document.createElement('tr');
+    let hdrCells='<th style="padding:4px 6px;border-bottom:1px solid #1f2937;color:#cbd5e1">Month</th>';
+    teams.forEach(t=>{
+      hdrCells += '<th style="padding:4px 6px;border-bottom:1px solid #1f2937;color:#cbd5e1">'+t+'</th>';
+    });
+    hdrRow.innerHTML=hdrCells;
+    thead.appendChild(hdrRow);
+    tbl.appendChild(thead);
+    const tbody=document.createElement('tbody');
+    monthKeys.forEach(mKey=>{
+      const row=document.createElement('tr');
+      let cells='<td style="padding:4px 6px;color:#cbd5e1">'+mKey.replace('-', '/')+'</td>';
+      teams.forEach(t=>{
+        const rec=data[mKey][t];
+        let pctVal=0;
+        if(rec && rec.totalDays>0){ pctVal = Math.round((rec.totalAvail/rec.totalDays)*100); }
+        // Determine target value if previously set
+        let targetPct = 0;
+        if(window.AVAILABILITY_TARGETS && window.AVAILABILITY_TARGETS[t] && window.AVAILABILITY_TARGETS[t][mKey]){
+          targetPct = Math.round(window.AVAILABILITY_TARGETS[t][mKey]*100);
+        }else{
+          targetPct = pctVal;
+        }
+        cells += '<td style="padding:4px 6px;text-align:center"><input type="number" min="0" max="100" step="1" value="'+targetPct+'" data-team="'+t+'" data-month="'+mKey+'" style="width:60px;background:#0b1220;border:1px solid #1f2937;color:#e6e8ef;border-radius:6px;padding:4px 6px"></td>';
+      });
+      row.innerHTML=cells;
+      tbody.appendChild(row);
+    });
+    tbl.appendChild(tbody);
+    container.appendChild(tbl);
+    // Attach change event to inputs for adjusting availability targets
+    container.querySelectorAll('input[type="number"]').forEach(inp=>{
+      inp.addEventListener('change', function(){
+        const team=this.dataset.team;
+        const month=this.dataset.month;
+        let val=parseFloat(this.value);
+        if(isNaN(val)) val=0;
+        val=Math.max(0, Math.min(100, val));
+        this.value=Math.round(val);
+        if(!window.AVAILABILITY_TARGETS) window.AVAILABILITY_TARGETS={};
+        if(!window.AVAILABILITY_TARGETS[team]) window.AVAILABILITY_TARGETS[team] = {};
+        window.AVAILABILITY_TARGETS[team][month] = val/100;
+        toast('Availability target updated. Regenerate schedule to apply changes.', 'ok');
+      });
+    });
+  }
+
+  /* ========= Enforce ≥1 absence every week (button) ========= */
+  function enforceWeeksBtn(){
+    var sVal=document.getElementById('start').value;
+    var eVal=document.getElementById('end').value;
+    if(!sVal||!eVal){ toast('Set start/end dates first.','warn'); return; }
+    var start=parseISODateInput(sVal), end=parseISODateInput(eVal);
+    if(isNaN(start)||isNaN(end)||start>end){ toast('Invalid date range.','bad'); return; }
+
+    var YEARS=[], y=start.getFullYear(); for(;y<=end.getFullYear();y++) YEARS.push(y);
+    var UK_HOLS = mergeHolidaySets(YEARS);
+
+    // Build active map at call-time
+    var ACTIVE = EMPLOYEES.filter(e=>!e.lts && !(e.mat && e.matFrom && e.matTo));
+    var byTeam={}; managerColors.forEach((_,name)=>{ byTeam[name]=[]; });
+    ACTIVE.forEach(e=>{ if(byTeam[e.manager]) byTeam[e.manager].push({name:e.name,id:e.id,days:e.days,manager:e.manager}); });
+
+    var balances=new Map();
+    Object.keys(byTeam).forEach(t=> (byTeam[t]||[]).forEach(p=>balances.set(t+'|'+p.name+'|'+(p.id||''), Math.max(0, Number(p.days)||0))));
+    SCHEDULE.forEach(function(rec){ (rec.AL||[]).forEach(function(a){ var k=a.team+'|'+a.person+'|'+(a.id||''); balances.set(k, Math.max(0,(balances.get(k)||0)-1)); }); });
+
+    enforceWeeklyHard(start,end,UK_HOLS,byTeam,balances);
+    buildCalendarPreview(start,end);
+    toast('Enforced one AL per week','ok');
+  }
+
+  /* ========= Export CSV (AL + MAT) ========= */
+  function csvEscape(v){ var s=(v==null?'':String(v)); if(s.indexOf('"')>-1) s=s.replace(/\"/g,'\"\"'); return '"'+s+'"'; }
+
+  function exportCSV(){
+    try{
+      var startVal=document.getElementById('start').value;
+      var endVal=document.getElementById('end').value;
+      if(!startVal||!endVal){ alert('Set start/end dates first.'); return; }
+
+      var startTime = (document.getElementById('startTime')||{}).value || '09:00';
+      var endTime   = (document.getElementById('endTime')||{}).value   || '17:30';
+      var alCode    = (document.getElementById('alCode')||{}).value    || 'UKVAC';
+      var matCode   = (document.getElementById('matCode')||{}).value   || 'MAT';
+      var hoursPerDay = Math.max(1, Number((document.getElementById('hoursPerDay')||{}).value)||7.5);
+
+      var byPersonAL = new Map();
+      var byPersonMAT = new Map();
+
+      SCHEDULE.forEach(function(rec,k){
+        var d=new Date(k);
+        (rec.AL||[]).forEach(function(a){
+          var key=a.team+'|'+a.person+'|'+(a.id||'');
+          var arr = byPersonAL.get(key); if(!arr){ arr=[]; byPersonAL.set(key,arr); }
+          arr.push(d);
+        });
+        (rec.mat||[]).forEach(function(a){
+          var key=a.team+'|'+a.person+'|'+(a.id||'');
+          var arr = byPersonMAT.get(key); if(!arr){ arr=[]; byPersonMAT.set(key,arr); }
+          arr.push(d);
+        });
+      });
+
+      function groupConsecutive(dates){
+        dates=dates.slice().sort((a,b)=>a-b);
+        var groups=[]; if(!dates.length) return groups;
+        var curStart=dates[0], curEnd=dates[0];
+        function isNextBiz(a,b){ var n=nextBusinessDay(a); return ymd(n)===ymd(b); }
+        for(var i=1;i<dates.length;i++){
+          if(isNextBiz(curEnd, dates[i])){ curEnd=dates[i]; }
+          else{ groups.push([curStart,curEnd]); curStart=dates[i]; curEnd=dates[i]; }
+        }
+        groups.push([curStart,curEnd]); return groups;
+      }
+
+      var rows=[];
+      var header=['Reference Number','Action','Absence Code','Start Date','Start Time','End Date','End Time','Evidence','Expected End Date','Note','Payroll','Do Not Process Before','Duration In Hours','Days','Working Days','Processed'];
+      rows.push(header.map(csvEscape).join(','));
+
+      function pushRows(map, code, typeLabel){
+        map.forEach(function(dates,key){
+          if(!dates.length) return;
+          var parts=key.split('|'); var team=parts[0], person=parts[1], id=parts[2];
+          var groups=groupConsecutive(dates);
+          for(var gi=0; gi<groups.length; gi++){
+            var g=groups[gi], s=g[0], e=g[1];
+            var workDays=0, d=new Date(s); while(d<=e){ if(isBiz(d)) workDays++; d=addDays(d,1); }
+            var duration = workDays * hoursPerDay;
+            var note = 'EMP='+person+';MGR='+team+';TYPE='+typeLabel;
+            var row=[
+              id||'', 'ADD', code,
+              dmy(s), startTime,
+              dmy(e), endTime,
+              '', '', note, '', '',
+              String(duration), '', '', 'Processed'
+            ];
+            rows.push(row.map(csvEscape).join(','));
+          }
+        });
+      }
+
+      pushRows(byPersonAL, alCode, 'AL');
+      pushRows(byPersonMAT, matCode, 'MAT');
+
+      var csv=rows.join('\r\n');
+      var blob=new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a'); a.href=url; a.download='uk-annual-leave-import.csv'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 500);
+      toast('CSV downloaded.','ok');
+    }catch(err){
+      console.error(err);
+      toast('CSV export error: '+(err&&err.message?err.message:String(err)),'bad');
+    }
+  }
+
+  /* ========= Import CSV → Calendar (AL rows only) ========= */
+  function importCalendarCSV(){
+    var fileInput=document.getElementById('csvFile');
+    fileInput.onchange=function(){
+      var f=fileInput.files[0]; if(!f){ return; }
+      var reader=new FileReader();
+      reader.onload=function(){
+        try{
+          var rows=parseCSV(String(reader.result||''));
+          if(!rows.length){ toast('No rows found in CSV.','warn'); return; }
+
+          function col(row, name){
+            var keys=Object.keys(row);
+            var exact=keys.find(k=>k===name.toLowerCase()); if(exact) return row[exact];
+            for(var k of keys){ if(k.replace(/\s+/g,'')===name.toLowerCase().replace(/\s+/g,'')) return row[k]; }
+            return '';
+          }
+
+          var alCode = (document.getElementById('alCode')||{}).value || 'UKVAC';
+
+          var idDir=new Map();
+          DEFAULT_LIST.forEach(d=>idDir.set(String(d.id).trim(), {name:d.name, manager:d.manager}));
+EMPLOYEES.forEach(e=>idDir.set(String(e.id||'').trim(), {name:e.name, manager:e.manager}));
+
+          let added=0, minD=null, maxD=null;
+
+          rows.forEach(function(r){
+            var code = (col(r,'absence code')||'').toUpperCase();
+            if(code!==String(alCode).toUpperCase()) return; // AL rows only
+
+            var ref= (col(r,'reference number') || col(r,'reference') || col(r,'id') || '').trim();
+            var sd = col(r,'start date') || col(r,'startdate');
+            var ed = col(r,'end date')   || col(r,'enddate');
+            if(!sd||!ed||!ref) return;
+
+            var s=parseDMY(sd), e=parseDMY(ed);
+            if(isNaN(s)||isNaN(e)) return;
+
+            var note = col(r,'note');
+            var mEmp = note.match(/EMP\s*[:=]\s*([^;|]+)/i);
+            var mMgr = note.match(/MGR\s*[:=]\s*([^;|]+)/i);
+            var hintName = mEmp ? mEmp[1].trim() : (idDir.get(ref)?.name || ('ID '+ref));
+            var hintMgr  = mMgr ? mMgr[1].trim() : (idDir.get(ref)?.manager || 'Belinda Newton');
+
+            ensureManager(hintMgr);
+            var personRec = EMPLOYEES.find(x=>String(x.id||'').trim()===ref);
+            if(!personRec){
+              personRec = { id:ref, name:hintName, manager:hintMgr, days:0, lts:false, ltsFrom:null, ltsTo:null, mat:false, matFrom:null, matTo:null, matEligible:false };
+              EMPLOYEES.push(personRec);
+            }
+
+            for(var cur=new Date(s); cur<=e; cur=addDays(cur,1)){
+              if(!isBiz(cur)) continue;
+              var k=ymd(cur), rec=ensureDay(k);
+              if(!rec.AL.some(a=>a.id===personRec.id)){
+                rec.AL.push({team:personRec.manager, person:personRec.name, id:personRec.id});
+                added++;
+              }
+              if(!minD || cur<minD) minD=new Date(cur);
+              if(!maxD || cur>maxD) maxD=new Date(cur);
+            }
+          });
+
+          renderEmpTable();
+          var any=false; SCHEDULE.forEach(r=>{ if((r.AL||[]).length || (r.mat||[]).length) any=true; });
+          document.getElementById('exportBtn').disabled = !any;
+
+          if(added>0){
+            var startInput=document.getElementById('start');
+            var endInput=document.getElementById('end');
+            var curStart=parseISODateInput(startInput.value);
+            var curEnd=parseISODateInput(endInput.value);
+            var noDatesSet = isNaN(curStart) || isNaN(curEnd);
+            var noOverlap = !noDatesSet && (curEnd < minD || curStart > maxD);
+            if(noDatesSet || noOverlap){
+              startInput.value = minD.toISOString().slice(0,10);
+              endInput.value   = maxD.toISOString().slice(0,10);
+              curStart=minD; curEnd=maxD;
+            }
+            buildCalendarPreview(curStart, curEnd);
+            document.getElementById('status').innerHTML =
+              '<span class="ok">Imported '+added+' day(s). Range: '+dmy(minD)+' → '+dmy(maxD)+'</span>';
+          }else{
+            toast('Nothing to import from the file (AL rows matching code).','warn');
+          }
+        }catch(err){
+          console.error(err); toast('CSV parse error: '+(err&&err.message?err.message:String(err)),'bad');
+        }finally{
+          fileInput.value='';
+        }
+      };
+      reader.readAsText(f);
+    };
+    fileInput.click();
+  }
+
+  /* ========= Special leaves modal logic ========= */
+
+  // Build LTS people multi-select, MAT eligible list, and manual person list
+  function buildLeavesPeopleUIs(){
+    // When opening the modal, build UI for the selected leave type
+    const t=document.getElementById('leaveType')?.value||'lts';
+    if(t==='lts'){
+      setupLtsStrategyUI();
+      updateLtsDateDisplays();
+      // randomize names on first load to provide a reference
+      randomizeLts();
+      setConfirmStateLts(false);
+    }else{
+      setupMatStrategyUI();
+      updateMatDateDisplays();
+      setConfirmStateMat(false);
+    }
+  }
+
+  function rebuildManualPerson(){
+    const type = document.getElementById('leaveType').value;
+    const sel=document.getElementById('manualPerson');
+    sel.innerHTML='';
+    let pool = EMPLOYEES.slice();
+    if(type==='mat') pool = pool.filter(e=>!!e.matEligible);
+    pool.forEach(e=>{
+      const opt=document.createElement('option');
+      opt.value=e.id||e.name; opt.textContent=`${e.name} — ${e.manager}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  function getEmpByKey(k){
+    return EMPLOYEES.find(e=>(e.id||e.name)===k) || null;
+  }
+
+  function addManualRange(){
+    const type = document.getElementById('leaveType').value;
+    const key = document.getElementById('manualPerson').value;
+    const s=document.getElementById('manualFrom').value;
+    const e=document.getElementById('manualTo').value;
+    const S=parseISODateInput(s), E=parseISODateInput(e);
+    if(!key || isNaN(S)||isNaN(E) || S>E){ toast('Pick person and a valid date range.','bad'); return; }
+    const emp=getEmpByKey(key); if(!emp){ toast('Unknown person.','bad'); return; }
+
+    if(type==='lts'){
+      emp.lts=true; emp.ltsFrom=S; emp.ltsTo=E;
+      // add to schedule view now (will be recomputed at Generate, but preview immediate helps)
+      for(let d=new Date(S); d<=E; d=addDays(d,1)){
+        if(!isBiz(d)) continue;
+        const rec=ensureDay(ymd(d));
+        rec.sick.push({team:emp.manager, person:emp.name, id:emp.id||'', lts:true});
+      }
+      toast('Added manual LTS block.','ok');
+    }else{
+      emp.mat=true; emp.matFrom=S; emp.matTo=E;
+      const maxMatDays = Math.max(1, Number(document.getElementById('maxMatDays').value)||130);
+      let placed=0;
+      for(let d=new Date(S); d<=E; d=addDays(d,1)){
+        if(!isBiz(d)) continue; if(placed>=maxMatDays) break;
+        const rec=ensureDay(ymd(d));
+        rec.mat.push({team:emp.manager, person:emp.name, id:emp.id||''});
+        placed++;
+      }
+      toast('Added manual MAT block.','ok');
+    }
+
+    // refresh preview if dates exist
+    const sv=document.getElementById('start').value, ev=document.getElementById('end').value;
+    if(sv&&ev){ buildCalendarPreview(parseISODateInput(sv), parseISODateInput(ev)); }
+  }
+
+  function applyAutoPlan(){
+    const type = document.getElementById('leaveType').value;
+    const sVal=document.getElementById('start').value;
+    const eVal=document.getElementById('end').value;
+    if(!sVal||!eVal){ toast('Set global Start/End in Step 1 first.','bad'); return; }
+    const start=parseISODateInput(sVal), end=parseISODateInput(eVal);
+    if(isNaN(start)||isNaN(end)||start>end){ toast('Invalid window dates.','bad'); return; }
+
+    if(type==='lts'){
+      const strat=document.getElementById('ltsStrategy').value;
+      const poolSel=document.getElementById('ltsPool');
+      const keys=[...poolSel.selectedOptions].map(o=>o.value);
+      if(!keys.length){ toast('Pick at least one person for the LTS rotation pool.','bad'); return; }
+      const pool=keys.map(getEmpByKey).filter(Boolean);
+      if(!pool.length){ toast('Pool is empty.','bad'); return; }
+
+      // Strategy → count per year & cycle length
+      let perYear=1, cycleYears=1;
+      if(strat==='2py'){ perYear=2; }
+      if(strat==='4p2y'){ perYear=4; cycleYears=2; }
+
+      // For each year block within [start,end], choose perYear from pool (round-robin)
+      let idx=0;
+      for(let y=start.getFullYear(); y<=end.getFullYear(); y++){
+        for(let n=0;n<perYear;n++){
+          const emp = pool[idx % pool.length]; idx++;
+          // assign LTS for the whole year's biz-days clipped to window
+          const yStart=new Date(y,0,1), yEnd=new Date(y,11,31);
+          const S = new Date(Math.max(start, yStart));
+          const E = new Date(Math.min(end,   yEnd));
+          if(S>E) continue;
+          emp.lts=true; emp.ltsFrom=S; emp.ltsTo=E;
+          for(let d=new Date(S); d<=E; d=addDays(d,1)){
+            if(!isBiz(d)) continue;
+            const rec=ensureDay(ymd(d));
+            rec.sick.push({team:emp.manager, person:emp.name, id:emp.id||'', lts:true});
+          }
+        }
+        // cycleYears currently informational; if >1, you could skip years here.
+        if(cycleYears>1){ /* no-op: keeping it simple but could stagger */ }
+      }
+      toast('Applied LTS rotation plan.','ok');
+    }else{
+      // Maternity auto: spread up to matDaysAuto across selected eligible people in window
+      const matAuto = (document.getElementById('matAuto').value==='yes');
+      const cap = Math.max(1, Number(document.getElementById('matDaysAuto').value)||130);
+      const sel=document.getElementById('matEligible');
+      const keys=[...sel.selectedOptions].map(o=>o.value);
+      if(!keys.length){ toast('Pick at least one eligible person.','bad'); return; }
+      const list=keys.map(getEmpByKey).filter(Boolean);
+
+      if(!matAuto){
+        toast('Manual mode selected. Use the fields below to add ranges.','warn');
+      }else{
+        // Assign contiguous blocks (Mon–Fri) until reaching cap, per person
+        const days=buildDays(start,end);
+        let stored=[];
+        list.forEach(emp=>{
+          emp.mat=true; let placed=0;
+          const planStart = start;
+          let planEnd = end;
+          for(let i=0;i<days.length && placed<cap;i++){
+            const d=days[i];
+            // Block in weeks
+            const wkStart=mondayOf(d), wkEnd=addDays(wkStart,4);
+            for(let dd=new Date(wkStart); dd<=wkEnd && placed<cap; dd=addDays(dd,1)){
+              const rec=ensureDay(ymd(dd));
+              rec.mat.push({team:emp.manager, person:emp.name, id:emp.id||''});
+              placed++;
+              planEnd = dd;
+            }
+          }
+          // set from/to roughly
+          emp.matFrom=start; emp.matTo=planEnd;
+          stored.push({id:emp.id||emp.name,start:ymd(planStart),end:ymd(planEnd)});
+        });
+        try{
+          localStorage.setItem('matPlan', JSON.stringify(stored));
+        }catch(e){}
+        toast('Applied maternity auto spread.','ok');
+      }
+    }
+    // update preview
+    buildCalendarFromInputs();
+  }
+
+  function buildCalendarFromInputs(){
+    const sv=document.getElementById('start').value, ev=document.getElementById('end').value;
+    if(sv&&ev) buildCalendarPreview(parseISODateInput(sv), parseISODateInput(ev));
+  }
+
+  /* ========= Range modal (legacy manual) ========= */
+  function openRange(type, i){
+    RANGE_TARGET={type,index:i};
+    var e=EMPLOYEES[i];
+    document.getElementById('rangeTitle').textContent=(type==='lts'?'Long-term sickness — ':'Maternity — ')+e.name;
+    document.getElementById('rangeFrom').value='';
+    document.getElementById('rangeTo').value='';
+    document.getElementById('rangeModal').classList.add('show');
+  }
+  function closeRange(){ document.getElementById('rangeModal').classList.remove('show'); }
+
+  /* ========= Events ========= */
+  // step 3
+  document.getElementById('run').addEventListener('click', generate);
+  document.getElementById('reshuffle').addEventListener('click', function(){ document.getElementById('seed').value=''; generate(); });
+
+  // export / import calendar
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('importBtn').addEventListener('click', importCalendarCSV);
+
+  // enforce weeks
+  document.getElementById('enforceWeeksBtn').addEventListener('click', enforceWeeksBtn);
+
+  // employees actions
+  document.getElementById('addEmp').addEventListener('click', addEmployee);
+  document.getElementById('clearEmp').addEventListener('click', clearEmployees);
+  document.getElementById('seedEmp').addEventListener('click', seedEmployees);
+  document.getElementById('loadEmpCsv').addEventListener('click', importEmployeesCSV);
+  document.getElementById('dlEmpTpl').addEventListener('click', downloadEmpTemplate);
+
+  // Manual range and year selection events (Step 1)
+  // Populate year dropdown
+  (function(){
+    const yearSel=document.getElementById('scheduleYear');
+    if(yearSel){
+      const now=new Date();
+      const current=now.getFullYear();
+      const years=[];
+      for(let y=current-2;y<=current+3;y++) years.push(y);
+      years.forEach(y=>{
+        const opt=document.createElement('option'); opt.value=y; opt.textContent=y; yearSel.appendChild(opt);
+      });
+      yearSel.value=current;
+      // Initialize start and end dates based on selected year (Jan 1 to Dec 31)
+      const sStr = current + '-01-01';
+      const eStr = current + '-12-31';
+      const sEl=document.getElementById('start');
+      const eEl=document.getElementById('end');
+      if(sEl) sEl.value = sStr;
+      if(eEl) eEl.value = eStr;
+    }
+  })();
+  if(document.getElementById('scheduleYear')){
+    document.getElementById('scheduleYear').addEventListener('change', function(){
+      const y=parseInt(this.value);
+      if(!isNaN(y)){
+      const s = y + '-01-01';
+      const e = y + '-12-31';
+        const sEl=document.getElementById('start');
+        const eEl=document.getElementById('end');
+        if(sEl) sEl.value=s;
+        if(eEl) eEl.value=e;
+        buildCalendarFromInputs();
+        // update availability summary immediately when year changes
+        const startDate=parseISODateInput(s);
+        const endDate=parseISODateInput(e);
+        computeAvailabilitySummary(startDate,endDate);
+      }
+    });
+  }
+  // Toggle manual range section
+  if(document.getElementById('toggleManualRange')){
+    document.getElementById('toggleManualRange').addEventListener('click', function(){
+      const box=document.getElementById('manualRangeWrap');
+      if(box){ box.style.display = (box.style.display==='none'||box.style.display==='') ? '' : 'none'; }
+    });
+  }
+  // Toggle manual employee addition section
+  if(document.getElementById('toggleManualEmp')){
+    document.getElementById('toggleManualEmp').addEventListener('click', function(){
+      const box=document.getElementById('manualEmpWrap');
+      if(box){ box.style.display = (box.style.display==='none'||box.style.display==='') ? '' : 'none'; }
+    });
+  }
+  // Buttons to open LTS or Maternity configuration
+  if(document.getElementById('openLtsConfig')){
+    document.getElementById('openLtsConfig').addEventListener('click', function(){
+      const typeSel=document.getElementById('leaveType');
+      if(typeSel){ typeSel.value='lts'; typeSel.dispatchEvent(new Event('change')); }
+      buildLeavesPeopleUIs();
+      // Auto-randomize LTS participants on first open for reference
+      randomizeLts();
+      document.getElementById('leavesModal').classList.add('show');
+    });
+  }
+  if(document.getElementById('openMatConfig')){
+    document.getElementById('openMatConfig').addEventListener('click', function(){
+      const typeSel=document.getElementById('leaveType');
+      if(typeSel){ typeSel.value='mat'; typeSel.dispatchEvent(new Event('change')); }
+      buildLeavesPeopleUIs();
+      // Auto-randomize maternity participants on first open for reference
+      randomizeMat();
+      document.getElementById('leavesModal').classList.add('show');
+    });
+  }
+
+  // table edits
+  document.getElementById('empTable').addEventListener('input', function(e){
+    if(e.target.classList.contains('days-input')){
+      var i=Number(e.target.getAttribute('data-i')); if(isNaN(i)||!EMPLOYEES[i]) return;
+      EMPLOYEES[i].days = Math.max(0, Math.round(Number(e.target.value)||0));
+    }
+  });
+  document.getElementById('empTable').addEventListener('click', function(e){
+    var rm=e.target.getAttribute('data-remove');
+    if(rm!=null){ EMPLOYEES.splice(Number(rm),1); renderEmpTable(); return; }
+  });
+
+  document.getElementById('leavesCancel').addEventListener('click', function(){
+    document.getElementById('leavesModal').classList.remove('show');
+  });
+  document.getElementById('leaveType').addEventListener('change', function(){
+    const t=this.value;
+    // Toggle visibility of LTS and maternity configuration wrappers
+    document.getElementById('ltsStrategyWrap').style.display = (t==='lts') ? '' : 'none';
+    document.getElementById('matStrategyWrap').style.display = (t==='mat') ? '' : 'none';
+    if(t==='lts'){
+      setupLtsStrategyUI();
+      updateLtsDateDisplays();
+      setConfirmStateLts(false);
+    }
+    if(t==='mat'){
+      setupMatStrategyUI();
+      updateMatDateDisplays();
+      setConfirmStateMat(false);
+    }
+  });
+    // Manual and auto plan buttons removed for v1.3
+
+  /* ========= LTS strategy dynamic UI & storage ========= */
+  // Define configuration for different LTS strategies
+  function getLtsConfig(val){
+    // Determine base parameters for number of participants and cycle length
+    let cfg={count:1, cycleYears:1};
+    if(val==='2py'){ cfg={count:2, cycleYears:1}; }
+    if(val==='4p2y'){ cfg={count:4, cycleYears:2}; }
+    // Build cycleStarts array. Without a global period selector, default to Jan (month 0)
+    cfg.cycleStarts=[];
+    if(val==='4p2y'){
+      // Two starts per year: January (0) and July (6)
+      cfg.cycleStarts.push(0,6);
+    } else {
+      for(let i=0;i<cfg.count;i++){
+        cfg.cycleStarts.push(0);
+      }
+    }
+    return cfg;
+  }
+
+  /**
+   * Update the displayed date ranges for each selected participant based on the current
+   * LTS strategy and window. This replaces the preview list so users can see the
+   * exact start and end dates next to each person picker. If there is no valid
+   * assignment for a given index, a dash is shown.
+   */
+  function updateLtsDateDisplays(){
+    // Update start/end date inputs for each LTS participant row
+    const stratVal=(document.getElementById('ltsStrategy')||{}).value||'1py';
+    const cfg=getLtsConfig(stratVal);
+    const rows=document.querySelectorAll('#ltsPoolSelect .lts-row');
+    const sVal=document.getElementById('start')?.value;
+    const eVal=document.getElementById('end')?.value;
+    // Parse global window start/end
+    let startDate = parseISODateInput(sVal);
+    let endDate = parseISODateInput(eVal);
+    if(!sVal || !eVal || isNaN(startDate) || isNaN(endDate) || startDate > endDate){
+      // Clear all date inputs
+      rows.forEach(row=>{
+        const sInput=row.querySelector('.ltsStartDate');
+        const eInput=row.querySelector('.ltsEndDate');
+        if(sInput) sInput.value='';
+        if(eInput) eInput.value='';
+      });
+      return;
+    }
+    // Determine cycle starts from each row's month select
+    rows.forEach((row,i)=>{
+      const perSel=row.querySelector('.ltsPeriodSel');
+      const month=parseInt(perSel?.value)||0;
+      // Determine year offset: for multi‑year cycles (e.g., 4p2y) schedule extra participants in following years
+      let offset=0;
+      if(cfg.cycleYears>1){
+        const perYear = cfg.cycleStarts ? cfg.cycleStarts.length : 1;
+        offset = Math.floor(i / perYear);
+      }
+      const baseYear=startDate.getFullYear() + offset;
+      // Compute one‑year range starting from selected month
+      const s=new Date(baseYear, month, 1);
+      const e=new Date(baseYear+1, month, 0);
+      const sInput=row.querySelector('.ltsStartDate');
+      const eInput=row.querySelector('.ltsEndDate');
+      if(sInput) sInput.value = s.toISOString().slice(0,10);
+      if(eInput) eInput.value = e.toISOString().slice(0,10);
+    });
+  }
+
+  /**
+   * Toggle the visual state of the LTS confirm button. When a plan is scheduled,
+   * the button text changes and a 'scheduled' class is added to style it. When
+   * there are unsaved changes, the button reverts to its original text and styling.
+   *
+   * @param {boolean} scheduled Whether the plan has been scheduled
+   */
+  function setConfirmStateLts(scheduled){
+    const btn=document.getElementById('ltsConfirm');
+    if(!btn) return;
+    if(scheduled){
+      btn.textContent='Plan scheduled';
+      btn.classList.add('scheduled');
+    }else{
+      btn.textContent='Confirm LTS plan';
+      btn.classList.remove('scheduled');
+    }
+  }
+
+  // Build the participant selectors based on strategy
+  function setupLtsStrategyUI(){
+    const stratVal = (document.getElementById('ltsStrategy')||{}).value || '1py';
+    const cfg = getLtsConfig(stratVal);
+    const container = document.getElementById('ltsPoolSelect');
+    if(!container) return;
+    container.innerHTML='';
+    // If there are no employees, nothing to select
+    if(!EMPLOYEES.length){ return; }
+    // Build one row per required participant
+    for(let i=0;i<cfg.count;i++){
+      const row=document.createElement('div');
+      // wrap each person row in a blue squircle for clarity
+      row.className='lts-row section-wrap';
+      row.style.display='flex';
+      row.style.flexWrap='wrap';
+      row.style.alignItems='flex-end';
+      row.style.gap='8px';
+
+      // Person label and selector
+      const lab=document.createElement('label');
+      lab.style.display='flex';
+      lab.style.flexDirection='column';
+      lab.style.gap='6px';
+      lab.style.minWidth='160px';
+      lab.innerHTML=`<div class="label-line"><span>Person ${i+1}</span></div>`;
+      const sel=document.createElement('select');
+      sel.className='ltsPersonSel';
+      sel.style.maxWidth='180px';
+      EMPLOYEES.forEach(e=>{
+        const opt=document.createElement('option');
+        opt.value=e.id||e.name;
+        opt.textContent=`${e.name} — ${e.manager}`;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', function(){ updateLtsDateDisplays(); setConfirmStateLts(false); });
+      lab.appendChild(sel);
+      row.appendChild(lab);
+
+      // Month dropdown per person (start month)
+      const monthLab=document.createElement('label');
+      monthLab.style.display='flex';
+      monthLab.style.flexDirection='column';
+      monthLab.style.gap='6px';
+      monthLab.style.minWidth='100px';
+      monthLab.innerHTML=`<div class="label-line"><span>Start month</span></div>`;
+      const perSel=document.createElement('select');
+      perSel.className='ltsPeriodSel';
+      perSel.style.maxWidth='120px';
+      const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      MONTHS.forEach((nm,mi)=>{
+        const opt=document.createElement('option'); opt.value=mi; opt.textContent=nm;
+        perSel.appendChild(opt);
+      });
+      // Set default based on strategy cycleStarts
+      if(cfg && Array.isArray(cfg.cycleStarts) && cfg.cycleStarts.length){
+        perSel.value = cfg.cycleStarts[i % cfg.cycleStarts.length];
+      }
+      perSel.addEventListener('change', function(){ updateLtsDateDisplays(); setConfirmStateLts(false); });
+      monthLab.appendChild(perSel);
+      row.appendChild(monthLab);
+
+      // Start date input
+      const startLab=document.createElement('label');
+      startLab.style.display='flex';
+      startLab.style.flexDirection='column';
+      startLab.style.gap='6px';
+      startLab.style.minWidth='140px';
+      startLab.innerHTML=`<div class="label-line"><span>Start date</span></div>`;
+      const startInput=document.createElement('input');
+      startInput.type='date';
+      startInput.className='ltsStartDate';
+      startInput.style.maxWidth='170px';
+      startInput.addEventListener('change', function(){ setConfirmStateLts(false); });
+      startLab.appendChild(startInput);
+      row.appendChild(startLab);
+
+      // End date input
+      const endLab=document.createElement('label');
+      endLab.style.display='flex';
+      endLab.style.flexDirection='column';
+      endLab.style.gap='6px';
+      endLab.style.minWidth='140px';
+      endLab.innerHTML=`<div class="label-line"><span>End date</span></div>`;
+      const endInput=document.createElement('input');
+      endInput.type='date';
+      endInput.className='ltsEndDate';
+      endInput.style.maxWidth='170px';
+      endInput.addEventListener('change', function(){ setConfirmStateLts(false); });
+      endLab.appendChild(endInput);
+      row.appendChild(endLab);
+
+      container.appendChild(row);
+    }
+    // After building rows, compute default dates
+    updateLtsDateDisplays();
+    setConfirmStateLts(false);
+    // hide preview section if exists
+    const previewWrap=document.getElementById('ltsPreviewWrap');
+    if(previewWrap) previewWrap.style.display='none';
+  }
+
+  // Randomize participant picks based on lowest remaining AL days
+  function randomizeLts(){
+    const stratVal=(document.getElementById('ltsStrategy')||{}).value||'1py';
+    const selectors=document.querySelectorAll('#ltsPoolSelect select.ltsPersonSel');
+    if(!selectors||!selectors.length) return;
+    // Build pool of eligible employees not already on LTS or MAT
+    const pool=EMPLOYEES.filter(e=>!e.lts && !e.mat);
+    if(!pool.length) return;
+    // Shuffle the pool randomly
+    const shuffled=pool.slice().sort(()=>Math.random()-0.5);
+    for(let i=0;i<selectors.length;i++){
+      const emp=shuffled[i % shuffled.length];
+      if(emp) selectors[i].value = emp.id||emp.name;
+    }
+    updateLtsDateDisplays();
+    setConfirmStateLts(false);
+  }
+
+  // Compute an LTS plan for selected participants
+  function computeLtsPlan(startDate,endDate,selectedIds,cfg){
+    const plans=[];
+    if(!selectedIds || !selectedIds.length) return plans;
+    // If cycleYears is 1 and cycleStarts length equals number of participants, treat each person separately for one full year
+    if(cfg.cycleYears===1 && cfg.cycleStarts && cfg.cycleStarts.length===selectedIds.length){
+      for(let i=0;i<selectedIds.length;i++){
+        const empId=selectedIds[i];
+        const month=cfg.cycleStarts[i];
+        // Start from the window's year at the chosen month
+        let s=new Date(startDate.getFullYear(), month, 1);
+        // If start is before the window, shift to window start
+        if(s < startDate) s = new Date(startDate);
+        // End is one year later minus one day (month same)
+        let e=new Date(s.getFullYear()+1, month, 0);
+        if(e > endDate) e = new Date(endDate);
+        plans.push({id:empId, start:s, end:e});
+      }
+      return plans;
+    }
+    // Default behaviour: repeat cycle years and perYear participants
+    const startYear=startDate.getFullYear();
+    const endYear=endDate.getFullYear();
+    const count=cfg.count;
+    const cycleYears=cfg.cycleYears;
+    const cycleStarts=cfg.cycleStarts;
+    const perYear=Math.ceil(count/Math.max(1,cycleYears));
+    for(let baseYear=startYear; baseYear<=endYear; baseYear+=cycleYears){
+      for(let yOff=0; yOff<cycleYears; yOff++){
+        const yr=baseYear + yOff;
+        for(let i=0; i<perYear; i++){
+          const idx=(yOff*perYear + i) % selectedIds.length;
+          const empId=selectedIds[idx];
+          const month=cycleStarts[i % cycleStarts.length];
+          let s=new Date(yr, month, 1);
+          let e=new Date(yr+1, month, 0);
+          if(e<startDate || s>endDate) continue;
+          const ss = s<startDate ? startDate : s;
+          const ee = e>endDate ? endDate : e;
+          plans.push({id:empId, start:ss, end:ee});
+        }
+      }
+    }
+    return plans;
+  }
+
+  // Build preview text for LTS plan
+  function buildLtsPreview(){
+    // Recompute plan and update date displays instead of preview text
+    updateLtsDateDisplays();
+    setConfirmStateLts(false);
+  }
+
+  // Confirm LTS plan: apply to employees, update schedule and persist to localStorage
+  function confirmLtsPlan(){
+    // Confirm LTS plan: read per-row selections and apply
+    const sVal=document.getElementById('start').value;
+    const eVal=document.getElementById('end').value;
+    if(!sVal||!eVal){ toast('Set global start/end first.','bad'); return; }
+    const globalStart=parseISODateInput(sVal);
+    const globalEnd=parseISODateInput(eVal);
+    if(isNaN(globalStart)||isNaN(globalEnd)||globalStart>globalEnd){ toast('Invalid date range.','bad'); return; }
+    // Gather plans from each row
+    let plans=[];
+    const rows=document.querySelectorAll('#ltsPoolSelect .lts-row');
+    rows.forEach(row=>{
+      const idSel=row.querySelector('.ltsPersonSel');
+      const sInput=row.querySelector('.ltsStartDate');
+      const eInput=row.querySelector('.ltsEndDate');
+      if(!idSel||!sInput||!eInput) return;
+      const empId=idSel.value;
+      const s=parseISODateInput(sInput.value);
+      const e=parseISODateInput(eInput.value);
+      if(!empId||isNaN(s)||isNaN(e)) return;
+      // Clip to global window
+      let ss = s<globalStart ? globalStart : s;
+      let ee = e>globalEnd ? globalEnd : e;
+      if(ss>ee) return;
+      plans.push({id:empId, start:ss, end:ee});
+    });
+    if(!plans.length){ toast('No valid LTS assignments in this window.', 'warn'); return; }
+    // Clear existing LTS assignments and flags before applying new plan
+    EMPLOYEES.forEach(e=>{ e.lts=false; e.ltsFrom=null; e.ltsTo=null; });
+    // Remove existing LTS sick records from schedule
+    SCHEDULE.forEach(rec=>{
+      if(rec && rec.sick){ rec.sick = rec.sick.filter(s=>!s.lts); }
+    });
+    // Apply new plan: mark employees and add sick records within global window
+    plans.forEach(item=>{
+      const emp=getEmpByKey(item.id);
+      if(!emp) return;
+      emp.lts=true;
+      emp.ltsFrom=item.start;
+      emp.ltsTo=item.end;
+      for(let d=new Date(item.start); d<=item.end; d=addDays(d,1)){
+        if(d < start || d > end) continue;
+        if(!isBiz(d)) continue;
+        const rec=ensureDay(ymd(d));
+        // avoid duplicates
+        if(!(rec.sick||[]).some(x=>x.person===emp.name && x.lts)){
+          rec.sick.push({team:emp.manager, person:emp.name, id:emp.id||'', lts:true});
+        }
+      }
+    });
+    // Persist new plan (store full start/end dates)
+    try{
+      localStorage.setItem('ltsPlan', JSON.stringify(plans.map(p=>({id:p.id,start:ymd(p.start),end:ymd(p.end)}))));
+    }catch(e){}
+    toast('LTS plan confirmed.','ok');
+    updateScheduledSummary();
+    buildCalendarFromInputs();
+    // mark button as scheduled
+    setConfirmStateLts(true);
+  }
+
+  // Load stored plans from localStorage and reapply
+  function loadStoredPlans(){
+    try{
+      const lts=JSON.parse(localStorage.getItem('ltsPlan')||'[]');
+      lts.forEach(item=>{
+        const emp=getEmpByKey(item.id);
+        if(!emp) return;
+        const s=parseISODateInput(item.start);
+        const e=parseISODateInput(item.end);
+        if(isNaN(s)||isNaN(e)) return;
+        emp.lts=true;
+        emp.ltsFrom=s;
+        emp.ltsTo=e;
+        for(let d=new Date(s); d<=e; d=addDays(d,1)){
+          if(!isBiz(d)) continue;
+          const rec=ensureDay(ymd(d));
+          rec.sick.push({team:emp.manager, person:emp.name, id:emp.id||'', lts:true});
+        }
+      });
+      const mats=JSON.parse(localStorage.getItem('matPlan')||'[]');
+      mats.forEach(item=>{
+        const emp=getEmpByKey(item.id);
+        if(!emp) return;
+        const s=parseISODateInput(item.start);
+        const e=parseISODateInput(item.end);
+        if(isNaN(s)||isNaN(e)) return;
+        emp.mat=true;
+        emp.matFrom=s;
+        emp.matTo=e;
+        for(let d=new Date(s); d<=e; d=addDays(d,1)){
+          if(!isBiz(d)) continue;
+          const rec=ensureDay(ymd(d));
+          rec.mat.push({team:emp.manager, person:emp.name, id:emp.id||''});
+        }
+      });
+    }catch(e){}
+  }
+
+  /* ========= Sickness configuration ========= */
+  // Store selected sick people IDs
+  var sickSelectedIds = [];
+
+  function buildSickPeopleList(){
+    const list=document.getElementById('sickPeopleList');
+    if(!list) return;
+    if(!sickSelectedIds.length){ list.innerHTML='<em>No people selected.</em>'; return; }
+    list.innerHTML='';
+    sickSelectedIds.forEach(id=>{
+      const emp=getEmpByKey(id);
+      const div=document.createElement('div');
+      div.innerHTML=`<span>${emp?emp.name:id}</span>`;
+      list.appendChild(div);
+    });
+  }
+
+  function randomizeSick(){
+    // Only allow randomization for monthly or quarterly strategies
+    const strat=(document.getElementById('sickStrategy')||{}).value||'';
+    if(!(strat==='everyMonth' || strat==='everyQuarter')){
+      return;
+    }
+    const available = EMPLOYEES.filter(e => !e.lts && !e.mat);
+    if(!available.length){ sickSelectedIds=[]; buildSickPeopleList(); return; }
+    // Pick a number of employees equal to the "people per period" setting, capped by available employees
+    sickSelectedIds=[];
+    const pplCount = Math.max(1, parseInt((document.getElementById('sickPeopleCount')||{}).value)||1);
+    let count = Math.min(pplCount, available.length);
+    const used=new Set();
+    while(sickSelectedIds.length < count){
+      const idx=Math.floor(Math.random()*available.length);
+      const emp=available[idx];
+      const key=emp.id||emp.name;
+      if(used.has(key)) continue;
+      used.add(key);
+      sickSelectedIds.push(key);
+    }
+    buildSickPeopleList();
+  }
+
+  /* ========= Maternity dynamic UI & storage ========= */
+  var matSelectedIds = [];
+
+  // Build participant selectors for maternity based on strategy and max days
+  function setupMatStrategyUI(){
+    const strat = (document.getElementById('matStrategy')||{}).value || '';
+    const maxDays = Math.max(1, Number((document.getElementById('matMaxDays')||{}).value)||52);
+    const container=document.getElementById('matPoolSelect');
+    if(!container) return;
+    container.innerHTML='';
+    // Determine number of participants needed
+    let count=0;
+    const sVal=document.getElementById('start')?.value;
+    const eVal=document.getElementById('end')?.value;
+    const start=sVal?parseISODateInput(sVal):null;
+    const end=eVal?parseISODateInput(eVal):null;
+    if(!start || !end || isNaN(start) || isNaN(end) || start>end){
+      count=0;
+    }else{
+      if(strat==='fillYear'){
+        // number of business days in window
+        const days=buildDays(start,end);
+        count = Math.ceil(days.length / maxDays);
+      }else if(strat==='3perYear'){
+        count=3;
+      }else if(strat==='4perYear'){
+        count=4;
+      }else{
+        count=0;
+      }
+    }
+    // Show/hide randomize and confirm buttons depending on whether we have participants
+    const randBtn=document.getElementById('matRandom');
+    const confirmBtn=document.getElementById('matConfirm');
+    if(count<=0){
+      if(randBtn) randBtn.style.display='none';
+      if(confirmBtn) confirmBtn.style.display='none';
+      return;
+    } else {
+      if(randBtn) randBtn.style.display='';
+      if(confirmBtn) confirmBtn.style.display='';
+    }
+    // Build selects and date displays
+    for(let i=0;i<count;i++){
+      const row=document.createElement('div');
+      row.className='row';
+      // person selector
+      const lab=document.createElement('label');
+      lab.style.display='flex'; lab.style.flexDirection='column'; lab.style.gap='6px';
+      lab.innerHTML = `<div class="label-line"><span>Person ${i+1}</span></div>`;
+      const sel=document.createElement('select');
+      sel.className='matPersonSel';
+      // populate options from eligible employees
+      EMPLOYEES.filter(e=>!!e.matEligible).forEach(e=>{
+        const opt=document.createElement('option');
+        opt.value=e.id||e.name; opt.textContent=`${e.name} — ${e.manager}`;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', function(){ updateMatDateDisplays(); setConfirmStateMat(false); });
+      lab.appendChild(sel);
+      row.appendChild(lab);
+      // date display
+      const span=document.createElement('span');
+      span.className='matDateDisplay';
+      span.style.alignSelf='end'; span.style.fontSize='12px'; span.style.color='#94a3b8';
+      span.textContent='DD/MM/YYYY → DD/MM/YYYY';
+      row.appendChild(span);
+      container.appendChild(row);
+    }
+    // After building, update date displays
+    updateMatDateDisplays();
+  }
+
+  // Compute maternity plan based on selected ids, strategy and max days
+  function computeMatPlan(startDate,endDate,selectedIds,strat,maxDays){
+    const plans=[];
+    if(!selectedIds || !selectedIds.length) return plans;
+    // Build list of business days across window
+    const allDays=buildDays(startDate,endDate);
+    if(!allDays.length) return plans;
+    let count=selectedIds.length;
+    if(strat==='fillYear'){
+      // count already equals number of selected ids; segments are contiguous blocks of maxDays
+      // adjust count if there are more slots than selected ids; limit to selectedIds.length
+      count=selectedIds.length;
+    }else if(strat==='3perYear' || strat==='4perYear'){
+      count=selectedIds.length;
+    }
+    let idxStart=0;
+    for(let i=0;i<count;i++){
+      const id=selectedIds[i];
+      const startIdx = idxStart;
+      const endIdx = Math.min(allDays.length-1, startIdx + maxDays - 1);
+      const s=allDays[startIdx];
+      const e=allDays[endIdx];
+      if(!s || !e) continue;
+      plans.push({id:id, start:s, end:e});
+      idxStart = endIdx + 1;
+      if(idxStart >= allDays.length) break;
+    }
+    return plans;
+  }
+
+  // Update maternity date displays according to current selections
+  function updateMatDateDisplays(){
+    const strat=(document.getElementById('matStrategy')||{}).value||'';
+    const maxDays=Math.max(1, Number((document.getElementById('matMaxDays')||{}).value)||52);
+    const selectors=document.querySelectorAll('#matPoolSelect select.matPersonSel');
+    const spans=document.querySelectorAll('#matPoolSelect .matDateDisplay');
+    const ids=[...selectors].map(sel=>sel.value).filter(Boolean);
+    const sVal=document.getElementById('start')?.value;
+    const eVal=document.getElementById('end')?.value;
+    if(!sVal||!eVal||!selectors.length){ spans.forEach(sp=>{ sp.textContent='—'; }); return; }
+    const start=parseISODateInput(sVal); const end=parseISODateInput(eVal);
+    if(isNaN(start)||isNaN(end)||start>end){ spans.forEach(sp=>{ sp.textContent='—'; }); return; }
+    const plan=computeMatPlan(start,end,ids,strat,maxDays);
+    spans.forEach((sp,i)=>{
+      if(plan[i]){
+        sp.textContent = dmy(plan[i].start)+' → '+dmy(plan[i].end);
+      }else{
+        sp.textContent = '—';
+      }
+    });
+  }
+
+  // Randomize maternity participants
+  function randomizeMat(){
+    const selectors=document.querySelectorAll('#matPoolSelect select.matPersonSel');
+    if(!selectors||!selectors.length) return;
+    const eligible=EMPLOYEES.filter(e=>!!e.matEligible);
+    if(!eligible.length) return;
+    // Shuffle eligible and assign
+    const shuffled=eligible.slice().sort(()=>Math.random()-0.5);
+    for(let i=0;i<selectors.length;i++){
+      const emp=shuffled[i % shuffled.length];
+      selectors[i].value=emp.id||emp.name;
+    }
+    updateMatDateDisplays();
+    setConfirmStateMat(false);
+  }
+
+  // Confirm maternity plan: apply to employees and schedule and persist
+  function confirmMatPlan(){
+    const strat=(document.getElementById('matStrategy')||{}).value||'';
+    const maxDays=Math.max(1, Number((document.getElementById('matMaxDays')||{}).value)||52);
+    const selectors=document.querySelectorAll('#matPoolSelect select.matPersonSel');
+    const ids=[...selectors].map(sel=>sel.value).filter(Boolean);
+    const sVal=document.getElementById('start')?.value;
+    const eVal=document.getElementById('end')?.value;
+    if(!sVal||!eVal){ toast('Set global start/end first.','bad'); return; }
+    const start=parseISODateInput(sVal), end=parseISODateInput(eVal);
+    if(isNaN(start)||isNaN(end)||start>end){ toast('Invalid date range.','bad'); return; }
+    const plan=computeMatPlan(start,end,ids,strat,maxDays);
+    if(!plan.length){ toast('No valid maternity assignments in this window.','warn'); return; }
+    // clear existing MAT assignments and flags
+    EMPLOYEES.forEach(e=>{ e.mat=false; e.matFrom=null; e.matTo=null; });
+    SCHEDULE.forEach(rec=>{ if(rec && rec.mat){ rec.mat=[]; } });
+    // Apply plan
+    plan.forEach(item=>{
+      const emp=getEmpByKey(item.id);
+      if(!emp) return;
+      emp.mat=true; emp.matFrom=item.start; emp.matTo=item.end;
+      for(let d=new Date(item.start); d<=item.end; d=addDays(d,1)){
+        if(!isBiz(d)) continue;
+        const rec=ensureDay(ymd(d));
+        // Avoid duplicates
+        if(!(rec.mat||[]).some(x=>x.person===emp.name)){
+          rec.mat.push({team:emp.manager, person:emp.name, id:emp.id||''});
+        }
+      }
+    });
+    // Persist
+    try{
+      const plain=plan.map(p=>({id:p.id,start:ymd(p.start),end:ymd(p.end)}));
+      localStorage.setItem('matPlan', JSON.stringify(plain));
+    }catch(e){}
+    toast('Maternity plan confirmed.','ok');
+    updateScheduledSummary();
+    buildCalendarFromInputs();
+    setConfirmStateMat(true);
+  }
+
+  // Toggle visual state of maternity confirm button
+  function setConfirmStateMat(scheduled){
+    const btn=document.getElementById('matConfirm');
+    if(!btn) return;
+    if(scheduled){
+      btn.textContent='Maternity planned';
+      btn.classList.add('scheduled');
+    }else{
+      btn.textContent='Confirm Maternity plan';
+      btn.classList.remove('scheduled');
+    }
+  }
+
+  function updateSickUI(){
+    const enabled=document.getElementById('sickEnabled')?.checked;
+    const controls=document.getElementById('sickControls');
+    if(!controls) return;
+    // Disable strategy select when sick disabled
+    const inputs=controls.querySelectorAll('select');
+    inputs.forEach(el=>{ el.disabled=!enabled; });
+    const stratVal=document.getElementById('sickStrategy')?.value||'';
+    const randBtn=document.getElementById('sickRandomBtn');
+    const list=document.getElementById('sickPeopleList');
+    if(randBtn){
+      // Randomize button only visible for monthly and quarterly strategies
+      const showRand = enabled && (stratVal==='everyMonth' || stratVal==='everyQuarter');
+      randBtn.style.display = showRand ? '' : 'none';
+      randBtn.disabled = !enabled;
+    }
+    if(list){
+      // Show selected people list only when applicable
+      const showList = enabled && (stratVal==='everyMonth' || stratVal==='everyQuarter');
+      list.style.display = showList ? '' : 'none';
+    }
+    controls.style.opacity = enabled ? '' : '0.6';
+    // For weekly strategies, clear the selected list since everyone will be cycled
+    if(enabled && (stratVal==='everyWeek' || stratVal==='everyOtherWeek')){
+      sickSelectedIds=[];
+    }
+    // Refresh list content
+    buildSickPeopleList();
+  }
+
+  // Update scheduled summary UI
+  function updateScheduledSummary(){
+    // Update LTS summary
+    const ltsContainer=document.getElementById('ltsSummary');
+    const matContainer=document.getElementById('matSummary');
+    if(ltsContainer){
+      let html='';
+      try{
+        const lts=JSON.parse(localStorage.getItem('ltsPlan')||'[]');
+        if(lts.length){
+          lts.forEach((item,i)=>{
+            const emp=getEmpByKey(item.id);
+            const name=emp?emp.name:item.id;
+            html += `<div>${name}: ${dmy(parseISODateInput(item.start))} → ${dmy(parseISODateInput(item.end))} <button class="btn icon" data-remove-lts="${i}" style="margin-left:6px">✕</button></div>`;
+          });
+        }
+      }catch(e){}
+      ltsContainer.innerHTML = html || '<em>No LTS plans.</em>';
+      // update confirm button state based on presence of LTS plans
+      try{
+        const ltsArr=JSON.parse(localStorage.getItem('ltsPlan')||'[]');
+        setConfirmStateLts(ltsArr.length>0);
+      }catch(e){ setConfirmStateLts(false); }
+      ltsContainer.querySelectorAll('button[data-remove-lts]').forEach(btn=>{
+        btn.addEventListener('click', function(){
+          const idx=Number(this.getAttribute('data-remove-lts'));
+          try{
+            const arr=JSON.parse(localStorage.getItem('ltsPlan')||'[]');
+            if(idx>=0 && idx<arr.length){ arr.splice(idx,1); localStorage.setItem('ltsPlan', JSON.stringify(arr)); }
+          }catch(e){}
+          EMPLOYEES.forEach(e=>{ e.lts=false; e.ltsFrom=null; e.ltsTo=null; });
+          SCHEDULE.forEach(rec=>{ if(rec && rec.sick){ rec.sick=rec.sick.filter(x=>!x.lts); } });
+          loadStoredPlans();
+          updateScheduledSummary();
+          buildCalendarFromInputs();
+        });
+      });
+    }
+    // Maternity summary
+    if(matContainer){
+      let html='';
+      try{
+        const mat=JSON.parse(localStorage.getItem('matPlan')||'[]');
+        if(mat.length){
+          mat.forEach((item,i)=>{
+            const emp=getEmpByKey(item.id);
+            const name=emp?emp.name:item.id;
+            html += `<div>${name}: ${dmy(parseISODateInput(item.start))} → ${dmy(parseISODateInput(item.end))} <button class="btn icon" data-remove-mat="${i}" style="margin-left:6px">✕</button></div>`;
+          });
+        }
+      }catch(e){}
+      matContainer.innerHTML = html || '<em>No maternity plans.</em>';
+      matContainer.querySelectorAll('button[data-remove-mat]').forEach(btn=>{
+        btn.addEventListener('click', function(){
+          const idx=Number(this.getAttribute('data-remove-mat'));
+          try{
+            const arr=JSON.parse(localStorage.getItem('matPlan')||'[]');
+            if(idx>=0 && idx<arr.length){ arr.splice(idx,1); localStorage.setItem('matPlan', JSON.stringify(arr)); }
+          }catch(e){}
+          EMPLOYEES.forEach(e=>{ e.mat=false; e.matFrom=null; e.matTo=null; });
+          SCHEDULE.forEach(rec=>{ if(rec && rec.mat){ rec.mat=[]; } });
+          // reload plans if any
+          const lts=JSON.parse(localStorage.getItem('ltsPlan')||'[]');
+          // clear schedule MAT (done) and reapply other
+          loadStoredPlans();
+          updateScheduledSummary();
+          buildCalendarFromInputs();
+        });
+      });
+      // update confirm button state for maternity
+      try{
+        const matArr=JSON.parse(localStorage.getItem('matPlan')||'[]');
+        setConfirmStateMat(matArr.length>0);
+      }catch(e){ setConfirmStateMat(false); }
+    }
+  }
+
+  // Attach events
+  document.getElementById('ltsStrategy').addEventListener('change', function(){
+    setupLtsStrategyUI();
+    updateLtsDateDisplays();
+    setConfirmStateLts(false);
+  });
+  if(document.getElementById('ltsRandom'))
+    document.getElementById('ltsRandom').addEventListener('click', function(){ randomizeLts(); });
+  if(document.getElementById('ltsConfirm'))
+    document.getElementById('ltsConfirm').addEventListener('click', function(){ confirmLtsPlan(); });
+
+  // Sickness UI events
+  const sickEnabledEl=document.getElementById('sickEnabled');
+  if(sickEnabledEl){ sickEnabledEl.addEventListener('change', updateSickUI); }
+  const sickStrategyEl=document.getElementById('sickStrategy');
+  if(sickStrategyEl){ sickStrategyEl.addEventListener('change', updateSickUI); }
+  const sickRandomBtn=document.getElementById('sickRandomBtn');
+  if(sickRandomBtn){ sickRandomBtn.addEventListener('click', function(){ randomizeSick(); }); }
+
+  // Maternity UI events
+  const matStrategyEl=document.getElementById('matStrategy');
+  if(matStrategyEl){ matStrategyEl.addEventListener('change', function(){ setupMatStrategyUI(); updateMatDateDisplays(); setConfirmStateMat(false); }); }
+  const matMaxEl=document.getElementById('matMaxDays');
+  if(matMaxEl){ matMaxEl.addEventListener('change', function(){ setupMatStrategyUI(); updateMatDateDisplays(); setConfirmStateMat(false); }); }
+  const matRandomBtn=document.getElementById('matRandom');
+  if(matRandomBtn){ matRandomBtn.addEventListener('click', function(){ randomizeMat(); }); }
+  const matConfirmBtn=document.getElementById('matConfirm');
+  if(matConfirmBtn){ matConfirmBtn.addEventListener('click', function(){ confirmMatPlan(); }); }
+
+  // range modal buttons (legacy)
+  document.getElementById('rangeCancel').addEventListener('click', closeRange);
+  document.getElementById('rangeApply').addEventListener('click', function(){
+    if(!RANGE_TARGET) return closeRange();
+    var from=document.getElementById('rangeFrom').value;
+    var to=document.getElementById('rangeTo').value;
+    var s=parseISODateInput(from), e=parseISODateInput(to);
+    var ok=!isNaN(s)&&!isNaN(e)&&s<=e;
+    var idx=RANGE_TARGET.index;
+    if(!ok){ closeRange(); return; }
+    if(RANGE_TARGET.type==='lts'){
+      EMPLOYEES[idx].lts = true;
+      EMPLOYEES[idx].ltsFrom = s;
+      EMPLOYEES[idx].ltsTo   = e;
+    }else{
+      EMPLOYEES[idx].mat = true;
+      EMPLOYEES[idx].matFrom = s;
+      EMPLOYEES[idx].matTo   = e;
+    }
+    closeRange(); buildCalendarFromInputs();
+  });
+
+  // Initialize: seed manager selects/legend, and mark mat eligibility on default list
+  (function init(){
+    // ensure DEFAULT_LIST matEligible
+    DEFAULT_LIST.forEach(e=>e.matEligible = !!e.mat);
+    rebuildManagerSelects();
+    buildLegend();
+    // If user loads default employees, keep matEligible when copying
+    const origSeed = seedEmployees;
+    // Monkey patch to add matEligible on seed copy
+    window.seedEmployees = function(){ EMPLOYEES = DEFAULT_LIST.map(x=>Object.assign({},x)); EMPLOYEES.forEach(e=>{ e.matEligible=!!e.mat; e.mat=false; e.matFrom=null; e.matTo=null; }); new Set(EMPLOYEES.map(e=>e.manager)).forEach(ensureManager); renderEmpTable(); buildLegend(); toast('UK list loaded.','ok'); };
+    // Also patch CSV import to set matEligible
+    const oldImport = importEmployeesCSV;
+    window.importEmployeesCSV = function(){ 
+      const input = document.getElementById('empCsvFile');
+      input.onchange=function(){
+        const f=input.files[0]; if(!f) return;
+        const reader=new FileReader();
+        reader.onload=function(){
+          try{
+            const rows=parseCSV(String(reader.result||'')); if(!rows.length){ toast('No rows in employees CSV.','warn'); return; }
+            let added=0;
+            rows.forEach(r=>{
+              const manager = r['manager'] || r['mgr'] || '';
+              const name = r['employee'] || r['name'] || '';
+              const id = r['id'] || '';
+              const days = Number(r['days']||'0')||0;
+              const matYn = (r['maternity (y/n)']||r['maternity']||'N').trim().toUpperCase()==='Y';
+              if(!name) return;
+              const mgr = manager && manager.trim().length ? manager.trim() : 'Belinda Newton';
+              ensureManager(mgr);
+              EMPLOYEES.push({name, id, days:Math.max(0,Math.round(days)), manager:mgr, lts:false, ltsFrom:null, ltsTo:null, mat:false, matFrom:null, matTo:null, matEligible:matYn});
+              added++;
+            });
+            renderEmpTable(); buildLegend(); toast('Imported '+added+' employee(s).','ok');
+          }catch(e){ console.error(e); toast('Employees CSV error: '+e.message,'bad'); }
+          finally{ input.value=''; }
+        };
+        reader.readAsText(f);
+      };
+      input.click();
+    };
+
+    // Apply any stored LTS or maternity plan on load
+    loadStoredPlans();
+    updateScheduledSummary();
+    // Initialize dynamic UIs
+    updateSickUI();
+    // Setup initial LTS and MAT UI based on defaults
+    setupLtsStrategyUI();
+    updateLtsDateDisplays();
+    setupMatStrategyUI();
+    updateMatDateDisplays();
+  })();
+
+  // Helper to rebuild preview from inputs on date change
+  ['start','end'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener('change', function(){
+      buildCalendarFromInputs();
+      const s=parseISODateInput(document.getElementById('start').value);
+      const e=parseISODateInput(document.getElementById('end').value);
+      if(!isNaN(s) && !isNaN(e) && s<=e){ computeAvailabilitySummary(s,e); }
+    });
+  });
+
+  // Hook legend once managers mutate
+  buildLegend();
+
+  /* ========= More days in UI ========= */
+  function setupMoreDaysUI(){
+    const monthSel=document.getElementById('moreMonth');
+    const weekWrap=document.getElementById('moreWeekWrap');
+    if(!monthSel || !weekWrap) return;
+    // Populate month select if empty
+    if(monthSel.options.length===0){
+      const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      MONTH_NAMES.forEach((m,i)=>{
+        const opt=document.createElement('option');
+        opt.value=i;
+        opt.textContent=m;
+        monthSel.appendChild(opt);
+      });
+    }
+    // Function to render week checkboxes for a given month
+    function renderWeeks(month){
+      weekWrap.innerHTML='';
+      // compute how many weeks are in this month (based on Mondays)
+      let weeksCount = 5;
+      try{
+        const ySel = document.getElementById('scheduleYear');
+        const yVal = ySel && ySel.value ? parseInt(ySel.value) : (new Date()).getFullYear();
+        const sDate = new Date(yVal, month, 1);
+        // find first Monday in this month
+        let firstMonday = new Date(sDate);
+        while(firstMonday.getDay() !== 1){ firstMonday = addDays(firstMonday, 1); }
+        // count how many Mondays fall within the month
+        let count=0;
+        let d = new Date(firstMonday);
+        while(d.getMonth() === month){ count++; d = addDays(d,7); }
+        weeksCount = count;
+      }catch(e){ weeksCount = 5; }
+      for(let i=0;i<5;i++){
+        const lbl=document.createElement('label');
+        lbl.style.display='inline-flex';
+        lbl.style.alignItems='center';
+        lbl.style.gap='4px';
+        const cb=document.createElement('input');
+        cb.type='checkbox'; cb.value=i;
+        // check if week is selected for this month
+        const sel=window.MORE_DAYS_IN[month] || [];
+        cb.checked = sel.includes(i);
+        // disable checkbox if this month has fewer weeks
+        if(i >= weeksCount){ cb.disabled = true; }
+        cb.addEventListener('change', function(){
+          const val=parseInt(this.value);
+          if(!window.MORE_DAYS_IN[month]) window.MORE_DAYS_IN[month] = [];
+          const arr=window.MORE_DAYS_IN[month];
+          if(this.checked){ if(!arr.includes(val)) arr.push(val); }
+          else{
+            const ix=arr.indexOf(val);
+            if(ix>=0) arr.splice(ix,1);
+          }
+        });
+        lbl.appendChild(cb);
+        const span=document.createElement('span');
+        span.textContent='Week '+(i+1);
+        lbl.appendChild(span);
+        weekWrap.appendChild(lbl);
+      }
+    }
+    // On month change, render weeks for selected month
+    monthSel.addEventListener('change', function(){
+      const m=parseInt(this.value);
+      if(!isNaN(m)) renderWeeks(m);
+    });
+    // Render for initial month (0 or first option)
+    const initM=parseInt(monthSel.value||0);
+    renderWeeks(isNaN(initM)?0:initM);
+  }
+
+  // Update LTS date displays when date range changes
+  const startInput=document.getElementById('start');
+  const endInput=document.getElementById('end');
+  if(startInput) startInput.addEventListener('change', function(){ updateLtsDateDisplays(); setConfirmStateLts(false); });
+  if(endInput) endInput.addEventListener('change', function(){ updateLtsDateDisplays(); setConfirmStateLts(false); });
+
+  // View mode toggle between full range and month tabs
+  const viewModeEl=document.getElementById('viewMode');
+  if(viewModeEl){
+    viewModeEl.addEventListener('click', function(e){
+      const btn=e.target.closest('button[data-mode]');
+      if(!btn) return;
+      calendarMode = btn.getAttribute('data-mode');
+      // toggle active class
+      viewModeEl.querySelectorAll('button[data-mode]').forEach(b=>{
+        b.classList.toggle('active', b.getAttribute('data-mode')===calendarMode);
+      });
+      const sv=document.getElementById('start')?.value;
+      const ev=document.getElementById('end')?.value;
+      if(sv && ev){ buildCalendarPreview(parseISODateInput(sv), parseISODateInput(ev)); }
+    });
+  }
+
+  // Clear LTS and Maternity plans
+  const clearLtsBtn=document.getElementById('clearLts');
+  if(clearLtsBtn){
+    clearLtsBtn.addEventListener('click', function(){
+      try{ localStorage.removeItem('ltsPlan'); }catch(e){}
+      EMPLOYEES.forEach(e=>{ e.lts=false; e.ltsFrom=null; e.ltsTo=null; });
+      SCHEDULE.forEach(rec=>{ if(rec && rec.sick){ rec.sick=rec.sick.filter(x=>!x.lts); } });
+      updateScheduledSummary();
+      buildCalendarFromInputs();
+      toast('LTS plan cleared.','warn');
+    });
+  }
+  const clearMatBtn=document.getElementById('clearMat');
+  if(clearMatBtn){
+    clearMatBtn.addEventListener('click', function(){
+      try{ localStorage.removeItem('matPlan'); }catch(e){}
+      EMPLOYEES.forEach(e=>{ e.mat=false; e.matFrom=null; e.matTo=null; });
+      SCHEDULE.forEach(rec=>{ if(rec && rec.mat){ rec.mat=[]; } });
+      updateScheduledSummary();
+      buildCalendarFromInputs();
+      toast('Maternity plan cleared.','warn');
+    });
+  }
+
+  // Initialize 'More days in' UI controls
+  setupMoreDaysUI();
+
+    // Attach increment/decrement handlers for custom number controls
+    document.querySelectorAll('.num-control button').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        const targetId=this.getAttribute('data-target');
+        const input=document.getElementById(targetId);
+        if(!input) return;
+        const min=parseInt(input.getAttribute('min'))||-Infinity;
+        const max=parseInt(input.getAttribute('max'))||Infinity;
+        let val=parseInt(input.value)||0;
+        if(this.classList.contains('inc')){
+          val = Math.min(max, val+1);
+        } else if(this.classList.contains('dec')){
+          val = Math.max(min, val-1);
+        }
+        input.value=val;
+        // Trigger change event on input so dependent logic runs
+        input.dispatchEvent(new Event('change'));
+      });
+    });
+
+    // Toggle left panel on hamburger click for small screens
+    const menuBtn=document.getElementById('menuToggle');
+    if(menuBtn){
+      menuBtn.addEventListener('click', function(){
+        const left=document.getElementById('leftCard');
+        if(left) left.classList.toggle('open');
+      });
+    }
+
+  /* ========= Sickness Advanced Controls events ========= */
+  const advBtn=document.getElementById('sickAdvBtn');
+  const advModal=document.getElementById('sickAdvancedModal');
+  if(advBtn && advModal){
+    advBtn.addEventListener('click', function(){
+      // populate inputs from config
+      const cfg=window.SICK_ADVANCED_CONFIG||{};
+      const blk=document.getElementById('sickBlocksPerPeriod'); if(blk) blk.value=cfg.blocksPerPeriod||2;
+      const min=document.getElementById('sickMinLen'); if(min) min.value=cfg.minLen||2;
+      const max=document.getElementById('sickMaxLen'); if(max) max.value=cfg.maxLen||5;
+      advModal.classList.add('show');
+    });
+    const cancelBtn=document.getElementById('sickAdvCancel');
+    const saveBtn=document.getElementById('sickAdvSave');
+    if(cancelBtn) cancelBtn.addEventListener('click', function(){ advModal.classList.remove('show'); });
+    if(saveBtn) saveBtn.addEventListener('click', function(){
+      const blk=document.getElementById('sickBlocksPerPeriod');
+      const min=document.getElementById('sickMinLen');
+      const max=document.getElementById('sickMaxLen');
+      const cfg=window.SICK_ADVANCED_CONFIG||{};
+      cfg.blocksPerPeriod = Math.max(1, parseInt(blk?.value)||2);
+      cfg.minLen = Math.max(1, parseInt(min?.value)||2);
+      cfg.maxLen = Math.max(cfg.minLen, parseInt(max?.value)||5);
+      window.SICK_ADVANCED_CONFIG = cfg;
+      advModal.classList.remove('show');
+      toast('Advanced sickness settings saved.','ok');
+    });
+  }
+
+  // Done
+})();
+</script>
+</body>
+</html>

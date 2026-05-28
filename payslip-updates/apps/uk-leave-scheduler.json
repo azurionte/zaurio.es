@@ -1,0 +1,7 @@
+{
+  "app": "uk-leave-scheduler",
+  "version": "2",
+  "entry": "uk-leave-scheduler.html",
+  "updatedAt": "2026-05-28T00:00:00Z",
+  "notes": "Adds the DBT-adapted UK Leave Scheduler mini-app under iHCM Specific tools."
+}
