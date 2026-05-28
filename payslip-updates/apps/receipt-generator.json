@@ -1,0 +1,7 @@
+{
+  "app": "receipt-generator",
+  "version": "2.3",
+  "entry": "receipt-generator.html?app=receipt",
+  "updatedAt": "2026-05-28T00:00:00Z",
+  "notes": "Fixes the receipt form layout so the price field and randomize button stay inside the card."
+}

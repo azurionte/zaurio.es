@@ -468,6 +468,7 @@ async function fetchPayslipUpdateAsset(request, env, path) {
   }
 
   if (
+    objectName.startsWith("apps/") ||
     objectName === "latest.yml" ||
     objectName.endsWith(".blockmap") ||
     objectName.endsWith(".nsis.7z") ||
