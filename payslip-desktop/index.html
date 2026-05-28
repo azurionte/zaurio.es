@@ -2305,6 +2305,14 @@ importFileInput.addEventListener('change', function(event) {
     // Determine selected format. Import can process both India and UK formats; for UK the parsing function may be limited.
     var formatSelectElem = document.getElementById('formatSelect');
     var currentFormat = selectedTemplateOrPrompt();
+    if (!currentFormat) {
+        currentFormat = window.__selectedImportTemplateV31 || (formatSelectElem && formatSelectElem.value) || 'India';
+        window.__selectedImportTemplateV31 = currentFormat;
+        if (formatSelectElem) {
+            formatSelectElem.value = currentFormat;
+            try { formatSelectElem.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+        }
+    }
     if (!currentFormat) return;
     importedFileName = file.name || '';
     var reader = new FileReader();
@@ -2345,6 +2353,16 @@ async function selectPdfWithDesktopPicker() {
     }
 
     importedFileName = result.fileName || 'payslip.pdf';
+    var formatSelectElem = document.getElementById('formatSelect');
+    var currentFormat = selectedTemplateOrPrompt();
+    if (!currentFormat) {
+        currentFormat = window.__selectedImportTemplateV31 || (formatSelectElem && formatSelectElem.value) || 'India';
+    }
+    window.__selectedImportTemplateV31 = currentFormat;
+    if (formatSelectElem) {
+        formatSelectElem.value = currentFormat;
+        try { formatSelectElem.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+    }
     var introEl = document.getElementById('intro-overlay');
     if (introEl) {
         introEl.style.setProperty('display', 'none', 'important');
@@ -3868,6 +3886,131 @@ function generatePayslipHTML(d) {
         '<div class="footnote">' + meta.footnote + '</div>' +
         '</div>';
 }
+</script>
+
+<script id="v53-india-selection-dynamic-fix">
+(function(){
+  'use strict';
+  function clean(s){ return String(s == null ? '' : s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim(); }
+  function escapeHtml(s){ return clean(s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function toNum(v){ return parseNumber ? parseNumber(v) : (parseFloat(String(v||'').replace(/,/g,'')) || 0); }
+  function money(v){ return toNum(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function activeTemplate(){
+    var fmt = document.getElementById('formatSelect');
+    var selected = window.__selectedImportTemplateV31 || (fmt && fmt.value) || '';
+    if (!selected) selected = 'India';
+    window.__selectedImportTemplateV31 = selected;
+    if (fmt && fmt.value !== selected) {
+      fmt.value = selected;
+      try { fmt.dispatchEvent(new Event('change', { bubbles: true })); } catch(e) {}
+    }
+    return selected;
+  }
+  function seedFrom(s){
+    var text = clean(s || 'ADP Demo');
+    var seed = 0;
+    for (var i = 0; i < text.length; i++) seed = (seed * 31 + text.charCodeAt(i)) >>> 0;
+    return seed || 10101;
+  }
+  function pad(n, len){ n = String(Math.abs(n)); while(n.length < len) n = '0' + n; return n.slice(-len); }
+  function enrichIndia(d){
+    if (!d || d.format !== 'India') return d;
+    var seed = seedFrom((d.empName || '') + (d.empcode || '') + (d.payMonth || ''));
+    d.compName = d.compName || 'ADP India Demo Pvt Ltd';
+    d.empName = d.empName || 'Demo Employee';
+    d.empcode = d.empcode || pad(seed, 6);
+    d.uanNo = d.uanNo || '100' + pad(seed * 7, 9);
+    d.pfNo = d.pfNo || 'PY/BOM/' + pad(seed * 13, 7) + '/' + pad(seed, 4);
+    d.esiNo = d.esiNo || pad(seed * 17, 10);
+    d.pan = d.pan || ('ADP' + pad(seed, 5) + 'F');
+    d.bankName = d.bankName || ['HDFC Bank','ICICI Bank','Axis Bank','State Bank of India'][seed % 4];
+    d.accNo = d.accNo || pad(seed * 19, 12);
+    d.location = d.location || ['Pune','Mumbai','Hyderabad','Bengaluru'][seed % 4];
+    d.department = d.department || ['Payroll Operations','Implementation','Customer Success','Demo Services'][seed % 4];
+    d.designation = d.designation || ['Senior Associate','Consultant','Payroll Specialist','Analyst'][seed % 4];
+    d.grade = d.grade || ['G5','G6','G7'][seed % 3];
+    d.stdDays = d.stdDays || '30';
+    d.workDays = d.workDays || '30';
+    d.lopDays = d.lopDays || '0';
+    d.doj = d.doj || '01/04/2024';
+    return d;
+  }
+  function row(desc, amount, ytd){ return { description: clean(desc), amount: clean(amount) || '0.00', ytd: clean(ytd) || '0.00' }; }
+  function buildRowsFromLegacy(d){
+    if (!d || d.format !== 'India') return d;
+    if (!Array.isArray(d.earningsRows)) {
+      d.earningsRows = [
+        row('BASIC PAY', d.basicPayAmt, d.basicPayYTD),
+        row('HRA', d.hraAmt, d.hraYTD),
+        row('SPECIAL ALLOWANCE', d.specialAllowanceAmt, d.specialAllowanceYTD),
+        row('CONVEYANCE ALLOWANCE', d.conveyanceAllowanceAmt, d.conveyanceAllowanceYTD),
+        row('LEAVE TRAVEL ALLOWANCE', d.leaveTravelAllowanceAmt, d.leaveTravelAllowanceYTD),
+        row('OTHER EARNINGS', d.otherEarningsAmt, d.otherEarningsYTD),
+        row('MEAL CARD', d.mealCardAmt, d.mealCardYTD)
+      ].filter(function(r){ return toNum(r.amount) || toNum(r.ytd); });
+    }
+    if (!Array.isArray(d.deductionsRows)) {
+      d.deductionsRows = [
+        row('PROVIDENT FUND', d.pfAmt, d.pfYTD),
+        row('INCOME TAX', d.incomeTaxAmt, d.incomeTaxYTD),
+        row('OTHER DEDUCTION', d.otherDeductionAmt, d.otherDeductionYTD),
+        row('SALARY HOLD', d.salaryHoldAmt, d.salaryHoldYTD),
+        row('LABOUR WELFARE FUND', d.labourWelfareFundAmt, d.labourWelfareFundYTD),
+        row('MEAL CARD DEDUCTION', d.mealCardDeductionAmt, d.mealCardDeductionYTD)
+      ].filter(function(r){ return toNum(r.amount) || toNum(r.ytd); });
+    }
+    if (!Array.isArray(d.reimburseRows)) {
+      d.reimburseRows = [];
+      if (toNum(d.telephoneReimbursementAmt) || toNum(d.telephoneReimbursementYTD)) {
+        d.reimburseRows.push(row('TELEPHONE REIMBURSEMENT', d.telephoneReimbursementAmt, d.telephoneReimbursementYTD));
+      }
+    }
+    d.reimburseSectionTitle = d.reimburseSectionTitle || 'REIMBURSEMENTS';
+    return d;
+  }
+  var previousParse = window.parseSlipLines;
+  if (typeof previousParse === 'function') {
+    window.parseSlipLines = parseSlipLines = function(lines){
+      var selected = activeTemplate();
+      var d = previousParse.apply(this, arguments);
+      if (selected === 'India' && d) {
+        d.format = 'India';
+        enrichIndia(buildRowsFromLegacy(d));
+      }
+      return d;
+    };
+  }
+  var previousPopulate = window.populateFormFromData;
+  if (typeof previousPopulate === 'function') {
+    window.populateFormFromData = populateFormFromData = function(data){
+      if (data && data.format === 'India') enrichIndia(buildRowsFromLegacy(data));
+      return previousPopulate.apply(this, arguments);
+    };
+  }
+  var previousGenerate = window.generatePayslipHTML;
+  if (typeof previousGenerate === 'function') {
+    window.generatePayslipHTML = generatePayslipHTML = function(data){
+      var d = data && data.format === 'India' ? enrichIndia(buildRowsFromLegacy(data)) : data;
+      var html = previousGenerate.apply(this, [d]);
+      if (!d || d.format !== 'India' || !Array.isArray(d.reimburseRows)) return html;
+      var rows = d.reimburseRows.filter(function(r){ return clean(r.description) || toNum(r.amount) || toNum(r.ytd); });
+      var totalCur = money(rows.reduce(function(sum,r){ return sum + toNum(r.amount); }, 0));
+      var totalYtd = money(rows.reduce(function(sum,r){ return sum + toNum(r.ytd); }, 0));
+      d.totalReimbursementCurrent = totalCur;
+      d.totalReimbursementYTD = totalYtd;
+      var body = rows.map(function(r){
+        return '<tr><td>'+escapeHtml(r.description || 'REIMBURSEMENT')+'</td><td>'+escapeHtml(r.amount || '0.00')+'</td><td>'+escapeHtml(r.ytd || '0.00')+'</td></tr>';
+      }).join('');
+      if (!body) body = '<tr><td>NO REIMBURSEMENTS IN SOURCE</td><td>0.00</td><td>0.00</td></tr>';
+      body += '<tr><td><strong>TOTAL REIMBURSEMENT</strong></td><td>'+escapeHtml(totalCur)+'</td><td>'+escapeHtml(totalYtd)+'</td></tr>';
+      return html.replace(/<tr><td>TELEPHONE REIMBURSEMENT<\/td><td>[\s\S]*?<tr><td><strong>TOTAL REIMBURSEMENT<\/strong><\/td><td>[\s\S]*?<\/tr>/, body);
+    };
+  }
+  document.addEventListener('click', function(ev){
+    var country = ev.target && ev.target.closest ? ev.target.closest('[data-country="India"],[data-template="India"]') : null;
+    if (country) activeTemplate();
+  }, true);
+})();
 </script>
 
 
@@ -7671,8 +7814,8 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 <script id="v500-demo-tools-shell">
 (function(){
   'use strict';
-  var SHELL_VERSION = 'v1.5';
-  var PAYSLIP_VERSION = 'V5.2';
+  var SHELL_VERSION = 'v1.6';
+  var PAYSLIP_VERSION = 'V5.3';
   var countries = {
     India: { code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
     UK: { code: 'GB', flagClass: 'flag-GB-v49', label: 'United Kingdom', detail: 'Celergo UK payslip' },
@@ -7688,7 +7831,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   var MINI_APP_STORAGE_KEY = 'dbtInstalledMiniAppsV1';
   var appCards = [
     { key: 'resume', slug: 'resume-generator', title: 'Resume Generator', version: 'V4', rawVersion: '4', icon: 'fa-id-card', detail: 'Build localized demo resumes with PDF export.', bundledEntry: 'mini-apps/resume-generator.html?app=resume' },
-    { key: 'receipt', slug: 'receipt-generator', title: 'Receipt Generator', version: 'V2.2', rawVersion: '2.2', icon: 'fa-receipt', detail: 'Create printable demo receipts by country and type.', bundledEntry: 'mini-apps/receipt-generator.html?app=receipt' },
+    { key: 'receipt', slug: 'receipt-generator', title: 'Receipt Generator', version: 'V2.4', rawVersion: '2.4', icon: 'fa-receipt', detail: 'Create printable demo receipts by country and type.', bundledEntry: 'mini-apps/receipt-generator.html?app=receipt' },
     { key: 'degree', slug: 'degree-generator', title: 'Degree diploma Generator', version: 'V2.2', rawVersion: '2.2', icon: 'fa-graduation-cap', detail: 'Generate UK and NL diploma-style degree documents.', bundledEntry: 'mini-apps/degree-generator.html?app=degree' }
   ];
 
