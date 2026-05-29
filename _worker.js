@@ -474,10 +474,26 @@ async function fetchPayslipUpdateAsset(request, env, path) {
     objectName.endsWith(".nsis.7z") ||
     /^(PayslipCreatorSetup|DemoBuildingToolsSetup)-\d+\.\d+\.\d+\.exe$/i.test(objectName)
   ) {
-    let rawUrl = `${PAYSLIP_UPDATES_GITHUB_RAW}${objectName.split("/").map(encodeURIComponent).join("/")}`;
     if (objectName === "latest.yml" || objectName.endsWith(".json")) {
-      rawUrl += `?ts=${Date.now()}`;
+      const apiUrl = `https://api.github.com/repos/azurionte/zaurio.es/contents/payslip-updates/${objectName.split("/").map(encodeURIComponent).join("/")}?ref=main&ts=${Date.now()}`;
+      const apiResponse = await fetch(apiUrl, {
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "User-Agent": "zaurio-dbt-updater",
+        },
+      });
+      if (!apiResponse.ok) {
+        return new Response("No encontrado", { status: apiResponse.status === 404 ? 404 : apiResponse.status });
+      }
+      const payload = await apiResponse.json();
+      const content = atob(String(payload.content || "").replace(/\s+/g, ""));
+      const headers = new Headers();
+      headers.set("Content-Type", getPayslipUpdateContentType(objectName));
+      headers.set("Cache-Control", "no-store");
+      headers.set("Access-Control-Allow-Origin", "*");
+      return new Response(content, { status: 200, headers });
     }
+    let rawUrl = `${PAYSLIP_UPDATES_GITHUB_RAW}${objectName.split("/").map(encodeURIComponent).join("/")}`;
     const upstreamHeaders = {};
     const range = request.headers.get("Range");
     if (range) upstreamHeaders.Range = range;
