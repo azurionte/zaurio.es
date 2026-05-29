@@ -474,7 +474,26 @@ async function fetchPayslipUpdateAsset(request, env, path) {
     objectName.endsWith(".nsis.7z") ||
     /^(PayslipCreatorSetup|DemoBuildingToolsSetup)-\d+\.\d+\.\d+\.exe$/i.test(objectName)
   ) {
-    return Response.redirect(`${PAYSLIP_UPDATES_GITHUB_RAW}${encodeURIComponent(objectName)}`, 302);
+    const rawUrl = `${PAYSLIP_UPDATES_GITHUB_RAW}${objectName.split("/").map(encodeURIComponent).join("/")}`;
+    const upstreamHeaders = {};
+    const range = request.headers.get("Range");
+    if (range) upstreamHeaders.Range = range;
+    const upstream = await fetch(rawUrl, {
+      method: request.method === "HEAD" ? "HEAD" : "GET",
+      headers: upstreamHeaders,
+    });
+    if (!upstream.ok) {
+      return new Response("No encontrado", { status: upstream.status === 404 ? 404 : upstream.status });
+    }
+    const headers = new Headers(upstream.headers);
+    headers.set("Content-Type", upstream.headers.get("Content-Type") || getPayslipUpdateContentType(objectName));
+    headers.set("Cache-Control", objectName === "latest.yml" || objectName.endsWith(".json") ? "no-store" : "public, max-age=31536000, immutable");
+    headers.set("Access-Control-Allow-Origin", "*");
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers,
+    });
   }
 
   const supabaseUrl = env.SUPABASE_URL || DEFAULT_SUPABASE_URL;
