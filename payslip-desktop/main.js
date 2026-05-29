@@ -15,6 +15,8 @@ let lastUpdateStatus = {
   checkedAt: null,
 };
 
+const MINI_APP_BASE_URL = 'https://zaurio.es/payslip-updates/apps/';
+
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'app',
@@ -31,6 +33,18 @@ function registerAppProtocol() {
   protocol.handle('app', (request) => {
     const url = new URL(request.url);
     const requestedPath = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
+    const installedPrefix = '/installed-mini-apps/';
+
+    if (requestedPath.startsWith(installedPrefix)) {
+      const relativeInstalledPath = requestedPath.slice(installedPrefix.length);
+      const installedRoot = path.resolve(app.getPath('userData'), 'mini-apps');
+      const resolvedInstalledPath = path.resolve(installedRoot, relativeInstalledPath);
+      if (resolvedInstalledPath !== installedRoot && !resolvedInstalledPath.startsWith(`${installedRoot}${path.sep}`)) {
+        return new Response('Not found', { status: 404 });
+      }
+      return net.fetch(pathToFileURL(resolvedInstalledPath).toString());
+    }
+
     const resolvedPath = path.resolve(__dirname, `.${requestedPath}`);
     const appRoot = path.resolve(__dirname);
 
@@ -40,6 +54,17 @@ function registerAppProtocol() {
 
     return net.fetch(pathToFileURL(resolvedPath).toString());
   });
+}
+
+function normalizeReleaseNotes(info = {}) {
+  const notes = info.releaseNotes || info.releaseName || '';
+  if (Array.isArray(notes)) {
+    return notes.map((item) => {
+      if (typeof item === 'string') return item;
+      return [item.version, item.note].filter(Boolean).join('\n');
+    }).filter(Boolean).join('\n\n');
+  }
+  return String(notes || '').trim();
 }
 
 function sendUpdateStatus(state, message, extra = {}) {
@@ -75,7 +100,7 @@ function registerUpdaterEvents() {
     sendUpdateStatus('checking', 'Checking for updates...');
   });
   autoUpdater.on('update-available', (info) => {
-    sendUpdateStatus('available', `Version ${info.version} is available.`, { updateVersion: info.version });
+    sendUpdateStatus('available', `Version ${info.version} is available.`, { updateVersion: info.version, releaseNotes: normalizeReleaseNotes(info) });
   });
   autoUpdater.on('update-not-available', () => {
     sendUpdateStatus('current', `Version ${app.getVersion()} is the latest.`);
@@ -84,7 +109,7 @@ function registerUpdaterEvents() {
     sendUpdateStatus('downloading', `Downloading update ${Math.round(progress.percent || 0)}%...`);
   });
   autoUpdater.on('update-downloaded', (info) => {
-    sendUpdateStatus('downloaded', `Version ${info.version} is ready. Restart to install.`, { updateVersion: info.version });
+    sendUpdateStatus('downloaded', `Version ${info.version} is ready. Restart to install.`, { updateVersion: info.version, releaseNotes: normalizeReleaseNotes(info) || lastUpdateStatus.releaseNotes || '' });
   });
   autoUpdater.on('error', (error) => {
     sendUpdateStatus('error', readableUpdateError(error));
@@ -123,6 +148,114 @@ function registerUpdaterEvents() {
     autoUpdater.quitAndInstall(false, true);
     return lastUpdateStatus;
   });
+}
+
+
+function safeMiniAppPart(value) {
+  return String(value || '').replace(/[^A-Za-z0-9._-]/g, '-').replace(/^-+|-+$/g, '') || 'mini-app';
+}
+
+function miniAppRoot(key) {
+  return path.join(app.getPath('userData'), 'mini-apps', safeMiniAppPart(key));
+}
+
+function miniAppMetaPath(key) {
+  return path.join(miniAppRoot(key), 'manifest.json');
+}
+
+function normalizeMiniAppManifest(manifest = {}, info = {}) {
+  const entry = String(manifest.entry || info.entry || `${safeMiniAppPart(info.slug || info.key)}.html`).replace(/^\/+/, '');
+  const entryPath = entry.split('?')[0];
+  return {
+    ...manifest,
+    key: safeMiniAppPart(info.key || manifest.key),
+    slug: safeMiniAppPart(info.slug || manifest.slug || info.key || manifest.key),
+    version: String(manifest.version || '0').replace(/^v/i, '').trim(),
+    entry,
+    entryPath,
+    updatedAt: manifest.updatedAt || new Date().toISOString(),
+  };
+}
+
+async function fetchJson(url) {
+  const response = await net.fetch(url, { bypassCustomProtocolHandlers: true });
+  if (!response.ok) throw new Error(`Request failed ${response.status}: ${url}`);
+  return response.json();
+}
+
+async function fetchBuffer(url) {
+  const response = await net.fetch(url, { bypassCustomProtocolHandlers: true });
+  if (!response.ok) throw new Error(`Request failed ${response.status}: ${url}`);
+  return Buffer.from(await response.arrayBuffer());
+}
+
+function miniAppManifestUrl(info = {}) {
+  const slug = safeMiniAppPart(info.slug || info.key);
+  return `${MINI_APP_BASE_URL}${slug}.json?ts=${Date.now()}`;
+}
+
+function miniAppPackageUrl(filePath, manifest, info = {}) {
+  const asString = String(filePath || '').replace(/^\/+/, '');
+  if (/^https?:\/\//i.test(asString)) return asString;
+  const baseUrl = String(manifest.baseUrl || `${MINI_APP_BASE_URL}`).replace(/\/+$/, '/');
+  return `${baseUrl}${asString}`;
+}
+
+async function readInstalledMiniApp(key) {
+  try {
+    return JSON.parse(await fs.readFile(miniAppMetaPath(key), 'utf8'));
+  } catch (_error) {
+    return null;
+  }
+}
+
+async function writeMiniAppFile(root, relativePath, bytes) {
+  const cleanRelativePath = String(relativePath || '').replace(/^\/+/, '');
+  const target = path.resolve(root, cleanRelativePath);
+  const resolvedRoot = path.resolve(root);
+  if (target !== resolvedRoot && !target.startsWith(`${resolvedRoot}${path.sep}`)) {
+    throw new Error('Mini-app package contains an unsafe path.');
+  }
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, bytes);
+}
+
+async function installMiniAppPackage(info = {}) {
+  const manifest = normalizeMiniAppManifest(await fetchJson(miniAppManifestUrl(info)), info);
+  const root = miniAppRoot(manifest.key);
+  const nextRoot = `${root}.download`;
+  await fs.rm(nextRoot, { recursive: true, force: true });
+  await fs.mkdir(nextRoot, { recursive: true });
+
+  const files = Array.isArray(manifest.files) && manifest.files.length
+    ? manifest.files
+    : [{ path: manifest.entryPath || manifest.entry.split('?')[0], url: manifest.entry }];
+
+  for (const file of files) {
+    const relativePath = (typeof file === 'string' ? file : (file.path || file.name || file.url)).split('?')[0];
+    const urlPath = typeof file === 'string' ? file : (file.url || relativePath);
+    await writeMiniAppFile(nextRoot, relativePath, await fetchBuffer(miniAppPackageUrl(urlPath, manifest, info)));
+  }
+
+  const installedManifest = {
+    ...manifest,
+    installedAt: new Date().toISOString(),
+    localEntry: `installed-mini-apps/${manifest.key}/${manifest.entry}`,
+  };
+  await fs.writeFile(path.join(nextRoot, 'manifest.json'), JSON.stringify(installedManifest, null, 2));
+  await fs.rm(root, { recursive: true, force: true });
+  await fs.rename(nextRoot, root);
+  return installedManifest;
+}
+
+function registerMiniAppUpdater() {
+  ipcMain.handle('miniapp:get-installed', async (_event, key) => readInstalledMiniApp(key));
+  ipcMain.handle('miniapp:check', async (_event, info = {}) => {
+    const manifest = normalizeMiniAppManifest(await fetchJson(miniAppManifestUrl(info)), info);
+    const installed = await readInstalledMiniApp(manifest.key);
+    return { manifest, installed };
+  });
+  ipcMain.handle('miniapp:install', async (_event, info = {}) => installMiniAppPackage(info));
 }
 
 function registerDesktopFilePicker() {
@@ -234,6 +367,7 @@ app.whenReady().then(() => {
   registerAppProtocol();
   registerUpdaterEvents();
   registerDesktopFilePicker();
+  registerMiniAppUpdater();
   createMainWindow();
 
   // On macOS it's common to re-create a window when the dock icon is clicked
