@@ -474,7 +474,10 @@ async function fetchPayslipUpdateAsset(request, env, path) {
     objectName.endsWith(".nsis.7z") ||
     /^(PayslipCreatorSetup|DemoBuildingToolsSetup)-\d+\.\d+\.\d+\.exe$/i.test(objectName)
   ) {
-    const rawUrl = `${PAYSLIP_UPDATES_GITHUB_RAW}${objectName.split("/").map(encodeURIComponent).join("/")}`;
+    let rawUrl = `${PAYSLIP_UPDATES_GITHUB_RAW}${objectName.split("/").map(encodeURIComponent).join("/")}`;
+    if (objectName === "latest.yml" || objectName.endsWith(".json")) {
+      rawUrl += `?ts=${Date.now()}`;
+    }
     const upstreamHeaders = {};
     const range = request.headers.get("Range");
     if (range) upstreamHeaders.Range = range;
