@@ -18,3 +18,9 @@ contextBridge.exposeInMainWorld('payslipDesktop', {
   selectPdf: () => ipcRenderer.invoke('pdf:select'),
   saveHtmlAsPdf: (payload) => ipcRenderer.invoke('pdf:save-html', payload)
 });
+
+contextBridge.exposeInMainWorld('payslipMiniApps', {
+  getInstalled: (key) => ipcRenderer.invoke('miniapp:get-installed', key),
+  check: (info) => ipcRenderer.invoke('miniapp:check', info),
+  install: (info) => ipcRenderer.invoke('miniapp:install', info),
+});
