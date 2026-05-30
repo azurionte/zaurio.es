@@ -7814,7 +7814,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 <script id="v500-demo-tools-shell">
 (function(){
   'use strict';
-  var SHELL_VERSION = 'v1.8';
+  var SHELL_VERSION = 'v1.9';
   var PAYSLIP_VERSION = 'V5.3';
   var countries = {
     India: { code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
@@ -7967,7 +7967,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
         button.disabled = false;
       }
     });
-    all('[data-open-mini-app="'+app+'"],#v5LaunchPayslip').forEach(function(button){
+    all('button[data-open-mini-app="'+app+'"],button#v5LaunchPayslip').forEach(function(button){
       if (app === 'payslip-converter' || button.getAttribute('data-open-mini-app') === app) {
         button.disabled = !!pending;
         button.classList.toggle('is-disabled', !!pending);

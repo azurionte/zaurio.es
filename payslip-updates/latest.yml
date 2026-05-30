@@ -1,8 +1,9 @@
-version: 5.0.13
+version: 5.0.14
 files:
-  - url: DemoBuildingToolsSetup-5.0.13.exe
-    sha512: WhiNVpUXAyKQrntaRIzps1+qvaKGrczMyCrCzRXM8T1oS1K8/i4UUJkwrYreRjFsqouspAbuoDytMC9qOM/z6g==
-    size: 101488773
-path: DemoBuildingToolsSetup-5.0.13.exe
-sha512: WhiNVpUXAyKQrntaRIzps1+qvaKGrczMyCrCzRXM8T1oS1K8/i4UUJkwrYreRjFsqouspAbuoDytMC9qOM/z6g==
-releaseDate: '2026-05-29T18:13:09.367Z'
+  - url: DemoBuildingToolsSetup-5.0.14.exe
+    sha512: fSO6PqckKFR4BAe1V4jMFi7TuN61vQpA8g21aBrcc+fY/RGNtheZtuQb8HWpIjEswSor6/X0Ueh6USqeOMrQFA==
+    size: 101488723
+path: DemoBuildingToolsSetup-5.0.14.exe
+sha512: fSO6PqckKFR4BAe1V4jMFi7TuN61vQpA8g21aBrcc+fY/RGNtheZtuQb8HWpIjEswSor6/X0Ueh6USqeOMrQFA==
+releaseNotes: Fixed a DBT Celergo folder glitch where checking updates for the Payslip Converter could collapse the Payslip Converter card into only an Open button when no update was available.
+releaseDate: '2026-05-30T00:34:52.755Z'
