@@ -1,0 +1,17 @@
+{
+  "app": "payslip-converter",
+  "version": "5.4",
+  "entry": "payslip-converter.html?app=payslip",
+  "updatedAt": "2026-05-30T00:00:00Z",
+  "notes": "Fixes the Payslip Converter save/export modal so the title and close button stay visible on smaller screens. The close button is now a high-contrast red circular button.",
+  "files": [
+    {
+      "path": "payslip-converter.html",
+      "url": "payslip-converter.html"
+    },
+    {
+      "path": "assets/adp-logo.png",
+      "url": "assets/adp-logo.png"
+    }
+  ]
+}
