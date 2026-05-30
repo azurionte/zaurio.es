@@ -4718,7 +4718,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.5.4';
+var TOOL_VERSION='V5.5.3';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5009,7 +5009,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.5.4';
+var TOOL_VERSION='V5.5.3';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5211,7 +5211,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.5.4';
+    var FINAL_VERSION = 'V5.5.3';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7426,7 +7426,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.5.4';
+    var TOOL_VERSION = 'V5.5.3';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7702,7 +7702,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 <script id="v49fix-script">
 (function(){
   'use strict';
-  var VERSION='V5.5.4';
+  var VERSION='V5.5.3';
   var countries={India:{code:'IN',name:'India',desc:'ADP Celergo India payslip'},UK:{code:'GB',name:'UK',desc:'UK demo payslip layout'},Brazil:{code:'BR',name:'Brazil',desc:'Demonstrativo de Pagamento'},Australia:{code:'AU',name:'Australia',desc:'PayForce Australia payslip'}};
   function el(id){return document.getElementById(id)}
   function all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel))}
