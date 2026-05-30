@@ -1,9 +1,9 @@
 {
   "app": "payslip-converter",
-  "version": "5.4",
+  "version": "5.5",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-05-30T00:00:00Z",
-  "notes": "Fixes the Payslip Converter save/export modal so the title and close button stay visible on smaller screens. The close button is now a high-contrast red circular button.",
+  "notes": "Fixes installed Payslip Converter mini-apps opening back to the Demo Building Tools home screen after update. Also keeps the save/export modal title and red close button visible on smaller screens.",
   "files": [
     {
       "path": "payslip-converter.html",

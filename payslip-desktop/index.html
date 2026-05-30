@@ -7910,7 +7910,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.9';
-  var PAYSLIP_VERSION = 'V5.4';
+  var PAYSLIP_VERSION = 'V5.5';
   var countries = {
     India: { code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
     UK: { code: 'GB', flagClass: 'flag-GB-v49', label: 'United Kingdom', detail: 'Celergo UK payslip' },
@@ -8466,7 +8466,9 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     bindImportButton();
     ensureImportModal();
     setTimeout(bindImportButton, 250);
-    setTimeout(renderDashboard, 40);
+    var bootApp = '';
+    try { bootApp = new URLSearchParams(window.location.search).get('app') || ''; } catch(e) {}
+    setTimeout(bootApp === 'payslip' ? renderPayslipLanding : renderDashboard, 40);
   }
   window.openPayslipImport = openPayslipImport;
   var previousReveal = window.revealImportedEditor;
