@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.1",
+  "version": "5.6.2",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-05-30T00:00:00Z",
-  "notes": "Architecture cleanup: DBT Home/Back navigation works from inside Payslip Converter, and the obsolete standalone payslip UI script has been removed so the current DBT mini-app shell is the only UI owner.",
+  "notes": "Architecture cleanup: DBT Home/Back navigation works from inside Payslip Converter, the obsolete standalone payslip UI script has been removed, and the mini-app version was bumped so installed clients receive the navigation fix.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.1"
+      "url": "payslip-converter.html?v=5.6.2"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.1"
+      "url": "assets/adp-logo.png?v=5.6.2"
     }
   ]
 }
