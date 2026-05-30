@@ -7910,7 +7910,9 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.9';
-  var PAYSLIP_VERSION = 'V5.5';
+  var PAYSLIP_VERSION = 'V5.5.2';
+  var isPayslipMiniBoot = false;
+  try { isPayslipMiniBoot = (new URLSearchParams(window.location.search).get('app') || '') === 'payslip'; } catch(e) {}
   var countries = {
     India: { code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
     UK: { code: 'GB', flagClass: 'flag-GB-v49', label: 'United Kingdom', detail: 'Celergo UK payslip' },
@@ -8238,7 +8240,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   }
   function bindBack(target){
     all('#v5BackBtn').forEach(function(back){ if (!back.disabled) back.addEventListener('click', target); });
-    all('#v5HomeBtn').forEach(function(home){ home.addEventListener('click', renderDashboard); });
+    all('#v5HomeBtn').forEach(function(home){ home.addEventListener('click', isPayslipMiniBoot ? renderPayslipLanding : renderDashboard); });
   }
   function folderCard(folder){ return '<button type="button" class="v5-card v5-folder" data-folder="'+folder.key+'"><span class="v5-folder-icon"></span><strong>'+folder.title+'</strong><small>'+folder.detail+'</small></button>'; }
   function plainAppCard(app){
@@ -8246,6 +8248,10 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     return '<div class="v5-card v5-app v5-open-resource" data-resource-app="'+app.key+'"><strong><i class="fa-solid '+app.icon+'"></i> '+app.title+'</strong><span class="v5-version" data-mini-version="'+app.key+'">'+version+'</span><small>'+app.detail+'</small><div class="v5-card-actions"><button type="button" class="v5-launch" data-open-mini-app="'+app.key+'" data-resource-app="'+app.key+'"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton(app.key)+'</div></div>';
   }
   function renderDashboard(){
+    if (isPayslipMiniBoot) {
+      renderPayslipLanding();
+      return;
+    }
     var overlay = el('intro-overlay'), modal = el('intro-modal');
     if (!overlay || !modal) return;
     overlay.className = 'v5-shell-overlay';
@@ -8275,7 +8281,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   }
   document.addEventListener('click', function(e){
     var home = e.target && e.target.closest ? e.target.closest('#v5HomeBtn') : null;
-    if (home) { e.preventDefault(); renderDashboard(); }
+    if (home) { e.preventDefault(); (isPayslipMiniBoot ? renderPayslipLanding : renderDashboard)(); }
   }, true);
   function resourceTitle(app){
     var info = getAppInfo(app);
@@ -8466,9 +8472,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     bindImportButton();
     ensureImportModal();
     setTimeout(bindImportButton, 250);
-    var bootApp = '';
-    try { bootApp = new URLSearchParams(window.location.search).get('app') || ''; } catch(e) {}
-    setTimeout(bootApp === 'payslip' ? renderPayslipLanding : renderDashboard, 40);
+    setTimeout(isPayslipMiniBoot ? renderPayslipLanding : renderDashboard, 40);
   }
   window.openPayslipImport = openPayslipImport;
   var previousReveal = window.revealImportedEditor;

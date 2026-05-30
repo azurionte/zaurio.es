@@ -1,9 +1,9 @@
 {
   "app": "payslip-converter",
-  "version": "5.5",
+  "version": "5.5.2",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-05-30T00:00:00Z",
-  "notes": "Fixes installed Payslip Converter mini-apps opening back to the Demo Building Tools home screen after update. Also keeps the save/export modal title and red close button visible on smaller screens.",
+  "notes": "Bug fix: prevents the installed Payslip Converter mini-app from flashing and returning to the Demo Building Tools home screen after opening. Payslip-only route is now locked when launched as app=payslip.",
   "files": [
     {
       "path": "payslip-converter.html",
