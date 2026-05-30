@@ -1,9 +1,9 @@
 {
   "app": "payslip-converter",
-  "version": "5.5.2",
+  "version": "5.5.3",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-05-30T00:00:00Z",
-  "notes": "Bug fix: prevents the installed Payslip Converter mini-app from flashing and returning to the Demo Building Tools home screen after opening. Payslip-only route is now locked when launched as app=payslip.",
+  "notes": "Bug fix: packages Payslip Converter as a standalone mini-app file instead of a full DBT shell copy, so it opens immediately after a mini-app update without flashing back to Home or requiring a DBT restart.",
   "files": [
     {
       "path": "payslip-converter.html",
