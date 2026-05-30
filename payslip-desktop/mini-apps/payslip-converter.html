@@ -4718,7 +4718,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.0';
+var TOOL_VERSION='V5.6.1';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5009,7 +5009,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.0';
+var TOOL_VERSION='V5.6.1';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5211,7 +5211,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.0';
+    var FINAL_VERSION = 'V5.6.1';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7426,7 +7426,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.0';
+    var TOOL_VERSION = 'V5.6.1';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7699,110 +7699,8 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 .v49fix-legacy{display:none!important;visibility:hidden!important;width:0!important;height:0!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important;position:absolute!important;}
 .v49-shell{display:grid;grid-template-columns:1.08fr .92fr;min-height:600px;border:1px solid var(--v49-line);border-radius:30px;overflow:hidden;background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(2,6,23,.96));position:relative;isolation:isolate}.v49-shell:before{content:"";position:absolute;inset:0;background:radial-gradient(560px 360px at 21% 18%,rgba(96,165,250,.16),transparent 64%);pointer-events:none;z-index:-1}.v49-left{padding:44px;display:flex;flex-direction:column;justify-content:space-between;gap:28px;animation:v49Left .72s var(--v49-ease) both}.v49-right{padding:26px;display:flex;align-items:center;justify-content:center;border-left:1px solid var(--v49-line);background:linear-gradient(180deg,rgba(15,23,42,.72),rgba(2,6,23,.36));animation:v49Right .88s var(--v49-ease) .34s both}.v49-pill{display:inline-flex;width:max-content;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid rgba(96,165,250,.5);background:rgba(37,99,235,.18);color:#bfdbfe;font-weight:900;font-size:13px;letter-spacing:.01em}.v49-title{margin:26px 0 14px;font-weight:950;letter-spacing:-.055em;font-size:clamp(42px,5vw,60px);line-height:.95;color:#fff}.v49-title span{background:linear-gradient(90deg,#bfdbfe,#fef9c3);-webkit-background-clip:text;background-clip:text;color:transparent}.v49-sub{max-width:570px;margin:0;color:#cbd5e1;font-size:17px;line-height:1.55}.v49-stats,.v49-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.v49-stat,.v49-step{border:1px solid var(--v49-line);background:rgba(15,23,42,.56);border-radius:17px;padding:14px}.v49-stat b{display:block;color:#fff;font-size:21px}.v49-stat span,.v49-step span{display:block;margin-top:4px;color:#9fb0c9;font-size:12px;font-weight:800}.v49-step b{display:block;font-size:13px;color:#fff}.v49-panel{width:100%;max-width:460px;min-height:520px;border:1px solid var(--v49-line);border-radius:24px;background:rgba(15,23,42,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.04);padding:24px}.v49-panel h2{margin:0 0 8px;font-size:24px;letter-spacing:-.02em;color:#fff}.v49-panel p{margin:0;color:#aebbd0;line-height:1.5}.v49-country-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0}.v49-country{position:relative;text-align:left;border:1px solid var(--v49-line);border-radius:18px;padding:15px;min-height:110px;background:#071024;color:#fff;cursor:pointer;overflow:hidden;transition:transform .18s var(--v49-ease),border-color .18s var(--v49-ease),background .18s var(--v49-ease),box-shadow .18s var(--v49-ease)}.v49-country:after{content:"";position:absolute;right:-22px;bottom:-30px;width:92px;height:92px;border-radius:50%;background:rgba(37,99,235,.24)}.v49-country:hover{transform:translateY(-2px);border-color:rgba(96,165,250,.6);box-shadow:0 14px 34px rgba(0,0,0,.22)}.v49-country.active{border-color:#f59e0b;background:linear-gradient(135deg,rgba(251,146,60,.14),rgba(7,16,36,.98));box-shadow:0 0 0 1px rgba(245,158,11,.45),0 18px 40px rgba(245,158,11,.09)}.v49-country-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.v49-code{font-weight:950;letter-spacing:.05em;color:#cbd5e1}.v49-country strong{display:block;margin-top:12px;font-size:19px}.v49-country small{display:block;margin-top:5px;color:#aebbd0;font-weight:800}.v49-drop{margin-top:88px;border:1.5px dashed rgba(148,163,184,.42);border-radius:20px;padding:24px 16px;display:flex;gap:15px;align-items:center;justify-content:center;text-align:left;color:#dbeafe;cursor:pointer;background:rgba(2,6,23,.34);transition:transform .18s var(--v49-ease),border-color .18s var(--v49-ease),background .18s var(--v49-ease)}.v49-drop:hover,.v49-drop.dragover{transform:translateY(-2px);border-color:#60a5fa;background:rgba(37,99,235,.12)}.v49-orb{width:64px;height:64px;min-width:64px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(96,165,250,.24),rgba(251,113,133,.16));border:1px solid rgba(96,165,250,.38);animation:v49Orb 2.2s ease-in-out infinite}.v49-file{width:33px;height:42px;background:#e0f2fe;border-radius:8px 8px 10px 10px;position:relative;box-shadow:0 10px 20px rgba(0,0,0,.22);animation:v49File 1.7s ease-in-out infinite}.v49-file:before{content:"";position:absolute;right:0;top:0;border-left:12px solid transparent;border-bottom:12px solid #93c5fd}.v49-file:after{content:"";position:absolute;left:7px;right:7px;top:20px;height:3px;background:#2563eb;border-radius:999px;box-shadow:0 8px 0 #2563eb}.v49-drop b{display:block;color:#fff;font-size:16px}.v49-drop span{display:block;margin-top:4px;color:#9fb0c9;font-size:13px}.v49-contact{display:inline-flex;align-items:center;gap:8px;margin-top:18px;color:#bfdbfe;text-decoration:none;font-weight:850;font-size:13px}.v49-contact-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;background:rgba(96,165,250,.14);border:1px solid rgba(96,165,250,.36)}.v49-modal-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.72);backdrop-filter:blur(10px);z-index:60000;padding:18px}.v49-modal-card{width:min(520px,96vw);border:1px solid var(--v49-line);border-radius:24px;background:#0b1426;color:#fff;box-shadow:0 28px 80px rgba(0,0,0,.5);padding:22px;animation:v49Pop .22s var(--v49-ease) both}.v49-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.v49-modal-head h2{margin:0;font-size:24px}.v49-modal-head p{margin:5px 0 0;color:#aebbd0;line-height:1.45}.v49-modal-close{appearance:none;border:0;background:rgba(148,163,184,.12);color:#fff;border-radius:12px;width:36px;height:36px;font-size:22px;cursor:pointer}.v49-modal-actions{display:flex;justify-content:flex-end;margin-top:16px}.v49-continue{border:0;border-radius:999px;padding:12px 18px;font-weight:950;cursor:pointer;color:#07111f;background:linear-gradient(135deg,#fb923c,#fb7185)}.header-contact-v49{display:inline-flex;align-items:center;gap:7px;margin-right:10px;padding:7px 10px;border:1px solid rgba(96,165,250,.28);border-radius:999px;background:rgba(37,99,235,.12);color:#dbeafe;text-decoration:none;font-size:12px;vertical-align:middle}.header-contact-v49 b{color:#fff}.tool-version-badge{display:inline-flex;align-items:center;margin-left:8px;padding:3px 7px;border-radius:999px;background:#0b75e5;color:#fff;font-size:11px;font-weight:900;vertical-align:middle}.workspace-enter-v49{animation:v49Workspace .32s var(--v49-ease) both}.flag-v49{display:inline-block;width:30px;height:20px;border-radius:5px;box-shadow:0 0 0 1px rgba(255,255,255,.24) inset,0 3px 10px rgba(0,0,0,.22);position:relative;overflow:hidden;background:#1e40af}.flag-IN-v49{background:linear-gradient(#ff9933 0 33%,#fff 33% 66%,#138808 66%)}.flag-IN-v49:after{content:"";position:absolute;left:50%;top:50%;width:7px;height:7px;border:1px solid #1e3a8a;border-radius:50%;transform:translate(-50%,-50%)}.flag-GB-v49{background:linear-gradient(90deg,transparent 43%,#fff 43% 57%,transparent 57%),linear-gradient(transparent 38%,#fff 38% 62%,transparent 62%),#1e3a8a}.flag-GB-v49:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 46%,#dc2626 46% 54%,transparent 54%),linear-gradient(transparent 43%,#dc2626 43% 57%,transparent 57%)}.flag-BR-v49{background:#16a34a}.flag-BR-v49:before{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;background:#facc15;transform:translate(-50%,-50%) rotate(45deg)}.flag-BR-v49:after{content:"";position:absolute;left:50%;top:50%;width:9px;height:9px;border-radius:50%;background:#1e3a8a;transform:translate(-50%,-50%)}.flag-AU-v49{background:#1e3a8a}.flag-AU-v49:before{content:"✦";position:absolute;right:4px;bottom:1px;color:#fff;font-size:10px}.flag-AU-v49:after{content:"";position:absolute;left:0;top:0;width:14px;height:10px;background:linear-gradient(90deg,transparent 42%,#fff 42% 58%,transparent 58%),linear-gradient(transparent 38%,#fff 38% 62%,transparent 62%),#1e3a8a}.flag-AU-v49.small,.flag-v49.small{width:24px;height:16px;border-radius:4px}@keyframes v49Left{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}@keyframes v49Right{0%{opacity:0;transform:translateX(-58%);filter:blur(10px)}62%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none;filter:blur(0)}}@keyframes v49Orb{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes v49File{0%,100%{transform:rotate(-4deg) translateY(0)}50%{transform:rotate(5deg) translateY(-3px)}}@keyframes v49Pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}@keyframes v49Workspace{from{opacity:.45;transform:translateY(8px)}to{opacity:1;transform:none}}@media(max-width:860px){#intro-modal.v49fix-modal{min-height:auto}.v49-shell{grid-template-columns:1fr}.v49-right{border-left:0;border-top:1px solid var(--v49-line);animation:v49Left .55s var(--v49-ease) .2s both}.v49-left{padding:28px}.v49-stats,.v49-steps{grid-template-columns:1fr}.v49-drop{margin-top:28px}.v49-panel{min-height:auto}.v49-title{font-size:42px}}
 </style>
-<script id="v49fix-script">
-(function(){
-  'use strict';
-  var VERSION='V5.6.0';
-  var countries={India:{code:'IN',name:'India',desc:'ADP Celergo India payslip'},UK:{code:'GB',name:'UK',desc:'UK demo payslip layout'},Brazil:{code:'BR',name:'Brazil',desc:'Demonstrativo de Pagamento'},Australia:{code:'AU',name:'Australia',desc:'PayForce Australia payslip'}};
-  function el(id){return document.getElementById(id)}
-  function all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel))}
-  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-  function currentCountry(){var f=el('formatSelect');return window.__selectedImportTemplateV31||(f&&f.value)||''}
-  function flag(code,small){return '<span class="flag-v49 flag-'+esc(code)+'-v49 '+(small?'small':'')+'"></span>'}
-  function ensureFormatOptions(){var s=el('formatSelect');if(!s)return;Object.keys(countries).forEach(function(k){var exists=Array.prototype.some.call(s.options,function(o){return o.value===k});if(!exists){var o=document.createElement('option');o.value=k;o.textContent=k;s.appendChild(o)}})}
-  function chooseCountry(country){ensureFormatOptions();window.__selectedImportTemplateV31=country;var s=el('formatSelect');if(s){s.value=country;try{s.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){}}if(typeof window.switchFormat==='function'){try{window.switchFormat()}catch(e){}}if(typeof window.refreshPreviewForSelectedTemplate==='function'){try{window.refreshPreviewForSelectedTemplate()}catch(e){}}updateCountryCards()}
-// Adjust countryCard so only the flag is shown (no two‑letter code)
-function countryCard(country,extraClass){var c=countries[country];return '<button type="button" class="v49-country '+(extraClass||'')+'" data-country="'+esc(country)+'"><div class="v49-country-top">'+flag(c.code)+'</div><strong>'+esc(c.name)+'</strong><small>'+esc(c.desc)+'</small></button>'}
-  function updateCountryCards(){var cur=currentCountry();all('[data-country]').forEach(function(node){node.classList.toggle('active',node.getAttribute('data-country')===cur)})}
-  function renderLanding(){var overlay=el('intro-overlay'),modal=el('intro-modal');if(!overlay||!modal)return;overlay.className='v49fix-overlay';overlay.style.display='flex';modal.className='v49fix-modal';modal.removeAttribute('style');modal.innerHTML='<div id="intro-text" class="v49fix-legacy"></div><div id="intro-buttons" class="v49fix-legacy"></div><div class="v49-shell"><section class="v49-left"><div><div class="v49-pill"><span class="tool-version-badge">'+VERSION+'</span><span>Multi-country demo payslip studio</span></div><h1 class="v49-title">Turn payroll<br>statements into demo-ready <span>payslips.</span></h1><p class="v49-sub">Import a Celergo earning statement, choose the target country template, edit every detected field, then export clean payslips for demos or testing. Built as a single portable HTML tool.</p></div><div><div id="v49UpdatePanel" class="v49-update"><span id="v49UpdateStatus">Version status loading...</span><button id="v49UpdateCheck" type="button">Look for updates</button><button id="v49UpdateInstall" type="button" style="display:none">Restart to install</button></div><div class="v49-stats"><div class="v49-stat"><b>4</b><span>country templates</span></div><div class="v49-stat"><b>PDF</b><span>batch import</span></div><div class="v49-stat"><b>ZIP</b><span>bulk export</span></div></div><div class="v49-steps" style="margin-top:32px"><div class="v49-step"><b>1. Select</b><span>Choose the output country.</span></div><div class="v49-step"><b>2. Import</b><span>Drop or browse a pay statement PDF.</span></div><div class="v49-step"><b>3. Edit & export</b><span>Fine-tune values and save.</span></div></div></div></section><section class="v49-right"><div class="v49-panel"><h2>Start a workspace</h2><p>Select the country template before importing. The selected template stays locked during conversion.</p><div class="v49-country-grid">'+Object.keys(countries).map(function(k){return countryCard(k)}).join('')+'</div><div id="v49Drop" class="v49-drop" tabindex="0" role="button"><span class="v49-orb"><span class="v49-file"></span></span><span><b>Drop a file or click here to select</b><span>PDF pay statement only. No blank workspace button. No old intro box.</span></span></div><a class="v49-contact" href="mailto:max.robles.gonzalez@adp.com?subject=Demo%20Payslip%20Creator%20feedback"><span class="v49-contact-icon">✉</span><span>If you need changes to this tool or report bugs, contact <b>max.robles.gonzalez@adp.com</b></span></a></div></section></div>';
-    bindLanding();bindLandingUpdater();updateCountryCards();
-  }
-  function bindLandingUpdater(){
-    if(!window.payslipUpdater)return;
-    var pill=document.querySelector('.v49-pill');
-    if(pill&&!el('v49InlineUpdate')){
-      var inline=document.createElement('span');
-      inline.id='v49InlineUpdate';
-      inline.className='v49-update-inline';
-      inline.innerHTML='<span id="v49UpdateStatus">Demo tools '+VERSION+' - Not checked yet.</span><button id="v49UpdateCheck" type="button">Check for updates</button><button id="v49UpdateInstall" type="button" style="display:none">Restart to install</button>';
-      pill.innerHTML='';
-      pill.appendChild(inline);
-    }
-    var oldPanel=el('v49UpdatePanel');
-    if(oldPanel)oldPanel.style.display='none';
-    var status=el('v49UpdateStatus'),check=el('v49UpdateCheck'),install=el('v49UpdateInstall');
-    if(!status||!check||!install)return;
-    function ago(iso){
-      if(!iso)return 'not checked yet';
-      var diff=Math.max(0,Date.now()-new Date(iso).getTime());
-      var mins=Math.floor(diff/60000);
-      if(mins<1)return 'just now';
-      if(mins===1)return '1 minute ago';
-      return mins+' minutes ago';
-    }
-    function render(s){
-      var state=s&&s.state==='current'?'Updated':(s&&s.state==='downloaded'?'Update ready':(s&&s.state==='error'?'Update unavailable':'Update status'));
-      status.textContent='Demo tools '+VERSION+' - '+state+'. Last checked '+ago(s&&s.checkedAt)+'.';
-      install.style.display=s&&s.state==='downloaded'?'inline-block':'none';
-      check.disabled=!!(s&&(s.state==='checking'||s.state==='downloading'));
-      check.style.opacity=check.disabled?'.55':'1';
-    }
-    window.payslipUpdater.onStatus(render);
-    window.payslipUpdater.getStatus().then(render).catch(function(){status.textContent='Update status unavailable.'});
-    check.onclick=function(){status.textContent='Demo tools '+VERSION+' - Checking for updates...';window.payslipUpdater.check().then(render).catch(function(){status.textContent='Demo tools '+VERSION+' - Update unavailable. Last checked just now.'})};
-    install.onclick=function(){window.payslipUpdater.install()};
-  }
-  function bindLanding(){all('.v49-country').forEach(function(btn){btn.addEventListener('click',function(){chooseCountry(btn.getAttribute('data-country'))})});var dz=el('v49Drop');if(!dz)return;dz.addEventListener('click',function(){openFileChooser()});dz.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openFileChooser()}});['dragenter','dragover'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.add('dragover')})});['dragleave','dragend'].forEach(function(evt){dz.addEventListener(evt,function(e){e.preventDefault();dz.classList.remove('dragover')})});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('dragover');var files=e.dataTransfer&&e.dataTransfer.files;if(files&&files.length){useDroppedFiles(files)}})}
-  function showWorkspace(){var intro=el('intro-overlay');if(intro){intro.style.setProperty('display','none','important');intro.style.setProperty('pointer-events','none','important')}var splash=el('splash');if(splash)splash.style.setProperty('display','none','important');var main=el('main');if(main){main.style.display='flex';main.classList.remove('workspace-enter-v49');void main.offsetWidth;main.classList.add('workspace-enter-v49')}}
-  function openFileChooser(){
-    if(!currentCountry()){alert('Choose a country template before selecting the PDF.');return;}
-    if(window.payslipDesktop&&typeof window.payslipDesktop.selectPdf==='function'&&typeof selectPdfWithDesktopPicker==='function'){
-      selectPdfWithDesktopPicker().catch(function(err){
-        console.error(err);
-        var loadingOverlay=el('loading-overlay');
-        if(loadingOverlay)loadingOverlay.style.display='none';
-        var drop=el('v49Drop');
-        if(drop&&drop.querySelector('b'))drop.querySelector('b').textContent='Drop a file or click here to select';
-        alert('Could not import that PDF. Please try again or choose another file.');
-      });
-      return;
-    }
-    var input = el('importFile');
-    if(!input) return;
-    // Reset the input so selecting the same file twice in a row still triggers
-    // the change event.
-    input.value = '';
-    var drop=el('v49Drop');
-    if(drop)drop.querySelector('b').textContent='Choose a PDF file...';
-    // Open the file dialog
-    input.click();
-  }
-  function useDroppedFiles(files){var input=el('importFile');if(!input)return;try{var dt=new DataTransfer();Array.prototype.forEach.call(files,function(f){dt.items.add(f)});input.files=dt.files;showWorkspace();input.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){openFileChooser()}}
-  function ensureModal(){var m=el('v49ImportModal');if(!m){m=document.createElement('div');m.id='v49ImportModal';m.className='v49-modal-overlay';document.body.appendChild(m)}m.innerHTML='<div class="v49-modal-card"><div class="v49-modal-head"><div><h2>Import pay statement</h2><p>Choose the target country template first. Then select your source PDF.</p></div><button type="button" class="v49-modal-close" aria-label="Close">×</button></div><div class="v49-country-grid">'+Object.keys(countries).map(function(k){return countryCard(k)}).join('')+'</div><div class="v49-modal-actions"><button type="button" class="v49-continue">Select PDF</button></div></div>';m.querySelector('.v49-modal-close').onclick=function(){m.style.display='none'};m.addEventListener('click',function(e){if(e.target===m)m.style.display='none'});all('.v49-country',m).forEach(function(btn){btn.addEventListener('click',function(){chooseCountry(btn.getAttribute('data-country'))})});m.querySelector('.v49-continue').onclick=function(){m.style.display='none';openFileChooser()};updateCountryCards();return m}
-  function openImportModal(e){if(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation()}var m=ensureModal();m.style.display='flex'}
-  function fixHeader(){var title=document.querySelector('#header .title');if(title){title.innerHTML='Payslip converter <span id="versionBadge" class="tool-version-badge">'+VERSION+'</span>'}var right=document.querySelector('#header > div:last-child');if(right&&!el('contactMaxV49')){var a=document.createElement('a');a.id='contactMaxV49';a.className='header-contact-v49';a.href='mailto:max.robles.gonzalez@adp.com?subject=Demo%20Payslip%20Creator%20feedback';a.innerHTML='<span>✉</span><span>Changes or bugs? <b>Contact Max</b></span>';right.insertBefore(a,right.firstChild)}var old=el('importBtn');if(old&&!old.dataset.v49fix){var clone=old.cloneNode(true);clone.dataset.v49fix='true';clone.addEventListener('click',openImportModal,true);old.parentNode.replaceChild(clone,old)}}
-  // Disable the automatic showWorkspace on file change.  We let the
-  // dedicated import handler (attached elsewhere) manage parsing and
-  // transitioning to the workspace.
-  function bindInput(){
-    var input = el('importFile');
-    if(input && !input.dataset.v49fix){
-      input.dataset.v49fix = 'true';
-      // Do not attach a redundant change handler here.
-    }
-  }
-  // Initialise the landing page exactly once.  Previously this code repeated
-  // init() via load and timer events, which caused a flash on load. In
-  // version 4.9.1 we bind init() only to DOMContentLoaded (or run immediately
-  // if the DOM is already ready). Duplicate init calls and timers have been removed.
-  function init(){ensureFormatOptions();fixHeader();bindInput();ensureModal();}
-  if(document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-</script>
+
+
 
 <script id="v4910-import-reveal-guard">
 (function(){
@@ -7910,7 +7808,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.9';
-  var PAYSLIP_VERSION = 'V5.6.0';
+  var PAYSLIP_VERSION = 'V5.6.1';
   var isPayslipMiniBoot = false;
   try { isPayslipMiniBoot = (new URLSearchParams(window.location.search).get('app') || '') === 'payslip'; } catch(e) {}
   var countries = {
@@ -8234,9 +8132,28 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   function renderAppChrome(canGoBack){
     return '<div id="v5AppChrome" class="v5-app-chrome">'+renderTopBar(!!canGoBack)+'</div>';
   }
+  function dbtHomeUrl(){
+    if (window.location.protocol === 'app:') return 'app://payslip/index.html';
+    if (window.location.origin && window.location.origin !== 'null') return window.location.origin + '/index.html';
+    return 'index.html';
+  }
+  function goDBTHome(){
+    if (isPayslipMiniBoot) {
+      window.location.href = dbtHomeUrl();
+      return;
+    }
+    renderDashboard();
+  }
+  function goDBTBack(target){
+    if (isPayslipMiniBoot && window.history && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    (target || renderDashboard)();
+  }
   function bindBack(target){
-    all('#v5BackBtn').forEach(function(back){ if (!back.disabled) back.addEventListener('click', target); });
-    all('#v5HomeBtn').forEach(function(home){ home.addEventListener('click', isPayslipMiniBoot ? renderPayslipLanding : renderDashboard); });
+    all('#v5BackBtn').forEach(function(back){ if (!back.disabled) back.addEventListener('click', function(){ goDBTBack(target); }); });
+    all('#v5HomeBtn').forEach(function(home){ home.addEventListener('click', goDBTHome); });
   }
   function folderCard(folder){ return '<button type="button" class="v5-card v5-folder" data-folder="'+folder.key+'"><span class="v5-folder-icon"></span><strong>'+folder.title+'</strong><small>'+folder.detail+'</small></button>'; }
   function plainAppCard(app){
@@ -8244,10 +8161,6 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     return '<div class="v5-card v5-app v5-open-resource" data-resource-app="'+app.key+'"><strong><i class="fa-solid '+app.icon+'"></i> '+app.title+'</strong><span class="v5-version" data-mini-version="'+app.key+'">'+version+'</span><small>'+app.detail+'</small><div class="v5-card-actions"><button type="button" class="v5-launch" data-open-mini-app="'+app.key+'" data-resource-app="'+app.key+'"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton(app.key)+'</div></div>';
   }
   function renderDashboard(){
-    if (isPayslipMiniBoot) {
-      renderPayslipLanding();
-      return;
-    }
     var overlay = el('intro-overlay'), modal = el('intro-modal');
     if (!overlay || !modal) return;
     overlay.className = 'v5-shell-overlay';
@@ -8277,7 +8190,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
   }
   document.addEventListener('click', function(e){
     var home = e.target && e.target.closest ? e.target.closest('#v5HomeBtn') : null;
-    if (home) { e.preventDefault(); (isPayslipMiniBoot ? renderPayslipLanding : renderDashboard)(); }
+    if (home) { e.preventDefault(); goDBTHome(); }
   }, true);
   function resourceTitle(app){
     var info = getAppInfo(app);
@@ -8334,7 +8247,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>Celergo Specific tools</h1><p>Tools for Celergo demo document preparation.</p></section><section><div class="v5-grid"><div class="v5-card v5-app v5-open-payslip" id="v5OpenPayslip" data-open-mini-app="payslip-converter"><strong><i class="fa-solid fa-file-invoice"></i> Payslip converter</strong><span class="v5-version" data-mini-version="payslip-converter">'+displayVersion(appCurrentVersion(payslipMiniApp))+'</span><small>Multi-country payslip converter for India, UK, Brazil, and Australia.</small><div class="v5-card-actions"><button type="button" class="v5-launch" id="v5LaunchPayslip" data-open-mini-app="payslip-converter"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton('payslip-converter')+'</div></div></div></section></main>';
     bindBack(renderDashboard);
     var home = el('v5HomeBtn');
-    if (home) home.addEventListener('click', isPayslipMiniBoot ? renderPayslipLanding : renderDashboard);
+    if (home) home.addEventListener('click', goDBTHome);
     var card = el('v5OpenPayslip');
     if (card) card.addEventListener('click', function(e){ if (e.target && e.target.closest && e.target.closest('button')) return; openPayslipConverter(); });
     var launch = el('v5LaunchPayslip');
@@ -8368,7 +8281,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     if (toolbar) main.parentNode.insertBefore(bar, toolbar);
     else main.parentNode.insertBefore(bar, main);
     var home = bar.querySelector('#v5HomeBtn');
-    if (home) home.addEventListener('click', function(){ (isPayslipMiniBoot ? renderPayslipLanding : renderDashboard)(); });
+    if (home) home.addEventListener('click', goDBTHome);
     var back = bar.querySelector('#v5BackBtn');
     if (back) back.addEventListener('click', function(){ renderPayslipLanding(); });
     stylePayslipToolbar();
@@ -8411,7 +8324,7 @@ function countryCard(country,extraClass){var c=countries[country];return '<butto
     modal.className = 'v49fix-modal';
     modal.removeAttribute('style');
     modal.innerHTML = renderAppChrome(true) + '<div class="v49-shell"><section class="v49-left"><div><div class="v49-pill"><span class="tool-version-badge">'+PAYSLIP_VERSION+'</span><span>Multi-country demo payslip studio</span></div><h1 class="v49-title">Turn payroll<br>statements into demo-ready <span>payslips.</span></h1><p class="v49-sub">Import a Celergo earning statement, choose the target country template, edit every detected field, then export clean payslips for demos or testing.</p></div><div><div class="v49-stats"><div class="v49-stat"><b><i class="fa-solid fa-globe"></i> 4</b><span>country templates</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-pdf"></i> PDF</b><span>batch import</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-zipper"></i> ZIP</b><span>bulk export</span></div></div><div class="v49-steps" style="margin-top:32px"><div class="v49-step"><b>1. Select</b><span>Choose the output country.</span></div><div class="v49-step"><b>2. Import</b><span>Drop or browse a pay statement PDF.</span></div><div class="v49-step"><b>3. Edit & export</b><span>Fine-tune values and save.</span></div></div></div></section><section class="v49-right"><div class="v49-panel"><h2>Start a workspace</h2><p>Select the country template before importing. The selected template stays locked during conversion.</p><div class="v5-country-grid">'+Object.keys(countries).map(countryCard).join('')+'</div><div id="v5PayslipDrop" class="v49-drop" tabindex="0" role="button"><span class="v49-orb"><span class="v49-file"></span></span><span><b><i class="fa-solid fa-file-arrow-up"></i> Drop a file or click here to select</b><span>PDF pay statement only.</span></span></div></div></section></div>';
-    bindBack(isPayslipMiniBoot ? renderPayslipLanding : renderCelergoFolder);
+    bindBack(renderCelergoFolder);
     all('.v5-country', modal).forEach(function(button){ button.addEventListener('click', function(){ setCountry(button.getAttribute('data-country')); }); });
     var drop = el('v5PayslipDrop');
     if (drop) drop.addEventListener('click', openSelectedPayslipFile);
