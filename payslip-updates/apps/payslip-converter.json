@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.5.3",
+  "version": "5.6.0",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-05-30T00:00:00Z",
-  "notes": "Bug fix: packages Payslip Converter as a standalone mini-app file instead of a full DBT shell copy, so it opens immediately after a mini-app update without flashing back to Home or requiring a DBT restart.",
+  "notes": "Architecture cleanup: Payslip Converter is packaged as its own mini-app file with the current DBT-integrated UI. The older standalone payslip landing no longer owns the screen, so mini-app updates replace the installed tool file and open without restarting DBT.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html"
+      "url": "payslip-converter.html?v=5.6.0"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png"
+      "url": "assets/adp-logo.png?v=5.6.0"
     }
   ]
 }
