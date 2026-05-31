@@ -1,9 +1,9 @@
-version: 5.0.14
+version: 5.0.15
 files:
-  - url: DemoBuildingToolsSetup-5.0.14.exe
-    sha512: fSO6PqckKFR4BAe1V4jMFi7TuN61vQpA8g21aBrcc+fY/RGNtheZtuQb8HWpIjEswSor6/X0Ueh6USqeOMrQFA==
-    size: 101488723
-path: DemoBuildingToolsSetup-5.0.14.exe
-sha512: fSO6PqckKFR4BAe1V4jMFi7TuN61vQpA8g21aBrcc+fY/RGNtheZtuQb8HWpIjEswSor6/X0Ueh6USqeOMrQFA==
-releaseNotes: Fixed a DBT Celergo folder glitch where checking updates for the Payslip Converter could collapse the Payslip Converter card into only an Open button when no update was available.
-releaseDate: '2026-05-30T00:34:52.755Z'
+  - url: DemoBuildingToolsSetup-5.0.15.exe
+    sha512: hz0OoJCZXpkoFAFDfVi/Qy7xLkA0tqHyXxsnZBWPMipXVKwJrWGHaTZJZtaV3Z0Mpk24d43/NXDGthP6MrDXQA==
+    size: 101487663
+path: DemoBuildingToolsSetup-5.0.15.exe
+sha512: hz0OoJCZXpkoFAFDfVi/Qy7xLkA0tqHyXxsnZBWPMipXVKwJrWGHaTZJZtaV3Z0Mpk24d43/NXDGthP6MrDXQA==
+releaseNotes: Fixed Payslip Converter navigation from Celergo Specific tools so it opens inside the existing DBT shell, keeps the global menu bar fixed in the same position, avoids the page blink caused by standalone boot, and returns Back to the Celergo folder.
+releaseDate: '2026-05-31T01:55:02.160Z'

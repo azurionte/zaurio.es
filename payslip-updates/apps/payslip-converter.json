@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.4",
+  "version": "5.6.5",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-05-30T00:00:00Z",
-  "notes": "Navigation fix: Payslip now opens inside the existing DBT shell instead of booting a second global menu, so there is no full-page blink and Back returns to Celergo Specific tools.",
+  "notes": "Navigation fix: Payslip opens directly inside the existing DBT shell with the global menu fixed in the same position, avoiding the standalone-page blink and returning Back to Celergo Specific tools.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.4"
+      "url": "payslip-converter.html?v=5.6.5"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.4"
+      "url": "assets/adp-logo.png?v=5.6.5"
     }
   ]
 }

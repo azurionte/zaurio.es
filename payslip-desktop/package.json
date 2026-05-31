@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.14",
+  "version": "5.0.15",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixed a DBT Celergo folder glitch where checking updates for the Payslip Converter could collapse the Payslip Converter card into only an Open button when no update was available."
+      "releaseNotes": "Fixed Payslip Converter navigation from Celergo Specific tools so it opens inside the existing DBT shell, keeps the global menu bar fixed in the same position, avoids the page blink caused by standalone boot, and returns Back to the Celergo folder."
     },
     "nsis": {
       "perMachine": false,
