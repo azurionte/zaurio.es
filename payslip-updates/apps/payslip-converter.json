@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.2",
+  "version": "5.6.3",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-05-30T00:00:00Z",
-  "notes": "Architecture cleanup: DBT Home/Back navigation works from inside Payslip Converter, the obsolete standalone payslip UI script has been removed, and the mini-app version was bumped so installed clients receive the navigation fix.",
+  "notes": "Navigation polish: Celergo folder is now a real DBT history step before opening Payslip, Back returns to the folder instead of Home, and the Payslip shell keeps the DBT global menu anchored consistently.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.2"
+      "url": "payslip-converter.html?v=5.6.3"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.2"
+      "url": "assets/adp-logo.png?v=5.6.3"
     }
   ]
 }
