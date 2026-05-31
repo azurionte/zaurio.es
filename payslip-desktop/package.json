@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.15",
+  "version": "5.0.16",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixed Payslip Converter navigation from Celergo Specific tools so it opens inside the existing DBT shell, keeps the global menu bar fixed in the same position, avoids the page blink caused by standalone boot, and returns Back to the Celergo folder."
+      "releaseNotes": "Fixed DBT startup layout so the Home screen no longer inherits the old centered modal max-width. The global menu bar now renders full-width immediately on launch and stays consistent when moving into Payslip Converter."
     },
     "nsis": {
       "perMachine": false,

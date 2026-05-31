@@ -1,9 +1,9 @@
-version: 5.0.15
+version: 5.0.16
 files:
-  - url: DemoBuildingToolsSetup-5.0.15.exe
-    sha512: hz0OoJCZXpkoFAFDfVi/Qy7xLkA0tqHyXxsnZBWPMipXVKwJrWGHaTZJZtaV3Z0Mpk24d43/NXDGthP6MrDXQA==
-    size: 101487663
-path: DemoBuildingToolsSetup-5.0.15.exe
-sha512: hz0OoJCZXpkoFAFDfVi/Qy7xLkA0tqHyXxsnZBWPMipXVKwJrWGHaTZJZtaV3Z0Mpk24d43/NXDGthP6MrDXQA==
-releaseNotes: Fixed Payslip Converter navigation from Celergo Specific tools so it opens inside the existing DBT shell, keeps the global menu bar fixed in the same position, avoids the page blink caused by standalone boot, and returns Back to the Celergo folder.
-releaseDate: '2026-05-31T01:55:02.160Z'
+  - url: DemoBuildingToolsSetup-5.0.16.exe
+    sha512: QQrNThRwQLbsxYJidPp5DWwLhSiigB19ZeXfqMckUatTywnQkhxZx7mdkDofALQsTl4lsj5I+F0WBls0gUKqfA==
+    size: 101487675
+path: DemoBuildingToolsSetup-5.0.16.exe
+sha512: QQrNThRwQLbsxYJidPp5DWwLhSiigB19ZeXfqMckUatTywnQkhxZx7mdkDofALQsTl4lsj5I+F0WBls0gUKqfA==
+releaseNotes: Fixed DBT startup layout so the Home screen no longer inherits the old centered modal max-width. The global menu bar now renders full-width immediately on launch and stays consistent when moving into Payslip Converter.
+releaseDate: '2026-05-31T02:25:38.414Z'
