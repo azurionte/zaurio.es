@@ -4718,7 +4718,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.3';
+var TOOL_VERSION='V5.6.4';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5009,7 +5009,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.3';
+var TOOL_VERSION='V5.6.4';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5211,7 +5211,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.3';
+    var FINAL_VERSION = 'V5.6.4';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7426,7 +7426,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.3';
+    var TOOL_VERSION = 'V5.6.4';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7808,9 +7808,14 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.9';
-  var PAYSLIP_VERSION = 'V5.6.3';
+  var PAYSLIP_VERSION = 'V5.6.4';
   var isPayslipMiniBoot = false;
-  try { isPayslipMiniBoot = (new URLSearchParams(window.location.search).get('app') || '') === 'payslip'; } catch(e) {}
+  var isEmbeddedMiniBoot = false;
+  try {
+    var bootParams = new URLSearchParams(window.location.search);
+    isPayslipMiniBoot = (bootParams.get('app') || '') === 'payslip';
+    isEmbeddedMiniBoot = bootParams.get('embedded') === '1';
+  } catch(e) {}
   var countries = {
     India: { code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
     UK: { code: 'GB', flagClass: 'flag-GB-v49', label: 'United Kingdom', detail: 'Celergo UK payslip' },
@@ -7874,14 +7879,23 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     var installed = info && installedMiniApp(info.key);
     return (installed && installed.version) || (info && info.rawVersion) || '0';
   }
-  function appEntryUrl(info){
+  function withQueryParam(url, key, value){
+    if (!url) return '';
+    return url + (url.indexOf('?') === -1 ? '?' : '&') + encodeURIComponent(key) + '=' + encodeURIComponent(value);
+  }
+  function appEntryUrl(info, embedded){
     if (!info) return '';
     var installed = installedMiniApp(info.key);
+    var url = '';
     if (installed && installed.entry) {
-      if (installed.localEntry) return 'app://payslip/' + installed.localEntry + (installed.localEntry.indexOf('?') === -1 ? '?' : '&') + 'miniVersion=' + encodeURIComponent(installed.version || '');
-      return MINI_APP_BASE + installed.entry + (installed.entry.indexOf('?') === -1 ? '?' : '&') + 'miniVersion=' + encodeURIComponent(installed.version || '');
+      if (installed.localEntry) url = 'app://payslip/' + installed.localEntry;
+      else url = MINI_APP_BASE + installed.entry;
+      url = withQueryParam(url, 'miniVersion', installed.version || '');
+    } else {
+      url = info.bundledEntry;
     }
-    return info.bundledEntry;
+    if (embedded) url = withQueryParam(url, 'embedded', '1');
+    return url;
   }
   function setMiniButtonState(button, html, disabled){
     if (!button) return;
@@ -7921,7 +7935,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     writePendingMiniUpdates();
     refreshMiniAppVersion(info.key, manifest.version);
     refreshMiniAppCards(info.key);
-    if (frame) frame.src = appEntryUrl(info);
+    if (frame) frame.src = appEntryUrl(info, true);
   }
   function installMiniAppUpdate(app, button, frame){
     var info = getAppInfo(app);
@@ -8007,8 +8021,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
   }
   function openPayslipConverter(){
     if (pendingMiniUpdates['payslip-converter']) return;
-    setDBTRoute('celergo', true);
-    window.location.href = appEntryUrl(payslipMiniApp);
+    renderResourceApp('payslip-converter');
   }
   document.addEventListener('click', function(e){
     var updateButton = e.target && e.target.closest ? e.target.closest('[data-mini-update]') : null;
@@ -8257,7 +8270,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     overlay.style.removeProperty('visibility');
     overlay.style.removeProperty('pointer-events');
     modal.className = 'v5-shell-modal';
-    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell"><div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version" data-mini-version="'+app+'">'+displayVersion(appCurrentVersion(appInfo))+'</span>'+toolUpdateButton(app)+'</div><iframe class="v5-resource-frame" data-mini-frame="'+app+'" src="'+appEntryUrl(appInfo)+'" title="'+resourceTitle(app)+'"></iframe></main>';
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell"><div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version" data-mini-version="'+app+'">'+displayVersion(appCurrentVersion(appInfo))+'</span>'+toolUpdateButton(app)+'</div><iframe class="v5-resource-frame" data-mini-frame="'+app+'" src="'+appEntryUrl(appInfo, true)+'" title="'+resourceTitle(app)+'"></iframe></main>';
     bindBack(renderDashboard);
     all('[data-mini-update]', modal).forEach(function(button){
       button.addEventListener('click', function(e){
@@ -8307,6 +8320,10 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     if (!main) return;
     var old = el('v5EditorTopbar');
     if (old) old.remove();
+    if (isEmbeddedMiniBoot) {
+      stylePayslipToolbar();
+      return;
+    }
     var header = el('header');
     if (header) header.classList.add('v5-payslip-toolbar');
     var bar = document.createElement('div');
@@ -8359,7 +8376,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     overlay.style.removeProperty('pointer-events');
     modal.className = 'v49fix-modal';
     modal.removeAttribute('style');
-    modal.innerHTML = renderAppChrome(true) + '<div class="v49-shell"><section class="v49-left"><div><div class="v49-pill"><span class="tool-version-badge">'+PAYSLIP_VERSION+'</span><span>Multi-country demo payslip studio</span></div><h1 class="v49-title">Turn payroll<br>statements into demo-ready <span>payslips.</span></h1><p class="v49-sub">Import a Celergo earning statement, choose the target country template, edit every detected field, then export clean payslips for demos or testing.</p></div><div><div class="v49-stats"><div class="v49-stat"><b><i class="fa-solid fa-globe"></i> 4</b><span>country templates</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-pdf"></i> PDF</b><span>batch import</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-zipper"></i> ZIP</b><span>bulk export</span></div></div><div class="v49-steps" style="margin-top:32px"><div class="v49-step"><b>1. Select</b><span>Choose the output country.</span></div><div class="v49-step"><b>2. Import</b><span>Drop or browse a pay statement PDF.</span></div><div class="v49-step"><b>3. Edit & export</b><span>Fine-tune values and save.</span></div></div></div></section><section class="v49-right"><div class="v49-panel"><h2>Start a workspace</h2><p>Select the country template before importing. The selected template stays locked during conversion.</p><div class="v5-country-grid">'+Object.keys(countries).map(countryCard).join('')+'</div><div id="v5PayslipDrop" class="v49-drop" tabindex="0" role="button"><span class="v49-orb"><span class="v49-file"></span></span><span><b><i class="fa-solid fa-file-arrow-up"></i> Drop a file or click here to select</b><span>PDF pay statement only.</span></span></div></div></section></div>';
+    modal.innerHTML = (isEmbeddedMiniBoot ? '' : renderAppChrome(true)) + '<div class="v49-shell"><section class="v49-left"><div><div class="v49-pill"><span class="tool-version-badge">'+PAYSLIP_VERSION+'</span><span>Multi-country demo payslip studio</span></div><h1 class="v49-title">Turn payroll<br>statements into demo-ready <span>payslips.</span></h1><p class="v49-sub">Import a Celergo earning statement, choose the target country template, edit every detected field, then export clean payslips for demos or testing.</p></div><div><div class="v49-stats"><div class="v49-stat"><b><i class="fa-solid fa-globe"></i> 4</b><span>country templates</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-pdf"></i> PDF</b><span>batch import</span></div><div class="v49-stat"><b><i class="fa-solid fa-file-zipper"></i> ZIP</b><span>bulk export</span></div></div><div class="v49-steps" style="margin-top:32px"><div class="v49-step"><b>1. Select</b><span>Choose the output country.</span></div><div class="v49-step"><b>2. Import</b><span>Drop or browse a pay statement PDF.</span></div><div class="v49-step"><b>3. Edit & export</b><span>Fine-tune values and save.</span></div></div></div></section><section class="v49-right"><div class="v49-panel"><h2>Start a workspace</h2><p>Select the country template before importing. The selected template stays locked during conversion.</p><div class="v5-country-grid">'+Object.keys(countries).map(countryCard).join('')+'</div><div id="v5PayslipDrop" class="v49-drop" tabindex="0" role="button"><span class="v49-orb"><span class="v49-file"></span></span><span><b><i class="fa-solid fa-file-arrow-up"></i> Drop a file or click here to select</b><span>PDF pay statement only.</span></span></div></div></section></div>';
     bindBack(renderCelergoFolder);
     all('.v5-country', modal).forEach(function(button){ button.addEventListener('click', function(){ setCountry(button.getAttribute('data-country')); }); });
     var drop = el('v5PayslipDrop');
