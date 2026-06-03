@@ -2,6 +2,7 @@ const { app, BrowserWindow, dialog, ipcMain, net, protocol } = require('electron
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs/promises');
 const path = require('path');
+const os = require('os');
 const { pathToFileURL } = require('url');
 
 app.setName('Demo Building Tools');
@@ -147,6 +148,13 @@ function registerUpdaterEvents() {
     }
     autoUpdater.quitAndInstall(false, true);
     return lastUpdateStatus;
+  });
+  ipcMain.handle('user:get-name', () => {
+    try {
+      return os.userInfo().username || '';
+    } catch (_error) {
+      return '';
+    }
   });
 }
 

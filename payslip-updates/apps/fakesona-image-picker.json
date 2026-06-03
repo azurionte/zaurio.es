@@ -1,0 +1,13 @@
+{
+  "app": "fakesona-image-picker",
+  "version": "1",
+  "entry": "fakesona-image-picker.html?app=fakesona",
+  "updatedAt": "2026-06-03T00:00:00Z",
+  "notes": "Initial Fakesona Image Picker mini-app: parse image filenames, filter by product/country/gender/age range, assign one or many pictures, and export the shared registry JSON plus downloads for SharePoint storage.",
+  "files": [
+    {
+      "path": "fakesona-image-picker.html",
+      "url": "fakesona-image-picker.html?v=1"
+    }
+  ]
+}

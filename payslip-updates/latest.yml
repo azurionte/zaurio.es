@@ -1,9 +1,9 @@
-version: 5.0.16
+version: 5.0.17
 files:
-  - url: DemoBuildingToolsSetup-5.0.16.exe
-    sha512: QQrNThRwQLbsxYJidPp5DWwLhSiigB19ZeXfqMckUatTywnQkhxZx7mdkDofALQsTl4lsj5I+F0WBls0gUKqfA==
-    size: 101487675
-path: DemoBuildingToolsSetup-5.0.16.exe
-sha512: QQrNThRwQLbsxYJidPp5DWwLhSiigB19ZeXfqMckUatTywnQkhxZx7mdkDofALQsTl4lsj5I+F0WBls0gUKqfA==
-releaseNotes: Fixed DBT startup layout so the Home screen no longer inherits the old centered modal max-width. The global menu bar now renders full-width immediately on launch and stays consistent when moving into Payslip Converter.
-releaseDate: '2026-05-31T02:25:38.414Z'
+  - url: DemoBuildingToolsSetup-5.0.17.exe
+    sha512: PpHe4Ef0bT0XoV7sWxgPUyFLI/kRBDUAVZMdD8rxwKo+j456PJioErRJs54SrX8SmC6HqW8JSbmBRDq0j4p5sw==
+    size: 101492114
+path: DemoBuildingToolsSetup-5.0.17.exe
+sha512: PpHe4Ef0bT0XoV7sWxgPUyFLI/kRBDUAVZMdD8rxwKo+j456PJioErRJs54SrX8SmC6HqW8JSbmBRDq0j4p5sw==
+releaseNotes: Added Fakesona Image Picker v1. The new mini-app assigns profile pictures by product, country, gender, and age range, supports batch requests, tracks assignments through a shared registry JSON workflow, and exports updated registry/download files for SharePoint storage.
+releaseDate: '2026-06-03T13:32:08.164Z'

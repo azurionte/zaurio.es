@@ -24,3 +24,7 @@ contextBridge.exposeInMainWorld('payslipMiniApps', {
   check: (info) => ipcRenderer.invoke('miniapp:check', info),
   install: (info) => ipcRenderer.invoke('miniapp:install', info),
 });
+
+contextBridge.exposeInMainWorld('dbtUser', {
+  getUsername: () => ipcRenderer.invoke('user:get-name')
+});

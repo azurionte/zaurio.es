@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fakesona Image Picker</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{--bg:#07111f;--panel:#0b1728;--panel2:#101c31;--line:rgba(148,163,184,.26);--text:#e5edf8;--muted:#9fb0c9;--blue:#60a5fa;--green:#86efac;--orange:#fb923c}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.app{min-height:100vh;background:linear-gradient(180deg,#07111f,#0b1020);padding:22px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:#101827;margin:-22px -22px 22px;padding:12px 22px}
+.title{display:flex;align-items:center;gap:10px;font-weight:950;font-size:18px}.tag{display:inline-flex;align-items:center;border:1px solid rgba(134,239,172,.34);background:rgba(22,163,74,.13);color:#bbf7d0;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:950}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.btn{border:1px solid rgba(96,165,250,.38);background:rgba(37,99,235,.16);color:#eaf2ff;border-radius:999px;padding:9px 12px;font-weight:900}.btn.primary{background:var(--blue);border-color:var(--blue);color:#05111f}.btn.good{background:#22c55e;border-color:#22c55e;color:#04130a}.btn.warn{background:rgba(251,146,60,.18);border-color:rgba(251,146,60,.46);color:#fed7aa}
+.layout{display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);gap:18px;align-items:start}.panel{border:1px solid var(--line);background:rgba(15,23,42,.72);border-radius:8px;padding:18px}.panel h2{margin:0 0 12px;font-size:20px}.panel p{margin:0 0 12px;color:var(--muted);line-height:1.45}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:12px;color:#cbd5e1;font-weight:850}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:#071024;color:#fff;border-radius:8px;padding:10px 11px;min-height:42px}.field textarea{min-height:86px;resize:vertical}.hint{font-size:12px;color:#93a4bd;line-height:1.4}.drop{border:1.5px dashed rgba(148,163,184,.42);border-radius:8px;background:rgba(2,6,23,.34);padding:14px;text-align:center;color:#cbd5e1}.drop input{display:none}
+.result{min-height:520px;display:flex;flex-direction:column;gap:14px}.empty{border:1px dashed rgba(148,163,184,.32);border-radius:8px;min-height:280px;display:grid;place-items:center;text-align:center;color:#9fb0c9;padding:24px}.preview{display:grid;grid-template-columns:minmax(220px,360px) minmax(0,1fr);gap:16px;align-items:start}.photo{border:1px solid var(--line);border-radius:8px;background:#020617;overflow:hidden;aspect-ratio:1/1;display:grid;place-items:center}.photo img{width:100%;height:100%;object-fit:cover}.meta{display:grid;gap:8px}.meta-row{border:1px solid rgba(148,163,184,.18);background:rgba(2,6,23,.26);border-radius:8px;padding:10px}.meta-row b{display:block;font-size:12px;color:#9fb0c9;margin-bottom:3px}.list{display:grid;gap:8px;max-height:390px;overflow:auto}.assignment{border:1px solid rgba(148,163,184,.2);background:#071024;border-radius:8px;padding:10px;display:flex;justify-content:space-between;gap:10px}.assignment strong{font-size:13px}.assignment small{display:block;color:#9fb0c9;margin-top:3px}
+details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8px;padding:12px}summary{font-weight:950;cursor:pointer}.combo{display:grid;grid-template-columns:1fr 1fr 1fr 74px 38px;gap:8px;align-items:end;margin-top:10px}.icon-btn{width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:#111827;color:#fff}.status{color:#cbd5e1;font-size:13px;min-height:20px}.status.error{color:#fecaca}.status.good{color:#bbf7d0}
+@media(max-width:900px){.layout,.preview{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.combo{grid-template-columns:1fr 1fr}.combo .field:nth-child(4){grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="title"><i class="fa-solid fa-user-check"></i> Fakesona Image Picker <span class="tag">V1</span></div>
+    <div class="actions">
+      <button class="btn" id="exportRegistryBtn"><i class="fa-solid fa-file-export"></i> Export registry</button>
+      <button class="btn" id="clearSessionBtn"><i class="fa-solid fa-rotate-left"></i> Reset session</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>Request picture</h2>
+      <p>Images are matched from filenames like <b>UK_MALE_30S_001.jpg</b>. Assignments are tracked by product, country, gender and age range.</p>
+      <div class="grid">
+        <div class="field"><label>Product</label><select id="product"></select></div>
+        <div class="field"><label>Country</label><select id="country"></select></div>
+        <div class="field"><label>Gender</label><select id="gender"></select></div>
+        <div class="field"><label>Age range</label><select id="ageRange"></select></div>
+        <div class="field"><label>Quantity</label><input id="quantity" type="number" min="1" max="50" value="1"></div>
+        <div class="field"><label>Analyst</label><input id="analyst" type="text"></div>
+        <div class="field full"><label>SharePoint folder URL</label><input id="folderUrl" type="url"></div>
+        <label class="drop field full">
+          <input id="imageFiles" type="file" accept="image/*" multiple>
+          <i class="fa-solid fa-images"></i> Load image files from synced SharePoint folder
+          <span class="hint">Select the pictures once so DBT can parse filenames and preview/download them.</span>
+        </label>
+        <label class="drop field full">
+          <input id="registryFile" type="file" accept=".json,application/json">
+          <i class="fa-solid fa-database"></i> Load fakesona-registry.json
+          <span class="hint">Use the latest shared registry from SharePoint before assigning pictures.</span>
+        </label>
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn primary" id="assignBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Find and assign</button>
+        <button class="btn" id="copyRegistryBtn"><i class="fa-solid fa-copy"></i> Copy registry JSON</button>
+      </div>
+      <p class="status" id="status"></p>
+
+      <details>
+        <summary><i class="fa-solid fa-sliders"></i> Advanced batch combinations</summary>
+        <p class="hint" style="margin-top:8px">Add several country/age/gender requests. Product is still taken from the main product selector unless changed per line later.</p>
+        <div id="combos"></div>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn" id="addComboBtn"><i class="fa-solid fa-plus"></i> Add combination</button>
+          <button class="btn primary" id="assignCombosBtn"><i class="fa-solid fa-layer-group"></i> Assign combinations</button>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel result">
+      <h2>Result</h2>
+      <div id="result"><div class="empty"><div><i class="fa-solid fa-user-large" style="font-size:48px"></i><p>Load images and registry, then request one or several pictures.</p></div></div></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var PRODUCTS = ['iHCM MC','iHCM SC UK','iHCM SC NL','WFM','Lyric','Celergo'];
+  var COUNTRIES = ['US','UK','NL','Brazil','Chile','Australia','China','HongKong','Singapore','Sweden','Switzerland','France','Spain','Italy','India'];
+  var GENDERS = ['MALE','FEMALE'];
+  var AGE_RANGES = ['20S','30S','40S','50PLUS'];
+  var DEFAULT_FOLDER = 'https://adponline.sharepoint.com/:f:/r/sites/Pre-sales-Product-Experience-Team/Shared%20Documents/_INTERNAL%20PSPE/Demo%20Team%20Resources/Fakesona%20Image%20Picker%20database?csf=1&web=1&e=6XScBQ';
+  var images = [];
+  var registry = { version: 1, assignments: [] };
+  var lastAssigned = [];
+
+  function el(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]); }); }
+  function norm(s){ return String(s || '').trim().toUpperCase().replace(/\s+/g,'').replace(/\+/g,'PLUS'); }
+  function displayCountry(code){ return COUNTRIES.find(function(c){ return norm(c) === norm(code); }) || code; }
+  function fillSelect(id, values){
+    el(id).innerHTML = values.map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('');
+  }
+  function fallbackUsername(){
+    var cached = localStorage.getItem('fakesonaAnalyst') || '';
+    if (cached) return cached;
+    var guess = '';
+    try { guess = (location.href.match(/Users[\\/]+([^\\/]+)/i) || [])[1] || ''; } catch(e) {}
+    return guess || 'Unknown analyst';
+  }
+  function loadUsername(){
+    var cached = localStorage.getItem('fakesonaAnalyst') || '';
+    if (cached) {
+      el('analyst').value = cached;
+      return;
+    }
+    if (window.dbtUser && window.dbtUser.getUsername) {
+      window.dbtUser.getUsername().then(function(name){
+        el('analyst').value = name || fallbackUsername();
+      }).catch(function(){ el('analyst').value = fallbackUsername(); });
+      return;
+    }
+    el('analyst').value = fallbackUsername();
+  }
+  function setStatus(text, cls){
+    var node = el('status');
+    node.textContent = text || '';
+    node.className = 'status ' + (cls || '');
+  }
+  function parseImage(file){
+    var base = file.name.replace(/\.[^.]+$/, '');
+    var parts = base.split(/[_-]+/).filter(Boolean);
+    if (parts.length < 4) return null;
+    var ageIndex = parts.findIndex(function(p){ return /^(20S|30S|40S|50S|50PLUS|60S)$/i.test(p); });
+    if (ageIndex < 2) return null;
+    var country = parts[0];
+    var gender = parts[1];
+    var age = parts[ageIndex].toUpperCase() === '50S' || parts[ageIndex].toUpperCase() === '60S' ? '50PLUS' : parts[ageIndex].toUpperCase();
+    return {
+      id: file.name,
+      fileName: file.name,
+      file: file,
+      objectUrl: URL.createObjectURL(file),
+      country: displayCountry(country),
+      gender: norm(gender),
+      ageRange: age,
+      sequence: parts.slice(ageIndex + 1).join('_') || ''
+    };
+  }
+  function assignmentKey(item){
+    return [norm(item.product), norm(item.country), norm(item.gender), norm(item.ageRange)].join('|');
+  }
+  function imageMatches(img, req){
+    return norm(img.country) === norm(req.country) && norm(img.gender) === norm(req.gender) && norm(img.ageRange) === norm(req.ageRange);
+  }
+  function usedSet(req){
+    var key = assignmentKey(req);
+    var set = new Set();
+    (registry.assignments || []).forEach(function(a){
+      if (assignmentKey(a) === key) set.add(a.imageId || a.imageFileName);
+    });
+    return set;
+  }
+  function claim(req){
+    var used = usedSet(req);
+    var available = images.filter(function(img){ return imageMatches(img, req) && !used.has(img.id) && !used.has(img.fileName); });
+    if (!available.length) return null;
+    available.sort(function(a,b){ return a.fileName.localeCompare(b.fileName); });
+    var img = available[0];
+    var assignment = {
+      id: 'asg_' + Date.now() + '_' + Math.random().toString(16).slice(2),
+      imageId: img.id,
+      imageFileName: img.fileName,
+      product: req.product,
+      country: req.country,
+      gender: req.gender,
+      ageRange: req.ageRange,
+      assignedToUser: el('analyst').value || fallbackUsername(),
+      assignedAt: new Date().toISOString()
+    };
+    registry.assignments = registry.assignments || [];
+    registry.assignments.push(assignment);
+    return { image: img, assignment: assignment };
+  }
+  function currentReq(){
+    return { product: el('product').value, country: el('country').value, gender: el('gender').value, ageRange: el('ageRange').value };
+  }
+  function renderResult(items){
+    lastAssigned = items || [];
+    if (!items.length) {
+      el('result').innerHTML = '<div class="empty"><div><i class="fa-solid fa-circle-exclamation" style="font-size:42px"></i><p>No available pictures for this request.</p></div></div>';
+      return;
+    }
+    if (items.length === 1) {
+      var item = items[0];
+      el('result').innerHTML =
+        '<div class="preview"><div class="photo"><img src="'+esc(item.image.objectUrl)+'" alt="'+esc(item.image.fileName)+'"></div>'+
+        '<div class="meta">'+
+        row('File', item.image.fileName)+row('Product', item.assignment.product)+row('Country', item.assignment.country)+row('Gender', item.assignment.gender)+row('Age range', item.assignment.ageRange)+row('Assigned to', item.assignment.assignedToUser)+
+        '<div class="actions"><button class="btn primary" id="downloadOneBtn"><i class="fa-solid fa-download"></i> Download picture</button></div></div></div>';
+      el('downloadOneBtn').addEventListener('click', function(){ downloadBlob(item.image.file, item.image.fileName); });
+      return;
+    }
+    el('result').innerHTML =
+      '<div class="list">'+items.map(function(item){
+        return '<div class="assignment"><div><strong>'+esc(item.image.fileName)+'</strong><small>'+esc(item.assignment.product+' / '+item.assignment.country+' / '+item.assignment.gender+' / '+item.assignment.ageRange)+'</small></div><span class="tag">'+esc(item.assignment.assignedToUser)+'</span></div>';
+      }).join('')+'</div><div class="actions"><button class="btn primary" id="downloadZipBtn"><i class="fa-solid fa-file-zipper"></i> Download zipped pictures</button></div>';
+      el('downloadZipBtn').addEventListener('click', downloadZip);
+  }
+  function row(label, value){ return '<div class="meta-row"><b>'+esc(label)+'</b>'+esc(value)+'</div>'; }
+  function downloadBlob(blob, name){
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
+  function downloadText(text, name){
+    downloadBlob(new Blob([text], { type:'application/json' }), name);
+  }
+  function exportRegistry(){
+    registry.updatedAt = new Date().toISOString();
+    downloadText(JSON.stringify(registry, null, 2), 'fakesona-registry.json');
+  }
+  function downloadZip(){
+    if (!window.JSZip) {
+      setStatus('ZIP library is not available. Downloading images individually instead.', 'error');
+      lastAssigned.forEach(function(item){ downloadBlob(item.image.file, item.image.fileName); });
+      return;
+    }
+    var zip = new JSZip();
+    lastAssigned.forEach(function(item){ zip.file(item.image.fileName, item.image.file); });
+    zip.file('assignments.json', JSON.stringify(lastAssigned.map(function(i){ return i.assignment; }), null, 2));
+    zip.generateAsync({ type:'blob' }).then(function(blob){ downloadBlob(blob, 'fakesona-pictures.zip'); });
+  }
+  function assignMany(reqs){
+    var assigned = [];
+    reqs.forEach(function(req){
+      var count = Math.max(1, Math.min(50, Number(req.quantity || 1)));
+      for (var i=0;i<count;i++) {
+        var item = claim(req);
+        if (item) assigned.push(item);
+      }
+    });
+    renderResult(assigned);
+    setStatus(assigned.length ? 'Assigned ' + assigned.length + ' picture(s). Export the registry and save it back to SharePoint.' : 'No available matching pictures found.', assigned.length ? 'good' : 'error');
+  }
+  function addCombo(values){
+    var id = 'combo_' + Date.now() + '_' + Math.random().toString(16).slice(2);
+    var div = document.createElement('div');
+    div.className = 'combo';
+    div.dataset.combo = id;
+    div.innerHTML =
+      '<div class="field"><label>Country</label><select data-c="country">'+COUNTRIES.map(opt(values && values.country)).join('')+'</select></div>'+
+      '<div class="field"><label>Gender</label><select data-c="gender">'+GENDERS.map(opt(values && values.gender)).join('')+'</select></div>'+
+      '<div class="field"><label>Age</label><select data-c="ageRange">'+AGE_RANGES.map(opt(values && values.ageRange)).join('')+'</select></div>'+
+      '<div class="field"><label>Qty</label><input data-c="quantity" type="number" min="1" max="50" value="'+esc(values && values.quantity || 1)+'"></div>'+
+      '<button class="icon-btn" title="Remove"><i class="fa-solid fa-xmark"></i></button>';
+    div.querySelector('button').addEventListener('click', function(){ div.remove(); });
+    el('combos').appendChild(div);
+  }
+  function opt(selected){ return function(v){ return '<option value="'+esc(v)+'" '+(norm(v)===norm(selected)?'selected':'')+'>'+esc(v)+'</option>'; }; }
+  function comboReqs(){
+    return Array.prototype.slice.call(document.querySelectorAll('[data-combo]')).map(function(row){
+      return {
+        product: el('product').value,
+        country: row.querySelector('[data-c="country"]').value,
+        gender: row.querySelector('[data-c="gender"]').value,
+        ageRange: row.querySelector('[data-c="ageRange"]').value,
+        quantity: row.querySelector('[data-c="quantity"]').value
+      };
+    });
+  }
+  function init(){
+    fillSelect('product', PRODUCTS); fillSelect('country', COUNTRIES); fillSelect('gender', GENDERS); fillSelect('ageRange', AGE_RANGES);
+    el('folderUrl').value = localStorage.getItem('fakesonaFolderUrl') || DEFAULT_FOLDER;
+    loadUsername();
+    addCombo({ country:'UK', gender:'MALE', ageRange:'30S', quantity:1 });
+    el('folderUrl').addEventListener('change', function(){ localStorage.setItem('fakesonaFolderUrl', el('folderUrl').value); });
+    el('analyst').addEventListener('change', function(){ localStorage.setItem('fakesonaAnalyst', el('analyst').value); });
+    el('imageFiles').addEventListener('change', function(e){
+      images.forEach(function(img){ if (img.objectUrl) URL.revokeObjectURL(img.objectUrl); });
+      images = Array.prototype.slice.call(e.target.files || []).map(parseImage).filter(Boolean);
+      setStatus('Loaded ' + images.length + ' valid image filename(s).', images.length ? 'good' : 'error');
+    });
+    el('registryFile').addEventListener('change', function(e){
+      var file = (e.target.files || [])[0]; if (!file) return;
+      file.text().then(function(text){
+        var parsed = JSON.parse(text);
+        registry = parsed && Array.isArray(parsed.assignments) ? parsed : { version:1, assignments: [] };
+        setStatus('Loaded registry with ' + registry.assignments.length + ' assignment(s).', 'good');
+      }).catch(function(){ setStatus('Could not read that registry JSON.', 'error'); });
+    });
+    el('assignBtn').addEventListener('click', function(){
+      assignMany([{ ...currentReq(), quantity: el('quantity').value }]);
+    });
+    el('addComboBtn').addEventListener('click', function(){ addCombo({ country: el('country').value, gender: el('gender').value, ageRange: el('ageRange').value, quantity: 1 }); });
+    el('assignCombosBtn').addEventListener('click', function(){ assignMany(comboReqs()); });
+    el('exportRegistryBtn').addEventListener('click', exportRegistry);
+    el('copyRegistryBtn').addEventListener('click', function(){
+      navigator.clipboard.writeText(JSON.stringify(registry, null, 2)).then(function(){ setStatus('Registry JSON copied.', 'good'); }).catch(function(){ setStatus('Clipboard copy failed. Use Export registry.', 'error'); });
+    });
+    el('clearSessionBtn').addEventListener('click', function(){ lastAssigned=[]; renderResult([]); setStatus('Session results cleared. Registry remains loaded.', ''); });
+  }
+  init();
+})();
+</script>
+</body>
+</html>
