@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.18",
+  "version": "5.0.19",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Added Microsoft Graph connection testing for the Fakesona Image Picker. Users can sign in with Microsoft device login and verify whether DBT can reach the ADP SharePoint image database from their account."
+      "releaseNotes": "Fixed Fakesona Image Picker buttons not responding in the embedded DBT mini-app frame. The Graph test now initializes after the page is ready and can use the parent DBT shell bridge when needed."
     },
     "nsis": {
       "perMachine": false,

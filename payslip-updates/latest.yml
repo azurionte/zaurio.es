@@ -1,9 +1,9 @@
-version: 5.0.18
+version: 5.0.19
 files:
-  - url: DemoBuildingToolsSetup-5.0.18.exe
-    sha512: Hcnkft4jHassbK5bRDAJj9qLIBzTPJvcuwlZR+OWMnt9xEM7aYgkAzM8Su0eawIRkhy/LuXLC7d8KhGjpWVnpA==
-    size: 101493908
-path: DemoBuildingToolsSetup-5.0.18.exe
-sha512: Hcnkft4jHassbK5bRDAJj9qLIBzTPJvcuwlZR+OWMnt9xEM7aYgkAzM8Su0eawIRkhy/LuXLC7d8KhGjpWVnpA==
-releaseNotes: Added Microsoft Graph connection testing for the Fakesona Image Picker. Users can sign in with Microsoft device login and verify whether DBT can reach the ADP SharePoint image database from their account.
-releaseDate: '2026-06-03T13:49:07.518Z'
+  - url: DemoBuildingToolsSetup-5.0.19.exe
+    sha512: sc0l5bINEPClGIlawkT0ZIzxf1mkKxZqtBPZfFKVN1GMNHEp+OhjkY2q0IIX9tH5OLZU0qe//KeBCODKU6SUcw==
+    size: 101494259
+path: DemoBuildingToolsSetup-5.0.19.exe
+sha512: sc0l5bINEPClGIlawkT0ZIzxf1mkKxZqtBPZfFKVN1GMNHEp+OhjkY2q0IIX9tH5OLZU0qe//KeBCODKU6SUcw==
+releaseNotes: Fixed Fakesona Image Picker buttons not responding in the embedded DBT mini-app frame. The Graph test now initializes after the page is ready and can use the parent DBT shell bridge when needed.
+releaseDate: '2026-06-03T13:56:52.879Z'

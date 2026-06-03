@@ -134,6 +134,19 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
     node.textContent = text || '';
     node.className = 'status ' + (cls || '');
   }
+  function graphApi(){
+    if (window.dbtGraph) return window.dbtGraph;
+    try {
+      if (window.parent && window.parent !== window && window.parent.dbtMiniAppBridge) {
+        return {
+          startDeviceLogin: window.parent.dbtMiniAppBridge.graphStartDeviceLogin,
+          pollDeviceLogin: window.parent.dbtMiniAppBridge.graphPollDeviceLogin,
+          testSharePointFolder: window.parent.dbtMiniAppBridge.graphTestSharePointFolder
+        };
+      }
+    } catch (_error) {}
+    return null;
+  }
   function parseImage(file){
     var base = file.name.replace(/\.[^.]+$/, '');
     var parts = base.split(/[_-]+/).filter(Boolean);
@@ -286,9 +299,10 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
     renderGraphPanel('<div class="meta-row"><b>Unavailable</b>This test only works inside the installed DBT Electron app.</div>');
   }
   function startGraphLogin(){
-    if (!window.dbtGraph || !window.dbtGraph.startDeviceLogin) return graphUnavailable();
+    var graph = graphApi();
+    if (!graph || !graph.startDeviceLogin) return graphUnavailable();
     renderGraphPanel('<div class="meta-row"><b>Microsoft login</b>Requesting device code...</div>');
-    window.dbtGraph.startDeviceLogin().then(function(device){
+    graph.startDeviceLogin().then(function(device){
       graphDevice = device;
       el('graphFinishBtn').disabled = false;
       var verification = device.verification_uri || 'https://microsoft.com/devicelogin';
@@ -308,7 +322,9 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
       return;
     }
     renderGraphPanel('<div class="meta-row"><b>Microsoft login</b>Checking whether sign-in completed...</div>');
-    window.dbtGraph.pollDeviceLogin(graphDevice.device_code).then(function(token){
+    var graph = graphApi();
+    if (!graph || !graph.pollDeviceLogin) return graphUnavailable();
+    graph.pollDeviceLogin(graphDevice.device_code).then(function(token){
       el('graphTestBtn').disabled = !token.ok;
       renderGraphPanel(
         '<div class="meta-row"><b>Signed in</b>Token received. Expires in '+esc(token.expiresIn || '')+' seconds.</div>'+
@@ -319,9 +335,10 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
     });
   }
   function testGraphFolder(){
-    if (!window.dbtGraph || !window.dbtGraph.testSharePointFolder) return graphUnavailable();
+    var graph = graphApi();
+    if (!graph || !graph.testSharePointFolder) return graphUnavailable();
     renderGraphPanel('<div class="meta-row"><b>SharePoint test</b>Checking account, site, and folder link...</div>');
-    window.dbtGraph.testSharePointFolder(el('folderUrl').value).then(function(results){
+    graph.testSharePointFolder(el('folderUrl').value).then(function(results){
       renderGraphPanel(results.map(function(item){
         return '<div class="meta-row"><b>'+esc(item.ok ? 'OK' : 'Failed')+' · '+esc(item.status)+'</b>'+esc(item.endpoint)+'<br>'+esc(item.name || item.message || '')+'</div>';
       }).join(''));
@@ -349,21 +366,33 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
         setStatus('Loaded registry with ' + registry.assignments.length + ' assignment(s).', 'good');
       }).catch(function(){ setStatus('Could not read that registry JSON.', 'error'); });
     });
-    el('assignBtn').addEventListener('click', function(){
-      assignMany([{ ...currentReq(), quantity: el('quantity').value }]);
+    document.addEventListener('click', function(e){
+      var target = e.target && e.target.closest ? e.target.closest('button') : null;
+      if (!target || target.disabled) return;
+      if (target.id === 'assignBtn') {
+        assignMany([Object.assign(currentReq(), { quantity: el('quantity').value })]);
+      } else if (target.id === 'addComboBtn') {
+        addCombo({ country: el('country').value, gender: el('gender').value, ageRange: el('ageRange').value, quantity: 1 });
+      } else if (target.id === 'assignCombosBtn') {
+        assignMany(comboReqs());
+      } else if (target.id === 'graphStartBtn') {
+        startGraphLogin();
+      } else if (target.id === 'graphFinishBtn') {
+        finishGraphLogin();
+      } else if (target.id === 'graphTestBtn') {
+        testGraphFolder();
+      } else if (target.id === 'exportRegistryBtn') {
+        exportRegistry();
+      } else if (target.id === 'copyRegistryBtn') {
+        navigator.clipboard.writeText(JSON.stringify(registry, null, 2)).then(function(){ setStatus('Registry JSON copied.', 'good'); }).catch(function(){ setStatus('Clipboard copy failed. Use Export registry.', 'error'); });
+      } else if (target.id === 'clearSessionBtn') {
+        lastAssigned=[]; renderResult([]); setStatus('Session results cleared. Registry remains loaded.', '');
+      }
     });
-    el('addComboBtn').addEventListener('click', function(){ addCombo({ country: el('country').value, gender: el('gender').value, ageRange: el('ageRange').value, quantity: 1 }); });
-    el('assignCombosBtn').addEventListener('click', function(){ assignMany(comboReqs()); });
-    el('graphStartBtn').addEventListener('click', startGraphLogin);
-    el('graphFinishBtn').addEventListener('click', finishGraphLogin);
-    el('graphTestBtn').addEventListener('click', testGraphFolder);
-    el('exportRegistryBtn').addEventListener('click', exportRegistry);
-    el('copyRegistryBtn').addEventListener('click', function(){
-      navigator.clipboard.writeText(JSON.stringify(registry, null, 2)).then(function(){ setStatus('Registry JSON copied.', 'good'); }).catch(function(){ setStatus('Clipboard copy failed. Use Export registry.', 'error'); });
-    });
-    el('clearSessionBtn').addEventListener('click', function(){ lastAssigned=[]; renderResult([]); setStatus('Session results cleared. Registry remains loaded.', ''); });
+    setStatus('Fakesona ready. Graph bridge: ' + (graphApi() ? 'available' : 'not available yet') + '.', graphApi() ? 'good' : '');
   }
-  init();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
 </script>
 </body>

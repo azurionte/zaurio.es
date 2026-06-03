@@ -1,13 +1,13 @@
 {
   "app": "fakesona-image-picker",
-  "version": "1.1",
+  "version": "1.2",
   "entry": "fakesona-image-picker.html?app=fakesona",
   "updatedAt": "2026-06-03T00:00:00Z",
-  "notes": "Adds a Microsoft Graph connection test so users can sign in with ADP Microsoft credentials and verify access to the SharePoint image database folder.",
+  "notes": "Fixes Fakesona buttons not responding in the embedded DBT mini-app frame and routes Graph test calls through the DBT shell bridge when needed.",
   "files": [
     {
       "path": "fakesona-image-picker.html",
-      "url": "fakesona-image-picker.html?v=1.1"
+      "url": "fakesona-image-picker.html?v=1.2"
     }
   ]
 }
