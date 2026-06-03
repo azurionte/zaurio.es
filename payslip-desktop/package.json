@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.17",
+  "version": "5.0.18",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Added Fakesona Image Picker v1. The new mini-app assigns profile pictures by product, country, gender, and age range, supports batch requests, tracks assignments through a shared registry JSON workflow, and exports updated registry/download files for SharePoint storage."
+      "releaseNotes": "Added Microsoft Graph connection testing for the Fakesona Image Picker. Users can sign in with Microsoft device login and verify whether DBT can reach the ADP SharePoint image database from their account."
     },
     "nsis": {
       "perMachine": false,

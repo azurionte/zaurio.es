@@ -28,3 +28,9 @@ contextBridge.exposeInMainWorld('payslipMiniApps', {
 contextBridge.exposeInMainWorld('dbtUser', {
   getUsername: () => ipcRenderer.invoke('user:get-name')
 });
+
+contextBridge.exposeInMainWorld('dbtGraph', {
+  startDeviceLogin: () => ipcRenderer.invoke('graph:start-device-login'),
+  pollDeviceLogin: (deviceCode) => ipcRenderer.invoke('graph:poll-device-login', deviceCode),
+  testSharePointFolder: (folderUrl) => ipcRenderer.invoke('graph:test-sharepoint-folder', folderUrl)
+});

@@ -61,6 +61,17 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
       <p class="status" id="status"></p>
 
       <details>
+        <summary><i class="fa-brands fa-microsoft"></i> Microsoft Graph connection test</summary>
+        <p class="hint" style="margin-top:8px">Use this on an ADP computer to see whether DBT can sign in with your Microsoft account and reach the SharePoint image database.</p>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn" id="graphStartBtn"><i class="fa-brands fa-microsoft"></i> Start Microsoft login</button>
+          <button class="btn primary" id="graphFinishBtn" disabled><i class="fa-solid fa-plug-circle-check"></i> Complete sign-in</button>
+          <button class="btn" id="graphTestBtn" disabled><i class="fa-solid fa-folder-tree"></i> Test SharePoint folder</button>
+        </div>
+        <div class="meta" id="graphPanel" style="margin-top:10px"></div>
+      </details>
+
+      <details>
         <summary><i class="fa-solid fa-sliders"></i> Advanced batch combinations</summary>
         <p class="hint" style="margin-top:8px">Add several country/age/gender requests. Product is still taken from the main product selector unless changed per line later.</p>
         <div id="combos"></div>
@@ -267,6 +278,57 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
       };
     });
   }
+  var graphDevice = null;
+  function renderGraphPanel(html){
+    el('graphPanel').innerHTML = html;
+  }
+  function graphUnavailable(){
+    renderGraphPanel('<div class="meta-row"><b>Unavailable</b>This test only works inside the installed DBT Electron app.</div>');
+  }
+  function startGraphLogin(){
+    if (!window.dbtGraph || !window.dbtGraph.startDeviceLogin) return graphUnavailable();
+    renderGraphPanel('<div class="meta-row"><b>Microsoft login</b>Requesting device code...</div>');
+    window.dbtGraph.startDeviceLogin().then(function(device){
+      graphDevice = device;
+      el('graphFinishBtn').disabled = false;
+      var verification = device.verification_uri || 'https://microsoft.com/devicelogin';
+      renderGraphPanel(
+        '<div class="meta-row"><b>Step 1</b>Open <a href="'+esc(verification)+'" target="_blank" rel="noreferrer">'+esc(verification)+'</a></div>'+
+        '<div class="meta-row"><b>Step 2</b>Enter this code: <strong style="font-size:20px">'+esc(device.user_code || '')+'</strong></div>'+
+        '<div class="meta-row"><b>Step 3</b>After Microsoft says you are signed in, click Complete sign-in.</div>'
+      );
+      try { window.open(verification, '_blank'); } catch(_error) {}
+    }).catch(function(error){
+      renderGraphPanel('<div class="meta-row"><b>Login failed</b>'+esc(error.message || error)+'</div>');
+    });
+  }
+  function finishGraphLogin(){
+    if (!graphDevice || !graphDevice.device_code) {
+      renderGraphPanel('<div class="meta-row"><b>Missing code</b>Start Microsoft login first.</div>');
+      return;
+    }
+    renderGraphPanel('<div class="meta-row"><b>Microsoft login</b>Checking whether sign-in completed...</div>');
+    window.dbtGraph.pollDeviceLogin(graphDevice.device_code).then(function(token){
+      el('graphTestBtn').disabled = !token.ok;
+      renderGraphPanel(
+        '<div class="meta-row"><b>Signed in</b>Token received. Expires in '+esc(token.expiresIn || '')+' seconds.</div>'+
+        '<div class="meta-row"><b>Scopes</b>'+esc(token.scope || 'Not reported')+'</div>'
+      );
+    }).catch(function(error){
+      renderGraphPanel('<div class="meta-row"><b>Not ready or blocked</b>'+esc(error.message || error)+'</div>');
+    });
+  }
+  function testGraphFolder(){
+    if (!window.dbtGraph || !window.dbtGraph.testSharePointFolder) return graphUnavailable();
+    renderGraphPanel('<div class="meta-row"><b>SharePoint test</b>Checking account, site, and folder link...</div>');
+    window.dbtGraph.testSharePointFolder(el('folderUrl').value).then(function(results){
+      renderGraphPanel(results.map(function(item){
+        return '<div class="meta-row"><b>'+esc(item.ok ? 'OK' : 'Failed')+' · '+esc(item.status)+'</b>'+esc(item.endpoint)+'<br>'+esc(item.name || item.message || '')+'</div>';
+      }).join(''));
+    }).catch(function(error){
+      renderGraphPanel('<div class="meta-row"><b>SharePoint test failed</b>'+esc(error.message || error)+'</div>');
+    });
+  }
   function init(){
     fillSelect('product', PRODUCTS); fillSelect('country', COUNTRIES); fillSelect('gender', GENDERS); fillSelect('ageRange', AGE_RANGES);
     el('folderUrl').value = localStorage.getItem('fakesonaFolderUrl') || DEFAULT_FOLDER;
@@ -292,6 +354,9 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
     });
     el('addComboBtn').addEventListener('click', function(){ addCombo({ country: el('country').value, gender: el('gender').value, ageRange: el('ageRange').value, quantity: 1 }); });
     el('assignCombosBtn').addEventListener('click', function(){ assignMany(comboReqs()); });
+    el('graphStartBtn').addEventListener('click', startGraphLogin);
+    el('graphFinishBtn').addEventListener('click', finishGraphLogin);
+    el('graphTestBtn').addEventListener('click', testGraphFolder);
     el('exportRegistryBtn').addEventListener('click', exportRegistry);
     el('copyRegistryBtn').addEventListener('click', function(){
       navigator.clipboard.writeText(JSON.stringify(registry, null, 2)).then(function(){ setStatus('Registry JSON copied.', 'good'); }).catch(function(){ setStatus('Clipboard copy failed. Use Export registry.', 'error'); });
