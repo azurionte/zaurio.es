@@ -34,3 +34,8 @@ contextBridge.exposeInMainWorld('dbtGraph', {
   pollDeviceLogin: (deviceCode) => ipcRenderer.invoke('graph:poll-device-login', deviceCode),
   testSharePointFolder: (folderUrl) => ipcRenderer.invoke('graph:test-sharepoint-folder', folderUrl)
 });
+
+contextBridge.exposeInMainWorld('dbtSharePoint', {
+  openLogin: (folderUrl) => ipcRenderer.invoke('sharepoint:open-login', folderUrl),
+  testFolder: (folderUrl) => ipcRenderer.invoke('sharepoint:test-folder', folderUrl)
+});

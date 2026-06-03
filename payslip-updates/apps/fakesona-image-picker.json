@@ -1,13 +1,13 @@
 {
   "app": "fakesona-image-picker",
-  "version": "1.3",
+  "version": "1.4",
   "entry": "fakesona-image-picker.html?app=fakesona",
   "updatedAt": "2026-06-03T00:00:00Z",
-  "notes": "Fixes Microsoft Graph login tenant detection by adding an authority override field. Start with common, then try ADP tenant values if needed.",
+  "notes": "Adds a SharePoint handshake test: open the real SharePoint folder, sign in normally, then verify DBT can read the image database through SharePoint REST without Graph.",
   "files": [
     {
       "path": "fakesona-image-picker.html",
-      "url": "fakesona-image-picker.html?v=1.3"
+      "url": "fakesona-image-picker.html?v=1.4"
     }
   ]
 }

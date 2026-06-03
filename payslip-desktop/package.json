@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.20",
+  "version": "5.0.21",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixed Microsoft Graph login tenant detection for Fakesona Image Picker. The Graph test now defaults to common and includes a tenant override field for ADP-specific authorities."
+      "releaseNotes": "Added a SharePoint handshake test for Fakesona Image Picker. DBT can open the real SharePoint folder for normal Microsoft sign-in, then test whether the authenticated session can read the image database through SharePoint REST without Graph."
     },
     "nsis": {
       "perMachine": false,

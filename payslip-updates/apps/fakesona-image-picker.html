@@ -61,8 +61,18 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
       <p class="status" id="status"></p>
 
       <details>
+        <summary><i class="fa-solid fa-handshake"></i> SharePoint handshake test</summary>
+        <p class="hint" style="margin-top:8px">Open the real SharePoint folder, sign in normally, then test whether DBT can reuse that session to list files.</p>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn" id="spLoginBtn"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open SharePoint sign-in</button>
+          <button class="btn primary" id="spTestBtn"><i class="fa-solid fa-folder-tree"></i> Test SharePoint session</button>
+        </div>
+        <div class="meta" id="spPanel" style="margin-top:10px"></div>
+      </details>
+
+      <details>
         <summary><i class="fa-brands fa-microsoft"></i> Microsoft Graph connection test</summary>
-        <p class="hint" style="margin-top:8px">Use this on an ADP computer to see whether DBT can sign in with your Microsoft account and reach the SharePoint image database.</p>
+        <p class="hint" style="margin-top:8px">Fallback diagnostic only. ADP may block this unless DBT is approved as an Entra app.</p>
         <div class="field" style="margin-top:10px">
           <label>Microsoft tenant / authority</label>
           <input id="graphAuthority" type="text" value="common" placeholder="common, adp.com, or tenant id">
@@ -147,6 +157,18 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
           startDeviceLogin: window.parent.dbtMiniAppBridge.graphStartDeviceLogin,
           pollDeviceLogin: window.parent.dbtMiniAppBridge.graphPollDeviceLogin,
           testSharePointFolder: window.parent.dbtMiniAppBridge.graphTestSharePointFolder
+        };
+      }
+    } catch (_error) {}
+    return null;
+  }
+  function sharePointApi(){
+    if (window.dbtSharePoint) return window.dbtSharePoint;
+    try {
+      if (window.parent && window.parent !== window && window.parent.dbtMiniAppBridge) {
+        return {
+          openLogin: window.parent.dbtMiniAppBridge.sharePointOpenLogin,
+          testFolder: window.parent.dbtMiniAppBridge.sharePointTestFolder
         };
       }
     } catch (_error) {}
@@ -300,6 +322,37 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
   function renderGraphPanel(html){
     el('graphPanel').innerHTML = html;
   }
+  function renderSpPanel(html){
+    el('spPanel').innerHTML = html;
+  }
+  function sharePointUnavailable(){
+    renderSpPanel('<div class="meta-row"><b>Unavailable</b>This test only works inside the installed DBT Electron app.</div>');
+  }
+  function openSharePointHandshake(){
+    var sp = sharePointApi();
+    if (!sp || !sp.openLogin) return sharePointUnavailable();
+    renderSpPanel('<div class="meta-row"><b>SharePoint</b>Opening sign-in window. Log in and leave the window open or close it after the folder loads.</div>');
+    sp.openLogin(el('folderUrl').value).then(function(){
+      renderSpPanel('<div class="meta-row"><b>SharePoint</b>Sign-in window opened. After the folder loads successfully, click Test SharePoint session.</div>');
+    }).catch(function(error){
+      renderSpPanel('<div class="meta-row"><b>Open failed</b>'+esc(error.message || error)+'</div>');
+    });
+  }
+  function testSharePointHandshake(){
+    var sp = sharePointApi();
+    if (!sp || !sp.testFolder) return sharePointUnavailable();
+    renderSpPanel('<div class="meta-row"><b>SharePoint</b>Testing session cookies and folder listing...</div>');
+    sp.testFolder(el('folderUrl').value).then(function(result){
+      var files = (result.files || []).map(function(file){ return '<br>'+esc(file.Name || file.name || 'file'); }).join('');
+      renderSpPanel(
+        '<div class="meta-row"><b>Signed in as</b>'+esc(result.user || 'SharePoint user')+'</div>'+
+        '<div class="meta-row"><b>Folder</b>'+esc(result.folder || '')+'</div>'+
+        '<div class="meta-row"><b>Files found</b>'+esc(String((result.files || []).length))+files+'</div>'
+      );
+    }).catch(function(error){
+      renderSpPanel('<div class="meta-row"><b>SharePoint test failed</b>'+esc(error.message || error)+'</div>');
+    });
+  }
   function graphUnavailable(){
     renderGraphPanel('<div class="meta-row"><b>Unavailable</b>This test only works inside the installed DBT Electron app.</div>');
   }
@@ -386,6 +439,10 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
         finishGraphLogin();
       } else if (target.id === 'graphTestBtn') {
         testGraphFolder();
+      } else if (target.id === 'spLoginBtn') {
+        openSharePointHandshake();
+      } else if (target.id === 'spTestBtn') {
+        testSharePointHandshake();
       } else if (target.id === 'exportRegistryBtn') {
         exportRegistry();
       } else if (target.id === 'copyRegistryBtn') {

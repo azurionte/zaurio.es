@@ -1,9 +1,9 @@
-version: 5.0.20
+version: 5.0.21
 files:
-  - url: DemoBuildingToolsSetup-5.0.20.exe
-    sha512: tx5ss/ckVIRhl2BSI14fD8T5z6E/FppDZ2j6D8/RkzwzQ14a6faUKN0MwGDMD8Ls6aMYs8YQoTtMhdCqRTA8MA==
-    size: 101494421
-path: DemoBuildingToolsSetup-5.0.20.exe
-sha512: tx5ss/ckVIRhl2BSI14fD8T5z6E/FppDZ2j6D8/RkzwzQ14a6faUKN0MwGDMD8Ls6aMYs8YQoTtMhdCqRTA8MA==
-releaseNotes: Fixed Microsoft Graph login tenant detection for Fakesona Image Picker. The Graph test now defaults to common and includes a tenant override field for ADP-specific authorities.
-releaseDate: '2026-06-03T14:03:30.569Z'
+  - url: DemoBuildingToolsSetup-5.0.21.exe
+    sha512: ZDuj7K6o9KA7niwMNgqB5GHidyPqbcdac2mULI6eyztkTqCAFDjiQXnvwfmFy9hokfa1LhUzryVKRJmV5mdLNg==
+    size: 101495527
+path: DemoBuildingToolsSetup-5.0.21.exe
+sha512: ZDuj7K6o9KA7niwMNgqB5GHidyPqbcdac2mULI6eyztkTqCAFDjiQXnvwfmFy9hokfa1LhUzryVKRJmV5mdLNg==
+releaseNotes: Added a SharePoint handshake test for Fakesona Image Picker. DBT can open the real SharePoint folder for normal Microsoft sign-in, then test whether the authenticated session can read the image database through SharePoint REST without Graph.
+releaseDate: '2026-06-03T14:30:33.224Z'
