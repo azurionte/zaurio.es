@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.19",
+  "version": "5.0.20",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixed Fakesona Image Picker buttons not responding in the embedded DBT mini-app frame. The Graph test now initializes after the page is ready and can use the parent DBT shell bridge when needed."
+      "releaseNotes": "Fixed Microsoft Graph login tenant detection for Fakesona Image Picker. The Graph test now defaults to common and includes a tenant override field for ADP-specific authorities."
     },
     "nsis": {
       "perMachine": false,

@@ -63,6 +63,11 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
       <details>
         <summary><i class="fa-brands fa-microsoft"></i> Microsoft Graph connection test</summary>
         <p class="hint" style="margin-top:8px">Use this on an ADP computer to see whether DBT can sign in with your Microsoft account and reach the SharePoint image database.</p>
+        <div class="field" style="margin-top:10px">
+          <label>Microsoft tenant / authority</label>
+          <input id="graphAuthority" type="text" value="common" placeholder="common, adp.com, or tenant id">
+          <span class="hint">Start with common. If ADP blocks it, try adp.com or adponline.onmicrosoft.com.</span>
+        </div>
         <div class="actions" style="margin-top:10px">
           <button class="btn" id="graphStartBtn"><i class="fa-brands fa-microsoft"></i> Start Microsoft login</button>
           <button class="btn primary" id="graphFinishBtn" disabled><i class="fa-solid fa-plug-circle-check"></i> Complete sign-in</button>
@@ -302,7 +307,7 @@ details{border:1px solid var(--line);background:rgba(2,6,23,.26);border-radius:8
     var graph = graphApi();
     if (!graph || !graph.startDeviceLogin) return graphUnavailable();
     renderGraphPanel('<div class="meta-row"><b>Microsoft login</b>Requesting device code...</div>');
-    graph.startDeviceLogin().then(function(device){
+    graph.startDeviceLogin(el('graphAuthority').value || 'common').then(function(device){
       graphDevice = device;
       el('graphFinishBtn').disabled = false;
       var verification = device.verification_uri || 'https://microsoft.com/devicelogin';

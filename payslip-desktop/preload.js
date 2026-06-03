@@ -30,7 +30,7 @@ contextBridge.exposeInMainWorld('dbtUser', {
 });
 
 contextBridge.exposeInMainWorld('dbtGraph', {
-  startDeviceLogin: () => ipcRenderer.invoke('graph:start-device-login'),
+  startDeviceLogin: (authority) => ipcRenderer.invoke('graph:start-device-login', authority),
   pollDeviceLogin: (deviceCode) => ipcRenderer.invoke('graph:poll-device-login', deviceCode),
   testSharePointFolder: (folderUrl) => ipcRenderer.invoke('graph:test-sharepoint-folder', folderUrl)
 });

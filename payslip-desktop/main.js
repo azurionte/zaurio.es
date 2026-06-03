@@ -17,11 +17,11 @@ let lastUpdateStatus = {
 };
 
 const MINI_APP_BASE_URL = 'https://zaurio.es/payslip-updates/apps/';
-const GRAPH_DEVICE_CODE_URL = 'https://login.microsoftonline.com/organizations/oauth2/v2.0/devicecode';
-const GRAPH_TOKEN_URL = 'https://login.microsoftonline.com/organizations/oauth2/v2.0/token';
+const GRAPH_AUTHORITY_BASE = 'https://login.microsoftonline.com';
 const GRAPH_CLIENT_ID = '14d82eec-204b-4c2f-b7e8-296a0dab67ef';
 const GRAPH_SCOPES = 'User.Read Files.ReadWrite.All Sites.ReadWrite.All';
 let graphAccessToken = '';
+let graphAuthority = 'common';
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -223,14 +223,21 @@ function shareLinkId(url) {
   return `u!${Buffer.from(String(url || ''), 'utf8').toString('base64').replace(/=+$/g, '').replace(/\+/g, '-').replace(/\//g, '_')}`;
 }
 
+function cleanGraphAuthority(value) {
+  return String(value || 'common').trim().replace(/^https:\/\/login\.microsoftonline\.com\//i, '').replace(/\/.*$/, '') || 'common';
+}
+
 function registerGraphDiagnostics() {
-  ipcMain.handle('graph:start-device-login', async () => postForm(GRAPH_DEVICE_CODE_URL, {
+  ipcMain.handle('graph:start-device-login', async (_event, authority) => {
+    graphAuthority = cleanGraphAuthority(authority);
+    return postForm(`${GRAPH_AUTHORITY_BASE}/${graphAuthority}/oauth2/v2.0/devicecode`, {
     client_id: GRAPH_CLIENT_ID,
     scope: GRAPH_SCOPES
-  }));
+    });
+  });
 
   ipcMain.handle('graph:poll-device-login', async (_event, deviceCode) => {
-    const token = await postForm(GRAPH_TOKEN_URL, {
+    const token = await postForm(`${GRAPH_AUTHORITY_BASE}/${graphAuthority}/oauth2/v2.0/token`, {
       grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
       client_id: GRAPH_CLIENT_ID,
       device_code: deviceCode

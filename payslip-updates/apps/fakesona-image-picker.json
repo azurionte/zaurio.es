@@ -1,13 +1,13 @@
 {
   "app": "fakesona-image-picker",
-  "version": "1.2",
+  "version": "1.3",
   "entry": "fakesona-image-picker.html?app=fakesona",
   "updatedAt": "2026-06-03T00:00:00Z",
-  "notes": "Fixes Fakesona buttons not responding in the embedded DBT mini-app frame and routes Graph test calls through the DBT shell bridge when needed.",
+  "notes": "Fixes Microsoft Graph login tenant detection by adding an authority override field. Start with common, then try ADP tenant values if needed.",
   "files": [
     {
       "path": "fakesona-image-picker.html",
-      "url": "fakesona-image-picker.html?v=1.2"
+      "url": "fakesona-image-picker.html?v=1.3"
     }
   ]
 }
