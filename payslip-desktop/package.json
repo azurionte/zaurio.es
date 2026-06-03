@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.21",
+  "version": "5.0.22",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Added a SharePoint handshake test for Fakesona Image Picker. DBT can open the real SharePoint folder for normal Microsoft sign-in, then test whether the authenticated session can read the image database through SharePoint REST without Graph."
+      "releaseNotes": "Removed Fakesona Image Picker and its temporary Microsoft Graph/SharePoint diagnostics from Demo Building Tools."
     },
     "nsis": {
       "perMachine": false,

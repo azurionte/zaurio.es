@@ -1,9 +1,9 @@
-version: 5.0.21
+version: 5.0.22
 files:
-  - url: DemoBuildingToolsSetup-5.0.21.exe
-    sha512: ZDuj7K6o9KA7niwMNgqB5GHidyPqbcdac2mULI6eyztkTqCAFDjiQXnvwfmFy9hokfa1LhUzryVKRJmV5mdLNg==
-    size: 101495527
-path: DemoBuildingToolsSetup-5.0.21.exe
-sha512: ZDuj7K6o9KA7niwMNgqB5GHidyPqbcdac2mULI6eyztkTqCAFDjiQXnvwfmFy9hokfa1LhUzryVKRJmV5mdLNg==
-releaseNotes: Added a SharePoint handshake test for Fakesona Image Picker. DBT can open the real SharePoint folder for normal Microsoft sign-in, then test whether the authenticated session can read the image database through SharePoint REST without Graph.
-releaseDate: '2026-06-03T14:30:33.224Z'
+  - url: DemoBuildingToolsSetup-5.0.22.exe
+    sha512: HhRlY6Su/QPIgB3kbc1lutusywUW2dARuFVA4dspA3i6cMFqI7MgVaLEoNxz+MzsWSOv3o/5++W7fGtKS9EdWw==
+    size: 101487693
+path: DemoBuildingToolsSetup-5.0.22.exe
+sha512: HhRlY6Su/QPIgB3kbc1lutusywUW2dARuFVA4dspA3i6cMFqI7MgVaLEoNxz+MzsWSOv3o/5++W7fGtKS9EdWw==
+releaseNotes: Removed Fakesona Image Picker and its temporary Microsoft Graph/SharePoint diagnostics from Demo Building Tools.
+releaseDate: '2026-06-03T16:27:21.570Z'

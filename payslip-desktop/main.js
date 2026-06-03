@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, net, protocol, session } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, net, protocol } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('fs/promises');
 const path = require('path');
@@ -17,12 +17,6 @@ let lastUpdateStatus = {
 };
 
 const MINI_APP_BASE_URL = 'https://zaurio.es/payslip-updates/apps/';
-const GRAPH_AUTHORITY_BASE = 'https://login.microsoftonline.com';
-const GRAPH_CLIENT_ID = '14d82eec-204b-4c2f-b7e8-296a0dab67ef';
-const GRAPH_SCOPES = 'User.Read Files.ReadWrite.All Sites.ReadWrite.All';
-let graphAccessToken = '';
-let graphAuthority = 'common';
-let sharePointLoginWindow = null;
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -201,156 +195,6 @@ async function fetchBuffer(url) {
   const response = await net.fetch(url, { bypassCustomProtocolHandlers: true });
   if (!response.ok) throw new Error(`Request failed ${response.status}: ${url}`);
   return Buffer.from(await response.arrayBuffer());
-}
-
-async function postForm(url, form) {
-  const response = await net.fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(form).toString(),
-    bypassCustomProtocolHandlers: true
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = payload.error_description || payload.error || `Request failed ${response.status}`;
-    const error = new Error(message);
-    error.payload = payload;
-    throw error;
-  }
-  return payload;
-}
-
-function shareLinkId(url) {
-  return `u!${Buffer.from(String(url || ''), 'utf8').toString('base64').replace(/=+$/g, '').replace(/\+/g, '-').replace(/\//g, '_')}`;
-}
-
-function cleanGraphAuthority(value) {
-  return String(value || 'common').trim().replace(/^https:\/\/login\.microsoftonline\.com\//i, '').replace(/\/.*$/, '') || 'common';
-}
-
-function sharePointOrigin(folderUrl) {
-  return new URL(folderUrl || 'https://adponline.sharepoint.com').origin;
-}
-
-function sharePointServerRelativeFolder(folderUrl) {
-  const url = new URL(folderUrl);
-  let pathname = decodeURIComponent(url.pathname || '');
-  pathname = pathname.replace(/^\/:f:\/r/i, '');
-  if (!pathname.startsWith('/')) pathname = `/${pathname}`;
-  return pathname;
-}
-
-async function sharePointCookieHeader(origin) {
-  const cookies = await session.defaultSession.cookies.get({ url: origin });
-  return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; ');
-}
-
-async function sharePointRestGet(folderUrl, endpoint) {
-  const origin = sharePointOrigin(folderUrl);
-  const cookie = await sharePointCookieHeader(origin);
-  if (!cookie) throw new Error('No SharePoint session cookies found yet. Open the SharePoint handshake first and sign in.');
-  const response = await net.fetch(`${origin}${endpoint}`, {
-    headers: {
-      Accept: 'application/json;odata=nometadata',
-      Cookie: cookie
-    },
-    bypassCustomProtocolHandlers: true
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = payload?.error?.message?.value || payload?.error?.message || `SharePoint request failed ${response.status}`;
-    throw new Error(message);
-  }
-  return payload;
-}
-
-function registerSharePointHandshake() {
-  ipcMain.handle('sharepoint:open-login', async (_event, folderUrl) => {
-    if (sharePointLoginWindow && !sharePointLoginWindow.isDestroyed()) {
-      sharePointLoginWindow.focus();
-      return { opened: true, reused: true };
-    }
-    sharePointLoginWindow = new BrowserWindow({
-      title: 'SharePoint sign-in',
-      width: 980,
-      height: 760,
-      parent: mainWindow || undefined,
-      modal: false,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true
-      }
-    });
-    sharePointLoginWindow.on('closed', () => { sharePointLoginWindow = null; });
-    await sharePointLoginWindow.loadURL(folderUrl || 'https://adponline.sharepoint.com');
-    return { opened: true, reused: false };
-  });
-
-  ipcMain.handle('sharepoint:test-folder', async (_event, folderUrl) => {
-    const folder = sharePointServerRelativeFolder(folderUrl);
-    const user = await sharePointRestGet(folderUrl, '/_api/web/currentuser');
-    const folderParam = encodeURIComponent(`'${folder.replace(/'/g, "''")}'`);
-    const files = await sharePointRestGet(folderUrl, `/_api/web/GetFolderByServerRelativeUrl(@v)/Files?$select=Name,Length,TimeLastModified&$top=10&@v=${folderParam}`);
-    return {
-      folder,
-      user: user.Title || user.Email || user.LoginName || '',
-      files: Array.isArray(files.value) ? files.value : []
-    };
-  });
-}
-
-function registerGraphDiagnostics() {
-  ipcMain.handle('graph:start-device-login', async (_event, authority) => {
-    graphAuthority = cleanGraphAuthority(authority);
-    return postForm(`${GRAPH_AUTHORITY_BASE}/${graphAuthority}/oauth2/v2.0/devicecode`, {
-    client_id: GRAPH_CLIENT_ID,
-    scope: GRAPH_SCOPES
-    });
-  });
-
-  ipcMain.handle('graph:poll-device-login', async (_event, deviceCode) => {
-    const token = await postForm(`${GRAPH_AUTHORITY_BASE}/${graphAuthority}/oauth2/v2.0/token`, {
-      grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-      client_id: GRAPH_CLIENT_ID,
-      device_code: deviceCode
-    });
-    graphAccessToken = token.access_token || '';
-    return {
-      ok: Boolean(graphAccessToken),
-      expiresIn: token.expires_in || 0,
-      scope: token.scope || ''
-    };
-  });
-
-  ipcMain.handle('graph:test-sharepoint-folder', async (_event, folderUrl) => {
-    if (!graphAccessToken) throw new Error('Not signed in to Microsoft Graph yet.');
-    const endpoints = [
-      '/me',
-      '/sites/adponline.sharepoint.com:/sites/Pre-sales-Product-Experience-Team',
-      `/shares/${shareLinkId(folderUrl)}/driveItem`
-    ];
-    const results = [];
-    for (const endpoint of endpoints) {
-      try {
-        const response = await net.fetch(`https://graph.microsoft.com/v1.0${endpoint}`, {
-          headers: { Authorization: `Bearer ${graphAccessToken}` },
-          bypassCustomProtocolHandlers: true
-        });
-        const payload = await response.json().catch(() => ({}));
-        results.push({
-          endpoint,
-          ok: response.ok,
-          status: response.status,
-          name: payload.displayName || payload.name || payload.webUrl || '',
-          message: response.ok ? 'OK' : (payload?.error?.message || `Request failed ${response.status}`)
-        });
-      } catch (error) {
-        results.push({ endpoint, ok: false, status: 0, name: '', message: String(error?.message || error) });
-      }
-    }
-    return results;
-  });
 }
 
 function miniAppManifestUrl(info = {}) {
@@ -532,8 +376,6 @@ app.whenReady().then(() => {
   registerUpdaterEvents();
   registerDesktopFilePicker();
   registerMiniAppUpdater();
-  registerGraphDiagnostics();
-  registerSharePointHandshake();
   createMainWindow();
 
   // On macOS it's common to re-create a window when the dock icon is clicked

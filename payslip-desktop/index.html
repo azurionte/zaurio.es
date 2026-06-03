@@ -7807,7 +7807,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 <script id="v500-demo-tools-shell">
 (function(){
   'use strict';
-  var SHELL_VERSION = 'v1.16';
+  var SHELL_VERSION = 'v1.17';
   var PAYSLIP_VERSION = 'V5.6.5';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
@@ -7835,8 +7835,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
   var appCards = [
     { key: 'resume', slug: 'resume-generator', title: 'Resume Generator', version: 'V4', rawVersion: '4', icon: 'fa-id-card', detail: 'Build localized demo resumes with PDF export.', bundledEntry: 'mini-apps/resume-generator.html?app=resume' },
     { key: 'receipt', slug: 'receipt-generator', title: 'Receipt Generator', version: 'V2.4', rawVersion: '2.4', icon: 'fa-receipt', detail: 'Create printable demo receipts by country and type.', bundledEntry: 'mini-apps/receipt-generator.html?app=receipt' },
-    { key: 'degree', slug: 'degree-generator', title: 'Degree diploma Generator', version: 'V2.2', rawVersion: '2.2', icon: 'fa-graduation-cap', detail: 'Generate UK and NL diploma-style degree documents.', bundledEntry: 'mini-apps/degree-generator.html?app=degree' },
-    { key: 'fakesona', slug: 'fakesona-image-picker', title: 'Fakesona Image Picker', version: 'V1.4', rawVersion: '1.4', icon: 'fa-user-check', detail: 'Assign unique profile pictures by product, country, gender, and age range.', bundledEntry: 'mini-apps/fakesona-image-picker.html?app=fakesona' }
+    { key: 'degree', slug: 'degree-generator', title: 'Degree diploma Generator', version: 'V2.2', rawVersion: '2.2', icon: 'fa-graduation-cap', detail: 'Generate UK and NL diploma-style degree documents.', bundledEntry: 'mini-apps/degree-generator.html?app=degree' }
   ];
   var folderApps = {
     ihcm: [
@@ -8282,28 +8281,6 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     wireUpdater();
     autoCheckMiniApps([appInfo]);
   }
-  window.dbtMiniAppBridge = {
-    graphStartDeviceLogin: function(authority){
-      if (!window.dbtGraph || !window.dbtGraph.startDeviceLogin) return Promise.reject(new Error('Microsoft Graph bridge is not available in this DBT version.'));
-      return window.dbtGraph.startDeviceLogin(authority);
-    },
-    graphPollDeviceLogin: function(deviceCode){
-      if (!window.dbtGraph || !window.dbtGraph.pollDeviceLogin) return Promise.reject(new Error('Microsoft Graph bridge is not available in this DBT version.'));
-      return window.dbtGraph.pollDeviceLogin(deviceCode);
-    },
-    graphTestSharePointFolder: function(folderUrl){
-      if (!window.dbtGraph || !window.dbtGraph.testSharePointFolder) return Promise.reject(new Error('Microsoft Graph bridge is not available in this DBT version.'));
-      return window.dbtGraph.testSharePointFolder(folderUrl);
-    },
-    sharePointOpenLogin: function(folderUrl){
-      if (!window.dbtSharePoint || !window.dbtSharePoint.openLogin) return Promise.reject(new Error('SharePoint handshake bridge is not available in this DBT version.'));
-      return window.dbtSharePoint.openLogin(folderUrl);
-    },
-    sharePointTestFolder: function(folderUrl){
-      if (!window.dbtSharePoint || !window.dbtSharePoint.testFolder) return Promise.reject(new Error('SharePoint handshake bridge is not available in this DBT version.'));
-      return window.dbtSharePoint.testFolder(folderUrl);
-    }
-  };
   function renderCelergoFolder(options){
     options = options || {};
     if (!options.fromRoute) setDBTRoute('celergo', options.replaceRoute);
