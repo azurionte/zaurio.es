@@ -1,9 +1,9 @@
-version: 5.0.22
+version: 5.0.23
 files:
-  - url: DemoBuildingToolsSetup-5.0.22.exe
-    sha512: HhRlY6Su/QPIgB3kbc1lutusywUW2dARuFVA4dspA3i6cMFqI7MgVaLEoNxz+MzsWSOv3o/5++W7fGtKS9EdWw==
-    size: 101487693
-path: DemoBuildingToolsSetup-5.0.22.exe
-sha512: HhRlY6Su/QPIgB3kbc1lutusywUW2dARuFVA4dspA3i6cMFqI7MgVaLEoNxz+MzsWSOv3o/5++W7fGtKS9EdWw==
-releaseNotes: Removed Fakesona Image Picker and its temporary Microsoft Graph/SharePoint diagnostics from Demo Building Tools.
-releaseDate: '2026-06-03T16:27:21.570Z'
+  - url: DemoBuildingToolsSetup-5.0.23.exe
+    sha512: D8SqLQXXBsP5bJGQtscfLy6C3c5inT3Mf2htmaFG6Rj4YNi8kNmynkHf7BaFG5sUrRJExqvOq3103ZIGFD34KQ==
+    size: 101495726
+path: DemoBuildingToolsSetup-5.0.23.exe
+sha512: D8SqLQXXBsP5bJGQtscfLy6C3c5inT3Mf2htmaFG6Rj4YNi8kNmynkHf7BaFG5sUrRJExqvOq3103ZIGFD34KQ==
+releaseNotes: Added Celergo Monthly Changes Input v1.2 to the Celergo Specific tools folder with independent mini-app updates, DBT styling, sticky navigation, collapsible employee rows, per-element randomization/actions, and country templates for AU, BR, CA, CN, DE, FR, GB, GB Tax, and IE.
+releaseDate: '2026-06-08T13:11:19.499Z'
