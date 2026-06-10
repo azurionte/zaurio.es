@@ -7831,7 +7831,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
   var MINI_APP_STORAGE_KEY = 'dbtInstalledMiniAppsV1';
   var MINI_APP_PENDING_KEY = 'dbtPendingMiniAppUpdatesV1';
   var payslipMiniApp = { key: 'payslip-converter', slug: 'payslip-converter', title: 'Payslip converter', version: PAYSLIP_VERSION, rawVersion: PAYSLIP_VERSION.replace(/^v/i, ''), icon: 'fa-file-invoice', detail: 'Multi-country payslip converter for India, UK, Brazil, and Australia.', bundledEntry: 'mini-apps/payslip-converter.html?app=payslip' };
-  var celergoMonthlyChangesApp = { key: 'celergo-monthly-changes', slug: 'celergo-monthly-changes', title: 'Monthly changes input', version: 'V1.2', rawVersion: '1.2', icon: 'fa-file-import', detail: 'Generate Celergo PaymentAndDeduction monthly changes by country template.', bundledEntry: 'mini-apps/celergo-monthly-changes.html?app=monthly-changes' };
+  var celergoMonthlyChangesApp = { key: 'celergo-monthly-changes', slug: 'celergo-monthly-changes', title: 'Monthly changes input', version: 'V1.4', rawVersion: '1.4', icon: 'fa-file-import', detail: 'Generate Celergo PaymentAndDeduction monthly changes by country template.', bundledEntry: 'mini-apps/celergo-monthly-changes.html?app=monthly-changes' };
   var pendingMiniUpdates = {};
   var appCards = [
     { key: 'resume', slug: 'resume-generator', title: 'Resume Generator', version: 'V4', rawVersion: '4', icon: 'fa-id-card', detail: 'Build localized demo resumes with PDF export.', bundledEntry: 'mini-apps/resume-generator.html?app=resume' },
@@ -8272,7 +8272,8 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     overlay.style.removeProperty('visibility');
     overlay.style.removeProperty('pointer-events');
     modal.className = 'v5-shell-modal';
-    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell"><div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version" data-mini-version="'+app+'">'+displayVersion(appCurrentVersion(appInfo))+'</span>'+toolUpdateButton(app)+'</div><iframe class="v5-resource-frame" data-mini-frame="'+app+'" src="'+appEntryUrl(appInfo, true)+'" title="'+resourceTitle(app)+'"></iframe></main>';
+    var resourceToolbar = app === 'celergo-monthly-changes' ? '' : '<div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version" data-mini-version="'+app+'">'+displayVersion(appCurrentVersion(appInfo))+'</span>'+toolUpdateButton(app)+'</div>';
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell">'+resourceToolbar+'<iframe class="v5-resource-frame" data-mini-frame="'+app+'" src="'+appEntryUrl(appInfo, true)+'" title="'+resourceTitle(app)+'"></iframe></main>';
     bindBack(renderDashboard);
     all('[data-mini-update]', modal).forEach(function(button){
       button.addEventListener('click', function(e){
