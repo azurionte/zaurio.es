@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.7",
+  "version": "5.6.8",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Adds China payslip conversion using the China pay advice template, generic earning-statement parsing, and rotating demo values for China-specific fields not present in source statements.",
+  "notes": "Adds Mexico and Germany payslip conversion, restores China visibility in the country workspace, and improves the country selection layout for additional templates.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.7"
+      "url": "payslip-converter.html?v=5.6.8"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.7"
+      "url": "assets/adp-logo.png?v=5.6.8"
     }
   ]
 }
