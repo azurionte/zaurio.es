@@ -7808,7 +7808,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.11';
-  var PAYSLIP_VERSION = 'V5.6.5';
+  var PAYSLIP_VERSION = 'V5.6.6';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
   try {
@@ -8270,7 +8270,8 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     overlay.style.removeProperty('visibility');
     overlay.style.removeProperty('pointer-events');
     modal.className = 'v5-shell-modal';
-    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell"><div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version" data-mini-version="'+app+'">'+displayVersion(appCurrentVersion(appInfo))+'</span>'+toolUpdateButton(app)+'</div><iframe class="v5-resource-frame" data-mini-frame="'+app+'" src="'+appEntryUrl(appInfo, true)+'" title="'+resourceTitle(app)+'"></iframe></main>';
+    var resourceToolbar = app === 'celergo-monthly-changes' ? '' : '<div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version" data-mini-version="'+app+'">'+displayVersion(appCurrentVersion(appInfo))+'</span>'+toolUpdateButton(app)+'</div>';
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell">'+resourceToolbar+'<iframe class="v5-resource-frame" data-mini-frame="'+app+'" src="'+appEntryUrl(appInfo, true)+'" title="'+resourceTitle(app)+'"></iframe></main>';
     bindBack(renderDashboard);
     all('[data-mini-update]', modal).forEach(function(button){
       button.addEventListener('click', function(e){
