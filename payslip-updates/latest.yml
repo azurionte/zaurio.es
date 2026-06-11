@@ -1,9 +1,9 @@
-version: 5.0.26
+version: 5.0.27
 files:
-  - url: DemoBuildingToolsSetup-5.0.26.exe
-    sha512: bUXN0Y/R7G9pDDqYXEni1bS6OFHBdsOmvY70vtWIeTFhTQJvnRDvlIT2VbI/XHAzuWMTrnHbYKF03mSzwALCTA==
-    size: 101826736
-path: DemoBuildingToolsSetup-5.0.26.exe
-sha512: bUXN0Y/R7G9pDDqYXEni1bS6OFHBdsOmvY70vtWIeTFhTQJvnRDvlIT2VbI/XHAzuWMTrnHbYKF03mSzwALCTA==
-releaseNotes: Fixes the payslip converter onboarding country selector to use one canonical country list across every entry screen.
-releaseDate: '2026-06-11T14:17:01.038Z'
+  - url: DemoBuildingToolsSetup-5.0.27.exe
+    sha512: KOYkXq9fOj+Rba3WGZxoWQSd652VdxP0VNyprefmJfOc9coEpG0HciNiyPyzyMx99/yGkbtGhshQE+hV3hlWPA==
+    size: 101826942
+path: DemoBuildingToolsSetup-5.0.27.exe
+sha512: KOYkXq9fOj+Rba3WGZxoWQSd652VdxP0VNyprefmJfOc9coEpG0HciNiyPyzyMx99/yGkbtGhshQE+hV3hlWPA==
+releaseNotes: Cleans up payslip converter version drift by centralizing the country registry before the onboarding shell renders.
+releaseDate: '2026-06-11T14:38:34.431Z'

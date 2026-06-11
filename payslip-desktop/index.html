@@ -4721,7 +4721,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.5';
+var TOOL_VERSION='V5.6.10';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5012,7 +5012,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.5';
+var TOOL_VERSION='V5.6.10';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5214,7 +5214,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.5';
+    var FINAL_VERSION = 'V5.6.10';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7429,7 +7429,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.5';
+    var TOOL_VERSION = 'V5.6.10';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7823,11 +7823,30 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 })();
 </script>
 
+<script id="v570-payslip-country-registry">
+(function(){
+  'use strict';
+  var list = [
+    { key: 'India', code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
+    { key: 'UK', code: 'GB', flagClass: 'flag-GB-v49', label: 'United Kingdom', detail: 'Celergo UK payslip' },
+    { key: 'Brazil', code: 'BR', flagClass: 'flag-BR-v49', label: 'Brazil', detail: 'Celergo Brazil payslip' },
+    { key: 'Australia', code: 'AU', flagClass: 'flag-AU-v49', label: 'Australia', detail: 'PayForce Australia payslip' },
+    { key: 'China', code: 'CN', flagClass: 'flag-CN-v49', label: 'China', detail: 'Celergo China pay advice' },
+    { key: 'Mexico', code: 'MX', flagClass: 'flag-MX-v49', label: 'Mexico', detail: 'Celergo Mexico payroll receipt' },
+    { key: 'Germany', code: 'DE', flagClass: 'flag-DE-v49', label: 'Germany', detail: 'Celergo Germany payslip' }
+  ];
+  var map = {};
+  list.forEach(function(country){ map[country.key] = country; });
+  window.DBT_PAYSLIP_COUNTRIES = list;
+  window.DBT_PAYSLIP_COUNTRY_MAP = map;
+})();
+</script>
+
 <script id="v500-demo-tools-shell">
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.18';
-  var PAYSLIP_VERSION = 'V5.6.9';
+  var PAYSLIP_VERSION = 'V5.6.10';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
   try {
@@ -7835,12 +7854,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     isPayslipMiniBoot = (bootParams.get('app') || '') === 'payslip';
     isEmbeddedMiniBoot = bootParams.get('embedded') === '1';
   } catch(e) {}
-  var countries = {
-    India: { code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
-    UK: { code: 'GB', flagClass: 'flag-GB-v49', label: 'United Kingdom', detail: 'Celergo UK payslip' },
-    Brazil: { code: 'BR', flagClass: 'flag-BR-v49', label: 'Brazil', detail: 'Celergo Brazil payslip' },
-    Australia: { code: 'AU', flagClass: 'flag-AU-v49', label: 'Australia', detail: 'PayForce Australia payslip' }
-  };
+  var countries = window.DBT_PAYSLIP_COUNTRY_MAP || {};
   var folders = [
     { key: 'ihcm', title: 'iHCM Specific tools', detail: 'Leave and workforce planning tools' },
     { key: 'lyrics', title: 'Lyrics Specific Tools', detail: 'Placeholder folder' },
@@ -8308,7 +8322,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     if (!options.fromRoute) setDBTRoute('celergo', options.replaceRoute);
     var modal = el('intro-modal');
     if (!modal) return;
-    modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>Celergo Specific tools</h1><p>Tools for Celergo demo document preparation.</p></section><section><div class="v5-grid"><div class="v5-card v5-app v5-open-payslip" id="v5OpenPayslip" data-open-mini-app="payslip-converter"><strong><i class="fa-solid fa-file-invoice"></i> Payslip converter</strong><span class="v5-version" data-mini-version="payslip-converter">'+displayVersion(appCurrentVersion(payslipMiniApp))+'</span><small>Multi-country payslip converter for India, UK, Brazil, and Australia.</small><div class="v5-card-actions"><button type="button" class="v5-launch" id="v5LaunchPayslip" data-open-mini-app="payslip-converter"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton('payslip-converter')+'</div></div>'+plainAppCard(celergoMonthlyChangesApp)+'</div></section></main>';
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>Celergo Specific tools</h1><p>Tools for Celergo demo document preparation.</p></section><section><div class="v5-grid"><div class="v5-card v5-app v5-open-payslip" id="v5OpenPayslip" data-open-mini-app="payslip-converter"><strong><i class="fa-solid fa-file-invoice"></i> Payslip converter</strong><span class="v5-version" data-mini-version="payslip-converter">'+displayVersion(appCurrentVersion(payslipMiniApp))+'</span><small>Multi-country payslip converter for India, UK, Brazil, Australia, China, Mexico, and Germany.</small><div class="v5-card-actions"><button type="button" class="v5-launch" id="v5LaunchPayslip" data-open-mini-app="payslip-converter"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton('payslip-converter')+'</div></div>'+plainAppCard(celergoMonthlyChangesApp)+'</div></section></main>';
     bindBack(renderDashboard);
     var home = el('v5HomeBtn');
     if (home) home.addEventListener('click', goDBTHome);
@@ -8508,15 +8522,8 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 <script id="v569-payslip-country-source-of-truth">
 (function(){
   'use strict';
-  var canonicalCountries = [
-    { key: 'India', code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
-    { key: 'UK', code: 'GB', flagClass: 'flag-GB-v49', label: 'United Kingdom', detail: 'Celergo UK payslip' },
-    { key: 'Brazil', code: 'BR', flagClass: 'flag-BR-v49', label: 'Brazil', detail: 'Celergo Brazil payslip' },
-    { key: 'Australia', code: 'AU', flagClass: 'flag-AU-v49', label: 'Australia', detail: 'PayForce Australia payslip' },
-    { key: 'China', code: 'CN', flagClass: 'flag-CN-v49', label: 'China', detail: 'Celergo China pay advice' },
-    { key: 'Mexico', code: 'MX', flagClass: 'flag-MX-v49', label: 'Mexico', detail: 'Celergo Mexico payroll receipt' },
-    { key: 'Germany', code: 'DE', flagClass: 'flag-DE-v49', label: 'Germany', detail: 'Celergo Germany payslip' }
-  ];
+  var canonicalCountries = window.DBT_PAYSLIP_COUNTRIES || [];
+  if (!canonicalCountries.length) { canonicalCountries = Object.keys(window.DBT_PAYSLIP_COUNTRY_MAP || {}).map(function(key){ return window.DBT_PAYSLIP_COUNTRY_MAP[key]; }); }
   window.DBT_PAYSLIP_COUNTRIES = canonicalCountries.slice();
   function selectedCountry(){
     var select = document.getElementById('formatSelect');
