@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.6",
+  "version": "5.6.7",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Removes the duplicate resource toolbar when opening Celergo Monthly Changes Input so DBT shows only the global menu and the mini-app step header.",
+  "notes": "Adds China payslip conversion using the China pay advice template, generic earning-statement parsing, and rotating demo values for China-specific fields not present in source statements.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.6"
+      "url": "payslip-converter.html?v=5.6.7"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.6"
+      "url": "assets/adp-logo.png?v=5.6.7"
     }
   ]
 }
