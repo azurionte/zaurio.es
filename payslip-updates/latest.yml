@@ -1,9 +1,9 @@
-version: 5.0.25
+version: 5.0.26
 files:
-  - url: DemoBuildingToolsSetup-5.0.25.exe
-    sha512: ky1d1DDVng+C1O5YUWG82Jxoy4dF6oVzPD0286rFCntm2bSSZE3HdPo6rpr4rIIGo1y3wLW3L8uKPBQ5v2bxlA==
-    size: 101826527
-path: DemoBuildingToolsSetup-5.0.25.exe
-sha512: ky1d1DDVng+C1O5YUWG82Jxoy4dF6oVzPD0286rFCntm2bSSZE3HdPo6rpr4rIIGo1y3wLW3L8uKPBQ5v2bxlA==
-releaseNotes: Updates the embedded payslip converter shell to V5.6.8 with China, Mexico, Germany, and the expanded country selection layout.
-releaseDate: '2026-06-11T14:09:27.426Z'
+  - url: DemoBuildingToolsSetup-5.0.26.exe
+    sha512: bUXN0Y/R7G9pDDqYXEni1bS6OFHBdsOmvY70vtWIeTFhTQJvnRDvlIT2VbI/XHAzuWMTrnHbYKF03mSzwALCTA==
+    size: 101826736
+path: DemoBuildingToolsSetup-5.0.26.exe
+sha512: bUXN0Y/R7G9pDDqYXEni1bS6OFHBdsOmvY70vtWIeTFhTQJvnRDvlIT2VbI/XHAzuWMTrnHbYKF03mSzwALCTA==
+releaseNotes: Fixes the payslip converter onboarding country selector to use one canonical country list across every entry screen.
+releaseDate: '2026-06-11T14:17:01.038Z'

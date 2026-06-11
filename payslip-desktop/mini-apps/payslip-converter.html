@@ -4721,7 +4721,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.8';
+var TOOL_VERSION='V5.6.9';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5012,7 +5012,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.8';
+var TOOL_VERSION='V5.6.9';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5214,7 +5214,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.8';
+    var FINAL_VERSION = 'V5.6.9';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7429,7 +7429,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.8';
+    var TOOL_VERSION = 'V5.6.9';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7827,7 +7827,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.11';
-  var PAYSLIP_VERSION = 'V5.6.8';
+  var PAYSLIP_VERSION = 'V5.6.9';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
   try {
@@ -8485,6 +8485,84 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
+})();
+</script>
+
+<script id="v569-payslip-country-source-of-truth">
+(function(){
+  'use strict';
+  var canonicalCountries = [
+    { key: 'India', code: 'IN', flagClass: 'flag-IN-v49', label: 'India', detail: 'Celergo India payslip' },
+    { key: 'UK', code: 'GB', flagClass: 'flag-GB-v49', label: 'United Kingdom', detail: 'Celergo UK payslip' },
+    { key: 'Brazil', code: 'BR', flagClass: 'flag-BR-v49', label: 'Brazil', detail: 'Celergo Brazil payslip' },
+    { key: 'Australia', code: 'AU', flagClass: 'flag-AU-v49', label: 'Australia', detail: 'PayForce Australia payslip' },
+    { key: 'China', code: 'CN', flagClass: 'flag-CN-v49', label: 'China', detail: 'Celergo China pay advice' },
+    { key: 'Mexico', code: 'MX', flagClass: 'flag-MX-v49', label: 'Mexico', detail: 'Celergo Mexico payroll receipt' },
+    { key: 'Germany', code: 'DE', flagClass: 'flag-DE-v49', label: 'Germany', detail: 'Celergo Germany payslip' }
+  ];
+  window.DBT_PAYSLIP_COUNTRIES = canonicalCountries.slice();
+  function selectedCountry(){
+    var select = document.getElementById('formatSelect');
+    return window.__selectedImportTemplateV31 || (select && select.value) || 'India';
+  }
+  function setSelected(country){
+    var select = document.getElementById('formatSelect');
+    if (select) select.value = country;
+    window.__selectedImportTemplateV31 = country;
+    reconcile();
+  }
+  function countryCard(country){
+    var active = selectedCountry() === country.key ? ' active' : '';
+    return '<button type="button" class="v5-country v49-country'+active+'" data-country="'+country.key+'"><span class="v49-country-top"><span class="flag-v49 '+country.flagClass+'"></span><span class="v49-code">'+country.code+'</span></span><strong>'+country.label+'</strong><small>'+country.detail+'</small></button>';
+  }
+  function reconcileGrid(grid){
+    if (!grid) return;
+    if (grid.dataset.v569Canonical !== 'true') {
+      grid.innerHTML = canonicalCountries.map(countryCard).join('');
+      grid.dataset.v569Canonical = 'true';
+      grid.querySelectorAll('[data-country]').forEach(function(button){
+        button.addEventListener('click', function(){ setSelected(button.getAttribute('data-country')); });
+      });
+    }
+    grid.querySelectorAll('[data-country]').forEach(function(button){
+      button.classList.toggle('active', button.getAttribute('data-country') === selectedCountry());
+    });
+  }
+  function reconcileStats(){
+    document.querySelectorAll('.v49-stat b').forEach(function(node){
+      if (/country templates/i.test((node.parentElement && node.parentElement.textContent) || '')) {
+        var html = '<i class="fa-solid fa-globe"></i> '+canonicalCountries.length;
+        if (node.innerHTML !== html) node.innerHTML = html;
+      }
+    });
+  }
+  function reconcileSelect(){
+    var select = document.getElementById('formatSelect');
+    if (!select) return;
+    canonicalCountries.forEach(function(country){
+      if (!select.querySelector('option[value="'+country.key+'"]')) {
+        var option = document.createElement('option');
+        option.value = country.key;
+        option.textContent = country.label === 'United Kingdom' ? 'UK' : country.label;
+        select.appendChild(option);
+      }
+    });
+  }
+  function reconcile(){
+    reconcileSelect();
+    document.querySelectorAll('.v5-country-grid,.v49-country-grid').forEach(reconcileGrid);
+    reconcileStats();
+  }
+  document.addEventListener('click', function(event){
+    var button = event.target && event.target.closest && event.target.closest('[data-country]');
+    if (button) setTimeout(reconcile, 0);
+  }, true);
+  document.addEventListener('change', function(event){
+    if (event.target && event.target.id === 'formatSelect') setTimeout(reconcile, 0);
+  }, true);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', reconcile);
+  else reconcile();
+  new MutationObserver(function(){ reconcile(); }).observe(document.documentElement, { childList: true, subtree: true });
 })();
 </script>
 

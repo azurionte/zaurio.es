@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.8",
+  "version": "5.6.9",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Adds Mexico and Germany payslip conversion, restores China visibility in the country workspace, and improves the country selection layout for additional templates.",
+  "notes": "Uses one canonical payslip country list across all onboarding screens so China, Mexico, Germany, and future countries appear everywhere.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.8"
+      "url": "payslip-converter.html?v=5.6.9"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.8"
+      "url": "assets/adp-logo.png?v=5.6.9"
     }
   ]
 }
