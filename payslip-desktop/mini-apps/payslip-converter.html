@@ -4721,7 +4721,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.10';
+var TOOL_VERSION='V5.6.11';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5012,7 +5012,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.10';
+var TOOL_VERSION='V5.6.11';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5214,7 +5214,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.10';
+    var FINAL_VERSION = 'V5.6.11';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7429,7 +7429,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.10';
+    var TOOL_VERSION = 'V5.6.11';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7846,7 +7846,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.11';
-  var PAYSLIP_VERSION = 'V5.6.10';
+  var PAYSLIP_VERSION = 'V5.6.11';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
   try {
@@ -8990,10 +8990,29 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
   window.processPdf=processPdf=async function(arrayBuffer){if(!mode())return previousProcessPdf?previousProcessPdf.apply(this,arguments):undefined;var country=fmt();var slips=await readPdf(arrayBuffer,country);if(!slips||!slips.length)slips=[country==='Mexico'?enrichMexico({format:'Mexico'},[]):enrichGermany({format:'Germany'},[])];window.pendingImportedSlips=pendingImportedSlips=slips;window.pendingDetectedCountry=pendingDetectedCountry=country;var f=document.getElementById('formatSelect');if(f)f.value=country;window.__selectedImportTemplateV31=country;if(typeof finishImport==='function')finishImport();};
   window.parseSlipLines=parseSlipLines=function(lines){if(fmt()==='Mexico')return enrichMexico({format:'Mexico'},lines);if(fmt()==='Germany')return enrichGermany({format:'Germany'},lines);return previousParseSlipLines?previousParseSlipLines.apply(this,arguments):{};};
   window.generatePayslipHTML=generatePayslipHTML=function(data,format){format=format||(data&&data.format)||fmt();if(format==='Mexico')return renderMexico(data);if(format==='Germany')return renderGermany(data);return previousGeneratePayslipHTML?previousGeneratePayslipHTML.apply(this,arguments):'';};
-  window.populateFormFromData=populateFormFromData=function(data){if(data&&(data.format==='Mexico'||data.format==='Germany')){var host=document.getElementById('payslip');if(host)host.outerHTML=data.format==='Mexico'?renderMexico(data):renderGermany(data);return;}return previousPopulateFormFromData?previousPopulateFormFromData.apply(this,arguments):undefined;};
+  function mountCountrySlip(data){
+    if(!data || (data.format!=='Mexico' && data.format!=='Germany')) return false;
+    var fmt=document.getElementById('formatSelect');
+    if(fmt){fmt.value=data.format; window.__selectedImportTemplateV31=data.format;}
+    ['payslipUK','combinedContainer','downloadCombinedContainer'].forEach(function(id){var el=document.getElementById(id); if(el) el.style.setProperty('display','none','important');});
+    var html=data.format==='Mexico'?renderMexico(data):renderGermany(data);
+    var content=document.getElementById('content') || document.getElementById('main') || document.body;
+    var host=document.getElementById('payslip');
+    if(host){
+      host.outerHTML=html;
+    } else {
+      var wrap=document.createElement('div');
+      wrap.innerHTML=html;
+      content.appendChild(wrap.firstElementChild);
+    }
+    var rendered=document.getElementById('payslip');
+    if(rendered){rendered.style.removeProperty('display'); rendered.style.margin='20px auto';}
+    return true;
+  }
+  window.populateFormFromData=populateFormFromData=function(data){if(mountCountrySlip(data))return;return previousPopulateFormFromData?previousPopulateFormFromData.apply(this,arguments):undefined;};
   window.groupSlips=groupSlips=function(slips){if(Array.isArray(slips)&&slips.some(function(s){return s&&/Mexico|Germany/.test(s.format||'');}))return slips.map(function(s,i){return {key:(s.format||'Payslip')+'-'+(s.empcode||i)+'-'+(s.payMonth||''),format:s.format,slips:[s],displayName:(s.empName||'Employee')+' - '+(s.payMonth||'Payslip')};});return previousGroupSlips?previousGroupSlips.apply(this,arguments):slips;};
   window.buildCelergoFilename=buildCelergoFilename=function(slip,idx,total){if(slip&&slip.format==='Mexico')return ['MX','PAYSLIP',slip.empcode||'0000',String(idx+1).padStart(3,'0')].join('_')+'.pdf';if(slip&&slip.format==='Germany')return ['DE','PAYSLIP',slip.empcode||'0000',String(idx+1).padStart(3,'0')].join('_')+'.pdf';return previousBuildFilename?previousBuildFilename.apply(this,arguments):'payslip.pdf';};
-  document.addEventListener('change',function(ev){if(ev.target&&ev.target.id==='formatSelect'&&(ev.target.value==='Mexico'||ev.target.value==='Germany'))setTimeout(function(){var host=document.getElementById('payslip');if(host)host.outerHTML=ev.target.value==='Mexico'?renderMexico({format:'Mexico'}):renderGermany({format:'Germany'});},0);},true);
+  document.addEventListener('change',function(ev){if(ev.target&&ev.target.id==='formatSelect'&&(ev.target.value==='Mexico'||ev.target.value==='Germany'))setTimeout(function(){mountCountrySlip(ev.target.value==='Mexico'?{format:'Mexico'}:{format:'Germany'});},0);},true);
 })();
 </script>
 

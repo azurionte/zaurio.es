@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.27",
+  "version": "5.0.28",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Cleans up payslip converter version drift by centralizing the country registry before the onboarding shell renders."
+      "releaseNotes": "Fixes Germany and Mexico payslip preview mounting after importing earning statements."
     },
     "nsis": {
       "perMachine": false,

@@ -1,9 +1,9 @@
-version: 5.0.27
+version: 5.0.28
 files:
-  - url: DemoBuildingToolsSetup-5.0.27.exe
-    sha512: KOYkXq9fOj+Rba3WGZxoWQSd652VdxP0VNyprefmJfOc9coEpG0HciNiyPyzyMx99/yGkbtGhshQE+hV3hlWPA==
-    size: 101826942
-path: DemoBuildingToolsSetup-5.0.27.exe
-sha512: KOYkXq9fOj+Rba3WGZxoWQSd652VdxP0VNyprefmJfOc9coEpG0HciNiyPyzyMx99/yGkbtGhshQE+hV3hlWPA==
-releaseNotes: Cleans up payslip converter version drift by centralizing the country registry before the onboarding shell renders.
-releaseDate: '2026-06-11T14:38:34.431Z'
+  - url: DemoBuildingToolsSetup-5.0.28.exe
+    sha512: HLR0ov6Y7JHx5K1+/c4fLzhq6LEoE/GV2ino8O5dYYcc89+8UC8mIa6A8/Dm09xnvNT8sBDg8yVv26z2awBUVg==
+    size: 101827219
+path: DemoBuildingToolsSetup-5.0.28.exe
+sha512: HLR0ov6Y7JHx5K1+/c4fLzhq6LEoE/GV2ino8O5dYYcc89+8UC8mIa6A8/Dm09xnvNT8sBDg8yVv26z2awBUVg==
+releaseNotes: Fixes Germany and Mexico payslip preview mounting after importing earning statements.
+releaseDate: '2026-06-11T14:47:43.609Z'

@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.10",
+  "version": "5.6.11",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Centralizes the payslip converter country registry before the onboarding shell renders, keeping all entry screens on one country list.",
+  "notes": "Fixes Mexico and Germany preview mounting after import and employee tab changes so the payslip renders into the main preview area.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.10"
+      "url": "payslip-converter.html?v=5.6.11"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.10"
+      "url": "assets/adp-logo.png?v=5.6.11"
     }
   ]
 }
