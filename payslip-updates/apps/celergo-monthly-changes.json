@@ -1,13 +1,13 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.7",
+  "version": "1.8",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Preserves the original Celergo PaymentAndDeduction workbook structure and sheet name by patching exported rows into the exact template file.",
+  "notes": "Enables Done navigation back to country selection and makes the step progress pills clickable for direct step navigation.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.7"
+      "url": "celergo-monthly-changes.html?v=1.8"
     }
   ]
 }
