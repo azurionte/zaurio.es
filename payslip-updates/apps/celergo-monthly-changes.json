@@ -1,13 +1,13 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.4",
+  "version": "1.5",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
-  "updatedAt": "2026-06-10T00:00:00Z",
-  "notes": "Scopes pay elements by country, simplifies the Celergo shell header, uses a processing-month picker tile, removes effective-date input, renames CA/MX/US cycles, assumes new hires receive all country elements, improves randomization, and fixes export preview mapping.",
+  "updatedAt": "2026-06-11T00:00:00Z",
+  "notes": "Verifies every pay element list against the country spreadsheets and removes the old global mixed pay-element catalogue so each country can only show its own elements.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.4"
+      "url": "celergo-monthly-changes.html?v=1.5"
     }
   ]
 }
