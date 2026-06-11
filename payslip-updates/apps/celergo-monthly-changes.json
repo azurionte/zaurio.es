@@ -1,13 +1,13 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.5",
+  "version": "1.6",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Verifies every pay element list against the country spreadsheets and removes the old global mixed pay-element catalogue so each country can only show its own elements.",
+  "notes": "Fixes single pay-element randomization so it only changes the clicked employee element, and exports by filling the exact country PaymentAndDeduction template workbooks.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.5"
+      "url": "celergo-monthly-changes.html?v=1.6"
     }
   ]
 }
