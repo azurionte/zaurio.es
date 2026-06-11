@@ -1,9 +1,9 @@
-version: 5.0.23
+version: 5.0.24
 files:
-  - url: DemoBuildingToolsSetup-5.0.23.exe
-    sha512: D8SqLQXXBsP5bJGQtscfLy6C3c5inT3Mf2htmaFG6Rj4YNi8kNmynkHf7BaFG5sUrRJExqvOq3103ZIGFD34KQ==
-    size: 101495726
-path: DemoBuildingToolsSetup-5.0.23.exe
-sha512: D8SqLQXXBsP5bJGQtscfLy6C3c5inT3Mf2htmaFG6Rj4YNi8kNmynkHf7BaFG5sUrRJExqvOq3103ZIGFD34KQ==
-releaseNotes: Added Celergo Monthly Changes Input v1.2 to the Celergo Specific tools folder with independent mini-app updates, DBT styling, sticky navigation, collapsible employee rows, per-element randomization/actions, and country templates for AU, BR, CA, CN, DE, FR, GB, GB Tax, and IE.
-releaseDate: '2026-06-08T13:11:19.499Z'
+  - url: DemoBuildingToolsSetup-5.0.24.exe
+    sha512: vy+5ysw7X0x8rc88s/xioGZZEbgXnAIUgaLkTSxOLVUbzeq1OfROl3n1pTprVXxF1dCNiYkFhvEEAeklwWnQVA==
+    size: 101503368
+path: DemoBuildingToolsSetup-5.0.24.exe
+sha512: vy+5ysw7X0x8rc88s/xioGZZEbgXnAIUgaLkTSxOLVUbzeq1OfROl3n1pTprVXxF1dCNiYkFhvEEAeklwWnQVA==
+releaseNotes: Removes the duplicate Monthly Changes resource toolbar so Celergo Monthly Changes Input shows only the DBT global menu and the mini-app step header.
+releaseDate: '2026-06-11T08:23:27.751Z'

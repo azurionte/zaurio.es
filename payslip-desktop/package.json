@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.23",
+  "version": "5.0.24",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Added Celergo Monthly Changes Input v1.2 to the Celergo Specific tools folder with independent mini-app updates, DBT styling, sticky navigation, collapsible employee rows, per-element randomization/actions, and country templates for AU, BR, CA, CN, DE, FR, GB, GB Tax, and IE."
+      "releaseNotes": "Removes the duplicate Monthly Changes resource toolbar so Celergo Monthly Changes Input shows only the DBT global menu and the mini-app step header."
     },
     "nsis": {
       "perMachine": false,
