@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.24",
+  "version": "5.0.25",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Removes the duplicate Monthly Changes resource toolbar so Celergo Monthly Changes Input shows only the DBT global menu and the mini-app step header."
+      "releaseNotes": "Updates the embedded payslip converter shell to V5.6.8 with China, Mexico, Germany, and the expanded country selection layout."
     },
     "nsis": {
       "perMachine": false,
