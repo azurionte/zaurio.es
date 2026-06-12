@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.28",
+  "version": "5.0.29",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixes Germany and Mexico payslip preview mounting after importing earning statements."
+      "releaseNotes": "Routes China, Mexico, and Germany payslip imports through the selected country before PDF parsing."
     },
     "nsis": {
       "perMachine": false,
