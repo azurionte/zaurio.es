@@ -1,9 +1,9 @@
-version: 5.0.29
+version: 5.0.30
 files:
-  - url: DemoBuildingToolsSetup-5.0.29.exe
-    sha512: hP66ub64zMrgH9Y1fbIwvjuQdY3qSwae7Wo9pmVJ505i/ojxlJbZQ+sy2SoC8bMFqMVp5vM8BXHKG2fuLYokpw==
-    size: 101827817
-path: DemoBuildingToolsSetup-5.0.29.exe
-sha512: hP66ub64zMrgH9Y1fbIwvjuQdY3qSwae7Wo9pmVJ505i/ojxlJbZQ+sy2SoC8bMFqMVp5vM8BXHKG2fuLYokpw==
-releaseNotes: Routes China, Mexico, and Germany payslip imports through the selected country before PDF parsing.
-releaseDate: '2026-06-12T09:50:11.343Z'
+  - url: DemoBuildingToolsSetup-5.0.30.exe
+    sha512: BlrvVdHfYYHp1JFgrZdwwJDs7MrU+kef36+LCKT5I6PIOGcQBPXi4ocWT0L0Imk3UsSbsxTl24YQwtTBt+A1sA==
+    size: 101829622
+path: DemoBuildingToolsSetup-5.0.30.exe
+sha512: BlrvVdHfYYHp1JFgrZdwwJDs7MrU+kef36+LCKT5I6PIOGcQBPXi4ocWT0L0Imk3UsSbsxTl24YQwtTBt+A1sA==
+releaseNotes: Restores DBT chrome in payslip mini-app mode and fixes China, Mexico, and Germany preview mounting after import.
+releaseDate: '2026-06-12T10:04:27.958Z'

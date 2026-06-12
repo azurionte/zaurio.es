@@ -4721,7 +4721,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.12';
+var TOOL_VERSION='V5.6.13';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5012,7 +5012,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.12';
+var TOOL_VERSION='V5.6.13';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5214,7 +5214,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.12';
+    var FINAL_VERSION = 'V5.6.13';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7429,7 +7429,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.12';
+    var TOOL_VERSION = 'V5.6.13';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7846,7 +7846,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.11';
-  var PAYSLIP_VERSION = 'V5.6.12';
+  var PAYSLIP_VERSION = 'V5.6.13';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
   try {
@@ -9070,6 +9070,129 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
       return result;
     };
   }
+})();
+</script>
+
+<script id="v572-new-country-preview-shell">
+(function(){
+  'use strict';
+  var APP_VERSION = 'V5.6.13';
+  var newCountries = { China: true, Mexico: true, Germany: true };
+  function valid(country){ return country && newCountries[country] ? country : ''; }
+  function selectedCountry(){
+    var select = document.getElementById('formatSelect');
+    var active = document.querySelector('[data-country].active');
+    return valid(window.__lastPayslipCountry) || valid(window.__selectedImportTemplateV31) || valid(select && select.value) || valid(active && active.getAttribute('data-country')) || '';
+  }
+  function currentSlip(){
+    try {
+      if (typeof groupedSlips !== 'undefined' && groupedSlips && typeof currentName !== 'undefined' && typeof currentPeriod !== 'undefined' && groupedSlips[currentName] && groupedSlips[currentName][currentPeriod]) return groupedSlips[currentName][currentPeriod];
+    } catch(e) {}
+    if (window.groupedSlips && window.currentName && window.currentPeriod && window.groupedSlips[window.currentName] && window.groupedSlips[window.currentName][window.currentPeriod]) return window.groupedSlips[window.currentName][window.currentPeriod];
+    try {
+      if (typeof importedSlips !== 'undefined' && Array.isArray(importedSlips)) {
+        var fromLocal = importedSlips.filter(function(slip){ return slip && valid(slip.format); })[0];
+        if (fromLocal) return fromLocal;
+      }
+    } catch(e) {}
+    if (Array.isArray(window.importedSlips)) return window.importedSlips.filter(function(slip){ return slip && valid(slip.format); })[0] || null;
+    return null;
+  }
+  function renderSlip(slip){
+    if (!slip || !valid(slip.format)) return '';
+    if (slip.format !== 'China' && typeof window.mountCountrySlip === 'function' && window.mountCountrySlip(slip)) return 'mounted';
+    if (typeof window.generatePayslipHTML === 'function') return window.generatePayslipHTML(slip, slip.format) || '';
+    return '';
+  }
+  function ensureGlobalBar(){
+    var params = new URLSearchParams(window.location.search || '');
+    if ((params.get('app') || '') !== 'payslip') return;
+    if (document.getElementById('v572GlobalChrome')) return;
+    var header = document.getElementById('header');
+    var bar = document.createElement('div');
+    bar.id = 'v572GlobalChrome';
+    bar.className = 'v5-app-chrome v5-editor-topbar';
+    bar.innerHTML = '<div class="v5-topbar"><div class="v5-brand"><span class="v5-adp-logo" aria-label="ADP logo"><img src="assets/adp-logo.png" alt="ADP"></span><button type="button" class="v5-nav-button" id="v572BackBtn" title="Back"><i class="fa-solid fa-arrow-left"></i></button><button type="button" class="v5-nav-button" id="v572HomeBtn" title="Home"><i class="fa-solid fa-house"></i></button><strong>Demo Building Tools v1.18</strong><span class="v5-update-ok"><i class="fa-solid fa-circle-check"></i> Up to date</span><button type="button" class="v5-shell-update" id="v572UpdateBtn"><i class="fa-solid fa-arrows-rotate"></i> Check for updates</button></div><span class="v5-contact">Contact Max Robles for bugs or changes</span></div>';
+    document.body.insertBefore(bar, header || document.body.firstChild);
+    var home = document.getElementById('v572HomeBtn');
+    if (home) home.addEventListener('click', function(){ window.location.href = window.location.protocol === 'app:' ? 'app://payslip/index.html' : 'index.html'; });
+    var back = document.getElementById('v572BackBtn');
+    if (back) back.addEventListener('click', function(){ if (window.history && window.history.length > 1) window.history.back(); else if (typeof renderPayslipLanding === 'function') renderPayslipLanding(); });
+    var update = document.getElementById('v572UpdateBtn');
+    if (update) update.addEventListener('click', function(){ update.innerHTML = '<i class="fa-solid fa-circle-check"></i> Up to date'; setTimeout(function(){ update.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Check for updates'; }, 1400); });
+  }
+  function ensureMiniBar(){
+    var header = document.getElementById('header');
+    if (!header) return;
+    header.classList.add('v5-payslip-toolbar');
+    var title = header.querySelector('.title');
+    if (title) title.innerHTML = '<i class="fa-solid fa-file-invoice"></i> Payslip converter <span class="v5-version">'+APP_VERSION+'</span>';
+    var label = header.querySelector('label[for="formatSelect"]');
+    if (label) label.style.display = 'none';
+    var select = document.getElementById('formatSelect');
+    if (select) select.style.display = 'none';
+    var importBtn = document.getElementById('importBtn');
+    if (importBtn) importBtn.innerHTML = '<i class="fa-solid fa-file-import"></i> Import';
+    var saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save';
+  }
+  function ensurePreview(){
+    var slip = currentSlip();
+    if (!slip || !valid(slip.format)) return false;
+    var country = slip.format;
+    window.__lastPayslipCountry = country;
+    window.__selectedImportTemplateV31 = country;
+    var select = document.getElementById('formatSelect');
+    if (select) select.value = country;
+    ensureGlobalBar();
+    ensureMiniBar();
+    var main = document.getElementById('main');
+    if (main) main.style.setProperty('display', 'flex', 'important');
+    var content = document.getElementById('content') || main || document.body;
+    if (country !== 'China' && typeof window.mountCountrySlip === 'function') {
+      window.mountCountrySlip(slip);
+    } else {
+      var html = renderSlip(slip);
+      if (html && html !== 'mounted') {
+        var old = document.getElementById('payslip');
+        if (old) old.outerHTML = html;
+        else {
+          var wrap = document.createElement('div');
+          wrap.innerHTML = html;
+          if (wrap.firstElementChild) content.appendChild(wrap.firstElementChild);
+        }
+      }
+    }
+    ['payslipUK','payslipBrazil','payslipAustralia','combinedContainer','downloadCombinedContainer'].forEach(function(id){
+      var node = document.getElementById(id);
+      if (node) node.style.setProperty('display', 'none', 'important');
+    });
+    var rendered = document.getElementById('payslip');
+    if (rendered) {
+      rendered.style.removeProperty('display');
+      rendered.style.margin = '20px auto';
+      return true;
+    }
+    return false;
+  }
+  var previousFinish = window.finishImport;
+  if (typeof previousFinish === 'function') {
+    window.finishImport = finishImport = function(){
+      var result = previousFinish.apply(this, arguments);
+      [0, 80, 220, 520].forEach(function(delay){ setTimeout(ensurePreview, delay); });
+      return result;
+    };
+  }
+  var previousPopulate = window.populateFormFromData;
+  if (typeof previousPopulate === 'function') {
+    window.populateFormFromData = populateFormFromData = function(data){
+      var result = previousPopulate.apply(this, arguments);
+      if (data && valid(data.format)) [0, 100, 260].forEach(function(delay){ setTimeout(ensurePreview, delay); });
+      return result;
+    };
+  }
+  document.addEventListener('DOMContentLoaded', function(){ ensureGlobalBar(); ensureMiniBar(); setTimeout(ensurePreview, 250); });
+  setInterval(function(){ ensureGlobalBar(); ensureMiniBar(); ensurePreview(); }, 1200);
 })();
 </script>
 

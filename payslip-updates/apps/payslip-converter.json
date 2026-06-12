@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.12",
+  "version": "5.6.13",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Routes China, Mexico, and Germany imports through the selected country card immediately before PDF processing so new-country parsers are not bypassed.",
+  "notes": "Restores DBT chrome in payslip mini-app mode and forces China, Mexico, and Germany previews to mount after import.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.12"
+      "url": "payslip-converter.html?v=5.6.13"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.12"
+      "url": "assets/adp-logo.png?v=5.6.13"
     }
   ]
 }
