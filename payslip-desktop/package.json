@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.30",
+  "version": "5.0.31",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Restores DBT chrome in payslip mini-app mode and fixes China, Mexico, and Germany preview mounting after import."
+      "releaseNotes": "Fixes China, Mexico, and Germany preview rendering for legacy-shaped imported slips and isolates mini-app update state by app."
     },
     "nsis": {
       "perMachine": false,

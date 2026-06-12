@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.13",
+  "version": "5.6.14",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Restores DBT chrome in payslip mini-app mode and forces China, Mexico, and Germany previews to mount after import.",
+  "notes": "Rescues legacy-shaped China, Mexico, and Germany imports by rendering them through the selected country template and isolates mini-app update state by app.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.13"
+      "url": "payslip-converter.html?v=5.6.14"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.13"
+      "url": "assets/adp-logo.png?v=5.6.14"
     }
   ]
 }
