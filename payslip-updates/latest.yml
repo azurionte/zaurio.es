@@ -1,9 +1,9 @@
-version: 5.0.31
+version: 5.0.32
 files:
-  - url: DemoBuildingToolsSetup-5.0.31.exe
-    sha512: 3h5nMCY5KjnTKaSo72zGThNg6KiIjy9EfZYzrusfrMfTguZQ8e9f0NR09Ya0ylkf6vdY1SMzXVZ3oGCQ18ZUBg==
-    size: 101831018
-path: DemoBuildingToolsSetup-5.0.31.exe
-sha512: 3h5nMCY5KjnTKaSo72zGThNg6KiIjy9EfZYzrusfrMfTguZQ8e9f0NR09Ya0ylkf6vdY1SMzXVZ3oGCQ18ZUBg==
-releaseNotes: Fixes China, Mexico, and Germany preview rendering for legacy-shaped imported slips and isolates mini-app update state by app.
-releaseDate: '2026-06-12T10:30:07.023Z'
+  - url: DemoBuildingToolsSetup-5.0.32.exe
+    sha512: OJ1i83GP3WSGbC7EY6R7ZfBN83SqpMGe9gr7tyaEsn2fAof/L2szxeqLhmo6yCYV/C/mLiWCXH72011fygNGKQ==
+    size: 101836414
+path: DemoBuildingToolsSetup-5.0.32.exe
+sha512: OJ1i83GP3WSGbC7EY6R7ZfBN83SqpMGe9gr7tyaEsn2fAof/L2szxeqLhmo6yCYV/C/mLiWCXH72011fygNGKQ==
+releaseNotes: Adds a stable China, Mexico, and Germany payslip editor/preview workflow and makes update checks on demand only.
+releaseDate: '2026-06-15T00:08:52.313Z'

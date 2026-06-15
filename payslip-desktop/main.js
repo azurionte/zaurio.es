@@ -348,20 +348,6 @@ function createMainWindow() {
 
   mainWindow.loadURL('app://payslip/index.html');
 
-  // Once the window is ready, we can check for updates. The autoUpdater
-  // will look for a release feed specified in your package.json under
-  // the "publish" field. See electron-updater docs for configuration.
-  mainWindow.once('ready-to-show', () => {
-    // In corporate environments without internet access, this call will
-    // safely fail. When an update exists, the renderer shows a button so
-    // the user can choose when to download and restart.
-    if (!app.isPackaged) return;
-    autoUpdater.checkForUpdates().catch((err) => {
-      // swallow update errors silently; updates are optional
-      console.warn('Auto update error:', err);
-    });
-  });
-
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
     mainWindow = null;
