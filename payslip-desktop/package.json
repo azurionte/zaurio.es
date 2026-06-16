@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.33",
+  "version": "5.0.35",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixes payslip converter editor scrolling, duplicate global bars, preview visibility, and Convert another button consistency."
+      "releaseNotes": "Fixes Germany, Mexico, and China preview rendering with a self-contained stable editor preview path."
     },
     "nsis": {
       "perMachine": false,

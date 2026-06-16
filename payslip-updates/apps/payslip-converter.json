@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.16",
+  "version": "5.6.18",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Fixes new-country editor scrolling, prevents duplicate global bars, keeps Convert another button text consistent, and guards legacy intro animation.",
+  "notes": "Fixes Germany, Mexico, and China preview rendering with a self-contained stable editor preview path.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.16"
+      "url": "payslip-converter.html?v=5.6.18"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.16"
+      "url": "assets/adp-logo.png?v=5.6.18"
     }
   ]
 }
