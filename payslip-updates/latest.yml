@@ -1,9 +1,9 @@
-version: 5.0.32
+version: 5.0.33
 files:
-  - url: DemoBuildingToolsSetup-5.0.32.exe
-    sha512: OJ1i83GP3WSGbC7EY6R7ZfBN83SqpMGe9gr7tyaEsn2fAof/L2szxeqLhmo6yCYV/C/mLiWCXH72011fygNGKQ==
-    size: 101836414
-path: DemoBuildingToolsSetup-5.0.32.exe
-sha512: OJ1i83GP3WSGbC7EY6R7ZfBN83SqpMGe9gr7tyaEsn2fAof/L2szxeqLhmo6yCYV/C/mLiWCXH72011fygNGKQ==
-releaseNotes: Adds a stable China, Mexico, and Germany payslip editor/preview workflow and makes update checks on demand only.
-releaseDate: '2026-06-15T00:08:52.313Z'
+  - url: DemoBuildingToolsSetup-5.0.33.exe
+    sha512: Up9kPQNynY8MxIdSD8J9jGN8Kw3Nk2fy83KuIQeoajApjnL885fgL4hbIlW6rkothoJcy6OukwEkiid0HRstxw==
+    size: 101836586
+path: DemoBuildingToolsSetup-5.0.33.exe
+sha512: Up9kPQNynY8MxIdSD8J9jGN8Kw3Nk2fy83KuIQeoajApjnL885fgL4hbIlW6rkothoJcy6OukwEkiid0HRstxw==
+releaseNotes: Fixes payslip converter editor scrolling, duplicate global bars, preview visibility, and Convert another button consistency.
+releaseDate: '2026-06-16T08:37:08.111Z'
