@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.36",
+  "version": "5.0.37",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Keeps Germany, Mexico, and China previews visible after import and employee tab changes."
+      "releaseNotes": "Renders Germany preview from the selected slip data without legacy profile rotation."
     },
     "nsis": {
       "perMachine": false,

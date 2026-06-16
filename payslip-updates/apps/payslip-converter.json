@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.19",
+  "version": "5.6.20",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Keeps Germany, Mexico, and China previews visible after import and employee tab changes.",
+  "notes": "Renders Germany preview from the selected slip data without legacy profile rotation.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.19"
+      "url": "payslip-converter.html?v=5.6.20"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.19"
+      "url": "assets/adp-logo.png?v=5.6.20"
     }
   ]
 }

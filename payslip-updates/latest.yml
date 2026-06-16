@@ -1,9 +1,9 @@
-version: 5.0.36
+version: 5.0.37
 files:
-  - url: DemoBuildingToolsSetup-5.0.36.exe
-    sha512: QNQwMoBXKK+hG6z0rx3IxVtZ3Su5aWeCdncWyd6mNrxcpZ7lPk7mATZ5yWfHdKP0TOyh9F3ty3hpa3SLjHFnZQ==
-    size: 101836810
-path: DemoBuildingToolsSetup-5.0.36.exe
-sha512: QNQwMoBXKK+hG6z0rx3IxVtZ3Su5aWeCdncWyd6mNrxcpZ7lPk7mATZ5yWfHdKP0TOyh9F3ty3hpa3SLjHFnZQ==
-releaseNotes: Keeps Germany, Mexico, and China previews visible after import and employee tab changes.
-releaseDate: '2026-06-16T14:33:55.686Z'
+  - url: DemoBuildingToolsSetup-5.0.37.exe
+    sha512: I9ka9H6TqI8mk5jjT8a8USt+vvcyI/Es9f2cT4WBfFVrEsF6r0dOrQfA4zFEsqr4v1c0layIvGMJ7FpObjtx0w==
+    size: 101837688
+path: DemoBuildingToolsSetup-5.0.37.exe
+sha512: I9ka9H6TqI8mk5jjT8a8USt+vvcyI/Es9f2cT4WBfFVrEsF6r0dOrQfA4zFEsqr4v1c0layIvGMJ7FpObjtx0w==
+releaseNotes: Renders Germany preview from the selected slip data without legacy profile rotation.
+releaseDate: '2026-06-16T17:06:37.102Z'

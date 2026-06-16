@@ -4722,7 +4722,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.19';
+var TOOL_VERSION='V5.6.20';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5013,7 +5013,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.19';
+var TOOL_VERSION='V5.6.20';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5215,7 +5215,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.19';
+    var FINAL_VERSION = 'V5.6.20';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7430,7 +7430,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.19';
+    var TOOL_VERSION = 'V5.6.20';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7847,7 +7847,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.18';
-  var PAYSLIP_VERSION = 'V5.6.19';
+  var PAYSLIP_VERSION = 'V5.6.20';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
   try {
@@ -9115,7 +9115,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v572-new-country-preview-shell">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.19';
+  var APP_VERSION = 'V5.6.20';
   var newCountries = { China: true, Mexico: true, Germany: true };
   function valid(country){ return country && newCountries[country] ? country : ''; }
   function selectedCountry(){
@@ -9237,7 +9237,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v573-new-country-legacy-slip-rescue">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.19';
+  var APP_VERSION = 'V5.6.20';
   var newCountries = { China: true, Mexico: true, Germany: true };
   function valid(country){ return country && newCountries[country] ? country : ''; }
   function selectedCountry(){
@@ -9367,7 +9367,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v574-new-country-stable-workflow">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.19';
+  var APP_VERSION = 'V5.6.20';
   var countries = { China:true, Mexico:true, Germany:true };
   var state = { slips: [], index: 0 };
   function valid(c){ return c && countries[c] ? c : ''; }
@@ -9389,7 +9389,20 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
   function rowEditor(name,title){ var s=state.slips[state.index]||{}, arr=s[name]||[]; var html='<div class="v574-section"><h3>'+esc(title)+'</h3>'; arr.forEach(function(r,i){ html+='<div class="v574-row"><input data-v574-row="'+name+'" data-index="'+i+'" data-key="label" value="'+esc(r.label||r.name||'')+'"><input data-v574-row="'+name+'" data-index="'+i+'" data-key="amount" value="'+esc(r.amount||'')+'"><button type="button" class="v574-remove" data-v574-remove="'+name+'" data-index="'+i+'">x</button></div>'; }); html+='<button type="button" class="v574-add" data-v574-add="'+name+'">+ Add row</button></div>'; return html; }
   function renderEditor(){ var s=state.slips[state.index]||{}, country=s.format; var countryFields=country==='Mexico'?field('employer','Employer')+field('employerRfc','Employer RFC')+field('rfc','Employee RFC')+field('curp','CURP')+field('nss','NSS')+field('position','Position')+field('department','Department')+field('costCenter','Cost center'):country==='Germany'?field('company','Company')+field('companyAddress','Company address')+field('address','Employee address','textarea')+field('taxId','Tax ID')+field('sv','Social insurance no.')+field('taxClass','Tax class')+field('health','Health insurance')+field('iban','IBAN'):field('chinaCompany','Company')+field('chinaAssignmentId','Assignment ID')+field('chinaPersonnelArea','Personnel area')+field('chinaTaxId','Tax ID')+field('chinaCostCenter','Cost center')+field('chinaBankCode','Bank code')+field('chinaBankAccount','Bank account'); return '<div class="v574-tabs">'+state.slips.map(function(item,i){return '<button type="button" class="v574-tab '+(i===state.index?'active':'')+'" data-v574-tab="'+i+'">ID : '+esc(item.empcode||i+1)+'</button>';}).join('')+'</div><div class="v574-section"><h3>Employee and period</h3>'+field('empName','Employee name')+field('empcode','Employee ID')+field('payMonth','Pay period')+field('gross','Gross')+field('totalDeductions','Total deductions')+field('net','Net pay')+'</div><div class="v574-section"><h3>'+esc(country)+' fields</h3>'+countryFields+'</div>'+rowEditor('earnings','Earnings')+rowEditor('deductions','Deductions'); }
   function renderBareNewCountryPreview(s){ var cls=s.format==='Germany'?'de-slip':s.format==='Mexico'?'mx-slip':'china-slip'; var title=s.format==='Germany'?'Entgeltabrechnung':s.format==='Mexico'?'RECIBO DE NOMINA':'PAY ADVICE'; var earn=(s.earnings||[]).map(function(r){return '<tr><td>'+esc(r.label||r.name||'Earning')+'</td><td>'+esc(r.amount||'0.00')+'</td></tr>';}).join(''); var ded=(s.deductions||[]).map(function(r){return '<tr><td>'+esc(r.label||r.name||'Deduction')+'</td><td>'+esc(r.amount||'0.00')+'</td></tr>';}).join(''); if(!earn)earn='<tr><td>Salary</td><td>'+esc(s.gross||s.totalGross||'0.00')+'</td></tr>'; if(!ded)ded='<tr><td>Tax</td><td>'+esc(s.totalDeductions||'0.00')+'</td></tr>'; return '<div id="payslip" class="'+cls+'"><section class="de-top mx-top china-box"><div class="de-title mx-title">'+title+'</div><div>'+esc(s.payMonth||'')+'</div></section><section class="de-meta mx-grid china-box"><div><b>Employee</b><br>'+esc(s.empName||'')+'</div><div><b>Employee ID</b><br>'+esc(s.empcode||'')+'</div><div><b>Company</b><br>'+esc(s.company||s.employer||s.chinaCompany||'')+'</div></section><table class="de-main mx-table"><thead><tr><th>Earnings</th><th class="num">Amount</th></tr></thead><tbody>'+earn+'</tbody></table><table class="de-main mx-table"><thead><tr><th>Deductions</th><th class="num">Amount</th></tr></thead><tbody>'+ded+'</tbody></table><div class="mx-summary china-summary-row"><div><span>Gross</span><b>'+esc(s.gross||s.totalGross||'0.00')+'</b></div><div><span>Net</span><b>'+esc(s.net||s.netPay||'0.00')+'</b></div></div></div>'; }
-  function renderPreview(){ var s=state.slips[state.index]; if(!s)return '<div class="v574-empty">No payslip selected</div>'; var html=''; try{ if(s.format==='China'&&typeof window.__renderChinaPayslipV567==='function') html=window.__renderChinaPayslipV567(s); else if(s.format==='Mexico'&&typeof window.__renderMexicoPayslipV568==='function') html=window.__renderMexicoPayslipV568(s); else if(s.format==='Germany'&&typeof window.__renderGermanyPayslipV568==='function') html=window.__renderGermanyPayslipV568(s); else if(typeof window.generatePayslipHTML==='function') html=window.generatePayslipHTML(s,s.format); if(!html&&(s.format==='China'||s.format==='Mexico'||s.format==='Germany')) html=renderBareNewCountryPreview(s); }catch(e){ console.error('Payslip preview render failed',e); if(s.format==='China'||s.format==='Mexico'||s.format==='Germany') html=renderBareNewCountryPreview(s); } return html||'<div class="v574-empty">Preview unavailable</div>'; }
+
+  function renderStableGermanyPreview(s){
+    s=s||{};
+    function value(v,fallback){ return esc(v==null||v===''?fallback||'':v); }
+    function amount(v){ return esc(typeof v==='number'?money(v):(v||'0.00')); }
+    var earnings=(Array.isArray(s.earnings)&&s.earnings.length?s.earnings:[{label:'Monatslohn',amount:money(num(s.gross||0)*0.96)},{label:'VWL / AG-Zuschuss - mtl',amount:money(num(s.gross||0)*0.04)}]);
+    var deductions=(Array.isArray(s.deductions)&&s.deductions.length?s.deductions:[{label:'Lohnsteuer',amount:money(num(s.totalDeductions||0)*0.42)},{label:'Krankenversicherung',amount:money(num(s.totalDeductions||0)*0.22)},{label:'Rentenversicherung',amount:money(num(s.totalDeductions||0)*0.25)},{label:'Arbeitslosenversicherung',amount:money(num(s.totalDeductions||0)*0.05)},{label:'Pflegeversicherung',amount:money(num(s.totalDeductions||0)*0.06)}]);
+    var gross=num(s.gross||s.totalGross||0), net=num(s.net||s.netPay||0);
+    var earnRows=earnings.map(function(r){return '<tr><td colspan="4">'+value(r.label||r.name,'Earning')+'</td><td>L</td><td>L</td><td class="num">'+amount(r.amount)+'</td><td></td></tr>';}).join('');
+    var dedRows=deductions.map(function(r){return '<tr><td>'+value(r.label||r.name,'Deduction')+'</td><td>Brutto (M/J)</td><td class="num">'+amount(gross)+'</td><td></td><td colspan="2"></td><td class="num">'+amount(r.amount)+'</td><td></td></tr>';}).join('');
+    return '<div id="payslip" class="de-slip"><section class="de-top"><div class="de-title">Entgeltabrechnung</div><div class="de-doc">'+value(s.doc,'')+'</div><div class="de-month">'+value(s.payMonth,'')+'</div></section><div class="de-personal"><div class="de-row"><span>Geburtsdatum</span><span>'+value(s.birth,'')+'</span></div><div class="de-row"><span>Sozialversicherungsnummer</span><span>'+value(s.sv,'')+'</span></div><div class="de-row"><span>Identifikationsnummer</span><span>'+value(s.taxId,'')+'</span></div><div class="de-row"><span>Steuerklasse</span><span>'+value(s.taxClass,'')+'</span></div><div class="de-row"><span>Konfession</span><span>'+value(s.church,'')+'</span></div><div class="de-row"><span>Kinderfreibetrag</span><span>'+value(s.children,'')+'</span></div><div class="de-row"><span>Krankenkasse</span><span>'+value(s.health,'')+'</span></div><div class="de-row"><span>Steuer-/SV-Tage</span><span>30/30</span></div><div class="de-row"><span>Woechentliche Arbeitszeit</span><span>40,00</span></div></div><div class="de-company">'+value(s.company,'')+'<br>'+value(s.companyAddress,'')+'</div><div class="de-address">'+String(s.address||'')+'</div><section class="de-meta"><div><b>Personal-Nr.</b><br>'+value(s.empcode,'')+'</div><div><b>Abteilung</b><br>Demo Payroll</div><div><b>Eintritt/Austritt</b><br>'+value(s.entry,'')+'</div></section><table class="de-main"><thead><tr><th colspan="4">Entgeltbestandteile</th><th>St</th><th>SV</th><th class="num">Monat</th><th class="num">Jahressumme</th></tr></thead><tbody>'+earnRows+'<tr class="band"><td colspan="6">Gesamtbrutto</td><td class="num">'+amount(gross)+'</td><td></td></tr>'+dedRows+'<tr class="band"><td colspan="6">Gesamtnetto</td><td class="num">'+amount(net)+'</td><td></td></tr><tr class="band"><td colspan="6">Auszahlung</td><td class="num">'+amount(net)+'</td><td></td></tr></tbody></table><div class="de-note">Ueberweisung&nbsp;&nbsp;&nbsp;&nbsp;IBAN '+value(s.iban,'')+'<br>SEPA payroll transfer</div><table class="de-mini"><tr><th></th><th>LSt lfd.</th><th>KSt lfd.</th><th>Soli lfd.</th><th>KV lfd.</th><th>RV lfd.</th><th>AV lfd.</th><th>PV lfd.</th></tr><tr><td>Brutto mtl</td><td>'+amount(gross)+'</td><td>'+amount(gross)+'</td><td>'+amount(gross)+'</td><td>'+amount(gross)+'</td><td>'+amount(gross)+'</td><td>'+amount(gross)+'</td><td>'+amount(gross)+'</td></tr></table><section class="de-legend"><div><b>Legende St/SV</b><br>L = Laufender Bezug / Gesamtbrutto</div><div>E = Einmaliger Bezug<br>F = Frei</div><div>M = Ermaessigt<br>P = Pauschalbesteuert</div><div>S = Sonstiger Bezug<br>Demo statement</div></section><footer class="de-footer"><div>'+new Date().toLocaleDateString('de-DE')+'</div><div class="c">edlohn demo</div><div class="r">-nicht gespeichert-</div></footer></div>';
+  }
+
+  function renderPreview(){ var s=state.slips[state.index]; if(!s)return '<div class="v574-empty">No payslip selected</div>'; var html=''; try{ if(s.format==='Germany') html=renderStableGermanyPreview(s); else if(s.format==='China'&&typeof window.__renderChinaPayslipV567==='function') html=window.__renderChinaPayslipV567(s); else if(s.format==='Mexico'&&typeof window.__renderMexicoPayslipV568==='function') html=window.__renderMexicoPayslipV568(s); else if(typeof window.generatePayslipHTML==='function') html=window.generatePayslipHTML(s,s.format); if(!html&&(s.format==='China'||s.format==='Mexico'||s.format==='Germany')) html=renderBareNewCountryPreview(s); }catch(e){ console.error('Payslip preview render failed',e); if(s.format==='Germany') html=renderStableGermanyPreview(s); else if(s.format==='China'||s.format==='Mexico') html=renderBareNewCountryPreview(s); } return html||'<div class="v574-empty">Preview unavailable</div>'; }
   function syncDerived(s){ s.totalGross=money(s.gross); s.netPay=money(s.net); s.chinaBankAmount=money(s.net); s.chinaStatDed=money(s.totalDeductions); s.chinaEarnings=(s.earnings||[]).map(function(r){return {name:r.label,unit:'0.00',amount:r.amount};}); s.chinaDeductions=(s.deductions||[]).map(function(r){return {name:r.label,amount:r.amount};}); }
   function paintPreview(){ var preview=document.getElementById('v574Preview'); if(!preview)return; preview.innerHTML=renderPreview(); var rendered=preview.querySelector('#payslip,.china-slip,.mx-slip,.de-slip'); if(rendered){ rendered.style.setProperty('display','block','important'); rendered.style.margin='20px auto'; } }
   function guardPreview(){ [0,40,120,260,600].forEach(function(delay){ setTimeout(paintPreview,delay); }); }
