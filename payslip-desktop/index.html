@@ -4722,7 +4722,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.18';
+var TOOL_VERSION='V5.6.19';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5013,7 +5013,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.18';
+var TOOL_VERSION='V5.6.19';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5215,7 +5215,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.18';
+    var FINAL_VERSION = 'V5.6.19';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7430,7 +7430,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.18';
+    var TOOL_VERSION = 'V5.6.19';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7847,7 +7847,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.18';
-  var PAYSLIP_VERSION = 'V5.6.18';
+  var PAYSLIP_VERSION = 'V5.6.19';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
   try {
@@ -9115,7 +9115,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v572-new-country-preview-shell">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.18';
+  var APP_VERSION = 'V5.6.19';
   var newCountries = { China: true, Mexico: true, Germany: true };
   function valid(country){ return country && newCountries[country] ? country : ''; }
   function selectedCountry(){
@@ -9237,7 +9237,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v573-new-country-legacy-slip-rescue">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.18';
+  var APP_VERSION = 'V5.6.19';
   var newCountries = { China: true, Mexico: true, Germany: true };
   function valid(country){ return country && newCountries[country] ? country : ''; }
   function selectedCountry(){
@@ -9367,7 +9367,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v574-new-country-stable-workflow">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.18';
+  var APP_VERSION = 'V5.6.19';
   var countries = { China:true, Mexico:true, Germany:true };
   var state = { slips: [], index: 0 };
   function valid(c){ return c && countries[c] ? c : ''; }
@@ -9391,11 +9391,14 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
   function renderBareNewCountryPreview(s){ var cls=s.format==='Germany'?'de-slip':s.format==='Mexico'?'mx-slip':'china-slip'; var title=s.format==='Germany'?'Entgeltabrechnung':s.format==='Mexico'?'RECIBO DE NOMINA':'PAY ADVICE'; var earn=(s.earnings||[]).map(function(r){return '<tr><td>'+esc(r.label||r.name||'Earning')+'</td><td>'+esc(r.amount||'0.00')+'</td></tr>';}).join(''); var ded=(s.deductions||[]).map(function(r){return '<tr><td>'+esc(r.label||r.name||'Deduction')+'</td><td>'+esc(r.amount||'0.00')+'</td></tr>';}).join(''); if(!earn)earn='<tr><td>Salary</td><td>'+esc(s.gross||s.totalGross||'0.00')+'</td></tr>'; if(!ded)ded='<tr><td>Tax</td><td>'+esc(s.totalDeductions||'0.00')+'</td></tr>'; return '<div id="payslip" class="'+cls+'"><section class="de-top mx-top china-box"><div class="de-title mx-title">'+title+'</div><div>'+esc(s.payMonth||'')+'</div></section><section class="de-meta mx-grid china-box"><div><b>Employee</b><br>'+esc(s.empName||'')+'</div><div><b>Employee ID</b><br>'+esc(s.empcode||'')+'</div><div><b>Company</b><br>'+esc(s.company||s.employer||s.chinaCompany||'')+'</div></section><table class="de-main mx-table"><thead><tr><th>Earnings</th><th class="num">Amount</th></tr></thead><tbody>'+earn+'</tbody></table><table class="de-main mx-table"><thead><tr><th>Deductions</th><th class="num">Amount</th></tr></thead><tbody>'+ded+'</tbody></table><div class="mx-summary china-summary-row"><div><span>Gross</span><b>'+esc(s.gross||s.totalGross||'0.00')+'</b></div><div><span>Net</span><b>'+esc(s.net||s.netPay||'0.00')+'</b></div></div></div>'; }
   function renderPreview(){ var s=state.slips[state.index]; if(!s)return '<div class="v574-empty">No payslip selected</div>'; var html=''; try{ if(s.format==='China'&&typeof window.__renderChinaPayslipV567==='function') html=window.__renderChinaPayslipV567(s); else if(s.format==='Mexico'&&typeof window.__renderMexicoPayslipV568==='function') html=window.__renderMexicoPayslipV568(s); else if(s.format==='Germany'&&typeof window.__renderGermanyPayslipV568==='function') html=window.__renderGermanyPayslipV568(s); else if(typeof window.generatePayslipHTML==='function') html=window.generatePayslipHTML(s,s.format); if(!html&&(s.format==='China'||s.format==='Mexico'||s.format==='Germany')) html=renderBareNewCountryPreview(s); }catch(e){ console.error('Payslip preview render failed',e); if(s.format==='China'||s.format==='Mexico'||s.format==='Germany') html=renderBareNewCountryPreview(s); } return html||'<div class="v574-empty">Preview unavailable</div>'; }
   function syncDerived(s){ s.totalGross=money(s.gross); s.netPay=money(s.net); s.chinaBankAmount=money(s.net); s.chinaStatDed=money(s.totalDeductions); s.chinaEarnings=(s.earnings||[]).map(function(r){return {name:r.label,unit:'0.00',amount:r.amount};}); s.chinaDeductions=(s.deductions||[]).map(function(r){return {name:r.label,amount:r.amount};}); }
-  function renderWorkspace(){ var s=state.slips[state.index]; if(!s)return; hideLegacy(); ensureChrome(s.format); var main=document.getElementById('main'); if(main){ main.style.setProperty('display','block','important'); main.innerHTML='<div id="v574Workspace"><aside id="v574Editor"></aside><section id="v574Preview"></section></div>'; } var editor=document.getElementById('v574Editor'), preview=document.getElementById('v574Preview'); if(editor) editor.innerHTML=renderEditor(); if(preview){ preview.innerHTML=renderPreview(); var rendered=preview.querySelector('#payslip,.china-slip,.mx-slip,.de-slip'); if(rendered){ rendered.style.setProperty('display','block','important'); rendered.style.margin='20px auto'; } } }
-  document.addEventListener('click',function(ev){ var tab=ev.target&&ev.target.closest?ev.target.closest('[data-v574-tab]'):null; if(tab){ state.index=parseInt(tab.getAttribute('data-v574-tab'),10)||0; renderWorkspace(); return; } var add=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-v574-add'):''; if(add){ var s=state.slips[state.index]; if(s){ if(!Array.isArray(s[add]))s[add]=[]; s[add].push({label:'New item',amount:'0.00'}); syncDerived(s); renderWorkspace(); } return; } var rem=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-v574-remove'):''; if(rem){ var idx=parseInt(ev.target.getAttribute('data-index'),10); var s2=state.slips[state.index]; if(s2&&Array.isArray(s2[rem])){ s2[rem].splice(idx,1); syncDerived(s2); renderWorkspace(); } } },true);
-  document.addEventListener('input',function(ev){ var s=state.slips[state.index]; if(!s)return; var key=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-v574-field'):''; if(key){ s[key]=ev.target.value; if(key==='gross'||key==='totalDeductions'||key==='net')s[key]=num(ev.target.value); syncDerived(s); var preview=document.getElementById('v574Preview'); if(preview){ preview.innerHTML=renderPreview(); var rendered=preview.querySelector('#payslip,.china-slip,.mx-slip,.de-slip'); if(rendered){ rendered.style.setProperty('display','block','important'); rendered.style.margin='20px auto'; } } return; } var row=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-v574-row'):''; if(row){ var idx=parseInt(ev.target.getAttribute('data-index'),10), k=ev.target.getAttribute('data-key'); if(s[row]&&s[row][idx]){ s[row][idx][k]=ev.target.value; syncDerived(s); var p=document.getElementById('v574Preview'); if(p){ p.innerHTML=renderPreview(); var rendered=p.querySelector('#payslip,.china-slip,.mx-slip,.de-slip'); if(rendered){ rendered.style.setProperty('display','block','important'); rendered.style.margin='20px auto'; } } } } },true);
+  function paintPreview(){ var preview=document.getElementById('v574Preview'); if(!preview)return; preview.innerHTML=renderPreview(); var rendered=preview.querySelector('#payslip,.china-slip,.mx-slip,.de-slip'); if(rendered){ rendered.style.setProperty('display','block','important'); rendered.style.margin='20px auto'; } }
+  function guardPreview(){ [0,40,120,260,600].forEach(function(delay){ setTimeout(paintPreview,delay); }); }
+  function ownEvent(ev){ if(ev&&ev.stopImmediatePropagation)ev.stopImmediatePropagation(); else if(ev&&ev.stopPropagation)ev.stopPropagation(); }
+  function renderWorkspace(){ var s=state.slips[state.index]; if(!s)return; window.__v574PreviewActive=true; hideLegacy(); ensureChrome(s.format); var main=document.getElementById('main'); if(main){ main.style.setProperty('display','block','important'); main.innerHTML='<div id="v574Workspace"><aside id="v574Editor"></aside><section id="v574Preview"></section></div>'; } var editor=document.getElementById('v574Editor'); if(editor) editor.innerHTML=renderEditor(); paintPreview(); guardPreview(); }
+  document.addEventListener('click',function(ev){ var tab=ev.target&&ev.target.closest?ev.target.closest('[data-v574-tab]'):null; if(tab){ ownEvent(ev); state.index=parseInt(tab.getAttribute('data-v574-tab'),10)||0; renderWorkspace(); return; } var add=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-v574-add'):''; if(add){ ownEvent(ev); var s=state.slips[state.index]; if(s){ if(!Array.isArray(s[add]))s[add]=[]; s[add].push({label:'New item',amount:'0.00'}); syncDerived(s); renderWorkspace(); } return; } var rem=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-v574-remove'):''; if(rem){ ownEvent(ev); var idx=parseInt(ev.target.getAttribute('data-index'),10); var s2=state.slips[state.index]; if(s2&&Array.isArray(s2[rem])){ s2[rem].splice(idx,1); syncDerived(s2); renderWorkspace(); } } },true);
+  document.addEventListener('input',function(ev){ var s=state.slips[state.index]; if(!s)return; var key=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-v574-field'):''; if(key){ ownEvent(ev); s[key]=ev.target.value; if(key==='gross'||key==='totalDeductions'||key==='net')s[key]=num(ev.target.value); syncDerived(s); paintPreview(); guardPreview(); return; } var row=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-v574-row'):''; if(row){ ownEvent(ev); var idx=parseInt(ev.target.getAttribute('data-index'),10), k=ev.target.getAttribute('data-key'); if(s[row]&&s[row][idx]){ s[row][idx][k]=ev.target.value; syncDerived(s); paintPreview(); guardPreview(); } } },true);
   var previousProcessPdf=window.processPdf;
-  window.processPdf=processPdf=async function(arrayBuffer){ var country=selectedCountry(); if(!country) return previousProcessPdf?previousProcessPdf.apply(this,arguments):undefined; window.__lastPayslipCountry=country; window.__selectedImportTemplateV31=country; try{ state.slips=await extractSlips(arrayBuffer,country); state.index=0; window.importedSlips=state.slips; try{ importedSlips=state.slips; }catch(e){} renderWorkspace(); return; }catch(err){ console.error(err); alert('Failed to process '+country+' PDF. '+(err&&err.message?err.message:err)); } };
+  window.processPdf=processPdf=async function(arrayBuffer){ var country=selectedCountry(); if(!country) return previousProcessPdf?previousProcessPdf.apply(this,arguments):undefined; window.__lastPayslipCountry=country; window.__selectedImportTemplateV31=country; try{ state.slips=await extractSlips(arrayBuffer,country); state.index=0; window.importedSlips=state.slips; try{ importedSlips=state.slips; }catch(e){} renderWorkspace(); guardPreview(); return; }catch(err){ console.error(err); alert('Failed to process '+country+' PDF. '+(err&&err.message?err.message:err)); } };
   window.__v574RenderNewCountryWorkspace=function(country,slips){ state.slips=(slips&&slips.length?slips:[makeSlip(country||selectedCountry(),[],0)]); state.index=0; renderWorkspace(); };
 })();
 </script>

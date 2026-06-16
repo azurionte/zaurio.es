@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.35",
+  "version": "5.0.36",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixes Germany, Mexico, and China preview rendering with a self-contained stable editor preview path."
+      "releaseNotes": "Keeps Germany, Mexico, and China previews visible after import and employee tab changes."
     },
     "nsis": {
       "perMachine": false,

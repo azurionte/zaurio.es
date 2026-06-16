@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.18",
+  "version": "5.6.19",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Fixes Germany, Mexico, and China preview rendering with a self-contained stable editor preview path.",
+  "notes": "Keeps Germany, Mexico, and China previews visible after import and employee tab changes.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.18"
+      "url": "payslip-converter.html?v=5.6.19"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.18"
+      "url": "assets/adp-logo.png?v=5.6.19"
     }
   ]
 }

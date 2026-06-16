@@ -1,9 +1,9 @@
-version: 5.0.35
+version: 5.0.36
 files:
-  - url: DemoBuildingToolsSetup-5.0.35.exe
-    sha512: DP6ioxHd2AIMla5B2rV+/70D9t09FWh1HruSnJEcpG47agEaZAyJe3rb64yNW2m0q61EnmXaaG84BfYuDnggVQ==
-    size: 101836690
-path: DemoBuildingToolsSetup-5.0.35.exe
-sha512: DP6ioxHd2AIMla5B2rV+/70D9t09FWh1HruSnJEcpG47agEaZAyJe3rb64yNW2m0q61EnmXaaG84BfYuDnggVQ==
-releaseNotes: Fixes Germany, Mexico, and China preview rendering with a self-contained stable editor preview path.
-releaseDate: '2026-06-16T09:15:28.725Z'
+  - url: DemoBuildingToolsSetup-5.0.36.exe
+    sha512: QNQwMoBXKK+hG6z0rx3IxVtZ3Su5aWeCdncWyd6mNrxcpZ7lPk7mATZ5yWfHdKP0TOyh9F3ty3hpa3SLjHFnZQ==
+    size: 101836810
+path: DemoBuildingToolsSetup-5.0.36.exe
+sha512: QNQwMoBXKK+hG6z0rx3IxVtZ3Su5aWeCdncWyd6mNrxcpZ7lPk7mATZ5yWfHdKP0TOyh9F3ty3hpa3SLjHFnZQ==
+releaseNotes: Keeps Germany, Mexico, and China previews visible after import and employee tab changes.
+releaseDate: '2026-06-16T14:33:55.686Z'
