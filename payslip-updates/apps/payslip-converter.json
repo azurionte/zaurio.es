@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.23",
+  "version": "5.6.24",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-16T00:00:00Z",
-  "notes": "Prevents PDF.js parser warnings from leaving Germany imports stuck on Reading PDF and falls back to a usable Germany demo payslip when text extraction fails.",
+  "notes": "Removes the fake desktop PDF worker error and makes Germany import fall back quickly instead of staying on Reading PDF locally.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.23"
+      "url": "payslip-converter.html?v=5.6.24"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.23"
+      "url": "assets/adp-logo.png?v=5.6.24"
     }
   ]
 }

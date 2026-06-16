@@ -1,9 +1,9 @@
-version: 5.0.40
+version: 5.0.41
 files:
-  - url: DemoBuildingToolsSetup-5.0.40.exe
-    sha512: Jctp1g0f2P5/isNV8zeweRwc4Ar5l+d5epbiOfwoBPTNQUk3MoZjLTC7WHMWM6sbJPfjDH3ONlCXFvJ1ZMQBPQ==
-    size: 101842948
-path: DemoBuildingToolsSetup-5.0.40.exe
-sha512: Jctp1g0f2P5/isNV8zeweRwc4Ar5l+d5epbiOfwoBPTNQUk3MoZjLTC7WHMWM6sbJPfjDH3ONlCXFvJ1ZMQBPQ==
-releaseNotes: Prevents PDF parser warnings from leaving Germany imports stuck on Reading PDF.
-releaseDate: '2026-06-16T20:02:51.747Z'
+  - url: DemoBuildingToolsSetup-5.0.41.exe
+    sha512: uhhGkgZbo0cuEZzoOp8TD8XXBIOM5QX8QYUCkEg09GYbF/T9klHaAw6exRlzOE8Krr6hnB5oFzYliQcgOixA7g==
+    size: 101843084
+path: DemoBuildingToolsSetup-5.0.41.exe
+sha512: uhhGkgZbo0cuEZzoOp8TD8XXBIOM5QX8QYUCkEg09GYbF/T9klHaAw6exRlzOE8Krr6hnB5oFzYliQcgOixA7g==
+releaseNotes: Removes the fake desktop PDF worker error and makes Germany import fall back quickly instead of staying on local PDF parsing.
+releaseDate: '2026-06-16T20:21:39.250Z'
