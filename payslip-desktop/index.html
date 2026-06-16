@@ -4722,7 +4722,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.20';
+var TOOL_VERSION='V5.6.21';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5013,7 +5013,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.20';
+var TOOL_VERSION='V5.6.21';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5215,7 +5215,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.20';
+    var FINAL_VERSION = 'V5.6.21';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7430,7 +7430,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.20';
+    var TOOL_VERSION = 'V5.6.21';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7847,7 +7847,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.18';
-  var PAYSLIP_VERSION = 'V5.6.20';
+  var PAYSLIP_VERSION = 'V5.6.21';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
   try {
@@ -9115,7 +9115,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v572-new-country-preview-shell">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.20';
+  var APP_VERSION = 'V5.6.21';
   var newCountries = { China: true, Mexico: true, Germany: true };
   function valid(country){ return country && newCountries[country] ? country : ''; }
   function selectedCountry(){
@@ -9237,7 +9237,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v573-new-country-legacy-slip-rescue">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.20';
+  var APP_VERSION = 'V5.6.21';
   var newCountries = { China: true, Mexico: true, Germany: true };
   function valid(country){ return country && newCountries[country] ? country : ''; }
   function selectedCountry(){
@@ -9367,7 +9367,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v574-new-country-stable-workflow">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.20';
+  var APP_VERSION = 'V5.6.21';
   var countries = { China:true, Mexico:true, Germany:true };
   var state = { slips: [], index: 0 };
   function valid(c){ return c && countries[c] ? c : ''; }
@@ -9463,5 +9463,49 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 
   <!-- Loading overlay to indicate PDF processing progress -->
   <div id="loading-overlay">Processing PDF…</div>
+
+<style id="germany-final-controller-style">
+#sidebarGermany{display:none;background:#1f1f1f;padding:20px;overflow-y:auto;color:#fff;box-sizing:border-box;width:100%;height:100%}
+#sidebarGermany .de-side-section{background:#151515;border:1px solid #2d2d2d;border-radius:8px;padding:12px;margin-bottom:14px;overflow-x:auto}
+#sidebarGermany h3{margin:0 0 10px;font-size:16px}#sidebarGermany h4{margin:0 0 8px;font-size:13px;color:#fff}
+#sidebarGermany label{display:block;margin:8px 0 3px;font-size:12px;color:#ddd}#sidebarGermany input,#sidebarGermany textarea{width:100%;box-sizing:border-box;background:#2a2a2a;border:1px solid #444;border-radius:4px;color:#fff;padding:7px;font-size:12px}#sidebarGermany textarea{min-height:72px;resize:vertical}
+#sidebarGermany .de-side-table{width:100%;border-collapse:collapse;table-layout:auto;font-size:11px}#sidebarGermany .de-side-table th{color:#ccc;text-align:left;font-weight:700;padding:3px;white-space:nowrap}#sidebarGermany .de-side-table td{padding:3px;vertical-align:top}#sidebarGermany .de-side-table input{min-width:90px;padding:5px;font-size:11px}
+#sidebarGermany .de-add-btn,#sidebarGermany .de-mini-btn{background:#0066cc;color:#fff;border:0;border-radius:4px;padding:5px 8px;cursor:pointer;font-size:11px}#sidebarGermany .de-mini-btn{background:#444;padding:4px 7px}
+#payslipGermany{display:none;width:100%;justify-content:center;align-items:flex-start;padding:20px 0;overflow:auto;background:#111}
+</style>
+<script id="germany-final-controller">
+(function(){
+  'use strict';
+  var APP_VERSION='V5.6.21';
+  function clean(v){return String(v==null?'':v).replace(/\s+/g,' ').trim();}
+  function esc(v){return clean(v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function num(v){var s=String(v==null?'':v).replace(/[^\d,.-]/g,''); if(/,\d{2}$/.test(s))s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,/g,''); var n=parseFloat(s); return isFinite(n)?n:0;}
+  function money(v){var n=typeof v==='number'?v:num(v); return n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function isGermany(){var f=document.getElementById('formatSelect');return (f&&f.value==='Germany')||window.__selectedImportTemplateV31==='Germany'||window.__lastPayslipCountry==='Germany';}
+  function allGermanySlips(){var slips=[];try{if(Array.isArray(window.importedSlips))slips=window.importedSlips;}catch(e){}try{if(!slips.length&&Array.isArray(importedSlips))slips=importedSlips;}catch(e){}return (slips||[]).filter(function(s){return s&&s.format==='Germany';});}
+  function activeSlipFromTabs(){try{var n=document.querySelector('#namesTabs .tab-name.active');var p=document.querySelector('#periodTabs .tab-period.active');var name=n&&n.dataset.name,period=p&&p.dataset.period;if(name&&period&&window.groupedSlips&&window.groupedSlips[name]){var s=window.groupedSlips[name][period];if(s&&s.format==='Germany')return s;}}catch(e){}return null;}
+  function selectedGermanySlip(){try{var a=activeSlipFromTabs();if(a)return a;if(window.groupedSlips&&window.currentName&&window.currentPeriod&&window.groupedSlips[window.currentName]){var s=window.groupedSlips[window.currentName][window.currentPeriod];if(s&&s.format==='Germany')return s;}}catch(e){}return allGermanySlips()[0]||null;}
+  function ensureGermanyPreview(){var content=document.getElementById('content');if(!content)return;var prev=document.getElementById('payslipGermany');if(!prev){prev=document.createElement('div');prev.id='payslipGermany';content.appendChild(prev);} }
+  function ensureGermanySidebar(){var wrap=document.getElementById('sidebar-wrapper');if(!wrap)return;var side=document.getElementById('sidebarGermany');if(!side){side=document.createElement('div');side.id='sidebarGermany';wrap.appendChild(side);side.addEventListener('input',onGermanySidebarInput);side.addEventListener('click',onGermanySidebarClick);} }
+  function getPath(obj,path){return String(path).split('.').reduce(function(o,k){return o==null?'':o[k];},obj);}
+  function setPath(obj,path,val){var parts=String(path).split('.'),o=obj;for(var i=0;i<parts.length-1;i++){if(o[parts[i]]==null)o[parts[i]]=/^\d+$/.test(parts[i+1])?[]:{};o=o[parts[i]];}o[parts[parts.length-1]]=val;}
+  function field(label,path,value,type){return '<label>'+esc(label)+(type==='textarea'?'<textarea data-de-path="'+esc(path)+'">'+esc(value||'')+'</textarea>':'<input data-de-path="'+esc(path)+'" value="'+esc(value||'')+'">')+'</label>';}
+  function tableInputs(title,items,base){var h='<div class="de-side-section"><h4>'+esc(title)+'</h4><table class="de-side-table"><thead><tr><th>Description</th><th>Amount</th><th></th></tr></thead><tbody>';(items||[]).forEach(function(r,i){h+='<tr><td><input data-de-path="'+base+'.'+i+'.label" value="'+esc(r.label||r.name||'')+'"></td><td><input data-de-path="'+base+'.'+i+'.amount" value="'+esc(r.amount||'')+'"></td><td><button type="button" class="de-mini-btn" data-de-remove="'+base+'.'+i+'">x</button></td></tr>';});return h+'</tbody></table><button type="button" class="de-add-btn" data-de-add="'+base+'">+ Add row</button></div>';}
+  function normalizeGermanySlip(s){if(!s)return s;s.format='Germany';s.country='Germany';s.company=s.company||'ADP Deutschland GmbH';s.companyAddress=s.companyAddress||'Frankfurter Allee 71 - 10247 Berlin';s.address=s.address||'Herrn<br>Gustav Arbeiter<br>Musterstrasse 112<br>10478 Berlin';s.doc=s.doc||'00996/411';s.taxId=s.taxId||'25501946873';s.sv=s.sv||'65260262A069';s.birth=s.birth||'26.02.1962';s.taxClass=s.taxClass||'4';s.church=s.church||'ev';s.children=s.children||'2,0';s.health=s.health||'TKK';s.entry=s.entry||'01.01.2014';s.iban=s.iban||'DE58 5421 0111 2467 1525 00';s.gross=num(s.gross||s.totalGross||5200);s.totalDeductions=num(s.totalDeductions||1456);s.net=num(s.net||s.netPay||s.gross-s.totalDeductions);if(!Array.isArray(s.earnings)||!s.earnings.length)s.earnings=[{label:'Monatslohn',amount:money(s.gross*.96)},{label:'VWL / AG-Zuschuss - mtl',amount:money(s.gross*.04)}];if(!Array.isArray(s.deductions)||!s.deductions.length)s.deductions=[{label:'Lohnsteuer',amount:money(s.totalDeductions*.42)},{label:'Krankenversicherung',amount:money(s.totalDeductions*.22)},{label:'Rentenversicherung',amount:money(s.totalDeductions*.25)},{label:'Arbeitslosenversicherung',amount:money(s.totalDeductions*.05)},{label:'Pflegeversicherung',amount:money(s.totalDeductions*.06)}];return s;}
+  function renderGermanyTemplate(s){s=normalizeGermanySlip(s||{});var earn=s.earnings.map(function(r){return '<tr><td colspan="4">'+esc(r.label||r.name)+'</td><td>L</td><td>L</td><td class="num">'+esc(r.amount)+'</td><td></td></tr>';}).join('');var ded=s.deductions.map(function(r){return '<tr><td>'+esc(r.label||r.name)+'</td><td>Brutto (M/J)</td><td class="num">'+money(s.gross)+'</td><td></td><td colspan="2"></td><td class="num">'+esc(r.amount)+'</td><td></td></tr>';}).join('');return '<div id="payslip" class="de-slip"><section class="de-top"><div class="de-title">Entgeltabrechnung</div><div class="de-doc">'+esc(s.doc)+'</div><div class="de-month">'+esc(s.payMonth||'')+'</div></section><div class="de-personal"><div class="de-row"><span>Geburtsdatum</span><span>'+esc(s.birth)+'</span></div><div class="de-row"><span>Sozialversicherungsnummer</span><span>'+esc(s.sv)+'</span></div><div class="de-row"><span>Identifikationsnummer</span><span>'+esc(s.taxId)+'</span></div><div class="de-row"><span>Steuerklasse</span><span>'+esc(s.taxClass)+'</span></div><div class="de-row"><span>Konfession</span><span>'+esc(s.church)+'</span></div><div class="de-row"><span>Kinderfreibetrag</span><span>'+esc(s.children)+'</span></div><div class="de-row"><span>Krankenkasse</span><span>'+esc(s.health)+'</span></div><div class="de-row"><span>Steuer-/SV-Tage</span><span>30/30</span></div><div class="de-row"><span>Woechentliche Arbeitszeit</span><span>40,00</span></div></div><div class="de-company">'+esc(s.company)+'<br>'+esc(s.companyAddress)+'</div><div class="de-address">'+String(s.address||'')+'</div><section class="de-meta"><div><b>Personal-Nr.</b><br>'+esc(s.empcode||'')+'</div><div><b>Abteilung</b><br>Demo Payroll</div><div><b>Eintritt/Austritt</b><br>'+esc(s.entry)+'</div></section><table class="de-main"><thead><tr><th colspan="4">Entgeltbestandteile</th><th>St</th><th>SV</th><th class="num">Monat</th><th class="num">Jahressumme</th></tr></thead><tbody>'+earn+'<tr class="band"><td colspan="6">Gesamtbrutto</td><td class="num">'+money(s.gross)+'</td><td></td></tr>'+ded+'<tr class="band"><td colspan="6">Gesamtnetto</td><td class="num">'+money(s.net)+'</td><td></td></tr><tr class="band"><td colspan="6">Auszahlung</td><td class="num">'+money(s.net)+'</td><td></td></tr></tbody></table><div class="de-note">Ueberweisung&nbsp;&nbsp;&nbsp;&nbsp;IBAN '+esc(s.iban)+'<br>SEPA payroll transfer</div><table class="de-mini"><tr><th></th><th>LSt lfd.</th><th>KSt lfd.</th><th>Soli lfd.</th><th>KV lfd.</th><th>RV lfd.</th><th>AV lfd.</th><th>PV lfd.</th></tr><tr><td>Brutto mtl</td><td>'+money(s.gross)+'</td><td>'+money(s.gross)+'</td><td>'+money(s.gross)+'</td><td>'+money(s.gross)+'</td><td>'+money(s.gross)+'</td><td>'+money(s.gross)+'</td><td>'+money(s.gross)+'</td></tr></table><section class="de-legend"><div><b>Legende St/SV</b><br>L = Laufender Bezug / Gesamtbrutto</div><div>E = Einmaliger Bezug<br>F = Frei</div><div>M = Ermaessigt<br>P = Pauschalbesteuert</div><div>S = Sonstiger Bezug<br>Demo statement</div></section><footer class="de-footer"><div>'+new Date().toLocaleDateString('de-DE')+'</div><div class="c">edlohn demo</div><div class="r">-nicht gespeichert-</div></footer></div>';}
+  function fillGermanySidebar(s){ensureGermanySidebar();s=normalizeGermanySlip(s||selectedGermanySlip());var side=document.getElementById('sidebarGermany');if(!side||!s)return;side.innerHTML='<div class="card"><h3>Germany Employee and Period</h3>'+field('Employee name','empName',s.empName)+field('Employee ID','empcode',s.empcode)+field('Pay period','payMonth',s.payMonth)+field('Gross','gross',s.gross)+field('Total deductions','totalDeductions',s.totalDeductions)+field('Net pay','net',s.net)+'</div><div class="card"><h3>Germany Fields</h3>'+field('Company','company',s.company)+field('Company address','companyAddress',s.companyAddress)+field('Employee address','address',String(s.address||'').replace(/<br>/g,'\n'),'textarea')+field('Document','doc',s.doc)+field('Tax ID','taxId',s.taxId)+field('Social insurance no.','sv',s.sv)+field('Birth date','birth',s.birth)+field('Tax class','taxClass',s.taxClass)+field('Church','church',s.church)+field('Children allowance','children',s.children)+field('Health insurance','health',s.health)+field('Entry date','entry',s.entry)+field('IBAN','iban',s.iban)+'</div>'+tableInputs('Earnings',s.earnings,'earnings')+tableInputs('Deductions',s.deductions,'deductions');}
+  function renderSelectedGermany(rebuildSidebar){var s=normalizeGermanySlip(selectedGermanySlip());ensureGermanyPreview();var prev=document.getElementById('payslipGermany');if(prev&&s){prev.innerHTML=renderGermanyTemplate(s);if(rebuildSidebar!==false)fillGermanySidebar(s);}}
+  function forceGermanyOnly(){if(!isGermany())return;window.__selectedImportTemplateV31='Germany';window.__lastPayslipCountry='Germany';var fmt=document.getElementById('formatSelect');if(fmt)fmt.value='Germany';ensureGermanySidebar();ensureGermanyPreview();['payslip','payslipUK','payslipBrazil','payslipAustralia','v574Workspace','combinedContainer','downloadCombinedContainer'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.setProperty('display','none','important');});var side=document.getElementById('sidebar');if(side)side.style.display='none';var uk=document.getElementById('sidebarUK');if(uk)uk.style.display='none';var br=document.getElementById('sidebarBrazil');if(br)br.style.display='none';var au=document.getElementById('sidebarAustralia');if(au)au.style.display='none';var deSide=document.getElementById('sidebarGermany');if(deSide)deSide.style.display='block';var dePrev=document.getElementById('payslipGermany');if(dePrev)dePrev.style.setProperty('display','flex','important');var main=document.getElementById('main');if(main)main.style.setProperty('display','flex','important');renderSelectedGermany();if(typeof placeHierarchy==='function')placeHierarchy();}
+  function onGermanySidebarInput(ev){var el=ev.target;if(!el||!el.getAttribute)return;var path=el.getAttribute('data-de-path');if(!path)return;var s=selectedGermanySlip();if(!s)return;var val=el.value;if(path==='address')val=val.split(/\n+/).map(clean).filter(Boolean).join('<br>');setPath(s,path,val);if(path==='gross'||path==='totalDeductions'||path==='net')s[path]=num(val);if(path==='gross'||path==='totalDeductions')s.net=num(s.gross)-num(s.totalDeductions);renderSelectedGermany(false);}
+  function onGermanySidebarClick(ev){var add=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-de-add'):null;var rem=ev.target&&ev.target.getAttribute?ev.target.getAttribute('data-de-remove'):null;var s=selectedGermanySlip();if(!s)return;if(add){if(!Array.isArray(s[add]))s[add]=[];s[add].push({label:'New item',amount:'0,00'});fillGermanySidebar(s);renderSelectedGermany(false);}if(rem){var p=rem.split('.'),arr=s[p[0]],idx=parseInt(p[1],10);if(Array.isArray(arr)&&idx>=0){arr.splice(idx,1);fillGermanySidebar(s);renderSelectedGermany(false);}}}
+  var previousFinish=window.finishImport;if(typeof previousFinish==='function'){window.finishImport=finishImport=function(){if(window.pendingImportedSlips&&pendingImportedSlips&&pendingImportedSlips.length&&pendingImportedSlips[0].format==='Germany'){importedSlips=pendingImportedSlips;window.importedSlips=importedSlips;importedFileName=pendingImportedFileName||importedFileName||'';['country-modal-overlay','modal-overlay','intro-overlay','splash','template-choice-overlay'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var main=document.getElementById('main');if(main)main.style.display='flex';var fmt=document.getElementById('formatSelect');if(fmt){fmt.value='Germany';fmt.dispatchEvent(new Event('change'));}groupSlips();buildHierarchyUI();if(typeof placeHierarchy==='function')placeHierarchy();var firstName=Object.keys(groupedSlips)[0];var firstPeriod=firstName?Object.keys(groupedSlips[firstName])[0]:null;currentName=window.currentName=firstName||null;currentPeriod=window.currentPeriod=firstPeriod||null;if(typeof updateTabsHighlight==='function')updateTabsHighlight();pendingImportedSlips=null;pendingImportedFileName='';pendingDetectedCountry='';countryModalMode='';window.__selectedImportTemplateV31='Germany';forceGermanyOnly();return;}return previousFinish.apply(this,arguments);};}
+  function handleGermanyTabClick(ev){if(!isGermany())return;var tab=ev.target&&ev.target.closest?ev.target.closest('.tab-name,.tab-period,[data-v574-tab]'):null;if(!tab)return;ev.preventDefault();ev.stopImmediatePropagation();if(tab.hasAttribute('data-v574-tab')){var slips=allGermanySlips(),idx=parseInt(tab.getAttribute('data-v574-tab'),10)||0;if(slips[idx]){currentName=window.currentName=slips[idx].empName;currentPeriod=window.currentPeriod=slips[idx].payMonth;}}else{var name=tab.dataset.name||currentName||window.currentName;if(!name||!groupedSlips||!groupedSlips[name])return;var period=tab.classList.contains('tab-period')?tab.dataset.period:Object.keys(groupedSlips[name])[0];currentName=window.currentName=name;currentPeriod=window.currentPeriod=period;}if(typeof updatePeriodTabs==='function')updatePeriodTabs();if(typeof updateTabsHighlight==='function')updateTabsHighlight();forceGermanyOnly();}
+  var previousGenerate=window.generatePayslipHTML;if(typeof previousGenerate==='function'){window.generatePayslipHTML=generatePayslipHTML=function(data){if(data&&data.format==='Germany')return renderGermanyTemplate(data);return previousGenerate.apply(this,arguments);};}
+  window.renderGermanyPayslipHTMLFinal=renderGermanyTemplate;window.forceGermanyOnlyFinal=forceGermanyOnly;
+  document.addEventListener('DOMContentLoaded',function(){ensureGermanySidebar();ensureGermanyPreview();setTimeout(forceGermanyOnly,0);});
+  document.addEventListener('click',handleGermanyTabClick,true);
+  document.addEventListener('change',function(ev){if(ev.target&&ev.target.id==='formatSelect')setTimeout(forceGermanyOnly,0);},true);
+})();
+</script>
 </body>
 </html>

@@ -1,9 +1,9 @@
-version: 5.0.37
+version: 5.0.38
 files:
-  - url: DemoBuildingToolsSetup-5.0.37.exe
-    sha512: I9ka9H6TqI8mk5jjT8a8USt+vvcyI/Es9f2cT4WBfFVrEsF6r0dOrQfA4zFEsqr4v1c0layIvGMJ7FpObjtx0w==
-    size: 101837688
-path: DemoBuildingToolsSetup-5.0.37.exe
-sha512: I9ka9H6TqI8mk5jjT8a8USt+vvcyI/Es9f2cT4WBfFVrEsF6r0dOrQfA4zFEsqr4v1c0layIvGMJ7FpObjtx0w==
-releaseNotes: Renders Germany preview from the selected slip data without legacy profile rotation.
-releaseDate: '2026-06-16T17:06:37.102Z'
+  - url: DemoBuildingToolsSetup-5.0.38.exe
+    sha512: gF9N0jzdkB2rni3A7OWc3BMupiKKQaSxtKNttxVApgHmXn4L95wkrEQ+RTAu6f60CdmGzo/K6bpxXevIuiQBSA==
+    size: 101841690
+path: DemoBuildingToolsSetup-5.0.38.exe
+sha512: gF9N0jzdkB2rni3A7OWc3BMupiKKQaSxtKNttxVApgHmXn4L95wkrEQ+RTAu6f60CdmGzo/K6bpxXevIuiQBSA==
+releaseNotes: Moves Germany preview to an Australia-style owned sidebar and preview controller.
+releaseDate: '2026-06-16T17:12:02.618Z'

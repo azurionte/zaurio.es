@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.20",
+  "version": "5.6.21",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Renders Germany preview from the selected slip data without legacy profile rotation.",
+  "notes": "Moves Germany preview to an Australia-style owned sidebar and preview controller.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.20"
+      "url": "payslip-converter.html?v=5.6.21"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.20"
+      "url": "assets/adp-logo.png?v=5.6.21"
     }
   ]
 }
