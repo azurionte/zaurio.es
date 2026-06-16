@@ -1,9 +1,9 @@
-version: 5.0.38
+version: 5.0.39
 files:
-  - url: DemoBuildingToolsSetup-5.0.38.exe
-    sha512: gF9N0jzdkB2rni3A7OWc3BMupiKKQaSxtKNttxVApgHmXn4L95wkrEQ+RTAu6f60CdmGzo/K6bpxXevIuiQBSA==
-    size: 101841690
-path: DemoBuildingToolsSetup-5.0.38.exe
-sha512: gF9N0jzdkB2rni3A7OWc3BMupiKKQaSxtKNttxVApgHmXn4L95wkrEQ+RTAu6f60CdmGzo/K6bpxXevIuiQBSA==
+  - url: DemoBuildingToolsSetup-5.0.39.exe
+    sha512: OwRxC9YfIm4rE6PaYmUc7tetP4UWLC72xlHPxmpNoi6P3yhgVy6c03AwgvfnyyFYosyLyHCdRLAYYvUTSY3QrQ==
+    size: 101842352
+path: DemoBuildingToolsSetup-5.0.39.exe
+sha512: OwRxC9YfIm4rE6PaYmUc7tetP4UWLC72xlHPxmpNoi6P3yhgVy6c03AwgvfnyyFYosyLyHCdRLAYYvUTSY3QrQ==
 releaseNotes: Moves Germany preview to an Australia-style owned sidebar and preview controller.
-releaseDate: '2026-06-16T17:12:02.618Z'
+releaseDate: '2026-06-16T17:22:51.764Z'

@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.38",
+  "version": "5.0.39",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",

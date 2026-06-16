@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.21",
+  "version": "5.6.22",
   "entry": "payslip-converter.html?app=payslip",
-  "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Moves Germany preview to an Australia-style owned sidebar and preview controller.",
+  "updatedAt": "2026-06-16T00:00:00Z",
+  "notes": "Routes Germany imports through the Australia-style owned preview controller and prevents generic new-country renderers from replacing the preview.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.21"
+      "url": "payslip-converter.html?v=5.6.22"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.21"
+      "url": "assets/adp-logo.png?v=5.6.22"
     }
   ]
 }
