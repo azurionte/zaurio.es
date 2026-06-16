@@ -2410,10 +2410,29 @@ importFileInput.addEventListener('change', function(event) {
     var reader = new FileReader();
     reader.onload = function(e) {
         var arrayBuffer = e.target.result;
-        processPdf(arrayBuffer);
+        runProcessPdfSafely(arrayBuffer);
+    };
+    reader.onerror = function() {
+        hideImportOverlay();
+        alert('Failed to read the selected PDF file. Please try selecting it again.');
     };
     reader.readAsArrayBuffer(file);
 });
+
+function hideImportOverlay() {
+    var loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+}
+
+async function runProcessPdfSafely(arrayBuffer) {
+    try {
+        await processPdf(arrayBuffer);
+    } catch (err) {
+        console.error('Unhandled PDF import failure', err);
+        hideImportOverlay();
+        alert('Failed to process PDF. Make sure the file is a valid payslip PDF.\n\nTechnical detail: ' + (err && err.message ? err.message : err));
+    }
+}
 
 function bytesToArrayBuffer(bytes) {
     if (bytes instanceof ArrayBuffer) return bytes;
@@ -2468,7 +2487,7 @@ async function selectPdfWithDesktopPicker() {
         loadingOverlayEl.textContent = 'Reading PDF...';
     }
 
-    await processPdf(base64ToArrayBuffer(result.base64));
+    await runProcessPdfSafely(base64ToArrayBuffer(result.base64));
     return true;
 }
 
@@ -4722,7 +4741,7 @@ function generatePayslipHTML(d) {
 /* V4.2 fixes: Australia tabs/address, visible tool version, and row editors for imported source rows. */
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.22';
+var TOOL_VERSION='V5.6.23';
 var previousProcessPdfV42=window.processPdf;
 var previousSwitchFormatV42=window.switchFormat;
 var previousBuildHierarchyUIV42=window.buildHierarchyUI;
@@ -5013,7 +5032,7 @@ setTimeout(refreshAllEditorsV42,300);
 <script id="v43-australia-fixes-script">
 (function(){
 'use strict';
-var TOOL_VERSION='V5.6.22';
+var TOOL_VERSION='V5.6.23';
 function clean43(s){return String(s==null?'':s).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();}
 function currentFormat43(){var f=document.getElementById('formatSelect');return f?f.value:'';}
 function setGlobal43(k,v){window[k]=v;try{eval(k+' = v');}catch(e){}}
@@ -5215,7 +5234,7 @@ setInterval(function(){updateVersionBadge43(); if(currentFormat43()==='Australia
    the single source of truth for sidebars and preview containers. */
 (function(){
     'use strict';
-    var FINAL_VERSION = 'V5.6.22';
+    var FINAL_VERSION = 'V5.6.23';
     var previousSwitchFormatV45 = window.switchFormat;
     var previousFinishImportV45 = window.finishImport;
     var applying = false;
@@ -7430,7 +7449,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
    We switch on pointerdown/mousedown and override the final Australia router so those older handlers
    now resolve to the selected Australia slip instead of falling back to a stale tab. */
 (function(){
-    var TOOL_VERSION = 'V5.6.22';
+    var TOOL_VERSION = 'V5.6.23';
     var baseSwitchFormat = window.switchFormat;
     var basePlaceHierarchy = window.placeHierarchy;
     var switching = false;
@@ -7847,7 +7866,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
 (function(){
   'use strict';
   var SHELL_VERSION = 'v1.11';
-  var PAYSLIP_VERSION = 'V5.6.22';
+  var PAYSLIP_VERSION = 'V5.6.23';
   var isPayslipMiniBoot = false;
   var isEmbeddedMiniBoot = false;
   try {
@@ -9005,8 +9024,9 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
   function enrichGermany(base,lines){base=base||{};if(base.__countryReady)return base;lines=lines||[];var p=deProfiles[demoIndex('DE')];var earns=extractRows(lines,'earn','DE');var deds=extractRows(lines,'ded','DE');var gross=n(amountNear(lines,/(gesamtbrutto|gross|total earnings)/i));var ded=n(amountNear(lines,/(abzug|deductions|lohnsteuer|total tax)/i));var net=n(amountNear(lines,/(gesamtnetto|auszahlung|net pay)/i));if(!earns.length){gross=gross||5200;earns=[{label:'Monatslohn',amount:gross*.96},{label:'VWL / AG-Zuschuss - mtl',amount:gross*.04}];}if(!deds.length){ded=ded||Math.round((gross||earns.reduce(function(a,b){return a+b.amount;},0))*.36*100)/100;deds=[{label:'Lohnsteuer',amount:ded*.42},{label:'Krankenversicherung',amount:ded*.22},{label:'Rentenversicherung',amount:ded*.25},{label:'Arbeitslosenversicherung',amount:ded*.05},{label:'Pflegeversicherung',amount:ded*.06}];}gross=gross||earns.reduce(function(a,b){return a+b.amount;},0);ded=ded||deds.reduce(function(a,b){return a+b.amount;},0);net=net||gross-ded;return Object.assign({},base,p,{__countryReady:true,format:'Germany',country:'Germany',empName:base.empName||first(lines,/(?:employee|mitarbeiter|name)\s*:?\s*(.+)$/i)||p.name,empcode:base.empcode||first(lines,/(?:personal|employee id|personal-nr)\s*:?\s*([A-Z0-9-]+)/i)||p.personnel,payMonth:base.payMonth||first(lines,/(?:abrechnung|period|monat)\s*:?\s*(.+)$/i)||new Date().toLocaleDateString('de-DE',{month:'long',year:'numeric'}),earnings:earns,deductions:deds,gross:gross,totalDeductions:ded,net:net});}
   function renderMexico(d){d=enrichMexico(d||{},[]);var earn=d.earnings.map(function(r){return '<tr><td>'+esc(r.label)+'</td><td>ACT</td><td>001</td><td>001</td><td class="num">'+money(r.amount,'$')+'</td><td class="num">'+money(r.amount*.8,'$')+'</td><td class="num">'+money(r.amount*.2,'$')+'</td></tr>';}).join('');var ded=d.deductions.map(function(r,i){return '<tr><td>'+esc(r.label)+'</td><td>ACT</td><td>10'+i+'</td><td>00'+(i+1)+'</td><td class="num">'+money(r.amount,'$')+'</td></tr>';}).join('');return '<div id="payslip" class="mx-slip"><div class="mx-top"><div class="mx-logo">ADP</div><div class="mx-title">RECIBO DE NOMINA</div><div class="mx-small">Pago: '+esc(d.payMonth)+'<br>Moneda: MXN<br>Version demo</div></div><div class="mx-grid"><section class="mx-box"><h3>Emisor</h3><div class="mx-fields"><div class="k">Nombre</div><div>'+esc(d.employer)+'</div><div class="k">RFC</div><div>'+esc(d.employerRfc)+'</div><div class="k">Registro patronal</div><div>'+esc(d.reg)+'</div><div class="k">Domicilio</div><div>'+esc(d.address)+'</div></div></section><section class="mx-box"><h3>Receptor</h3><div class="mx-fields"><div class="k">Nombre</div><div>'+esc(d.empName)+'</div><div class="k">No. Empleado</div><div>'+esc(d.empcode)+'</div><div class="k">RFC</div><div>'+esc(d.rfc)+'</div><div class="k">CURP</div><div>'+esc(d.curp)+'</div><div class="k">NSS</div><div>'+esc(d.nss)+'</div></div></section><section class="mx-box"><h3>Datos laborales</h3><div class="mx-fields"><div class="k">Puesto</div><div>'+esc(d.position)+'</div><div class="k">Departamento</div><div>'+esc(d.department)+'</div><div class="k">Centro de costos</div><div>'+esc(d.costCenter)+'</div><div class="k">Salario diario</div><div>$'+esc(d.dailySalary)+'</div></div></section><section class="mx-box"><h3>Periodo</h3><div class="mx-fields"><div class="k">Fecha de pago</div><div>'+esc(d.payMonth)+'</div><div class="k">Dias pagados</div><div>30.000</div><div class="k">Tipo nomina</div><div>Ordinaria</div><div class="k">Metodo de pago</div><div>Transferencia</div></div></section></div><table class="mx-table"><thead><tr><th>Concepto</th><th>Unidad</th><th>Clave</th><th>Tipo percepcion</th><th>Total importe</th><th>Gravado</th><th>Exento</th></tr></thead><tbody>'+earn+'</tbody></table><table class="mx-table"><thead><tr><th>Concepto</th><th>Unidad</th><th>Clave</th><th>Tipo deduccion</th><th>Total importe</th></tr></thead><tbody>'+ded+'</tbody></table><div class="mx-summary"><div><span>Total percepciones</span><b>'+money(d.gross,'$')+'</b></div><div><span>Total deducciones</span><b>'+money(d.totalDeductions,'$')+'</b></div><div class="mx-net"><span>Total neto</span><b>'+money(d.net,'$')+'</b></div></div><div class="mx-footer"><div class="mx-seal">Sello digital demo: '+esc((d.empName+d.empcode+d.payMonth).replace(/\s/g,'').toUpperCase())+'-CFDI-CELERGO-MX-DEMO-0001</div><div class="mx-qr">QR</div></div></div>';}
   function renderGermany(d){d=enrichGermany(d||{},[]);var earn=d.earnings.map(function(r){return '<tr><td colspan="4">'+esc(r.label)+'</td><td>L</td><td>L</td><td class="num">'+money(r.amount,'')+'</td><td></td></tr>';}).join('');var ded=d.deductions.map(function(r){return '<tr><td>'+esc(r.label)+'</td><td>Brutto (M/J)</td><td class="num">'+money(d.gross,'')+'</td><td></td><td colspan="2"></td><td class="num">'+money(r.amount,'')+'</td><td></td></tr>';}).join('');return '<div id="payslip" class="de-slip"><section class="de-top"><div class="de-title">Entgeltabrechnung</div><div class="de-doc">'+esc(d.doc)+'</div><div class="de-month">'+esc(d.payMonth)+'</div></section><div class="de-personal"><div class="de-row"><span>Geburtsdatum</span><span>'+esc(d.birth)+'</span></div><div class="de-row"><span>Sozialversicherungsnummer</span><span>'+esc(d.sv)+'</span></div><div class="de-row"><span>Identifikationsnummer</span><span>'+esc(d.taxId)+'</span></div><div class="de-row"><span>Steuerklasse</span><span>'+esc(d.taxClass)+'</span></div><div class="de-row"><span>Konfession</span><span>'+esc(d.church)+'</span></div><div class="de-row"><span>Kinderfreibetrag</span><span>'+esc(d.children)+'</span></div><div class="de-row"><span>Krankenkasse</span><span>'+esc(d.health)+'</span></div><div class="de-row"><span>Steuer-/SV-Tage</span><span>30/30</span></div><div class="de-row"><span>Woechentliche Arbeitszeit</span><span>40,00</span></div></div><div class="de-company">'+esc(d.company)+'<br>'+esc(d.companyAddress)+'</div><div class="de-address">'+d.address+'</div><section class="de-meta"><div><b>Personal-Nr.</b><br>'+esc(d.empcode)+'</div><div><b>Abteilung</b><br>Demo Payroll</div><div><b>Eintritt/Austritt</b><br>'+esc(d.entry)+'</div></section><table class="de-main"><thead><tr><th colspan="4">Entgeltbestandteile</th><th>St</th><th>SV</th><th class="num">Monat</th><th class="num">Jahressumme</th></tr></thead><tbody>'+earn+'<tr class="band"><td colspan="6">Gesamtbrutto</td><td class="num">'+money(d.gross,'')+'</td><td></td></tr>'+ded+'<tr class="band"><td colspan="6">Gesamtnetto</td><td class="num">'+money(d.net,'')+'</td><td></td></tr><tr class="band"><td colspan="6">Auszahlung</td><td class="num">'+money(d.net,'')+'</td><td></td></tr></tbody></table><div class="de-note">Ueberweisung&nbsp;&nbsp;&nbsp;&nbsp;IBAN '+esc(d.iban)+'<br>SEPA payroll transfer</div><table class="de-mini"><tr><th></th><th>LSt lfd.</th><th>KSt lfd.</th><th>Soli lfd.</th><th>KV lfd.</th><th>RV lfd.</th><th>AV lfd.</th><th>PV lfd.</th></tr><tr><td>Brutto mtl</td><td>'+money(d.gross,'')+'</td><td>'+money(d.gross,'')+'</td><td>'+money(d.gross,'')+'</td><td>'+money(d.gross,'')+'</td><td>'+money(d.gross,'')+'</td><td>'+money(d.gross,'')+'</td><td>'+money(d.gross,'')+'</td></tr></table><section class="de-legend"><div><b>Legende St/SV</b><br>L = Laufender Bezug / Gesamtbrutto</div><div>E = Einmaliger Bezug<br>F = Frei</div><div>M = Ermaessigt<br>P = Pauschalbesteuert</div><div>S = Sonstiger Bezug<br>Demo statement</div></section><footer class="de-footer"><div>'+new Date().toLocaleDateString('de-DE')+'</div><div class="c">edlohn demo</div><div class="r">-nicht gespeichert-</div></footer></div>';}
-  async function readPdf(arrayBuffer,country){if(!window.pdfjsLib||!pdfjsLib.getDocument)return null;var pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;var slips=[];for(var p=1;p<=pdf.numPages;p++){var page=await pdf.getPage(p);var content=await page.getTextContent();var lines=content.items.map(function(it){return it.str;}).filter(Boolean);slips.push(country==='Mexico'?enrichMexico({format:'Mexico'},lines):enrichGermany({format:'Germany'},lines));}return slips;}
-  window.processPdf=processPdf=async function(arrayBuffer){if(!mode())return previousProcessPdf?previousProcessPdf.apply(this,arguments):undefined;var country=fmt();var slips=await readPdf(arrayBuffer,country);if(!slips||!slips.length)slips=[country==='Mexico'?enrichMexico({format:'Mexico'},[]):enrichGermany({format:'Germany'},[])];window.pendingImportedSlips=pendingImportedSlips=slips;window.pendingDetectedCountry=pendingDetectedCountry=country;var f=document.getElementById('formatSelect');if(f)f.value=country;window.__selectedImportTemplateV31=country;if(typeof finishImport==='function')finishImport();};
+  async function readPdf(arrayBuffer,country){if(!window.pdfjsLib||!pdfjsLib.getDocument)return null;var pdf=typeof loadPdfDocument==='function'?await loadPdfDocument(arrayBuffer):await pdfjsLib.getDocument({data:arrayBuffer.slice?arrayBuffer.slice(0):arrayBuffer}).promise;var slips=[];for(var p=1;p<=pdf.numPages;p++){var page=await pdf.getPage(p);var content=await page.getTextContent({normalizeWhitespace:true,disableCombineTextItems:false});var lines=(content.items||[]).map(function(it){return it.str;}).filter(Boolean);slips.push(country==='Mexico'?enrichMexico({format:'Mexico'},lines):enrichGermany({format:'Germany'},lines));if(page.cleanup)page.cleanup();}return slips;}
+  function fallbackSlip(country){return country==='Mexico'?enrichMexico({format:'Mexico'},[]):enrichGermany({format:'Germany'},[]);}
+  window.processPdf=processPdf=async function(arrayBuffer){if(!mode())return previousProcessPdf?previousProcessPdf.apply(this,arguments):undefined;var country=fmt(),slips=null;try{setImportStatus('Reading '+country+' earning statement...');slips=await readPdf(arrayBuffer,country);}catch(err){console.warn(country+' PDF text extraction failed; using demo fallback slip.',err);setImportStatus('Preparing '+country+' demo payslip...');slips=null;}if(!slips||!slips.length)slips=[fallbackSlip(country)];window.pendingImportedSlips=pendingImportedSlips=slips;window.pendingDetectedCountry=pendingDetectedCountry=country;window.pendingImportedFileName=pendingImportedFileName=window.importedFileName||importedFileName||country+'_EarningStatement.pdf';var f=document.getElementById('formatSelect');if(f)f.value=country;window.__selectedImportTemplateV31=country;if(typeof finishImport==='function')finishImport();};
   window.parseSlipLines=parseSlipLines=function(lines){if(fmt()==='Mexico')return enrichMexico({format:'Mexico'},lines);if(fmt()==='Germany')return enrichGermany({format:'Germany'},lines);return previousParseSlipLines?previousParseSlipLines.apply(this,arguments):{};};
   window.__renderMexicoPayslipV568 = renderMexico;
   window.__renderGermanyPayslipV568 = renderGermany;
@@ -9097,7 +9117,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v572-new-country-preview-shell">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.22';
+  var APP_VERSION = 'V5.6.23';
   var newCountries = { China: true, Mexico: true };
   function valid(country){ return country && newCountries[country] ? country : ''; }
   function selectedCountry(){
@@ -9219,7 +9239,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v573-new-country-legacy-slip-rescue">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.22';
+  var APP_VERSION = 'V5.6.23';
   var newCountries = { China: true, Mexico: true };
   function valid(country){ return country && newCountries[country] ? country : ''; }
   function selectedCountry(){
@@ -9349,7 +9369,7 @@ body.demo-tools-v5{overflow:hidden!important}.demo-tools-v5 #main{height:calc(10
 <script id="v574-new-country-stable-workflow">
 (function(){
   'use strict';
-  var APP_VERSION = 'V5.6.22';
+  var APP_VERSION = 'V5.6.23';
   var countries = { China:true, Mexico:true };
   var state = { slips: [], index: 0 };
   function valid(c){ return c && countries[c] ? c : ''; }
@@ -9463,7 +9483,7 @@ body.demo-tools-v5 #main.germany-owned #payslipGermany{height:100%!important;min
 <script id="germany-final-controller">
 (function(){
   'use strict';
-  var APP_VERSION='V5.6.22';
+  var APP_VERSION='V5.6.23';
   function clean(v){return String(v==null?'':v).replace(/\s+/g,' ').trim();}
   function esc(v){return clean(v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function num(v){var s=String(v==null?'':v).replace(/[^\d,.-]/g,''); if(/,\d{2}$/.test(s))s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,/g,''); var n=parseFloat(s); return isFinite(n)?n:0;}
@@ -9491,7 +9511,7 @@ body.demo-tools-v5 #main.germany-owned #payslipGermany{height:100%!important;min
   var previousFinish=window.finishImport;if(typeof previousFinish==='function'){window.finishImport=finishImport=function(){if(window.pendingImportedSlips&&pendingImportedSlips&&pendingImportedSlips.length&&pendingImportedSlips[0].format==='Germany'){importedSlips=pendingImportedSlips;window.importedSlips=importedSlips;importedFileName=pendingImportedFileName||importedFileName||'';['country-modal-overlay','modal-overlay','intro-overlay','splash','template-choice-overlay'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var main=document.getElementById('main');if(main)main.style.display='flex';var fmt=document.getElementById('formatSelect');if(fmt){fmt.value='Germany';fmt.dispatchEvent(new Event('change'));}groupSlips();buildHierarchyUI();if(typeof placeHierarchy==='function')placeHierarchy();var firstName=Object.keys(groupedSlips)[0];var firstPeriod=firstName?Object.keys(groupedSlips[firstName])[0]:null;currentName=window.currentName=firstName||null;currentPeriod=window.currentPeriod=firstPeriod||null;if(typeof updateTabsHighlight==='function')updateTabsHighlight();pendingImportedSlips=null;pendingImportedFileName='';pendingDetectedCountry='';countryModalMode='';window.__selectedImportTemplateV31='Germany';forceGermanyOnly();scheduleGermanyRender();return;}return previousFinish.apply(this,arguments);};}
   function handleGermanyTabClick(ev){if(!isGermany())return;var tab=ev.target&&ev.target.closest?ev.target.closest('.tab-name,.tab-period,[data-v574-tab]'):null;if(!tab)return;ev.preventDefault();ev.stopImmediatePropagation();if(tab.hasAttribute('data-v574-tab')){var slips=allGermanySlips(),idx=parseInt(tab.getAttribute('data-v574-tab'),10)||0;if(slips[idx]){currentName=window.currentName=slips[idx].empName;currentPeriod=window.currentPeriod=slips[idx].payMonth;}}else{var name=tab.dataset.name||currentName||window.currentName;if(!name||!groupedSlips||!groupedSlips[name])return;var period=tab.classList.contains('tab-period')?tab.dataset.period:Object.keys(groupedSlips[name])[0];currentName=window.currentName=name;currentPeriod=window.currentPeriod=period;}if(typeof updatePeriodTabs==='function')updatePeriodTabs();if(typeof updateTabsHighlight==='function')updateTabsHighlight();forceGermanyOnly();scheduleGermanyRender();}
   var previousGenerate=window.generatePayslipHTML;if(typeof previousGenerate==='function'){window.generatePayslipHTML=generatePayslipHTML=function(data){if(data&&data.format==='Germany')return renderGermanyTemplate(data);return previousGenerate.apply(this,arguments);};}
-  var previousProcessGermany=window.processPdf;if(typeof previousProcessGermany==='function'){window.processPdf=processPdf=async function(arrayBuffer){var wasGermany=isGermany();var result=await previousProcessGermany.apply(this,arguments);if(wasGermany||allGermanySlips().length)scheduleGermanyRender();return result;};}
+  var previousProcessGermany=window.processPdf;if(typeof previousProcessGermany==='function'){window.processPdf=processPdf=async function(arrayBuffer){var wasGermany=isGermany();try{var result=await previousProcessGermany.apply(this,arguments);if(wasGermany||allGermanySlips().length)scheduleGermanyRender();return result;}catch(err){if(!wasGermany)throw err;console.warn('Germany import chain failed; using demo fallback slip.',err);window.pendingImportedSlips=pendingImportedSlips=[normalizeGermanySlip({format:'Germany'})];window.pendingDetectedCountry=pendingDetectedCountry='Germany';window.pendingImportedFileName=pendingImportedFileName=window.importedFileName||importedFileName||'Germany_EarningStatement.pdf';if(typeof finishImport==='function')finishImport();scheduleGermanyRender();return;}};}
   window.renderGermanyPayslipHTMLFinal=renderGermanyTemplate;window.forceGermanyOnlyFinal=forceGermanyOnly;
   document.addEventListener('DOMContentLoaded',function(){ensureGermanySidebar();ensureGermanyPreview();setTimeout(forceGermanyOnly,0);});
   document.addEventListener('click',handleGermanyTabClick,true);

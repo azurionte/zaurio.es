@@ -1,17 +1,17 @@
 {
   "app": "payslip-converter",
-  "version": "5.6.22",
+  "version": "5.6.23",
   "entry": "payslip-converter.html?app=payslip",
   "updatedAt": "2026-06-16T00:00:00Z",
-  "notes": "Routes Germany imports through the Australia-style owned preview controller and prevents generic new-country renderers from replacing the preview.",
+  "notes": "Prevents PDF.js parser warnings from leaving Germany imports stuck on Reading PDF and falls back to a usable Germany demo payslip when text extraction fails.",
   "files": [
     {
       "path": "payslip-converter.html",
-      "url": "payslip-converter.html?v=5.6.22"
+      "url": "payslip-converter.html?v=5.6.23"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=5.6.22"
+      "url": "assets/adp-logo.png?v=5.6.23"
     }
   ]
 }
