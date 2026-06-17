@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Editable Germany Payslip</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;background:#e9e9e9;font-family:Arial,Helvetica,sans-serif;color:#111}.page{width:900px;height:1306px;margin:20px auto;background:#fff;position:relative;padding:16px 20px 18px 20px;box-shadow:0 0 4px rgba(0,0,0,.35);font-size:14px;line-height:1.08}.edit{outline:0}.edit:focus{background:#fffde7;box-shadow:0 0 0 1px #f0d35a inset} .bold{font-weight:700}.title{position:absolute;left:30px;top:15px;font-size:18px;font-weight:700}.docno{position:absolute;left:398px;top:21px;font-size:16px}.period{position:absolute;left:549px;top:21px;font-size:16px}.company{position:absolute;left:20px;top:200px;font-size:10px;line-height:1.05}.address{position:absolute;left:34px;top:294px;font-size:18px;line-height:1.08}.infoBox{position:absolute;right:27px;top:52px;width:334px;height:475px;border:1.5px solid #111;padding:6px 9px;font-size:14px}.row{display:flex;justify-content:space-between;gap:10px}.left{text-align:left}.right{text-align:right}.smallBox{position:absolute;left:20px;top:468px;width:451px;height:60px;border:1.5px solid #111;display:grid;grid-template-columns:118px 189px 144px;text-align:center}.smallBox>div{border-right:1.5px solid #111;padding:7px 4px}.smallBox>div:last-child{border-right:0}.smallBox .head{font-weight:700;font-size:15px}.smallBox .val{font-size:14px;margin-top:2px}.main{position:absolute;left:20px;top:548px;width:853px;border:1.5px solid #111;border-collapse:collapse;font-size:15px}.main th{background:#ddd;text-align:left;padding:2px 8px;border-bottom:0;font-weight:700}.main td{padding:2px 8px;vertical-align:top}.main .num{text-align:right;white-space:nowrap}.main .center{text-align:center}.main .bar td{background:#ddd;font-weight:700;padding-top:4px;padding-bottom:4px}.main .spacer td{height:8px}.main .indent{padding-left:48px;font-size:14px}.main .bottompad td{padding-bottom:14px}.taxTable{position:absolute;left:30px;top:1020px;width:833px;border-collapse:collapse;font-size:10px;text-align:center}.taxTable th,.taxTable td{border:1px solid #111;padding:1px 2px;height:12px}.taxTable th{font-weight:700;background:#eee}.legend{position:absolute;left:30px;top:1075px;width:825px;font-size:10px;line-height:1.15;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;column-gap:18px}.footerNote{position:absolute;left:30px;top:1167px;font-size:16px}.footer{position:absolute;left:20px;right:20px;bottom:6px;font-size:15px;display:flex;justify-content:space-between}.wideLine{position:absolute;left:20px;right:27px;top:1283px;border-top:1.5px solid #111}
+</style>
+</head>
+<body>
+  <main class="page">
+    <div class="title edit" contenteditable="true">Entgeltabrechnung</div>
+    <div class="docno edit" contenteditable="true">00996/411</div>
+    <div class="period edit" contenteditable="true">Mai 2015</div>
+
+    <div class="company edit" contenteditable="true">Musterfirma<br>Saarbrücker Str. 25 · 10318 Berlin</div>
+    <div class="address edit" contenteditable="true">Herrn<br>Gustav Arbeiter<br>Musterstraße 112<br>10478 Berlin</div>
+
+    <section class="infoBox edit" contenteditable="true">
+      <div class="row"><span>Geburtsdatum</span><span>26.02.1962</span></div>
+      <div class="row"><span>Sozialversicherungsnummer</span><span>65260262A069</span></div>
+      <div class="row"><span>Identifikationsnummer</span><span>25501946873</span></div>
+      <div class="row"><span>Steuerklasse</span><span>4</span></div>
+      <div class="row"><span>Konfession</span><span>ev</span></div>
+      <div class="row"><span>Kinderfreibetrag</span><span>2,0</span></div>
+      <div class="row"><span>Freibetrag (m/j)</span><span>50/600</span></div>
+      <div class="row"><span>Hinzurechnungsbetrag (m/j)</span><span>0,00/0,00</span></div>
+      <div class="row"><span>BGR-Schlüssel</span><span>1-1-1-1</span></div>
+      <div class="row"><span>PV-Beitragszuschlag</span><span>Nein</span></div>
+      <div class="row"><span>Gleitzonenregelung</span><span>Nein</span></div>
+      <div class="row"><span>Mehrfachbeschäftigung</span><span>Nein</span></div>
+      <div class="row"><span>Krankenkasse</span><span>TKK</span></div>
+      <div class="row"><span>KK-Beitragssatz</span><span>14,60</span></div>
+      <div class="row"><span>KK-Zusatzbeitragssatz</span><span>0,80</span></div>
+      <div class="row"><span>Steuer-/SV-Tage</span><span>30/30</span></div>
+      <div class="row"><span>Wöchentliche Arbeitszeit</span><span>40,00</span></div>
+    </section>
+
+    <section class="smallBox">
+      <div><div class="head edit" contenteditable="true">Personal-Nr.</div><div class="val edit" contenteditable="true">000003</div></div>
+      <div><div class="head edit" contenteditable="true">Abteilung</div><div class="val edit" contenteditable="true">&nbsp;</div></div>
+      <div><div class="head edit" contenteditable="true">Eintritt/Austritt</div><div class="val edit" contenteditable="true">01.01.2014</div></div>
+    </section>
+
+    <table class="main">
+      <colgroup><col style="width:240px"><col style="width:90px"><col style="width:100px"><col style="width:70px"><col style="width:35px"><col style="width:35px"><col style="width:105px"><col style="width:130px"></colgroup>
+      <thead><tr><th colspan="4" class="edit" contenteditable="true">Entgeltbestandteile</th><th class="center edit" contenteditable="true">St</th><th class="center edit" contenteditable="true">SV</th><th class="num edit" contenteditable="true">Monat</th><th class="num edit" contenteditable="true">Jahressumme</th></tr></thead>
+      <tbody>
+        <tr><td class="edit" contenteditable="true">Monatslohn</td><td></td><td></td><td></td><td class="center edit" contenteditable="true">L</td><td class="center edit" contenteditable="true">L</td><td class="num edit" contenteditable="true">2.800,00</td><td></td></tr>
+        <tr><td class="edit" contenteditable="true">VWL / AG-Zuschuss - mtl</td><td></td><td></td><td></td><td class="center edit" contenteditable="true">L</td><td class="center edit" contenteditable="true">L</td><td class="num edit" contenteditable="true">39,00</td><td></td></tr>
+        <tr class="bar"><td colspan="6" class="edit" contenteditable="true">Gesamtbrutto</td><td class="num edit" contenteditable="true">2.839,00</td><td class="num edit" contenteditable="true">14.195,00</td></tr>
+        <tr class="spacer"><td colspan="8"></td></tr>
+        <tr><td class="edit" contenteditable="true">Lohnsteuer</td><td class="edit" contenteditable="true">Brutto (M/J)</td><td class="num edit" contenteditable="true">2.839,00</td><td class="num edit" contenteditable="true">14.195,00</td><td></td><td></td><td class="num edit" contenteditable="true">397,75</td><td class="num edit" contenteditable="true">1.988,75</td></tr>
+        <tr><td class="edit" contenteditable="true">Kirchensteuer</td><td></td><td></td><td></td><td></td><td></td><td class="num edit" contenteditable="true">20,67</td><td class="num edit" contenteditable="true">103,35</td></tr>
+        <tr><td class="edit" contenteditable="true">Solidaritätszuschlag</td><td></td><td></td><td></td><td></td><td></td><td class="num edit" contenteditable="true">12,63</td><td class="num edit" contenteditable="true">63,15</td></tr>
+        <tr><td class="edit" contenteditable="true">Krankenversicherung</td><td class="edit" contenteditable="true">Brutto (M/J)</td><td class="num edit" contenteditable="true">2.839,00</td><td class="num edit" contenteditable="true">14.195,00</td><td></td><td></td><td class="num edit" contenteditable="true">229,96</td><td class="num edit" contenteditable="true">1.149,80</td></tr>
+        <tr><td class="edit" contenteditable="true">Rentenversicherung</td><td class="edit" contenteditable="true">Brutto (M/J)</td><td class="num edit" contenteditable="true">2.839,00</td><td class="num edit" contenteditable="true">14.195,00</td><td></td><td></td><td class="num edit" contenteditable="true">265,45</td><td class="num edit" contenteditable="true">1.327,25</td></tr>
+        <tr><td class="edit" contenteditable="true">Arbeitslosenversicherung</td><td class="edit" contenteditable="true">Brutto (M/J)</td><td class="num edit" contenteditable="true">2.839,00</td><td class="num edit" contenteditable="true">14.195,00</td><td></td><td></td><td class="num edit" contenteditable="true">42,59</td><td class="num edit" contenteditable="true">212,95</td></tr>
+        <tr><td class="edit" contenteditable="true">Pflegeversicherung</td><td class="edit" contenteditable="true">Brutto (M/J)</td><td class="num edit" contenteditable="true">2.839,00</td><td class="num edit" contenteditable="true">14.195,00</td><td></td><td></td><td class="num edit" contenteditable="true">33,36</td><td class="num edit" contenteditable="true">166,80</td></tr>
+        <tr class="bar"><td colspan="6" class="edit" contenteditable="true">Gesamtnetto</td><td class="num edit" contenteditable="true">1.836,59</td><td class="num edit" contenteditable="true">9.182,95</td></tr>
+        <tr class="spacer"><td colspan="8"></td></tr>
+        <tr><td colspan="6" class="edit" contenteditable="true">Anlage VWL - mtl (Vertrag 1)</td><td class="num edit" contenteditable="true">-39,00</td><td></td></tr>
+        <tr><td colspan="8" class="indent edit" contenteditable="true">(Targo / BLZ 30020900 / Kto 5001990096)</td></tr>
+        <tr class="bottompad"><td colspan="8" class="indent edit" contenteditable="true">(BIC CMCIDEDDXXX / IBAN DE30 3002 0900 5001 9900 96)</td></tr>
+        <tr class="bar"><td colspan="6" class="edit" contenteditable="true">Auszahlung</td><td class="num edit" contenteditable="true">1.797,59</td><td class="num edit" contenteditable="true">4.987,95</td></tr>
+        <tr class="spacer"><td colspan="8"></td></tr>
+        <tr><td class="edit" contenteditable="true">Überweisung</td><td colspan="7" class="edit" contenteditable="true">IBAN DE58 5421 0111 2467 1525 00<br>SEB Pirmasens - Pirmasens</td></tr>
+      </tbody>
+    </table>
+
+    <table class="taxTable">
+      <tr><th></th><th>LSt lfd.</th><th>LSt SB</th><th>KSt lfd.</th><th>KSt SB</th><th>Soli lfd.</th><th>Soli SB</th><th>KV lfd.</th><th>KV EGA</th><th>RV lfd.</th><th>RV EGA</th><th>AV lfd.</th><th>AV EGA</th><th>PV lfd.</th><th>PV EGA</th></tr>
+      <tr><th>Brutto mtl</th><td>2839,00</td><td></td><td>2839,00</td><td></td><td>2839,00</td><td></td><td>2839,00</td><td></td><td>2839,00</td><td></td><td>2839,00</td><td></td><td>2839,00</td><td></td></tr>
+      <tr><th>Brutto jhrl</th><td>14195,00</td><td></td><td>14195,00</td><td></td><td>14195,00</td><td></td><td>14195,00</td><td></td><td>14195,00</td><td></td><td>14195,00</td><td></td><td>14195,00</td><td></td></tr>
+      <tr><th>Abzug mtl</th><td>397,75</td><td></td><td>20,67</td><td></td><td>12,63</td><td></td><td>229,96</td><td></td><td>265,45</td><td></td><td>42,59</td><td></td><td>33,36</td><td></td></tr>
+      <tr><th>Abzug jhrl</th><td>1988,75</td><td></td><td>103,35</td><td></td><td>63,15</td><td></td><td>1149,80</td><td></td><td>1327,25</td><td></td><td>212,95</td><td></td><td>166,80</td><td></td></tr>
+    </table>
+
+    <section class="legend edit" contenteditable="true">
+      <div><b>Legende St/SV</b><br>E = Einmaliger Bezug / Gesamtbrutto<br>F = Frei / Gesamtbrutto<br>L = Laufender Bezug / Gesamtbrutto</div>
+      <div>e = Einmaliger Bezug / n.i. Gesamtbrutto<br>f = Frei / n.i. Gesamtbrutto<br>l = Laufender Bezug / n.i. Gesamtbrutto</div>
+      <div>M = Ermäßigt / Gesamtbrutto<br>P = Pauschalbesteuert / Gesamtbrutto<br>S = Sonstiger Bezug / Gesamtbrutto</div>
+      <div>m = Ermäßigt / n.i. Gesamtbrutto<br>p = Pauschalbesteuert / n.i. Gesamtbrutto<br>s = Sonstiger Bezug / n.i. Gesamtbrutto</div>
+    </section>
+
+    <div class="footerNote edit" contenteditable="true">Entgeltbescheinigung nach § 108 Abs.3 Satz 1 der Gewerbeordnung</div>
+    <div class="wideLine"></div>
+    <footer class="footer edit" contenteditable="true"><span>08.06.2015&nbsp;&nbsp;10:37:37</span><span>edlohn&nbsp;&nbsp;9.2.0</span><span>-nicht gespeichert-</span></footer>
+  </main>
+</body>
+</html>

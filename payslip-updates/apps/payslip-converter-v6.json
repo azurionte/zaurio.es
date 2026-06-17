@@ -1,17 +1,53 @@
 {
   "app": "payslip-converter-v6",
-  "version": "6.0.1",
+  "version": "6.1.0",
   "entry": "payslip-converter-v6.html?app=payslip-v6",
   "updatedAt": "2026-06-17T00:00:00Z",
-  "notes": "Fixes desktop file picker import so selected PDFs proceed into the V6 parser instead of staying on Opening file picker.",
+  "notes": "Reworks V6 to load exact country HTML templates as package files, removes placeholder templates, and moves import/save controls into the mini-app bar.",
   "files": [
     {
       "path": "payslip-converter-v6.html",
-      "url": "payslip-converter-v6.html?v=6.0.1"
+      "url": "payslip-converter-v6.html?v=6.1.0"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=6.0.1"
+      "url": "assets/adp-logo.png?v=6.1.0"
+    },
+    {
+      "path": "payslip-v6/templates/uk.html",
+      "url": "payslip-v6/templates/uk.html?v=6.1.0"
+    },
+    {
+      "path": "payslip-v6/templates/au.html",
+      "url": "payslip-v6/templates/au.html?v=6.1.0"
+    },
+    {
+      "path": "payslip-v6/templates/cn.html",
+      "url": "payslip-v6/templates/cn.html?v=6.1.0"
+    },
+    {
+      "path": "payslip-v6/templates/de.html",
+      "url": "payslip-v6/templates/de.html?v=6.1.0"
+    },
+    {
+      "path": "payslip-v6/templates/mx.html",
+      "url": "payslip-v6/templates/mx.html?v=6.1.0"
+    },
+    {
+      "path": "payslip-v6/templates/sg.html",
+      "url": "payslip-v6/templates/sg.html?v=6.1.0"
+    },
+    {
+      "path": "payslip-v6/templates/fr.html",
+      "url": "payslip-v6/templates/fr.html?v=6.1.0"
+    },
+    {
+      "path": "payslip-v6/templates/nl.html",
+      "url": "payslip-v6/templates/nl.html?v=6.1.0"
+    },
+    {
+      "path": "payslip-v6/templates/ca.html",
+      "url": "payslip-v6/templates/ca.html?v=6.1.0"
     }
   ]
 }

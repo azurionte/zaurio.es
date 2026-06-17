@@ -1,9 +1,9 @@
-version: 5.0.43
+version: 5.0.44
 files:
-  - url: DemoBuildingToolsSetup-5.0.43.exe
-    sha512: GMoJNS47eii5yZFysO8ATQE5bKUqq+O18pBYRo09o/rxpLjjH428Mn+z5JNQ/iwOtDRQ3Yqayd3AexlKqNYXVQ==
-    size: 101852410
-path: DemoBuildingToolsSetup-5.0.43.exe
-sha512: GMoJNS47eii5yZFysO8ATQE5bKUqq+O18pBYRo09o/rxpLjjH428Mn+z5JNQ/iwOtDRQ3Yqayd3AexlKqNYXVQ==
-releaseNotes: Fixes Payslip Converter V6 desktop file picker imports so selected PDFs continue into parsing.
-releaseDate: '2026-06-17T00:47:01.293Z'
+  - url: DemoBuildingToolsSetup-5.0.44.exe
+    sha512: /o5Y4wuAF568cmMHe+dAf0hU/W8/D1jhwoWgNdlPYasNYnrvOn/fGybpPHDL2Z9FnJK61uKLKg/MmOPsnfwOxw==
+    size: 101943665
+path: DemoBuildingToolsSetup-5.0.44.exe
+sha512: /o5Y4wuAF568cmMHe+dAf0hU/W8/D1jhwoWgNdlPYasNYnrvOn/fGybpPHDL2Z9FnJK61uKLKg/MmOPsnfwOxw==
+releaseNotes: Reworks Payslip Converter V6 to use packaged country HTML templates and a cleaner mini-app layout.
+releaseDate: '2026-06-17T10:34:28.560Z'

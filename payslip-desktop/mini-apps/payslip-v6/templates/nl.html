@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<title>Editable Netherlands Payslip - August 2025</title>
+<style>
+  :root{--page-w:1240px;--page-h:1755px;--pink:#fde9e9;--grey:#f3f3f3;--line:#111;}
+  *{box-sizing:border-box}
+  body{margin:0;background:#d7d7d7;padding:24px;font-family:"Courier New",Courier,monospace;color:#111}
+  .page{width:var(--page-w);height:var(--page-h);margin:0 auto;background:white;position:relative;box-shadow:0 0 8px #999;padding:0;overflow:hidden}
+  [contenteditable="true"]{outline:1px dashed transparent;white-space:pre-wrap}
+  [contenteditable="true"]:hover{outline-color:#76a9ff;background:rgba(118,169,255,.08)}
+  .topbar{position:absolute;left:10px;right:10px;top:22px;height:35px;border:2px solid var(--line);background:var(--pink);font-size:17px;line-height:31px;padding:0 28px;display:flex;justify-content:space-between;align-items:center}
+  .box{position:absolute;border:2px solid var(--line);background:#f7f7f7;font-size:17px;line-height:1.16;padding:22px 24px}
+  .company{left:408px;top:66px;width:397px;height:280px}
+  .addr{left:408px;top:352px;width:397px;height:134px}
+  .details{left:812px;top:66px;width:402px;height:420px;padding-top:10px}
+  .main{position:absolute;left:10px;top:493px;width:1204px;height:900px;border:2px solid var(--line);background:#fff;font-size:17px;line-height:1.18}
+  .main .head{height:38px;background:var(--pink);border-bottom:2px solid var(--line);display:grid;grid-template-columns:470px 142px 148px 150px 150px 142px;align-items:center;text-align:center;padding-top:2px}
+  .vline{position:absolute;top:38px;bottom:0;border-left:2px solid var(--line)}
+  .v1{left:486px}.v2{left:628px}.v3{left:776px}.v4{left:926px}.v5{left:1076px}
+  .maintext{position:absolute;left:12px;top:47px;right:13px;bottom:12px;font-size:17px;line-height:1.2;white-space:pre}
+  .paybar{position:absolute;left:10px;top:1401px;width:1204px;height:44px;border:2px solid var(--line);background:var(--pink);font-size:17px;text-align:center;line-height:40px}
+  .bottom{position:absolute;top:1453px;height:226px;border:2px solid var(--line);background:#f7f7f7;font-size:17px;line-height:1.18;padding:54px 50px 16px 50px;white-space:pre}
+  .b1{left:10px;width:366px}.b2{left:382px;width:390px}.b3{left:778px;width:436px}
+  @media print{body{background:white;padding:0}.page{box-shadow:none;margin:0} [contenteditable="true"]:hover{outline-color:transparent;background:transparent}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="topbar" contenteditable="true"><span>1PAYSLNL003001 500003408/251</span><span>Augustus 2025</span><span>Pagina : 1</span></div>
+
+  <div class="box company" contenteditable="true">ADP Company Demo 1</div>
+
+  <div class="box addr" contenteditable="true">Dhr. S. Van Curen
+Vijzelstraat 4261
+1051 MA AMSTERDAM</div>
+
+  <div class="box details" contenteditable="true">GV personeelsnr  : 05000034
+Kostenplaats     :
+Burgerservicenr. :
+Pers.Nr. IT0709  : 5000034
+Pers.Nr. IT0032  : BC EMPLOYEE
+Geboortedatum    : 07.08.1998
+Datum in dienst  : 01.01.2023
+Datum uit dienst :
+Fulltime Salaris :      0,00
+Parttime Salaris :  6.377,25
+Parttime %       :    100,00
+Min. uurloon     :     14,40
+Uurloon          :     36,79
+Voordeelregel    :  Toegepast
+
+Functie          :
+Loonheffingsnummer:</div>
+
+  <div class="main">
+    <div class="head" contenteditable="true"><div>Looncomponent</div><div>Basis</div><div>Tarief</div><div>Tabelloon</div><div>Bijz.l oon</div><div>Uitbetaling</div></div>
+    <div class="vline v1"></div><div class="vline v2"></div><div class="vline v3"></div><div class="vline v4"></div><div class="vline v5"></div>
+    <div class="maintext" contenteditable="true">1110  Loon                                             6.377,25                  6.377,25
+93PI  WN-premie pens5                                    118,18-                   118,18-
+=3Belastingvoordeeuto v.d. zaak   715,00                 715,00
+   Belastingvoordee 39.000,00
+                                                      -----------   -----------   -----------
+/412  Basis LH BB                                                     6.974,07
+/416  Loonheffing BB                                                  3.626,51-     3.626,51-
+                                                                                  -----------
+/550  Nettoloon                                                                    2.632,56
+                                                                                  -----------
+/560  Te betalen bedrag                                                             2.632,56</div>
+  </div>
+
+  <div class="paybar" contenteditable="true">2.632,56</div>
+
+  <div class="bottom b1" contenteditable="true">Salaris          50.646,75
+Brutoloon BB      2.521,20
+Pensioenpremie      937,06
+Auto van de z      5.720,00
+Fiscaal loon      57.894,17
+Loonheffing t     30.104,93</div>
+
+  <div class="bottom b2" contenteditable="true">Werkbare dagen        173,00
+Gewerkte dagen        173,00
+Maandelijkse werkuren 173,33
+Uitbetaald bedrag  22.069,24
+Ziekte dagen            0,00
+Reiskostenvergoeding    0,00
+Vak.geld Opgebouwd   4.051,74
+Vak.geld Uitbetaald  2.521,20
+Perm/Schrft/Oprp J/J/N</div>
+
+  <div class="bottom b3" contenteditable="true">ZW/WW/WIA/ZVW          J/J/J/J
+Heffingskort.           Ja
+Code LB-tabel           Maand /
+% Bijz. Beloningen      0,00  %
+Jaarl.Bijz.Bel.         0
+
+
+Lease auto              Ja</div>
+</div>
+</body>
+</html>

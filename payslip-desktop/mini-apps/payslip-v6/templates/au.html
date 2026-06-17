@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editable AU PayForce Payslip</title>
+<style>
+  :root{--ink:#111;--line:#222;--bg:#fff;--paper-w:210mm;--paper-h:297mm;}
+  *{box-sizing:border-box}
+  body{margin:0;background:#e9e9e9;font-family:"Courier New", Courier, monospace;color:var(--ink);}
+  .page{width:var(--paper-w);min-height:var(--paper-h);margin:20px auto;background:var(--bg);padding:14mm 12mm 10mm;border:5px solid #050505;box-shadow:0 4px 18px rgba(0,0,0,.25);font-size:11px;line-height:1.05;}
+  [contenteditable="true"]{outline:0;white-space:pre-wrap;}
+  [contenteditable="true"]:focus{background:#fff9c7;box-shadow:0 0 0 1px #f0c400 inset;}
+  .address{margin-left:48px;margin-top:47px;font-weight:bold;letter-spacing:.2px;}
+  table{border-collapse:collapse;width:100%;table-layout:fixed;}
+  .box{border:2px solid var(--line);margin-top:8px;}
+  .box th,.box td{border:2px solid var(--line);padding:2px 5px;vertical-align:top;}
+  .box th{font-weight:bold;text-align:center;padding:1px 4px;}
+  .no-top{margin-top:0}
+  .paydetails{margin-top:88px;}
+  .center-title{font-weight:bold;text-align:center;border-bottom:2px solid var(--line);padding:1px 0;}
+  .tiny{font-size:10px}.num{text-align:right}.center{text-align:center}.bold{font-weight:bold}
+  .section-title{font-weight:bold;text-align:center;border-bottom:2px solid var(--line);padding:1px 0;}
+  .flex{display:flex;gap:0}.half{width:50%;}.third{width:33.33%}
+  .panel{border:2px solid var(--line);min-height:1px}.panel+.panel{border-left:0}
+  .panel-title{text-align:center;font-weight:bold;border-bottom:2px solid var(--line);padding:1px 0;}
+  .pad{padding:5px 9px;}.large{height:160px}.medium{height:118px}.small{height:35px}.message{height:38px}.leave{height:80px}.notes{height:58px}.ytdad{height:162px}.footer{margin-top:7px;border:2px solid var(--line);padding:1px 8px;display:flex;justify-content:space-between;font-weight:bold;}
+  .summary td,.summary th{padding:2px 8px}.other-details{height:42px}.salary{padding:8px 9px;font-weight:bold;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;}.cols-tight{display:grid;grid-template-columns:1.15fr 1fr .6fr;gap:10px;}
+  .rowgrid{display:grid;grid-template-columns:1.1fr .7fr .7fr 1fr;gap:6px;}.ytdgrid{display:grid;grid-template-columns:1.15fr .8fr .8fr .8fr .8fr;gap:0;text-align:center;}
+  .data-grid{display:grid;grid-template-columns:1.2fr .9fr .9fr;gap:8px}.ded-grid{display:grid;grid-template-columns:1.35fr .25fr .65fr;gap:7px}.ent-grid{display:grid;grid-template-columns:1.6fr .55fr .45fr .45fr;gap:8px}.disb-grid{display:grid;grid-template-columns:.55fr 1.2fr .55fr .55fr .55fr;gap:6px}.allow-grid{display:grid;grid-template-columns:1.25fr .75fr .65fr .65fr 1.25fr .75fr .65fr .65fr;gap:6px}.leave-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr 1.1fr 1fr 1fr 1fr;gap:6px}.notes-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;padding:9px 26px;font-weight:bold;}
+  @media print{body{background:white}.page{margin:0;box-shadow:none;border:5px solid #000;width:210mm;min-height:297mm}.no-print{display:none}}
+</style>
+</head>
+<body>
+<div class="no-print" style="max-width:210mm;margin:14px auto 0;font-family:Arial,sans-serif;font-size:13px;color:#333">Editable recreation: click any text to modify it. Use your browser's Print/Save as PDF if needed.</div>
+<main class="page">
+  <div class="address" contenteditable="true">MR LINDSAY DONOHUE
+PO BOX 123ADP
+MELBOURNE  VIC  3000</div>
+
+  <section class="paydetails panel">
+    <div class="center-title" contenteditable="true">EMPLOYEE PAY DETAILS</div>
+    <div class="rowgrid pad bold tiny" contenteditable="true"><span>Month      End
+30/09/2013</span><span>PayDate
+15/09/2013</span><span>EmpNo
+000005</span><span>Name                                      Status
+DONOHUE, LINDSAY                         Full Time</span></div>
+    <div class="rowgrid pad bold tiny" style="border-top:2px solid var(--line)" contenteditable="true"><span>PayPoint
+Administration</span><span>PayAdvice
+1 OF 1</span><span>Classification
+STORE Store Grade 1</span><span>Location
+TTT Test</span></div>
+  </section>
+
+  <section class="flex no-top">
+    <div class="panel half large">
+      <div class="panel-title" contenteditable="true">ELEMENTS</div>
+      <div class="data-grid pad bold tiny" contenteditable="true"><span>Description
+Normal</span><span>Rate        Hours
+216.3462    173.3333</span><span class="num">Value
+37500.00</span></div>
+    </div>
+    <div class="panel half large">
+      <div class="panel-title" contenteditable="true">ALLOWANCES / DEDUCTIONS</div>
+      <div class="ded-grid pad bold tiny" contenteditable="true"><span>Description
+*1st Super Master Plan
+lafha
+*AMP MultiFund Flexible Income Plan
+HYPO TAX
+Sal/Sac LAFHA Food</span><span>TaxInd
+E
+A
+E
+A
+A</span><span class="num">Value
+50.00
+100.00
+350.00
+-5000.00
+-100.00</span></div>
+    </div>
+  </section>
+
+  <section class="panel no-top">
+    <div class="section-title" contenteditable="true">SUMMARY OF EARNINGS</div>
+    <div class="ytdgrid pad bold tiny" contenteditable="true"><span>Gross
+37600.00</span><span>Taxable Income
+37500.00</span><span>Pre Tax Allows/Deds
+.00</span><span>Post Tax Allows/Deds          Tax
+-5000.00                       .00</span><span>NET INCOME
+32500.00</span></div>
+  </section>
+
+  <section class="flex no-top">
+    <div class="panel half medium">
+      <div class="panel-title" contenteditable="true">PAY DISBURSEMENT DETAILS</div>
+      <div class="disb-grid pad bold tiny" contenteditable="true"><span>Method
+EFT2
+EFT3
+EFT1</span><span>Account No.</span><span>BSB Code
+732-102
+733-118
+732-102</span><span>Bank
+KBC
+KBC
+KBC</span><span class="num">Amount
+500.00
+300.00
+31700.00</span></div>
+    </div>
+    <div class="panel half medium">
+      <div class="panel-title" contenteditable="true">ENTITLEMENTS / ACCRUALS</div>
+      <div class="ent-grid pad bold tiny" contenteditable="true"><span>Description
+Annual Lve
+Sick Leave
+LS Leave
+TIL Pay</span><span>Entitlement
+190.1</span><span>Prorata
+8.7</span><span class="num">Total
+198.8
+26.3
+33.8
+2.6</span></div>
+    </div>
+  </section>
+
+  <section class="panel other-details">
+    <div class="panel-title" contenteditable="true">OTHER DETAILS</div>
+    <div class="salary" contenteditable="true">ANNUAL SALARY $450000.00  HYP DATE 01/07/13</div>
+  </section>
+
+  <section class="panel message">
+    <div class="panel-title" contenteditable="true">EMPLOYER MESSAGE</div>
+    <div class="pad bold" contenteditable="true">Test Pay group message</div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-title" contenteditable="true">YEAR TO DATE DETAILS</div>
+    <div class="ytdgrid pad bold tiny" contenteditable="true"><span>YTD Gross
+260220.22</span><span>YTD Taxable Income
+247620.22</span><span>YTD Deductions
+22114.97</span><span>YTD Tax
+34200.00</span><span>YTD Net
+203905.25</span></div>
+  </section>
+
+  <section class="panel leave">
+    <div class="panel-title" contenteditable="true">LEAVE THIS PERIOD</div>
+    <div class="leave-grid pad bold tiny" contenteditable="true"><span>Description</span><span>From</span><span>To</span><span>Hours</span><span>Description</span><span>From</span><span>To</span><span>Hours</span></div>
+  </section>
+
+  <section class="panel notes">
+    <div class="panel-title" contenteditable="true">Notes / Classifications</div>
+    <div class="notes-grid" contenteditable="true"><span>1. 6543210</span><span>4. 123456789012</span><span>5. JIRA</span></div>
+  </section>
+
+  <section class="panel ytdad">
+    <div class="panel-title" contenteditable="true">YTD Allowances / Deductions</div>
+    <div class="allow-grid pad bold tiny" contenteditable="true"><span>Description
+LVE LDG
+1st Super
+AMPCSX
+BT Busines
+Night
+daf
+AMP Multif
+Sup
+MEDIBANK
+GarmTot</span><span>Member No.
+
+12345
+
+
+
+
+889966</span><span class="num">Amount
+400.05
+50.00
+378.20
+5279.58
+6000.00
+52584.00
+350.00
+533.08
+2760.00
+100.00</span><span>Bal Owing</span><span>Description
+Auswide Ma
+ACCOMODAT
+INQ Org A
+COMMISSION
+ENTERTAIN
+Lafha
+AXA Super
+AMPCSX
+HYPO TAX
+S/S Food</span><span>Member No.
+12345
+12345
+
+
+
+
+889966</span><span class="num">Amount
+50.00
+50.00
+27.40
+11857.50
+5500.00
+1100.00
+3443.80
+3054.97
+15000.00
+1200.00</span><span>Bal Owing</span></div>
+  </section>
+
+  <div class="footer" contenteditable="true"><span>ADP EMPLOYER SERVICES</span><span>(ABN) 70003924945</span></div>
+</main>
+</body>
+</html>
