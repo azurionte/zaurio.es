@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payslip Converter V6</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{--bg:#07111f;--panel:#0b1728;--panel2:#101827;--field:#071024;--line:rgba(148,163,184,.25);--text:#e5edf8;--muted:#9fb0c9;--blue:#60a5fa;--blue2:#2563eb;--green:#86efac;--orange:#fb923c;--red:#f87171}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}body{overflow:hidden}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{height:100vh;display:flex;flex-direction:column;min-height:0;background:linear-gradient(180deg,#07111f,#0b1020)}.start{height:100%;min-height:0;display:grid;grid-template-columns:minmax(360px,.85fr) minmax(520px,1.15fr);border-top:1px solid var(--line)}.start-copy{padding:34px 38px;display:flex;flex-direction:column;justify-content:space-between;gap:28px;border-right:1px solid var(--line);background:linear-gradient(135deg,rgba(96,165,250,.14),rgba(15,23,42,.06) 48%,rgba(7,17,31,.4))}.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(96,165,250,.45);background:rgba(37,99,235,.18);border-radius:999px;color:#dbeafe;padding:7px 11px;font-size:12px;font-weight:900}.start h1{font-size:54px;line-height:1.02;margin:32px 0 12px;letter-spacing:0}.start h1 span{color:#d9f99d}.start p{font-size:17px;line-height:1.45;color:#cbd5e1;max-width:720px;margin:0}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.metric{border:1px solid var(--line);background:rgba(15,23,42,.72);border-radius:8px;padding:15px}.metric b{font-size:25px}.metric span{display:block;color:var(--muted);font-size:12px;font-weight:800;margin-top:4px}.start-work{padding:34px 38px;display:flex;align-items:center;justify-content:center;min-height:0}.start-panel{width:min(760px,100%);border:1px solid var(--line);background:rgba(15,23,42,.72);border-radius:8px;padding:22px}.start-panel h2{margin:0 0 6px;font-size:24px}.country-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.country-card{border:1px solid rgba(148,163,184,.25);background:#071024;color:#fff;border-radius:8px;padding:12px;text-align:left;min-height:92px;display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start}.country-card:hover,.country-card.active{border-color:rgba(134,239,172,.72);background:rgba(16,185,129,.12)}.flag{width:30px;height:21px;border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.25) inset;background:#334155}.flag.IN{background:linear-gradient(#ff9933 0 33%,#fff 33% 66%,#138808 66%)}.flag.GB{background:linear-gradient(135deg,#012169 0 43%,#fff 43% 48%,#c8102e 48% 55%,#fff 55% 60%,#012169 60%)}.flag.BR{background:#009b3a;position:relative}.flag.BR:after{content:"";position:absolute;left:7px;top:3px;width:16px;height:15px;background:#ffdf00;transform:rotate(45deg)}.flag.AU{background:#1d4ed8}.flag.CN{background:#dc2626}.flag.MX{background:linear-gradient(90deg,#006847 0 33%,#fff 33% 66%,#ce1126 66%)}.flag.DE{background:linear-gradient(#000 0 33%,#dd0000 33% 66%,#ffce00 66%)}.country-card strong{display:block;font-size:17px}.country-card small{display:block;color:#9fb0c9;margin-top:3px;line-height:1.25}.drop{border:1px dashed rgba(148,163,184,.45);border-radius:8px;min-height:205px;display:flex;align-items:center;justify-content:center;gap:14px;text-align:left;background:rgba(2,6,23,.34);color:#fff;padding:24px}.drop:hover,.drop.drag{border-color:rgba(96,165,250,.78);background:rgba(37,99,235,.12)}.drop-icon{width:58px;height:58px;border-radius:999px;display:grid;place-items:center;background:rgba(96,165,250,.18);border:1px solid rgba(96,165,250,.35);font-size:25px}.drop b{display:block}.drop span span{display:block;color:var(--muted);font-size:13px;margin-top:4px}.workspace{height:100%;min-height:0;display:grid;grid-template-columns:360px minmax(0,1fr);background:#101010}.sidebar{min-height:0;display:flex;flex-direction:column;background:#121212;border-right:1px solid #333}.side-top{flex:0 0 auto;padding:12px;border-bottom:1px solid #333;background:#181818}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btn{border:1px solid rgba(96,165,250,.38);background:rgba(37,99,235,.18);color:#eaf2ff;border-radius:8px;padding:9px 11px;font-weight:900;display:inline-flex;align-items:center;gap:7px}.btn.primary{background:#0b82ff;border-color:#0b82ff;color:white}.btn.good{background:#16a34a;border-color:#16a34a;color:white}.btn.warn{background:#f97316;border-color:#f97316;color:white}.btn:disabled{opacity:.5;cursor:not-allowed}.record-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 12px 0}.record-tabs button{border:1px solid #444;background:#2c2c2c;color:#fff;border-radius:6px;padding:7px 10px;font-size:12px}.record-tabs button.active{background:#0b82ff;border-color:#0b82ff}.side-scroll{flex:1 1 auto;min-height:0;overflow:auto;padding:12px}.section{border:1px solid #333;background:#1f1f1f;border-radius:8px;margin-bottom:12px;padding:12px}.section h3{margin:0 0 10px;font-size:15px}.field{display:block;margin-bottom:9px}.field span{display:block;font-size:11px;font-weight:850;color:#cbd5e1;margin-bottom:5px}input,textarea,select{width:100%;border:1px solid #444;background:#2a2a2a;color:#fff;border-radius:6px;padding:8px 9px;min-height:36px}textarea{resize:vertical;min-height:66px}.mini-table{width:100%;border-collapse:collapse}.mini-table th,.mini-table td{border-bottom:1px solid #333;padding:5px;vertical-align:top}.mini-table th{font-size:10px;color:#b7c6da;text-align:left}.mini-table input{min-height:31px;padding:6px}.icon-btn{border:1px solid #444;background:#2d2d2d;color:#fff;border-radius:6px;min-width:32px;min-height:32px}.preview-shell{height:100%;min-height:0;display:flex;flex-direction:column;background:#101010}.preview-toolbar{flex:0 0 auto;min-height:46px;padding:8px 14px;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#151515}.preview-toolbar strong{font-size:14px}.preview-toolbar span{color:#aaa;font-size:12px}.preview-scroll{flex:1 1 auto;min-height:0;overflow:auto;padding:34px 24px 70px}.paper-host{display:flex;justify-content:center;min-width:max-content}.busy{position:fixed;inset:0;background:rgba(2,6,23,.74);display:none;align-items:center;justify-content:center;z-index:1000;font-size:22px;font-weight:800}.busy.show{display:flex}.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#0f172a;border:1px solid var(--line);color:#fff;border-radius:999px;padding:10px 14px;z-index:1200;box-shadow:0 10px 30px rgba(0,0,0,.35);display:none}.toast.show{display:block}.hidden{display:none!important}
+.pay-page{width:850px;min-height:1100px;background:#fff;color:#111;box-shadow:0 12px 34px rgba(0,0,0,.42);font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.25}.pay-page table{width:100%;border-collapse:collapse}.num{text-align:right}.center{text-align:center}.muted{color:var(--muted)}
+.std-page{padding:38px}.std-head{display:grid;grid-template-columns:140px 1fr 180px;gap:20px;align-items:start;border-bottom:3px solid #172554;padding-bottom:16px}.adp-logo{font-size:34px;font-weight:950;color:#d71920;font-style:italic}.std-title h2{margin:0;font-size:25px}.std-title p{margin:5px 0 0;color:#475569}.std-boxes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.std-box{border:1px solid #94a3b8;border-radius:3px;padding:10px}.std-box h3{margin:0 0 8px;font-size:13px;color:#172554}.kv{display:grid;grid-template-columns:120px 1fr;gap:4px}.kv b{color:#334155}.std-table th{background:#172554;color:#fff;padding:7px}.std-table td{border-bottom:1px solid #cbd5e1;padding:7px}.std-total{background:#e2e8f0;font-weight:800}.std-net{display:flex;justify-content:flex-end;margin-top:16px}.std-net div{min-width:260px;background:#172554;color:#fff;padding:12px 14px;font-size:18px;font-weight:900;display:flex;justify-content:space-between}
+.au-page{width:8.5in;min-height:11in;border:6px solid #000;padding:.17in .19in .15in;background:#fff;font-family:"Courier New",Courier,monospace;font-size:10px;line-height:1.03;overflow:hidden}.au-addr{margin-left:.58in;margin-top:.43in;height:1.25in;font-weight:bold;white-space:pre}.au-section{border:1.2px solid #222;margin-top:.055in}.au-title{border-bottom:1.2px solid #222;background:#e9e9e9;text-align:center;font-weight:bold;padding:1px 3px}.au-boxed td,.au-boxed th{border:1.2px solid #222;padding:3px 5px;font-weight:bold}.au-split{display:grid;grid-template-columns:47% 53%;border:1.2px solid #222}.au-panel{min-height:1.55in;border-right:1.2px solid #222}.au-panel:last-child{border-right:0}.au-inner th,.au-inner td{border:0;padding:2px 6px;font-weight:bold}.au-inner th{font-size:7.4px;text-align:left}.au-summary td{text-align:center}.au-footer{height:.16in;border:1.2px solid #222;margin-top:.055in;display:flex;align-items:center;justify-content:space-between;padding:0 7px;font-weight:bold}
+.de-page{width:900px;height:1273px;padding:18px 20px 12px;position:relative;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif}.de-top{display:grid;grid-template-columns:1fr 160px 1fr;font-size:16px}.de-title{font-weight:700;font-size:18px}.de-personal{position:absolute;top:52px;right:26px;width:356px;border:1px solid #111;padding:8px 10px;font-size:14px}.de-row{display:flex;justify-content:space-between;gap:10px}.de-company{position:absolute;top:203px;left:20px;font-size:10px}.de-address{position:absolute;top:296px;left:34px;font-size:17px;line-height:1.08;white-space:pre-line}.de-meta{position:absolute;top:594px;left:20px;right:244px;display:grid;grid-template-columns:118px 190px 150px;border:1px solid #111;background:#d8d8d8;text-align:center}.de-meta div{border-right:1px solid #111;padding:7px}.de-meta div:last-child{border-right:0}.de-main{position:absolute;top:688px;left:20px;right:20px;width:calc(100% - 40px);font-size:10px}.de-main th{background:#eee;border:1px solid #111;padding:3px}.de-main td{padding:3px 6px}.de-band td{background:#d8d8d8;font-weight:700}.de-note{position:absolute;top:910px;left:30px;font-size:16px}.de-mini{position:absolute;top:963px;left:20px;right:20px;width:calc(100% - 40px);font-size:10px}.de-mini th,.de-mini td{border:1px solid #111;padding:3px}.de-legend{position:absolute;bottom:18px;left:20px;right:20px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;font-size:10px}
+.mx-page{width:1120px;min-height:1448px;padding:22px 52px 34px;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;font-size:10px}.mx-top{display:grid;grid-template-columns:170px 1fr;gap:28px}.mx-logo{padding-top:52px}.mx-logo img{width:135px}.mx-page h1{text-align:center;font-size:14px;margin:0}.mx-bar{background:#12608a;color:#fff;font-weight:700;text-align:center;padding:4px 6px}.mx-section td,.mx-section th{padding:3px 4px;vertical-align:top}.mx-label{font-weight:700;white-space:nowrap}.mx-grid th{background:#12608a;color:#fff;padding:4px}.mx-grid td{border-bottom:1px solid #777;padding:4px}.mx-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:12px 155px 14px}.mx-summary div{background:#d6d2ce;padding:6px;font-weight:700}.mx-summary div:last-child{background:#12608a;color:#fff}.mx-seal{border:1px solid #777;padding:6px;font-size:8px;word-break:break-all;margin-top:14px}
+.cn-page{width:900px;min-height:1160px;padding:42px 18px 28px;background:#fff;color:#111;font-family:"Times New Roman",Times,serif;font-size:14px}.cn-logo{display:flex;justify-content:flex-end;padding-right:96px;margin-bottom:18px}.cn-logo img{width:132px}.cn-box{border:1.5px solid #111;margin-bottom:10px}.cn-head{background:#f3bfc0;text-align:center;font-weight:bold;padding:5px}.cn-grid{display:grid;grid-template-columns:1fr 1fr}.cn-cell{border-top:1px solid #111;border-right:1px solid #111;padding:6px}.cn-cell:nth-child(even){border-right:0}.cn-table th{background:#d6d6d6;border:1px solid #111;padding:5px}.cn-table td{border:1px solid #111;padding:5px}.cn-net{background:#d6d6d6;font-weight:bold}
+@media(max-width:980px){.start{grid-template-columns:1fr;overflow:auto}.start-copy{border-right:0;border-bottom:1px solid var(--line)}.country-grid{grid-template-columns:1fr 1fr}.workspace{grid-template-columns:1fr}.sidebar{height:48vh;border-right:0;border-bottom:1px solid #333}.preview-shell{height:52vh}.start h1{font-size:42px}}@media(max-width:640px){.country-grid,.metrics{grid-template-columns:1fr}.start-copy,.start-work{padding:22px}.actions{display:grid;grid-template-columns:1fr}.btn{justify-content:center}}
+</style>
+</head>
+<body>
+<div class="app">
+  <section id="start" class="start">
+    <div class="start-copy">
+      <div>
+        <div class="pill"><i class="fa-solid fa-code-branch"></i><span>V6.0.0 universal preview engine</span></div>
+        <h1>Build demo-ready <span>payslips</span> with one stable workflow.</h1>
+        <p>Choose a country, import an earning statement PDF, edit the normalized fields, and preview the matching country template from one shared sidebar and preview host.</p>
+      </div>
+      <div>
+        <div class="metrics">
+          <div class="metric"><b id="metricCountries">7</b><span>country adapters</span></div>
+          <div class="metric"><b>1</b><span>sidebar engine</span></div>
+          <div class="metric"><b>1</b><span>preview engine</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="start-work">
+      <div class="start-panel">
+        <h2>Start a workspace</h2>
+        <p class="muted">Select the output template first. V6 keeps the selected adapter locked during import.</p>
+        <div id="countryGrid" class="country-grid"></div>
+        <div id="dropZone" class="drop" role="button" tabindex="0">
+          <span class="drop-icon"><i class="fa-solid fa-file-arrow-up"></i></span>
+          <span><b>Drop a file or click here to select</b><span>PDF earning statement. If parsing fails, V6 opens a realistic demo record instead of hanging.</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="workspace" class="workspace hidden">
+    <aside class="sidebar">
+      <div class="side-top">
+        <strong id="workspaceTitle">Payslip Converter V6</strong>
+        <div class="muted" id="fileMeta">No file imported</div>
+        <div class="actions">
+          <button id="importBtn" class="btn warn" type="button"><i class="fa-solid fa-file-import"></i> Import PDF</button>
+          <button id="newDemoBtn" class="btn" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i> Demo data</button>
+          <button id="saveBtn" class="btn good" type="button"><i class="fa-solid fa-floppy-disk"></i> Save PDF</button>
+          <button id="resetBtn" class="btn" type="button"><i class="fa-solid fa-arrow-left"></i> Countries</button>
+        </div>
+      </div>
+      <div id="recordTabs" class="record-tabs"></div>
+      <div id="fieldPanel" class="side-scroll"></div>
+    </aside>
+    <main class="preview-shell">
+      <div class="preview-toolbar">
+        <div><strong id="previewTitle">Preview</strong><br><span id="previewMeta"></span></div>
+        <span id="recordCount"></span>
+      </div>
+      <div class="preview-scroll">
+        <div id="previewHost" class="paper-host"></div>
+      </div>
+    </main>
+  </section>
+  <input id="fileInput" type="file" accept="application/pdf,.pdf" hidden>
+  <div id="busy" class="busy">Reading PDF...</div>
+  <div id="toast" class="toast"></div>
+</div>
+<script>
+(function(){
+'use strict';
+var VERSION='6.0.0';
+var SAMPLE_NAMES={
+  India:['Anika Sharma','Rohan Mehta','Priya Nair'],
+  UK:['Oliver Smith','Amelia Clarke','James Wilson'],
+  Brazil:['Mariana Silva','Rafael Costa','Camila Oliveira'],
+  Australia:['Harper Collins','Noah Williams','Mia Thompson'],
+  China:['Li Wei','Chen Yu','Zhang Min'],
+  Mexico:['David Santos Ruiz','Laura Hernandez','Carlos Garcia'],
+  Germany:['Markus Weber','Gustav Arbeiter','Anna Schneider']
+};
+var COUNTRY={
+  India:{code:'IN',flag:'IN',label:'India',detail:'Celergo India payslip',currency:'INR',locale:'en-IN',company:'ADP India Demo Pvt Ltd',fields:[
+    ['company','Company'],['department','Department'],['designation','Designation'],['location','Location'],['taxId','PAN'],['bank','Bank account']
+  ]},
+  UK:{code:'GB',flag:'GB',label:'United Kingdom',detail:'Celergo UK payslip',currency:'GBP',locale:'en-GB',company:'ADP UK Demo Ltd',fields:[
+    ['company','Company'],['department','Department'],['taxCode','Tax code'],['nationalInsurance','National Insurance'],['payrollId','Payroll ID'],['bank','Bank account']
+  ]},
+  Brazil:{code:'BR',flag:'BR',label:'Brazil',detail:'Celergo Brazil payslip',currency:'BRL',locale:'pt-BR',company:'ADP Brasil Demo Ltda',fields:[
+    ['company','Company'],['branch','Branch'],['department','Department'],['role','Role'],['cpf','CPF'],['bank','Bank account']
+  ]},
+  Australia:{code:'AU',flag:'AU',label:'Australia',detail:'PayForce Australia payslip',currency:'AUD',locale:'en-AU',company:'ADP Demo Pty Ltd',fields:[
+    ['company','Company'],['address','Employee address','textarea'],['status','Status'],['payPoint','Pay point'],['classification','Classification'],['location','Location'],['bsb','BSB'],['bank','Bank']
+  ]},
+  China:{code:'CN',flag:'CN',label:'China',detail:'Celergo China pay advice',currency:'CNY',locale:'zh-CN',company:'ADP China Demo Co., Ltd.',fields:[
+    ['company','Company'],['assignmentId','Assignment ID'],['personalArea','Personal area'],['taxId','Tax ID'],['socialNo','Social insurance no.'],['bank','Bank account']
+  ]},
+  Mexico:{code:'MX',flag:'MX',label:'Mexico',detail:'Celergo Mexico payroll receipt',currency:'MXN',locale:'es-MX',company:'ADP Mexico Demo S.A. de C.V.',fields:[
+    ['company','Employer'],['employerRfc','Employer RFC'],['registration','Registro patronal'],['rfc','RFC'],['curp','CURP'],['nss','NSS'],['department','Department'],['position','Position']
+  ]},
+  Germany:{code:'DE',flag:'DE',label:'Germany',detail:'Celergo Germany payslip',currency:'EUR',locale:'de-DE',company:'ADP Deutschland GmbH',fields:[
+    ['company','Company'],['companyAddress','Company address'],['address','Employee address','textarea'],['taxId','Tax ID'],['socialNo','Social insurance no.'],['taxClass','Tax class'],['health','Health insurance'],['iban','IBAN']
+  ]}
+};
+var state={country:'India',records:[],index:0,fileName:'',busy:false};
+var commonFields=[['name','Employee name'],['employeeId','Employee ID'],['period','Pay period'],['gross','Gross','number'],['totalDeductions','Total deductions','number'],['net','Net pay','number']];
+function $(id){return document.getElementById(id)}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function num(v){var n=parseFloat(String(v==null?'':v).replace(/[^\d.-]/g,''));return isFinite(n)?n:0}
+function fmtMoney(v,country){var cfg=COUNTRY[country]||COUNTRY.India;try{return new Intl.NumberFormat(cfg.locale,{style:'currency',currency:cfg.currency,minimumFractionDigits:2}).format(num(v))}catch(e){return cfg.currency+' '+num(v).toFixed(2)}}
+function plainMoney(v){return num(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function todayPeriod(){var d=new Date();return d.getFullYear()+'-Monthly-'+String(d.getMonth()+1).padStart(2,'0')}
+function demoIndex(country,i){return (i||0)%SAMPLE_NAMES[country].length}
+function baseDemo(country,i){
+  var cfg=COUNTRY[country], idx=demoIndex(country,i), id=String((country==='China'?3200:country==='Germany'?3400:country==='Mexico'?3500:3000)+idx);
+  var gross={India:185000,UK:5200,Brazil:18500,Australia:7200,China:38000,Mexico:62000,Germany:5200}[country]||5200;
+  var ded=Math.round(gross*({India:.22,UK:.29,Brazil:.27,Australia:.24,China:.28,Mexico:.21,Germany:.28}[country]||.25)*100)/100;
+  var rec={country:country,name:SAMPLE_NAMES[country][idx],employeeId:id,period:todayPeriod(),gross:gross,totalDeductions:ded,net:gross-ded,company:cfg.company,department:'Demo Payroll',designation:'Senior Consultant',location:'Main Office',taxId:'TX'+id+'88',bank:'**** '+(9000+idx*137),earnings:[{label:'Base Salary',amount:gross*.86},{label:'Bonus',amount:gross*.08},{label:'Allowance',amount:gross*.06}],deductions:[{label:'Income Tax',amount:ded*.52},{label:'Social Security',amount:ded*.33},{label:'Other deductions',amount:ded*.15}]};
+  if(country==='Australia')Object.assign(rec,{address:'HARPER COLLINS\n120 GEORGE STREET\nSYDNEY NSW 2000',status:'Full Time',payPoint:'Administration',classification:'STORE Store Grade 1',bsb:'032-001',bank:'WBC',contributions:[{label:'Employer Super',amount:gross*.105}],entitlements:[{label:'Annual Leave',amount:152},{label:'Personal Leave',amount:76}]});
+  if(country==='China')Object.assign(rec,{assignmentId:'CN-A-'+(1042+idx),personalArea:'Shanghai Demo Payroll',socialNo:'110101198803078888'});
+  if(country==='Mexico')Object.assign(rec,{employerRfc:'ADM0101019X0',registration:'D4563070108',rfc:'XAXX010101000',curp:'SAAL010808HMCRNSU4',nss:'72536548323',position:'DESARROLLO1'});
+  if(country==='Germany')Object.assign(rec,{companyAddress:'Koenigsallee 82 - 40212 Duesseldorf',address:'Herrn\n'+SAMPLE_NAMES[country][idx]+'\nLindenstrasse 44\n40215 Duesseldorf',socialNo:'43090581W274',taxClass:'3',health:'Barmer',iban:'DE30 3002 0900 5001 9900 96'});
+  if(country==='UK')Object.assign(rec,{taxCode:'1257L',nationalInsurance:'QQ 12 34 56 C',payrollId:'UK-'+id});
+  if(country==='Brazil')Object.assign(rec,{branch:'Sao Paulo',role:'Consultor Senior',cpf:'123.456.789-09'});
+  return normalize(rec);
+}
+function normalize(rec){
+  rec.earnings=Array.isArray(rec.earnings)?rec.earnings:[];
+  rec.deductions=Array.isArray(rec.deductions)?rec.deductions:[];
+  rec.gross=num(rec.gross)||sum(rec.earnings);
+  rec.totalDeductions=num(rec.totalDeductions)||sum(rec.deductions);
+  rec.net=num(rec.net)||(rec.gross-rec.totalDeductions);
+  return rec;
+}
+function sum(rows){return (rows||[]).reduce(function(t,r){return t+num(r.amount)},0)}
+function amountAfter(text,re){var m=text.match(re);if(!m)return 0;var slice=text.slice(m.index,Math.min(text.length,m.index+220));var amounts=slice.match(/[-]?\d[\d,.]*\d/g)||[];for(var i=0;i<amounts.length;i++){var val=parseAmount(amounts[i]);if(val>0)return val}return 0}
+function parseAmount(raw){var s=String(raw||'').replace(/[^\d,.-]/g,'');if(/,\d{2}$/.test(s))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'');var n=parseFloat(s);return isFinite(n)?n:0}
+function firstMatch(text,res){for(var i=0;i<res.length;i++){var m=text.match(res[i]);if(m)return (m[1]||m[2]||'').trim()}return ''}
+function parseGeneric(country,lines,text,pageIndex){
+  var rec=baseDemo(country,pageIndex);
+  var joined=text||lines.join('\n');
+  rec.employeeId=firstMatch(joined,[/Employee\s*ID\s*:?\s*([A-Z0-9-]+)/i,/Emp\s*No\.?\s*:?\s*([A-Z0-9-]+)/i,/Personal-?Nr\.?\s*:?\s*([A-Z0-9-]+)/i,/No\.?\s*Empleado\s*:?\s*([A-Z0-9-]+)/i])||rec.employeeId;
+  rec.name=firstMatch(joined,[/Employee\s*Name\s*:?\s*([^\n]+)/i,/Nombre\s*:?\s*([^\n]+)/i,/Name\s*:?\s*([^\n]+)/i])||rec.name;
+  if(!/employee|nombre|name/i.test(joined) && lines[0] && !/cid:/i.test(lines[0]))rec.name=String(lines[0]).replace(/\s*ADP Demo\s*/i,'').trim()||rec.name;
+  if((!rec.name || SAMPLE_NAMES[country].indexOf(rec.name)>-1) && lines[0] && !/cid:/i.test(lines[0]))rec.name=String(lines[0]).replace(/\s*ADP Demo\s*/i,'').trim()||rec.name;
+  rec.period=firstMatch(joined,[/Pay\s*Period\s*:?\s*([^\n]+)/i,/Period\s*:?\s*([^\n]+)/i,/Periodo\s*:?\s*([^\n]+)/i,/Abrechnung\s*:?\s*([^\n]+)/i])||rec.period;
+  var gross=amountAfter(joined,/(gross|total earnings|payment total|gesamtbrutto|percepciones|bruto)/i);
+  var ded=amountAfter(joined,/(deductions|deduction total|total deducciones|abzug|lohnsteuer)/i);
+  var net=amountAfter(joined,/(net pay|netpay|auszahlung|neto|gesamtnetto)/i);
+  if(gross)rec.gross=gross;if(ded)rec.totalDeductions=ded;if(net)rec.net=net;else rec.net=rec.gross-rec.totalDeductions;
+  var statementEarnings=sectionRows(lines,/^Payments\b/i,/^Payment\s*Total\b/i);
+  var statementDeductions=sectionRows(lines,/^Deductions\b/i,/^(Deduction\s*Total|DeductionTotal|Employer Contributions)\b/i);
+  rec.earnings=statementEarnings.length?statementEarnings:guessRows(lines,['salary','base','bonus','allowance','commission','monatslohn','sueldo','salario','payment'],rec.earnings,rec.gross);
+  rec.deductions=statementDeductions.length?statementDeductions:guessRows(lines,['tax','deduction','insurance','lohnsteuer','imss','isr','seguro','renten','health','social security'],rec.deductions,rec.totalDeductions);
+  if(country==='Germany'){rec.address=rec.address||'Herrn\n'+rec.name+'\nLindenstrasse 44\n40215 Duesseldorf';}
+  return normalize(rec);
+}
+function sectionRows(lines,startRe,endRe){
+  var active=false,rows=[];
+  lines.forEach(function(raw){
+    var line=String(raw||'').trim();if(!line)return;
+    if(startRe.test(line)){active=true;return}
+    if(active&&endRe.test(line)){active=false;return}
+    if(!active||/^(Current Amount|YTD Amount|AUD|EUR|MXN|BRL|GBP|INR|CNY)$/i.test(line))return;
+    var amounts=line.match(/[-]?\d[\d,.]*\d/g)||[];
+    if(!amounts.length)return;
+    var amount=parseAmount(amounts[0]);
+    var label=line.replace(/[-]?\d[\d,.]*\d/g,'').replace(/\b(AUD|EUR|MXN|BRL|GBP|INR|CNY)\b/ig,'').replace(/\s+/g,' ').trim();
+    if(label&&amount>0)rows.push({label:label.slice(0,54),amount:amount});
+  });
+  return rows;
+}
+function guessRows(lines,keys,fallback,total){
+  var rows=[];lines.forEach(function(line){
+    var l=String(line||'').trim();if(!l||rows.length>6)return;
+    if(keys.some(function(k){return l.toLowerCase().indexOf(k)>-1})){
+      var matches=l.match(/[-]?\d[\d,.]*\d/g)||[];var amount=matches.length?parseAmount(matches[matches.length-1]):0;
+      var label=l.replace(/[-]?\d[\d,.]*\d/g,'').replace(/[:\-]+$/,'').trim();
+      if(label&&amount>0)rows.push({label:label.slice(0,42),amount:amount});
+    }
+  });
+  if(rows.length)return rows;
+  return fallback&&fallback.length?fallback:[{label:'Base Salary',amount:total||0}];
+}
+function getCurrent(){return state.records[state.index]||null}
+function setPath(obj,path,value){var parts=path.split('.'),ref=obj;for(var i=0;i<parts.length-1;i++){if(ref[parts[i]]==null)ref[parts[i]]={};ref=ref[parts[i]]}ref[parts[parts.length-1]]=value}
+function getPath(obj,path){return path.split('.').reduce(function(r,p){return r&&r[p]},obj)}
+function recalc(rec){rec.gross=sum(rec.earnings);rec.totalDeductions=sum(rec.deductions);rec.net=rec.gross-rec.totalDeductions}
+function renderCountries(){
+  $('metricCountries').textContent=Object.keys(COUNTRY).length;
+  $('countryGrid').innerHTML=Object.keys(COUNTRY).map(function(k){var c=COUNTRY[k];return '<button type="button" class="country-card '+(state.country===k?'active':'')+'" data-country="'+esc(k)+'"><span class="flag '+c.flag+'"></span><span><strong>'+esc(c.label)+'</strong><small>'+esc(c.detail)+'</small></span></button>'}).join('');
+}
+function openWorkspace(records,fileName){
+  state.records=records.map(normalize);state.index=0;state.fileName=fileName||'Demo data';
+  $('start').classList.add('hidden');$('workspace').classList.remove('hidden');renderAll();
+}
+function renderAll(){renderTabs();renderSidebar();renderPreview();renderWorkspaceMeta()}
+function renderWorkspaceMeta(){
+  var cfg=COUNTRY[state.country], rec=getCurrent();
+  $('workspaceTitle').textContent=cfg.label+' converter V6';
+  $('fileMeta').textContent=state.fileName||'Demo data';
+  $('previewTitle').textContent=cfg.label+' preview';
+  $('previewMeta').textContent=rec?(rec.name+' / '+rec.employeeId+' / '+rec.period):'';
+  $('recordCount').textContent=state.records.length?((state.index+1)+' of '+state.records.length):'';
+}
+function renderTabs(){
+  $('recordTabs').innerHTML=state.records.map(function(r,i){return '<button type="button" class="'+(i===state.index?'active':'')+'" data-record="'+i+'">ID : '+esc(r.employeeId||i+1)+'</button>'}).join('');
+}
+function fieldHtml(field,rec){
+  var path=field[0],label=field[1],type=field[2]||'text',value=getPath(rec,path);
+  if(type==='textarea')return '<label class="field"><span>'+esc(label)+'</span><textarea data-field="'+esc(path)+'">'+esc(value||'')+'</textarea></label>';
+  return '<label class="field"><span>'+esc(label)+'</span><input data-field="'+esc(path)+'" type="'+(type==='number'?'number':'text')+'" step="0.01" value="'+esc(value==null?'':value)+'"></label>';
+}
+function renderSidebar(){
+  var rec=getCurrent();if(!rec){$('fieldPanel').innerHTML='';return}
+  var cfg=COUNTRY[state.country];
+  var html='<div class="section"><h3>Employee and period</h3>'+commonFields.map(function(f){return fieldHtml(f,rec)}).join('')+'</div>';
+  html+='<div class="section"><h3>'+esc(cfg.label)+' fields</h3>'+cfg.fields.map(function(f){return fieldHtml(f,rec)}).join('')+'</div>';
+  html+=tableEditor('Earnings','earnings',rec.earnings);
+  html+=tableEditor('Deductions','deductions',rec.deductions);
+  if(state.country==='Australia')html+=tableEditor('Employer contributions','contributions',rec.contributions||[]);
+  $('fieldPanel').innerHTML=html;
+}
+function tableEditor(title,path,rows){
+  rows=rows||[];
+  return '<div class="section"><h3>'+esc(title)+'</h3><table class="mini-table"><thead><tr><th>Label</th><th>Amount</th><th></th></tr></thead><tbody>'+rows.map(function(r,i){return '<tr><td><input data-row="'+path+'.'+i+'.label" value="'+esc(r.label||'')+'"></td><td><input type="number" step="0.01" data-row="'+path+'.'+i+'.amount" value="'+esc(r.amount||0)+'"></td><td><button type="button" class="icon-btn" data-remove-row="'+path+'.'+i+'"><i class="fa-solid fa-xmark"></i></button></td></tr>'}).join('')+'</tbody></table><button type="button" class="btn" data-add-row="'+path+'"><i class="fa-solid fa-plus"></i> Add row</button></div>';
+}
+function renderPreview(){
+  var rec=getCurrent();if(!rec){$('previewHost').innerHTML='';return}
+  var html;
+  if(state.country==='Australia')html=renderAustralia(rec);
+  else if(state.country==='Germany')html=renderGermany(rec);
+  else if(state.country==='Mexico')html=renderMexico(rec);
+  else if(state.country==='China')html=renderChina(rec);
+  else html=renderStandard(rec);
+  $('previewHost').innerHTML=html;
+}
+function rowHtml(rows,country){return (rows||[]).map(function(r){return '<tr><td>'+esc(r.label)+'</td><td class="num">'+fmtMoney(r.amount,country)+'</td></tr>'}).join('')}
+function renderStandard(d){
+  var c=COUNTRY[d.country], title=d.country==='UK'?'Payslip':d.country==='Brazil'?'Demonstrativo de Pagamento':'Salary Slip';
+  return '<div class="pay-page std-page"><div class="std-head"><div class="adp-logo">ADP</div><div class="std-title"><h2>'+esc(title)+'</h2><p>'+esc(c.label)+' demo payroll statement</p></div><div class="kv"><b>Period</b><span>'+esc(d.period)+'</span><b>Employee ID</b><span>'+esc(d.employeeId)+'</span></div></div><div class="std-boxes"><section class="std-box"><h3>Employer</h3><div class="kv"><b>Company</b><span>'+esc(d.company)+'</span><b>Department</b><span>'+esc(d.department)+'</span><b>Location</b><span>'+esc(d.location)+'</span></div></section><section class="std-box"><h3>Employee</h3><div class="kv"><b>Name</b><span>'+esc(d.name)+'</span><b>Designation</b><span>'+esc(d.designation||d.role||d.position||'Consultant')+'</span><b>Tax ID</b><span>'+esc(d.taxId||d.cpf||d.nationalInsurance||'')+'</span></div></section></div><table class="std-table"><thead><tr><th>Earnings</th><th class="num">Amount</th></tr></thead><tbody>'+rowHtml(d.earnings,d.country)+'<tr class="std-total"><td>Gross pay</td><td class="num">'+fmtMoney(d.gross,d.country)+'</td></tr></tbody></table><br><table class="std-table"><thead><tr><th>Deductions</th><th class="num">Amount</th></tr></thead><tbody>'+rowHtml(d.deductions,d.country)+'<tr class="std-total"><td>Total deductions</td><td class="num">'+fmtMoney(d.totalDeductions,d.country)+'</td></tr></tbody></table><div class="std-net"><div><span>Net pay</span><span>'+fmtMoney(d.net,d.country)+'</span></div></div></div>';
+}
+function renderAustralia(d){
+  function rows(rows){var out=(rows||[]).slice(0,7).map(function(r){return '<tr><td>'+esc(r.label)+'</td><td></td><td></td><td class="num">'+plainMoney(r.amount)+'</td></tr>'});while(out.length<7)out.push('<tr><td>&nbsp;</td><td></td><td></td><td></td></tr>');return out.join('')}
+  var contrib=sum(d.contributions||[]), ytd=d.gross*6;
+  return '<div class="au-page"><div class="au-addr">'+esc(d.address||d.name).toUpperCase()+'</div><section class="au-section"><div class="au-title">EMPLOYEE PAY DETAILS</div><table class="au-boxed"><tr><td><b>Month End</b><br>'+esc(d.period)+'</td><td><b>PayDate</b><br>'+esc(new Date().toLocaleDateString('en-AU'))+'</td><td><b>Emp No.</b><br>'+esc(d.employeeId)+'</td><td><b>Name</b><br>'+esc(d.name)+'</td><td><b>Status</b><br>'+esc(d.status)+'</td></tr><tr><td><b>Pay Point</b><br>'+esc(d.payPoint)+'</td><td><b>Pay Advice</b><br>1 OF 1</td><td colspan="2"><b>Classification</b><br>'+esc(d.classification)+'</td><td><b>Location</b><br>'+esc(d.location)+'</td></tr></table></section><div class="au-split"><section class="au-panel"><div class="au-title">ELEMENTS</div><table class="au-inner"><tr><th>Description</th><th>Rate</th><th>Hours</th><th class="num">Value</th></tr>'+rows(d.earnings)+'</table></section><section class="au-panel"><div class="au-title">ALLOWANCES / DEDUCTIONS</div><table class="au-inner"><tr><th>Description</th><th>Tax Ind</th><th class="num">Value</th></tr>'+((d.deductions||[]).map(function(r){return '<tr><td>'+esc(r.label)+'</td><td>A</td><td class="num">-'+plainMoney(r.amount)+'</td></tr>'}).join(''))+'</table></section></div><section class="au-section au-summary"><div class="au-title">SUMMARY OF EARNINGS</div><table class="au-boxed"><tr><td><b>Gross</b><br>'+plainMoney(d.gross)+'</td><td><b>Taxable Income</b><br>'+plainMoney(d.gross)+'</td><td><b>Pre Tax Allow/Deds</b><br>'+plainMoney(contrib)+'</td><td><b>Post Tax Allow/Deds</b><br>-'+plainMoney(d.totalDeductions)+'</td><td><b>Tax</b><br>'+plainMoney(d.totalDeductions)+'</td><td><b>NET INCOME</b><br>'+plainMoney(d.net)+'</td></tr></table></section><div class="au-title">* Employer Superannuation Contribution</div><div class="au-split"><section class="au-panel"><div class="au-title">PAY DISBURSEMENT DETAILS</div><table class="au-inner"><tr><th>Method</th><th>Account No.</th><th>BSB Code</th><th>Bank</th><th class="num">Amount</th></tr><tr><td>EFT</td><td>'+esc(d.bank)+'</td><td>'+esc(d.bsb)+'</td><td>'+esc(d.bank)+'</td><td class="num">'+plainMoney(d.net)+'</td></tr></table></section><section class="au-panel"><div class="au-title">ENTITLEMENTS / ACCRUALS</div><table class="au-inner"><tr><th>Description</th><th>Entitlement</th><th>Prorata</th><th class="num">Total</th></tr>'+((d.entitlements||[]).map(function(r){return '<tr><td>'+esc(r.label)+'</td><td></td><td></td><td class="num">'+plainMoney(r.amount)+'</td></tr>'}).join(''))+'</table></section></div><section class="au-section"><div class="au-title">YEAR TO DATE DETAILS</div><table class="au-boxed"><tr><td><b>YTD Gross</b><br>'+plainMoney(ytd)+'</td><td><b>YTD Taxable Income</b><br>'+plainMoney(ytd)+'</td><td><b>YTD Deductions</b><br>'+plainMoney(d.totalDeductions*6)+'</td><td><b>YTD Net</b><br>'+plainMoney(d.net*6)+'</td></tr></table></section><footer class="au-footer"><div>ADP EMPLOYER SERVICES</div><div>(ABN) 70003924945</div></footer></div>';
+}
+function renderGermany(d){
+  var earn=(d.earnings||[]).map(function(r){return '<tr><td colspan="4">'+esc(r.label)+'</td><td>L</td><td>L</td><td class="num">'+plainMoney(r.amount)+'</td><td></td></tr>'}).join('');
+  var ded=(d.deductions||[]).map(function(r){return '<tr><td>'+esc(r.label)+'</td><td>Brutto (M/J)</td><td class="num">'+plainMoney(d.gross)+'</td><td></td><td colspan="2"></td><td class="num">'+plainMoney(r.amount)+'</td><td></td></tr>'}).join('');
+  return '<div class="de-page"><div class="de-top"><div class="de-title">Entgeltabrechnung</div><div>02915/118</div><div>'+esc(d.period)+'</div></div><div class="de-personal"><div class="de-row"><span>Geburtsdatum</span><span>05.09.1981</span></div><div class="de-row"><span>Sozialversicherungsnummer</span><span>'+esc(d.socialNo)+'</span></div><div class="de-row"><span>Identifikationsnummer</span><span>'+esc(d.taxId)+'</span></div><div class="de-row"><span>Steuerklasse</span><span>'+esc(d.taxClass)+'</span></div><div class="de-row"><span>Konfession</span><span>rk</span></div><div class="de-row"><span>Kinderfreibetrag</span><span>1,0</span></div><div class="de-row"><span>Krankenkasse</span><span>'+esc(d.health)+'</span></div><div class="de-row"><span>Steuer-/SV-Tage</span><span>30/30</span></div><div class="de-row"><span>Woechentliche Arbeitszeit</span><span>40,00</span></div></div><div class="de-company">'+esc(d.company)+'<br>'+esc(d.companyAddress)+'</div><div class="de-address">'+esc(d.address)+'</div><section class="de-meta"><div><b>Personal-Nr.</b><br>'+esc(d.employeeId)+'</div><div><b>Abteilung</b><br>'+esc(d.department)+'</div><div><b>Eintritt/Austritt</b><br>01.07.2021</div></section><table class="de-main"><thead><tr><th colspan="4">Entgeltbestandteile</th><th>St</th><th>SV</th><th class="num">Monat</th><th class="num">Jahressumme</th></tr></thead><tbody>'+earn+'<tr class="de-band"><td colspan="6">Gesamtbrutto</td><td class="num">'+plainMoney(d.gross)+'</td><td></td></tr>'+ded+'<tr class="de-band"><td colspan="6">Gesamtnetto</td><td class="num">'+plainMoney(d.net)+'</td><td></td></tr><tr class="de-band"><td colspan="6">Auszahlung</td><td class="num">'+plainMoney(d.net)+'</td><td></td></tr></tbody></table><div class="de-note">Ueberweisung&nbsp;&nbsp;&nbsp;&nbsp;IBAN '+esc(d.iban)+'<br>SEPA payroll transfer</div><table class="de-mini"><tr><th></th><th>LSt lfd.</th><th>KSt lfd.</th><th>Soli lfd.</th><th>KV lfd.</th><th>RV lfd.</th><th>AV lfd.</th><th>PV lfd.</th></tr><tr><td>Brutto mtl</td><td>'+plainMoney(d.gross)+'</td><td>'+plainMoney(d.gross)+'</td><td>'+plainMoney(d.gross)+'</td><td>'+plainMoney(d.gross)+'</td><td>'+plainMoney(d.gross)+'</td><td>'+plainMoney(d.gross)+'</td><td>'+plainMoney(d.gross)+'</td></tr></table><section class="de-legend"><div><b>Legende St/SV</b><br>L = Laufender Bezug / Gesamtbrutto</div><div>E = Einmaliger Bezug<br>F = Frei</div><div>M = Ermaessigt<br>P = Pauschalbesteuert</div><div>S = Sonstiger Bezug<br>Demo statement</div></section></div>';
+}
+function renderMexico(d){
+  var earn=(d.earnings||[]).map(function(r){return '<tr><td>'+esc(r.label)+'</td><td>ACT</td><td>001</td><td>001</td><td class="num">'+fmtMoney(r.amount,'Mexico')+'</td><td class="num">'+fmtMoney(r.amount*.8,'Mexico')+'</td><td class="num">'+fmtMoney(r.amount*.2,'Mexico')+'</td></tr>'}).join('');
+  var ded=(d.deductions||[]).map(function(r,i){return '<tr><td>'+esc(r.label)+'</td><td>ACT</td><td>10'+i+'</td><td>00'+(i+1)+'</td><td class="num">'+fmtMoney(r.amount,'Mexico')+'</td></tr>'}).join('');
+  return '<div class="mx-page"><div class="mx-top"><div class="mx-logo"><img src="assets/adp-logo.png" alt="ADP"></div><div><h1>RECIBO DE NOMINA</h1><div class="mx-bar">Emisor</div><table class="mx-section"><tr><td class="mx-label">Nombre:</td><td>'+esc(d.company)+'</td><td class="mx-label">RFC:</td><td>'+esc(d.employerRfc)+'</td></tr><tr><td class="mx-label">Registro Patronal:</td><td>'+esc(d.registration)+'</td><td class="mx-label">Regimen Fiscal:</td><td>626</td></tr></table><div class="mx-bar">Receptor</div><table class="mx-section"><tr><td class="mx-label">Nombre:</td><td>'+esc(d.name)+'</td><td class="mx-label">No. Empleado:</td><td>'+esc(d.employeeId)+'</td></tr><tr><td class="mx-label">RFC:</td><td>'+esc(d.rfc)+'</td><td class="mx-label">CURP:</td><td>'+esc(d.curp)+'</td></tr><tr><td class="mx-label">NSS:</td><td>'+esc(d.nss)+'</td><td class="mx-label">Puesto:</td><td>'+esc(d.position)+'</td></tr><tr><td class="mx-label">Depto:</td><td>'+esc(d.department)+'</td><td class="mx-label">Periodo:</td><td>'+esc(d.period)+'</td></tr></table></div></div><table class="mx-grid"><thead><tr><th>Concepto</th><th>Unidad</th><th>Clave</th><th>Tipo percepcion</th><th>Total importe</th><th>Gravado</th><th>Exento</th></tr></thead><tbody>'+earn+'</tbody></table><br><table class="mx-grid"><thead><tr><th>Concepto</th><th>Unidad</th><th>Clave</th><th>Tipo deduccion</th><th>Total importe</th></tr></thead><tbody>'+ded+'</tbody></table><div class="mx-summary"><div>Total percepciones<br>'+fmtMoney(d.gross,'Mexico')+'</div><div>Total deducciones<br>'+fmtMoney(d.totalDeductions,'Mexico')+'</div><div>Total neto<br>'+fmtMoney(d.net,'Mexico')+'</div></div><div class="mx-seal">Sello digital demo: '+esc((d.name+d.employeeId+d.period).replace(/\s/g,'').toUpperCase())+'-CFDI-CELERGO-MX-DEMO-0001</div></div>';
+}
+function renderChina(d){
+  var earn=rowHtml(d.earnings,'China'), ded=rowHtml(d.deductions,'China');
+  return '<div class="cn-page"><div class="cn-logo"><img src="assets/adp-logo.png" alt="ADP"></div><div class="cn-box"><div class="cn-head">PAY ADVICE</div><div class="cn-grid"><div class="cn-cell"><b>Company</b><br>'+esc(d.company)+'</div><div class="cn-cell"><b>Period</b><br>'+esc(d.period)+'</div><div class="cn-cell"><b>Employee</b><br>'+esc(d.name)+'</div><div class="cn-cell"><b>Employee ID</b><br>'+esc(d.employeeId)+'</div><div class="cn-cell"><b>Assignment ID</b><br>'+esc(d.assignmentId)+'</div><div class="cn-cell"><b>Personal Area</b><br>'+esc(d.personalArea)+'</div><div class="cn-cell"><b>Tax ID</b><br>'+esc(d.taxId)+'</div><div class="cn-cell"><b>Social Insurance No.</b><br>'+esc(d.socialNo)+'</div></div></div><div class="cn-box"><div class="cn-head">Earnings</div><table class="cn-table"><tr><th>Description</th><th class="num">Amount</th></tr>'+earn+'<tr class="cn-net"><td>Gross</td><td class="num">'+fmtMoney(d.gross,'China')+'</td></tr></table></div><div class="cn-box"><div class="cn-head">Deductions</div><table class="cn-table"><tr><th>Description</th><th class="num">Amount</th></tr>'+ded+'<tr class="cn-net"><td>Total deductions</td><td class="num">'+fmtMoney(d.totalDeductions,'China')+'</td></tr></table></div><div class="cn-box"><div class="cn-head">Net Pay</div><table class="cn-table"><tr class="cn-net"><td>Bank</td><td>'+esc(d.bank)+'</td><td class="num">'+fmtMoney(d.net,'China')+'</td></tr></table></div></div>';
+}
+function setBusy(show,msg){state.busy=!!show;$('busy').textContent=msg||'Working...';$('busy').classList.toggle('show',!!show)}
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('show')},2400)}
+function desktopApi(){try{return window.payslipDesktop||(window.parent&&window.parent.payslipDesktop)}catch(e){return window.payslipDesktop||null}}
+function b64ToArrayBuffer(b64){var bin=atob(b64),len=bin.length,bytes=new Uint8Array(len);for(var i=0;i<len;i++)bytes[i]=bin.charCodeAt(i);return bytes.buffer}
+function withTimeout(promise,ms,label,onTimeout){var timer;return Promise.race([promise,new Promise(function(_,reject){timer=setTimeout(function(){if(onTimeout)onTimeout();reject(new Error(label+' timed out'))},ms)})]).finally(function(){clearTimeout(timer)})}
+async function readPdfPages(arrayBuffer){
+  if(!window.pdfjsLib||!pdfjsLib.getDocument)throw new Error('PDF.js unavailable');
+  if(pdfjsLib.GlobalWorkerOptions)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  var task=pdfjsLib.getDocument({data:new Uint8Array(arrayBuffer.slice(0)),disableWorker:true,useWorkerFetch:false,isEvalSupported:false,stopAtErrors:false,verbosity:pdfjsLib.VerbosityLevel?pdfjsLib.VerbosityLevel.ERRORS:0});
+  var pdf=await withTimeout(task.promise,9000,'PDF local parser',function(){try{task.destroy()}catch(e){}});
+  var pages=[];
+  for(var p=1;p<=pdf.numPages;p++){
+    var page=await withTimeout(pdf.getPage(p),3500,'PDF page '+p);
+    var content=await withTimeout(page.getTextContent({normalizeWhitespace:true,disableCombineTextItems:false}),3500,'PDF text '+p);
+    var lines=(content.items||[]).map(function(it){return String(it.str||'').trim()}).filter(Boolean);
+    pages.push({lines:lines,text:lines.join('\n')});
+    if(page.cleanup)page.cleanup();
+  }
+  if(pdf.destroy)pdf.destroy();
+  return pages;
+}
+async function importBuffer(arrayBuffer,fileName){
+  if(state.busy)return;
+  setBusy(true,'Reading PDF...');
+  var pages=[];
+  try{pages=await readPdfPages(arrayBuffer)}catch(err){console.debug('V6 PDF text extraction fell back to demo data.',err);toast('PDF text was not readable. Demo records loaded.')}
+  try{
+    var records=pages.length?pages.map(function(page,i){return parseGeneric(state.country,page.lines,page.text,i)}):[baseDemo(state.country,0),baseDemo(state.country,1),baseDemo(state.country,2)];
+    openWorkspace(records,fileName||'Imported PDF');
+  }finally{setBusy(false)}
+}
+async function choosePdf(){
+  var api=desktopApi();
+  if(api&&api.selectPdf){
+    setBusy(true,'Opening file picker...');
+    try{var r=await api.selectPdf();if(!r||r.canceled){setBusy(false);return}await importBuffer(b64ToArrayBuffer(r.base64),r.fileName)}catch(e){setBusy(false);toast('Could not read selected PDF.');console.error(e)}
+    return;
+  }
+  $('fileInput').value='';$('fileInput').click();
+}
+function savePdf(){
+  var rec=getCurrent();if(!rec)return;
+  var api=desktopApi(), html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(rec.name)+'</title><style>'+Array.prototype.map.call(document.styleSheets,function(sheet){try{return Array.prototype.map.call(sheet.cssRules,function(r){return r.cssText}).join('\n')}catch(e){return ''}}).join('\n')+'</style></head><body><div class="paper-host">'+$('previewHost').innerHTML+'</div></body></html>';
+  if(api&&api.saveHtmlAsPdf){api.saveHtmlAsPdf({title:rec.country+'_'+rec.employeeId+'_Payslip',html:html}).then(function(r){if(!r||r.canceled)return;toast('PDF saved')}).catch(function(){toast('Save failed')});return}
+  var blob=new Blob([html],{type:'text/html'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=rec.country+'_'+rec.employeeId+'_Payslip.html';a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+}
+function bind(){
+  document.addEventListener('click',function(e){
+    var country=e.target.closest('[data-country]');if(country){state.country=country.dataset.country;renderCountries();return}
+    if(e.target.closest('#dropZone')||e.target.closest('#importBtn')){choosePdf();return}
+    if(e.target.closest('#newDemoBtn')){openWorkspace([baseDemo(state.country,0),baseDemo(state.country,1),baseDemo(state.country,2)],'Demo data');return}
+    if(e.target.closest('#saveBtn')){savePdf();return}
+    if(e.target.closest('#resetBtn')){$('workspace').classList.add('hidden');$('start').classList.remove('hidden');renderCountries();return}
+    var tab=e.target.closest('[data-record]');if(tab){state.index=parseInt(tab.dataset.record,10)||0;renderAll();return}
+    var add=e.target.closest('[data-add-row]');if(add){var rec=getCurrent(),p=add.dataset.addRow;if(!rec[p])rec[p]=[];rec[p].push({label:'New row',amount:0});recalc(rec);renderAll();return}
+    var rem=e.target.closest('[data-remove-row]');if(rem){var rec2=getCurrent(),parts=rem.dataset.removeRow.split('.'),arr=rec2[parts[0]]||[];arr.splice(parseInt(parts[1],10),1);recalc(rec2);renderAll();return}
+  });
+  document.addEventListener('input',function(e){
+    var rec=getCurrent();if(!rec)return;
+    if(e.target.matches('[data-field]')){var path=e.target.dataset.field;setPath(rec,path,e.target.type==='number'?num(e.target.value):e.target.value);normalize(rec);renderPreview();renderWorkspaceMeta();return}
+    if(e.target.matches('[data-row]')){var p=e.target.dataset.row;if(/\.amount$/.test(p))setPath(rec,p,num(e.target.value));else setPath(rec,p,e.target.value);recalc(rec);renderPreview();renderWorkspaceMeta();return}
+  });
+  $('fileInput').addEventListener('change',function(){var file=this.files&&this.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(ev){importBuffer(ev.target.result,file.name)};reader.onerror=function(){toast('Could not read selected file')};reader.readAsArrayBuffer(file)});
+  ['dragenter','dragover'].forEach(function(ev){$('dropZone').addEventListener(ev,function(e){e.preventDefault();$('dropZone').classList.add('drag')})});
+  ['dragleave','drop'].forEach(function(ev){$('dropZone').addEventListener(ev,function(e){e.preventDefault();$('dropZone').classList.remove('drag')})});
+  $('dropZone').addEventListener('drop',function(e){var file=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(ev){importBuffer(ev.target.result,file.name)};reader.readAsArrayBuffer(file)});
+  $('dropZone').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();choosePdf()}});
+}
+renderCountries();bind();
+})();
+</script>
+</body>
+</html>

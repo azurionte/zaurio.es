@@ -1,9 +1,9 @@
-version: 5.0.41
+version: 5.0.42
 files:
-  - url: DemoBuildingToolsSetup-5.0.41.exe
-    sha512: uhhGkgZbo0cuEZzoOp8TD8XXBIOM5QX8QYUCkEg09GYbF/T9klHaAw6exRlzOE8Krr6hnB5oFzYliQcgOixA7g==
-    size: 101843084
-path: DemoBuildingToolsSetup-5.0.41.exe
-sha512: uhhGkgZbo0cuEZzoOp8TD8XXBIOM5QX8QYUCkEg09GYbF/T9klHaAw6exRlzOE8Krr6hnB5oFzYliQcgOixA7g==
-releaseNotes: Removes the fake desktop PDF worker error and makes Germany import fall back quickly instead of staying on local PDF parsing.
-releaseDate: '2026-06-16T20:21:39.250Z'
+  - url: DemoBuildingToolsSetup-5.0.42.exe
+    sha512: WNB8bRlfXEugeVuKgKEhqNZ7/oQXO+bgFVu9PJIyznDChc60NgrlPnseR4OBj+EKsRrVMcIUuapwkVM+CdUHrw==
+    size: 101852466
+path: DemoBuildingToolsSetup-5.0.42.exe
+sha512: WNB8bRlfXEugeVuKgKEhqNZ7/oQXO+bgFVu9PJIyznDChc60NgrlPnseR4OBj+EKsRrVMcIUuapwkVM+CdUHrw==
+releaseNotes: Adds a separate Payslip Converter V6 beta mini app with a universal sidebar and preview engine.
+releaseDate: '2026-06-17T00:36:44.413Z'

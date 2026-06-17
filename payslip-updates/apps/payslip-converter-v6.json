@@ -1,0 +1,17 @@
+{
+  "app": "payslip-converter-v6",
+  "version": "6.0.0",
+  "entry": "payslip-converter-v6.html?app=payslip-v6",
+  "updatedAt": "2026-06-17T00:00:00Z",
+  "notes": "Introduces the V6 beta payslip converter with one universal sidebar, one preview host, and country-specific adapters.",
+  "files": [
+    {
+      "path": "payslip-converter-v6.html",
+      "url": "payslip-converter-v6.html?v=6.0.0"
+    },
+    {
+      "path": "assets/adp-logo.png",
+      "url": "assets/adp-logo.png?v=6.0.0"
+    }
+  ]
+}
