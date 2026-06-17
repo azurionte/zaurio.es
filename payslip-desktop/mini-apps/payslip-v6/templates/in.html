@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>India Payslip</title>
+<style>
+:root{--ink:#111827;--muted:#4b5563;--blue:#172554;--line:#cbd5e1}
+body{margin:0;background:#e5e7eb;font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+.page{width:794px;height:1123px;margin:0 auto;background:#fff;padding:42px 48px;box-sizing:border-box;overflow:hidden}
+.top{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:4px solid var(--blue);padding-bottom:18px}
+.logo{font-size:42px;font-weight:950;font-style:italic;color:#d71920;letter-spacing:-3px}
+.title{text-align:right}.title h1{margin:0;font-size:28px}.title p{margin:5px 0 0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}.box{border:1px solid var(--line);padding:12px;min-height:88px}.box h2{margin:0 0 10px;font-size:14px;color:var(--blue)}.line{display:grid;grid-template-columns:145px 1fr;gap:8px;margin:5px 0;font-size:13px}.label{font-weight:700;color:#334155}
+table{width:100%;border-collapse:collapse;margin-top:22px;font-size:13px}th{background:var(--blue);color:#fff;text-align:left;padding:8px}td{border-bottom:1px solid #e5e7eb;padding:8px}td:last-child,th:last-child{text-align:right}.total td{font-weight:700;background:#e5e7eb}.summary{margin-top:24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.summary div{border:1px solid var(--line);padding:12px;text-align:center}.summary b{display:block;font-size:18px;margin-top:4px}.footer{position:absolute;left:48px;right:48px;bottom:34px;color:#64748b;font-size:11px;border-top:1px solid var(--line);padding-top:10px}
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="top">
+    <div class="logo">ADP</div>
+    <div class="title"><h1>Salary Slip</h1><p>India demo payroll statement</p></div>
+  </section>
+  <section class="grid">
+    <div class="box">
+      <h2>Employer</h2>
+      <div class="line"><span class="label">Company</span><span>ADP India Demo Pvt Ltd</span></div>
+      <div class="line"><span class="label">Department</span><span>Demo Payroll</span></div>
+      <div class="line"><span class="label">Location</span><span>Bengaluru</span></div>
+    </div>
+    <div class="box">
+      <h2>Employee</h2>
+      <div class="line"><span class="label">Name</span><span>Priya Sharma</span></div>
+      <div class="line"><span class="label">Employee ID</span><span>2000</span></div>
+      <div class="line"><span class="label">Pay period</span><span>2026-Monthly-05</span></div>
+    </div>
+  </section>
+  <table>
+    <thead><tr><th>Earnings</th><th>Amount</th></tr></thead>
+    <tbody>
+      <tr><td>Basic Salary</td><td>52,000.00</td></tr>
+      <tr><td>House Rent Allowance</td><td>18,000.00</td></tr>
+      <tr class="total"><td>Gross pay</td><td>70,000.00</td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th>Deductions</th><th>Amount</th></tr></thead>
+    <tbody>
+      <tr><td>Income Tax</td><td>8,000.00</td></tr>
+      <tr><td>Provident Fund</td><td>4,200.00</td></tr>
+      <tr class="total"><td>Total deductions</td><td>12,200.00</td></tr>
+    </tbody>
+  </table>
+  <section class="summary">
+    <div>Gross<b>70,000.00</b></div>
+    <div>Deductions<b>12,200.00</b></div>
+    <div>Net pay<b>57,800.00</b></div>
+  </section>
+  <div class="footer">Generated for demo use from a Celergo earning statement.</div>
+</main>
+</body>
+</html>

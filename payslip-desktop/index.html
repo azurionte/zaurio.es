@@ -7884,7 +7884,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
   var MINI_APP_STORAGE_KEY = 'dbtInstalledMiniAppsV1';
   var MINI_APP_PENDING_KEY = 'dbtPendingMiniAppUpdatesV1';
   var payslipMiniApp = { key: 'payslip-converter', slug: 'payslip-converter', title: 'Payslip converter', version: PAYSLIP_VERSION, rawVersion: PAYSLIP_VERSION.replace(/^v/i, ''), icon: 'fa-file-invoice', detail: 'Multi-country payslip converter for India, UK, Brazil, Australia, China, Mexico, and Germany.', bundledEntry: 'mini-apps/payslip-converter.html?app=payslip' };
-  var payslipV6MiniApp = { key: 'payslip-converter-v6', slug: 'payslip-converter-v6', title: 'Payslip converter V6', version: 'V6.1.0', rawVersion: '6.1.0', icon: 'fa-file-invoice-dollar', detail: 'Beta rebuild with template files, exact country layouts, and a universal editor.', bundledEntry: 'mini-apps/payslip-converter-v6.html?app=payslip-v6' };
+  var payslipV6MiniApp = { key: 'payslip-converter-v6', slug: 'payslip-converter-v6', title: 'Payslip converter V6', version: 'V6.2.0', rawVersion: '6.2.0', icon: 'fa-file-invoice-dollar', detail: 'Universal converter with packaged country templates, dynamic pay-element capture, and V6 export flow.', bundledEntry: 'mini-apps/payslip-converter-v6.html?app=payslip-v6' };
   var celergoMonthlyChangesApp = { key: 'celergo-monthly-changes', slug: 'celergo-monthly-changes', title: 'Monthly changes input', version: 'V1.8', rawVersion: '1.8', icon: 'fa-file-import', detail: 'Generate Celergo PaymentAndDeduction monthly changes by country template.', bundledEntry: 'mini-apps/celergo-monthly-changes.html?app=monthly-changes' };
   var pendingMiniUpdates = {};
   var appCards = [
@@ -8360,15 +8360,10 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     if (!options.fromRoute) setDBTRoute('celergo', options.replaceRoute);
     var modal = el('intro-modal');
     if (!modal) return;
-    var legacyPayslipCard = '<div class="v5-card v5-app v5-open-payslip" id="v5OpenPayslip" data-open-mini-app="payslip-converter"><strong><i class="fa-solid fa-file-invoice"></i> Payslip converter</strong><span class="v5-version" data-mini-version="payslip-converter">'+displayVersion(appCurrentVersion(payslipMiniApp))+'</span><small>Current 5.6.x converter kept for comparison while V6 is tested.</small><div class="v5-card-actions"><button type="button" class="v5-launch" id="v5LaunchPayslip" data-open-mini-app="payslip-converter"><i class="fa-solid fa-up-right-from-square"></i> Open</button>'+toolUpdateButton('payslip-converter')+'</div></div>';
-    modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>Celergo Specific tools</h1><p>Tools for Celergo demo document preparation.</p></section><section><div class="v5-grid">'+legacyPayslipCard+plainAppCard(payslipV6MiniApp)+plainAppCard(celergoMonthlyChangesApp)+'</div></section></main>';
+    modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>Celergo Specific tools</h1><p>Tools for Celergo demo document preparation.</p></section><section><div class="v5-grid">'+plainAppCard(payslipV6MiniApp)+plainAppCard(celergoMonthlyChangesApp)+'</div></section></main>';
     bindBack(renderDashboard);
     var home = el('v5HomeBtn');
     if (home) home.addEventListener('click', goDBTHome);
-    var card = el('v5OpenPayslip');
-    if (card) card.addEventListener('click', function(e){ if (e.target && e.target.closest && e.target.closest('button')) return; openPayslipConverter(); });
-    var launch = el('v5LaunchPayslip');
-    if (launch) launch.addEventListener('click', openPayslipConverter);
     all('[data-mini-update]', modal).forEach(function(button){
       button.addEventListener('click', function(e){
         e.preventDefault();
@@ -8389,7 +8384,7 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
       });
     });
     wireUpdater();
-    autoCheckMiniApps([payslipMiniApp, payslipV6MiniApp, celergoMonthlyChangesApp]);
+    autoCheckMiniApps([payslipV6MiniApp, celergoMonthlyChangesApp]);
   }
   function renderRouteFromLocation(replaceRoute){
     var route = currentDBTRoute();

@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.44",
+  "version": "5.0.45",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Reworks Payslip Converter V6 to use packaged country HTML templates and a cleaner mini-app layout."
+      "releaseNotes": "Updates Payslip Converter V6 with Brazil and India templates, dynamic pay element extraction, real flags, template cleanup, and V6 export flow."
     },
     "nsis": {
       "perMachine": false,

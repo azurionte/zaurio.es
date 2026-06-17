@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Editable Brazil Payslip Sample</title>
+<style>
+  :root{--page-w:794px;--page-h:1123px;--mono:'Courier New', Courier, monospace;--sans:Arial, Helvetica, sans-serif;}
+  body{margin:0;background:#e9e9e9;font-family:var(--sans);color:#000;}
+  .toolbar{position:sticky;top:0;z-index:9;background:#222;color:#fff;padding:10px 16px;font-size:14px;box-shadow:0 2px 5px #999;}
+  .toolbar button{margin-left:10px;padding:6px 10px;border:0;border-radius:3px;background:#fff;cursor:pointer;}
+  .page{width:var(--page-w);height:var(--page-h);margin:22px auto;background:#fff;position:relative;box-shadow:0 1px 8px rgba(0,0,0,.25);overflow:hidden;box-sizing:border-box;padding:20px 46px;font-family:var(--mono);font-size:13px;line-height:1.18;}
+  [contenteditable="true"]{outline:1px dashed transparent;}
+  [contenteditable="true"]:focus{outline:1px dashed #2f80ed;background:rgba(47,128,237,.05);}
+  .topline{display:flex;justify-content:space-between;font-family:var(--sans);font-size:12px;margin-bottom:18px;}
+  .topline .center{position:absolute;top:21px;left:0;right:0;text-align:center;}
+  .title{font-family:var(--sans);font-weight:700;font-size:21px;text-align:center;margin:0 0 32px 0;}
+  .head-grid{display:grid;grid-template-columns:1fr 180px 48px;column-gap:22px;align-items:end;font-weight:700;font-size:13.5px;}
+  .head-labels{font-style:italic;font-weight:400;text-align:center;margin-bottom:4px;}
+  .row{display:grid;align-items:center;}
+  .estab{grid-template-columns:72px 94px 255px 130px 56px 42px;text-align:center;font-weight:700;}
+  .subrow{grid-template-columns:72px 94px 88px 205px 170px 100px;text-align:center;font-weight:700;margin-top:12px;}
+  .paydate{margin:18px 0 7px 12px;font-style:italic;font-weight:700;}
+  .box{border:2px solid #c8c8c8;padding:8px 8px 12px 8px;min-height:232px;}
+  .table-head{display:grid;grid-template-columns:1fr 92px 152px 152px;font-weight:700;text-decoration:underline;font-style:italic;text-align:center;margin-bottom:14px;}
+  .line{display:grid;grid-template-columns:1fr 92px 152px 152px;white-space:pre;}
+  .line span:nth-child(2),.line span:nth-child(3),.line span:nth-child(4){text-align:right;}
+  .base{font-weight:700;text-align:center;margin:16px 0 12px 0;white-space:pre;}
+  .totals{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;align-items:end;margin-top:10px;font-size:15px;font-weight:700;text-align:center;letter-spacing:1px;}
+  .totals .label{letter-spacing:8px;}
+  .totals .cap{font-family:var(--sans);font-style:italic;font-weight:400;letter-spacing:0;font-size:14px;margin-bottom:3px;}
+  .processed{position:absolute;left:55px;bottom:330px;font-family:var(--sans);font-weight:700;font-size:13px;}
+  .footer{position:absolute;left:26px;right:26px;bottom:12px;display:flex;justify-content:space-between;font-family:var(--sans);font-size:12px;}
+  @media print{body{background:#fff}.toolbar{display:none}.page{box-shadow:none;margin:0 auto;page-break-after:always}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="topline"><span contenteditable="true">07/07/2020</span><span class="center" contenteditable="true">Demonstrativo de Pagamento</span></div>
+  <h1 class="title" contenteditable="true">Demonstrativo de Pagamento</h1>
+  <div class="head-grid"><div class="head-labels" contenteditable="true">ESTABELECIMENTO</div><div class="head-labels" contenteditable="true">C.N.P.J</div><div class="head-labels" contenteditable="true">FOL</div></div>
+  <div class="head-grid"><div contenteditable="true">ADP EXPERT - UNIDADE DE DESENVOLVIMENTO</div><div contenteditable="true">47.680.798/0001-23</div><div contenteditable="true">1</div></div>
+  <div class="row estab" style="margin-top:12px"><em>ESTAB</em><em>MATRÍCULA</em><em>NOME</em><em>FUNÇÃO</em><em>DEP</em><em>FILH</em></div>
+  <div class="row estab"><span contenteditable="true">1</span><span contenteditable="true">1007</span><span contenteditable="true">BETO ROBERTO</span><span contenteditable="true">DIRETOR FIN</span><span contenteditable="true">02</span><span contenteditable="true">00</span></div>
+  <div class="row subrow"><em>C.R.</em><em>BCO</em><em>AG</em><em>CONTA</em><em>SALÁRIO</em><em>REFERÊNCIA</em></div>
+  <div class="row subrow"><span contenteditable="true">110000</span><span contenteditable="true">341</span><span contenteditable="true">105</span><span contenteditable="true">12345-5</span><span contenteditable="true">19.800,00/MES</span><span contenteditable="true">JAN/2020</span></div>
+  <div class="paydate" contenteditable="true">DATA DE PAGAMENTO: 05/02/2020</div>
+  <div class="box">
+    <div class="table-head"><span>CONTA</span><span>QTDE.v1</span><span>VENCIMENTOS</span><span>DESCONTOS</span></div>
+    <div class="line"><span contenteditable="true">0056 Sextênio</span><span contenteditable="true">3,00 |</span><span contenteditable="true">5.940,00 |</span><span></span></div>
+    <div class="line"><span contenteditable="true">0501 DSR(Comissão)</span><span>|</span><span contenteditable="true">192,31 |</span><span></span></div>
+    <div class="line"><span contenteditable="true">0502 DSR (H.E./Adic.Not.)</span><span>|</span><span contenteditable="true">1.107,69 |</span><span></span></div>
+    <div class="line"><span contenteditable="true">0620 Comissões</span><span>|</span><span contenteditable="true">1.000,00 |</span><span></span></div>
+    <div class="line"><span contenteditable="true">1602 Horas Extras - 100%</span><span contenteditable="true">10,00 |</span><span contenteditable="true">1.800,00 |</span><span></span></div>
+    <div class="line"><span contenteditable="true">1800 Adicional Noturno 20%</span><span contenteditable="true">220,00 |</span><span contenteditable="true">3.960,00 |</span><span></span></div>
+    <div class="line"><span contenteditable="true">5500 IR Retido</span><span>|</span><span>|</span><span contenteditable="true">2.699,72</span></div>
+    <div class="line"><span contenteditable="true">5560 INSS</span><span>|</span><span>|</span><span contenteditable="true">642,33</span></div>
+    <div class="line"><span contenteditable="true">5762 Mensalidade Sindic</span><span>|</span><span>|</span><span contenteditable="true">15,00</span></div>
+    <div class="line"><span contenteditable="true">5811 Assist Médica</span><span>|</span><span>|</span><span contenteditable="true">75,00</span></div>
+    <div class="base" contenteditable="true">---- -----BASE/OUTROS----- ----        |   -----   |    ----------    |    ----------</div>
+    <div class="line"><span contenteditable="true">5501 Base IR</span><span>|</span><span>|</span><span contenteditable="true">12.978,49</span></div>
+    <div class="line"><span contenteditable="true">5561 Base INSS</span><span>|</span><span>|</span><span contenteditable="true">5.839,45</span></div>
+    <div class="line"><span contenteditable="true">8000 Salario Contribuicao</span><span>|</span><span>|</span><span contenteditable="true">14.000,00</span></div>
+    <div class="line"><span contenteditable="true">8002 Contribuição - Trib. Salário</span><span>|</span><span>|</span><span contenteditable="true">14.000,00</span></div>
+    <div class="line"><span contenteditable="true">9921 Base FGTS</span><span>|</span><span>|</span><span contenteditable="true">13.807,69</span></div>
+    <div class="line"><span contenteditable="true">9920 FGTS</span><span>|</span><span>|</span><span contenteditable="true">1.104,62</span></div>
+  </div>
+  <div class="totals"><div class="label">TOTAIS</div><div><div class="cap">VENCIMENTOS</div><span contenteditable="true">14.000,00</span></div><div><div class="cap">DESCONTOS</div><span contenteditable="true">3.432,05</span></div><div><div class="cap">LÍQUIDO</div><span contenteditable="true">10.567,95</span></div></div>
+  <div class="processed" contenteditable="true">Processado pela ADP</div>
+  <div class="footer"><span contenteditable="true">file:///C:/Users/jbarbo1/AppData/Local/Microsoft/Windows/INetCache/IE/R5ZG9LLW/demonstrativopagto1101051222.htm</span><span contenteditable="true">1/5</span></div>
+</div>
+
+<script>
+const pages = [
+{p:'2/5',est:'ADP Expert - Unidade de Execução Operacional',cnpj:'47.680.798/0002-04',estab:'2',mat:'1120',nome:'DURVAL COMINTES',func:'DIRETOR ADM',dep:'02',filh:'00',cr:'7000',bco:'341',ag:'100',conta:'9458-6',sal:'3.564,00/MES',ref:'JAN/2020',items:[['0056 Sextênio','3,00 |','1.069,20 |',''],['0501 DSR(Comissão)','|','192,31 |',''],['0502 DSR (H.E./Adic.Not.)','|','199,38 |',''],['0620 Comissões','|','1.000,00 |',''],['1602 Horas Extras - 100%','10,00 |','324,00 |',''],['1800 Adicional Noturno 20%','220,00 |','712,80 |',''],['0833 Desc. Insuf Saldo','|','|','288,83'],['5500 IR Retido','|','|','62,23'],['5560 INSS','|','|','384,74'],['5762 Mensalidade Sindic','|','|','15,00'],['5811 Assist Médica','|','|','75,00']],bases:[['5501 Base IR','2.733,77'],['5561 Base INSS','3.497,69'],['8000 Salario Contribuicao','3.497,69'],['8002 Contribuição - Trib. Salário','3.497,69'],['9921 Base FGTS','3.305,38'],['9920 FGTS','264,43']],ven:'3.497,69',des:'825,80',liq:'2.671,89'},
+{p:'3/5',est:'ADP EXPERT - UNIDADE DE DESENVOLVIMENTO',cnpj:'47.680.798/0001-23',estab:'1',mat:'426',nome:'MATHEUS KELLER',func:'Ger. Neg.',dep:'04',filh:'00',cr:'10000',bco:'341',ag:'2934',conta:'12345-9',sal:'7.500,00/MES',ref:'JAN/2020',items:[['0056 Sextênio','4,00 |','3.000,00 |',''],['0832 Insuf Saldo no Mês','|','9.923,75 |',''],['0833 Desc. Insuf Saldo','|','|','9.745,25'],['4444 Assist Médica - Agregado','|','|','50,00'],['5100 Empréstimos','|','|','400,00'],['5560 INSS','|','|','330,00'],['5590 Prev. Privada Básica','|','|','225,00'],['5762 Mensalidade Sindic','|','|','15,00'],['5811 Assist Médica','|','|','75,00'],['8960 Pensão Jud. Salario','|','|','2.083,50']],bases:[['5561 Base INSS','3.000,00'],['8000 Salario Contribuicao','3.000,00'],['8002 Contribuição - Trib. Salário','3.000,00'],['9921 Base FGTS','3.000,00'],['9920 FGTS','240,00']],ven:'12.923,75',des:'12.923,75',liq:'0,00'},
+{p:'4/5',est:'ADP Expert - Unidade de Execução Operacional',cnpj:'47.680.798/0002-04',estab:'2',mat:'558',nome:'RODRIGO MARTINS',func:'Gerente Contabil',dep:'02',filh:'00',cr:'3000',bco:'341',ag:'100',conta:'12345-9',sal:'19.602,00/MES',ref:'JAN/2020',items:[['0014 Gratificação por Acordo/Convenção','|','300,00 |',''],['0052 Biênio','12,00 |','11.761,20 |',''],['0501 DSR(Comissão)','|','192,31 |',''],['0502 DSR (H.E./Adic.Not.)','|','1.096,62 |',''],['0620 Comissões','|','1.000,00 |',''],['0832 Insuf Saldo no Mês','|','1.953,86 |',''],['1602 Horas Extras - 100%','10,00 |','1.782,00 |',''],['1800 Adicional Noturno 20%','220,00 |','3.920,40 |',''],['0833 Desc. Insuf Saldo','|','|','12.375,59'],['5500 IR Retido','|','|','3.016,03'],['5560 INSS','|','|','642,33'],['5762 Mensalidade Sindic','|','|','15,00'],['5811 Assist Médica','|','|','75,00'],['5860 Contrib Assistencial','|','|','653,40'],['5861 Contrib Confederativa','|','|','326,70'],['8960 Pensão Jud. Salario','|','|','4.902,34']],bases:[['5501 Base IR','14.128,68'],['5561 Base INSS','5.839,45'],['8000 Salario Contribuicao','20.052,53'],['8002 Contribuição - Trib. Salário','20.052,53'],['9921 Base FGTS','19.560,22'],['9920 FGTS','1.564,82']],ven:'22.006,39',des:'22.006,39',liq:'0,00'},
+{p:'5/5',est:'ADP EXPERT - UNIDADE DE DESENVOLVIMENTO',cnpj:'47.680.798/0001-23',estab:'1',mat:'817',nome:'ROGERIO AGUILEIRA',func:'An. Contabil',dep:'00',filh:'00',cr:'5300',bco:'341',ag:'100',conta:'9885-0',sal:'6.475,00/MES',ref:'JAN/2020',items:[['0056 Sextênio','4,00 |','2.590,00 |',''],['0501 DSR(Comissão)','|','192,31 |',''],['0502 DSR (H.E./Adic.Not.)','|','362,24 |',''],['0620 Comissões','|','1.000,00 |',''],['1602 Horas Extras - 100%','10,00 |','588,64 |',''],['1800 Adicional Noturno 20%','220,00 |','1.295,00 |',''],['5500 IR Retido','|','|','611,75'],['5560 INSS','|','|','642,33'],['5762 Mensalidade Sindic','|','|','15,00'],['5811 Assist Médica','|','|','75,00']],bases:[['5501 Base IR','5.385,86'],['5561 Base INSS','5.839,45'],['8000 Salario Contribuicao','6.028,19'],['8002 Contribuição - Trib. Salário','6.028,19'],['9921 Base FGTS','5.835,88'],['9920 FGTS','466,87']],ven:'6.028,19',des:'1.344,08',liq:'4.684,11'}
+];
+function pageTpl(d){return `<div class="page">
+  <div class="topline"><span contenteditable="true">07/07/2020</span><span class="center" contenteditable="true">Demonstrativo de Pagamento</span></div>
+  <h1 class="title" contenteditable="true">Demonstrativo de Pagamento</h1>
+  <div class="head-grid"><div class="head-labels" contenteditable="true">ESTABELECIMENTO</div><div class="head-labels" contenteditable="true">C.N.P.J</div><div class="head-labels" contenteditable="true">FOL</div></div>
+  <div class="head-grid"><div contenteditable="true">${d.est}</div><div contenteditable="true">${d.cnpj}</div><div contenteditable="true">1</div></div>
+  <div class="row estab" style="margin-top:12px"><em>ESTAB</em><em>MATRÍCULA</em><em>NOME</em><em>FUNÇÃO</em><em>DEP</em><em>FILH</em></div>
+  <div class="row estab"><span contenteditable="true">${d.estab}</span><span contenteditable="true">${d.mat}</span><span contenteditable="true">${d.nome}</span><span contenteditable="true">${d.func}</span><span contenteditable="true">${d.dep}</span><span contenteditable="true">${d.filh}</span></div>
+  <div class="row subrow"><em>C.R.</em><em>BCO</em><em>AG</em><em>CONTA</em><em>SALÁRIO</em><em>REFERÊNCIA</em></div>
+  <div class="row subrow"><span contenteditable="true">${d.cr}</span><span contenteditable="true">${d.bco}</span><span contenteditable="true">${d.ag}</span><span contenteditable="true">${d.conta}</span><span contenteditable="true">${d.sal}</span><span contenteditable="true">${d.ref}</span></div>
+  <div class="paydate" contenteditable="true">DATA DE PAGAMENTO: 05/02/2020</div>
+  <div class="box"><div class="table-head"><span>CONTA</span><span>QTDE.v1</span><span>VENCIMENTOS</span><span>DESCONTOS</span></div>
+  ${d.items.map(x=>`<div class="line"><span contenteditable="true">${x[0]}</span><span contenteditable="true">${x[1]}</span><span contenteditable="true">${x[2]}</span><span contenteditable="true">${x[3]}</span></div>`).join('')}
+  <div class="base" contenteditable="true">---- -----BASE/OUTROS----- ----        |   -----   |    ----------    |    ----------</div>
+  ${d.bases.map(x=>`<div class="line"><span contenteditable="true">${x[0]}</span><span>|</span><span>|</span><span contenteditable="true">${x[1]}</span></div>`).join('')}
+  </div>
+  <div class="totals"><div class="label">TOTAIS</div><div><div class="cap">VENCIMENTOS</div><span contenteditable="true">${d.ven}</span></div><div><div class="cap">DESCONTOS</div><span contenteditable="true">${d.des}</span></div><div><div class="cap">LÍQUIDO</div><span contenteditable="true">${d.liq}</span></div></div>
+  <div class="processed" contenteditable="true">Processado pela ADP</div>
+  <div class="footer"><span contenteditable="true">file:///C:/Users/jbarbo1/AppData/Local/Microsoft/Windows/INetCache/IE/R5ZG9LLW/demonstrativopagto1101051222.htm</span><span contenteditable="true">${d.p}</span></div>
+</div>`}
+document.body.insertAdjacentHTML('beforeend', pages.map(pageTpl).join(''));
+</script>
+</body>
+</html>

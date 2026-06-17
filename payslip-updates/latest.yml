@@ -1,9 +1,9 @@
-version: 5.0.44
+version: 5.0.45
 files:
-  - url: DemoBuildingToolsSetup-5.0.44.exe
-    sha512: /o5Y4wuAF568cmMHe+dAf0hU/W8/D1jhwoWgNdlPYasNYnrvOn/fGybpPHDL2Z9FnJK61uKLKg/MmOPsnfwOxw==
-    size: 101943665
-path: DemoBuildingToolsSetup-5.0.44.exe
-sha512: /o5Y4wuAF568cmMHe+dAf0hU/W8/D1jhwoWgNdlPYasNYnrvOn/fGybpPHDL2Z9FnJK61uKLKg/MmOPsnfwOxw==
-releaseNotes: Reworks Payslip Converter V6 to use packaged country HTML templates and a cleaner mini-app layout.
-releaseDate: '2026-06-17T10:34:28.560Z'
+  - url: DemoBuildingToolsSetup-5.0.45.exe
+    sha512: UzfHbWVJvoN7FwVQWQ1pwDNd8gIVBap7CGQOevA4mpOnzCCURn9Gmh/h9PHQDdQybowqqllUE+kpPliNLflPcw==
+    size: 101844187
+path: DemoBuildingToolsSetup-5.0.45.exe
+sha512: UzfHbWVJvoN7FwVQWQ1pwDNd8gIVBap7CGQOevA4mpOnzCCURn9Gmh/h9PHQDdQybowqqllUE+kpPliNLflPcw==
+releaseNotes: Updates Payslip Converter V6 with Brazil and India templates, dynamic pay element extraction, real flags, template cleanup, and V6 export flow.
+releaseDate: '2026-06-17T13:44:37.908Z'
