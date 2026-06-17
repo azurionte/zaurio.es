@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.42",
+  "version": "5.0.43",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Adds a separate Payslip Converter V6 beta mini app with a universal sidebar and preview engine."
+      "releaseNotes": "Fixes Payslip Converter V6 desktop file picker imports so selected PDFs continue into parsing."
     },
     "nsis": {
       "perMachine": false,

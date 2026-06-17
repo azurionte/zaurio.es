@@ -23,7 +23,7 @@
   <section id="start" class="start">
     <div class="start-copy">
       <div>
-        <div class="pill"><i class="fa-solid fa-code-branch"></i><span>V6.0.0 universal preview engine</span></div>
+        <div class="pill"><i class="fa-solid fa-code-branch"></i><span>V6.0.1 universal preview engine</span></div>
         <h1>Build demo-ready <span>payslips</span> with one stable workflow.</h1>
         <p>Choose a country, import an earning statement PDF, edit the normalized fields, and preview the matching country template from one shared sidebar and preview host.</p>
       </div>
@@ -303,8 +303,7 @@ async function importBuffer(arrayBuffer,fileName){
 async function choosePdf(){
   var api=desktopApi();
   if(api&&api.selectPdf){
-    setBusy(true,'Opening file picker...');
-    try{var r=await api.selectPdf();if(!r||r.canceled){setBusy(false);return}await importBuffer(b64ToArrayBuffer(r.base64),r.fileName)}catch(e){setBusy(false);toast('Could not read selected PDF.');console.error(e)}
+    try{var r=await api.selectPdf();if(!r||r.canceled){return}await importBuffer(b64ToArrayBuffer(r.base64),r.fileName)}catch(e){setBusy(false);toast('Could not read selected PDF.');console.error(e)}
     return;
   }
   $('fileInput').value='';$('fileInput').click();
