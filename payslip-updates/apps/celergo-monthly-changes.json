@@ -1,13 +1,13 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.9",
+  "version": "1.10",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
-  "updatedAt": "2026-06-22T00:13:46.698Z",
-  "notes": "Adds Supabase-backed shared employee sync with offline retry for newly added employees.",
+  "updatedAt": "2026-06-25T12:40:00.000Z",
+  "notes": "Adds shared employee deletion with cloud tombstones and offline retry.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.9"
+      "url": "celergo-monthly-changes.html?v=1.10"
     }
   ]
 }

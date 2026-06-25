@@ -1,7 +1,7 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
@@ -38,6 +38,10 @@ function validSalary(value: number) {
   return Number.isFinite(value) && value > 0 && value <= 10000000;
 }
 
+function eq(value: string) {
+  return encodeURIComponent(value);
+}
+
 async function supabase(path: string, init: RequestInit = {}) {
   if (!SUPABASE_URL || !SERVICE_KEY) {
     throw new Error("Supabase service configuration is missing.");
@@ -59,6 +63,11 @@ async function supabase(path: string, init: RequestInit = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+function missingTable(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "");
+  return message.includes("PGRST205") || message.includes("Could not find the table");
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -67,12 +76,21 @@ Deno.serve(async (request) => {
 
     if (request.method === "GET") {
       const country = cleanCountry(url.searchParams.get("country"));
-      const filter = country ? `&country_code=eq.${encodeURIComponent(country)}` : "";
-      const data = await supabase(
+      const filter = country ? `&country_code=eq.${eq(country)}` : "";
+      const employees = await supabase(
         `dbt_celergo_employees?select=country_code,employee_id,monthly_salary,source,created_by_device,created_at,updated_at&active=eq.true${filter}&order=country_code.asc,employee_id.asc`,
         { method: "GET" },
       );
-      return json({ ok: true, employees: data || [] });
+      let deletions: unknown[] = [];
+      try {
+        deletions = await supabase(
+          `dbt_celergo_employee_deletions?select=country_code,employee_id,deleted_by_device,deleted_at${filter}&order=country_code.asc,employee_id.asc`,
+          { method: "GET" },
+        ) || [];
+      } catch (error) {
+        if (!missingTable(error)) throw error;
+      }
+      return json({ ok: true, employees: employees || [], deletions: deletions || [] });
     }
 
     if (request.method === "POST") {
@@ -104,7 +122,53 @@ Deno.serve(async (request) => {
         method: "POST",
         body: JSON.stringify(row),
       });
+      try {
+        await supabase(
+          `dbt_celergo_employee_deletions?country_code=eq.${eq(country)}&employee_id=eq.${eq(employeeId)}`,
+          { method: "DELETE" },
+        );
+      } catch (error) {
+        if (!missingTable(error)) throw error;
+      }
       return json({ ok: true, employee: Array.isArray(data) ? data[0] : data });
+    }
+
+    if (request.method === "DELETE") {
+      const input = await request.json().catch(() => ({}));
+      const country = cleanCountry(input.country || input.country_code || url.searchParams.get("country"));
+      const employeeId = cleanEmployeeId(input.employeeId || input.employee_id || url.searchParams.get("employeeId"));
+      const device = String(input.device || input.deleted_by_device || "").trim().slice(0, 120);
+
+      if (!VALID_COUNTRIES.has(country)) {
+        return json({ ok: false, error: "Unsupported country." }, { status: 400 });
+      }
+      if (!validEmployeeId(employeeId)) {
+        return json({ ok: false, error: "Invalid employee ID." }, { status: 400 });
+      }
+
+      await supabase(
+        `dbt_celergo_employees?country_code=eq.${eq(country)}&employee_id=eq.${eq(employeeId)}`,
+        { method: "PATCH", body: JSON.stringify({ active: false }) },
+      );
+      const deletion = {
+        country_code: country,
+        employee_id: employeeId,
+        deleted_by_device: device || null,
+        source: "dbt-monthly-changes",
+        deleted_at: new Date().toISOString(),
+      };
+      let data: unknown = deletion;
+      let warning = "";
+      try {
+        data = await supabase("dbt_celergo_employee_deletions?on_conflict=country_code,employee_id", {
+          method: "POST",
+          body: JSON.stringify(deletion),
+        });
+      } catch (error) {
+        if (!missingTable(error)) throw error;
+        warning = "Deletion tombstone table is not deployed yet.";
+      }
+      return json({ ok: true, deletion: Array.isArray(data) ? data[0] : data, warning });
     }
 
     return json({ ok: false, error: "Method not allowed." }, { status: 405 });
