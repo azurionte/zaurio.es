@@ -1,9 +1,9 @@
-version: 5.0.49
+version: 5.0.50
 files:
-  - url: DemoBuildingToolsSetup-5.0.49.exe
-    sha512: 65gWLVC9dVrydcwexuFb4P/7rB68OIsmx97dIqeVqu3adlltvWv4204wDstCc3GMTj2Oh6AvbCtu4sI5+MgGLA==
-    size: 101846508
-path: DemoBuildingToolsSetup-5.0.49.exe
-sha512: 65gWLVC9dVrydcwexuFb4P/7rB68OIsmx97dIqeVqu3adlltvWv4204wDstCc3GMTj2Oh6AvbCtu4sI5+MgGLA==
-releaseNotes: Fixes Payslip Converter V6 PDF row grouping and employee splitting for Brazil and other country earning statements.
-releaseDate: '2026-06-25T13:29:19.883Z'
+  - url: DemoBuildingToolsSetup-5.0.50.exe
+    sha512: hNAChGOjHsukR9iYtVIk4Yi+tWTCaugKH9HCw4fjrOz/7Czao5g0M9/LfsbVWw+8rJS6esQ9haFOt3rmu7ah+A==
+    size: 101847363
+path: DemoBuildingToolsSetup-5.0.50.exe
+sha512: hNAChGOjHsukR9iYtVIk4Yi+tWTCaugKH9HCw4fjrOz/7Czao5g0M9/LfsbVWw+8rJS6esQ9haFOt3rmu7ah+A==
+releaseNotes: Adds native Australia PayForce mapping in Payslip Converter V6 and preserves current/YTD values from imported earning statements.
+releaseDate: '2026-06-25T13:58:29.576Z'
