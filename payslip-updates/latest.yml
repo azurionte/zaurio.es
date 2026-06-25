@@ -1,9 +1,9 @@
-version: 5.0.50
+version: 5.0.51
 files:
-  - url: DemoBuildingToolsSetup-5.0.50.exe
-    sha512: hNAChGOjHsukR9iYtVIk4Yi+tWTCaugKH9HCw4fjrOz/7Czao5g0M9/LfsbVWw+8rJS6esQ9haFOt3rmu7ah+A==
-    size: 101847363
-path: DemoBuildingToolsSetup-5.0.50.exe
-sha512: hNAChGOjHsukR9iYtVIk4Yi+tWTCaugKH9HCw4fjrOz/7Czao5g0M9/LfsbVWw+8rJS6esQ9haFOt3rmu7ah+A==
-releaseNotes: Adds native Australia PayForce mapping in Payslip Converter V6 and preserves current/YTD values from imported earning statements.
-releaseDate: '2026-06-25T13:58:29.576Z'
+  - url: DemoBuildingToolsSetup-5.0.51.exe
+    sha512: Z2A8ae67tJ/vdl2dhPViDDYfIsXY3ZTq6q+F+RByHf0ddXfFJd6vxiMl2PpJ5TxebVoGatTsjVlJ9GJBlUczrQ==
+    size: 101847471
+path: DemoBuildingToolsSetup-5.0.51.exe
+sha512: Z2A8ae67tJ/vdl2dhPViDDYfIsXY3ZTq6q+F+RByHf0ddXfFJd6vxiMl2PpJ5TxebVoGatTsjVlJ9GJBlUczrQ==
+releaseNotes: Fixes Australia PayForce layout in Payslip Converter V6 by preserving template grid spans and improving employee-name extraction.
+releaseDate: '2026-06-25T14:22:59.891Z'

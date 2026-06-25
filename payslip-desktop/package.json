@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.50",
+  "version": "5.0.51",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Adds native Australia PayForce mapping in Payslip Converter V6 and preserves current/YTD values from imported earning statements."
+      "releaseNotes": "Fixes Australia PayForce layout in Payslip Converter V6 by preserving template grid spans and improving employee-name extraction."
     },
     "nsis": {
       "perMachine": false,
