@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.52",
+  "version": "5.0.53",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Payslip Converter V6 adds editable Celergo filename fields, updates India to the A4 template, and improves dynamic row placement from imported earning statements."
+      "releaseNotes": "Payslip Converter V6 compacts the export modal, improves employee-name extraction globally, fixes Australia preview sizing, and tightens imported pay-row value mapping."
     },
     "nsis": {
       "perMachine": false,

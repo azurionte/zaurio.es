@@ -1,9 +1,9 @@
-version: 5.0.52
+version: 5.0.53
 files:
-  - url: DemoBuildingToolsSetup-5.0.52.exe
-    sha512: D+JY1tIjg3GHFXZ5vBaFZYFh26QSIcKuYcZcUBbszHdr7t6zlQ1dZsedfsnCNT0MaC1wrc7WpBSFl/oF7sItsw==
-    size: 101849999
-path: DemoBuildingToolsSetup-5.0.52.exe
-sha512: D+JY1tIjg3GHFXZ5vBaFZYFh26QSIcKuYcZcUBbszHdr7t6zlQ1dZsedfsnCNT0MaC1wrc7WpBSFl/oF7sItsw==
-releaseNotes: Payslip Converter V6 adds editable Celergo filename fields, updates India to the A4 template, and improves dynamic row placement from imported earning statements.
-releaseDate: '2026-06-25T15:00:40.214Z'
+  - url: DemoBuildingToolsSetup-5.0.53.exe
+    sha512: /vBg9dVw91AujlG+5KwmK8ZUmsOgCcv8JeVcxdHDN3DcGPIUFrWMkur5JIri0yrt3Mm+RfTDMe2OUi6uvt5pfg==
+    size: 101850323
+path: DemoBuildingToolsSetup-5.0.53.exe
+sha512: /vBg9dVw91AujlG+5KwmK8ZUmsOgCcv8JeVcxdHDN3DcGPIUFrWMkur5JIri0yrt3Mm+RfTDMe2OUi6uvt5pfg==
+releaseNotes: Payslip Converter V6 compacts the export modal, improves employee-name extraction globally, fixes Australia preview sizing, and tightens imported pay-row value mapping.
+releaseDate: '2026-06-25T15:38:03.339Z'
