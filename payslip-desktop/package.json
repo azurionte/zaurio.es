@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.45",
+  "version": "5.0.46",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Updates Payslip Converter V6 with Brazil and India templates, dynamic pay element extraction, real flags, template cleanup, and V6 export flow."
+      "releaseNotes": "Adds Supabase-backed cloud sync for Celergo Monthly Changes new employees."
     },
     "nsis": {
       "perMachine": false,

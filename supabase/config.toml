@@ -3,3 +3,6 @@ verify_jwt = false
 
 [functions.velocichef-plan-week]
 verify_jwt = false
+
+[functions.dbt-celergo-employees]
+verify_jwt = false

@@ -1,13 +1,13 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.8",
+  "version": "1.9",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
-  "updatedAt": "2026-06-11T00:00:00Z",
-  "notes": "Enables Done navigation back to country selection and makes the step progress pills clickable for direct step navigation.",
+  "updatedAt": "2026-06-22T00:13:46.698Z",
+  "notes": "Adds Supabase-backed shared employee sync with offline retry for newly added employees.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.8"
+      "url": "celergo-monthly-changes.html?v=1.9"
     }
   ]
 }
