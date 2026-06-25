@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.48",
+  "version": "5.0.49",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixes Payslip Converter V6 previews so imported rows populate the country template instead of adding generic blue source-data tables."
+      "releaseNotes": "Fixes Payslip Converter V6 PDF row grouping and employee splitting for Brazil and other country earning statements."
     },
     "nsis": {
       "perMachine": false,

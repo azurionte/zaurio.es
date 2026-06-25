@@ -1,9 +1,9 @@
-version: 5.0.48
+version: 5.0.49
 files:
-  - url: DemoBuildingToolsSetup-5.0.48.exe
-    sha512: tB3q1E48EP7unhE89OwKvCV9SNk5sxIKgHNsrUDjvRFsvSXvCGM2XOCLxVR5S9bBKGpnGAu1AyAmiXZHt5Ao4Q==
-    size: 101846236
-path: DemoBuildingToolsSetup-5.0.48.exe
-sha512: tB3q1E48EP7unhE89OwKvCV9SNk5sxIKgHNsrUDjvRFsvSXvCGM2XOCLxVR5S9bBKGpnGAu1AyAmiXZHt5Ao4Q==
-releaseNotes: Fixes Payslip Converter V6 previews so imported rows populate the country template instead of adding generic blue source-data tables.
-releaseDate: '2026-06-25T13:21:38.717Z'
+  - url: DemoBuildingToolsSetup-5.0.49.exe
+    sha512: 65gWLVC9dVrydcwexuFb4P/7rB68OIsmx97dIqeVqu3adlltvWv4204wDstCc3GMTj2Oh6AvbCtu4sI5+MgGLA==
+    size: 101846508
+path: DemoBuildingToolsSetup-5.0.49.exe
+sha512: 65gWLVC9dVrydcwexuFb4P/7rB68OIsmx97dIqeVqu3adlltvWv4204wDstCc3GMTj2Oh6AvbCtu4sI5+MgGLA==
+releaseNotes: Fixes Payslip Converter V6 PDF row grouping and employee splitting for Brazil and other country earning statements.
+releaseDate: '2026-06-25T13:29:19.883Z'
