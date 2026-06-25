@@ -1,61 +1,61 @@
 {
   "app": "payslip-converter-v6",
-  "version": "6.3.4",
+  "version": "6.3.5",
   "entry": "payslip-converter-v6.html?app=payslip-v6",
-  "updatedAt": "2026-06-25T15:05:00.000Z",
-  "notes": "Fixes Australia PayForce layout by preserving template grid spans and tightens employee-name extraction.",
+  "updatedAt": "2026-06-25T16:10:00.000Z",
+  "notes": "Adds country-wide dynamic export filename fields, replaces India with the A4 template, and maps India rows from imported earning statements.",
   "files": [
     {
       "path": "payslip-converter-v6.html",
-      "url": "payslip-converter-v6.html?v=6.3.4"
+      "url": "payslip-converter-v6.html?v=6.3.5"
     },
     {
       "path": "assets/adp-logo.png",
-      "url": "assets/adp-logo.png?v=6.3.4"
+      "url": "assets/adp-logo.png?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/in.html",
-      "url": "payslip-v6/templates/in.html?v=6.3.4"
+      "url": "payslip-v6/templates/in.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/uk.html",
-      "url": "payslip-v6/templates/uk.html?v=6.3.4"
+      "url": "payslip-v6/templates/uk.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/br.html",
-      "url": "payslip-v6/templates/br.html?v=6.3.4"
+      "url": "payslip-v6/templates/br.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/au.html",
-      "url": "payslip-v6/templates/au.html?v=6.3.4"
+      "url": "payslip-v6/templates/au.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/ca.html",
-      "url": "payslip-v6/templates/ca.html?v=6.3.4"
+      "url": "payslip-v6/templates/ca.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/cn.html",
-      "url": "payslip-v6/templates/cn.html?v=6.3.4"
+      "url": "payslip-v6/templates/cn.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/de.html",
-      "url": "payslip-v6/templates/de.html?v=6.3.4"
+      "url": "payslip-v6/templates/de.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/fr.html",
-      "url": "payslip-v6/templates/fr.html?v=6.3.4"
+      "url": "payslip-v6/templates/fr.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/mx.html",
-      "url": "payslip-v6/templates/mx.html?v=6.3.4"
+      "url": "payslip-v6/templates/mx.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/nl.html",
-      "url": "payslip-v6/templates/nl.html?v=6.3.4"
+      "url": "payslip-v6/templates/nl.html?v=6.3.5"
     },
     {
       "path": "payslip-v6/templates/sg.html",
-      "url": "payslip-v6/templates/sg.html?v=6.3.4"
+      "url": "payslip-v6/templates/sg.html?v=6.3.5"
     }
   ]
 }

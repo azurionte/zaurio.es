@@ -1,62 +1,121 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>India Payslip</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>India Payslip - Editable A4</title>
 <style>
-:root{--ink:#111827;--muted:#4b5563;--blue:#172554;--line:#cbd5e1}
-body{margin:0;background:#e5e7eb;font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
-.page{width:794px;height:1123px;margin:0 auto;background:#fff;padding:42px 48px;box-sizing:border-box;overflow:hidden}
-.top{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:4px solid var(--blue);padding-bottom:18px}
-.logo{font-size:42px;font-weight:950;font-style:italic;color:#d71920;letter-spacing:-3px}
-.title{text-align:right}.title h1{margin:0;font-size:28px}.title p{margin:5px 0 0;color:var(--muted)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}.box{border:1px solid var(--line);padding:12px;min-height:88px}.box h2{margin:0 0 10px;font-size:14px;color:var(--blue)}.line{display:grid;grid-template-columns:145px 1fr;gap:8px;margin:5px 0;font-size:13px}.label{font-weight:700;color:#334155}
-table{width:100%;border-collapse:collapse;margin-top:22px;font-size:13px}th{background:var(--blue);color:#fff;text-align:left;padding:8px}td{border-bottom:1px solid #e5e7eb;padding:8px}td:last-child,th:last-child{text-align:right}.total td{font-weight:700;background:#e5e7eb}.summary{margin-top:24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.summary div{border:1px solid var(--line);padding:12px;text-align:center}.summary b{display:block;font-size:18px;margin-top:4px}.footer{position:absolute;left:48px;right:48px;bottom:34px;color:#64748b;font-size:11px;border-top:1px solid var(--line);padding-top:10px}
+  @page { size: A4 portrait; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #e9e9e9; font-family: Arial, Helvetica, sans-serif; color: #111; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .a4 {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 auto;
+    background: #fff;
+    padding: 13mm 9mm;
+    position: relative;
+  }
+  .slip {
+    width: 100%;
+    border: 1.4px solid #111;
+    position: relative;
+    margin-top: 4mm;
+    font-size: 10.1pt;
+    line-height: 1.08;
+  }
+  .title {
+    position: absolute;
+    right: 4mm;
+    top: -7.5mm;
+    font-size: 15.5pt;
+    font-weight: 700;
+    letter-spacing: .4px;
+  }
+  .head { text-align: center; border-bottom: 1px solid #111; padding: 2.2mm 0 4.5mm; }
+  .company { font-size: 11pt; font-weight: 700; letter-spacing: 1px; }
+  .month { margin-top: 2.5mm; font-size: 9.6pt; }
+  .info { display: grid; grid-template-columns: 28% 25% 26% 21%; padding: 1.2mm 1.4mm 2.4mm; border-bottom: 1px solid #111; }
+  .lbl { font-weight: 700; }
+  .info div { min-height: 4mm; padding: .4mm .6mm; }
+  .tables { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #111; }
+  .tables > section:first-child { border-right: 1px solid #111; }
+  .row, .hdr, .total { display: grid; grid-template-columns: 1fr 23mm 23mm; min-height: 4.6mm; align-items: center; }
+  .hdr { font-weight: 700; border-bottom: 1px solid #111; }
+  .cell { padding: .6mm 1.1mm; }
+  .num { text-align: right; white-space: nowrap; }
+  .total { border-top: 1px solid #111; font-weight: 700; }
+  .net { padding: 1.9mm 1.1mm; border-bottom: 1px solid #111; font-weight: 700; }
+  .reimb .row, .reimb .hdr, .reimb .total { display: grid; grid-template-columns: 1fr 33% 33%; min-height: 5.4mm; align-items: center; }
+  .reimb .cell:nth-child(1), .reimb .cell:nth-child(2) { border-right: 1px solid #111; }
+  .reimb .hdr { border-bottom: 1px solid #111; font-weight: 700; }
+  .reimb .total { border-top: 1px solid #111; font-weight: 700; }
+  .bottom { padding: 1.5mm 1.1mm; border-top: 1px solid #111; font-weight: 700; }
+  .foot { text-align: center; border-top: 1px solid #111; padding: 1.2mm 0; font-size: 8.7pt; }
+  [contenteditable="true"] { outline: none; min-height: 1em; }
+  [contenteditable="true"]:focus { background: #fff7b1; box-shadow: inset 0 0 0 1px #b99800; }
+  @media screen { .a4 { box-shadow: 0 0 14px rgba(0,0,0,.18); } }
+  @media print { html, body { background: #fff; } .a4 { margin: 0; box-shadow: none; } }
 </style>
 </head>
 <body>
-<main class="page">
-  <section class="top">
-    <div class="logo">ADP</div>
-    <div class="title"><h1>Salary Slip</h1><p>India demo payroll statement</p></div>
-  </section>
-  <section class="grid">
-    <div class="box">
-      <h2>Employer</h2>
-      <div class="line"><span class="label">Company</span><span>ADP India Demo Pvt Ltd</span></div>
-      <div class="line"><span class="label">Department</span><span>Demo Payroll</span></div>
-      <div class="line"><span class="label">Location</span><span>Bengaluru</span></div>
+<main class="a4">
+  <section class="slip">
+    <div class="title" contenteditable="true">Pay Slip</div>
+    <header class="head">
+      <div class="company" contenteditable="true">ABC Limited</div>
+      <div class="month" contenteditable="true">Pay Slip for the Month of December 2020</div>
+    </header>
+
+    <section class="info">
+      <div class="lbl" contenteditable="true">EMPCODE</div><div contenteditable="true">1234567891</div><div class="lbl" contenteditable="true">UAN NO</div><div contenteditable="true">100218852000</div>
+      <div class="lbl" contenteditable="true">EMPNAME</div><div contenteditable="true">Parthasarathy</div><div class="lbl" contenteditable="true">PF NO</div><div contenteditable="true">GNGLZ1445072000/0000100</div>
+      <div class="lbl" contenteditable="true">DESIGNATION</div><div contenteditable="true">Senior Commercial Manager (Lv1)</div><div class="lbl" contenteditable="true">ESI NO</div><div contenteditable="true"></div>
+      <div class="lbl" contenteditable="true">DOJ</div><div contenteditable="true">29/07/2014</div><div class="lbl" contenteditable="true">STD DAYS</div><div contenteditable="true">21.00</div>
+      <div class="lbl" contenteditable="true">GRADE</div><div contenteditable="true">10</div><div class="lbl" contenteditable="true">WRKDAYS</div><div contenteditable="true">21.00</div>
+      <div class="lbl" contenteditable="true">PAN</div><div contenteditable="true">ABCPA9284Q</div><div class="lbl" contenteditable="true">LOP DAYS</div><div contenteditable="true">0.00</div>
+      <div class="lbl" contenteditable="true">DEPARTMENT</div><div contenteditable="true">Commercial</div><div class="lbl" contenteditable="true">BANK NAME</div><div contenteditable="true">HDFC Bank</div>
+      <div class="lbl" contenteditable="true">LOCATION</div><div contenteditable="true">Gurgaon</div><div class="lbl" contenteditable="true">ACCOUNT NO</div><div contenteditable="true">0069900002200000</div>
+    </section>
+
+    <div class="tables">
+      <section>
+        <div class="hdr"><div class="cell" contenteditable="true">EARNINGS</div><div class="cell num" contenteditable="true">AMOUNT</div><div class="cell num" contenteditable="true">YTD</div></div>
+        <div class="row"><div class="cell" contenteditable="true">BASIC PAY</div><div class="cell num" contenteditable="true">73,546.00</div><div class="cell num" contenteditable="true">579,174.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">HRA</div><div class="cell num" contenteditable="true">36,773.00</div><div class="cell num" contenteditable="true">289,587.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">SPECIAL ALLOWANCE</div><div class="cell num" contenteditable="true">28,225.00</div><div class="cell num" contenteditable="true">267,972.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">CONVEYANCE ALLOWANCE</div><div class="cell num" contenteditable="true">1,600.00</div><div class="cell num" contenteditable="true">14,400.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">LEAVE TRAVEL ALLOWANCE</div><div class="cell num" contenteditable="true">18,387.00</div><div class="cell num" contenteditable="true">144,798.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">OTHER EARNINGS</div><div class="cell num" contenteditable="true">0.00</div><div class="cell num" contenteditable="true">10,000.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">MEAL CARD</div><div class="cell num" contenteditable="true">2,000.00</div><div class="cell num" contenteditable="true">4,000.00</div></div>
+        <div class="total"><div class="cell" contenteditable="true">GROSS EARNINGS</div><div class="cell num" contenteditable="true">160,531.00</div><div class="cell num" contenteditable="true">1,309,931.00</div></div>
+      </section>
+      <section>
+        <div class="hdr"><div class="cell" contenteditable="true">DEDUCTIONS</div><div class="cell num" contenteditable="true">AMOUNT</div><div class="cell num" contenteditable="true">YTD</div></div>
+        <div class="row"><div class="cell" contenteditable="true">PROVIDENT FUND</div><div class="cell num" contenteditable="true">1,800.00</div><div class="cell num" contenteditable="true">16,200.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">INCOME TAX</div><div class="cell num" contenteditable="true">10,599.00</div><div class="cell num" contenteditable="true">88,370.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">OTHER DEDUCTION</div><div class="cell num" contenteditable="true">0.00</div><div class="cell num" contenteditable="true">19,082.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">SALARY HOLD</div><div class="cell num" contenteditable="true">0.00</div><div class="cell num" contenteditable="true">9,541.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">LABOUR WELFARE FUND</div><div class="cell num" contenteditable="true">25.00</div><div class="cell num" contenteditable="true">225.00</div></div>
+        <div class="row"><div class="cell" contenteditable="true">MEAL CARD DEDUCTION</div><div class="cell num" contenteditable="true">2,000.00</div><div class="cell num" contenteditable="true">4,000.00</div></div>
+        <div class="row"><div class="cell">&nbsp;</div><div class="cell"></div><div class="cell"></div></div>
+        <div class="total"><div class="cell" contenteditable="true">GROSS DEDUCTION</div><div class="cell num" contenteditable="true">14,424.00</div><div class="cell num" contenteditable="true">137,418.00</div></div>
+      </section>
     </div>
-    <div class="box">
-      <h2>Employee</h2>
-      <div class="line"><span class="label">Name</span><span>Priya Sharma</span></div>
-      <div class="line"><span class="label">Employee ID</span><span>2000</span></div>
-      <div class="line"><span class="label">Pay period</span><span>2026-Monthly-05</span></div>
-    </div>
+
+    <div class="net" contenteditable="true">NET PAY : 146,107.00</div>
+
+    <section class="reimb">
+      <div class="hdr"><div class="cell" contenteditable="true">REIMBURSEMENTS</div><div class="cell num" contenteditable="true">AMOUNT</div><div class="cell num" contenteditable="true">YTD</div></div>
+      <div class="row"><div class="cell" contenteditable="true">TELEPHONE REIMBURSEMENT</div><div class="cell num" contenteditable="true">3,194.00</div><div class="cell num" contenteditable="true">3,194.00</div></div>
+      <div class="total"><div class="cell" contenteditable="true">TOTAL REIMBURSEMENT</div><div class="cell num" contenteditable="true">3,194.00</div><div class="cell num" contenteditable="true">3,194.00</div></div>
+    </section>
+
+    <div class="bottom" contenteditable="true">NET TRANSFER : 149,301.00</div>
+    <div class="bottom" contenteditable="true">IN WORDS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Rupees One Lacs Forty-Nine Thousand Three Hundred and One Only</div>
+    <div class="foot" contenteditable="true">This is a computer generated document, hence no signature is required.</div>
   </section>
-  <table>
-    <thead><tr><th>Earnings</th><th>Amount</th></tr></thead>
-    <tbody>
-      <tr><td>Basic Salary</td><td>52,000.00</td></tr>
-      <tr><td>House Rent Allowance</td><td>18,000.00</td></tr>
-      <tr class="total"><td>Gross pay</td><td>70,000.00</td></tr>
-    </tbody>
-  </table>
-  <table>
-    <thead><tr><th>Deductions</th><th>Amount</th></tr></thead>
-    <tbody>
-      <tr><td>Income Tax</td><td>8,000.00</td></tr>
-      <tr><td>Provident Fund</td><td>4,200.00</td></tr>
-      <tr class="total"><td>Total deductions</td><td>12,200.00</td></tr>
-    </tbody>
-  </table>
-  <section class="summary">
-    <div>Gross<b>70,000.00</b></div>
-    <div>Deductions<b>12,200.00</b></div>
-    <div>Net pay<b>57,800.00</b></div>
-  </section>
-  <div class="footer">Generated for demo use from a Celergo earning statement.</div>
 </main>
 </body>
 </html>
