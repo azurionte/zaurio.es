@@ -1,9 +1,9 @@
-version: 5.0.47
+version: 5.0.48
 files:
-  - url: DemoBuildingToolsSetup-5.0.47.exe
-    sha512: i28BmPFpo7sbwMCK3mg3+HDeeTN4i5rX0LJziloP2vp2re2QvcYpj9ACShgpl6he13GzWqZTcCyYKtD3KHYNdA==
-    size: 101846019
-path: DemoBuildingToolsSetup-5.0.47.exe
-sha512: i28BmPFpo7sbwMCK3mg3+HDeeTN4i5rX0LJziloP2vp2re2QvcYpj9ACShgpl6he13GzWqZTcCyYKtD3KHYNdA==
-releaseNotes: Adds cloud-synced employee deletion in Monthly Changes and removes hardcoded fallback values from Payslip Converter V6 parsing.
-releaseDate: '2026-06-25T13:03:55.600Z'
+  - url: DemoBuildingToolsSetup-5.0.48.exe
+    sha512: tB3q1E48EP7unhE89OwKvCV9SNk5sxIKgHNsrUDjvRFsvSXvCGM2XOCLxVR5S9bBKGpnGAu1AyAmiXZHt5Ao4Q==
+    size: 101846236
+path: DemoBuildingToolsSetup-5.0.48.exe
+sha512: tB3q1E48EP7unhE89OwKvCV9SNk5sxIKgHNsrUDjvRFsvSXvCGM2XOCLxVR5S9bBKGpnGAu1AyAmiXZHt5Ao4Q==
+releaseNotes: Fixes Payslip Converter V6 previews so imported rows populate the country template instead of adding generic blue source-data tables.
+releaseDate: '2026-06-25T13:21:38.717Z'

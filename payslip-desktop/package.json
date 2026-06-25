@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.47",
+  "version": "5.0.48",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Adds cloud-synced employee deletion in Monthly Changes and removes hardcoded fallback values from Payslip Converter V6 parsing."
+      "releaseNotes": "Fixes Payslip Converter V6 previews so imported rows populate the country template instead of adding generic blue source-data tables."
     },
     "nsis": {
       "perMachine": false,
