@@ -1,9 +1,9 @@
-version: 5.0.55
+version: 5.0.56
 files:
-  - url: DemoBuildingToolsSetup-5.0.55.exe
-    sha512: 1RlKW9HKWdz8hjqEbQRLeC2diaCeLhC+3IDjP0+3rP/75P6f7+drx9yGtLJkHr+KqpSbi6airmjjZNwpvaQyJw==
-    size: 101850712
-path: DemoBuildingToolsSetup-5.0.55.exe
-sha512: 1RlKW9HKWdz8hjqEbQRLeC2diaCeLhC+3IDjP0+3rP/75P6f7+drx9yGtLJkHr+KqpSbi6airmjjZNwpvaQyJw==
-releaseNotes: Payslip Converter V6 fixes Mexico preview by fitting the full wide template to A4 width without cropping.
-releaseDate: '2026-06-28T23:31:34.693Z'
+  - url: DemoBuildingToolsSetup-5.0.56.exe
+    sha512: sKeQEzEEkHXGLjvpt8CLp3vwGRe2UuO+zPGQ3kANxV/XCstPrwns1VUZ/9bUMWHHkOHq8lR8SK7umOWcr1pnBQ==
+    size: 101851523
+path: DemoBuildingToolsSetup-5.0.56.exe
+sha512: sKeQEzEEkHXGLjvpt8CLp3vwGRe2UuO+zPGQ3kANxV/XCstPrwns1VUZ/9bUMWHHkOHq8lR8SK7umOWcr1pnBQ==
+releaseNotes: Payslip Converter V6 fixes Mexico dynamic PDF totals and maps imported pay elements into the Mexico template.
+releaseDate: '2026-06-28T23:46:17.013Z'
