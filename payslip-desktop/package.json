@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.53",
+  "version": "5.0.54",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Payslip Converter V6 compacts the export modal, improves employee-name extraction globally, fixes Australia preview sizing, and tightens imported pay-row value mapping."
+      "releaseNotes": "Payslip Converter V6 fixes Mexico preview positioning by cropping the wide receipt template viewport."
     },
     "nsis": {
       "perMachine": false,

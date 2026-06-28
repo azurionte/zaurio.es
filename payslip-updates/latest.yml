@@ -1,9 +1,9 @@
-version: 5.0.53
+version: 5.0.54
 files:
-  - url: DemoBuildingToolsSetup-5.0.53.exe
-    sha512: /vBg9dVw91AujlG+5KwmK8ZUmsOgCcv8JeVcxdHDN3DcGPIUFrWMkur5JIri0yrt3Mm+RfTDMe2OUi6uvt5pfg==
-    size: 101850323
-path: DemoBuildingToolsSetup-5.0.53.exe
-sha512: /vBg9dVw91AujlG+5KwmK8ZUmsOgCcv8JeVcxdHDN3DcGPIUFrWMkur5JIri0yrt3Mm+RfTDMe2OUi6uvt5pfg==
-releaseNotes: Payslip Converter V6 compacts the export modal, improves employee-name extraction globally, fixes Australia preview sizing, and tightens imported pay-row value mapping.
-releaseDate: '2026-06-25T15:38:03.339Z'
+  - url: DemoBuildingToolsSetup-5.0.54.exe
+    sha512: PIKIoeb5DVhgoGjrBYxV9IubdHke3sos+7NWzHPl3KXlG8jDcSh3lHWAtec3SUZwIuYFzFnMugWFiNAjjToMvw==
+    size: 101850472
+path: DemoBuildingToolsSetup-5.0.54.exe
+sha512: PIKIoeb5DVhgoGjrBYxV9IubdHke3sos+7NWzHPl3KXlG8jDcSh3lHWAtec3SUZwIuYFzFnMugWFiNAjjToMvw==
+releaseNotes: Payslip Converter V6 fixes Mexico preview positioning by cropping the wide receipt template viewport.
+releaseDate: '2026-06-28T23:19:30.229Z'
