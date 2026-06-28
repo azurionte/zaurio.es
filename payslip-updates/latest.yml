@@ -1,9 +1,9 @@
-version: 5.0.54
+version: 5.0.55
 files:
-  - url: DemoBuildingToolsSetup-5.0.54.exe
-    sha512: PIKIoeb5DVhgoGjrBYxV9IubdHke3sos+7NWzHPl3KXlG8jDcSh3lHWAtec3SUZwIuYFzFnMugWFiNAjjToMvw==
-    size: 101850472
-path: DemoBuildingToolsSetup-5.0.54.exe
-sha512: PIKIoeb5DVhgoGjrBYxV9IubdHke3sos+7NWzHPl3KXlG8jDcSh3lHWAtec3SUZwIuYFzFnMugWFiNAjjToMvw==
-releaseNotes: Payslip Converter V6 fixes Mexico preview positioning by cropping the wide receipt template viewport.
-releaseDate: '2026-06-28T23:19:30.229Z'
+  - url: DemoBuildingToolsSetup-5.0.55.exe
+    sha512: 1RlKW9HKWdz8hjqEbQRLeC2diaCeLhC+3IDjP0+3rP/75P6f7+drx9yGtLJkHr+KqpSbi6airmjjZNwpvaQyJw==
+    size: 101850712
+path: DemoBuildingToolsSetup-5.0.55.exe
+sha512: 1RlKW9HKWdz8hjqEbQRLeC2diaCeLhC+3IDjP0+3rP/75P6f7+drx9yGtLJkHr+KqpSbi6airmjjZNwpvaQyJw==
+releaseNotes: Payslip Converter V6 fixes Mexico preview by fitting the full wide template to A4 width without cropping.
+releaseDate: '2026-06-28T23:31:34.693Z'

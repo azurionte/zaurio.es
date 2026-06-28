@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.54",
+  "version": "5.0.55",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Payslip Converter V6 fixes Mexico preview positioning by cropping the wide receipt template viewport."
+      "releaseNotes": "Payslip Converter V6 fixes Mexico preview by fitting the full wide template to A4 width without cropping."
     },
     "nsis": {
       "perMachine": false,
