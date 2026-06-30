@@ -81,6 +81,10 @@ Deno.serve(async (request) => {
         `dbt_celergo_employees?select=country_code,employee_id,monthly_salary,source,created_by_device,created_at,updated_at&active=eq.true${filter}&order=country_code.asc,employee_id.asc`,
         { method: "GET" },
       );
+      const inactiveEmployees = await supabase(
+        `dbt_celergo_employees?select=country_code,employee_id,updated_at&active=eq.false${filter}&order=country_code.asc,employee_id.asc`,
+        { method: "GET" },
+      );
       let deletions: unknown[] = [];
       try {
         deletions = await supabase(
@@ -90,7 +94,22 @@ Deno.serve(async (request) => {
       } catch (error) {
         if (!missingTable(error)) throw error;
       }
-      return json({ ok: true, employees: employees || [], deletions: deletions || [] });
+      const deletionMap = new Map<string, Record<string, unknown>>();
+      for (const row of (deletions || []) as Record<string, unknown>[]) {
+        deletionMap.set(`${row.country_code}|${row.employee_id}`, row);
+      }
+      for (const row of (inactiveEmployees || []) as Record<string, unknown>[]) {
+        const key = `${row.country_code}|${row.employee_id}`;
+        if (!deletionMap.has(key)) {
+          deletionMap.set(key, {
+            country_code: row.country_code,
+            employee_id: row.employee_id,
+            deleted_by_device: null,
+            deleted_at: row.updated_at,
+          });
+        }
+      }
+      return json({ ok: true, employees: employees || [], deletions: Array.from(deletionMap.values()) });
     }
 
     if (request.method === "POST") {

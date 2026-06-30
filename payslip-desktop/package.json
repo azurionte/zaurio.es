@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.56",
+  "version": "5.0.57",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Payslip Converter V6 fixes Mexico preview by fitting the full wide template to A4 width without cropping."
+      "releaseNotes": "Celergo Monthly Changes now syncs shared employee deletions across computers and prevents deleted cloud employees from reappearing locally."
     },
     "nsis": {
       "perMachine": false,

@@ -1,13 +1,13 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.10",
+  "version": "1.11",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
-  "updatedAt": "2026-06-25T12:40:00.000Z",
-  "notes": "Adds shared employee deletion with cloud tombstones and offline retry.",
+  "updatedAt": "2026-06-30T00:00:00.000Z",
+  "notes": "Makes shared employee deletion propagate across computers by syncing inactive rows and preserving local delete markers.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.10"
+      "url": "celergo-monthly-changes.html?v=1.11"
     }
   ]
 }

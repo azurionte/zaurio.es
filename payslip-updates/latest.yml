@@ -1,9 +1,9 @@
-version: 5.0.56
+version: 5.0.57
 files:
-  - url: DemoBuildingToolsSetup-5.0.56.exe
-    sha512: sKeQEzEEkHXGLjvpt8CLp3vwGRe2UuO+zPGQ3kANxV/XCstPrwns1VUZ/9bUMWHHkOHq8lR8SK7umOWcr1pnBQ==
-    size: 101851523
-path: DemoBuildingToolsSetup-5.0.56.exe
-sha512: sKeQEzEEkHXGLjvpt8CLp3vwGRe2UuO+zPGQ3kANxV/XCstPrwns1VUZ/9bUMWHHkOHq8lR8SK7umOWcr1pnBQ==
-releaseNotes: Payslip Converter V6 fixes Mexico dynamic PDF totals and maps imported pay elements into the Mexico template.
-releaseDate: '2026-06-28T23:46:17.013Z'
+  - url: DemoBuildingToolsSetup-5.0.57.exe
+    sha512: sNybpO9ffojgKWpx/j9ihugeKxPhTojik5JkVTn2bLAG2xiYqZZRgE40W26jhBpEqK+Q08MvoKkV/jlXPCOd0Q==
+    size: 101851835
+path: DemoBuildingToolsSetup-5.0.57.exe
+sha512: sNybpO9ffojgKWpx/j9ihugeKxPhTojik5JkVTn2bLAG2xiYqZZRgE40W26jhBpEqK+Q08MvoKkV/jlXPCOd0Q==
+releaseNotes: Celergo Monthly Changes now syncs shared employee deletions across computers and prevents deleted cloud employees from reappearing locally.
+releaseDate: '2026-06-30T14:22:24.976Z'
