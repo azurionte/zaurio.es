@@ -111,7 +111,7 @@ function mergeCloudEmployee(row){const emp=cloudEmployeeFromRow(row);if(!emp||is
 
 function cleanupEmployeeState(id){delete state.open[id];delete state.salaryHistory[id];delete state.salarySchedule[id];Object.keys(state.elementDrafts||{}).forEach(k=>{if(k.indexOf(id+'|')===0)delete state.elementDrafts[k]});Object.keys(state.customActions||{}).forEach(k=>{if(k.indexOf(id+'|')===0)delete state.customActions[k]})}
 function removeLocalEmployee(country,employeeId){rememberDeletedEmployee(country,employeeId);state.employeesByCountry=state.employeesByCountry||{};const list=state.employeesByCountry[country]||(state.employeesByCountry[country]=JSON.parse(JSON.stringify(APP_DATA.employeesSeed[country]||[])));const before=list.length;state.employeesByCountry[country]=list.filter(emp=>String(emp.id)!==String(employeeId));if(before!==state.employeesByCountry[country].length){cleanupEmployeeState(employeeId);return true}return false}
-async function deleteEmployee(index){const emp=employees()[index];if(!emp)return;if(!confirm('Delete employee '+emp.id+' from '+template().label+'? This will sync to everyone.'))return;const country=state.country;removeLocalEmployee(country,emp.id);save();renderEmployees();setSyncStatus('Employee '+emp.id+' deleted locally. Syncing delete...');try{await deleteCloudEmployee(country,emp.id);setSyncStatus('Employee '+emp.id+' deleted and synced.','ok')}catch(e){console.warn('Cloud employee delete failed',e);enqueueCloudDelete(country,emp.id)}}
+async function deleteEmployee(index){const emp=employees()[index];if(!emp)return;if(!confirm('Delete employee '+emp.id+' from '+template().label+'? This will sync to everyone.'))return;const country=state.country;removeLocalEmployee(country,emp.id);save();renderEmployees();setSyncStatus('Employee '+emp.id+' deleted locally. Syncing delete...');try{await deleteCloudEmployee(country,emp.id);await syncCloudEmployees(country,{quiet:true});setSyncStatus('Employee '+emp.id+' deleted and synced.','ok')}catch(e){console.warn('Cloud employee delete failed',e);enqueueCloudDelete(country,emp.id)}}
 async function deleteCloudEmployee(country,employeeId){const device=await deviceName();const res=await fetch(CLOUD_EMPLOYEE_API,{method:'DELETE',headers:{'content-type':'application/json','apikey':CLOUD_EMPLOYEE_KEY,'authorization':'Bearer '+CLOUD_EMPLOYEE_KEY},body:JSON.stringify({country,employeeId,device})});const data=await res.json().catch(()=>({}));if(!res.ok||data.ok===false)throw new Error(data.error||'Cloud delete failed');return data.deletion}
 function enqueueCloudDelete(country,employeeId){state.cloudDeleteQueue=state.cloudDeleteQueue||[];const key=country+'|'+employeeId;state.cloudDeleteQueue=state.cloudDeleteQueue.filter(x=>x.country+'|'+x.employeeId!==key);state.cloudDeleteQueue.push({country,employeeId,queuedAt:new Date().toISOString()});save();setSyncStatus('Delete saved locally. Cloud sync will retry when online.')}
 async function flushCloudDeleteQueue(){state.cloudDeleteQueue=state.cloudDeleteQueue||[];if(!state.cloudDeleteQueue.length)return 0;const pending=[...state.cloudDeleteQueue];state.cloudDeleteQueue=[];let sent=0;for(const item of pending){try{await deleteCloudEmployee(item.country,item.employeeId);sent++}catch(e){state.cloudDeleteQueue.push(item)}}save();return sent}
@@ -121,5 +121,45 @@ async function postCloudEmployee(country,employeeId,monthlySalary){const device=
 function enqueueCloudEmployee(country,employeeId,monthlySalary){state.cloudEmployeeQueue=state.cloudEmployeeQueue||[];const key=country+'|'+employeeId;state.cloudEmployeeQueue=state.cloudEmployeeQueue.filter(x=>x.country+'|'+x.employeeId!==key);state.cloudEmployeeQueue.push({country,employeeId,monthlySalary,queuedAt:new Date().toISOString()});save();setSyncStatus('Saved locally. Cloud sync will retry when online.')}
 async function syncEmployee(emp){try{await postCloudEmployee(state.country,emp.id,emp.salary);emp.cloudSynced=true;save();setSyncStatus('Employee '+emp.id+' synced to cloud.','ok')}catch(e){console.warn('Cloud employee sync failed',e);enqueueCloudEmployee(state.country,emp.id,emp.salary)}}
 async function syncCloudEmployees(country=state.country){try{setSyncStatus('Syncing shared employees...');await flushCloudDeleteQueue();await flushCloudQueue();const url=CLOUD_EMPLOYEE_API+(country?'?country='+encodeURIComponent(country):'');const res=await fetch(url,{headers:{'apikey':CLOUD_EMPLOYEE_KEY,'authorization':'Bearer '+CLOUD_EMPLOYEE_KEY}});const data=await res.json().catch(()=>({}));if(!res.ok||data.ok===false)throw new Error(data.error||'Cloud sync failed');let added=0,removed=0;(data.deletions||[]).forEach(row=>{if(applyCloudDeletion(row))removed++});(data.employees||[]).forEach(row=>{if(mergeCloudEmployee(row))added++});state.cloudLastSync=new Date().toISOString();save();if(added||removed)renderEmployees();setSyncStatus((added||removed)?'Synced '+added+' shared employee(s), removed '+removed+'.':'Shared employees are up to date.','ok')}catch(e){console.warn('Cloud employee read failed',e);setSyncStatus('Cloud sync unavailable. Local data is still usable.')}}
+
+/* Keep a running client authoritative after another computer adds or deletes an employee. */
+let cloudSyncInFlight=false;
+let cloudSyncTimer=null;
+syncCloudEmployees=async function(country=state.country,options={}){
+  if(cloudSyncInFlight)return;
+  cloudSyncInFlight=true;
+  const requestedCountry=country;
+  const quiet=!!options.quiet;
+  try{
+    if(!quiet)setSyncStatus('Syncing shared employees...');
+    await flushCloudDeleteQueue();
+    await flushCloudQueue();
+    const url=CLOUD_EMPLOYEE_API+(requestedCountry?'?country='+encodeURIComponent(requestedCountry):'');
+    const res=await fetch(url,{cache:'no-store',headers:{'apikey':CLOUD_EMPLOYEE_KEY,'authorization':'Bearer '+CLOUD_EMPLOYEE_KEY}});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok||data.ok===false)throw new Error(data.error||'Cloud sync failed');
+    let added=0,removed=0;
+    (data.deletions||[]).forEach(row=>{if(applyCloudDeletion(row))removed++});
+    (data.employees||[]).forEach(row=>{if(mergeCloudEmployee(row))added++});
+    state.cloudLastSync=new Date().toISOString();
+    save();
+    if((added||removed)&&state.country===requestedCountry)renderEmployees();
+    if(!quiet)setSyncStatus((added||removed)?'Synced '+added+' shared employee(s), removed '+removed+'.':'Shared employees are up to date.','ok');
+  }catch(e){
+    console.warn('Cloud employee read failed',e);
+    if(!quiet)setSyncStatus('Cloud sync unavailable. Local data is still usable.');
+  }finally{cloudSyncInFlight=false}
+};
+function startCloudEmployeeRefresh(){
+  const refresh=()=>{if(document.visibilityState!=='hidden')syncCloudEmployees(state.country,{quiet:true})};
+  if(cloudSyncTimer)clearInterval(cloudSyncTimer);
+  cloudSyncTimer=setInterval(refresh,30000);
+  window.addEventListener('focus',refresh);
+  document.addEventListener('visibilitychange',refresh);
+}
 init();
+APP_DATA.version='1.12';
+const versionBadge=document.querySelector('[data-mini-version="celergo-monthly-changes"]');
+if(versionBadge)versionBadge.textContent='V1.12';
+startCloudEmployeeRefresh();
 </script></body></html>

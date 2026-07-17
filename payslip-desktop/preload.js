@@ -16,7 +16,8 @@ contextBridge.exposeInMainWorld('payslipUpdater', updaterApi);
 
 contextBridge.exposeInMainWorld('payslipDesktop', {
   selectPdf: () => ipcRenderer.invoke('pdf:select'),
-  saveHtmlAsPdf: (payload) => ipcRenderer.invoke('pdf:save-html', payload)
+  saveHtmlAsPdf: (payload) => ipcRenderer.invoke('pdf:save-html', payload),
+  saveHtmlBatch: (payload) => ipcRenderer.invoke('pdf:save-html-batch', payload)
 });
 
 contextBridge.exposeInMainWorld('payslipMiniApps', {

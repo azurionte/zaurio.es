@@ -1,13 +1,13 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.11",
+  "version": "1.12",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
   "updatedAt": "2026-06-30T00:00:00.000Z",
-  "notes": "Makes shared employee deletion propagate across computers by syncing inactive rows and preserving local delete markers.",
+  "notes": "Refreshes shared employees across active clients and reconciles deletions after focus, country changes, and restart.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.11"
+      "url": "celergo-monthly-changes.html?v=1.12"
     }
   ]
 }
