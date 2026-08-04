@@ -987,7 +987,10 @@
     function flowStateGet(){ return sessionStorage.getItem('dz_flow_state') || ''; }
     function flowStateSet(v){ sessionStorage.setItem('dz_flow_state', v); }
     function flowStateClear(){ sessionStorage.removeItem('dz_flow_state'); }
-    function cloneData(v){ return JSON.parse(JSON.stringify(v)); }
+    function cloneData(v){
+      if(v === undefined) return undefined;
+      return JSON.parse(JSON.stringify(v));
+    }
     const DEBT_META_PREFIX = '__DZMETA__';
     function debtInstrumentTypeLabel(type){
       return ({
