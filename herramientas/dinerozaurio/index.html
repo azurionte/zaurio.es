@@ -859,7 +859,7 @@
             <div class="field"><label>Hasta</label><input id="forecastTo" class="input" type="month" /></div>
             <div class="field"><label>Leyenda</label><div class="pill">Recuperado = cuota liberada al terminar una deuda</div></div>
             <div class="field"><label>Leyenda</label><div class="pill">Sobrante = ingreso - gastos - deuda - ahorro</div></div>
-            <div class="field"><label>Leyenda</label><div class="pill">Colchón = acumulado previo y sobrantes positivos; solo baja si lo usas explícitamente</div></div>
+            <div class="field"><label>Leyenda</label><div class="pill">Colchón = saldo inicial + todos los sobrantes mensuales acumulados</div></div>
           </div>
           <div class="legend">
             <span class="pill">Primera parte: la base ya no se rompe al entrar.</span>
@@ -1105,7 +1105,10 @@
         .reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
     }
     function reserveCarryFromNet(net){
-      return Math.max(0, Number(net || 0));
+      return Number(net || 0);
+    }
+    function cashOneOffExpensesTotal(ym){
+      return salaryOneOffExpensesTotal(ym) + reserveOneOffExpensesTotal(ym);
     }
     function savingsOneOffExpensesTotal(ym){
       return monthOneOffExpenses(ym)
@@ -2640,6 +2643,8 @@
       for(const targetMonth of months){
         const payoff = Number(getDebtPayoffAmount(d, targetMonth) || 0);
         if(payoff <= 0) continue;
+        const targetReserve = Number(buildReserveStateThroughMonth(targetMonth).reserve || 0);
+        if(targetReserve < payoff) continue;
         let collected = 0;
         let startMonth = targetMonth;
         const usedMonths = [];
@@ -2780,19 +2785,19 @@
       const reserveTransferAmount = Number(adj.reserveTransferAmount || 0);
       const income = state.incomes.reduce((sum, item) => {
         return sum + getScopedAmountForMonth('incomeOverrides', item.id, ym, getIncomeMonthlyCharge(item, ym));
-      }, 0) + Number(adj.extraIncomeAmount || 0) + reserveTransferAmount + monthCardTransfersTotal(ym);
+      }, 0) + Number(adj.extraIncomeAmount || 0) + monthCardTransfersTotal(ym);
       const expenseItems = state.expenses
         .map(item => {
           return { ...item, monthAmount: getScopedAmountForMonth('expenseOverrides', item.id, ym, getExpenseMonthlyCharge(item, ym)) };
         })
         .filter(item => item.monthAmount !== 0);
-      const expense = expenseItems.reduce((sum, item) => sum + Number(item.monthAmount || 0), 0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(ym);
+      const expense = expenseItems.reduce((sum, item) => sum + Number(item.monthAmount || 0), 0) + Number(adj.extraExpenseAmount || 0) + cashOneOffExpensesTotal(ym);
       let debt = 0;
       let reserveUsage = reserveOneOffExpensesTotal(ym) + reserveTransferAmount;
       let savingsUsage = savingsOneOffExpensesTotal(ym);
       state.debts.forEach(item => {
         const funding = getDebtFundingForMonth(item, ym);
-        debt += Number(funding.salaryAmount || 0);
+        debt += Number(funding.salaryAmount || 0) + Number(funding.reserveAmount || 0);
         reserveUsage += Number(funding.reserveAmount || 0);
         savingsUsage += Number(funding.savingsAmount || 0);
       });
@@ -2813,13 +2818,13 @@
       let cumulativeSavings = 0;
       if(ym < state.defaultStartMonth){
         const snapshot = buildForecastMonthSnapshot(ym);
-        reserve += reserveCarryFromNet(snapshot.net) - Number(snapshot.reserveUsage || 0);
+        reserve += reserveCarryFromNet(snapshot.net);
         cumulativeSavings += Number(snapshot.savings || 0) - Number(snapshot.savingsUsage || 0);
         return { reserve, cumulativeSavings };
       }
       monthsInRange(state.defaultStartMonth, ym).forEach(monthKey => {
         const snapshot = buildForecastMonthSnapshot(monthKey);
-        reserve += reserveCarryFromNet(snapshot.net) - Number(snapshot.reserveUsage || 0);
+        reserve += reserveCarryFromNet(snapshot.net);
         cumulativeSavings += Number(snapshot.savings || 0) - Number(snapshot.savingsUsage || 0);
       });
       return { reserve, cumulativeSavings };
@@ -2837,7 +2842,7 @@
       const oneOffEntries = monthOneOffExpenses(ym);
       const recovered = state.debts.reduce((sum, item) => sum + getDebtRecoveredForMonth(item, ym), 0);
       const { reserve, cumulativeSavings } = buildReserveStateThroughMonth(ym);
-      const hasNegative = Number(snapshot.net || 0) < 0;
+      const hasNegativeBalance = Number(reserve || 0) < 0;
 
       const renderMiniItems = (items, emptyLabel) => items.length
         ? `<div class="miniList">${items.join('')}</div>`
@@ -2866,8 +2871,8 @@
         ...(reserveTransferAmount ? [`
           <div class="miniItem">
             <div class="miniMeta">
-              <div class="miniName">${escapeHtml(adj.reserveTransferName || 'Ingreso extra desde colchón')}</div>
-              <div class="miniSub">Ingreso extra desde colchón</div>
+              <div class="miniName">${escapeHtml(adj.reserveTransferName || 'Uso registrado del colchón')}</div>
+              <div class="miniSub">Movimiento interno antiguo · no altera ingreso ni colchón</div>
             </div>
             <div class="money">${euros(reserveTransferAmount)}</div>
           </div>`] : []),
@@ -2944,7 +2949,7 @@
               <div class="sub">${escapeHtml(monthLabel)} · vista operativa del mes actual</div>
             </div>
             <div class="btnRow">
-              ${hasNegative ? `<button id="currentMonthAlertBtn" class="btn danger">Resolver negativo</button>` : ''}
+              ${hasNegativeBalance ? `<button id="currentMonthAlertBtn" class="btn danger">Cubrir déficit acumulado</button>` : ''}
               <button id="openCurrentMonthModalBtn" class="btn primary">Abrir detalle del mes</button>
             </div>
           </div>
@@ -2984,7 +2989,7 @@
               <div class="value ${reserve >= 0 ? 'kpi-green' : 'kpi-red'}">${euros(reserve)}</div>
             </div>
           </div>
-          ${hasNegative ? `<div class="warnBox" style="margin-top:14px"><h4>Este mes está en negativo</h4><div class="muted">Faltan ${euros(Math.abs(snapshot.net))}. El colchón no se usa automáticamente: solo baja si marcas gastos o deudas como pagados con colchón.</div></div>` : ''}
+          ${hasNegativeBalance ? `<div class="warnBox" style="margin-top:14px"><h4>El colchón acumulado está en negativo</h4><div class="muted">Faltan ${euros(Math.abs(reserve))} después de arrastrar los resultados de los meses anteriores. El sobrante de este mes es ${euros(snapshot.net)}.</div></div>` : ''}
         </div>
 
         <div class="currentMonthGrid" style="margin-top:16px">
@@ -3015,12 +3020,15 @@
       const alertBtn = document.getElementById('currentMonthAlertBtn');
       if(alertBtn) alertBtn.onclick = () => openNegativeMonthModal(ym);
     }
-    function buildNegativeMonthSuggestions(ym){
+    function buildNegativeMonthSuggestions(ym, requiredAmount = null){
       const snapshot = buildForecastMonthSnapshot(ym);
-      const deficit = Math.abs(Math.min(0, snapshot.net));
+      const monthDeficit = Math.abs(Math.min(0, snapshot.net));
+      const deficit = requiredAmount === null
+        ? monthDeficit
+        : Math.max(0, Number(requiredAmount || 0));
       if(deficit <= 0) return { deficit:0, suggestions:[] };
       const salaryOneOffs = monthOneOffExpenses(ym)
-        .filter(entry => entry.paymentSource === 'salary')
+        .filter(entry => entry.paymentSource === 'salary' || entry.paymentSource === 'reserve')
         .map(entry => ({
           id: entry.id,
           name: entry.name || 'Gasto puntual',
@@ -3055,16 +3063,16 @@
         .filter(item => (item.instrumentType || item.debtKind) === 'card' && (item.paymentMode || item.cardSubtype || 'revolving') === 'revolving')
         .map(item => `<option value="${item.id}">${escapeHtml(debtDisplayName(item))}</option>`)
         .join('');
-      const { deficit, suggestions } = buildNegativeMonthSuggestions(ym);
-      const reserveAvailable = Math.max(0, Number(buildReserveStateThroughMonth(ym).reserve || 0));
-      const reserveSuggested = Math.min(deficit, reserveAvailable);
+      const accumulatedBalance = Number(buildReserveStateThroughMonth(ym).reserve || 0);
+      const accumulatedDeficit = Math.abs(Math.min(0, accumulatedBalance));
+      const { deficit, suggestions } = buildNegativeMonthSuggestions(ym, accumulatedDeficit);
       const root = document.getElementById('modalRoot');
       root.className = 'modalRoot';
       root.innerHTML = `<div class="modalCard">
         <div class="modalHead">
           <div>
-            <h3>Mes en negativo · ${escapeHtml(prettyMonthLabel(ym))}</h3>
-            <div class="muted">Faltan ${euros(deficit)} para que el mes no quede en rojo. El colchón no se aplica automáticamente.</div>
+            <h3>Déficit acumulado · ${escapeHtml(prettyMonthLabel(ym))}</h3>
+            <div class="muted">El colchón ya incorpora automáticamente todos los sobrantes anteriores. Faltan ${euros(deficit)} para volver a cero.</div>
           </div>
           <button id="closeModalBtn" class="btn danger">Cerrar</button>
         </div>
@@ -3073,101 +3081,34 @@
           ${suggestions.length ? `<ul class="warnDetails">${suggestions.map(item => `<li><strong>${escapeHtml(item.name)}</strong> · ${euros(item.amount)} · ${escapeHtml(item.reason)}</li>`).join('')}</ul>` : '<div class="muted">No veo gastos claros para mover a tarjeta en este mes.</div>'}
         </div>
         <div class="panel">
-          <h4 style="margin:0 0 10px">Resolver el negativo</h4>
-          <div class="sub" style="margin-bottom:12px">Elige cómo quieres cubrir el déficit de este mes.</div>
+          <h4 style="margin:0 0 10px">Cubrir el déficit con financiación</h4>
+          <div class="sub" style="margin-bottom:12px">El colchón no es un ingreso: ya se ha consumido en el saldo acumulado. Aquí solo puedes añadir dinero nuevo procedente de una tarjeta.</div>
           <div class="modalGrid">
-            <div class="field"><label>Método</label><select id="negativeMethod" class="select">
-              <option value="reserve">Colchón (dinero en cuenta)</option>
-              <option value="card">Tarjeta de crédito</option>
-            </select></div>
-            <div class="field" id="negativeReserveAmountField"><label>Monto del colchón</label><input id="negativeReserveAmount" class="input" type="number" step="0.01" value="${reserveSuggested > 0 ? reserveSuggested : 0}"></div>
-            <div class="field" id="negativeCardField" style="display:none"><label>Tarjeta</label><select id="negativeTransferCard" class="select">${cardOptions || '<option value="">No hay tarjetas revolving disponibles</option>'}</select></div>
+            <div class="field"><label>Tarjeta</label><select id="negativeTransferCard" class="select">${cardOptions || '<option value="">No hay tarjetas revolving disponibles</option>'}</select></div>
             <div class="field" id="negativeAmountField"><label>Monto</label><input id="negativeTransferAmount" class="input" type="number" step="0.01" value="${deficit > 0 ? deficit : 0}"></div>
-            <div class="field" style="grid-column:1/-1"><label>Concepto</label><input id="negativeName" class="input" value="Traspaso para cubrir negativo"></div>
+            <div class="field" style="grid-column:1/-1"><label>Concepto</label><input id="negativeName" class="input" value="Traspaso para cubrir déficit acumulado"></div>
           </div>
           <div class="btnRow" style="margin-top:14px">
-            <button id="applyNegativeBtn" class="btn primary">Resolver negativo</button>
+            <button id="applyNegativeBtn" class="btn primary" ${cardOptions ? '' : 'disabled'}>Simular traspaso</button>
           </div>
         </div>
       </div>`;
       root.onclick = (e) => { if(e.target === root) closeModal(); };
       document.getElementById('closeModalBtn').onclick = closeModal;
 
-      // Función para actualizar la UI según el método seleccionado
-      function updateNegativeMethodUI() {
-        const method = document.getElementById('negativeMethod').value;
-        const reserveField = document.getElementById('negativeReserveAmountField');
-        const cardField = document.getElementById('negativeCardField');
-        const amountField = document.getElementById('negativeAmountField');
-        const amountInput = document.getElementById('negativeTransferAmount');
-        const reserveInput = document.getElementById('negativeReserveAmount');
-        const applyBtn = document.getElementById('applyNegativeBtn');
-
-        if (method === 'reserve') {
-          reserveField.style.display = 'block';
-          cardField.style.display = 'none';
-          amountInput.value = reserveInput.value;
-          applyBtn.disabled = reserveAvailable <= 0;
-          applyBtn.textContent = 'Resolver con colchón';
-        } else {
-          reserveField.style.display = 'none';
-          cardField.style.display = 'block';
-          reserveInput.value = amountInput.value;
-          applyBtn.disabled = !cardOptions;
-          applyBtn.textContent = 'Resolver con traspaso';
-        }
-      }
-
-      // Event listener para cambio de método
-      document.getElementById('negativeMethod').onchange = updateNegativeMethodUI;
-
-      // Sincronizar valores entre los inputs de monto
-      document.getElementById('negativeReserveAmount').oninput = (e) => {
-        if (document.getElementById('negativeMethod').value === 'reserve') {
-          document.getElementById('negativeTransferAmount').value = e.target.value;
-        }
-      };
-      document.getElementById('negativeTransferAmount').oninput = (e) => {
-        if (document.getElementById('negativeMethod').value === 'card') {
-          document.getElementById('negativeReserveAmount').value = e.target.value;
-        }
-      };
-
-      // Inicializar UI
-      updateNegativeMethodUI();
-
       const applyBtn = document.getElementById('applyNegativeBtn');
       if(applyBtn) applyBtn.onclick = () => {
-        const method = document.getElementById('negativeMethod').value;
-        const name = document.getElementById('negativeName').value.trim() || 'Traspaso para cubrir negativo';
-
-        if (method === 'reserve') {
-          const amount = Number(document.getElementById('negativeReserveAmount').value || 0);
-          if(amount <= 0){
-            alert('Necesito un monto válido para usar el colchón.');
-            return;
-          }
-          if(amount > reserveAvailable){
-            alert(`Ese monto supera el colchón disponible para este mes (${euros(reserveAvailable)}).`);
-            return;
-          }
-          closeModal();
-          commitMonthAdjustmentGlobal(ym, nextAdj => {
-            nextAdj.reserveTransferName = name;
-            nextAdj.reserveTransferAmount = amount;
-          });
-        } else {
-          const cardDebtId = document.getElementById('negativeTransferCard').value;
-          const amount = Number(document.getElementById('negativeTransferAmount').value || 0);
-          if(!cardDebtId || amount <= 0){
-            alert('Necesito una tarjeta revolving y un monto válido para resolver el negativo.');
-            return;
-          }
-          closeModal();
-          commitMonthAdjustmentGlobal(ym, nextAdj => {
-            nextAdj.cardTransfers = [...(nextAdj.cardTransfers || []), normalizeCardTransferEntry({ cardDebtId, amount, name, monthKey: ym }, ym)];
-          });
+        const name = document.getElementById('negativeName').value.trim() || 'Traspaso para cubrir déficit acumulado';
+        const cardDebtId = document.getElementById('negativeTransferCard').value;
+        const amount = Number(document.getElementById('negativeTransferAmount').value || 0);
+        if(!cardDebtId || amount <= 0){
+          alert('Necesito una tarjeta revolving y un monto válido para cubrir el déficit.');
+          return;
         }
+        closeModal();
+        commitMonthAdjustmentGlobal(ym, nextAdj => {
+          nextAdj.cardTransfers = [...(nextAdj.cardTransfers || []), normalizeCardTransferEntry({ cardDebtId, amount, name, monthKey: ym }, ym)];
+        });
       };
     }
     function itemGroupTotal(collection, item){
@@ -4340,8 +4281,8 @@
         const reserveTransfer = adj.reserveTransferAmount ? `
           <div class="miniItem">
             <div class="miniMeta">
-              <div class="miniName">${escapeHtml(adj.reserveTransferName || 'Ingreso extra desde colchón')}</div>
-              <div class="miniSub">${euros(adj.reserveTransferAmount)} · ingreso extra desde colchón</div>
+              <div class="miniName">${escapeHtml(adj.reserveTransferName || 'Uso registrado del colchón')}</div>
+              <div class="miniSub">${euros(adj.reserveTransferAmount)} · registro antiguo sin efecto en el saldo</div>
             </div>
             <div class="miniActions">
               <button class="btn ghost" id="editReserveTransferBtn">Editar</button>
@@ -4838,8 +4779,8 @@
       };
       const editReserveTransferBtn = document.getElementById('editReserveTransferBtn');
       if(editReserveTransferBtn) editReserveTransferBtn.onclick = () => {
-        mountInlineForm('monthIncomeForm', 'Editar uso de colchón', [
-          { id:'amr_name', label:'Nombre', type:'text', value:adj.reserveTransferName || 'Traspaso desde colchón para cubrir negativo' },
+        mountInlineForm('monthIncomeForm', 'Editar registro antiguo de colchón', [
+          { id:'amr_name', label:'Nombre', type:'text', value:adj.reserveTransferName || 'Uso registrado del colchón' },
           { id:'amr_amount', label:'Monto', type:'number', step:'0.01', value:adj.reserveTransferAmount || 0 }
         ], () => {
           const amount = Number(document.getElementById('amr_amount').value || 0);
@@ -5081,18 +5022,18 @@
 
         const income = state.incomes.reduce((a,b)=>{
           return a + getScopedAmountForMonth('incomeOverrides', b.id, m, getIncomeMonthlyCharge(b, m));
-        },0) + Number(adj.extraIncomeAmount || 0) + reserveTransferIn + transferIn;
+        },0) + Number(adj.extraIncomeAmount || 0) + transferIn;
 
         const expense = state.expenses.reduce((a,b)=>{
           return a + getScopedAmountForMonth('expenseOverrides', b.id, m, getExpenseMonthlyCharge(b, m));
-        },0) + Number(adj.extraExpenseAmount || 0) + salaryOneOffExpensesTotal(m);
+        },0) + Number(adj.extraExpenseAmount || 0) + cashOneOffExpensesTotal(m);
 
         let debt = 0;
         let reserveUsage = reserveOneOffExpensesTotal(m) + reserveTransferIn;
         let savingsUsage = savingsOneOffExpensesTotal(m);
         state.debts.forEach(item => {
           const funding = getDebtFundingForMonth(item, m);
-          debt += Number(funding.salaryAmount || 0);
+          debt += Number(funding.salaryAmount || 0) + Number(funding.reserveAmount || 0);
           reserveUsage += Number(funding.reserveAmount || 0);
           savingsUsage += Number(funding.savingsAmount || 0);
         });
@@ -5117,19 +5058,20 @@
         });
 
         const net = income - expense - debt - totalSaving;
-        reserve += reserveCarryFromNet(net) - reserveUsage;
+        reserve += reserveCarryFromNet(net);
         cumulativeSavings += totalSaving - savingsUsage;
-        const monthRisk = net < 0 ? buildNegativeMonthSuggestions(m) : { deficit:0, suggestions:[] };
+        const hasAccumulatedDeficit = reserve < 0;
+        const monthRisk = hasAccumulatedDeficit ? buildNegativeMonthSuggestions(m, Math.abs(reserve)) : { deficit:0, suggestions:[] };
 
         if(m >= from && m <= to){
           visibleCards.push(`<div class="month" data-month="${m}">
             <div class="monthHead">
               <h4>${escapeHtml(m)}</h4>
-              ${net < 0 ? `<button class="btn danger monthAlertBtn bad" data-month-alert="${m}" title="Mes en negativo">!</button>` : ''}
+              ${hasAccumulatedDeficit ? `<button class="btn danger monthAlertBtn bad" data-month-alert="${m}" title="Colchón acumulado en negativo">!</button>` : ''}
             </div>
             <div class="rows">
               <div class="lab">Ingreso</div><div>${euros(income)}</div>
-              ${reserveTransferIn ? `<div class="lab">Uso colchón</div><div>${euros(reserveTransferIn)}</div>` : ''}
+              ${reserveTransferIn ? `<div class="lab">Uso colchón (registro antiguo)</div><div>${euros(reserveTransferIn)}</div>` : ''}
               ${transferIn ? `<div class="lab">Traspaso tarjeta</div><div>${euros(transferIn)}</div>` : ''}
               <div class="lab">Gastos</div><div>${euros(expense)}</div>
               <div class="lab">Deuda</div><div>${euros(debt)}</div>
@@ -5141,7 +5083,7 @@
               <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
               <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
             </div>
-            ${net < 0 ? `<div class="sub" style="margin-top:10px">Faltan ${euros(monthRisk.deficit)}. Toca el aviso para ver sugerencias o resolverlo con tarjeta.</div>` : ''}
+            ${hasAccumulatedDeficit ? `<div class="sub" style="margin-top:10px">Déficit acumulado: faltan ${euros(monthRisk.deficit)} para que el colchón vuelva a cero.</div>` : ''}
           </div>`);
         }
       });
