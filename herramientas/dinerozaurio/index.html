@@ -3439,7 +3439,8 @@
           if(r.error) throw r.error;
         }
 
-        const adjEntries = Object.entries(state.monthAdjustments || {});
+        const adjEntries = Object.entries(state.monthAdjustments || {})
+          .filter(([, value]) => monthAdjustmentHasDataGlobal(value));
         if(adjEntries.length){
           const rows = adjEntries.map(([monthKey, v]) => ({
             plan_id: planId,
