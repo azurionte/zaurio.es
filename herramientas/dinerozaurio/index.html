@@ -1088,8 +1088,8 @@
         calendarRuleType,
         dueDay: Math.min(31, Math.max(1, Number(item.dueDay || defaults.dueDay || 12))),
         calendarMonthShift: Math.max(0, Math.min(1, Number(item.calendarMonthShift ?? defaults.calendarMonthShift ?? 0))),
-        calendarBehavior: item.calendarBehavior === 'budget' ? 'budget' : (defaults.calendarBehavior || 'charge'),
-        calendarConfidence: item.calendarConfidence === 'confirmed' ? 'confirmed' : (defaults.calendarConfidence || 'estimated'),
+        calendarBehavior: ['charge','budget'].includes(item.calendarBehavior) ? item.calendarBehavior : (defaults.calendarBehavior || 'charge'),
+        calendarConfidence: ['confirmed','estimated'].includes(item.calendarConfidence) ? item.calendarConfidence : (defaults.calendarConfidence || 'estimated'),
         calendarNote: String(item.calendarNote || defaults.calendarNote || '').trim()
       };
     }
