@@ -312,6 +312,19 @@
       box-shadow:0 10px 24px rgba(255,51,95,.3);
     }
     .saveBadge.hidden{display:none !important}
+
+    .calendarToolbar{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr)) auto;gap:12px;align-items:end}
+    .calendarSummary{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin:14px 0}
+    .calendarKpi{background:rgba(14,26,43,.74);border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:14px}
+    .calendarKpi .kpiLabel{color:#94a3b8;font-size:.78rem;margin-bottom:6px}
+    .calendarKpi .kpiValue{font-size:1.25rem;font-weight:800}
+    .cashTimeline{display:grid;gap:8px}
+    .cashEvent{display:grid;grid-template-columns:92px minmax(180px,1fr) 150px 150px;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:rgba(15,23,42,.72);border:1px solid rgba(148,163,184,.18)}
+    .cashEvent.negative{border-color:rgba(248,113,113,.62);background:rgba(127,29,29,.16)}
+    .cashEventDate{font-weight:800}.cashEventName{font-weight:700}.cashEventMeta{color:#94a3b8;font-size:.78rem;margin-top:3px}
+    .cashEventAmount,.cashEventBalance{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
+    .cashEventAmount.in{color:#4ade80}.cashEventAmount.out{color:#fb7185}
+    @media (max-width:900px){.calendarToolbar,.calendarSummary{grid-template-columns:1fr 1fr}.cashEvent{grid-template-columns:78px 1fr}.cashEventAmount,.cashEventBalance{text-align:left}}
     .saveMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .saveState{
       font-size:12px;
@@ -743,6 +756,7 @@
         <div class="tab active" data-tab="config">Configuración</div>
         <div class="tab" data-tab="current-month">Este mes</div>
         <div class="tab" data-tab="forecast">Previsión</div>
+        <div class="tab" data-tab="calendar">Calendario</div>
       </div>
 
       <section id="tab-config" class="stack">
@@ -867,6 +881,22 @@
           </div>
         </div>
         <div id="forecastWarnings"></div><div id="cardBalancesPanel" class="cardBalancesPanel"></div><div id="monthsGrid" class="months-grid"></div>
+      </section>
+
+      <section id="tab-calendar" class="stack hidden">
+        <div class="panel">
+          <div class="section-title">
+            <div><h2>Calendario de caja</h2><div class="sub">Fecha real y mes atribuido separados. La nómina que entra después del día 23 financia el mes siguiente.</div></div>
+          </div>
+          <div class="calendarToolbar">
+            <div class="field"><label>Saldo disponible hoy</label><input id="calendarOpeningBalance" class="input" type="number" step="0.01"></div>
+            <div class="field"><label>Desde</label><input id="calendarStartDate" class="input" type="date"></div>
+            <div class="field"><label>Días a proyectar</label><input id="calendarHorizon" class="input" type="number" min="7" max="120" value="45"></div>
+            <button id="calendarRefresh" class="btn primary">Actualizar</button>
+          </div>
+          <div class="legend" style="margin-top:12px"><span class="pill">Confirmado = fecha conocida</span><span class="pill">Estimado = patrón de cobros</span><span class="pill">Presupuesto = reserva, no cargo único</span></div>
+        </div>
+        <div id="calendarView"></div>
       </section>
     </section>
   </div>
@@ -1443,7 +1473,7 @@
     }
     function decodeDebtStorageName(rawName, fallbackType = 'loan'){
       const text = String(rawName || '').trim();
-      if(!text) return { entityName:'', instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'' };
+      if(!text) return { entityName:'', instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'', payoffFeePct:0, balanceMonth:'' };
       if(text.startsWith(DEBT_META_PREFIX)){
         try{
           const payload = JSON.parse(text.slice(DEBT_META_PREFIX.length));
@@ -1454,13 +1484,15 @@
             creditLimit: Number(payload.creditLimit || 0),
             totalBorrowed: Number(payload.totalBorrowed || 0),
             intervalMonths: Math.max(1, Number(payload.intervalMonths || 1)),
-            settledMonth: String(payload.settledMonth || '').trim()
+            settledMonth: String(payload.settledMonth || '').trim(),
+            payoffFeePct: Number(payload.payoffFeePct || 0),
+            balanceMonth: String(payload.balanceMonth || '').trim()
           };
         }catch(err){
           console.error('Error decodificando nombre de deuda', err);
         }
       }
-      return { entityName:text, instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'' };
+      return { entityName:text, instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'', payoffFeePct:0, balanceMonth:'' };
     }
     function debtEntityName(item){
       return String(item?.entityName || item?.name || '').trim();
@@ -1493,7 +1525,9 @@
         creditLimit: Number(item?.creditLimit || 0),
         totalBorrowed: Number(item?.totalBorrowed || 0),
         intervalMonths: Math.max(1, Number(item?.intervalMonths || 1)),
-        settledMonth: String(item?.settledMonth || '').trim()
+        settledMonth: String(item?.settledMonth || '').trim(),
+        payoffFeePct: Number(item?.payoffFeePct || 0),
+        balanceMonth: String(item?.balanceMonth || '').trim()
       })}`;
     }
     function normalizeDebtItem(item = {}){
@@ -1528,7 +1562,9 @@
         tae: Number(item.tae || 0),
         periodicity: normalizeExpensePeriodicity(item.periodicity || (instrumentType === 'card' && paymentMode === 'pay_end_month' ? 'monthly' : 'monthly')),
         intervalMonths: Math.max(1, Number(item.intervalMonths || decoded.intervalMonths || 1)),
-        settledMonth: String(item.settledMonth || decoded.settledMonth || '').trim()
+        settledMonth: String(item.settledMonth || decoded.settledMonth || '').trim(),
+        payoffFeePct: Number(item.payoffFeePct ?? decoded.payoffFeePct ?? 0),
+        balanceMonth: String(item.balanceMonth || decoded.balanceMonth || '').trim()
       };
     }
     function emptyPersistableState(){
@@ -2497,7 +2533,9 @@
       const monthKey = getDebtPaidMonth(debtId);
       if(!monthKey) return null;
       const override = state.monthAdjustments?.[monthKey]?.debtOverrides?.[debtId];
-      return override?.mode === 'paid' ? { monthKey, amount: Number(override.amount || 0) } : { monthKey, amount: 0 };
+      return override?.mode === 'paid'
+        ? { monthKey, amount: Number(override.amount || 0), recurringAmount: Number(override.recurringAmount || 0) }
+        : { monthKey, amount: 0, recurringAmount: 0 };
     }
     function getDebtOverrideForMonth(debtId, ym){
       const direct = cloneData(monthAdjustmentView(ym)?.debtOverrides?.[debtId] || null);
@@ -2525,6 +2563,24 @@
         return Math.max(0, getDebtMonthlyCharge(d, ym));
       }
       if((d.instrumentType || d.debtKind) === 'loan' || paymentMode === 'installment'){
+        const currentPrincipal = Number(d.currentDebt || 0);
+        if((d.instrumentType || d.debtKind) === 'loan' && currentPrincipal > 0){
+          const balanceMonth = d.balanceMonth || state.defaultStartMonth || ym;
+          let balance = currentPrincipal;
+          let cursor = balanceMonth;
+          const monthlyRate = Math.max(0, Number(d.tin || 0)) / 100 / 12;
+          const scheduledPayment = Math.max(0, Number(d.monthlyPayment || 0));
+          let safe = 0;
+          while(cursor < ym && balance > 0.01 && safe < 240){
+            const interest = balance * monthlyRate;
+            const principalPaid = Math.max(0, Math.min(balance, scheduledPayment - interest));
+            balance = Math.max(0, balance - principalPaid);
+            cursor = addMonthsStr(cursor, 1);
+            safe++;
+          }
+          const feeMultiplier = 1 + Math.max(0, Number(d.payoffFeePct || 0)) / 100;
+          return Math.round(balance * feeMultiplier * 100) / 100;
+        }
         const monthly = Number(d.monthlyPayment || 0);
         if(monthly <= 0 || ym < start) return 0;
         if(d.lastMonth){
@@ -2571,10 +2627,14 @@
     function getDebtRecoveredForMonth(d, ym){
       const paidMonth = getDebtPaidMonth(d.id);
       if(paidMonth && ym === addMonthsStr(paidMonth, 1)){
+        const paidOverride = getDebtPaidOverride(d.id);
+        if(Number(paidOverride?.recurringAmount || 0) > 0){
+          return Number(paidOverride.recurringAmount || 0);
+        }
         const start = d.startMonth || state.defaultStartMonth;
         const previousMonth = addMonthsStr(paidMonth, -1);
         const referenceMonth = previousMonth >= start ? previousMonth : paidMonth;
-        return Number(getDebtRecurringAmountForMonth(d, referenceMonth) || 0);
+        return Number(getDebtMonthlyCharge(d, referenceMonth) || 0);
       }
       return getDebtMonthState(d, ym).recoveredAmount;
     }
@@ -2812,6 +2872,92 @@
         remainingAvailable -= amount;
       });
       return { income, expense, debt, savings, net: income - expense - debt - savings, expenseItems, reserveUsage, savingsUsage };
+    }
+
+    const CALENDAR_STORAGE_KEY = 'dinerozaurio_calendar_settings_v1';
+    function dateIsoLocal(date){
+      return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+    }
+    function dateForMonthDay(ym, day){
+      const [y,m] = ym.split('-').map(Number);
+      return new Date(y, m-1, Math.min(Number(day || 1), new Date(y,m,0).getDate()));
+    }
+    function calendarRule(kind, name){
+      const n = String(name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      if(kind === 'income' && /(nomina|salario|sueldo)/.test(n)) return { day:25, confidence:'alta', note:'Se atribuye al mes siguiente' };
+      if(/alquiler/.test(n)) return { day:1, confidence:'media', note:'Ventana estimada 1–5' };
+      if(/vodafone/.test(n)) return { day:22, confidence:'alta', note:'Último cargo antes de la nómina' };
+      if(/(bbva|bankinter|cetelem|cofidis|revolut|prestamo|tarjeta)/.test(n)) return { day:5, confidence:'media', note:'Patrón de primeros días del mes' };
+      if(/webel|limpieza/.test(n)) return { day:10, confidence:'media', note:'Agrupa las visitas quincenales' };
+      return { day:12, confidence:'baja', note:'Fecha estimada; conviene corregirla con el próximo cargo' };
+    }
+    function buildCalendarEvents(startDate, horizon){
+      const endDate = new Date(startDate); endDate.setDate(endDate.getDate() + horizon);
+      const firstYm = addMonthsStr(dateIsoLocal(startDate).slice(0,7), -1);
+      const lastYm = addMonthsStr(dateIsoLocal(endDate).slice(0,7), 1);
+      const events = [];
+      monthsInRange(firstYm, lastYm).forEach(ym => {
+        (state.incomes || []).forEach(item => {
+          const rule = calendarRule('income', item.name);
+          const salaryNextMonth = rule.note.includes('mes siguiente');
+          const actualYm = salaryNextMonth ? addMonthsStr(ym,-1) : ym;
+          const amount = getScopedAmountForMonth('incomeOverrides', item.id, ym, getIncomeMonthlyCharge(item, ym));
+          if(amount) events.push({ date:dateForMonthDay(actualYm,rule.day), attributedYm:ym, type:'Ingreso', name:item.name || 'Ingreso', amount:Number(amount), confidence:rule.confidence, note:rule.note });
+        });
+        (state.expenses || []).forEach(item => {
+          const amount = getScopedAmountForMonth('expenseOverrides', item.id, ym, getExpenseMonthlyCharge(item, ym));
+          if(!amount) return;
+          const rule = calendarRule('expense', item.name);
+          events.push({ date:dateForMonthDay(ym,rule.day), attributedYm:ym, type:'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:rule.confidence, note:rule.note });
+        });
+        (state.debts || []).forEach(item => {
+          const amount = Number(getDebtMonthlyCharge(item, ym) || 0);
+          if(!amount) return;
+          const name = debtDisplayName(item);
+          const rule = calendarRule('debt', name);
+          events.push({ date:dateForMonthDay(ym,rule.day), attributedYm:ym, type:'Deuda', name, amount:-amount, confidence:rule.confidence, note:rule.note });
+        });
+        const snapshot = buildForecastMonthSnapshot(ym);
+        if(snapshot.savings) events.push({ date:dateForMonthDay(ym,1), attributedYm:ym, type:'Ahorro', name:'Ahorros activos del mes', amount:-Number(snapshot.savings), confidence:'alta', note:'Reserva planificada; no es gasto perdido' });
+      });
+      return events.filter(event => event.date >= startDate && event.date <= endDate).sort((a,b) => a.date - b.date || b.amount - a.amount);
+    }
+    function renderCalendar(){
+      const root = document.getElementById('calendarView');
+      if(!root) return;
+      let settings = {};
+      try{ settings = JSON.parse(localStorage.getItem(CALENDAR_STORAGE_KEY) || '{}'); }catch(_err){}
+      const startInput = document.getElementById('calendarStartDate');
+      const balanceInput = document.getElementById('calendarOpeningBalance');
+      const horizonInput = document.getElementById('calendarHorizon');
+      if(!startInput.value) startInput.value = settings.startDate || dateIsoLocal(new Date());
+      if(balanceInput.value === '') balanceInput.value = settings.openingBalance ?? (state.session?.user?.email === DEBUG_EXPORT_EMAIL ? 165.34 : 0);
+      if(settings.horizon && !horizonInput.dataset.loaded){ horizonInput.value = settings.horizon; horizonInput.dataset.loaded = '1'; }
+      const opening = Number(balanceInput.value || 0);
+      const horizon = Math.max(7, Math.min(120, Number(horizonInput.value || 45)));
+      const startDate = new Date(startInput.value + 'T00:00:00');
+      const events = buildCalendarEvents(startDate, horizon);
+      let running = opening;
+      const rows = events.map(event => {
+        running += event.amount;
+        const negative = running < 0;
+        return `<div class="cashEvent ${negative ? 'negative' : ''}">
+          <div class="cashEventDate">${event.date.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}</div>
+          <div><div class="cashEventName">${escapeHtml(event.name)}</div><div class="cashEventMeta">${event.type} · ${prettyMonthLabel(event.attributedYm)} · ${event.confidence} · ${escapeHtml(event.note)}</div></div>
+          <div class="cashEventAmount ${event.amount >= 0 ? 'in' : 'out'}">${event.amount >= 0 ? '+' : '−'}${euros(Math.abs(event.amount))}</div>
+          <div class="cashEventBalance">Saldo ${euros(running)}</div>
+        </div>`;
+      }).join('');
+      const totalIn = events.filter(e=>e.amount>0).reduce((s,e)=>s+e.amount,0);
+      const totalOut = -events.filter(e=>e.amount<0).reduce((s,e)=>s+e.amount,0);
+      const lowest = events.reduce((acc,event) => { acc.running += event.amount; acc.lowest = Math.min(acc.lowest,acc.running); return acc; }, {running:opening,lowest:opening}).lowest;
+      root.innerHTML = `<div class="calendarSummary">
+        <div class="calendarKpi"><div class="kpiLabel">Saldo inicial</div><div class="kpiValue">${euros(opening)}</div></div>
+        <div class="calendarKpi"><div class="kpiLabel">Entradas</div><div class="kpiValue kpi-green">${euros(totalIn)}</div></div>
+        <div class="calendarKpi"><div class="kpiLabel">Salidas previstas</div><div class="kpiValue kpi-red">${euros(totalOut)}</div></div>
+        <div class="calendarKpi"><div class="kpiLabel">Punto más bajo</div><div class="kpiValue ${lowest < 0 ? 'kpi-red' : 'kpi-cyan'}">${euros(lowest)}</div></div>
+      </div><div class="cashTimeline">${rows || '<div class="panel empty">No hay eventos en este periodo.</div>'}</div>`;
+      localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify({ openingBalance:opening, startDate:startInput.value, horizon }));
     }
     function buildReserveStateThroughMonth(ym){
       let reserve = Number(state.reserveInitial || 0);
@@ -3951,6 +4097,10 @@
           wrap.innerHTML = `<div class="modalGrid">
             <div class="field"><label>Total prestado</label><input id="dTotalBorrowed" class="input" type="number" step="0.01" value="${Number(draft.totalBorrowed||0)}"></div>
             <div class="field"><label>Cuota actual</label><input id="dMonthly" class="input" type="number" step="0.01" value="${Number(draft.monthlyPayment||0)}"></div>
+            <div class="field"><label>Capital pendiente actual</label><input id="dCurrentDebt" class="input" type="number" step="0.01" value="${Number(draft.currentDebt||0)}"></div>
+            <div class="field"><label>Mes del capital pendiente</label><input id="dBalanceMonth" class="input" type="month" value="${draft.balanceMonth||state.defaultStartMonth}"></div>
+            <div class="field"><label>TIN %</label><input id="dTin" class="input" type="number" step="0.01" value="${Number(draft.tin||0)}"></div>
+            <div class="field"><label>Comision cancelacion total %</label><input id="dPayoffFeePct" class="input" type="number" step="0.01" value="${Number(draft.payoffFeePct||0)}"></div>
             <div class="field"><label>Cuotas restantes</label><input id="dRemaining" class="input" type="number" step="1" value="${Number(draft.remainingInstallments||0)}"></div>
             <div class="field"><label>Ultima cuota (opcional)</label><input id="dLastMonth" class="input" type="month" value="${draft.lastMonth||''}"></div>
           </div>`;
@@ -4045,10 +4195,16 @@
         next.tae = 24;
         next.periodicity = 'monthly';
         next.intervalMonths = 1;
+        next.payoffFeePct = 0;
+        next.balanceMonth = '';
 
         if(debtKind === 'loan'){
           next.totalBorrowed = Number(document.getElementById('dTotalBorrowed').value||0);
           next.monthlyPayment = Number(document.getElementById('dMonthly').value||0);
+          next.currentDebt = Number(document.getElementById('dCurrentDebt').value||0);
+          next.balanceMonth = document.getElementById('dBalanceMonth').value || state.defaultStartMonth;
+          next.tin = Number(document.getElementById('dTin').value||0);
+          next.payoffFeePct = Number(document.getElementById('dPayoffFeePct').value||0);
           next.remainingInstallments = Number(document.getElementById('dRemaining').value||0);
           next.lastMonth = document.getElementById('dLastMonth').value || '';
         } else if(subtype === 'revolving'){
@@ -4604,7 +4760,18 @@
             return;
           }
           commitMonthAdjustment(nextAdj => {
-            nextAdj.debtOverrides[debt.id] = { mode:'custom', amount, source, savingsGoalId, scope };
+            const settledThisMonth = getDebtPaidMonth(debt.id) === ym;
+            if(currentOverride.mode === 'paid' || settledThisMonth){
+              nextAdj.debtOverrides[debt.id] = {
+                mode:'paid',
+                amount,
+                source,
+                savingsGoalId,
+                recurringAmount: Number(currentOverride.recurringAmount || getDebtMonthlyCharge(debt, ym) || 0)
+              };
+            } else {
+              nextAdj.debtOverrides[debt.id] = { mode:'custom', amount, source, savingsGoalId, scope };
+            }
           });
         });
         const sourceEl = document.getElementById('md_source');
@@ -4662,11 +4829,12 @@
             return;
           }
           const sourceDebt = state.debts.find(item => item.id === debt.id);
+          const recurringAmount = Number(getDebtRecurringAmountForMonth(debt, ym) || getDebtMonthlyCharge(debt, ym) || 0);
           if(sourceDebt){
             sourceDebt.settledMonth = ym;
           }
           commitMonthAdjustment(nextAdj => {
-            nextAdj.debtOverrides[debt.id] = { mode:'paid', amount, source, savingsGoalId };
+            nextAdj.debtOverrides[debt.id] = { mode:'paid', amount, source, savingsGoalId, recurringAmount };
           });
         });
         const sourceEl = document.getElementById('md_payoff_source');
@@ -5410,12 +5578,14 @@
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           const activeTab = tab.dataset.tab;
-          ['config','current-month','forecast'].forEach(tabId => {
+          ['config','current-month','forecast','calendar'].forEach(tabId => {
             const section = document.getElementById(`tab-${tabId}`);
             if(section) section.classList.toggle('hidden', activeTab !== tabId);
           });
+          if(activeTab === 'calendar') renderCalendar();
         });
       });
+      document.getElementById('calendarRefresh')?.addEventListener('click', renderCalendar);
     }
 
     window.state = state;
