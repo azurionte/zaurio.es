@@ -970,6 +970,7 @@
     const EMAIL_SCAN_PENDING_KEY = 'dinerozaurio_email_scan_pending_v1';
     const GMAIL_READ_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
     let emailScanResults = [];
+    let gmailProviderToken = '';
 
     const state = {
       session: null,
@@ -5859,6 +5860,11 @@
 
     async function requestGmailReadPermission(){
       if(!window.dzSupabase) return;
+      if(gmailProviderToken){
+        closeModal();
+        await startEmailScan({ provider_token:gmailProviderToken });
+        return;
+      }
       sessionStorage.setItem(EMAIL_SCAN_PENDING_KEY,'oauth');
       await window.dzSupabase.auth.signInWithOAuth({
         provider:'google',
@@ -5871,6 +5877,7 @@
     }
 
     function maybeResumeEmailScan(session){
+      if(session?.provider_token) gmailProviderToken = session.provider_token;
       if(sessionStorage.getItem(EMAIL_SCAN_PENDING_KEY) !== 'oauth') return;
       sessionStorage.removeItem(EMAIL_SCAN_PENDING_KEY);
       setTimeout(() => startEmailScan(session), 0);
@@ -6038,8 +6045,9 @@
     async function startEmailScan(session = state.session){
       openEmailScanningModal();
       try{
-        const token = session?.provider_token || state.session?.provider_token;
+        const token = session?.provider_token || gmailProviderToken || state.session?.provider_token;
         if(!token) throw new Error('No se recibió el permiso temporal de Gmail. Vuelve a pulsar Escanear correos.');
+        gmailProviderToken = token;
         const query = encodeURIComponent('newer_than:30d {factura invoice receipt recibo suscripción subscription renovación renewal cuota préstamo financing "saldo pendiente"}');
         const list = await gmailApi(`messages?q=${query}&maxResults=150`,token);
         const ids = (list.messages || []).slice(0,150);
@@ -6182,6 +6190,7 @@
       document.getElementById('logoutBtn').addEventListener('click', async () => {
         if(window.dzSupabase){ await window.dzSupabase.auth.signOut(); }
         state.session = null;
+        gmailProviderToken = '';
         updateDebugExportUi();
         updateTopNavUi();
         flowStateClear();
