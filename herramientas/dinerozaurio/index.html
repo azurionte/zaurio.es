@@ -5971,17 +5971,18 @@
     }
     function detectedPeriodicity(text, merchant = '', isDebt = false){
       const value = normalizeDetectionText(text);
-      if(/cada\s*(?:7\s*dias|semana)|weekly|semanal/.test(value)) return 'weekly';
-      if(/cada\s*(?:14|15)\s*dias|every\s*(?:two|2)\s*weeks|quincenal/.test(value)) return 'biweekly';
-      if(/anual|annual|yearly|cada ano|renovacion anual/.test(value)) return 'yearly';
-      if(/trimestral|quarterly/.test(value)) return 'quarterly';
-      if(/bimestral|every two months/.test(value)) return 'bimonthly';
       const known = normalizeDetectionText(merchant);
       if(/distrokid/.test(known)) return 'yearly';
       if(/webel/.test(known)) return 'biweekly';
       if(/aigues/.test(known)) return 'bimonthly';
       if(/netflix|spotify|vodafone|chatgpt|openai|kivet|iberdrola/.test(known)) return 'monthly';
-      if(isDebt || /mensual|monthly|cada mes|suscrip|subscription|membership|plan recurrente/.test(value)) return 'monthly';
+      if(isDebt) return 'monthly';
+      if(/cada\s*(?:7\s*dias|semana)|weekly|semanal/.test(value)) return 'weekly';
+      if(/cada\s*(?:14|15)\s*dias|every\s*(?:two|2)\s*weeks|quincenal/.test(value)) return 'biweekly';
+      if(/anual|annual|yearly|cada ano|renovacion anual/.test(value)) return 'yearly';
+      if(/trimestral|quarterly/.test(value)) return 'quarterly';
+      if(/bimestral|every two months/.test(value)) return 'bimonthly';
+      if(/mensual|monthly|cada mes|suscrip|subscription|membership|plan recurrente/.test(value)) return 'monthly';
       return 'one_time';
     }
     function detectedDate(text, fallback){
@@ -6077,7 +6078,7 @@
             <div class="field emailDebtOutstanding" style="${item.type==='debt'?'':'display:none'}"><label>Saldo pendiente de la deuda</label><input class="input emailResultOutstanding" type="number" step="0.01" placeholder="Necesario para añadir deuda" value="${item.outstanding||''}"></div>
           </div>
         </div>`).join('') : '<div class="empty">No encontramos cargos suficientemente claros. Ningún dato se ha guardado.</div>'}</div>
-        <div class="btnRow" style="margin-top:18px"><button id="acceptEmailResultsBtn" class="btn primary" ${emailScanResults.length?'':'disabled'}>Añadir seleccionados</button><button id="ignoreEmailResultsBtn" class="btn ghost">Ignorar resultados</button></div>
+        <div class="btnRow" style="margin-top:18px"><button id="acceptEmailResultsBtn" class="btn primary" disabled>Añadir seleccionados</button><button id="ignoreEmailResultsBtn" class="btn ghost">Ignorar resultados</button></div>
       </div>`;
       document.getElementById('closeModalBtn').onclick = () => { emailScanResults=[]; closeModal(); };
       document.getElementById('ignoreEmailResultsBtn').onclick = () => { emailScanResults=[]; closeModal(); };
@@ -6085,6 +6086,10 @@
         const card = select.closest('.emailScanResult');
         card.querySelector('.emailDebtOutstanding').style.display = select.value === 'debt' ? '' : 'none';
       });
+      const refreshAcceptButton = () => {
+        document.getElementById('acceptEmailResultsBtn').disabled = !root.querySelector('.emailResultSelected:checked');
+      };
+      root.querySelectorAll('.emailResultSelected').forEach(checkbox => checkbox.onchange = refreshAcceptButton);
       document.getElementById('acceptEmailResultsBtn').onclick = acceptEmailScanResults;
     }
 
@@ -6118,8 +6123,10 @@
       });
       emailScanResults = [];
       closeModal();
-      touchState();
-      if(accepted.length) setSaveStatus('idle');
+      if(accepted.length){
+        touchState();
+        setSaveStatus('idle');
+      }
     }
 
     function bindUi(){
