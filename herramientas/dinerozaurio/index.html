@@ -5947,39 +5947,49 @@
       const domain = (String(from || '').match(/@([a-z0-9.-]+)/i) || [])[1] || 'Proveedor detectado';
       return domain.replace(/^mail\.|^email\.|^no-?reply\./i,'').split('.')[0].replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()).slice(0,60);
     }
-    function detectedMoney(text, preferredContext = null){
+    function detectedMoney(text, preferredContext = null, options = {}){
       const moneyPattern = /(?:€|EUR|USD|GBP|\$|£)\s*([0-9]{1,6}(?:[.,][0-9]{2})?)|([0-9]{1,6}(?:[.,][0-9]{2})?)\s*(?:€|EUR|USD|GBP|\$|£)/gi;
       const candidates = [];
       const source = String(text || '').slice(0,30000);
+      const maxAmount = Number(options.maxAmount || 5000);
       let match;
       while((match = moneyPattern.exec(source)) && candidates.length < 30){
         const raw = match[1] || match[2] || '';
         const amount = Number(raw.replace(/\.(?=\d{3}(?:\D|$))/g,'').replace(',','.'));
-        if(!Number.isFinite(amount) || amount <= 0) continue;
+        if(!Number.isFinite(amount) || amount <= 0 || amount > maxAmount) continue;
+        if(Number.isInteger(amount) && amount >= 2020 && amount <= 2035) continue;
         const context = normalizeDetectionText(source.slice(Math.max(0,match.index-80),match.index+match[0].length+80));
         let score = 1;
         if(/total|importe|cobrado|charged|pagado|paid|cuota|payment due|a pagar/.test(context)) score += 4;
         if(preferredContext && preferredContext.test(context)) score += 8;
         if(/subtotal|iva|tax|ahorro|descuento|discount/.test(context)) score -= 2;
+        if(/hasta|up to|desde|from only|limite|limit|promocion|promotion|oferta|offer/.test(context)) score -= 8;
         candidates.push({amount,score});
       }
       candidates.sort((a,b)=>b.score-a.score || b.amount-a.amount);
-      return candidates[0]?.amount || 0;
+      return candidates[0]?.score > 0 ? candidates[0].amount : 0;
     }
-    function detectedPeriodicity(text){
+    function detectedPeriodicity(text, merchant = '', isDebt = false){
       const value = normalizeDetectionText(text);
       if(/cada\s*(?:7\s*dias|semana)|weekly|semanal/.test(value)) return 'weekly';
       if(/cada\s*(?:14|15)\s*dias|every\s*(?:two|2)\s*weeks|quincenal/.test(value)) return 'biweekly';
       if(/anual|annual|yearly|cada ano|renovacion anual/.test(value)) return 'yearly';
       if(/trimestral|quarterly/.test(value)) return 'quarterly';
       if(/bimestral|every two months/.test(value)) return 'bimonthly';
-      return 'monthly';
+      const known = normalizeDetectionText(merchant);
+      if(/distrokid/.test(known)) return 'yearly';
+      if(/webel/.test(known)) return 'biweekly';
+      if(/aigues/.test(known)) return 'bimonthly';
+      if(/netflix|spotify|vodafone|chatgpt|openai|kivet|iberdrola/.test(known)) return 'monthly';
+      if(isDebt || /mensual|monthly|cada mes|suscrip|subscription|membership|plan recurrente/.test(value)) return 'monthly';
+      return 'one_time';
     }
     function detectedDate(text, fallback){
       const source = String(text || '');
-      const iso = source.match(/\b(20\d{2})[-/](0?[1-9]|1[0-2])[-/](0?[1-9]|[12]\d|3[01])\b/);
+      const relevant = source.match(/(?:vence|vencimiento|due|renov|renew|cobro|charged|pago|payment|fecha)[^\n.]{0,80}(20\d{2}[-/](?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\d|3[01])|(?:0?[1-9]|[12]\d|3[01])[/-](?:0?[1-9]|1[0-2])[/-]20\d{2})/i)?.[1] || '';
+      const iso = relevant.match(/\b(20\d{2})[-/](0?[1-9]|1[0-2])[-/](0?[1-9]|[12]\d|3[01])\b/);
       if(iso) return `${iso[1]}-${String(iso[2]).padStart(2,'0')}-${String(iso[3]).padStart(2,'0')}`;
-      const european = source.match(/\b(0?[1-9]|[12]\d|3[01])[/-](0?[1-9]|1[0-2])[/-](20\d{2})\b/);
+      const european = relevant.match(/\b(0?[1-9]|[12]\d|3[01])[/-](0?[1-9]|1[0-2])[/-](20\d{2})\b/);
       if(european) return `${european[3]}-${String(european[2]).padStart(2,'0')}-${String(european[1]).padStart(2,'0')}`;
       return dateIsoLocal(fallback);
     }
@@ -5994,19 +6004,22 @@
       const negativeSignals = (normalized.match(/newsletter|oferta|promotion|promocion|codigo de verificacion|verification code|contrasena|password|encuesta/g) || []).length;
       if(!positiveSignals || negativeSignals > positiveSignals) return null;
       const debt = /saldo pendiente|pago minimo|cuota de (?:tu )?(?:prestamo|credito)|loan payment|financiacion|deuda/.test(normalized);
-      const amount = detectedMoney(text, debt ? /cuota|pago minimo|minimum payment|payment due|monthly payment/ : /total|importe cobrado|charged|pagado|paid|a pagar/);
+      const merchant = merchantFromEmail(from,subject,text);
+      const amount = detectedMoney(text, debt ? /cuota|pago minimo|minimum payment|payment due|monthly payment/ : /total|importe cobrado|charged|pagado|paid|a pagar/, { maxAmount:debt ? 50000 : 5000 });
       if(!amount) return null;
-      const outstanding = debt ? detectedMoney(text,/saldo pendiente|deuda total|outstanding balance|capital pendiente/) : 0;
+      const outstanding = debt ? detectedMoney(text,/saldo pendiente|deuda total|outstanding balance|capital pendiente/,{maxAmount:250000}) : 0;
       const date = detectedDate(text,new Date(sent || Date.now()));
-      const confidenceScore = Math.min(0.98,0.45 + Math.min(positiveSignals,4)*0.1 + (amount ? .15 : 0) + (/total|importe cobrado|charged|paid/.test(normalized) ? .08 : 0));
+      const periodicity = detectedPeriodicity(text,merchant,debt);
+      const knownMerchant = /Netflix|Spotify|Vodafone|Iberdrola|Aigües|Webel|DistroKid|ChatGPT|Kivet|Cetelem|Cofidis|Bankinter|BBVA/.test(merchant);
+      const confidenceScore = Math.min(0.98,0.38 + Math.min(positiveSignals,4)*0.08 + (amount ? .12 : 0) + (/total|importe cobrado|charged|paid/.test(normalized) ? .08 : 0) + (knownMerchant ? .12 : 0));
       return {
         id:message.id,
-        selected:true,
+        selected:false,
         type:debt ? 'debt' : 'expense',
-        name:merchantFromEmail(from,subject,text),
+        name:merchant,
         amount,
         outstanding:outstanding === amount ? 0 : outstanding,
-        periodicity:detectedPeriodicity(text),
+        periodicity,
         date,
         confidence:confidenceScore >= .75 ? 'alta' : confidenceScore >= .6 ? 'media' : 'baja',
         occurrences:1
@@ -6026,7 +6039,7 @@
       try{
         const token = session?.provider_token || state.session?.provider_token;
         if(!token) throw new Error('No se recibió el permiso temporal de Gmail. Vuelve a pulsar Escanear correos.');
-        const query = encodeURIComponent('newer_than:30d {factura invoice receipt recibo suscripción subscription renovación renewal cobro charged cuota préstamo financing pago}');
+        const query = encodeURIComponent('newer_than:30d {factura invoice receipt recibo suscripción subscription renovación renewal cuota préstamo financing "saldo pendiente"}');
         const list = await gmailApi(`messages?q=${query}&maxResults=150`,token);
         const ids = (list.messages || []).slice(0,150);
         const progress = document.getElementById('emailScanProgress');
