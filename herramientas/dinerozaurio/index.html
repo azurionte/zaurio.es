@@ -1615,6 +1615,7 @@
       if(text.startsWith(DEBT_META_PREFIX)){
         try{
           const payload = JSON.parse(text.slice(DEBT_META_PREFIX.length));
+          const inferredDebtDay = payload.instrumentType !== 'card' && /bbva/i.test(String(payload.entityName || '')) ? 31 : 5;
           return {
             entityName: String(payload.entityName || '').trim(),
             instrumentName: String(payload.instrumentName || '').trim(),
@@ -1625,7 +1626,7 @@
             settledMonth: String(payload.settledMonth || '').trim(),
             payoffFeePct: Number(payload.payoffFeePct || 0),
             balanceMonth: String(payload.balanceMonth || '').trim(),
-            ...normalizeCalendarFields(payload, {dueDay:5})
+            ...normalizeCalendarFields(payload, {dueDay:inferredDebtDay})
           };
         }catch(err){
           console.error('Error decodificando nombre de deuda', err);
@@ -3028,9 +3029,14 @@
       const n = String(name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
       if(kind === 'income' && /(nomina|salario|sueldo)/.test(n)) return { day:25, confidence:'alta', note:'Se atribuye al mes siguiente' };
       if(/alquiler/.test(n)) return { day:1, confidence:'media', note:'Ventana estimada 1–5' };
-      if(/vodafone/.test(n)) return { day:22, confidence:'alta', note:'Último cargo antes de la nómina' };
+      if(/vodafone/.test(n)) return { day:10, confidence:'alta', note:'Patrón observado: días 9–10' };
+      if(/aigues|agua/.test(n)) return { day:3, confidence:'alta', note:'Patrón observado: primeros días, cobro bimestral' };
+      if(/chatgpt/.test(n)) return { day:29, confidence:'alta', note:'Patrón observado: día 29' };
+      if(/spotify/.test(n)) return { day:9, confidence:'alta', note:'Patrón observado: día 9' };
+      if(/kivet/.test(n)) return { day:3, confidence:'alta', note:'Patrón observado: día 3' };
+      if(/distrokid/.test(n)) return { day:26, confidence:'alta', note:'Renovación anual: 26 de junio' };
       if(/(bbva|bankinter|cetelem|cofidis|revolut|prestamo|tarjeta)/.test(n)) return { day:5, confidence:'media', note:'Patrón de primeros días del mes' };
-      if(/webel|limpieza/.test(n)) return { day:10, confidence:'media', note:'Agrupa las visitas quincenales' };
+      if(/webel|limpieza/.test(n)) return { day:10, confidence:'media', note:'Importe mensual que agrupa las visitas quincenales' };
       if(/madrid|viaje/.test(n)) return { day:18, confidence:'media', note:'Fecha aproximada del viaje o evento' };
       return { day:12, confidence:'baja', note:'Fecha estimada; conviene corregirla con el próximo cargo' };
     }
@@ -3067,7 +3073,7 @@
     }
     function isCalendarBudget(name){
       const n = String(name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      return /^(comida|ocio y caprichos)$/.test(n) || /iberdrola.*reserva|reserva.*luz/.test(n);
+      return /comida|ocio y caprichos|webel|limpieza/.test(n) || /iberdrola.*reserva|reserva.*luz/.test(n);
     }
     function buildCalendarEvents(startDate, horizon){
       const endDate = new Date(startDate); endDate.setDate(endDate.getDate() + Math.max(1,Number(horizon || 1)) - 1);
@@ -3932,7 +3938,8 @@
 
     function makeIncomeRow(item={}){
       const isSalary = /(nomina|salario|sueldo)/i.test(String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,''));
-      const calendar = normalizeCalendarFields(item, { dueDay:isSalary ? 25 : 12, calendarMonthShift:isSalary ? 1 : 0 });
+      const inferred = inferredCalendarRule('income', item.name);
+      const calendar = normalizeCalendarFields(item, { dueDay:inferred.day, calendarMonthShift:isSalary ? 1 : 0 });
       return {
         id: item.id || uid(),
         name: item.name || '',
@@ -3945,7 +3952,8 @@
     }
     function makeExpenseRow(item={}){
       const budget = isCalendarBudget(item.name);
-      const calendar = normalizeCalendarFields(item, { dueDay:budget ? 1 : 12, calendarRuleType:budget ? 'after_salary' : 'fixed_day', calendarBehavior:budget ? 'budget' : 'charge' });
+      const inferred = inferredCalendarRule('expense', item.name);
+      const calendar = normalizeCalendarFields(item, { dueDay:inferred.day, calendarRuleType:budget ? 'after_salary' : 'fixed_day', calendarBehavior:budget ? 'budget' : 'charge', calendarNote:inferred.note });
       return {
         id: item.id || uid(),
         name: item.name || '',
