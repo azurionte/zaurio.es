@@ -3939,7 +3939,12 @@
     function makeIncomeRow(item={}){
       const isSalary = /(nomina|salario|sueldo)/i.test(String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,''));
       const inferred = inferredCalendarRule('income', item.name);
-      const calendar = normalizeCalendarFields(item, { dueDay:inferred.day, calendarMonthShift:isSalary ? 1 : 0 });
+      const legacyPlaceholder = item.calendarConfidence !== 'confirmed'
+        && (!item.calendarRuleType || item.calendarRuleType === 'fixed_day')
+        && Number(item.dueDay || 12) === 12
+        && (!item.calendarNote || /fecha estimada/i.test(item.calendarNote));
+      const calendarSource = legacyPlaceholder ? { ...item, dueDay:null, calendarMonthShift:null, calendarNote:inferred.note } : item;
+      const calendar = normalizeCalendarFields(calendarSource, { dueDay:inferred.day, calendarMonthShift:isSalary ? 1 : 0 });
       return {
         id: item.id || uid(),
         name: item.name || '',
@@ -3953,7 +3958,12 @@
     function makeExpenseRow(item={}){
       const budget = isCalendarBudget(item.name);
       const inferred = inferredCalendarRule('expense', item.name);
-      const calendar = normalizeCalendarFields(item, { dueDay:inferred.day, calendarRuleType:budget ? 'after_salary' : 'fixed_day', calendarBehavior:budget ? 'budget' : 'charge', calendarNote:inferred.note });
+      const legacyPlaceholder = item.calendarConfidence !== 'confirmed'
+        && (!item.calendarRuleType || item.calendarRuleType === 'fixed_day')
+        && Number(item.dueDay || 12) === 12
+        && (!item.calendarNote || /fecha estimada/i.test(item.calendarNote));
+      const calendarSource = legacyPlaceholder ? { ...item, dueDay:null, calendarNote:inferred.note } : item;
+      const calendar = normalizeCalendarFields(calendarSource, { dueDay:inferred.day, calendarRuleType:budget ? 'after_salary' : 'fixed_day', calendarBehavior:budget ? 'budget' : 'charge', calendarNote:inferred.note });
       return {
         id: item.id || uid(),
         name: item.name || '',
