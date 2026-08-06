@@ -4322,8 +4322,8 @@
         next.currentPayment = 0;
         next.creditLimit = 0;
         next.totalBorrowed = 0;
-        next.tin = 20;
-        next.tae = 24;
+        next.tin = Number(draft.tin || 0);
+        next.tae = Number(draft.tae || 0);
         next.periodicity = 'monthly';
         next.intervalMonths = 1;
         next.payoffFeePct = 0;
