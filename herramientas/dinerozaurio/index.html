@@ -343,7 +343,20 @@
     .calendarEventChip.out{background:rgba(251,113,133,.12)}
     .calendarEventChip span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     @media (max-width:900px){.calendarToolbar,.calendarSummary{grid-template-columns:1fr 1fr}.cashEvent{grid-template-columns:78px 1fr}.cashEventAmount,.cashEventBalance{text-align:left}}
-    .saveMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .saveMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:relative}
+    .saveReminderBubble{
+      position:absolute;top:calc(100% + 12px);right:0;z-index:170;width:min(340px,88vw);
+      padding:14px 16px;border-radius:16px;background:#fff;color:#1c1330;
+      border:2px solid var(--pink);box-shadow:0 20px 52px rgba(0,0,0,.42)
+    }
+    .saveReminderBubble::before{
+      content:'';position:absolute;right:28px;top:-9px;width:16px;height:16px;
+      background:#fff;border-left:2px solid var(--pink);border-top:2px solid var(--pink);transform:rotate(45deg)
+    }
+    .saveReminderBubble strong{display:block;font-size:14px;margin-bottom:5px}
+    .saveReminderBubble p{font-size:13px;line-height:1.4;margin:0 0 10px;color:#524563}
+    .saveReminderBubble label{display:flex;align-items:center;gap:8px;font-size:12px;color:#524563}
+    .saveReminderClose{position:absolute;right:8px;top:7px;border:0;background:transparent;color:#524563;font-size:20px;cursor:pointer}
     .saveState{
       font-size:12px;
       color:var(--muted);
@@ -610,7 +623,11 @@
     .emailScanResults{display:grid;gap:12px;margin-top:14px}
     .emailScanResult{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.025)}
     .emailScanResultHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-    .emailScanResultGrid{display:grid;grid-template-columns:1.4fr .8fr .8fr .9fr 1fr;gap:10px}
+    .emailScanResultGrid{display:grid;grid-template-columns:1.35fr .75fr .8fr .9fr 1fr;gap:10px}
+    .emailReviewProgress{height:8px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden;margin:12px 0 16px}
+    .emailReviewProgress span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--pink));border-radius:inherit}
+    .emailExistingSummary{padding:10px 12px;border-radius:12px;background:rgba(34,211,238,.08);border-left:3px solid var(--cyan);font-size:13px;color:#c8f7ff;margin-bottom:12px}
+    .emailReviewActions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px}
     .emailScanSpinner{width:42px;height:42px;border:4px solid rgba(255,255,255,.14);border-top-color:var(--cyan);border-radius:50%;animation:emailScanSpin .8s linear infinite;margin:18px auto}
     @keyframes emailScanSpin{to{transform:rotate(360deg)}}
     @media (max-width:800px){.emailScanResultGrid{grid-template-columns:1fr 1fr}}
@@ -792,6 +809,12 @@
               <span id="saveChangesBadge" class="saveBadge hidden">0</span>
             </button>
             <div id="saveStateText" class="saveState">Sin cambios pendientes</div>
+            <div id="saveReminderBubble" class="saveReminderBubble hidden" role="status" aria-live="polite">
+              <button id="closeSaveReminderBtn" class="saveReminderClose" type="button" aria-label="Cerrar recordatorio">×</button>
+              <strong>Los cambios todavía no están guardados</strong>
+              <p>Revísalos desde el botón Guardar para aprobarlos o descartarlos.</p>
+              <label><input id="hideSaveReminderForever" type="checkbox"> No mostrar este recordatorio en el futuro</label>
+            </div>
           </div>
         </div>
       </div>
@@ -968,8 +991,11 @@
     };
     const DEBUG_EXPORT_EMAIL = 'dmnrobles@gmail.com';
     const EMAIL_SCAN_PENDING_KEY = 'dinerozaurio_email_scan_pending_v1';
+    const SAVE_REMINDER_HIDDEN_KEY = 'dinerozaurio_hide_save_reminder_v1';
     const GMAIL_READ_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
     let emailScanResults = [];
+    let emailScanReviewIndex = 0;
+    let emailScanAcceptedCount = 0;
     let gmailProviderToken = '';
 
     const state = {
@@ -2558,6 +2584,16 @@
       } else {
         label.textContent = 'Sin cambios pendientes';
       }
+    }
+    function hideSaveReminder(){
+      document.getElementById('saveReminderBubble')?.classList.add('hidden');
+    }
+    function showSaveReminder(){
+      if(localStorage.getItem(SAVE_REMINDER_HIDDEN_KEY) === '1') return;
+      const bubble = document.getElementById('saveReminderBubble');
+      if(!bubble) return;
+      bubble.classList.remove('hidden');
+      setTimeout(() => document.getElementById('saveChangesBtn')?.focus(), 0);
     }
     function syncGeneralSettingsFromInputs(){
       const reserveEl = document.getElementById('initialReserve');
@@ -6042,6 +6078,49 @@
       });
       return Array.from(map.values()).sort((a,b)=>({alta:3,media:2,baja:1}[b.confidence]-({alta:3,media:2,baja:1}[a.confidence])) || b.amount-a.amount);
     }
+    function emailServiceKey(value){
+      return normalizeDetectionText(value).replace(/[^a-z0-9]+/g,' ').replace(/\b(premium|business|reserva|servicio|plan|mensual|anual|credito|prestamo|tarjeta)\b/g,' ').replace(/\s+/g,' ').trim();
+    }
+    function emailServiceNamesMatch(a,b){
+      const left = emailServiceKey(a);
+      const right = emailServiceKey(b);
+      if(!left || !right) return false;
+      return left === right || (left.length >= 5 && right.includes(left)) || (right.length >= 5 && left.includes(right));
+    }
+    function existingEmailScanMatch(item){
+      if(item.type === 'debt'){
+        const debt = (state.debts || []).find(entry => [entry.entityName,entry.instrumentName,debtDisplayName(entry)].some(name => emailServiceNamesMatch(item.name,name)));
+        if(!debt) return null;
+        return { kind:'debt', id:debt.id, name:debtDisplayName(debt), amount:Number(debt.monthlyPayment || 0), outstanding:Number(debt.currentDebt || 0), periodicity:'monthly' };
+      }
+      const expense = (state.expenses || []).find(entry => emailServiceNamesMatch(item.name,entry.name));
+      if(!expense) return null;
+      return { kind:'expense', id:expense.id, name:expense.name, amount:Number(expense.amount || 0), periodicity:expense.periodicity || 'monthly' };
+    }
+    function buildEmailReviewProposals(items){
+      const groups = new Map();
+      items.forEach(item => {
+        const key = `${item.type}|${emailServiceKey(item.name)}`;
+        if(!groups.has(key)) groups.set(key,[]);
+        groups.get(key).push(item);
+      });
+      const proposals = [];
+      groups.forEach(group => {
+        const existing = existingEmailScanMatch(group[0]);
+        const recurring = group.filter(item => item.type === 'debt' || item.periodicity !== 'one_time' || existing);
+        if(!recurring.length) return;
+        recurring.sort((a,b) => {
+          if(existing){
+            const distance = Math.abs(a.amount-existing.amount)-Math.abs(b.amount-existing.amount);
+            if(distance) return distance;
+          }
+          const confidence = ({alta:3,media:2,baja:1}[b.confidence]||0)-({alta:3,media:2,baja:1}[a.confidence]||0);
+          return confidence || String(b.date).localeCompare(String(a.date));
+        });
+        proposals.push({ ...recurring[0], action:existing ? 'update' : 'add', existing });
+      });
+      return proposals.sort((a,b) => Number(b.action === 'update')-Number(a.action === 'update') || (({alta:3,media:2,baja:1}[b.confidence]||0)-({alta:3,media:2,baja:1}[a.confidence]||0)));
+    }
     async function startEmailScan(session = state.session){
       openEmailScanningModal();
       try{
@@ -6059,7 +6138,9 @@
           messages.forEach(message => detections.push(detectEmailFinancialItem(message)));
           if(progress) progress.textContent = `Analizados ${Math.min(i+batch.length,ids.length)} de ${ids.length} mensajes candidatos.`;
         }
-        emailScanResults = dedupeEmailDetections(detections);
+        emailScanResults = buildEmailReviewProposals(dedupeEmailDetections(detections));
+        emailScanReviewIndex = 0;
+        emailScanAcceptedCount = 0;
         renderEmailScanResults();
       }catch(err){
         const root = document.getElementById('modalRoot');
@@ -6072,69 +6153,101 @@
     function renderEmailScanResults(){
       const root = document.getElementById('modalRoot');
       root.className = 'modalRoot';
-      const periodicityOptions = item => [['weekly','Semanal'],['biweekly','Cada 14 días'],['monthly','Mensual'],['bimonthly','Bimestral'],['quarterly','Trimestral'],['yearly','Anual'],['one_time','Puntual']].map(([value,label])=>`<option value="${value}" ${item.periodicity===value?'selected':''}>${label}</option>`).join('');
+      if(!emailScanResults.length){
+        root.innerHTML = `<div class="modalCard"><div class="modalHead"><h3>Todo parece al día</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div><div class="empty">No encontramos servicios recurrentes o deudas suficientemente claros. Las compras puntuales se han omitido.</div></div>`;
+        document.getElementById('closeModalBtn').onclick = finishEmailScanReview;
+        return;
+      }
+      const item = emailScanResults[emailScanReviewIndex];
+      const periodicityOptions = [['weekly','Semanal'],['biweekly','Cada 14 días'],['monthly','Mensual'],['bimonthly','Bimestral'],['quarterly','Trimestral'],['yearly','Anual']].map(([value,label])=>`<option value="${value}" ${item.periodicity===value?'selected':''}>${label}</option>`).join('');
+      const progress = Math.round(((emailScanReviewIndex+1)/emailScanResults.length)*100);
+      const isUpdate = item.action === 'update';
+      const shownName = isUpdate ? item.existing.name : item.name;
+      const outstanding = item.outstanding || (isUpdate && item.existing.kind === 'debt' ? item.existing.outstanding : 0) || '';
       root.innerHTML = `<div class="modalCard">
-        <div class="modalHead"><div><h3>Resultados del escaneo</h3><div class="muted">${emailScanResults.length} propuestas. Edita, acepta o ignora antes de guardar.</div></div><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
-        <div class="emailScanResults">${emailScanResults.length ? emailScanResults.map((item,index)=>`<div class="emailScanResult" data-email-result="${index}">
-          <div class="emailScanResultHead"><label><input class="emailResultSelected" type="checkbox" ${item.selected?'checked':''}> Añadir</label><span class="pill">Certeza ${item.confidence}${item.occurrences>1?` · ${item.occurrences} correos`:''}</span></div>
+        <div class="modalHead"><div><h3>${isUpdate?'Posible actualización':'Nuevo servicio detectado'}</h3><div class="muted">Propuesta ${emailScanReviewIndex+1} de ${emailScanResults.length}</div></div><button id="closeModalBtn" class="btn danger">Terminar</button></div>
+        <div class="emailReviewProgress" aria-label="Progreso ${progress}%"><span style="width:${progress}%"></span></div>
+        ${isUpdate ? `<div class="emailExistingSummary"><strong>Ya existe:</strong> ${escapeHtml(item.existing.name)} · ${euros(item.existing.amount)} · ${formatFieldValue('expenses','periodicity',item.existing.periodicity)}. Revisa la propuesta antes de actualizar.</div>` : ''}
+        <div class="emailScanResult" data-email-result="current">
+          <div class="emailScanResultHead"><strong>${escapeHtml(item.name)}</strong><span class="pill">Certeza ${item.confidence}${item.occurrences>1?` · ${item.occurrences} avisos`:''}</span></div>
           <div class="emailScanResultGrid">
-            <div class="field"><label>Proveedor o concepto</label><input class="input emailResultName" value="${escapeHtml(item.name)}"></div>
-            <div class="field"><label>Tipo</label><select class="select emailResultType"><option value="expense" ${item.type==='expense'?'selected':''}>Gasto</option><option value="debt" ${item.type==='debt'?'selected':''}>Deuda</option></select></div>
+            <div class="field"><label>Proveedor o concepto</label><input class="input emailResultName" value="${escapeHtml(shownName)}"></div>
+            <div class="field"><label>Tipo</label><select class="select emailResultType" ${isUpdate?'disabled':''}><option value="expense" ${item.type==='expense'?'selected':''}>Gasto</option><option value="debt" ${item.type==='debt'?'selected':''}>Deuda</option></select></div>
             <div class="field"><label>Importe / cuota</label><input class="input emailResultAmount" type="number" step="0.01" value="${item.amount}"></div>
-            <div class="field"><label>Frecuencia</label><select class="select emailResultPeriodicity">${periodicityOptions(item)}</select></div>
+            <div class="field"><label>Frecuencia</label><select class="select emailResultPeriodicity">${periodicityOptions}</select></div>
             <div class="field"><label>Fecha detectada</label><input class="input emailResultDate" type="date" value="${item.date}"></div>
-            <div class="field emailDebtOutstanding" style="${item.type==='debt'?'':'display:none'}"><label>Saldo pendiente de la deuda</label><input class="input emailResultOutstanding" type="number" step="0.01" placeholder="Necesario para añadir deuda" value="${item.outstanding||''}"></div>
+            <div class="field emailDebtOutstanding" style="${item.type==='debt'?'':'display:none'}"><label>Saldo pendiente de la deuda</label><input class="input emailResultOutstanding" type="number" step="0.01" placeholder="Necesario para añadir una deuda" value="${outstanding}"></div>
           </div>
-        </div>`).join('') : '<div class="empty">No encontramos cargos suficientemente claros. Ningún dato se ha guardado.</div>'}</div>
-        <div class="btnRow" style="margin-top:18px"><button id="acceptEmailResultsBtn" class="btn primary" disabled>Añadir seleccionados</button><button id="ignoreEmailResultsBtn" class="btn ghost">Ignorar resultados</button></div>
+        </div>
+        <div class="emailReviewActions"><button id="ignoreEmailResultBtn" class="btn ghost">Ignorar</button><button id="acceptEmailResultBtn" class="btn primary">${isUpdate?'Actualizar':'Añadir'} y continuar</button></div>
       </div>`;
-      document.getElementById('closeModalBtn').onclick = () => { emailScanResults=[]; closeModal(); };
-      document.getElementById('ignoreEmailResultsBtn').onclick = () => { emailScanResults=[]; closeModal(); };
-      root.querySelectorAll('.emailResultType').forEach(select => select.onchange = () => {
-        const card = select.closest('.emailScanResult');
-        card.querySelector('.emailDebtOutstanding').style.display = select.value === 'debt' ? '' : 'none';
+      document.getElementById('closeModalBtn').onclick = finishEmailScanReview;
+      document.getElementById('ignoreEmailResultBtn').onclick = () => advanceEmailScanReview(false);
+      document.getElementById('acceptEmailResultBtn').onclick = acceptEmailScanResult;
+      document.querySelector('.emailResultType')?.addEventListener('change', event => {
+        document.querySelector('.emailDebtOutstanding').style.display = event.target.value === 'debt' ? '' : 'none';
       });
-      const refreshAcceptButton = () => {
-        document.getElementById('acceptEmailResultsBtn').disabled = !root.querySelector('.emailResultSelected:checked');
-      };
-      root.querySelectorAll('.emailResultSelected').forEach(checkbox => checkbox.onchange = refreshAcceptButton);
-      document.getElementById('acceptEmailResultsBtn').onclick = acceptEmailScanResults;
     }
 
-    function acceptEmailScanResults(){
-      const cards = Array.from(document.querySelectorAll('[data-email-result]'));
-      const invalidDebts = [];
-      const accepted = [];
-      cards.forEach(card => {
-        if(!card.querySelector('.emailResultSelected').checked) return;
-        const result = {
-          name:card.querySelector('.emailResultName').value.trim(),
-          type:card.querySelector('.emailResultType').value,
-          amount:Number(card.querySelector('.emailResultAmount').value || 0),
-          periodicity:card.querySelector('.emailResultPeriodicity').value,
-          date:card.querySelector('.emailResultDate').value,
-          outstanding:Number(card.querySelector('.emailResultOutstanding').value || 0)
-        };
-        if(!result.name || result.amount <= 0) return;
-        if(result.type === 'debt' && result.outstanding <= 0){ invalidDebts.push(result.name); return; }
-        accepted.push(result);
-      });
-      if(invalidDebts.length){ alert(`Indica el saldo pendiente antes de añadir estas deudas: ${invalidDebts.join(', ')}`); return; }
-      accepted.forEach(result => {
-        const startMonth = result.date?.slice(0,7) || state.defaultStartMonth;
-        const dueDay = Number(result.date?.slice(8,10) || 12);
-        if(result.type === 'expense'){
-          state.expenses.push(makeExpenseRow({ name:result.name, amount:result.amount, periodicity:result.periodicity, startMonth, startDate:['weekly','biweekly'].includes(result.periodicity)?result.date:'', dueDay, calendarConfidence:'estimated', calendarNote:'Detectado en Gmail y aprobado por el usuario' }));
-        }else{
-          state.debts.push(makeDebtRow({ entityName:result.name, instrumentName:'Deuda detectada en Gmail', instrumentType:'loan', totalBorrowed:result.outstanding, outstandingBalance:result.outstanding, monthlyPayment:result.amount, remainingInstallments:Math.max(1,Math.ceil(result.outstanding/result.amount)), startMonth, dueDay, calendarConfidence:'estimated', calendarNote:'Detectado en Gmail y aprobado por el usuario' }));
-        }
-      });
+    function finishEmailScanReview(){
       emailScanResults = [];
       closeModal();
-      if(accepted.length){
+      if(emailScanAcceptedCount > 0){
         touchState();
         setSaveStatus('idle');
+        showSaveReminder();
       }
+      emailScanReviewIndex = 0;
+      emailScanAcceptedCount = 0;
+    }
+    function advanceEmailScanReview(accepted){
+      if(accepted) emailScanAcceptedCount += 1;
+      emailScanReviewIndex += 1;
+      if(emailScanReviewIndex >= emailScanResults.length) finishEmailScanReview();
+      else renderEmailScanResults();
+    }
+    function acceptEmailScanResult(){
+      const proposal = emailScanResults[emailScanReviewIndex];
+      const result = {
+        name:document.querySelector('.emailResultName').value.trim(),
+        type:document.querySelector('.emailResultType').value,
+        amount:Number(document.querySelector('.emailResultAmount').value || 0),
+        periodicity:document.querySelector('.emailResultPeriodicity').value,
+        date:document.querySelector('.emailResultDate').value,
+        outstanding:Number(document.querySelector('.emailResultOutstanding').value || 0)
+      };
+      if(!result.name || result.amount <= 0){ alert('Revisa el nombre y el importe antes de continuar.'); return; }
+      if(proposal.action === 'add' && result.type === 'debt' && result.outstanding <= 0){ alert('Indica el saldo pendiente antes de añadir esta deuda.'); return; }
+      const startMonth = result.date?.slice(0,7) || state.defaultStartMonth;
+      const dueDay = Number(result.date?.slice(8,10) || 12);
+      if(proposal.action === 'update'){
+        if(proposal.existing.kind === 'expense'){
+          const existing = state.expenses.find(entry => entry.id === proposal.existing.id);
+          if(existing){
+            existing.name = result.name;
+            existing.amount = result.amount;
+            existing.periodicity = result.periodicity;
+            existing.dueDay = dueDay;
+            if(['weekly','biweekly'].includes(result.periodicity)) existing.startDate = result.date;
+            existing.calendarConfidence = 'estimated';
+            existing.calendarNote = 'Actualizado desde Gmail y pendiente de aprobación';
+          }
+        }else{
+          const existing = state.debts.find(entry => entry.id === proposal.existing.id);
+          if(existing){
+            existing.monthlyPayment = result.amount;
+            existing.dueDay = dueDay;
+            if(result.outstanding > 0) existing.currentDebt = result.outstanding;
+            existing.calendarConfidence = 'estimated';
+            existing.calendarNote = 'Actualizado desde Gmail y pendiente de aprobación';
+          }
+        }
+      }else if(result.type === 'expense'){
+        state.expenses.push(makeExpenseRow({ name:result.name, amount:result.amount, periodicity:result.periodicity, startMonth, startDate:['weekly','biweekly'].includes(result.periodicity)?result.date:'', dueDay, calendarConfidence:'estimated', calendarNote:'Detectado en Gmail y pendiente de aprobación' }));
+      }else{
+        state.debts.push(makeDebtRow({ entityName:result.name, instrumentName:'Deuda detectada en Gmail', instrumentType:'loan', amount:result.outstanding, totalBorrowed:result.outstanding, currentDebt:result.outstanding, monthlyPayment:result.amount, remainingInstallments:Math.max(1,Math.ceil(result.outstanding/result.amount)), startMonth, dueDay, calendarConfidence:'estimated', calendarNote:'Detectado en Gmail y pendiente de aprobación' }));
+      }
+      advanceEmailScanReview(true);
     }
 
     function bindUi(){
@@ -6181,7 +6294,14 @@
         hide('choiceGate'); hide('appShell'); hide('authGate'); show('wizard'); showWizardStep(0);
       });
       document.getElementById('saveChangesBtn').addEventListener('click', () => {
+        hideSaveReminder();
         openSaveModal();
+      });
+      document.getElementById('closeSaveReminderBtn').addEventListener('click', hideSaveReminder);
+      document.getElementById('hideSaveReminderForever').addEventListener('change', (event) => {
+        if(!event.target.checked) return;
+        localStorage.setItem(SAVE_REMINDER_HIDDEN_KEY,'1');
+        hideSaveReminder();
       });
       document.getElementById('exportDebugJsonBtn').addEventListener('click', () => {
         downloadDebugExportJson();
