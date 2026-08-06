@@ -606,6 +606,14 @@
     .modalCard{width:min(760px,100%);max-height:88vh;overflow:auto;background:linear-gradient(180deg,#121933,#0f1630);border:1px solid var(--line);border-radius:20px;padding:18px}
     .modalHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .modalGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .emailScanPanel{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+    .emailScanResults{display:grid;gap:12px;margin-top:14px}
+    .emailScanResult{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.025)}
+    .emailScanResultHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .emailScanResultGrid{display:grid;grid-template-columns:1.4fr .8fr .8fr .9fr 1fr;gap:10px}
+    .emailScanSpinner{width:42px;height:42px;border:4px solid rgba(255,255,255,.14);border-top-color:var(--cyan);border-radius:50%;animation:emailScanSpin .8s linear infinite;margin:18px auto}
+    @keyframes emailScanSpin{to{transform:rotate(360deg)}}
+    @media (max-width:800px){.emailScanResultGrid{grid-template-columns:1fr 1fr}}
     @media (max-width:1100px){.grid-2,.summary,.forecast-toolbar,.modalGrid,.currentMonthGrid{grid-template-columns:1fr}}
   </style>
 </head>
@@ -895,6 +903,16 @@
               </div>
             </div>
           </div>
+
+          <div class="panel fullCol">
+            <div class="emailScanPanel">
+              <div>
+                <h2>Detección desde el correo</h2>
+                <div class="sub">Busca facturas, suscripciones y cuotas de los últimos 30 días. Los correos no se guardan y cada propuesta requiere tu aprobación.</div>
+              </div>
+              <button id="scanEmailBtn" class="btn primary" type="button">Escanear correos</button>
+            </div>
+          </div>
         </div>
       </section></section>
 
@@ -949,6 +967,9 @@
       appBaseUrl: 'https://herramientas.zaurio.es/dinerozaurio/'
     };
     const DEBUG_EXPORT_EMAIL = 'dmnrobles@gmail.com';
+    const EMAIL_SCAN_PENDING_KEY = 'dinerozaurio_email_scan_pending_v1';
+    const GMAIL_READ_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
+    let emailScanResults = [];
 
     const state = {
       session: null,
@@ -1077,7 +1098,7 @@
       if(!text.startsWith(ITEM_META_PREFIX)) return { name:text };
       try{
         const payload = JSON.parse(text.slice(ITEM_META_PREFIX.length));
-        return { name:String(payload.name || '').trim(), ...normalizeCalendarFields(payload), intervalMonths:Math.max(1, Number(payload.intervalMonths || 1)) };
+        return { name:String(payload.name || '').trim(), ...normalizeCalendarFields(payload), intervalMonths:Math.max(1, Number(payload.intervalMonths || 1)), startDate:String(payload.startDate || ''), chargeLeadDays:Math.max(0, Number(payload.chargeLeadDays || 0)) };
       }catch(err){
         console.error('Error decodificando calendario de elemento', err);
         return { name:text };
@@ -1085,7 +1106,7 @@
     }
     function serializeScheduledItemName(item){
       const calendar = normalizeCalendarFields(item);
-      return `${ITEM_META_PREFIX}${JSON.stringify({ name:String(item.name || '').trim(), ...calendar, intervalMonths:Math.max(1, Number(item.intervalMonths || 1)) })}`;
+      return `${ITEM_META_PREFIX}${JSON.stringify({ name:String(item.name || '').trim(), ...calendar, intervalMonths:Math.max(1, Number(item.intervalMonths || 1)), startDate:String(item.startDate || ''), chargeLeadDays:Math.max(0, Number(item.chargeLeadDays || 0)) })}`;
     }
     function debtInstrumentTypeLabel(type){
       return ({
@@ -1102,7 +1123,7 @@
     }
     function normalizeExpensePeriodicity(value){
       const normalized = value || 'monthly';
-      if(['monthly','bimonthly','quarterly','four_monthly','yearly','one_time','custom_months'].includes(normalized)) return normalized;
+      if(['weekly','biweekly','monthly','bimonthly','quarterly','four_monthly','yearly','one_time','custom_months'].includes(normalized)) return normalized;
       return 'monthly';
     }
     function normalizeOneOffExpenseEntry(entry = {}, monthKey = ''){
@@ -1993,12 +2014,15 @@
       }
       if(field === 'periodicity'){
         return ({
+          weekly: 'Semanal',
+          biweekly: 'Cada 14 días',
           monthly: 'Mensual',
           bimonthly: 'Bimestral',
           quarterly: 'Trimestral',
           four_monthly: 'Cuatrimestral',
           custom_months: 'Cada varios meses',
           one_time: 'Una vez',
+          yearly: 'Anual',
           annual: 'Anual'
         })[value] || String(value);
       }
@@ -2591,6 +2615,9 @@
       if(ym < start) return 0;
       if(end && ym > end) return 0;
       const periodicity = normalizeExpensePeriodicity(item.periodicity);
+      if(periodicity === 'weekly' || periodicity === 'biweekly'){
+        return recurringChargeDatesForMonth(item, ym).length * Number(item.amount || 0);
+      }
       const diff = monthDiff(start, ym);
       if(periodicity === 'one_time') return ym === start ? Number(item.amount || 0) : 0;
       if(periodicity === 'bimonthly') return diff % 2 === 0 ? Number(item.amount || 0) : 0;
@@ -2602,6 +2629,33 @@
       }
       if(periodicity === 'yearly') return diff % 12 === 0 ? Number(item.amount || 0) : 0;
       return Number(item.amount || 0);
+    }
+
+    function addDaysLocal(date, days){
+      const next = new Date(date);
+      next.setDate(next.getDate() + Number(days || 0));
+      return next;
+    }
+    function recurringChargeDatesForMonth(item, ym){
+      const periodicity = normalizeExpensePeriodicity(item.periodicity);
+      if(periodicity !== 'weekly' && periodicity !== 'biweekly') return [];
+      const intervalDays = periodicity === 'weekly' ? 7 : 14;
+      const fallbackDate = `${item.startMonth || state.defaultStartMonth}-${String(item.dueDay || 1).padStart(2,'0')}`;
+      const rawAnchor = /^\d{4}-\d{2}-\d{2}$/.test(String(item.startDate || '')) ? item.startDate : fallbackDate;
+      const serviceAnchor = new Date(`${rawAnchor}T12:00:00`);
+      if(Number.isNaN(serviceAnchor.getTime())) return [];
+      const firstCharge = addDaysLocal(serviceAnchor, -Math.max(0, Number(item.chargeLeadDays || 0)));
+      const [year,month] = ym.split('-').map(Number);
+      const monthStart = new Date(year,month-1,1,12);
+      const monthEnd = new Date(year,month,0,12);
+      if(item.endMonth && ym > item.endMonth) return [];
+      const firstAllowedMonth = item.startMonth || rawAnchor.slice(0,7);
+      if(ym < firstAllowedMonth) return [];
+      let cursor = new Date(firstCharge);
+      while(cursor < monthStart) cursor = addDaysLocal(cursor,intervalDays);
+      const out = [];
+      while(cursor <= monthEnd){ out.push(new Date(cursor)); cursor = addDaysLocal(cursor,intervalDays); }
+      return out;
     }
 
     function getIncomeMonthlyCharge(item, ym){
@@ -3065,6 +3119,9 @@
       };
     }
     function calendarRuleLabel(item){
+      const periodicity = normalizeExpensePeriodicity(item?.periodicity);
+      if(periodicity === 'weekly') return 'cada 7 días';
+      if(periodicity === 'biweekly') return 'cada 14 días';
       const rule = item?.calendarRuleType || 'fixed_day';
       if(rule === 'first_day') return 'primer día';
       if(rule === 'last_day') return 'último día';
@@ -3091,6 +3148,17 @@
           if(!amount) return;
           const meta = calendarMetaForItem(item, 'expense', item.name);
           const budget = item.calendarBehavior === 'budget' || isCalendarBudget(item.name);
+          const periodicity = normalizeExpensePeriodicity(item.periodicity);
+          if(periodicity === 'weekly' || periodicity === 'biweekly'){
+            const dates = recurringChargeDatesForMonth(item, ym);
+            const baseTotal = dates.length * Number(item.amount || 0);
+            if(dates.length && Math.abs(Number(amount) - baseTotal) < 0.01){
+              dates.forEach(date => events.push({ date, attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(item.amount || 0), confidence:meta.confidence, note:meta.note || `Se repite cada ${periodicity === 'weekly' ? 7 : 14} días` }));
+            }else if(dates.length){
+              events.push({ date:dates[0], attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:'confirmada', note:'Importe mensual ajustado manualmente' });
+            }
+            return;
+          }
           events.push({ date:calendarDateForItem(ym,item,'expense'), attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:budget ? 'confirmada' : meta.confidence, note:budget ? (item.calendarNote || 'Reserva del mes; no es un cargo único') : meta.note });
         });
         (state.debts || []).forEach(item => {
@@ -3971,6 +4039,8 @@
         kind: item.kind || 'fixed',
         periodicity: normalizeExpensePeriodicity(item.periodicity),
         intervalMonths: Math.max(1, Number(item.intervalMonths || 1)),
+        startDate: String(item.startDate || ''),
+        chargeLeadDays: Math.max(0, Number(item.chargeLeadDays || 0)),
         startMonth: item.startMonth || state.defaultStartMonth,
         endMonth: item.endMonth || null,
         ...calendar
@@ -4260,6 +4330,8 @@
           <div class="field"><label>Monto</label><input id="editAmount" class="input" type="number" step="0.01" value="${Number(item.amount||0)}"></div>
           ${isExpense ? `<div class="field"><label>Frecuencia</label>
             <select id="editPeriodicity" class="select">
+              <option value="weekly" ${normalizeExpensePeriodicity(item.periodicity)==='weekly'?'selected':''}>Semanal</option>
+              <option value="biweekly" ${normalizeExpensePeriodicity(item.periodicity)==='biweekly'?'selected':''}>Cada 14 días</option>
               <option value="monthly" ${normalizeExpensePeriodicity(item.periodicity)==='monthly'?'selected':''}>Mensual</option>
               <option value="bimonthly" ${normalizeExpensePeriodicity(item.periodicity)==='bimonthly'?'selected':''}>Bimestral</option>
               <option value="quarterly" ${normalizeExpensePeriodicity(item.periodicity)==='quarterly'?'selected':''}>Trimestral</option>
@@ -4270,6 +4342,8 @@
             </select>
           </div>
           <div class="field"><label>Mes del proximo recibo</label><input id="editStartMonth" class="input" type="month" value="${item.startMonth||state.defaultStartMonth}"></div>
+          <div class="field" id="recurringDateWrap" style="${['weekly','biweekly'].includes(normalizeExpensePeriodicity(item.periodicity))?'':'display:none'}"><label>Fecha del próximo servicio</label><input id="editStartDate" class="input" type="date" value="${escapeHtml(item.startDate||'')}"></div>
+          <div class="field" id="chargeLeadWrap" style="${['weekly','biweekly'].includes(normalizeExpensePeriodicity(item.periodicity))?'':'display:none'}"><label>Se cobra cuántos días antes</label><input id="editChargeLeadDays" class="input" type="number" min="0" max="14" step="1" value="${Math.max(0, Number(item.chargeLeadDays || 0))}"></div>
           <div class="field" id="customIntervalWrap" style="${normalizeExpensePeriodicity(item.periodicity)==='custom_months'?'':'display:none'}"><label>Cada cuantos meses</label><input id="editIntervalMonths" class="input" type="number" min="1" step="1" value="${Math.max(1, Number(item.intervalMonths || 1))}"></div>` : ''}
           <div class="field"><label>Regla de fecha</label><select id="editCalendarRule" class="select">
             <option value="fixed_day" ${item.calendarRuleType==='fixed_day'?'selected':''}>Día fijo del mes</option>
@@ -4299,8 +4373,13 @@
       if(isExpense){
         const periodicitySelect = document.getElementById('editPeriodicity');
         const customWrap = document.getElementById('customIntervalWrap');
+        const recurringDateWrap = document.getElementById('recurringDateWrap');
+        const chargeLeadWrap = document.getElementById('chargeLeadWrap');
         periodicitySelect.onchange = () => {
           customWrap.style.display = periodicitySelect.value === 'custom_months' ? '' : 'none';
+          const repeatsInDays = ['weekly','biweekly'].includes(periodicitySelect.value);
+          recurringDateWrap.style.display = repeatsInDays ? '' : 'none';
+          chargeLeadWrap.style.display = repeatsInDays ? '' : 'none';
         };
       }
       const updateDueDayVisibility = () => {
@@ -4315,6 +4394,8 @@
           item.periodicity = normalizeExpensePeriodicity(document.getElementById('editPeriodicity').value);
           item.startMonth = document.getElementById('editStartMonth').value || state.defaultStartMonth;
           item.intervalMonths = Math.max(1, Number(document.getElementById('editIntervalMonths')?.value || item.intervalMonths || 1));
+          item.startDate = document.getElementById('editStartDate')?.value || '';
+          item.chargeLeadDays = Math.max(0, Number(document.getElementById('editChargeLeadDays')?.value || 0));
         }
         item.calendarRuleType = document.getElementById('editCalendarRule').value;
         item.dueDay = Math.min(31, Math.max(1, Number(document.getElementById('editDueDay').value || item.dueDay || 12)));
@@ -5370,7 +5451,10 @@
         money = Number(item.amount||0);
       }
       if(type==='expense'){
-        desc = `Gasto ${item.periodicity||'monthly'} · ${calendarRuleLabel(item)} · ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' → ' + item.endMonth : ''}`;
+        const repeatDetail = ['weekly','biweekly'].includes(normalizeExpensePeriodicity(item.periodicity)) && item.startDate
+          ? ` · próximo servicio ${item.startDate}${Number(item.chargeLeadDays||0) ? ` · cobra ${Number(item.chargeLeadDays)} días antes` : ''}`
+          : '';
+        desc = `Gasto ${formatFieldValue('expenses','periodicity',item.periodicity||'monthly')} · ${calendarRuleLabel(item)} · ${item.startMonth||state.defaultStartMonth}${repeatDetail}${item.endMonth ? ' → ' + item.endMonth : ''}`;
         money = Number(item.amount||0);
       }
       if(type==='goal'){
@@ -5730,6 +5814,7 @@
       if(currentFlow === 'app'){
         hide('choiceGate'); hide('wizard'); show('appShell');
         renderManualLists(); renderForecast();
+        maybeResumeEmailScan(session);
         return;
       }
       if(currentFlow === 'wizard'){
@@ -5754,7 +5839,265 @@
       hide('appShell');
     }
 
+    function openEmailScanConsentModal(){
+      const root = document.getElementById('modalRoot');
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead"><h3>Escanear correos</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+        <p>Permite que DineroZaurio consulte tus emails de los últimos 30 días para detectar automáticamente deudas, facturas y suscripciones.</p>
+        <div class="legendNotes" style="margin-top:14px">
+          <div class="legendNote"><span class="legendDot"></span><span>No se guardará ningún correo, asunto ni cuerpo del mensaje.</span></div>
+          <div class="legendNote"><span class="legendDot"></span><span>Solo se conservarán los datos financieros que tú revises y aceptes.</span></div>
+          <div class="legendNote"><span class="legendDot"></span><span>DineroZaurio nunca modificará, eliminará ni enviará emails.</span></div>
+        </div>
+        <div class="btnRow" style="margin-top:18px"><button id="allowEmailScanBtn" class="btn primary">Permitir</button><button id="cancelEmailScanBtn" class="btn ghost">Ahora no</button></div>
+      </div>`;
+      document.getElementById('closeModalBtn').onclick = closeModal;
+      document.getElementById('cancelEmailScanBtn').onclick = closeModal;
+      document.getElementById('allowEmailScanBtn').onclick = requestGmailReadPermission;
+    }
+
+    async function requestGmailReadPermission(){
+      if(!window.dzSupabase) return;
+      sessionStorage.setItem(EMAIL_SCAN_PENDING_KEY,'oauth');
+      await window.dzSupabase.auth.signInWithOAuth({
+        provider:'google',
+        options:{
+          redirectTo:CONFIG.appBaseUrl,
+          scopes:`email profile https://www.googleapis.com/auth/userinfo.email ${GMAIL_READ_SCOPE}`,
+          queryParams:{ access_type:'online', prompt:'consent', include_granted_scopes:'true' }
+        }
+      });
+    }
+
+    function maybeResumeEmailScan(session){
+      if(sessionStorage.getItem(EMAIL_SCAN_PENDING_KEY) !== 'oauth') return;
+      sessionStorage.removeItem(EMAIL_SCAN_PENDING_KEY);
+      setTimeout(() => startEmailScan(session), 0);
+    }
+
+    function openEmailScanningModal(){
+      const root = document.getElementById('modalRoot');
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard" aria-live="polite">
+        <div class="modalHead"><h3>Escaneando correos…</h3></div>
+        <div class="emailScanSpinner"></div>
+        <p id="emailScanProgress" class="muted" style="text-align:center">Buscando facturas y pagos de los últimos 30 días.</p>
+      </div>`;
+    }
+
+    async function gmailApi(path, token){
+      const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, { cache:'no-store', headers:{ Authorization:`Bearer ${token}` } });
+      if(!response.ok){
+        const detail = await response.text();
+        throw new Error(response.status === 403 ? 'Google no concedió acceso de lectura a Gmail o la API todavía no está habilitada.' : `Gmail respondió ${response.status}: ${detail.slice(0,180)}`);
+      }
+      return response.json();
+    }
+
+    function decodeGmailText(data){
+      if(!data) return '';
+      try{
+        const normalized = data.replace(/-/g,'+').replace(/_/g,'/');
+        const bytes = Uint8Array.from(atob(normalized), c => c.charCodeAt(0));
+        return new TextDecoder('utf-8').decode(bytes);
+      }catch(_err){ return ''; }
+    }
+    function extractGmailPartText(part){
+      if(!part) return '';
+      let out = '';
+      if(part.body?.data && (part.mimeType === 'text/plain' || part.mimeType === 'text/html')) out += decodeGmailText(part.body.data) + '\n';
+      (part.parts || []).forEach(child => { out += extractGmailPartText(child); });
+      return out;
+    }
+    function textOnlyEmail(raw){
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(String(raw || ''),'text/html');
+      return (doc.body?.textContent || raw || '').replace(/\s+/g,' ').trim().slice(0,30000);
+    }
+    function normalizeDetectionText(value){
+      return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    }
+    function emailHeader(message,name){
+      return message.payload?.headers?.find(header => String(header.name || '').toLowerCase() === name.toLowerCase())?.value || '';
+    }
+    function merchantFromEmail(from, subject, text){
+      const haystack = normalizeDetectionText(`${from} ${subject} ${text.slice(0,1200)}`);
+      const known = [
+        ['ChatGPT / OpenAI',/openai|chatgpt/],['Netflix',/netflix/],['Spotify',/spotify/],['Vodafone',/vodafone/],
+        ['Iberdrola',/iberdrola/],['Aigües de Barcelona',/aigues|agbar/],['Webel',/webel/],['DistroKid',/distrokid/],
+        ['Apple',/apple\.com|itunes/],['Google',/google play|google payments/],['Amazon',/amazon/],['Kivet',/kivet/],
+        ['Cetelem',/cetelem/],['Cofidis',/cofidis/],['Revolut',/revolut/],['Bankinter',/bankinter/],['BBVA',/bbva/]
+      ];
+      const match = known.find(([_name,rule]) => rule.test(haystack));
+      if(match) return match[0];
+      const display = String(from || '').split('<')[0].replace(/["']/g,'').trim();
+      if(display && !/@/.test(display)) return display.slice(0,60);
+      const domain = (String(from || '').match(/@([a-z0-9.-]+)/i) || [])[1] || 'Proveedor detectado';
+      return domain.replace(/^mail\.|^email\.|^no-?reply\./i,'').split('.')[0].replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()).slice(0,60);
+    }
+    function detectedMoney(text){
+      const moneyPattern = /(?:€|EUR|USD|GBP|\$|£)\s*([0-9]{1,6}(?:[.,][0-9]{2})?)|([0-9]{1,6}(?:[.,][0-9]{2})?)\s*(?:€|EUR|USD|GBP|\$|£)/gi;
+      const candidates = [];
+      const source = String(text || '').slice(0,30000);
+      let match;
+      while((match = moneyPattern.exec(source)) && candidates.length < 30){
+        const raw = match[1] || match[2] || '';
+        const amount = Number(raw.replace(/\.(?=\d{3}(?:\D|$))/g,'').replace(',','.'));
+        if(!Number.isFinite(amount) || amount <= 0) continue;
+        const context = normalizeDetectionText(source.slice(Math.max(0,match.index-80),match.index+match[0].length+80));
+        let score = 1;
+        if(/total|importe|cobrado|charged|pagado|paid|cuota|payment due|a pagar/.test(context)) score += 4;
+        if(/subtotal|iva|tax|ahorro|descuento|discount/.test(context)) score -= 2;
+        candidates.push({amount,score});
+      }
+      candidates.sort((a,b)=>b.score-a.score || b.amount-a.amount);
+      return candidates[0]?.amount || 0;
+    }
+    function detectedPeriodicity(text){
+      const value = normalizeDetectionText(text);
+      if(/cada\s*(?:7\s*dias|semana)|weekly|semanal/.test(value)) return 'weekly';
+      if(/cada\s*(?:14|15)\s*dias|every\s*(?:two|2)\s*weeks|quincenal/.test(value)) return 'biweekly';
+      if(/anual|annual|yearly|cada ano|renovacion anual/.test(value)) return 'yearly';
+      if(/trimestral|quarterly/.test(value)) return 'quarterly';
+      if(/bimestral|every two months/.test(value)) return 'bimonthly';
+      return 'monthly';
+    }
+    function detectedDate(text, fallback){
+      const source = String(text || '');
+      const iso = source.match(/\b(20\d{2})[-/](0?[1-9]|1[0-2])[-/](0?[1-9]|[12]\d|3[01])\b/);
+      if(iso) return `${iso[1]}-${String(iso[2]).padStart(2,'0')}-${String(iso[3]).padStart(2,'0')}`;
+      const european = source.match(/\b(0?[1-9]|[12]\d|3[01])[/-](0?[1-9]|1[0-2])[/-](20\d{2})\b/);
+      if(european) return `${european[3]}-${String(european[2]).padStart(2,'0')}-${String(european[1]).padStart(2,'0')}`;
+      return dateIsoLocal(fallback);
+    }
+    function detectEmailFinancialItem(message){
+      const subject = emailHeader(message,'Subject');
+      const from = emailHeader(message,'From');
+      const sent = emailHeader(message,'Date');
+      const rawBody = extractGmailPartText(message.payload);
+      const text = textOnlyEmail(`${subject} ${rawBody}`);
+      const normalized = normalizeDetectionText(`${from} ${subject} ${text}`);
+      const positiveSignals = (normalized.match(/factura|invoice|receipt|recibo|suscrip|subscription|renov|renewal|cobro|charged|pagado|payment|cuota|prestamo|loan|financi|saldo pendiente|pago minimo/g) || []).length;
+      const negativeSignals = (normalized.match(/newsletter|oferta|promotion|promocion|codigo de verificacion|verification code|contrasena|password|encuesta/g) || []).length;
+      if(!positiveSignals || negativeSignals > positiveSignals) return null;
+      const amount = detectedMoney(text);
+      if(!amount) return null;
+      const debt = /saldo pendiente|pago minimo|cuota de (?:tu )?(?:prestamo|credito)|loan payment|financiacion|deuda/.test(normalized);
+      const date = detectedDate(text,new Date(sent || Date.now()));
+      const confidenceScore = Math.min(0.98,0.45 + Math.min(positiveSignals,4)*0.1 + (amount ? .15 : 0) + (/total|importe cobrado|charged|paid/.test(normalized) ? .08 : 0));
+      return {
+        id:message.id,
+        selected:true,
+        type:debt ? 'debt' : 'expense',
+        name:merchantFromEmail(from,subject,text),
+        amount,
+        outstanding:0,
+        periodicity:detectedPeriodicity(text),
+        date,
+        confidence:confidenceScore >= .75 ? 'alta' : confidenceScore >= .6 ? 'media' : 'baja',
+        occurrences:1
+      };
+    }
+    function dedupeEmailDetections(items){
+      const map = new Map();
+      items.filter(Boolean).forEach(item => {
+        const key = `${item.type}|${normalizeDetectionText(item.name)}|${item.amount.toFixed(2)}|${item.periodicity}`;
+        if(!map.has(key)) map.set(key,item);
+        else map.get(key).occurrences += 1;
+      });
+      return Array.from(map.values()).sort((a,b)=>({alta:3,media:2,baja:1}[b.confidence]-({alta:3,media:2,baja:1}[a.confidence])) || b.amount-a.amount);
+    }
+    async function startEmailScan(session = state.session){
+      openEmailScanningModal();
+      try{
+        const token = session?.provider_token || state.session?.provider_token;
+        if(!token) throw new Error('No se recibió el permiso temporal de Gmail. Vuelve a pulsar Escanear correos.');
+        const query = encodeURIComponent('newer_than:30d {factura invoice receipt recibo suscripción subscription renovación renewal cobro charged cuota préstamo financing pago}');
+        const list = await gmailApi(`messages?q=${query}&maxResults=150`,token);
+        const ids = (list.messages || []).slice(0,150);
+        const progress = document.getElementById('emailScanProgress');
+        const detections = [];
+        for(let i=0;i<ids.length;i+=10){
+          const batch = ids.slice(i,i+10);
+          const messages = await Promise.all(batch.map(entry => gmailApi(`messages/${entry.id}?format=full`,token)));
+          messages.forEach(message => detections.push(detectEmailFinancialItem(message)));
+          if(progress) progress.textContent = `Analizados ${Math.min(i+batch.length,ids.length)} de ${ids.length} mensajes candidatos.`;
+        }
+        emailScanResults = dedupeEmailDetections(detections);
+        renderEmailScanResults();
+      }catch(err){
+        const root = document.getElementById('modalRoot');
+        root.className = 'modalRoot';
+        root.innerHTML = `<div class="modalCard"><div class="modalHead"><h3>No se pudo escanear Gmail</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div><p>${escapeHtml(err.message || 'Error desconocido')}</p><p class="muted">Comprueba que Gmail API esté habilitada en el proyecto de Google asociado a DineroZaurio.</p></div>`;
+        document.getElementById('closeModalBtn').onclick = closeModal;
+      }
+    }
+
+    function renderEmailScanResults(){
+      const root = document.getElementById('modalRoot');
+      root.className = 'modalRoot';
+      const periodicityOptions = item => [['weekly','Semanal'],['biweekly','Cada 14 días'],['monthly','Mensual'],['bimonthly','Bimestral'],['quarterly','Trimestral'],['yearly','Anual'],['one_time','Puntual']].map(([value,label])=>`<option value="${value}" ${item.periodicity===value?'selected':''}>${label}</option>`).join('');
+      root.innerHTML = `<div class="modalCard">
+        <div class="modalHead"><div><h3>Resultados del escaneo</h3><div class="muted">${emailScanResults.length} propuestas. Edita, acepta o ignora antes de guardar.</div></div><button id="closeModalBtn" class="btn danger">Cerrar</button></div>
+        <div class="emailScanResults">${emailScanResults.length ? emailScanResults.map((item,index)=>`<div class="emailScanResult" data-email-result="${index}">
+          <div class="emailScanResultHead"><label><input class="emailResultSelected" type="checkbox" ${item.selected?'checked':''}> Añadir</label><span class="pill">Certeza ${item.confidence}${item.occurrences>1?` · ${item.occurrences} correos`:''}</span></div>
+          <div class="emailScanResultGrid">
+            <div class="field"><label>Proveedor o concepto</label><input class="input emailResultName" value="${escapeHtml(item.name)}"></div>
+            <div class="field"><label>Tipo</label><select class="select emailResultType"><option value="expense" ${item.type==='expense'?'selected':''}>Gasto</option><option value="debt" ${item.type==='debt'?'selected':''}>Deuda</option></select></div>
+            <div class="field"><label>Importe / cuota</label><input class="input emailResultAmount" type="number" step="0.01" value="${item.amount}"></div>
+            <div class="field"><label>Frecuencia</label><select class="select emailResultPeriodicity">${periodicityOptions(item)}</select></div>
+            <div class="field"><label>Fecha detectada</label><input class="input emailResultDate" type="date" value="${item.date}"></div>
+            <div class="field emailDebtOutstanding" style="${item.type==='debt'?'':'display:none'}"><label>Saldo pendiente de la deuda</label><input class="input emailResultOutstanding" type="number" step="0.01" placeholder="Necesario para añadir deuda" value="${item.outstanding||''}"></div>
+          </div>
+        </div>`).join('') : '<div class="empty">No encontramos cargos suficientemente claros. Ningún dato se ha guardado.</div>'}</div>
+        <div class="btnRow" style="margin-top:18px"><button id="acceptEmailResultsBtn" class="btn primary" ${emailScanResults.length?'':'disabled'}>Añadir seleccionados</button><button id="ignoreEmailResultsBtn" class="btn ghost">Ignorar resultados</button></div>
+      </div>`;
+      document.getElementById('closeModalBtn').onclick = () => { emailScanResults=[]; closeModal(); };
+      document.getElementById('ignoreEmailResultsBtn').onclick = () => { emailScanResults=[]; closeModal(); };
+      root.querySelectorAll('.emailResultType').forEach(select => select.onchange = () => {
+        const card = select.closest('.emailScanResult');
+        card.querySelector('.emailDebtOutstanding').style.display = select.value === 'debt' ? '' : 'none';
+      });
+      document.getElementById('acceptEmailResultsBtn').onclick = acceptEmailScanResults;
+    }
+
+    function acceptEmailScanResults(){
+      const cards = Array.from(document.querySelectorAll('[data-email-result]'));
+      const invalidDebts = [];
+      const accepted = [];
+      cards.forEach(card => {
+        if(!card.querySelector('.emailResultSelected').checked) return;
+        const result = {
+          name:card.querySelector('.emailResultName').value.trim(),
+          type:card.querySelector('.emailResultType').value,
+          amount:Number(card.querySelector('.emailResultAmount').value || 0),
+          periodicity:card.querySelector('.emailResultPeriodicity').value,
+          date:card.querySelector('.emailResultDate').value,
+          outstanding:Number(card.querySelector('.emailResultOutstanding').value || 0)
+        };
+        if(!result.name || result.amount <= 0) return;
+        if(result.type === 'debt' && result.outstanding <= 0){ invalidDebts.push(result.name); return; }
+        accepted.push(result);
+      });
+      if(invalidDebts.length){ alert(`Indica el saldo pendiente antes de añadir estas deudas: ${invalidDebts.join(', ')}`); return; }
+      accepted.forEach(result => {
+        const startMonth = result.date?.slice(0,7) || state.defaultStartMonth;
+        const dueDay = Number(result.date?.slice(8,10) || 12);
+        if(result.type === 'expense'){
+          state.expenses.push(makeExpenseRow({ name:result.name, amount:result.amount, periodicity:result.periodicity, startMonth, startDate:['weekly','biweekly'].includes(result.periodicity)?result.date:'', dueDay, calendarConfidence:'estimated', calendarNote:'Detectado en Gmail y aprobado por el usuario' }));
+        }else{
+          state.debts.push(makeDebtRow({ entityName:result.name, instrumentName:'Deuda detectada en Gmail', instrumentType:'loan', totalBorrowed:result.outstanding, outstandingBalance:result.outstanding, monthlyPayment:result.amount, remainingInstallments:Math.max(1,Math.ceil(result.outstanding/result.amount)), startMonth, dueDay, calendarConfidence:'estimated', calendarNote:'Detectado en Gmail y aprobado por el usuario' }));
+        }
+      });
+      emailScanResults = [];
+      closeModal();
+      touchState();
+      if(accepted.length) setSaveStatus('idle');
+    }
+
     function bindUi(){
+      document.getElementById('scanEmailBtn').addEventListener('click', openEmailScanConsentModal);
       document.getElementById('googleLoginBtn').addEventListener('click', async () => {
         if(!window.dzSupabase) return;
         await window.dzSupabase.auth.signInWithOAuth({
