@@ -6163,7 +6163,7 @@
       const progress = Math.round(((emailScanReviewIndex+1)/emailScanResults.length)*100);
       const isUpdate = item.action === 'update';
       const shownName = isUpdate ? item.existing.name : item.name;
-      const outstanding = item.outstanding || (isUpdate && item.existing.kind === 'debt' ? item.existing.outstanding : 0) || '';
+      const outstanding = (isUpdate && item.existing.kind === 'debt' ? item.existing.outstanding : item.outstanding) || '';
       root.innerHTML = `<div class="modalCard">
         <div class="modalHead"><div><h3>${isUpdate?'Posible actualización':'Nuevo servicio detectado'}</h3><div class="muted">Propuesta ${emailScanReviewIndex+1} de ${emailScanResults.length}</div></div><button id="closeModalBtn" class="btn danger">Terminar</button></div>
         <div class="emailReviewProgress" aria-label="Progreso ${progress}%"><span style="width:${progress}%"></span></div>
