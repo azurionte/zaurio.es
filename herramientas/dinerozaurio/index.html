@@ -5398,6 +5398,13 @@
         },0) + Number(adj.extraExpenseAmount || 0) + cashOneOffExpensesTotal(m);
         const expenseExtras = [
           ...(Number(adj.extraExpenseAmount || 0) ? [{ name:adj.extraExpenseName || 'Gasto extraordinario', amount:Number(adj.extraExpenseAmount || 0) }] : []),
+          ...state.expenses
+            .filter(entry => normalizeExpensePeriodicity(entry.periodicity) === 'one_time')
+            .map(entry => ({
+              name:entry.name || 'Gasto puntual',
+              amount:getScopedAmountForMonth('expenseOverrides',entry.id,m,getExpenseMonthlyCharge(entry,m))
+            }))
+            .filter(entry => Number(entry.amount || 0) > 0),
           ...monthOneOffExpenses(m)
             .filter(entry => (entry.paymentSource === 'salary' || entry.paymentSource === 'reserve') && Number(entry.amount || 0) > 0)
             .map(entry => ({ name:entry.name || 'Gasto puntual', amount:Number(entry.amount || 0) }))
