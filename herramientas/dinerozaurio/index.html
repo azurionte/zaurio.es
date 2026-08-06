@@ -2911,7 +2911,7 @@
           events.push({ date:dateForMonthDay(ym,rule.day), attributedYm:ym, type:'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:rule.confidence, note:rule.note });
         });
         (state.debts || []).forEach(item => {
-          const amount = Number(getDebtMonthlyCharge(item, ym) || 0);
+          const amount = Number(getDebtAmountForMonth(item, ym) || 0);
           if(!amount) return;
           const name = debtDisplayName(item);
           const rule = calendarRule('debt', name);
