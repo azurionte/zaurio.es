@@ -999,14 +999,14 @@
         const oldId = item.id;
         const newId = ensureUuid(oldId);
         incomeMap[oldId] = newId;
-        return { ...item, id: newId };
+        return makeIncomeRow({ ...item, id: newId });
       });
 
       state.expenses = (state.expenses || []).map(item => {
         const oldId = item.id;
         const newId = ensureUuid(oldId);
         expenseMap[oldId] = newId;
-        return { ...item, id: newId, periodicity: normalizeExpensePeriodicity(item.periodicity), intervalMonths: Math.max(1, Number(item.intervalMonths || 1)) };
+        return makeExpenseRow({ ...item, id: newId });
       });
 
       state.debts = (state.debts || []).map(item => {
@@ -1020,7 +1020,7 @@
         const oldId = item.id;
         const newId = ensureUuid(oldId);
         goalMap[oldId] = newId;
-        return { ...item, id: newId };
+        return makeGoalRow({ ...item, id: newId });
       });
 
       Object.keys(state.monthAdjustments || {}).forEach(monthKey => {
@@ -1059,6 +1059,34 @@
       return JSON.parse(JSON.stringify(v));
     }
     const DEBT_META_PREFIX = '__DZMETA__';
+    const ITEM_META_PREFIX = '__DZITEM__';
+    function normalizeCalendarFields(item = {}, defaults = {}){
+      const allowedRules = ['fixed_day','first_day','last_day','after_salary'];
+      const calendarRuleType = allowedRules.includes(item.calendarRuleType) ? item.calendarRuleType : (defaults.calendarRuleType || 'fixed_day');
+      return {
+        calendarRuleType,
+        dueDay: Math.min(31, Math.max(1, Number(item.dueDay || defaults.dueDay || 12))),
+        calendarMonthShift: Math.max(0, Math.min(1, Number(item.calendarMonthShift ?? defaults.calendarMonthShift ?? 0))),
+        calendarBehavior: item.calendarBehavior === 'budget' ? 'budget' : (defaults.calendarBehavior || 'charge'),
+        calendarConfidence: item.calendarConfidence === 'confirmed' ? 'confirmed' : (defaults.calendarConfidence || 'estimated'),
+        calendarNote: String(item.calendarNote || defaults.calendarNote || '').trim()
+      };
+    }
+    function decodeScheduledItemName(rawName){
+      const text = String(rawName || '').trim();
+      if(!text.startsWith(ITEM_META_PREFIX)) return { name:text };
+      try{
+        const payload = JSON.parse(text.slice(ITEM_META_PREFIX.length));
+        return { name:String(payload.name || '').trim(), ...normalizeCalendarFields(payload), intervalMonths:Math.max(1, Number(payload.intervalMonths || 1)) };
+      }catch(err){
+        console.error('Error decodificando calendario de elemento', err);
+        return { name:text };
+      }
+    }
+    function serializeScheduledItemName(item){
+      const calendar = normalizeCalendarFields(item);
+      return `${ITEM_META_PREFIX}${JSON.stringify({ name:String(item.name || '').trim(), ...calendar, intervalMonths:Math.max(1, Number(item.intervalMonths || 1)) })}`;
+    }
     function debtInstrumentTypeLabel(type){
       return ({
         card: 'Tarjeta',
@@ -1583,7 +1611,7 @@
     }
     function decodeDebtStorageName(rawName, fallbackType = 'loan'){
       const text = String(rawName || '').trim();
-      if(!text) return { entityName:'', instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'', payoffFeePct:0, balanceMonth:'' };
+      if(!text) return { entityName:'', instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'', payoffFeePct:0, balanceMonth:'', ...normalizeCalendarFields({}, {dueDay:5}) };
       if(text.startsWith(DEBT_META_PREFIX)){
         try{
           const payload = JSON.parse(text.slice(DEBT_META_PREFIX.length));
@@ -1596,13 +1624,14 @@
             intervalMonths: Math.max(1, Number(payload.intervalMonths || 1)),
             settledMonth: String(payload.settledMonth || '').trim(),
             payoffFeePct: Number(payload.payoffFeePct || 0),
-            balanceMonth: String(payload.balanceMonth || '').trim()
+            balanceMonth: String(payload.balanceMonth || '').trim(),
+            ...normalizeCalendarFields(payload, {dueDay:5})
           };
         }catch(err){
           console.error('Error decodificando nombre de deuda', err);
         }
       }
-      return { entityName:text, instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'', payoffFeePct:0, balanceMonth:'' };
+      return { entityName:text, instrumentName:'', instrumentType:fallbackType, creditLimit:0, totalBorrowed:0, intervalMonths:1, settledMonth:'', payoffFeePct:0, balanceMonth:'', ...normalizeCalendarFields({}, {dueDay:5}) };
     }
     function debtEntityName(item){
       return String(item?.entityName || item?.name || '').trim();
@@ -1637,7 +1666,8 @@
         intervalMonths: Math.max(1, Number(item?.intervalMonths || 1)),
         settledMonth: String(item?.settledMonth || '').trim(),
         payoffFeePct: Number(item?.payoffFeePct || 0),
-        balanceMonth: String(item?.balanceMonth || '').trim()
+        balanceMonth: String(item?.balanceMonth || '').trim(),
+        ...normalizeCalendarFields(item, {dueDay:5})
       })}`;
     }
     function normalizeDebtItem(item = {}){
@@ -1674,7 +1704,8 @@
         intervalMonths: Math.max(1, Number(item.intervalMonths || decoded.intervalMonths || 1)),
         settledMonth: String(item.settledMonth || decoded.settledMonth || '').trim(),
         payoffFeePct: Number(item.payoffFeePct ?? decoded.payoffFeePct ?? 0),
-        balanceMonth: String(item.balanceMonth || decoded.balanceMonth || '').trim()
+        balanceMonth: String(item.balanceMonth || decoded.balanceMonth || '').trim(),
+        ...normalizeCalendarFields({ ...decoded, ...item }, {dueDay:5})
       };
     }
     function emptyPersistableState(){
@@ -2993,7 +3024,7 @@
       const [y,m] = ym.split('-').map(Number);
       return new Date(y, m-1, Math.min(Number(day || 1), new Date(y,m,0).getDate()));
     }
-    function calendarRule(kind, name){
+    function inferredCalendarRule(kind, name){
       const n = String(name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
       if(kind === 'income' && /(nomina|salario|sueldo)/.test(n)) return { day:25, confidence:'alta', note:'Se atribuye al mes siguiente' };
       if(/alquiler/.test(n)) return { day:1, confidence:'media', note:'Ventana estimada 1–5' };
@@ -3002,6 +3033,37 @@
       if(/webel|limpieza/.test(n)) return { day:10, confidence:'media', note:'Agrupa las visitas quincenales' };
       if(/madrid|viaje/.test(n)) return { day:18, confidence:'media', note:'Fecha aproximada del viaje o evento' };
       return { day:12, confidence:'baja', note:'Fecha estimada; conviene corregirla con el próximo cargo' };
+    }
+    function salaryCalendarDay(){
+      const salary = (state.incomes || []).find(item => /(nomina|salario|sueldo)/i.test(String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
+      return Math.min(31, Math.max(1, Number(salary?.dueDay || 25)));
+    }
+    function calendarDateForItem(ym, item, kind){
+      const inferred = inferredCalendarRule(kind, item?.name || debtDisplayName(item || {}));
+      const configured = normalizeCalendarFields(item || {}, { dueDay:inferred.day, calendarMonthShift:kind === 'income' && inferred.note.includes('mes siguiente') ? 1 : 0 });
+      if(configured.calendarRuleType === 'after_salary'){
+        const salaryDay = salaryCalendarDay();
+        return dateForMonthDay(addMonthsStr(ym,-1), salaryDay + 1);
+      }
+      const actualYm = kind === 'income' && configured.calendarMonthShift ? addMonthsStr(ym,-configured.calendarMonthShift) : ym;
+      if(configured.calendarRuleType === 'first_day') return dateForMonthDay(actualYm,1);
+      if(configured.calendarRuleType === 'last_day') return dateForMonthDay(actualYm,31);
+      return dateForMonthDay(actualYm,configured.dueDay || inferred.day);
+    }
+    function calendarMetaForItem(item, kind, name){
+      const inferred = inferredCalendarRule(kind, name);
+      const configured = normalizeCalendarFields(item || {}, { dueDay:inferred.day });
+      return {
+        confidence: configured.calendarConfidence === 'confirmed' ? 'confirmada' : 'estimada',
+        note: configured.calendarNote || (configured.calendarConfidence === 'confirmed' ? 'Fecha configurada y confirmada' : inferred.note)
+      };
+    }
+    function calendarRuleLabel(item){
+      const rule = item?.calendarRuleType || 'fixed_day';
+      if(rule === 'first_day') return 'primer día';
+      if(rule === 'last_day') return 'último día';
+      if(rule === 'after_salary') return 'día después de la nómina';
+      return `día ${Math.min(31, Math.max(1, Number(item?.dueDay || 12)))}`;
     }
     function isCalendarBudget(name){
       const n = String(name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -3014,47 +3076,55 @@
       const events = [];
       monthsInRange(firstYm, lastYm).forEach(ym => {
         (state.incomes || []).forEach(item => {
-          const rule = calendarRule('income', item.name);
-          const salaryNextMonth = rule.note.includes('mes siguiente');
-          const actualYm = salaryNextMonth ? addMonthsStr(ym,-1) : ym;
+          const meta = calendarMetaForItem(item, 'income', item.name);
           const amount = getScopedAmountForMonth('incomeOverrides', item.id, ym, getIncomeMonthlyCharge(item, ym));
-          if(amount) events.push({ date:dateForMonthDay(actualYm,rule.day), attributedYm:ym, type:'Ingreso', name:item.name || 'Ingreso', amount:Number(amount), confidence:rule.confidence, note:rule.note });
+          if(amount) events.push({ date:calendarDateForItem(ym,item,'income'), attributedYm:ym, type:'Ingreso', name:item.name || 'Ingreso', amount:Number(amount), confidence:meta.confidence, note:meta.note });
         });
         (state.expenses || []).forEach(item => {
           const amount = getScopedAmountForMonth('expenseOverrides', item.id, ym, getExpenseMonthlyCharge(item, ym));
           if(!amount) return;
-          const rule = calendarRule('expense', item.name);
-          const budget = isCalendarBudget(item.name);
-          events.push({ date:dateForMonthDay(ym,budget ? 1 : rule.day), attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:budget ? 'alta' : rule.confidence, note:budget ? 'Reserva del mes; no es un cargo único en esta fecha' : rule.note });
+          const meta = calendarMetaForItem(item, 'expense', item.name);
+          const budget = item.calendarBehavior === 'budget' || isCalendarBudget(item.name);
+          events.push({ date:calendarDateForItem(ym,item,'expense'), attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:budget ? 'confirmada' : meta.confidence, note:budget ? (item.calendarNote || 'Reserva del mes; no es un cargo único') : meta.note });
         });
         (state.debts || []).forEach(item => {
           const amount = Number(getDebtAmountForMonth(item, ym) || 0);
           if(!amount) return;
           const name = debtDisplayName(item);
-          const rule = calendarRule('debt', name);
-          events.push({ date:dateForMonthDay(ym,rule.day), attributedYm:ym, type:'Deuda', name, amount:-amount, confidence:rule.confidence, note:rule.note });
+          const meta = calendarMetaForItem(item, 'debt', name);
+          events.push({ date:calendarDateForItem(ym,item,'debt'), attributedYm:ym, type:'Deuda', name, amount:-amount, confidence:meta.confidence, note:meta.note });
         });
         const snapshot = buildForecastMonthSnapshot(ym);
-        if(snapshot.savings) events.push({ date:dateForMonthDay(ym,1), attributedYm:ym, type:'Ahorro', name:'Ahorros activos del mes', amount:-Number(snapshot.savings), confidence:'alta', note:'Reserva planificada; no es gasto perdido' });
+        let scheduledGoalTotal = 0;
+        (state.goals || []).forEach(goal => {
+          const amount = getGoalMonthlyCharge(goal, ym, Number.POSITIVE_INFINITY).amount;
+          if(!amount) return;
+          scheduledGoalTotal += Number(amount);
+          const meta = calendarMetaForItem(goal, 'goal', goal.name);
+          events.push({ date:calendarDateForItem(ym,goal,'goal'), attributedYm:ym, type:'Ahorro', name:goal.name || 'Ahorro', amount:-Number(amount), confidence:meta.confidence, note:goal.calendarNote || 'Reserva planificada; no es gasto perdido' });
+        });
+        const remainingSavings = Math.max(0, Number(snapshot.savings || 0) - scheduledGoalTotal);
+        if(remainingSavings) events.push({ date:dateForMonthDay(ym,1), attributedYm:ym, type:'Ahorro', name:'Ahorro extra del mes', amount:-remainingSavings, confidence:'confirmada', note:'Ajuste mensual de ahorro' });
         const adj = adjustmentForMonth(ym);
         if(Number(adj.extraIncomeAmount || 0)){
           const name = adj.extraIncomeName || 'Ingreso extraordinario';
-          const rule = calendarRule('income', name);
-          events.push({ date:dateForMonthDay(ym,rule.day), attributedYm:ym, type:'Ingreso extraordinario', name, amount:Number(adj.extraIncomeAmount), confidence:'alta', note:'Movimiento puntual incluido en la previsión' });
+          const inferred = inferredCalendarRule('income', name);
+          events.push({ date:dateForMonthDay(ym,inferred.day), attributedYm:ym, type:'Ingreso extraordinario', name, amount:Number(adj.extraIncomeAmount), confidence:'confirmada', note:'Movimiento puntual incluido en la previsión' });
         }
         if(Number(adj.extraExpenseAmount || 0)){
           const name = adj.extraExpenseName || 'Gasto extraordinario';
-          const rule = calendarRule('expense', name);
-          events.push({ date:dateForMonthDay(ym,rule.day), attributedYm:ym, type:'Gasto extraordinario', name, amount:-Number(adj.extraExpenseAmount), confidence:'media', note:'Movimiento puntual incluido en la previsión' });
+          const inferred = inferredCalendarRule('expense', name);
+          events.push({ date:dateForMonthDay(ym,inferred.day), attributedYm:ym, type:'Gasto extraordinario', name, amount:-Number(adj.extraExpenseAmount), confidence:'estimada', note:'Movimiento puntual incluido en la previsión' });
         }
         monthOneOffExpenses(ym).filter(entry => entry.paymentSource === 'salary' || entry.paymentSource === 'reserve').forEach(entry => {
           const name = entry.name || 'Gasto puntual';
-          const rule = calendarRule('expense', name);
-          events.push({ date:dateForMonthDay(ym,rule.day), attributedYm:ym, type:'Gasto puntual', name, amount:-Number(entry.amount || 0), confidence:'media', note:'Movimiento puntual incluido en la previsión' });
+          const exactDate = entry.entryDate && /^\d{4}-\d{2}-\d{2}$/.test(entry.entryDate) ? new Date(`${entry.entryDate}T12:00:00`) : dateForMonthDay(ym,inferredCalendarRule('expense',name).day);
+          events.push({ date:exactDate, attributedYm:ym, type:'Gasto puntual', name, amount:-Number(entry.amount || 0), confidence:entry.entryDate ? 'confirmada' : 'estimada', note:'Movimiento puntual incluido en la previsión' });
         });
         monthCardTransfers(ym).forEach(entry => {
           const name = entry.name || 'Traspaso desde tarjeta';
-          events.push({ date:dateForMonthDay(ym,5), attributedYm:ym, type:'Entrada financiada', name, amount:Number(entry.amount || 0), confidence:'alta', note:'Liquidez recibida desde una tarjeta' });
+          const exactDate = entry.entryDate && /^\d{4}-\d{2}-\d{2}$/.test(entry.entryDate) ? new Date(`${entry.entryDate}T12:00:00`) : dateForMonthDay(ym,5);
+          events.push({ date:exactDate, attributedYm:ym, type:'Entrada financiada', name, amount:Number(entry.amount || 0), confidence:entry.entryDate ? 'confirmada' : 'estimada', note:'Liquidez recibida desde una tarjeta' });
         });
       });
       return events.filter(event => event.date >= startDate && event.date <= endDate).sort((a,b) => a.date - b.date || b.amount - a.amount);
@@ -3664,7 +3734,7 @@
           const rows = state.incomes.map(it => ({
             id: ensureUuid(it.id),
             plan_id: planId,
-            name: it.name || 'Ingreso',
+            name: serializeScheduledItemName({ ...it, name:it.name || 'Ingreso' }),
             amount: Number(it.amount || 0),
             periodicity: it.periodicity || 'monthly',
             start_month: it.startMonth || state.defaultStartMonth,
@@ -3678,7 +3748,7 @@
           const rows = state.expenses.map(it => ({
             id: ensureUuid(it.id),
             plan_id: planId,
-            name: it.name || 'Gasto',
+            name: serializeScheduledItemName({ ...it, name:it.name || 'Gasto' }),
             amount: Number(it.amount || 0),
             kind: it.kind || 'fixed',
             periodicity: it.periodicity || 'monthly',
@@ -3716,7 +3786,7 @@
           const rows = state.goals.map(it => ({
             id: ensureUuid(it.id),
             plan_id: planId,
-            name: it.name || 'Ahorro',
+            name: serializeScheduledItemName({ ...it, name:it.name || 'Ahorro' }),
             goal_type: it.goalType || 'fixed',
             monthly_amount: Number(it.monthlyAmount || 0),
             target_total: Number(it.targetTotal || 0),
@@ -3773,7 +3843,7 @@
 
       state.incomes = (incomeRes.data || []).map(it => makeIncomeRow({
         id: ensureUuid(it.id),
-        name: it.name,
+        ...decodeScheduledItemName(it.name),
         amount: Number(it.amount || 0),
         periodicity: it.periodicity || 'monthly',
         startMonth: it.start_month || state.defaultStartMonth,
@@ -3781,7 +3851,7 @@
       }));
       state.expenses = (expenseRes.data || []).map(it => makeExpenseRow({
         id: ensureUuid(it.id),
-        name: it.name,
+        ...decodeScheduledItemName(it.name),
         amount: Number(it.amount || 0),
         kind: it.kind || 'fixed',
         periodicity: it.periodicity || 'monthly',
@@ -3809,7 +3879,7 @@
       }));
       state.goals = (goalRes.data || []).map(it => makeGoalRow({
         id: ensureUuid(it.id),
-        name: it.name,
+        ...decodeScheduledItemName(it.name),
         goalType: it.goal_type || 'fixed',
         monthlyAmount: Number(it.monthly_amount || 0),
         targetTotal: Number(it.target_total || 0),
@@ -3861,16 +3931,21 @@
 
 
     function makeIncomeRow(item={}){
+      const isSalary = /(nomina|salario|sueldo)/i.test(String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+      const calendar = normalizeCalendarFields(item, { dueDay:isSalary ? 25 : 12, calendarMonthShift:isSalary ? 1 : 0 });
       return {
         id: item.id || uid(),
         name: item.name || '',
         amount: Number(item.amount || 0),
         periodicity: item.periodicity || 'monthly',
         startMonth: item.startMonth || state.defaultStartMonth,
-        endMonth: item.endMonth || null
+        endMonth: item.endMonth || null,
+        ...calendar
       };
     }
     function makeExpenseRow(item={}){
+      const budget = isCalendarBudget(item.name);
+      const calendar = normalizeCalendarFields(item, { dueDay:budget ? 1 : 12, calendarRuleType:budget ? 'after_salary' : 'fixed_day', calendarBehavior:budget ? 'budget' : 'charge' });
       return {
         id: item.id || uid(),
         name: item.name || '',
@@ -3879,10 +3954,12 @@
         periodicity: normalizeExpensePeriodicity(item.periodicity),
         intervalMonths: Math.max(1, Number(item.intervalMonths || 1)),
         startMonth: item.startMonth || state.defaultStartMonth,
-        endMonth: item.endMonth || null
+        endMonth: item.endMonth || null,
+        ...calendar
       };
     }
     function makeGoalRow(item={}){
+      const calendar = normalizeCalendarFields(item, { dueDay:1, calendarBehavior:'budget' });
       return {
         id: item.id || uid(),
         name: item.name || '',
@@ -3890,7 +3967,8 @@
         monthlyAmount: Number(item.monthlyAmount || item.amount || 0),
         targetTotal: Number(item.targetTotal || 0),
         startMonth: item.startMonth || state.defaultStartMonth,
-        endMonth: item.endMonth || null
+        endMonth: item.endMonth || null,
+        ...calendar
       };
     }
     function makeDebtRow(item={}){
@@ -4175,6 +4253,17 @@
           </div>
           <div class="field"><label>Mes del proximo recibo</label><input id="editStartMonth" class="input" type="month" value="${item.startMonth||state.defaultStartMonth}"></div>
           <div class="field" id="customIntervalWrap" style="${normalizeExpensePeriodicity(item.periodicity)==='custom_months'?'':'display:none'}"><label>Cada cuantos meses</label><input id="editIntervalMonths" class="input" type="number" min="1" step="1" value="${Math.max(1, Number(item.intervalMonths || 1))}"></div>` : ''}
+          <div class="field"><label>Regla de fecha</label><select id="editCalendarRule" class="select">
+            <option value="fixed_day" ${item.calendarRuleType==='fixed_day'?'selected':''}>Día fijo del mes</option>
+            <option value="first_day" ${item.calendarRuleType==='first_day'?'selected':''}>Primer día del mes</option>
+            <option value="last_day" ${item.calendarRuleType==='last_day'?'selected':''}>Último día del mes</option>
+            <option value="after_salary" ${item.calendarRuleType==='after_salary'?'selected':''}>Día después de la nómina</option>
+          </select></div>
+          <div class="field" id="editDueDayWrap"><label>Día previsto</label><input id="editDueDay" class="input" type="number" min="1" max="31" value="${Number(item.dueDay||12)}"></div>
+          ${kind === 'income' ? `<div class="field"><label>Mes que financia</label><select id="editMonthShift" class="select"><option value="0" ${Number(item.calendarMonthShift||0)===0?'selected':''}>El mismo mes</option><option value="1" ${Number(item.calendarMonthShift||0)===1?'selected':''}>El mes siguiente</option></select></div>` : ''}
+          ${isExpense ? `<div class="field"><label>Cómo se muestra</label><select id="editCalendarBehavior" class="select"><option value="charge" ${item.calendarBehavior!=='budget'?'selected':''}>Cargo en una fecha</option><option value="budget" ${item.calendarBehavior==='budget'?'selected':''}>Presupuesto reservado</option></select></div>` : ''}
+          <div class="field"><label>Certeza de la fecha</label><select id="editCalendarConfidence" class="select"><option value="confirmed" ${item.calendarConfidence==='confirmed'?'selected':''}>Confirmada</option><option value="estimated" ${item.calendarConfidence!=='confirmed'?'selected':''}>Estimada</option></select></div>
+          <div class="field"><label>Nota de calendario</label><input id="editCalendarNote" class="input" placeholder="Ej. suele variar 2–3 días" value="${escapeHtml(item.calendarNote||'')}"></div>
         </div>
         <div class="btnRow" style="margin-top:16px"><button id="saveSimpleBtn" class="btn primary">Guardar</button></div>
       </div>`;
@@ -4196,6 +4285,11 @@
           customWrap.style.display = periodicitySelect.value === 'custom_months' ? '' : 'none';
         };
       }
+      const updateDueDayVisibility = () => {
+        document.getElementById('editDueDayWrap').style.display = document.getElementById('editCalendarRule').value === 'fixed_day' ? '' : 'none';
+      };
+      document.getElementById('editCalendarRule').onchange = updateDueDayVisibility;
+      updateDueDayVisibility();
       document.getElementById('saveSimpleBtn').onclick = () => {
         item.name = document.getElementById('editName').value.trim();
         item.amount = Number(document.getElementById('editAmount').value||0);
@@ -4204,6 +4298,12 @@
           item.startMonth = document.getElementById('editStartMonth').value || state.defaultStartMonth;
           item.intervalMonths = Math.max(1, Number(document.getElementById('editIntervalMonths')?.value || item.intervalMonths || 1));
         }
+        item.calendarRuleType = document.getElementById('editCalendarRule').value;
+        item.dueDay = Math.min(31, Math.max(1, Number(document.getElementById('editDueDay').value || item.dueDay || 12)));
+        item.calendarConfidence = document.getElementById('editCalendarConfidence').value;
+        item.calendarNote = document.getElementById('editCalendarNote').value.trim();
+        if(kind === 'income') item.calendarMonthShift = Number(document.getElementById('editMonthShift').value || 0);
+        if(isExpense) item.calendarBehavior = document.getElementById('editCalendarBehavior').value;
         closeModal(); persistAndRefresh().catch(err => console.error(err));
       };
     }
@@ -4224,6 +4324,8 @@
           <div class="field"><label id="goalAmountLabel">${(item.goalType||'fixed')==='fixed'?'Monto por mes':'Objetivo total'}</label><input id="goalAmount" class="input" type="number" step="0.01" value="${(item.goalType||'fixed')==='fixed'?Number(item.monthlyAmount||0):Number(item.targetTotal||0)}"></div>
           <div class="field"><label>Desde</label><input id="goalStart" class="input" type="month" value="${item.startMonth||state.defaultStartMonth}"></div>
           <div class="field"><label>Hasta (opcional)</label><input id="goalEnd" class="input" type="month" value="${item.endMonth||''}"></div>
+          <div class="field"><label>Regla de fecha</label><select id="goalCalendarRule" class="select"><option value="fixed_day" ${item.calendarRuleType==='fixed_day'?'selected':''}>Día fijo</option><option value="first_day" ${item.calendarRuleType==='first_day'?'selected':''}>Primer día del mes</option><option value="after_salary" ${item.calendarRuleType==='after_salary'?'selected':''}>Día después de la nómina</option></select></div>
+          <div class="field"><label>Día previsto</label><input id="goalDueDay" class="input" type="number" min="1" max="31" value="${Number(item.dueDay||1)}"></div>
         </div>
         <div class="btnRow" style="margin-top:16px"><button id="saveGoalBtn" class="btn primary">Guardar ahorro</button></div>
       </div>`;
@@ -4245,6 +4347,8 @@
         item.goalType = document.getElementById('goalType').value;
         item.startMonth = document.getElementById('goalStart').value || state.defaultStartMonth;
         item.endMonth = document.getElementById('goalEnd').value || null;
+        item.calendarRuleType = document.getElementById('goalCalendarRule').value;
+        item.dueDay = Math.min(31, Math.max(1, Number(document.getElementById('goalDueDay').value || 1)));
         if(item.goalType === 'fixed'){
           item.monthlyAmount = Number(document.getElementById('goalAmount').value||0);
           item.targetTotal = 0;
@@ -4276,6 +4380,10 @@
             </select>
           </div>
           <div class="field"><label>Empieza en</label><input id="debtStart" class="input" type="month" value="${draft.startMonth||state.defaultStartMonth}"></div>
+          <div class="field"><label>Regla de cobro</label><select id="debtCalendarRule" class="select"><option value="fixed_day" ${draft.calendarRuleType==='fixed_day'?'selected':''}>Día fijo del mes</option><option value="first_day" ${draft.calendarRuleType==='first_day'?'selected':''}>Primer día del mes</option><option value="last_day" ${draft.calendarRuleType==='last_day'?'selected':''}>Último día del mes</option></select></div>
+          <div class="field"><label>Día previsto</label><input id="debtDueDay" class="input" type="number" min="1" max="31" value="${Number(draft.dueDay||5)}"></div>
+          <div class="field"><label>Certeza de la fecha</label><select id="debtCalendarConfidence" class="select"><option value="confirmed" ${draft.calendarConfidence==='confirmed'?'selected':''}>Confirmada</option><option value="estimated" ${draft.calendarConfidence!=='confirmed'?'selected':''}>Estimada</option></select></div>
+          <div class="field"><label>Nota de calendario</label><input id="debtCalendarNote" class="input" value="${escapeHtml(draft.calendarNote||'')}"></div>
           <div class="field" id="debtPaymentModeWrap"><label>Forma de pago</label>
             <select id="debtSubtype" class="select">
               <option value="revolving" ${draft.paymentMode==='revolving'?'selected':''}>Revolving</option>
@@ -4384,6 +4492,10 @@
           cardSubtype: debtKind === 'card' ? subtype : null,
           startMonth: (document.getElementById('dStartMonthInline')?.value || document.getElementById('debtStart').value || state.defaultStartMonth)
         });
+        next.calendarRuleType = document.getElementById('debtCalendarRule').value;
+        next.dueDay = Math.min(31, Math.max(1, Number(document.getElementById('debtDueDay').value || 5)));
+        next.calendarConfidence = document.getElementById('debtCalendarConfidence').value;
+        next.calendarNote = document.getElementById('debtCalendarNote').value.trim();
         next.amount = 0;
         next.monthlyPayment = 0;
         next.remainingInstallments = 0;
@@ -5236,25 +5348,25 @@
       let displayName = item.name || 'Sin nombre';
       let extraHtml = '';
       if(type==='income'){
-        desc = `Ingreso · ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' → ' + item.endMonth : ''}`;
+        desc = `Ingreso · ${calendarRuleLabel(item)} · ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' → ' + item.endMonth : ''}`;
         money = Number(item.amount||0);
       }
       if(type==='expense'){
-        desc = `Gasto ${item.periodicity||'monthly'} · ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' → ' + item.endMonth : ''}`;
+        desc = `Gasto ${item.periodicity||'monthly'} · ${calendarRuleLabel(item)} · ${item.startMonth||state.defaultStartMonth}${item.endMonth ? ' → ' + item.endMonth : ''}`;
         money = Number(item.amount||0);
       }
       if(type==='goal'){
         if((item.goalType||'fixed') === 'fixed'){
-          desc = `Ahorro fijo · ${item.startMonth||state.defaultStartMonth} → ${item.endMonth||'sin fin'}`;
+          desc = `Ahorro fijo · ${calendarRuleLabel(item)} · ${item.startMonth||state.defaultStartMonth} → ${item.endMonth||'sin fin'}`;
           money = Number(item.monthlyAmount||0);
         } else {
-          desc = `Objetivo total · ${item.startMonth||state.defaultStartMonth} → ${item.endMonth||'sin fin'}`;
+          desc = `Objetivo total · ${calendarRuleLabel(item)} · ${item.startMonth||state.defaultStartMonth} → ${item.endMonth||'sin fin'}`;
           money = Number(item.targetTotal||0);
         }
       }
       if(type==='debt'){
         displayName = debtDisplayName(item);
-        desc = debtDescription(item, state.defaultStartMonth);
+        desc = `${debtDescription(item, state.defaultStartMonth)} · cobra ${calendarRuleLabel(item)}`;
         money = debtBaseDisplayAmount(item, state.defaultStartMonth);
         const estimatedEnd = getDebtEstimatedEndMonth(item, todayMonth());
         extraHtml = `<div class="debtInsights">
