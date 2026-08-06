@@ -313,7 +313,7 @@
     }
     .saveBadge.hidden{display:none !important}
 
-    .calendarToolbar{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr)) auto;gap:12px;align-items:end}
+    .calendarToolbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
     .calendarSummary{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin:14px 0}
     .calendarKpi{background:rgba(14,26,43,.74);border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:14px}
     .calendarKpi .kpiLabel{color:#94a3b8;font-size:.78rem;margin-bottom:6px}
@@ -324,6 +324,24 @@
     .cashEventDate{font-weight:800}.cashEventName{font-weight:700}.cashEventMeta{color:#94a3b8;font-size:.78rem;margin-top:3px}
     .cashEventAmount,.cashEventBalance{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
     .cashEventAmount.in{color:#4ade80}.cashEventAmount.out{color:#fb7185}
+    .viewToggle{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;padding:3px;background:#0c1330}
+    .viewToggle button{border:0;border-radius:9px;padding:9px 12px;background:transparent;color:var(--muted);font-weight:800;cursor:pointer}
+    .viewToggle button.active{background:#26356c;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.22)}
+    .legendNotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:12px}
+    .legendNote{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-left:3px solid #53659f;background:rgba(15,23,42,.48);border-radius:4px 10px 10px 4px;color:var(--muted);font-size:12px;line-height:1.4}
+    .legendDot{width:8px;height:8px;border-radius:50%;background:var(--cyan);margin-top:4px;flex:0 0 auto}
+    .calendarMonths{display:grid;gap:16px}
+    .calendarMonth{border:1px solid var(--line);border-radius:18px;background:#0c1330;padding:14px;overflow:auto}
+    .calendarMonth h3{margin:0 0 12px;text-transform:capitalize}
+    .calendarWeekdays,.calendarGrid{display:grid;grid-template-columns:repeat(7,minmax(118px,1fr));min-width:826px}
+    .calendarWeekdays div{padding:6px 8px;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase}
+    .calendarDay{min-height:126px;padding:8px;border-top:1px solid rgba(148,163,184,.15);border-right:1px solid rgba(148,163,184,.1);background:rgba(15,23,42,.38)}
+    .calendarDay.outside{opacity:.28;background:transparent}
+    .calendarDayNumber{font-weight:900;margin-bottom:6px}
+    .calendarDayBalance{font-size:11px;color:#cbd5e1;margin-top:7px;padding-top:5px;border-top:1px solid rgba(148,163,184,.12)}
+    .calendarEventChip{display:flex;justify-content:space-between;gap:5px;margin-top:4px;padding:4px 5px;border-radius:7px;background:rgba(96,165,250,.12);font-size:10px;line-height:1.2}
+    .calendarEventChip.out{background:rgba(251,113,133,.12)}
+    .calendarEventChip span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     @media (max-width:900px){.calendarToolbar,.calendarSummary{grid-template-columns:1fr 1fr}.cashEvent{grid-template-columns:78px 1fr}.cashEventAmount,.cashEventBalance{text-align:left}}
     .saveMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .saveState{
@@ -562,6 +580,14 @@
     .debtBreakdownDetails[open] .debtBreakdownArrow{transform:rotate(180deg)}
     .debtBreakdownList{display:grid;gap:5px;margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,.62)}
     .debtBreakdownItem{display:flex;justify-content:space-between;gap:10px}
+    .expenseExtrasDetails{grid-column:1/-1}
+    .expenseExtrasDetails summary{display:grid;grid-template-columns:1fr auto;gap:8px;cursor:pointer;list-style:none;color:var(--muted)}
+    .expenseExtrasDetails summary::-webkit-details-marker{display:none}
+    .expenseExtrasLabel{display:flex;align-items:center;gap:6px}
+    .expenseExtrasArrow{font-size:15px;transition:transform .15s ease}
+    .expenseExtrasDetails[open] .expenseExtrasArrow{transform:rotate(180deg)}
+    .expenseExtrasList{display:grid;gap:5px;margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,.62)}
+    .expenseExtrasItem{display:flex;justify-content:space-between;gap:10px}
     .monthHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
     .monthHead h4{margin:0}
     .monthAlertBtn{min-width:40px;padding:8px 10px;font-size:18px;line-height:1}
@@ -882,13 +908,11 @@
             <div class="field"><label>Desde</label><input id="forecastFrom" class="input" type="month" /></div>
             <div class="field"><label>Hasta</label><input id="forecastTo" class="input" type="month" /></div>
             <div class="field"><label>Inventario de deudas</label><button id="toggleSettledDebts" class="btn ghost" type="button" aria-pressed="false">Ocultar saldadas</button></div>
-            <div class="field"><label>Leyenda</label><div class="pill">Recuperado = cuota liberada al terminar una deuda</div></div>
-            <div class="field"><label>Leyenda</label><div class="pill">Sobrante = ingreso - gastos - deuda - ahorro</div></div>
-            <div class="field"><label>Leyenda</label><div class="pill">Colchón = saldo inicial + todos los sobrantes mensuales acumulados</div></div>
           </div>
-          <div class="legend">
-            <span class="pill">Primera parte: la base ya no se rompe al entrar.</span>
-            <span class="pill">Siguiente parte: modales y ajustes por mes.</span>
+          <div class="legendNotes" aria-label="Cómo leer la previsión">
+            <div class="legendNote"><span class="legendDot"></span><span><strong>Recuperado</strong>: cuota que dejas de pagar al terminar una deuda.</span></div>
+            <div class="legendNote"><span class="legendDot"></span><span><strong>Sobrante</strong>: ingreso menos gastos, deuda y ahorro de ese mes.</span></div>
+            <div class="legendNote"><span class="legendDot"></span><span><strong>Colchón</strong>: saldo inicial más todos los sobrantes acumulados.</span></div>
           </div>
         </div>
         <div id="forecastWarnings"></div><div id="cardBalancesPanel" class="cardBalancesPanel"></div><div id="monthsGrid" class="months-grid"></div>
@@ -904,9 +928,10 @@
             <div class="field" id="calendarManualBalanceField"><label>Saldo en la fecha inicial</label><input id="calendarOpeningBalance" class="input" type="number" step="0.01" value="0"></div>
             <div class="field"><label>Desde</label><input id="calendarStartDate" class="input" type="date"></div>
             <div class="field"><label>Días a proyectar</label><input id="calendarHorizon" class="input" type="number" min="7" max="120" value="45"></div>
+            <div class="field"><label>Vista</label><div class="viewToggle" aria-label="Vista del calendario"><button type="button" data-calendar-view="list" class="active">Lista</button><button type="button" data-calendar-view="calendar">Calendario</button></div></div>
             <button id="calendarRefresh" class="btn primary">Actualizar</button>
           </div>
-          <div class="legend" style="margin-top:12px"><span class="pill">Confirmado = fecha conocida</span><span class="pill">Estimado = patrón de cobros</span><span class="pill">Presupuesto = reserva, no cargo único</span></div>
+          <div class="legendNotes" aria-label="Cómo leer el calendario"><div class="legendNote"><span class="legendDot"></span><span><strong>Confirmado</strong>: fecha conocida.</span></div><div class="legendNote"><span class="legendDot"></span><span><strong>Estimado</strong>: fecha basada en el patrón de cobros.</span></div><div class="legendNote"><span class="legendDot"></span><span><strong>Presupuesto</strong>: dinero reservado; no representa un cargo único.</span></div></div>
         </div>
         <div id="calendarView"></div>
       </section>
@@ -2960,6 +2985,7 @@
     }
 
     const CALENDAR_STORAGE_KEY = 'dinerozaurio_calendar_settings_v1';
+    let calendarViewMode = 'list';
     function dateIsoLocal(date){
       return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
     }
@@ -2982,7 +3008,7 @@
       return /^(comida|ocio y caprichos)$/.test(n) || /iberdrola.*reserva|reserva.*luz/.test(n);
     }
     function buildCalendarEvents(startDate, horizon){
-      const endDate = new Date(startDate); endDate.setDate(endDate.getDate() + horizon);
+      const endDate = new Date(startDate); endDate.setDate(endDate.getDate() + Math.max(1,Number(horizon || 1)) - 1);
       const firstYm = addMonthsStr(dateIsoLocal(startDate).slice(0,7), -1);
       const lastYm = addMonthsStr(dateIsoLocal(endDate).slice(0,7), 1);
       const events = [];
@@ -3033,6 +3059,40 @@
       });
       return events.filter(event => event.date >= startDate && event.date <= endDate).sort((a,b) => a.date - b.date || b.amount - a.amount);
     }
+    function renderCalendarMonthView(events,startDate,endDate,opening){
+      const eventsByDay = new Map();
+      events.forEach(event => {
+        const key = dateIsoLocal(event.date);
+        if(!eventsByDay.has(key)) eventsByDay.set(key,[]);
+        eventsByDay.get(key).push(event);
+      });
+      const balanceByDay = new Map();
+      let running = Number(opening || 0);
+      const cursor = new Date(startDate);
+      while(cursor <= endDate){
+        const key = dateIsoLocal(cursor);
+        (eventsByDay.get(key) || []).forEach(event => { running += Number(event.amount || 0); });
+        balanceByDay.set(key,running);
+        cursor.setDate(cursor.getDate()+1);
+      }
+      return `<div class="calendarMonths">${monthsInRange(dateIsoLocal(startDate).slice(0,7),dateIsoLocal(endDate).slice(0,7)).map(ym => {
+        const [year,month] = ym.split('-').map(Number);
+        const firstDay = new Date(year,month-1,1);
+        const daysInMonth = new Date(year,month,0).getDate();
+        const leading = (firstDay.getDay()+6)%7;
+        const cells = [];
+        for(let i=0;i<leading;i++) cells.push('<div class="calendarDay outside"></div>');
+        for(let day=1;day<=daysInMonth;day++){
+          const date = new Date(year,month-1,day);
+          const key = dateIsoLocal(date);
+          const inRange = date >= startDate && date <= endDate;
+          const dayEvents = inRange ? (eventsByDay.get(key) || []) : [];
+          cells.push(`<div class="calendarDay ${inRange ? '' : 'outside'}"><div class="calendarDayNumber">${day}</div>${dayEvents.map(event => `<div class="calendarEventChip ${event.amount < 0 ? 'out' : ''}" title="${escapeHtml(event.name)}"><span>${escapeHtml(event.name)}</span><strong>${event.amount >= 0 ? '+' : '−'}${euros(Math.abs(event.amount))}</strong></div>`).join('')}${inRange ? `<div class="calendarDayBalance">Saldo ${euros(balanceByDay.get(key) || 0)}</div>` : ''}</div>`);
+        }
+        while(cells.length%7) cells.push('<div class="calendarDay outside"></div>');
+        return `<section class="calendarMonth"><h3>${escapeHtml(firstDay.toLocaleDateString('es-ES',{month:'long',year:'numeric'}))}</h3><div class="calendarWeekdays"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div><div class="calendarGrid">${cells.join('')}</div></section>`;
+      }).join('')}</div>`;
+    }
     function projectedCalendarOpening(startDate){
       const startYm = dateIsoLocal(startDate).slice(0,7);
       const previousYm = addMonthsStr(startYm,-1);
@@ -3051,6 +3111,7 @@
       if(!root) return;
       let settings = {};
       try{ settings = JSON.parse(localStorage.getItem(CALENDAR_STORAGE_KEY) || '{}'); }catch(_err){}
+      calendarViewMode = settings.viewMode || calendarViewMode || 'list';
       const startInput = document.getElementById('calendarStartDate');
       const balanceInput = document.getElementById('calendarOpeningBalance');
       const modeInput = document.getElementById('calendarBalanceMode');
@@ -3062,9 +3123,15 @@
       if(settings.horizon && !horizonInput.dataset.loaded){ horizonInput.value = settings.horizon; horizonInput.dataset.loaded = '1'; }
       const horizon = Math.max(7, Math.min(120, Number(horizonInput.value || 45)));
       const startDate = new Date(startInput.value + 'T00:00:00');
+      const endDate = new Date(startDate); endDate.setDate(endDate.getDate() + horizon - 1);
       const balanceMode = modeInput.value || 'zero';
       const opening = balanceMode === 'projected' ? projectedCalendarOpening(startDate) : balanceMode === 'manual' ? Number(balanceInput.value || 0) : 0;
       manualBalanceField.classList.toggle('hidden', balanceMode !== 'manual');
+      document.querySelectorAll('[data-calendar-view]').forEach(btn => {
+        const active = btn.dataset.calendarView === calendarViewMode;
+        btn.classList.toggle('active',active);
+        btn.setAttribute('aria-pressed',active ? 'true' : 'false');
+      });
       const events = buildCalendarEvents(startDate, horizon);
       let running = opening;
       const rows = events.map(event => {
@@ -3082,13 +3149,16 @@
       const lowest = events.reduce((acc,event) => { acc.running += event.amount; acc.lowest = Math.min(acc.lowest,acc.running); return acc; }, {running:opening,lowest:opening}).lowest;
       const ending = opening + totalIn - totalOut;
       const openingLabel = balanceMode === 'zero' ? 'Inicio desde cero' : balanceMode === 'projected' ? 'Saldo acumulado al inicio' : 'Saldo indicado al inicio';
+      const calendarBody = calendarViewMode === 'calendar'
+        ? renderCalendarMonthView(events,startDate,endDate,opening)
+        : `<div class="cashTimeline">${rows || '<div class="panel empty">No hay eventos en este periodo.</div>'}</div>`;
       root.innerHTML = `<div class="calendarSummary">
         <div class="calendarKpi"><div class="kpiLabel">${openingLabel}</div><div class="kpiValue">${euros(opening)}</div></div>
         <div class="calendarKpi"><div class="kpiLabel">Entradas</div><div class="kpiValue kpi-green">${euros(totalIn)}</div></div>
         <div class="calendarKpi"><div class="kpiLabel">Salidas previstas</div><div class="kpiValue kpi-red">${euros(totalOut)}</div></div>
         <div class="calendarKpi"><div class="kpiLabel">Punto más bajo</div><div class="kpiValue ${lowest < 0 ? 'kpi-red' : 'kpi-cyan'}">${euros(lowest)}</div></div>
-      </div><div class="panel"><div class="sub">Saldo al terminar el intervalo: <strong>${euros(ending)}</strong>. ${balanceMode === 'zero' ? 'Esta vista ignora deliberadamente todo lo ocurrido antes de la fecha inicial.' : balanceMode === 'projected' ? 'Esta vista arrastra el colchón calculado por la previsión hasta la fecha inicial.' : 'Esta vista parte del saldo que has indicado para la fecha inicial.'}</div></div><div class="cashTimeline">${rows || '<div class="panel empty">No hay eventos en este periodo.</div>'}</div>`;
-      localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify({ openingBalance:Number(balanceInput.value || 0), balanceMode, startDate:startInput.value, horizon }));
+      </div><div class="panel"><div class="sub">Saldo al terminar el intervalo: <strong>${euros(ending)}</strong>. ${balanceMode === 'zero' ? 'Esta vista ignora deliberadamente todo lo ocurrido antes de la fecha inicial.' : balanceMode === 'projected' ? 'Esta vista arrastra el colchón calculado por la previsión hasta la fecha inicial.' : 'Esta vista parte del saldo que has indicado para la fecha inicial.'}</div></div>${calendarBody}`;
+      localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify({ openingBalance:Number(balanceInput.value || 0), balanceMode, startDate:startInput.value, horizon, viewMode:calendarViewMode }));
     }
     function buildReserveStateThroughMonth(ym){
       let reserve = Number(state.reserveInitial || 0);
@@ -5326,6 +5396,12 @@
         const expense = state.expenses.reduce((a,b)=>{
           return a + getScopedAmountForMonth('expenseOverrides', b.id, m, getExpenseMonthlyCharge(b, m));
         },0) + Number(adj.extraExpenseAmount || 0) + cashOneOffExpensesTotal(m);
+        const expenseExtras = [
+          ...(Number(adj.extraExpenseAmount || 0) ? [{ name:adj.extraExpenseName || 'Gasto extraordinario', amount:Number(adj.extraExpenseAmount || 0) }] : []),
+          ...monthOneOffExpenses(m)
+            .filter(entry => (entry.paymentSource === 'salary' || entry.paymentSource === 'reserve') && Number(entry.amount || 0) > 0)
+            .map(entry => ({ name:entry.name || 'Gasto puntual', amount:Number(entry.amount || 0) }))
+        ];
 
         let debt = 0;
         let reserveUsage = reserveOneOffExpensesTotal(m) + reserveTransferIn;
@@ -5377,7 +5453,7 @@
               <div class="lab">Ingreso</div><div>${euros(income)}</div>
               ${reserveTransferIn ? `<div class="lab">Uso colchón (registro antiguo)</div><div>${euros(reserveTransferIn)}</div>` : ''}
               ${transferIn ? `<div class="lab">Traspaso tarjeta</div><div>${euros(transferIn)}</div>` : ''}
-              <div class="lab">Gastos</div><div>${euros(expense)}</div>
+              ${expenseExtras.length ? `<details class="expenseExtrasDetails"><summary><span class="expenseExtrasLabel">Gastos + extras <span class="expenseExtrasArrow">⌄</span></span><strong>${euros(expense)}</strong></summary><div class="expenseExtrasList">${expenseExtras.map(entry => `<div class="expenseExtrasItem"><span>${escapeHtml(entry.name)}</span><strong>${euros(entry.amount)}</strong></div>`).join('')}</div></details>` : `<div class="lab">Gastos</div><div>${euros(expense)}</div>`}
               <div class="lab">Deuda</div><div>${euros(debt)}</div>
               ${debtBreakdown.length ? `<div class="debtBreakdownRow"><details class="debtBreakdownDetails"><summary><span>Detalle de deuda</span><span class="debtBreakdownSummary">${debtBreakdown.length} pago${debtBreakdown.length === 1 ? '' : 's'} · ${euros(debt)}</span><span class="debtBreakdownArrow">⌄</span></summary><div class="debtBreakdownList">${debtBreakdown.map(entry => `<div class="debtBreakdownItem"><span>${escapeHtml(entry.name)}</span><strong>${euros(entry.amount)}</strong></div>`).join('')}</div></details></div>` : ''}
               <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
@@ -5421,6 +5497,9 @@
         });
       });
       document.querySelectorAll('.debtBreakdownDetails').forEach(details => {
+        details.addEventListener('click', event => event.stopPropagation());
+      });
+      document.querySelectorAll('.expenseExtrasDetails').forEach(details => {
         details.addEventListener('click', event => event.stopPropagation());
       });
 
@@ -5732,6 +5811,15 @@
       });
       document.getElementById('calendarRefresh')?.addEventListener('click', renderCalendar);
       document.getElementById('calendarBalanceMode')?.addEventListener('change', renderCalendar);
+      document.querySelectorAll('[data-calendar-view]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          calendarViewMode = btn.dataset.calendarView || 'list';
+          let settings = {};
+          try{ settings = JSON.parse(localStorage.getItem(CALENDAR_STORAGE_KEY) || '{}'); }catch(_err){}
+          localStorage.setItem(CALENDAR_STORAGE_KEY,JSON.stringify({ ...settings, viewMode:calendarViewMode }));
+          renderCalendar();
+        });
+      });
     }
 
     window.state = state;
