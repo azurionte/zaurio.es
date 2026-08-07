@@ -925,6 +925,23 @@
                 <input id="defaultStart" class="input" type="month" />
               </div>
             </div>
+
+            <div class="panel">
+              <div class="section-title">
+                <div>
+                  <h2>Periodos de DineroZaurio</h2>
+                  <div class="sub">Elige cómo agrupar ingresos, cargos, ahorro y deuda en la previsión.</div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Cómo se organiza cada periodo</label>
+                <select id="budgetPeriodMode" class="select">
+                  <option value="calendar_month">Mes natural</option>
+                  <option value="salary_cycle">Sueldo a sueldo</option>
+                </select>
+              </div>
+              <div id="budgetPeriodModeHelp" class="legendNote" style="margin-top:12px"></div>
+            </div>
           </div>
 
           <div class="panel fullCol">
@@ -3073,7 +3090,7 @@
       if(d.settledMonth) return 0;
       return getDebtAmountForMonth(d, ym || state.defaultStartMonth);
     }
-    function buildForecastMonthSnapshot(ym){
+    function buildCalendarMonthSnapshot(ym){
       const adj = adjustmentForMonth(ym);
       const reserveTransferAmount = Number(adj.reserveTransferAmount || 0);
       const income = state.incomes.reduce((sum, item) => {
@@ -3107,8 +3124,14 @@
       return { income, expense, debt, savings, net: income - expense - debt - savings, expenseItems, reserveUsage, savingsUsage };
     }
 
+    function buildForecastMonthSnapshot(ym){
+      return budgetPeriodMode === 'salary_cycle' ? buildSalaryPeriodSnapshot(ym) : buildCalendarMonthSnapshot(ym);
+    }
+
     const CALENDAR_STORAGE_KEY = 'dinerozaurio_calendar_settings_v1';
+    const BUDGET_PERIOD_MODE_KEY = 'dinerozaurio_budget_period_mode_v1';
     let calendarViewMode = 'list';
+    let budgetPeriodMode = localStorage.getItem(BUDGET_PERIOD_MODE_KEY) === 'salary_cycle' ? 'salary_cycle' : 'calendar_month';
     function dateIsoLocal(date){
       return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
     }
@@ -3134,6 +3157,43 @@
     function salaryCalendarDay(){
       const salary = (state.incomes || []).find(item => /(nomina|salario|sueldo)/i.test(String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
       return Math.min(31, Math.max(1, Number(salary?.dueDay || 25)));
+    }
+    function salaryPeriodWindow(ym){
+      const salary = (state.incomes || []).find(item => /(nomina|salario|sueldo)/i.test(String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
+      const start = salary
+        ? calendarDateForItem(ym,salary,'income')
+        : dateForMonthDay(addMonthsStr(ym,-1),salaryCalendarDay());
+      const nextStart = salary
+        ? calendarDateForItem(addMonthsStr(ym,1),salary,'income')
+        : dateForMonthDay(ym,salaryCalendarDay());
+      const end = addDaysLocal(nextStart,-1);
+      return { start, end, nextStart };
+    }
+    function budgetPeriodForDate(date){
+      const ym = dateIsoLocal(date).slice(0,7);
+      return date >= dateForMonthDay(ym,salaryCalendarDay()) ? addMonthsStr(ym,1) : ym;
+    }
+    function budgetPeriodCaption(ym){
+      if(budgetPeriodMode !== 'salary_cycle') return prettyMonthLabel(ym);
+      const { start, end } = salaryPeriodWindow(ym);
+      return `${prettyMonthLabel(ym)} · ${start.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}–${end.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}`;
+    }
+    function buildSalaryPeriodSnapshot(ym){
+      const { start, nextStart } = salaryPeriodWindow(ym);
+      const horizon = Math.max(1,Math.round((nextStart-start)/86400000));
+      const events = buildCalendarEvents(start,horizon);
+      const expenseTypes = new Set(['Presupuesto','Gasto','Gasto extraordinario','Gasto puntual']);
+      const income = events.filter(event => Number(event.amount || 0) > 0).reduce((sum,event) => sum + Number(event.amount || 0),0);
+      const expenseEvents = events.filter(event => expenseTypes.has(event.type));
+      const debtEvents = events.filter(event => event.type === 'Deuda');
+      const savingEvents = events.filter(event => event.type === 'Ahorro');
+      const expense = expenseEvents.reduce((sum,event) => sum + Math.abs(Number(event.amount || 0)),0);
+      const debt = debtEvents.reduce((sum,event) => sum + Math.abs(Number(event.amount || 0)),0);
+      const savings = savingEvents.reduce((sum,event) => sum + Math.abs(Number(event.amount || 0)),0);
+      const groupedExpenses = new Map();
+      expenseEvents.forEach(event => groupedExpenses.set(event.name,(groupedExpenses.get(event.name)||0)+Math.abs(Number(event.amount||0))));
+      const expenseItems = Array.from(groupedExpenses.entries()).map(([name,monthAmount]) => ({ name, monthAmount }));
+      return { income, expense, debt, savings, net:income-expense-debt-savings, expenseItems, reserveUsage:0, savingsUsage:0, events, periodStart:start, periodEnd:addDaysLocal(nextStart,-1) };
     }
     function calendarDateForItem(ym, item, kind){
       const inferred = inferredCalendarRule(kind, item?.name || debtDisplayName(item || {}));
@@ -3205,7 +3265,7 @@
           const meta = calendarMetaForItem(item, 'debt', name);
           events.push({ date:calendarDateForItem(ym,item,'debt'), attributedYm:ym, type:'Deuda', name, amount:-amount, confidence:meta.confidence, note:meta.note });
         });
-        const snapshot = buildForecastMonthSnapshot(ym);
+        const snapshot = buildCalendarMonthSnapshot(ym);
         let scheduledGoalTotal = 0;
         (state.goals || []).forEach(goal => {
           const amount = getGoalMonthlyCharge(goal, ym, Number.POSITIVE_INFINITY).amount;
@@ -3320,7 +3380,7 @@
         const negative = running < 0;
         return `<div class="cashEvent ${negative ? 'negative' : ''}">
           <div class="cashEventDate">${event.date.toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}</div>
-          <div><div class="cashEventName">${escapeHtml(event.name)}</div><div class="cashEventMeta">${event.type} · ${prettyMonthLabel(event.attributedYm)} · ${event.confidence} · ${escapeHtml(event.note)}</div></div>
+          <div><div class="cashEventName">${escapeHtml(event.name)}</div><div class="cashEventMeta">${event.type} · ${budgetPeriodMode === 'salary_cycle' ? `periodo ${prettyMonthLabel(budgetPeriodForDate(event.date))}` : prettyMonthLabel(event.attributedYm)} · ${event.confidence} · ${escapeHtml(event.note)}</div></div>
           <div class="cashEventAmount ${event.amount >= 0 ? 'in' : 'out'}">${event.amount >= 0 ? '+' : '−'}${euros(Math.abs(event.amount))}</div>
           <div class="cashEventBalance">Saldo ${euros(running)}</div>
         </div>`;
@@ -3363,7 +3423,7 @@
       if(!root) return;
       const snapshot = buildForecastMonthSnapshot(ym);
       const current = monthlyActiveItems(ym);
-      const monthLabel = prettyMonthLabel(ym);
+      const monthLabel = budgetPeriodCaption(ym);
       const adj = adjustmentForMonth(ym);
       const transferEntries = monthCardTransfers(ym);
       const reserveTransferAmount = Number(adj.reserveTransferAmount || 0);
@@ -3474,7 +3534,7 @@
           <div class="currentMonthHeader">
             <div>
               <h2 style="margin:0">Este mes</h2>
-              <div class="sub">${escapeHtml(monthLabel)} · vista operativa del mes actual</div>
+              <div class="sub">${escapeHtml(monthLabel)} · ${budgetPeriodMode === 'salary_cycle' ? 'vista operativa entre nóminas' : 'vista operativa del mes natural'}</div>
             </div>
             <div class="btnRow">
               ${hasNegativeBalance ? `<button id="currentMonthAlertBtn" class="btn danger">Cubrir déficit acumulado</button>` : ''}
@@ -5611,6 +5671,8 @@
       document.getElementById('forecastTo').value = state.forecast.to;
       document.getElementById('defaultStart').value = state.defaultStartMonth;
       document.getElementById('initialReserve').value = state.reserveInitial || 0;
+      document.getElementById('budgetPeriodMode').value = budgetPeriodMode;
+      renderBudgetPeriodModeHelp();
 
       const now = new Date();
       const pad = (n) => String(n).padStart(2,'0');
@@ -5621,6 +5683,14 @@
       document.getElementById('kpiSavings').textContent = euros(savingsBase);
       kpis();
       updateSaveUi();
+    }
+
+    function renderBudgetPeriodModeHelp(){
+      const root = document.getElementById('budgetPeriodModeHelp');
+      if(!root) return;
+      root.innerHTML = budgetPeriodMode === 'salary_cycle'
+        ? `<span class="legendDot"></span><span><strong>Sueldo a sueldo:</strong> cada periodo empieza cuando entra la nómina que lo financia y termina el día anterior a la siguiente. Los cargos se asignan por su fecha prevista; una limpieza del 31 de enero puede pertenecer al periodo de febrero.</span>`
+        : `<span class="legendDot"></span><span><strong>Mes natural:</strong> agrupa todo lo que ocurre entre el día 1 y el último día del calendario, aunque un mes tenga más cargos semanales o quincenales.</span>`;
     }
 
     function renderForecast(){
@@ -5637,17 +5707,20 @@
 
       allMonths.forEach(m => {
         const adj = adjustmentForMonth(m);
+        const periodSnapshot = buildForecastMonthSnapshot(m);
         const transferIn = monthCardTransfersTotal(m);
         const reserveTransferIn = Number(adj.reserveTransferAmount || 0);
 
-        const income = state.incomes.reduce((a,b)=>{
+        const calendarIncome = state.incomes.reduce((a,b)=>{
           return a + getScopedAmountForMonth('incomeOverrides', b.id, m, getIncomeMonthlyCharge(b, m));
         },0) + Number(adj.extraIncomeAmount || 0) + transferIn;
+        const income = budgetPeriodMode === 'salary_cycle' ? periodSnapshot.income : calendarIncome;
 
-        const expense = state.expenses.reduce((a,b)=>{
+        const calendarExpense = state.expenses.reduce((a,b)=>{
           return a + getScopedAmountForMonth('expenseOverrides', b.id, m, getExpenseMonthlyCharge(b, m));
         },0) + Number(adj.extraExpenseAmount || 0) + cashOneOffExpensesTotal(m);
-        const expenseExtras = [
+        const expense = budgetPeriodMode === 'salary_cycle' ? periodSnapshot.expense : calendarExpense;
+        const calendarExpenseExtras = [
           ...(Number(adj.extraExpenseAmount || 0) ? [{ name:adj.extraExpenseName || 'Gasto extraordinario', amount:Number(adj.extraExpenseAmount || 0) }] : []),
           ...state.expenses
             .filter(entry => normalizeExpensePeriodicity(entry.periodicity) === 'one_time')
@@ -5660,6 +5733,9 @@
             .filter(entry => (entry.paymentSource === 'salary' || entry.paymentSource === 'reserve') && Number(entry.amount || 0) > 0)
             .map(entry => ({ name:entry.name || 'Gasto puntual', amount:Number(entry.amount || 0) }))
         ];
+        const expenseExtras = budgetPeriodMode === 'salary_cycle'
+          ? (periodSnapshot.events || []).filter(event => event.type === 'Gasto extraordinario' || event.type === 'Gasto puntual').map(event => ({ name:event.name, amount:Math.abs(Number(event.amount || 0)) }))
+          : calendarExpenseExtras;
 
         let debt = 0;
         let reserveUsage = reserveOneOffExpensesTotal(m) + reserveTransferIn;
@@ -5670,6 +5746,7 @@
           reserveUsage += Number(funding.reserveAmount || 0);
           savingsUsage += Number(funding.savingsAmount || 0);
         });
+        if(budgetPeriodMode === 'salary_cycle') debt = periodSnapshot.debt;
 
         const recovered = state.debts.reduce((a,b)=> a + getDebtRecoveredForMonth(b, m), 0);
 
@@ -5689,6 +5766,7 @@
           totalSaving += amount;
           remainingAvailable -= amount;
         });
+        if(budgetPeriodMode === 'salary_cycle') totalSaving = periodSnapshot.savings;
 
         const net = income - expense - debt - totalSaving;
         reserve += reserveCarryFromNet(net);
@@ -5697,14 +5775,17 @@
         const monthRisk = hasAccumulatedDeficit ? buildNegativeMonthSuggestions(m, Math.abs(reserve)) : { deficit:0, suggestions:[] };
 
         if(m >= from && m <= to){
-          const debtBreakdown = state.debts.map(item => {
+          const calendarDebtBreakdown = state.debts.map(item => {
             const funding = getDebtFundingForMonth(item,m);
             const amount = Number(funding.salaryAmount || 0) + Number(funding.reserveAmount || 0);
             return amount > 0 ? { name:debtDisplayName(item), amount } : null;
           }).filter(Boolean);
+          const debtBreakdown = budgetPeriodMode === 'salary_cycle'
+            ? (periodSnapshot.events || []).filter(event => event.type === 'Deuda').map(event => ({ name:event.name, amount:Math.abs(Number(event.amount || 0)) }))
+            : calendarDebtBreakdown;
           visibleCards.push(`<div class="month" data-month="${m}">
             <div class="monthHead">
-              <h4>${escapeHtml(m)}</h4>
+              <h4>${escapeHtml(budgetPeriodCaption(m))}</h4>
               ${hasAccumulatedDeficit ? `<button class="btn danger monthAlertBtn bad" data-month-alert="${m}" title="Colchón acumulado en negativo">!</button>` : ''}
             </div>
             <div class="rows">
@@ -5796,6 +5877,8 @@
       document.getElementById('initialReserve').value = state.reserveInitial || 0;
       document.getElementById('defaultStart').value = state.defaultStartMonth;
       document.getElementById('paymentMethod').value = state.paymentMethod || 'reserve';
+      document.getElementById('budgetPeriodMode').value = budgetPeriodMode;
+      renderBudgetPeriodModeHelp();
       document.getElementById('forecastFrom').value = state.forecast.from;
       document.getElementById('forecastTo').value = state.forecast.to;
 
@@ -6402,6 +6485,14 @@
         cacheLocal();
         updateSaveUi();
         touchState();
+      });
+      document.getElementById('budgetPeriodMode').addEventListener('change', (event) => {
+        budgetPeriodMode = event.target.value === 'salary_cycle' ? 'salary_cycle' : 'calendar_month';
+        localStorage.setItem(BUDGET_PERIOD_MODE_KEY,budgetPeriodMode);
+        renderBudgetPeriodModeHelp();
+        renderForecast();
+        const activeTab = document.querySelector('.tab.active')?.dataset.tab;
+        if(activeTab === 'calendar') renderCalendar();
       });
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
