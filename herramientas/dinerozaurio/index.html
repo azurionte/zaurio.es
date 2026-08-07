@@ -969,8 +969,8 @@
           </div>
           <div class="legendNotes" aria-label="Cómo leer la previsión">
             <div class="legendNote"><span class="legendDot"></span><span><strong>Recuperado</strong>: cuota que dejas de pagar al terminar una deuda.</span></div>
-            <div class="legendNote"><span class="legendDot"></span><span><strong>Sobrante</strong>: ingreso menos gastos, deuda y ahorro de ese mes.</span></div>
-            <div class="legendNote"><span class="legendDot"></span><span><strong>Colchón</strong>: saldo inicial más todos los sobrantes acumulados.</span></div>
+            <div class="legendNote"><span class="legendDot"></span><span><strong>Sobrante</strong>: ingreso menos gastos, deuda y ahorro del periodo mostrado.</span></div>
+            <div class="legendNote"><span class="legendDot"></span><span><strong>Colchón</strong>: saldo inicial más los sobrantes acumulados de los periodos anteriores.</span></div>
           </div>
         </div>
         <div id="forecastWarnings"></div><div id="cardBalancesPanel" class="cardBalancesPanel"></div><div id="monthsGrid" class="months-grid"></div>
@@ -3475,7 +3475,7 @@
       ];
 
       const expenseItems = [
-        ...current.expenses.map(item => `
+        ...(budgetPeriodMode === 'salary_cycle' ? snapshot.expenseItems : current.expenses).map(item => `
           <div class="miniItem">
             <div class="miniMeta">
               <div class="miniName">${escapeHtml(item.name || 'Gasto')}</div>
