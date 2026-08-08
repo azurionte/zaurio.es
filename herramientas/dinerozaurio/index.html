@@ -3351,7 +3351,7 @@
     }
     function isCalendarBudget(name){
       const n = String(name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      return /comida|ocio y caprichos|webel|limpieza/.test(n) || /iberdrola.*reserva|reserva.*luz/.test(n);
+      return /comida|ocio y caprichos/.test(n) || /iberdrola.*reserva|reserva.*luz/.test(n);
     }
     function buildCalendarEvents(startDate, horizon){
       const endDate = new Date(startDate); endDate.setDate(endDate.getDate() + Math.max(1,Number(horizon || 1)) - 1);
