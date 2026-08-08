@@ -3227,7 +3227,7 @@
     }
     function inferredCalendarRule(kind, name){
       const n = String(name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      if(kind === 'income' && /(nomina|salario|sueldo)/.test(n)) return { day:25, confidence:'alta', note:'Se atribuye al mes siguiente' };
+      if(kind === 'income' && /(nomina|salario|sueldo)/.test(n)) return { day:28, confidence:'alta', note:'Patrón observado: día 28; se atribuye al mes siguiente' };
       if(/alquiler/.test(n)) return { day:1, confidence:'media', note:'Ventana estimada 1–5' };
       if(/vodafone/.test(n)) return { day:10, confidence:'alta', note:'Patrón observado: días 9–10' };
       if(/aigues|agua/.test(n)) return { day:3, confidence:'alta', note:'Patrón observado: primeros días, cobro bimestral' };
@@ -3242,7 +3242,9 @@
     }
     function salaryCalendarDay(){
       const salary = (state.incomes || []).find(item => /(nomina|salario|sueldo)/i.test(String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
-      return Math.min(31, Math.max(1, Number(salary?.dueDay || 25)));
+      const configuredDay = Math.min(31, Math.max(1, Number(salary?.dueDay || 28)));
+      if(salary && salary.calendarConfidence !== 'confirmed' && configuredDay === 25) return 28;
+      return configuredDay;
     }
     function salaryPeriodWindow(ym){
       const salary = (state.incomes || []).find(item => /(nomina|salario|sueldo)/i.test(String(item.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
@@ -3284,6 +3286,10 @@
     function calendarDateForItem(ym, item, kind){
       const inferred = inferredCalendarRule(kind, item?.name || debtDisplayName(item || {}));
       const configured = normalizeCalendarFields(item || {}, { dueDay:inferred.day, calendarMonthShift:kind === 'income' && inferred.note.includes('mes siguiente') ? 1 : 0 });
+      const normalizedName = String(item?.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const dueDay = kind === 'income' && /(nomina|salario|sueldo)/.test(normalizedName) && configured.calendarConfidence !== 'confirmed'
+        ? salaryCalendarDay()
+        : (configured.dueDay || inferred.day);
       if(configured.calendarRuleType === 'after_salary'){
         const salaryDay = salaryCalendarDay();
         return dateForMonthDay(addMonthsStr(ym,-1), salaryDay + 1);
@@ -3291,7 +3297,7 @@
       const actualYm = kind === 'income' && configured.calendarMonthShift ? addMonthsStr(ym,-configured.calendarMonthShift) : ym;
       if(configured.calendarRuleType === 'first_day') return dateForMonthDay(actualYm,1);
       if(configured.calendarRuleType === 'last_day') return dateForMonthDay(actualYm,31);
-      return dateForMonthDay(actualYm,configured.dueDay || inferred.day);
+      return dateForMonthDay(actualYm,dueDay);
     }
     function calendarMetaForItem(item, kind, name){
       const inferred = inferredCalendarRule(kind, name);
