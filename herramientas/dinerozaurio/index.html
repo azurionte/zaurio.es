@@ -2814,7 +2814,7 @@
       return cloneData(monthAdjustmentView(ym)?.[overrideKey]?.[itemId] ?? null);
     }
     function dateFromIso(value){
-      return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? new Date(`${value}T12:00:00`) : null;
+      return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? new Date(`${value}T00:00:00`) : null;
     }
     function applyExpenseDateOverrides(item, ym, dates){
       const raw = rawMonthOverride('expenseOverrides', item.id, ym);
@@ -5595,6 +5595,7 @@
             const settledThisMonth = getDebtPaidMonth(debt.id) === ym;
             if(currentOverride.mode === 'paid' || settledThisMonth){
               nextAdj.debtOverrides[debt.id] = {
+                ...cloneData(currentOverride),
                 mode:'paid',
                 amount,
                 source,
@@ -5602,7 +5603,7 @@
                 recurringAmount: Number(currentOverride.recurringAmount || getDebtMonthlyCharge(debt, ym) || 0)
               };
             } else {
-              nextAdj.debtOverrides[debt.id] = { mode:'custom', amount, source, savingsGoalId, scope };
+              nextAdj.debtOverrides[debt.id] = { ...cloneData(currentOverride), mode:'custom', amount, source, savingsGoalId, scope };
             }
           });
         });
@@ -5666,7 +5667,7 @@
             sourceDebt.settledMonth = ym;
           }
           commitMonthAdjustment(nextAdj => {
-            nextAdj.debtOverrides[debt.id] = { mode:'paid', amount, source, savingsGoalId, recurringAmount };
+            nextAdj.debtOverrides[debt.id] = { ...cloneData(currentOverride), mode:'paid', amount, source, savingsGoalId, recurringAmount };
           });
         });
         const sourceEl = document.getElementById('md_payoff_source');
