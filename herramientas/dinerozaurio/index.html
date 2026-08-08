@@ -526,6 +526,8 @@
     .miniMeta{display:flex;flex-direction:column;gap:4px}
     .miniName{font-weight:800}
     .miniSub{font-size:12px;color:var(--muted)}
+    .scheduleEntry{display:inline-flex;align-items:center;gap:4px;margin:4px 8px 0 0;flex-wrap:wrap}
+    .scheduleEntry .btn{padding:4px 8px;font-size:11px}
     .miniActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     .settledDebt{border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.08)}
 
@@ -2360,6 +2362,19 @@
             desc = `Se ha cambiado de ${euros(beforeAmount)} a ${euros(afterAmount)} ${scopeLabel(afterOverride)}.`;
           }
         }
+        const beforeDate = beforeMap[id]?.calendarDate || '';
+        const afterDate = afterMap[id]?.calendarDate || '';
+        const beforeReplacements = beforeMap[id]?.dateReplacements || {};
+        const afterReplacements = afterMap[id]?.dateReplacements || {};
+        if(beforeDate !== afterDate || stableStringify(beforeReplacements) !== stableStringify(afterReplacements)){
+          title = `Se ha cambiado la fecha de ${itemName} en ${prettyMonth}`;
+          if(afterDate){
+            desc = `La fecha prevista pasa a ${afterDate} solo en este periodo.`;
+          } else {
+            const moved = Object.entries(afterReplacements).find(([key,value]) => beforeReplacements[key] !== value);
+            if(moved) desc = `La fecha prevista pasa de ${moved[0]} a ${moved[1]} solo en este periodo.`;
+          }
+        }
         changes.push(createMonthOpsChange(
           `monthAdjustments:${monthKey}:${overrideKey}:${id}`,
           title,
@@ -2793,6 +2808,23 @@
       const out = [];
       while(cursor <= monthEnd){ out.push(new Date(cursor)); cursor = addDaysLocal(cursor,intervalDays); }
       return out;
+    }
+
+    function rawMonthOverride(overrideKey, itemId, ym){
+      return cloneData(monthAdjustmentView(ym)?.[overrideKey]?.[itemId] ?? null);
+    }
+    function dateFromIso(value){
+      return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? new Date(`${value}T12:00:00`) : null;
+    }
+    function applyExpenseDateOverrides(item, ym, dates){
+      const raw = rawMonthOverride('expenseOverrides', item.id, ym);
+      if(!raw || typeof raw !== 'object') return dates;
+      const replacements = raw.dateReplacements && typeof raw.dateReplacements === 'object' ? raw.dateReplacements : {};
+      return dates.map(date => dateFromIso(replacements[dateIsoLocal(date)]) || date);
+    }
+    function calendarDateOverride(overrideKey, itemId, ym){
+      const raw = rawMonthOverride(overrideKey, itemId, ym);
+      return raw && typeof raw === 'object' ? dateFromIso(raw.calendarDate) : null;
     }
 
     function getIncomeMonthlyCharge(item, ym){
@@ -3330,7 +3362,7 @@
         (state.incomes || []).forEach(item => {
           const meta = calendarMetaForItem(item, 'income', item.name);
           const amount = getScopedAmountForMonth('incomeOverrides', item.id, ym, getIncomeMonthlyCharge(item, ym));
-          if(amount) events.push({ date:calendarDateForItem(ym,item,'income'), attributedYm:ym, type:'Ingreso', name:item.name || 'Ingreso', amount:Number(amount), confidence:meta.confidence, note:meta.note });
+          if(amount) events.push({ date:calendarDateOverride('incomeOverrides',item.id,ym) || calendarDateForItem(ym,item,'income'), itemId:item.id, attributedYm:ym, type:'Ingreso', name:item.name || 'Ingreso', amount:Number(amount), confidence:meta.confidence, note:meta.note });
         });
         (state.expenses || []).forEach(item => {
           const amount = getScopedAmountForMonth('expenseOverrides', item.id, ym, getExpenseMonthlyCharge(item, ym));
@@ -3339,23 +3371,23 @@
           const budget = item.calendarBehavior === 'budget' || isCalendarBudget(item.name);
           const periodicity = normalizeExpensePeriodicity(item.periodicity);
           if(periodicity === 'weekly' || periodicity === 'biweekly'){
-            const dates = recurringChargeDatesForMonth(item, ym);
+            const dates = applyExpenseDateOverrides(item, ym, recurringChargeDatesForMonth(item, ym));
             const baseTotal = dates.length * Number(item.amount || 0);
             if(dates.length && Math.abs(Number(amount) - baseTotal) < 0.01){
-              dates.forEach(date => events.push({ date, attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(item.amount || 0), confidence:meta.confidence, note:meta.note || `Se repite cada ${periodicity === 'weekly' ? 7 : 14} días` }));
+              dates.forEach(date => events.push({ date, itemId:item.id, attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(item.amount || 0), confidence:meta.confidence, note:meta.note || `Se repite cada ${periodicity === 'weekly' ? 7 : 14} días` }));
             }else if(dates.length){
-              events.push({ date:dates[0], attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:'confirmada', note:'Importe mensual ajustado manualmente' });
+              events.push({ date:dates[0], itemId:item.id, attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:'confirmada', note:'Importe mensual ajustado manualmente' });
             }
             return;
           }
-          events.push({ date:calendarDateForItem(ym,item,'expense'), attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:budget ? 'confirmada' : meta.confidence, note:budget ? (item.calendarNote || 'Reserva del mes; no es un cargo único') : meta.note });
+          events.push({ date:calendarDateOverride('expenseOverrides',item.id,ym) || calendarDateForItem(ym,item,'expense'), itemId:item.id, attributedYm:ym, type:budget ? 'Presupuesto' : 'Gasto', name:item.name || 'Gasto', amount:-Number(amount), confidence:budget ? 'confirmada' : meta.confidence, note:budget ? (item.calendarNote || 'Reserva del mes; no es un cargo único') : meta.note });
         });
         (state.debts || []).forEach(item => {
           const amount = Number(getDebtAmountForMonth(item, ym) || 0);
           if(!amount) return;
           const name = debtDisplayName(item);
           const meta = calendarMetaForItem(item, 'debt', name);
-          events.push({ date:calendarDateForItem(ym,item,'debt'), attributedYm:ym, type:'Deuda', name, amount:-amount, confidence:meta.confidence, note:meta.note });
+          events.push({ date:calendarDateOverride('debtOverrides',item.id,ym) || calendarDateForItem(ym,item,'debt'), itemId:item.id, attributedYm:ym, type:'Deuda', name, amount:-amount, confidence:meta.confidence, note:meta.note });
         });
         const snapshot = buildCalendarMonthSnapshot(ym);
         let scheduledGoalTotal = 0;
@@ -3364,7 +3396,7 @@
           if(!amount) return;
           scheduledGoalTotal += Number(amount);
           const meta = calendarMetaForItem(goal, 'goal', goal.name);
-          events.push({ date:calendarDateForItem(ym,goal,'goal'), attributedYm:ym, type:'Ahorro', name:goal.name || 'Ahorro', amount:-Number(amount), confidence:meta.confidence, note:goal.calendarNote || 'Reserva planificada; no es gasto perdido' });
+          events.push({ date:calendarDateForItem(ym,goal,'goal'), itemId:goal.id, attributedYm:ym, type:'Ahorro', name:goal.name || 'Ahorro', amount:-Number(amount), confidence:meta.confidence, note:goal.calendarNote || 'Reserva planificada; no es gasto perdido' });
         });
         const remainingSavings = Math.max(0, Number(snapshot.savings || 0) - scheduledGoalTotal);
         if(remainingSavings) events.push({ date:dateForMonthDay(ym,1), attributedYm:ym, type:'Ahorro', name:'Ahorro extra del mes', amount:-remainingSavings, confidence:'confirmada', note:'Ajuste mensual de ahorro' });
@@ -5097,6 +5129,36 @@
         if(!entry?.source) return '';
         return spendingSourceLabel(entry.source, entry.savingsGoalId);
       }
+      function periodicityLabel(item){
+        const labels = {
+          one_time:'Puntual', weekly:'Semanal', biweekly:'Quincenal', monthly:'Mensual',
+          bimonthly:'Bimestral', quarterly:'Trimestral', four_monthly:'Cada 4 meses',
+          custom_months:`Cada ${Math.max(1,Number(item.intervalMonths || 1))} meses`, yearly:'Anual'
+        };
+        return labels[normalizeExpensePeriodicity(item?.periodicity)] || 'Mensual';
+      }
+      function eventsForMonthItem(itemId, type){
+        const window = budgetPeriodMode === 'salary_cycle'
+          ? salaryPeriodWindow(ym)
+          : { start:dateForMonthDay(ym,1), end:dateForMonthDay(ym,31) };
+        const horizon = Math.max(1,Math.round((window.end-window.start)/86400000)+1);
+        return buildCalendarEvents(window.start,horizon).filter(event => event.itemId === itemId && (!type || event.type === type || (type === 'Gasto' && event.type === 'Presupuesto')));
+      }
+      function eventStatusLabel(event){
+        if(event.type === 'Presupuesto') return 'Presupuesto reservado';
+        const today = new Date(); today.setHours(0,0,0,0);
+        const date = new Date(event.date); date.setHours(0,0,0,0);
+        return date < today ? 'Fecha pasada · por conciliar' : date.getTime() === today.getTime() ? 'Previsto hoy' : 'Pendiente';
+      }
+      function scheduleHtml(item, type, changeAttr){
+        const events = eventsForMonthItem(item.id,type);
+        if(!events.length) return '<span>Sin fecha en este periodo</span>';
+        return events.map(event => {
+          const iso = dateIsoLocal(event.date);
+          const label = event.date.toLocaleDateString('es-ES',{day:'2-digit',month:'short'});
+          return `<span class="scheduleEntry"><strong>${escapeHtml(label)}</strong> · ${escapeHtml(eventStatusLabel(event))}${changeAttr ? ` <button class="btn ghost" data-${changeAttr}="${item.id}" data-event-date="${iso}">Cambiar fecha</button>` : ''}</span>`;
+        }).join(' ');
+      }
       function recurringScopeOptions(selected = 'this_month'){
         return `
           <option value="this_month" ${selected === 'this_month' ? 'selected' : ''}>Solo este mes</option>
@@ -5123,7 +5185,7 @@
       function incomeListHtml(){
         const base = current.incomes.length ? current.incomes.map(it => `
           <div class="miniItem">
-            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Ingreso')}</div><div class="miniSub">${euros(it.monthAmount)}</div></div>
+            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Ingreso')}</div><div class="miniSub">${euros(it.monthAmount)} · ${escapeHtml(periodicityLabel(it))}</div><div class="miniSub">${scheduleHtml(it,'Ingreso','')}</div></div>
             <div class="miniActions"><button class="btn ghost" data-income-edit="${it.id}">Editar</button></div>
           </div>`).join('') : '';
         const transfers = monthCardTransfers(ym).length ? monthCardTransfers(ym).map(entry => {
@@ -5161,7 +5223,7 @@
       function expenseListHtml(){
         const base = current.expenses.length ? current.expenses.map(it => `
           <div class="miniItem">
-            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Gasto')}</div><div class="miniSub">${euros(it.monthAmount)}</div></div>
+            <div class="miniMeta"><div class="miniName">${escapeHtml(it.name||'Gasto')}</div><div class="miniSub">${euros(it.monthAmount)} · ${escapeHtml(periodicityLabel(it))}</div><div class="miniSub">${scheduleHtml(it,'Gasto','expense-date')}</div></div>
             <div class="miniActions">
               <button class="btn ghost" data-expense-edit="${it.id}">Editar</button>
               <button class="btn danger" data-expense-remove="${it.id}">Eliminar</button>
@@ -5194,7 +5256,8 @@
           <div class="miniItem ${it.settled ? 'settledDebt' : ''}">
             <div class="miniMeta">
               <div class="miniName" style="${it.settled ? 'color:#4ade80' : ''}">${escapeHtml(debtDisplayName(it))}${it.settled ? ' · saldada' : ''}</div>
-              <div class="miniSub">${it.settled ? 'Cuota liberada este mes' : escapeHtml(debtDescription(it, ym))}${debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)) ? ` · ${escapeHtml(debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)))}` : ''}</div>
+              <div class="miniSub">${it.settled ? 'Pago completo previsto en este periodo' : escapeHtml(debtDescription(it, ym))}${debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)) ? ` · ${escapeHtml(debtPaymentLabel(getDebtOverrideForMonth(it.id, ym)))}` : ''}</div>
+              <div class="miniSub">${scheduleHtml(it,'Deuda','debt-date')}</div>
             </div>
             <div class="miniActions">
               ${it.settled ? '' : `
@@ -5269,7 +5332,7 @@
               if(f.type === 'select'){
                 return `<div class="field"><label>${f.label}</label><select id="${f.id}" class="select">${f.options}</select></div>`;
               }
-              return `<div class="field"><label>${f.label}</label><input id="${f.id}" class="input" type="${f.type||'text'}" step="${f.step||''}" value="${f.value ?? ''}"></div>`;
+              return `<div class="field"><label>${f.label}</label><input id="${f.id}" class="input" type="${f.type||'text'}" step="${f.step||''}" value="${f.value ?? ''}" ${f.readonly ? 'readonly aria-readonly="true"' : ''}></div>`;
             }).join('')}
           </div>
           <div class="btnRow" style="margin-top:12px">
@@ -5279,6 +5342,65 @@
         </div>`;
         document.getElementById(`${containerId}_cancel`).onclick = () => { box.innerHTML = ''; };
         document.getElementById(`${containerId}_save`).onclick = onSave;
+      }
+      function mountDateScopeChoice(containerId, item, kind, previousIso, nextIso){
+        const box = document.getElementById(containerId);
+        if(!box) return;
+        box.innerHTML = `<div class="inlineModalForm">
+          <div class="sub" style="margin-bottom:8px">Estás cambiando la fecha de cobro de este ${kind === 'expense' ? 'servicio' : 'pago'}.</div>
+          <div class="miniSub" style="margin-bottom:12px">De ${escapeHtml(previousIso)} a ${escapeHtml(nextIso)}. ¿Hasta dónde quieres aplicar el cambio?</div>
+          <div class="btnRow">
+            <button class="btn primary" id="${containerId}_date_once">Aplicar solo a este periodo</button>
+            <button class="btn ghost" id="${containerId}_date_future">Cambiar esta fecha y las siguientes</button>
+            <button class="btn ghost" id="${containerId}_date_cancel">Cancelar</button>
+          </div>
+        </div>`;
+        const applyOnlyThisPeriod = () => {
+          commitMonthAdjustment(nextAdj => {
+            const overrideKey = kind === 'expense' ? 'expenseOverrides' : 'debtOverrides';
+            const raw = nextAdj[overrideKey][item.id];
+            const base = raw && typeof raw === 'object'
+              ? cloneData(raw)
+              : (kind === 'expense' ? { mode:'this_month', amount:Number(raw ?? item.monthAmount ?? 0) } : { mode:'custom', amount:Number(item.monthAmount || 0), scope:'this_month', source:'salary' });
+            if(kind === 'expense' && ['weekly','biweekly'].includes(normalizeExpensePeriodicity(item.periodicity))){
+              base.dateReplacements = { ...(base.dateReplacements || {}), [previousIso]:nextIso };
+            } else {
+              base.calendarDate = nextIso;
+            }
+            nextAdj[overrideKey][item.id] = base;
+          });
+        };
+        const applyFromHere = () => {
+          const source = (kind === 'expense' ? state.expenses : state.debts).find(entry => entry.id === item.id);
+          if(!source) return;
+          const chosen = dateFromIso(nextIso);
+          if(kind === 'expense' && ['weekly','biweekly'].includes(normalizeExpensePeriodicity(source.periodicity))){
+            source.startDate = dateIsoLocal(addDaysLocal(chosen,Math.max(0,Number(source.chargeLeadDays || 0))));
+            source.startMonth = source.startDate.slice(0,7);
+          } else {
+            source.dueDay = chosen.getDate();
+            source.calendarRuleType = 'fixed_day';
+          }
+          source.calendarConfidence = 'confirmed';
+          source.calendarNote = `Fecha confirmada por el usuario desde ${nextIso}`;
+          touchState({ reopenMonth:ym });
+        };
+        document.getElementById(`${containerId}_date_once`).onclick = applyOnlyThisPeriod;
+        document.getElementById(`${containerId}_date_future`).onclick = applyFromHere;
+        document.getElementById(`${containerId}_date_cancel`).onclick = () => { box.innerHTML = ''; };
+      }
+      function openScheduledDateForm(item, kind, previousIso){
+        const containerId = kind === 'expense' ? 'monthExpenseForm' : 'monthDebtForm';
+        mountInlineForm(containerId, `Cambiar fecha de ${escapeHtml(kind === 'expense' ? item.name || 'servicio' : debtDisplayName(item))}`, [
+          { id:`${containerId}_date_value`, label:'Fecha de cobro en este periodo', type:'date', value:previousIso }
+        ], () => {
+          const nextIso = document.getElementById(`${containerId}_date_value`).value;
+          if(!dateFromIso(nextIso) || nextIso === previousIso){
+            document.getElementById(containerId).innerHTML = '';
+            return;
+          }
+          mountDateScopeChoice(containerId,item,kind,previousIso,nextIso);
+        });
       }
       function openOneOffExpenseForm(entry = null){
         const currentEntry = entry ? normalizeOneOffExpenseEntry(entry, ym) : normalizeOneOffExpenseEntry({ monthKey: ym }, ym);
@@ -5402,14 +5524,21 @@
       root.querySelectorAll('[data-expense-edit]').forEach(btn => btn.onclick = () => {
         const item = current.expenses.find(x=>x.id===btn.dataset.expenseEdit);
         const effectiveOverride = getScopedAmountOverrideForMonth('expenseOverrides', item.id, ym);
+        const firstEvent = eventsForMonthItem(item.id,'Gasto')[0];
         mountInlineForm('monthExpenseForm', 'Editar gasto de este mes', [
           { id:'me_amount', label:'Monto', type:'number', step:'0.01', value:item.monthAmount },
+          { id:'me_periodicity', label:'Periodicidad', type:'text', value:periodicityLabel(item), readonly:true },
+          { id:'me_date_readonly', label:'Próxima fecha de este periodo', type:'date', value:firstEvent ? dateIsoLocal(firstEvent.date) : '', readonly:true },
           { id:'me_scope', label:'Aplicar cambio', type:'select', options: recurringScopeOptions(effectiveOverride?.mode === 'from_here' ? 'from_here' : 'this_month') }
         ], () => {
           const amount = Number(document.getElementById('me_amount').value||0);
           const scope = document.getElementById('me_scope').value || 'this_month';
           commitScopedCollectionAmount('expenseOverrides', item.id, scope, amount);
         });
+      });
+      root.querySelectorAll('[data-expense-date]').forEach(btn => btn.onclick = () => {
+        const item = current.expenses.find(x => x.id === btn.dataset.expenseDate);
+        if(item) openScheduledDateForm(item,'expense',btn.dataset.eventDate);
       });
       root.querySelectorAll('[data-expense-remove]').forEach(btn => btn.onclick = () => {
         const item = current.expenses.find(x => x.id === btn.dataset.expenseRemove);
@@ -5551,6 +5680,10 @@
           sourceEl.onchange = syncDebtPayoffSource;
           syncDebtPayoffSource();
         }
+      });
+      root.querySelectorAll('[data-debt-date]').forEach(btn => btn.onclick = () => {
+        const item = current.debts.find(x => x.id === btn.dataset.debtDate);
+        if(item) openScheduledDateForm(item,'debt',btn.dataset.eventDate);
       });
 
       root.querySelectorAll('[data-goal-edit]').forEach(btn => btn.onclick = () => {
