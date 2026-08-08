@@ -3586,7 +3586,7 @@
       if(!root) return;
       const today = new Date();
       const summary = buildTodayFinancialSnapshot(today);
-      const charges = summary.upcomingCharges.slice(0,6);
+      const charges = summary.upcomingCharges;
       const nextSalary = addDaysLocal(summary.periodEnd,1);
       root.innerHTML = `
         <section class="panel homeHero">
