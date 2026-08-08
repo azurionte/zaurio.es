@@ -176,6 +176,10 @@
       font-size:13px;
     }
     .dzVersionPill strong{font-weight:900}
+    .dzLastUpdated{
+      margin:-2px 0 10px;padding:0 12px 10px;color:var(--muted);
+      font-size:12px;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.07)
+    }
     .profileMenuAction{
       width:100%;
       justify-content:flex-start;
@@ -492,7 +496,12 @@
     .debtPlanCard{border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;background:#10193a;margin-top:12px}
     .debtPlanTitle{font-weight:900;margin-bottom:6px}
     .debtPlanText{font-size:13px;color:var(--muted);line-height:1.45}
-    .forecast-toolbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+    .forecast-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .forecast-toolbar{display:grid;grid-template-columns:minmax(150px,190px) minmax(150px,190px) minmax(170px,1fr);gap:12px;align-items:end;flex:1}
+    .forecastLegend{position:relative;flex:0 0 auto}
+    .infoButton{width:38px;height:38px;padding:0;border-radius:50%;font-weight:900;font-size:17px}
+    .forecastLegendContent{display:none;position:absolute;z-index:120;right:0;top:46px;width:min(420px,82vw);padding:10px;border-radius:14px;background:#111a39;border:1px solid var(--line);box-shadow:0 18px 48px rgba(0,0,0,.38)}
+    .forecastLegend.open .forecastLegendContent{display:grid}
     .field{display:flex;flex-direction:column;gap:7px}
     .field label{font-size:12px;color:var(--muted)}
     .months-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
@@ -585,7 +594,7 @@
     .cardBalanceStatValue{font-weight:900}
     .debtProgressTrack{height:7px;border-radius:999px;background:#182143;overflow:hidden;margin-top:12px}
     .debtProgressFill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--cyan),var(--purple))}
-    .debtBreakdownRow{grid-column:1/-1;border-top:1px solid rgba(148,163,184,.14);padding-top:7px}
+    .debtBreakdownRow{grid-column:1/-1}
     .debtBreakdownDetails summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;color:var(--muted);white-space:nowrap}
     .debtBreakdownDetails summary::-webkit-details-marker{display:none}
     .debtBreakdownSummary{overflow:hidden;text-overflow:ellipsis;text-align:right;color:#cbd5e1}
@@ -605,6 +614,10 @@
     .monthHead h4{margin:0}
     .monthAlertBtn{min-width:40px;padding:8px 10px;font-size:18px;line-height:1}
     .monthAlertBtn.bad{box-shadow:0 0 0 1px rgba(255,91,127,.38) inset}
+    .upcomingNotice{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:13px 15px;border-radius:16px;background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.34);margin-bottom:14px}
+    .upcomingNoticeTitle{font-weight:900;color:#fde68a}
+    .upcomingNoticeText{font-size:13px;color:#e2e8f0;margin-top:4px;line-height:1.45}
+    .upcomingNoticeBadge{flex:0 0 auto;padding:6px 9px;border-radius:999px;background:rgba(250,204,21,.16);color:#fde68a;font-size:12px;font-weight:900}
     .currentMonthGrid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
     .currentMonthStacks{display:flex;flex-direction:column;gap:16px}
     .currentMonthSummary .value{font-size:24px}
@@ -630,8 +643,28 @@
     .emailReviewActions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px}
     .emailScanSpinner{width:42px;height:42px;border:4px solid rgba(255,255,255,.14);border-top-color:var(--cyan);border-radius:50%;animation:emailScanSpin .8s linear infinite;margin:18px auto}
     @keyframes emailScanSpin{to{transform:rotate(360deg)}}
-    @media (max-width:800px){.emailScanResultGrid{grid-template-columns:1fr 1fr}}
-    @media (max-width:1100px){.grid-2,.summary,.forecast-toolbar,.modalGrid,.currentMonthGrid{grid-template-columns:1fr}}
+    @media (max-width:800px){
+      .emailScanResultGrid{grid-template-columns:1fr 1fr}
+      .page{padding-left:10px;padding-right:10px}
+      .appShell{margin-top:6px}
+      .topbar{margin-bottom:10px;justify-content:flex-end}
+      .tabs{gap:5px;margin-bottom:10px;display:grid;grid-template-columns:repeat(4,1fr)}
+      .tab{padding:9px 6px;text-align:center;font-size:12px}
+      .stack{gap:9px}
+      .panel{padding:11px;border-radius:14px}
+      .forecast-panel-head{align-items:flex-start}
+      .forecast-toolbar{grid-template-columns:1fr 1fr;gap:8px}
+      .forecast-toolbar .field:nth-child(3){grid-column:1/-1}
+      .forecast-toolbar .field{gap:4px}
+      .forecast-toolbar .input,.forecast-toolbar .btn{padding:8px 9px;font-size:12px}
+      .months-grid{grid-template-columns:1fr;gap:9px}
+      .month{padding:11px;border-radius:14px}
+      .month .rows{row-gap:6px}
+      .cardBalancesPanel{grid-template-columns:1fr;gap:9px;margin-bottom:9px}
+      .cardBalanceCard{padding:11px}
+      .upcomingNotice{padding:11px 12px;margin-bottom:9px}
+    }
+    @media (max-width:1100px){.grid-2,.summary,.modalGrid,.currentMonthGrid{grid-template-columns:1fr}}
   </style>
 </head>
 <body data-zaurio-nav="herramientas">
@@ -704,6 +737,7 @@
               <span>Version</span>
               <strong id="profileVersionText">2.1.dev</strong>
             </div>
+            <div id="lastUpdatedText" class="dzLastUpdated">Última actualización de datos —</div>
             <button id="exportDebugJsonBtn" class="btn ghost profileMenuAction hidden">Exportar JSON</button>
             <button id="resetToWizardBtn" class="btn ghost profileMenuAction hidden">Volver al wizard</button>
             <button id="logoutBtn" class="btn danger profileMenuAction hidden">Salir</button>
@@ -798,10 +832,6 @@
 
     <section id="appShell" class="appShell hidden">
       <div class="topbar">
-        <div class="brand">
-          <h1>DineroZaurio</h1>
-          <p id="lastUpdatedText">Última actualización de datos —</p>
-        </div>
         <div class="actions">
           <div class="saveMeta">
             <button id="saveChangesBtn" class="btn primary saveBtn" disabled>
@@ -818,6 +848,8 @@
           </div>
         </div>
       </div>
+
+      <div id="upcomingNotifications" aria-live="polite"></div>
 
       <div class="tabs">
         <div class="tab active" data-tab="config">Configuración</div>
@@ -962,15 +994,20 @@
 
       <section id="tab-forecast" class="stack hidden">
         <div class="panel">
-          <div class="forecast-toolbar">
-            <div class="field"><label>Desde</label><input id="forecastFrom" class="input" type="month" /></div>
-            <div class="field"><label>Hasta</label><input id="forecastTo" class="input" type="month" /></div>
-            <div class="field"><label>Inventario de deudas</label><button id="toggleSettledDebts" class="btn ghost" type="button" aria-pressed="false">Ocultar saldadas</button></div>
-          </div>
-          <div class="legendNotes" aria-label="Cómo leer la previsión">
-            <div class="legendNote"><span class="legendDot"></span><span><strong>Recuperado</strong>: cuota que dejas de pagar al terminar una deuda.</span></div>
-            <div class="legendNote"><span class="legendDot"></span><span><strong>Sobrante</strong>: ingreso menos gastos, deuda y ahorro del periodo mostrado.</span></div>
-            <div class="legendNote"><span class="legendDot"></span><span><strong>Colchón</strong>: saldo inicial más los sobrantes acumulados de los periodos anteriores.</span></div>
+          <div class="forecast-panel-head">
+            <div class="forecast-toolbar">
+              <div class="field"><label>Desde</label><input id="forecastFrom" class="input" type="month" /></div>
+              <div class="field"><label>Hasta</label><input id="forecastTo" class="input" type="month" /></div>
+              <div class="field"><label>Inventario de deudas</label><button id="toggleSettledDebts" class="btn ghost" type="button" aria-pressed="false">Ocultar saldadas</button></div>
+            </div>
+            <div id="forecastLegend" class="forecastLegend">
+              <button id="forecastLegendBtn" class="btn ghost infoButton" type="button" aria-expanded="false" aria-label="Cómo leer la previsión">i</button>
+              <div class="forecastLegendContent legendNotes" role="tooltip" aria-label="Cómo leer la previsión">
+                <div class="legendNote"><span class="legendDot"></span><span><strong>Recuperado</strong>: cuota que dejas de pagar al terminar una deuda.</span></div>
+                <div class="legendNote"><span class="legendDot"></span><span><strong>Sobrante</strong>: ingreso menos gastos, deuda y ahorro del periodo mostrado.</span></div>
+                <div class="legendNote"><span class="legendDot"></span><span><strong>Colchón</strong>: saldo inicial más los sobrantes acumulados de los periodos anteriores.</span></div>
+              </div>
+            </div>
           </div>
         </div>
         <div id="forecastWarnings"></div><div id="cardBalancesPanel" class="cardBalancesPanel"></div><div id="monthsGrid" class="months-grid"></div>
@@ -1009,6 +1046,7 @@
     const DEBUG_EXPORT_EMAIL = 'dmnrobles@gmail.com';
     const EMAIL_SCAN_PENDING_KEY = 'dinerozaurio_email_scan_pending_v1';
     const SAVE_REMINDER_HIDDEN_KEY = 'dinerozaurio_hide_save_reminder_v1';
+    const LAST_SAVED_AT_KEY = 'dinerozaurio_last_saved_at_v1';
     const GMAIL_READ_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
     let emailScanResults = [];
     let emailScanReviewIndex = 0;
@@ -1018,6 +1056,7 @@
     const state = {
       session: null,
       planId: null,
+      lastSavedAt: localStorage.getItem(LAST_SAVED_AT_KEY) || '',
       reserveInitial: 0,
       defaultStartMonth: todayMonth(),
       paymentMethod: 'reserve',
@@ -1042,6 +1081,21 @@
       return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
     }
     function euros(n){ return Number(n||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2}); }
+    function formatSavedAt(value){
+      if(!value) return 'Última actualización de datos —';
+      const date = new Date(value);
+      if(Number.isNaN(date.getTime())) return 'Última actualización de datos —';
+      return `Última actualización de datos ${date.toLocaleDateString('es-ES')} ${date.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
+    }
+    function renderLastSavedAt(){
+      const target = document.getElementById('lastUpdatedText');
+      if(target) target.textContent = formatSavedAt(state.lastSavedAt);
+    }
+    function recordSuccessfulSave(value = new Date().toISOString()){
+      state.lastSavedAt = value;
+      localStorage.setItem(LAST_SAVED_AT_KEY,value);
+      renderLastSavedAt();
+    }
     function uid(){
       return crypto.randomUUID();
     }
@@ -2114,7 +2168,13 @@
     }
     function getChangedFields(before, after){
       return Array.from(new Set([...Object.keys(before || {}), ...Object.keys(after || {})]))
-        .filter(key => key !== 'id' && stableStringify(before?.[key]) !== stableStringify(after?.[key]));
+        .filter(key => {
+          if(key === 'id') return false;
+          const beforeValue = before?.[key];
+          const afterValue = after?.[key];
+          const bothEmpty = [beforeValue,afterValue].every(value => value === undefined || value === null || value === '');
+          return !bothEmpty && stableStringify(beforeValue) !== stableStringify(afterValue);
+        });
     }
     function createCollectionCreateChange(collection, item){
       const detailField = collection === 'debts'
@@ -3850,6 +3910,11 @@
         plan = ins.data;
       }
       state.planId = plan.id;
+      const remoteSavedAt = plan.updated_at || '';
+      if(remoteSavedAt && (!state.lastSavedAt || new Date(remoteSavedAt) > new Date(state.lastSavedAt))){
+        state.lastSavedAt = remoteSavedAt;
+        localStorage.setItem(LAST_SAVED_AT_KEY,remoteSavedAt);
+      }
       if(syncPlanState){
         state.reserveInitial = Number(plan.initial_reserve || 0);
         state.defaultStartMonth = plan.default_start_month || todayMonth();
@@ -4392,6 +4457,7 @@
           assignPersistableState(snapshot);
           savedBaseline = cloneData(snapshot);
           cacheLocal();
+          recordSuccessfulSave();
           closeSaveModal();
           renderManualLists();
           renderForecast();
@@ -5674,15 +5740,13 @@
       document.getElementById('budgetPeriodMode').value = budgetPeriodMode;
       renderBudgetPeriodModeHelp();
 
-      const now = new Date();
-      const pad = (n) => String(n).padStart(2,'0');
-      document.getElementById('lastUpdatedText').textContent =
-        `Última actualización de datos ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      renderLastSavedAt();
 
       const savingsBase = state.goals.reduce((a,g)=>a+Number((g.goalType||'fixed')==='fixed' ? (g.monthlyAmount||0) : 0),0);
       document.getElementById('kpiSavings').textContent = euros(savingsBase);
       kpis();
       updateSaveUi();
+      renderUpcomingNotifications();
     }
 
     function renderBudgetPeriodModeHelp(){
@@ -5691,6 +5755,39 @@
       root.innerHTML = budgetPeriodMode === 'salary_cycle'
         ? `<span class="legendDot"></span><span><strong>Sueldo a sueldo:</strong> cada periodo empieza cuando entra la nómina que lo financia y termina el día anterior a la siguiente. Los cargos se asignan por su fecha prevista; una limpieza del 31 de enero puede pertenecer al periodo de febrero.</span>`
         : `<span class="legendDot"></span><span><strong>Mes natural:</strong> agrupa todo lo que ocurre entre el día 1 y el último día del calendario, aunque un mes tenga más cargos semanales o quincenales.</span>`;
+    }
+
+    function isNonMonthlyExpense(item){
+      return normalizeExpensePeriodicity(item?.periodicity) !== 'monthly';
+    }
+    function groupExpenseExtras(entries){
+      const grouped = new Map();
+      entries.forEach(entry => {
+        const amount = Number(entry?.amount || 0);
+        if(amount <= 0) return;
+        const name = entry?.name || 'Gasto extra';
+        grouped.set(name,(grouped.get(name) || 0) + amount);
+      });
+      return Array.from(grouped,([name,amount]) => ({ name,amount }));
+    }
+    function salaryPeriodExpenseExtras(events){
+      const nonMonthlyNames = new Set((state.expenses || []).filter(isNonMonthlyExpense).map(item => String(item.name || '').trim().toLowerCase()));
+      return groupExpenseExtras((events || [])
+        .filter(event => ['Gasto extraordinario','Gasto puntual'].includes(event.type) || nonMonthlyNames.has(String(event.name || '').trim().toLowerCase()))
+        .map(event => ({ name:event.name, amount:Math.abs(Number(event.amount || 0)) })));
+    }
+    function renderUpcomingNotifications(){
+      const root = document.getElementById('upcomingNotifications');
+      if(!root) return;
+      const tomorrow = new Date();
+      tomorrow.setHours(0,0,0,0);
+      tomorrow.setDate(tomorrow.getDate()+1);
+      const chargeTypes = new Set(['Gasto','Gasto extraordinario','Gasto puntual','Deuda']);
+      const events = buildCalendarEvents(tomorrow,1).filter(event => Number(event.amount || 0) < 0 && chargeTypes.has(event.type));
+      if(!events.length){ root.innerHTML = ''; return; }
+      const total = events.reduce((sum,event) => sum + Math.abs(Number(event.amount || 0)),0);
+      const names = events.map(event => escapeHtml(event.name)).join(', ');
+      root.innerHTML = `<div class="upcomingNotice"><div><div class="upcomingNoticeTitle">Mañana se prevén ${events.length} cargo${events.length === 1 ? '' : 's'}</div><div class="upcomingNoticeText">${names}. Comprueba que la cuenta de cobro tenga al menos ${euros(total)} disponibles.</div></div><div class="upcomingNoticeBadge">${euros(total)}</div></div>`;
     }
 
     function renderForecast(){
@@ -5723,7 +5820,7 @@
         const calendarExpenseExtras = [
           ...(Number(adj.extraExpenseAmount || 0) ? [{ name:adj.extraExpenseName || 'Gasto extraordinario', amount:Number(adj.extraExpenseAmount || 0) }] : []),
           ...state.expenses
-            .filter(entry => normalizeExpensePeriodicity(entry.periodicity) === 'one_time')
+            .filter(isNonMonthlyExpense)
             .map(entry => ({
               name:entry.name || 'Gasto puntual',
               amount:getScopedAmountForMonth('expenseOverrides',entry.id,m,getExpenseMonthlyCharge(entry,m))
@@ -5734,8 +5831,8 @@
             .map(entry => ({ name:entry.name || 'Gasto puntual', amount:Number(entry.amount || 0) }))
         ];
         const expenseExtras = budgetPeriodMode === 'salary_cycle'
-          ? (periodSnapshot.events || []).filter(event => event.type === 'Gasto extraordinario' || event.type === 'Gasto puntual').map(event => ({ name:event.name, amount:Math.abs(Number(event.amount || 0)) }))
-          : calendarExpenseExtras;
+          ? salaryPeriodExpenseExtras(periodSnapshot.events)
+          : groupExpenseExtras(calendarExpenseExtras);
 
         let debt = 0;
         let reserveUsage = reserveOneOffExpensesTotal(m) + reserveTransferIn;
@@ -5771,8 +5868,11 @@
         const net = income - expense - debt - totalSaving;
         reserve += reserveCarryFromNet(net);
         cumulativeSavings += totalSaving - savingsUsage;
+        const hasMonthlyDeficit = net < 0;
         const hasAccumulatedDeficit = reserve < 0;
-        const monthRisk = hasAccumulatedDeficit ? buildNegativeMonthSuggestions(m, Math.abs(reserve)) : { deficit:0, suggestions:[] };
+        const hasFinancialRisk = hasMonthlyDeficit || hasAccumulatedDeficit;
+        const riskDeficit = hasAccumulatedDeficit ? Math.abs(reserve) : Math.abs(net);
+        const monthRisk = hasFinancialRisk ? buildNegativeMonthSuggestions(m, riskDeficit) : { deficit:0, suggestions:[] };
 
         if(m >= from && m <= to){
           const calendarDebtBreakdown = state.debts.map(item => {
@@ -5786,15 +5886,14 @@
           visibleCards.push(`<div class="month" data-month="${m}">
             <div class="monthHead">
               <h4>${escapeHtml(budgetPeriodCaption(m))}</h4>
-              ${hasAccumulatedDeficit ? `<button class="btn danger monthAlertBtn bad" data-month-alert="${m}" title="Colchón acumulado en negativo">!</button>` : ''}
+              ${hasFinancialRisk ? `<button class="btn danger monthAlertBtn bad" data-month-alert="${m}" title="${hasAccumulatedDeficit ? 'Colchón acumulado en negativo' : 'El periodo gasta más de lo que ingresa'}">!</button>` : ''}
             </div>
             <div class="rows">
               <div class="lab">Ingreso</div><div>${euros(income)}</div>
               ${reserveTransferIn ? `<div class="lab">Uso colchón (registro antiguo)</div><div>${euros(reserveTransferIn)}</div>` : ''}
               ${transferIn ? `<div class="lab">Traspaso tarjeta</div><div>${euros(transferIn)}</div>` : ''}
               ${expenseExtras.length ? `<details class="expenseExtrasDetails"><summary><span class="expenseExtrasLabel">Gastos + extras <span class="expenseExtrasArrow">⌄</span></span><strong>${euros(expense)}</strong></summary><div class="expenseExtrasList">${expenseExtras.map(entry => `<div class="expenseExtrasItem"><span>${escapeHtml(entry.name)}</span><strong>${euros(entry.amount)}</strong></div>`).join('')}</div></details>` : `<div class="lab">Gastos</div><div>${euros(expense)}</div>`}
-              <div class="lab">Deuda</div><div>${euros(debt)}</div>
-              ${debtBreakdown.length ? `<div class="debtBreakdownRow"><details class="debtBreakdownDetails"><summary><span>Detalle de deuda</span><span class="debtBreakdownSummary">${debtBreakdown.length} pago${debtBreakdown.length === 1 ? '' : 's'} · ${euros(debt)}</span><span class="debtBreakdownArrow">⌄</span></summary><div class="debtBreakdownList">${debtBreakdown.map(entry => `<div class="debtBreakdownItem"><span>${escapeHtml(entry.name)}</span><strong>${euros(entry.amount)}</strong></div>`).join('')}</div></details></div>` : ''}
+              ${debtBreakdown.length ? `<div class="debtBreakdownRow"><details class="debtBreakdownDetails"><summary><span>Deuda <span class="debtBreakdownArrow">⌄</span></span><strong>${euros(debt)}</strong></summary><div class="debtBreakdownList">${debtBreakdown.map(entry => `<div class="debtBreakdownItem"><span>${escapeHtml(entry.name)}</span><strong>${euros(entry.amount)}</strong></div>`).join('')}</div></details></div>` : `<div class="lab">Deuda</div><div>${euros(debt)}</div>`}
               <div class="lab">Recuperado</div><div class="pos">${recovered ? '+ ' + euros(recovered) : '—'}</div>
               ${reserveUsage ? `<div class="lab">Pagado con colchón</div><div>${euros(reserveUsage)}</div>` : ''}
               ${savingsUsage ? `<div class="lab">Pagado con ahorro</div><div>${euros(savingsUsage)}</div>` : ''}
@@ -5803,7 +5902,7 @@
               <div class="lab">Sobrante</div><div class="${net>=0?'pos':'neg'}">${euros(net)}</div>
               <div class="lab">Colchón</div><div class="${reserve>=0?'pos':'neg'}">${euros(reserve)}</div>
             </div>
-            ${hasAccumulatedDeficit ? `<div class="sub" style="margin-top:10px">Déficit acumulado: faltan ${euros(monthRisk.deficit)} para que el colchón vuelva a cero.</div>` : ''}
+            ${hasAccumulatedDeficit ? `<div class="sub" style="margin-top:10px">Déficit acumulado: faltan ${euros(monthRisk.deficit)} para que el colchón vuelva a cero.</div>` : hasMonthlyDeficit ? `<div class="sub" style="margin-top:10px">Este periodo consume ${euros(monthRisk.deficit)} del colchón aunque el saldo acumulado siga siendo positivo.</div>` : ''}
           </div>`);
         }
       });
@@ -6496,6 +6595,20 @@
       });
       document.getElementById('forecastFrom').addEventListener('change', renderForecast);
       document.getElementById('forecastTo').addEventListener('change', renderForecast);
+      document.getElementById('forecastLegendBtn').addEventListener('click', (event) => {
+        event.stopPropagation();
+        const legend = document.getElementById('forecastLegend');
+        const open = !legend.classList.contains('open');
+        legend.classList.toggle('open',open);
+        event.currentTarget.setAttribute('aria-expanded',open ? 'true' : 'false');
+      });
+      document.addEventListener('click', (event) => {
+        const legend = document.getElementById('forecastLegend');
+        if(legend && !legend.contains(event.target)){
+          legend.classList.remove('open');
+          document.getElementById('forecastLegendBtn')?.setAttribute('aria-expanded','false');
+        }
+      });
       document.getElementById('toggleSettledDebts').addEventListener('click', () => {
         forecastHideSettled = !forecastHideSettled;
         localStorage.setItem(FORECAST_HIDE_SETTLED_KEY, forecastHideSettled ? '1' : '0');
