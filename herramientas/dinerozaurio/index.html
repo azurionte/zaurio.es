@@ -632,6 +632,7 @@
     .txAmount{font-weight:900}
     .modalRoot{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:320;padding:18px}
     .modalCard{width:min(760px,100%);max-height:88vh;overflow:auto;background:linear-gradient(180deg,#121933,#0f1630);border:1px solid var(--line);border-radius:20px;padding:18px}
+    .modalCard.managerModal{width:min(980px,100%)}
     .modalHead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .modalGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .emailScanPanel{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
@@ -693,8 +694,19 @@
     .folderPillList{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.folderPill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px}
     .reconcileBanner{border-color:rgba(255,190,70,.45);background:linear-gradient(135deg,rgba(255,190,70,.12),rgba(255,255,255,.02))}
     .settingsBackBtn{align-self:flex-start}
-    @media (max-width:1100px){.homeGrid{grid-template-columns:1fr 1fr}}
-    @media (max-width:800px){.homeHeroHead{display:block}.homeHeroHead .btn{width:100%;margin-top:14px}.homeGrid{grid-template-columns:1fr}.homeCharge{grid-template-columns:58px 1fr auto}.folderModePanel,.allocationRow{grid-template-columns:1fr}.folderModeStatus{justify-content:flex-start}.accountSummaryGrid{grid-template-columns:1fr}}
+    .settingsIntro{background:linear-gradient(135deg,rgba(32,211,190,.09),rgba(76,130,255,.06))}
+    .settingsManagerGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+    .settingsManagerCard{appearance:none;color:inherit;text-align:left;display:grid;grid-template-columns:auto 1fr;gap:12px;min-height:180px;cursor:pointer;position:relative;transition:transform .16s ease,border-color .16s ease,background .16s ease}
+    .settingsManagerCard:hover{transform:translateY(-2px);border-color:rgba(32,211,190,.45);background:rgba(255,255,255,.045)}
+    .settingsManagerCard:focus-visible{outline:3px solid rgba(32,211,190,.5);outline-offset:2px}
+    .settingsManagerCard .value{display:block;font-size:25px;margin:7px 0 4px}
+    .settingsManagerIcon{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(34,211,238,.12);color:var(--cyan);font-size:20px;font-weight:900}
+    .settingsManagerIcon.expense{background:rgba(251,113,133,.12);color:#fb7185}.settingsManagerIcon.saving{background:rgba(74,222,128,.12);color:#4ade80}.settingsManagerIcon.debt{background:rgba(250,204,21,.12);color:#facc15}
+    .settingsManagerAction{position:absolute;left:62px;bottom:15px;color:var(--cyan);font-weight:850;font-size:13px}
+    .managerModalList{display:grid;gap:12px;margin-top:14px}
+    .modeIndicator{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;background:rgba(34,211,238,.1);color:#bff7ff;font-size:12px;font-weight:850}
+    @media (max-width:1100px){.homeGrid,.settingsManagerGrid{grid-template-columns:1fr 1fr}}
+    @media (max-width:800px){.homeHeroHead{display:block}.homeHeroHead .btn{width:100%;margin-top:14px}.homeGrid,.settingsManagerGrid{grid-template-columns:1fr}.settingsManagerCard{min-height:140px}.homeCharge{grid-template-columns:58px 1fr auto}.folderModePanel,.allocationRow{grid-template-columns:1fr}.folderModeStatus{justify-content:flex-start}.accountSummaryGrid{grid-template-columns:1fr}}
   </style>
 </head>
 <body data-zaurio-nav="herramientas">
@@ -895,70 +907,32 @@
        </section>
 
        <section id="tab-config" class="stack hidden">
+        <section class="panel settingsIntro">
+          <div><div class="label">Configuración</div><h2>¿Qué quieres organizar?</h2><div class="sub">Cada bloque se abre en una ventana independiente. Aquí solo ves el estado general.</div></div>
+        </section>
+        <div class="settingsManagerGrid">
+          <button class="panel settingsManagerCard" id="openIncomeManagerBtn" type="button">
+            <span class="settingsManagerIcon" aria-hidden="true">↗</span><span><span class="label">Ingresos</span><strong class="value kpi-cyan" id="kpiIncome">0 €</strong><span class="sub" id="incomeManagerMeta">0 configurados</span></span><span class="settingsManagerAction">Gestionar →</span>
+          </button>
+          <button class="panel settingsManagerCard" id="openExpenseManagerBtn" type="button">
+            <span class="settingsManagerIcon expense" aria-hidden="true">↓</span><span><span class="label">Gastos</span><strong class="value kpi-red" id="kpiExpense">0 €</strong><span class="sub" id="expenseManagerMeta">0 configurados</span></span><span class="settingsManagerAction">Gestionar →</span>
+          </button>
+          <button class="panel settingsManagerCard" id="openGoalManagerBtn" type="button">
+            <span class="settingsManagerIcon saving" aria-hidden="true">◎</span><span><span class="label">Ahorros</span><strong class="value kpi-green" id="kpiSavings">0 €</strong><span class="sub" id="goalManagerMeta">0 configurados</span></span><span class="settingsManagerAction">Gestionar →</span>
+          </button>
+          <button class="panel settingsManagerCard" id="openDebtManagerBtn" type="button">
+            <span class="settingsManagerIcon debt" aria-hidden="true">▤</span><span><span class="label">Deudas</span><strong class="value kpi-yellow" id="kpiDebt">0 €</strong><span class="sub" id="debtManagerMeta">0 configuradas</span></span><span class="settingsManagerAction">Gestionar →</span>
+          </button>
+        </div>
+
+        <div class="hidden" aria-hidden="true">
+          <button id="addIncomeBtn" type="button"></button><div id="incomeList"></div>
+          <button id="addExpenseBtn" type="button"></button><div id="expenseList"></div>
+          <button id="addGoalBtn" type="button"></button><div id="goalList"></div>
+          <button id="addDebtBtn" type="button"></button><div id="debtList"></div>
+        </div>
+
         <div class="compactGrid">
-          <div class="leftCol">
-            <div class="panel">
-              <div class="section-title">
-                <div>
-                  <div class="label">Ingresos mensuales base</div>
-                  <div class="value kpi-cyan" id="kpiIncome">0 €</div>
-                </div>
-                <button class="btn ghost toggleSectionBtn" data-target="incomeSectionBody">Editar</button>
-              </div>
-              <div id="incomeSectionBody" class="sectionBody hidden" style="display:none">
-                <div class="sub" style="margin-bottom:12px">Añade sueldo, bonus, alquiler cobrado o side income.</div>
-                <div class="btnRow" style="margin-bottom:12px"><button id="addIncomeBtn" class="btn good">+ Añadir ingreso</button></div>
-                <div id="incomeList" class="list"></div>
-              </div>
-            </div>
-
-            <div class="panel">
-              <div class="section-title">
-                <div>
-                  <div class="label">Gastos base mensuales</div>
-                  <div class="value kpi-red" id="kpiExpense">0 €</div>
-                </div>
-                <button class="btn ghost toggleSectionBtn" data-target="expenseSectionBody">Editar</button>
-              </div>
-              <div id="expenseSectionBody" class="sectionBody hidden" style="display:none">
-                <div class="sub" style="margin-bottom:12px">Cada gasto tiene nombre, importe y periodicidad.</div>
-                <div class="btnRow" style="margin-bottom:12px"><button id="addExpenseBtn" class="btn good">+ Añadir gasto</button></div>
-                <div id="expenseList" class="list"></div>
-              </div>
-            </div>
-
-            <div class="panel">
-              <div class="section-title">
-                <div>
-                  <div class="label">Ahorro conseguido</div>
-                  <div class="value kpi-green" id="kpiSavings">0 €</div>
-                </div>
-                <button class="btn ghost toggleSectionBtn" data-target="goalSectionBody">Editar</button>
-              </div>
-              <div id="goalSectionBody" class="sectionBody hidden" style="display:none">
-                <div class="sub" style="margin-bottom:12px">Ahorro fijo por mes o ahorro por objetivo.</div>
-                <div class="btnRow" style="margin-bottom:12px"><button id="addGoalBtn" class="btn good">+ Añadir ahorro</button></div>
-                <div id="goalList" class="list"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="rightCol">
-            <div class="panel">
-              <div class="section-title">
-                <div>
-                  <div class="label">Deuda base mensual</div>
-                  <div class="value kpi-yellow" id="kpiDebt">0 €</div>
-                </div>
-                <button class="btn ghost toggleSectionBtn" data-target="debtSectionBody">Editar</button>
-              </div>
-              <div id="debtSectionBody" class="sectionBody hidden" style="display:none">
-                <div class="sub" style="margin-bottom:12px">Préstamos, compras aplazadas y tarjetas.</div>
-                <div class="btnRow" style="margin-bottom:12px"><button id="addDebtBtn" class="btn good">+ Añadir deuda</button></div>
-                <div id="debtList" class="list"></div>
-              </div>
-            </div>
-          </div>
 
           <div class="grid-2 fullCol">
             <div class="panel">
@@ -3698,29 +3672,34 @@
         return true;
       }).sort((a,b)=>a.date-b.date);
     }
-    function buildOrganizationDashboard(summary){
-      const organization = normalizeMoneyOrganization(state.moneyOrganization);
-      if(!organization.enabled || !organization.accounts.length) return '';
-      const allEvents = summary.snapshot.events || [];
-      const today = new Date(); today.setHours(23,59,59,999);
-      const targets = new Map();
-      organization.accounts.forEach(account => {
-        targets.set(`${account.id}|`,Number(account.minimumBalance || 0));
-        account.folders.forEach(folder => targets.set(`${account.id}|${folder.id}`,0));
+    function organizationPlan(summary){
+      const organization=normalizeMoneyOrganization(state.moneyOrganization);
+      const targets=new Map();
+      organization.accounts.forEach(account=>{
+        targets.set(`${account.id}|`,Number(account.minimumBalance||0));
+        account.folders.forEach(folder=>targets.set(`${account.id}|${folder.id}`,0));
       });
-      allEvents.forEach(event => {
-        if(Number(event.amount || 0) >= 0 || !event.itemId) return;
-        const assignment = organization.assignments[event.itemId];
-        if(!assignment) return;
-        const isBudget = event.type === 'Presupuesto';
-        const confirmed = eventConfirmation(event.itemId,summary.periodYm,dateIsoLocal(event.date));
-        if(!isBudget && event.date <= today){
-          const isServiceExpense = (state.expenses || []).some(item => item.id === event.itemId);
+      const today=new Date(); today.setHours(23,59,59,999);
+      (summary.snapshot.events||[]).forEach(event=>{
+        if(Number(event.amount||0)>=0 || !event.itemId) return;
+        const assignment=organization.assignments[event.itemId]; if(!assignment) return;
+        const isBudget=event.type==='Presupuesto';
+        const confirmed=eventConfirmation(event.itemId,summary.periodYm,dateIsoLocal(event.date));
+        if(!isBudget && event.date<=today){
+          const isServiceExpense=(state.expenses||[]).some(item=>item.id===event.itemId);
           if(!isServiceExpense || confirmed) return;
         }
-        const key = `${assignment.accountId}|${assignment.folderId || ''}`;
-        targets.set(key,(targets.get(key) || 0) + Math.abs(Number(event.amount || 0)));
+        const key=`${assignment.accountId}|${assignment.folderId||''}`;
+        targets.set(key,(targets.get(key)||0)+Math.abs(Number(event.amount||0)));
       });
+      const accountTarget=account=>(targets.get(`${account.id}|`)||0)+account.folders.reduce((sum,folder)=>sum+(targets.get(`${account.id}|${folder.id}`)||0),0);
+      const transferTotal=organization.accounts.filter(account=>account.id!==organization.salaryAccountId).reduce((sum,account)=>sum+accountTarget(account),0);
+      const reservedTotal=organization.accounts.reduce((sum,account)=>sum+accountTarget(account),0);
+      return {organization,targets,accountTarget,transferTotal,reservedTotal};
+    }
+    function buildOrganizationDashboard(summary){
+      const {organization,targets,accountTarget} = organizationPlan(summary);
+      if(!organization.enabled || !organization.accounts.length) return '';
       const salaryAccount = organization.accounts.find(account => account.id === organization.salaryAccountId);
       const cards = organization.accounts.map(account => {
         const directTarget = targets.get(`${account.id}|`) || 0;
@@ -3735,15 +3714,15 @@
         return `<div class="accountSummaryCard">
           <div class="accountSummaryHead"><div><strong>${escapeHtml(account.name)}</strong><div class="sub">${account.id === organization.salaryAccountId ? 'Cuenta de la nómina' : 'Cuenta secundaria'}</div></div><button class="btn ghost" data-update-account-balance="${account.id}" type="button">Actualizar saldo</button></div>
           <div class="accountSummaryGrid">
-            <div class="accountSummaryMetric"><span class="sub">Debería conservar hoy</span><strong>${euros(expected)}</strong></div>
-            <div class="accountSummaryMetric"><span class="sub">Saldo informado</span><strong>${actual === null ? '—' : euros(actual)}</strong></div>
-            <div class="accountSummaryMetric"><span class="sub">Diferencia</span><strong class="${difference === null ? '' : difference >= 0 ? 'kpi-green' : 'kpi-red'}">${difference === null ? 'Sin actualizar' : euros(difference)}</strong></div>
+            <div class="accountSummaryMetric"><span class="sub">Reservado aquí hasta la nómina</span><strong>${euros(expected)}</strong></div>
+            <div class="accountSummaryMetric"><span class="sub">Saldo real informado</span><strong>${actual === null ? '—' : euros(actual)}</strong></div>
+            <div class="accountSummaryMetric"><span class="sub">Margen tras reservas</span><strong class="${difference === null ? '' : difference >= 0 ? 'kpi-green' : 'kpi-red'}">${difference === null ? 'Actualízalo' : euros(difference)}</strong></div>
           </div>
           ${folderPills ? `<div class="folderPillList">${folderPills}</div>` : ''}
         </div>`;
       }).join('');
       const transfers = organization.accounts.filter(account => account.id !== organization.salaryAccountId).map(account => {
-        const total = (targets.get(`${account.id}|`) || 0) + account.folders.reduce((sum,folder)=>sum+(targets.get(`${account.id}|${folder.id}`)||0),0);
+        const total = accountTarget(account);
         return total > 0 ? `<div class="homeCharge"><div class="homeChargeDate">Mover</div><div><div class="homeChargeName">${escapeHtml(salaryAccount?.name || 'Cuenta de nómina')} → ${escapeHtml(account.name)}</div><div class="sub">Distribución interna; no cuenta como gasto</div></div><strong>${euros(total)}</strong></div>` : '';
       }).join('');
       return `<section class="panel"><div class="section-title"><div><h2>Distribuye tu dinero con tu sueldo nuevo</h2><div class="sub">El objetivo baja durante el periodo cuando confirmas cargos reales. No gastes el sobrante de la cuenta de nómina si todavía respalda pagos futuros.</div></div><button id="openOrganizationSettingsFromHome" class="btn ghost" type="button">Configurar</button></div>${transfers ? `<div class="homeChargeList">${transfers}</div>` : '<div class="empty">No hay transferencias internas sugeridas para este periodo.</div>'}<div class="accountSummaryList" style="margin-top:14px">${cards}</div></section>`;
@@ -3762,7 +3741,7 @@
     let moneyOrganizationDraft = null;
     function openMoneyOrganizationIntro(){
       const root = document.getElementById('modalRoot');
-      root.classList.remove('hidden');
+      root.className = 'modalRoot';
       root.innerHTML = `<div class="modalCard"><div class="modalHead"><h3>Modo carpetas</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div><p>Dinerozaurio te dirá cuánto conservar en cada cuenta y cuánto mover a cada Pocket, Espacio o carpeta después de cobrar.</p><div class="legendNote"><span class="legendDot"></span><span>Las transferencias entre tus cuentas son movimientos internos: el gasto solo ocurre cuando el dinero se utiliza o se cobra el servicio.</span></div><div class="legendNote" style="margin-top:10px"><span class="legendDot"></span><span>El plan funciona si respetas las cantidades reservadas. Usar dinero destinado a facturas puede generar un déficit aunque el saldo bancario todavía parezca alto.</span></div><div class="btnRow" style="margin-top:18px"><button id="startMoneyOrganizationSetup" class="btn primary">Configurar ahora</button><button id="cancelMoneyOrganizationSetup" class="btn ghost">Ahora no</button></div></div>`;
       document.getElementById('closeModalBtn').onclick = closeModal;
       document.getElementById('cancelMoneyOrganizationSetup').onclick = closeModal;
@@ -3787,7 +3766,7 @@
         <div class="sub" style="margin:12px 0 8px">Carpetas, Pockets o Espacios dentro de esta cuenta</div><div class="folderSetupList">${account.folders.map(folder=>`<div class="folderSetupRow"><input class="input" data-org-folder-name="${account.id}|${folder.id}" value="${escapeHtml(folder.name)}"><button class="btn danger" data-remove-org-folder="${account.id}|${folder.id}" type="button">Quitar</button></div>`).join('') || '<div class="empty">Sin carpetas. Puedes usar solamente la cuenta.</div>'}</div><button class="btn ghost" data-add-org-folder="${account.id}" type="button" style="margin-top:10px">+ Añadir carpeta</button>
       </div>`).join('');
       const assignmentRows = organizationAssignableItems().map(item => `<div class="allocationRow"><div><strong>${escapeHtml(item.label)}</strong><div class="sub">${item.type}</div></div><select class="select" data-org-assignment="${item.id}">${organizationTargetOptions(draft,draft.assignments[item.id] || {})}</select></div>`).join('');
-      root.classList.remove('hidden');
+      root.className = 'modalRoot';
       root.innerHTML = `<div class="modalCard"><div class="modalHead"><h3>Configurar cuentas y carpetas</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div><p class="sub">Añade todas las ubicaciones reales del dinero. Después asigna cada gasto, deuda o ahorro a la cuenta o carpeta que debe financiarlo.</p><div class="accountSetupList">${accountCards || '<div class="empty">Añade al menos una cuenta.</div>'}</div><button id="addOrganizationAccount" class="btn good" type="button" style="margin-top:12px">+ Añadir cuenta</button><h3 style="margin-top:22px">Dónde se paga cada cosa</h3><div class="allocationList">${assignmentRows || '<div class="empty">No hay gastos, deudas o ahorros configurados.</div>'}</div><div class="btnRow" style="margin-top:18px"><button id="saveMoneyOrganization" class="btn primary">Guardar configuración</button><button id="cancelMoneyOrganizationSetup" class="btn ghost">Cancelar</button></div></div>`;
       const syncDraftFromInputs = () => {
         draft.accounts.forEach(account => {
@@ -3816,7 +3795,7 @@
       const organization = normalizeMoneyOrganization(state.moneyOrganization);
       const account = organization.accounts.find(item => item.id === accountId);
       if(!account) return;
-      const root = document.getElementById('modalRoot'); root.classList.remove('hidden');
+      const root = document.getElementById('modalRoot'); root.className = 'modalRoot';
       root.innerHTML = `<div class="modalCard"><div class="modalHead"><h3>Actualizar ${escapeHtml(account.name)}</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div><div class="field"><label>Saldo real actual</label><input id="organizationActualBalance" class="input" type="number" step="0.01" value="${account.actualBalance ?? ''}"></div><div class="btnRow" style="margin-top:14px"><button id="saveOrganizationActualBalance" class="btn primary">Guardar saldo</button></div></div>`;
       document.getElementById('closeModalBtn').onclick=closeModal;
       document.getElementById('saveOrganizationActualBalance').onclick=()=>{ account.actualBalance=Number(document.getElementById('organizationActualBalance').value||0); account.balanceUpdatedAt=new Date().toISOString(); state.moneyOrganization=organization; closeModal(); touchState(); };
@@ -3825,7 +3804,7 @@
       const event = events[index]; if(!event) return;
       const item = state.expenses.find(entry => entry.id === event.itemId); if(!item) return;
       const originalIso = dateIsoLocal(event.date);
-      const root = document.getElementById('modalRoot'); root.classList.remove('hidden');
+      const root = document.getElementById('modalRoot'); root.className = 'modalRoot';
       root.innerHTML = `<div class="modalCard"><div class="modalHead"><h3>Actualizar valor real</h3><button id="closeModalBtn" class="btn danger">Cerrar</button></div><div class="sub">${index+1} de ${events.length} · Según el calendario, este servicio ya debería haberse cobrado.</div><h2 style="margin-top:14px">${escapeHtml(event.name)}</h2><div class="modalGrid"><div class="field"><label>Importe real cobrado</label><input id="confirmedChargeAmount" class="input" type="number" step="0.01" value="${Math.abs(Number(event.amount||0))}"></div><div class="field"><label>Fecha real</label><input id="confirmedChargeDate" class="input" type="date" value="${originalIso}"></div></div><div class="btnRow" style="margin-top:16px"><button id="confirmChargeValue" class="btn primary">Confirmar y continuar</button><button id="reviewChargeLater" class="btn ghost">Todavía no / más tarde</button></div><div class="homeFootnote">La corrección se quedará pendiente en Guardar para que puedas revisarla antes de aprobarla.</div></div>`;
       document.getElementById('closeModalBtn').onclick=closeModal;
       document.getElementById('reviewChargeLater').onclick=()=>{ if(events[index+1]) openChargeReviewModal(events,summary,index+1); else closeModal(); };
@@ -3853,24 +3832,32 @@
       const charges = summary.upcomingCharges;
       const unconfirmedCharges = unconfirmedPastServiceEvents(summary,today);
       const nextSalary = addDaysLocal(summary.periodEnd,1);
+      const organization=normalizeMoneyOrganization(state.moneyOrganization);
+      const organizationEnabled=organization.enabled && organization.accounts.length>0;
+      const plan=organizationEnabled ? organizationPlan(summary) : null;
+      const summaryCards=organizationEnabled ? `
+          <section class="panel homeMetric"><div><div class="label">Dinero del plan hoy</div><div class="homeMetricValue kpi-cyan">${euros(summary.potentialNow)}</div></div><div class="sub">Estimación conjunta antes de repartirla entre cuentas.</div></section>
+          <section class="panel homeMetric"><div><div class="label">Reservado entre cuentas</div><div class="homeMetricValue kpi-yellow">${euros(plan.reservedTotal)}</div></div><div class="sub">Facturas, presupuestos y mínimos que todavía debes proteger.</div></section>
+          <section class="panel homeMetric"><div><div class="label">Mover a cuentas secundarias</div><div class="homeMetricValue kpi-cyan">${euros(plan.transferTotal)}</div></div><div class="sub">Transferencias internas sugeridas; no son gastos nuevos.</div></section>
+          <section class="panel homeMetric"><div><div class="label">Libre al cerrar el periodo</div><div class="homeMetricValue ${summary.endingBalance>=0?'kpi-green':'kpi-red'}">${euros(summary.endingBalance)}</div></div><div class="sub">Lo que quedaría después de cumplir todo el plan hasta la próxima nómina.</div></section>` : `
+          <section class="panel homeMetric"><div><div class="label">Saldo operativo hoy</div><div class="homeMetricValue kpi-cyan">${euros(summary.operatingBalanceNow)}</div></div><div class="sub">Saldo potencial menos ${euros(summary.budgetsReservedToDate)} ya apartados en presupuestos.</div></section>
+          <section class="panel homeMetric"><div><div class="label">Cargos ya registrados</div><div class="homeMetricValue kpi-red">${euros(summary.charged)}</div></div><div class="sub">Desde el ${summary.periodStart.toLocaleDateString('es-ES',{day:'numeric',month:'short'})} hasta hoy.</div></section>
+          <section class="panel homeMetric"><div><div class="label">Próximos cargos</div><div class="homeMetricValue kpi-yellow">${euros(summary.upcomingTotal)}</div></div><div class="sub">Cargos con fecha prevista antes de la siguiente nómina.</div></section>
+          <section class="panel homeMetric"><div><div class="label">Saldo al final del periodo</div><div class="homeMetricValue ${summary.endingBalance >= 0 ? 'kpi-green' : 'kpi-red'}">${euros(summary.endingBalance)}</div></div><div class="sub">Después de cargos, deuda, ahorro y ${euros(summary.budgetsReserved)} todavía reservados en presupuestos.</div></section>`;
       root.innerHTML = `
         <section class="panel homeHero">
           <div class="homeHeroHead">
             <div>
-              <div class="label">Saldo potencial actual</div>
+              <div class="label">${organizationEnabled?'Plan conjunto antes de distribuir':'Saldo potencial actual'}</div>
               <div class="homeHeroValue">${euros(summary.potentialNow)}</div>
               <div class="sub">${escapeHtml(budgetPeriodCaption(summary.periodYm))} · saldo inicial + entradas del periodo − cargos registrados hasta hoy</div>
+              <div class="modeIndicator" style="margin-top:12px">${organizationEnabled?'Modo carpetas activo · revisa cada cuenta debajo':'Presupuesto conjunto · modo carpetas desactivado'}</div>
             </div>
             <button id="addMissingExpensesBtn" class="btn primary" type="button">Añadir gastos faltantes</button>
           </div>
-          <div class="homeFootnote">No es el saldo bancario sincronizado. Es la mejor estimación con los movimientos y fechas guardados; los presupuestos reservados se descuentan en el saldo de cierre, no se presentan como cargos ya realizados.</div>
+          <div class="homeFootnote">${organizationEnabled?'No confundas esta cifra con el saldo de una cuenta concreta. La sección de distribución indica qué debe permanecer en BBVA, Revolut o cada carpeta.':'No es el saldo bancario sincronizado. Es la mejor estimación con los movimientos y fechas guardados; los presupuestos reservados se descuentan en el saldo de cierre.'}</div>
         </section>
-        <div class="homeGrid">
-          <section class="panel homeMetric"><div><div class="label">Saldo operativo hoy</div><div class="homeMetricValue kpi-cyan">${euros(summary.operatingBalanceNow)}</div></div><div class="sub">Saldo potencial menos ${euros(summary.budgetsReservedToDate)} ya apartados en presupuestos.</div></section>
-          <section class="panel homeMetric"><div><div class="label">Cargos ya registrados</div><div class="homeMetricValue kpi-red">${euros(summary.charged)}</div></div><div class="sub">Desde el ${summary.periodStart.toLocaleDateString('es-ES',{day:'numeric',month:'short'})} hasta hoy.</div></section>
-          <section class="panel homeMetric"><div><div class="label">Próximos cargos</div><div class="homeMetricValue kpi-yellow">${euros(summary.upcomingTotal)}</div></div><div class="sub">Cargos con fecha prevista antes de la siguiente nómina.</div></section>
-          <section class="panel homeMetric"><div><div class="label">Saldo al final del periodo</div><div class="homeMetricValue ${summary.endingBalance >= 0 ? 'kpi-green' : 'kpi-red'}">${euros(summary.endingBalance)}</div></div><div class="sub">Después de cargos, deuda, ahorro y ${euros(summary.budgetsReserved)} todavía reservados en presupuestos.</div></section>
-        </div>
+        <div class="homeGrid">${summaryCards}</div>
         ${unconfirmedCharges.length ? `<section class="panel reconcileBanner"><div class="section-title"><div><h2>${unconfirmedCharges.length} cargo${unconfirmedCharges.length===1?'':'s'} pendiente${unconfirmedCharges.length===1?'':'s'} de confirmar</h2><div class="sub">El calendario cree que ya se cobraron. Confirma el importe real para que el saldo y las carpetas sigan siendo fiables.</div></div><button id="reviewPastChargesBtn" class="btn primary" type="button">Actualizar valores reales</button></div></section>` : ''}
         ${buildOrganizationDashboard(summary)}
         <section class="panel">
@@ -4781,6 +4768,43 @@
       const root = document.getElementById('modalRoot');
       root.className = 'hidden';
       root.innerHTML = '';
+    }
+    function openCollectionManager(type){
+      const config = {
+        income:{ title:'Ingresos', description:'Sueldo y otras entradas recurrentes que financian tu plan.', addLabel:'+ Añadir ingreso', items:()=>state.incomes },
+        expense:{ title:'Gastos', description:'Servicios, necesidades y presupuestos, con su periodicidad y fecha de cobro.', addLabel:'+ Añadir gasto', items:()=>state.expenses },
+        goal:{ title:'Ahorros', description:'Aportaciones activas y objetivos que quieres proteger cada periodo.', addLabel:'+ Añadir ahorro', items:()=>state.goals },
+        debt:{ title:'Deudas', description:'Préstamos, tarjetas y compras financiadas, separadas por instrumento.', addLabel:'+ Añadir deuda', items:()=>state.debts }
+      }[type];
+      if(!config) return;
+      const items = config.items();
+      const listHtml = type === 'debt' && items.length
+        ? groupedDebtsByEntity().map(group=>`<div class="debtGroup"><div class="debtGroupHead"><div><div class="debtGroupTitle">${escapeHtml(group.entityName)}</div><div class="debtGroupMeta">${group.items.length} instrumento${group.items.length===1?'':'s'}</div></div><div class="debtGroupActions"><button class="btn ghost" data-manager-add-card="${escapeHtml(group.entityName)}" type="button">+ Tarjeta</button><button class="btn ghost" data-manager-add-loan="${escapeHtml(group.entityName)}" type="button">+ Préstamo</button></div></div><div class="debtGroupList">${group.items.map(item=>itemCardHtml(item,'debt')).join('')}</div></div>`).join('')
+        : items.map(item=>itemCardHtml(item,type)).join('');
+      const root = document.getElementById('modalRoot');
+      root.className = 'modalRoot';
+      root.innerHTML = `<div class="modalCard managerModal" role="dialog" aria-modal="true" aria-labelledby="collectionManagerTitle"><div class="modalHead"><div><div class="label">Configuración</div><h3 id="collectionManagerTitle">${config.title}</h3></div><button id="closeModalBtn" class="btn danger" type="button">Cerrar</button></div><div class="section-title"><div class="sub">${config.description}</div><button id="managerAddItemBtn" class="btn good" type="button">${config.addLabel}</button></div><div class="managerModalList">${listHtml || '<div class="empty">No hay elementos todavía.</div>'}</div></div>`;
+      document.getElementById('closeModalBtn').onclick = closeModal;
+      document.getElementById('managerAddItemBtn').onclick = () => {
+        if(type==='income'){ const item=makeIncomeRow({name:''}); state.incomes.push(item); openSimpleEditor('income',item); }
+        if(type==='expense'){ const item=makeExpenseRow({name:''}); state.expenses.push(item); openSimpleEditor('expense',item); }
+        if(type==='goal'){ const item=makeGoalRow({name:'Nuevo objetivo'}); state.goals.push(item); renderManualLists(); openGoalEditor(item,false); }
+        if(type==='debt') openDebtCreateFlow('','revolving',false);
+      };
+      root.querySelectorAll('[data-edit]').forEach(button=>button.onclick=()=>{
+        const item=items.find(entry=>entry.id===button.dataset.id); if(!item) return;
+        if(type==='goal') openGoalEditor(item,false); else if(type==='debt') openDebtEditor(item,false); else openSimpleEditor(type,item);
+      });
+      root.querySelectorAll('[data-del]').forEach(button=>button.onclick=()=>{
+        const index=items.findIndex(entry=>entry.id===button.dataset.id);
+        if(index>=0) items.splice(index,1);
+        touchState(); kpis(); openCollectionManager(type);
+      });
+      root.querySelectorAll('[data-debt-prepay]').forEach(button=>button.onclick=()=>openDebtPlannerModal(button.dataset.debtPrepay,'prepay'));
+      root.querySelectorAll('[data-debt-saveplan]').forEach(button=>button.onclick=()=>openDebtPlannerModal(button.dataset.debtSaveplan,'saveplan'));
+      root.querySelectorAll('[data-manager-add-card]').forEach(button=>button.onclick=()=>openDebtCreateFlow(button.dataset.managerAddCard,'revolving',false));
+      root.querySelectorAll('[data-manager-add-loan]').forEach(button=>button.onclick=()=>openDebtCreateFlow(button.dataset.managerAddLoan,'loan',false));
+      setTimeout(()=>document.getElementById('collectionManagerTitle')?.focus(),0);
     }
     function closeSaveModal(){
       saveModalSelection = new Set();
@@ -6150,6 +6174,14 @@
       if(expenseEl) expenseEl.textContent = euros(expense);
       if(debtEl) debtEl.textContent = euros(debt);
       if(savingsEl) savingsEl.textContent = euros(savings);
+      const setMeta = (id,count,labelSingular,labelPlural) => {
+        const element=document.getElementById(id);
+        if(element) element.textContent=`${count} ${count===1?labelSingular:labelPlural}`;
+      };
+      setMeta('incomeManagerMeta',state.incomes.length,'configurado','configurados');
+      setMeta('expenseManagerMeta',state.expenses.length,'configurado','configurados');
+      setMeta('goalManagerMeta',state.goals.length,'configurado','configurados');
+      setMeta('debtManagerMeta',state.debts.length,'configurada','configuradas');
     }
 
     function itemCardHtml(item, type){
@@ -7114,6 +7146,10 @@
       document.getElementById('addDebtBtn').addEventListener('click', () => {
         openDebtCreateFlow('', 'revolving', false);
       });
+      document.getElementById('openIncomeManagerBtn')?.addEventListener('click',()=>openCollectionManager('income'));
+      document.getElementById('openExpenseManagerBtn')?.addEventListener('click',()=>openCollectionManager('expense'));
+      document.getElementById('openGoalManagerBtn')?.addEventListener('click',()=>openCollectionManager('goal'));
+      document.getElementById('openDebtManagerBtn')?.addEventListener('click',()=>openCollectionManager('debt'));
 
       const handleGeneralSettingsInput = () => {
         syncGeneralSettingsFromInputs();
