@@ -5,18 +5,23 @@
   const GENERAL='__accountGeneralTransfers';
   const OBSERVED='__accountGeneralBalances';
 
+  function claimAuthority(){
+    window.__DZ_CURRENT_ACCOUNTING__=VERSION;
+    window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__=VERSION;
+  }
+
   function install(){
     if(window.__DZ_CURRENT_ACCOUNTING__===VERSION) return;
     if(typeof renderHomeDashboard!=='function'||typeof buildTodayFinancialSnapshot!=='function'||typeof normalizeMoneyOrganization!=='function'){
       setTimeout(install,60);return;
     }
-    window.__DZ_CURRENT_ACCOUNTING__=VERSION;
-    window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__=VERSION;
+    claimAuthority();
     const previous=renderHomeDashboard;
     renderHomeDashboard=function(){
       previous();
-      setTimeout(()=>{try{applyAccounting();}catch(error){console.error('DineroZaurio accounting error',error);}},0);
+      setTimeout(()=>{try{claimAuthority();applyAccounting();}catch(error){console.error('DineroZaurio accounting error',error);}},0);
     };
+    setTimeout(claimAuthority,0);
     if(document.getElementById('homeDashboard')) renderHomeDashboard();
   }
 
