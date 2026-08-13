@@ -1,0 +1,12 @@
+name = "dinerozaurio-mcp"
+main = "src/worker.js"
+compatibility_date = "2026-08-13"
+
+[vars]
+FINANCE_TIMEZONE = "Europe/Madrid"
+
+# Secrets required at deploy time (never commit their values):
+# SUPABASE_URL
+# SUPABASE_SERVICE_ROLE_KEY
+# DINEROZAURIO_USER_ID
+# MCP_API_KEY
