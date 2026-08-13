@@ -48,7 +48,7 @@ An observed folder balance is physical truth at its observation point. Events at
 
 `ui/accounts.js` adapts domain state to the existing application UI. It must not parse money from DOM text or rebuild account balances. It consumes `resolveAccountState()` and renders its values.
 
-The module also owns UI-side persistence actions: account/folder selection in income/expense/debt/savings editors, observed balance entry, confirmation of an already-performed internal transfer, savings movement confirmation, universal add menu, personal-loan presentation and contextual future-charge editing. Persistence actions mutate state and call the existing `touchState()` / `persistAndRefresh()` pipeline; monetary interpretation remains in the core.
+The module also owns UI-side persistence actions: account/folder selection in income/expense/debt/savings editors, observed balance entry, confirmation of an already-performed internal transfer, savings movement confirmation, the visual universal add menu, personal-loan presentation and contextual future-charge editing. Personal loans preserve direction explicitly as `borrowed` (`me han prestado`) or `lent` (`he prestado`), including direction-aware repayment labels and payment records. Persistence actions mutate state and call the existing `touchState()` / `persistAndRefresh()` pipeline; monetary interpretation remains in the core.
 
 Only one canonical wrapper is installed around `renderHomeDashboard`; the former wrapper chain is not loaded.
 
@@ -78,9 +78,13 @@ Savings use three routing states: `planned`, `destination_defined`, and `movemen
 
 ## MCP and authentication
 
-The separate Cloudflare Worker under `integrations/dinerozaurio-mcp/` is read-only. It uses a server-side Supabase service-role credential and a separate MCP bearer token. It does not use the browser's authenticated session and does not expose write tools.
+The separate Cloudflare Worker under `integrations/dinerozaurio-mcp/` is read-only and multiuser. The MCP protected-resource metadata advertises Supabase Auth as its authorization server. Each `/mcp` request must carry the authenticated user's OAuth bearer token.
 
-Browser login/authentication remains a Supabase Auth concern. The current MCP endpoint does **not** implement OAuth; its client authentication is bearer-token based. Any future MCP OAuth work should be treated as a separate security change, not coupled to account routing.
+The Worker validates that bearer token against Supabase Auth `/auth/v1/user` using `SUPABASE_PUBLISHABLE_KEY`. Financial REST queries then use the same publishable key plus that user's bearer token. Row Level Security therefore remains the authorization boundary for `plans`, `income_items`, `expense_items`, `debt_items`, `savings_goals` and `month_adjustments`.
+
+The MCP must not use a Supabase service-role credential to read user financial data, must not pin itself to a single user, and must not bypass RLS. It exposes only read-only MCP tools; write operations remain outside the MCP surface.
+
+This behavior is independent of the browser session transport, but both the browser and MCP ultimately rely on Supabase Auth identities and RLS policies to scope data to the authenticated user.
 
 ## Tests and CI
 
