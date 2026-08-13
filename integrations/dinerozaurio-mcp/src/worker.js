@@ -1,5 +1,5 @@
 const SERVER_NAME = 'dinerozaurio-finance';
-const SERVER_VERSION = '0.2.0';
+const SERVER_VERSION = '0.3.0';
 
 const READ_ONLY_ANNOTATIONS = {
   readOnlyHint: true,
@@ -184,18 +184,49 @@ async function getFinancialOverview(plan, args, env, accessToken) {
     listByPlan(env, accessToken, 'expense_items', plan.id, 'created_at.asc'),
     listByPlan(env, accessToken, 'debt_items', plan.id, 'created_at.asc'),
     listByPlan(env, accessToken, 'savings_goals', plan.id, 'created_at.asc'),
-    getMonthAdjustments(env, accessToken, plan.id, month)
+    getMonthAdjustmentsUntil(env, accessToken, plan.id, month)
   ]);
 
   const startDefault = plan.default_start_month || month;
-  const activeIncomes = incomes.filter((item) => applies(item, month, startDefault));
-  const activeExpenses = expenses.filter((item) => applies(item, month, startDefault));
-  const activeGoals = goals.filter((item) => goalApplies(item, month, startDefault));
-  const recurringIncome = sum(activeIncomes, (item) => item.amount);
-  const recurringExpenses = sum(activeExpenses, (item) => item.amount);
-  const debtPayments = sum(debts, (debt) => debtMonthlyAmount(debt, month, startDefault));
-  const scheduledSavings = sum(activeGoals, (goal) => goal.monthly_amount);
-  const adjustment = adjustments[0] || null;
+  const adjustment = adjustments.find((row) => row.month_key === month) || null;
+
+  const incomeAmounts = incomes.map((item) => ({
+    item,
+    amount: getScopedAmountForMonth(
+      adjustments,
+      'income_overrides',
+      item.id,
+      month,
+      recurringItemAmount(item, month, startDefault)
+    )
+  }));
+  const expenseAmounts = expenses.map((item) => ({
+    item,
+    amount: getScopedAmountForMonth(
+      adjustments,
+      'expense_overrides',
+      item.id,
+      month,
+      recurringItemAmount(item, month, startDefault)
+    )
+  }));
+  const goalAmounts = goals.map((goal) => ({
+    item: goal,
+    amount: getScopedAmountForMonth(
+      adjustments,
+      'goal_overrides',
+      goal.id,
+      month,
+      goalApplies(goal, month, startDefault) ? Number(goal.monthly_amount || 0) : 0
+    )
+  }));
+  const debtStates = debts.map((debt) => resolveDebtMonthState(debt, month, startDefault, adjustments));
+
+  const recurringIncome = sum(incomeAmounts, (entry) => entry.amount);
+  const recurringExpenses = sum(expenseAmounts, (entry) => entry.amount);
+  const debtPayments = sum(debtStates, (state) => state.amount);
+  const scheduledSavings = sum(goalAmounts, (entry) => entry.amount);
+
   const extraIncome = Number(adjustment?.extra_income_amount || 0);
   const extraExpense = Number(adjustment?.extra_expense_amount || 0);
   const extraSaving = Number(adjustment?.extra_saving_amount || 0);
@@ -222,10 +253,11 @@ async function getFinancialOverview(plan, args, env, accessToken) {
       margin: round2(margin)
     },
     counts: {
-      active_incomes: activeIncomes.length,
-      active_expenses: activeExpenses.length,
+      active_incomes: incomeAmounts.filter((entry) => entry.amount !== 0).length,
+      active_expenses: expenseAmounts.filter((entry) => entry.amount !== 0).length,
       debts: debts.length,
-      active_savings_goals: activeGoals.length
+      active_debts: debtStates.filter((state) => state.amount !== 0).length,
+      active_savings_goals: goalAmounts.filter((entry) => entry.amount !== 0).length
     },
     month_adjustment: adjustment
   };
@@ -247,6 +279,14 @@ async function getAuthenticatedUser(env, accessToken) {
 async function getMonthAdjustments(env, accessToken, planId, month) {
   const filters = [`plan_id=eq.${encodeURIComponent(planId)}`];
   if (validMonth(month)) filters.push(`month_key=eq.${encodeURIComponent(month)}`);
+  return supabaseSelect(env, accessToken, 'month_adjustments', filters, 'month_key.asc');
+}
+
+async function getMonthAdjustmentsUntil(env, accessToken, planId, month) {
+  const filters = [
+    `plan_id=eq.${encodeURIComponent(planId)}`,
+    `month_key=lte.${encodeURIComponent(month)}`
+  ];
   return supabaseSelect(env, accessToken, 'month_adjustments', filters, 'month_key.asc');
 }
 
@@ -283,52 +323,264 @@ async function supabaseSelect(env, accessToken, table, filters = [], order = nul
   return response.json();
 }
 
-function applies(item, month, startDefault) {
+function recurringItemAmount(item, month, startDefault) {
   const start = item.start_month || startDefault;
   const end = item.end_month || '';
-  if (!start || month < start) return false;
-  if (end && month > end) return false;
-  return periodicityApplies(item.periodicity || 'monthly', start, month);
+  if (!start || month < start) return 0;
+  if (end && month > end) return 0;
+
+  const periodicity = normalizePeriodicity(item.periodicity || 'monthly');
+  const meta = itemMetadata(item);
+  if (periodicity === 'weekly' || periodicity === 'biweekly') {
+    const count = recurringChargeCount(item, meta, month, startDefault, periodicity === 'weekly' ? 7 : 14);
+    return count * Number(item.amount || 0);
+  }
+
+  return periodicityApplies(periodicity, start, month, Number(meta.intervalMonths || 1))
+    ? Number(item.amount || 0)
+    : 0;
 }
 
 function goalApplies(goal, month, startDefault) {
-  return applies({ start_month: goal.start_month || startDefault, end_month: goal.end_month || '', periodicity: goal.periodicity || 'monthly' }, month, startDefault);
+  const start = goal.start_month || startDefault;
+  const end = goal.end_month || '';
+  if (!start || month < start) return false;
+  if (end && month > end) return false;
+  const meta = itemMetadata(goal);
+  return periodicityApplies(normalizePeriodicity(goal.periodicity || 'monthly'), start, month, Number(meta.intervalMonths || 1));
 }
 
-function periodicityApplies(periodicity, start, month) {
+function normalizePeriodicity(value) {
+  return [
+    'weekly',
+    'biweekly',
+    'monthly',
+    'bimonthly',
+    'quarterly',
+    'four_monthly',
+    'yearly',
+    'one_time',
+    'custom_months'
+  ].includes(value) ? value : 'monthly';
+}
+
+function periodicityApplies(periodicity, start, month, intervalMonths = 1) {
   const diff = monthDiff(start, month);
   if (diff < 0) return false;
   switch (periodicity) {
     case 'one_time': return diff === 0;
     case 'bimonthly': return diff % 2 === 0;
     case 'quarterly': return diff % 3 === 0;
+    case 'four_monthly': return diff % 4 === 0;
     case 'yearly': return diff % 12 === 0;
+    case 'custom_months': return diff % Math.max(1, Number(intervalMonths || 1)) === 0;
+    case 'weekly':
+    case 'biweekly':
     case 'monthly':
     default: return true;
   }
 }
 
-function debtMonthlyAmount(debt, month, startDefault) {
+function recurringChargeCount(item, meta, month, startDefault, intervalDays) {
+  const startMonth = item.start_month || startDefault;
+  const dueDay = Math.min(28, Math.max(1, Number(meta.dueDay || 1)));
+  const fallbackDate = `${startMonth}-${String(dueDay).padStart(2, '0')}`;
+  const rawAnchor = /^\d{4}-\d{2}-\d{2}$/.test(String(meta.startDate || '')) ? meta.startDate : fallbackDate;
+  const anchor = utcDateValue(rawAnchor);
+  if (anchor === null) return 0;
+
+  const leadDays = Math.max(0, Number(meta.chargeLeadDays || 0));
+  const dayMs = 24 * 60 * 60 * 1000;
+  const firstCharge = anchor - (leadDays * dayMs);
+  const [year, monthNumber] = month.split('-').map(Number);
+  const monthStart = Date.UTC(year, monthNumber - 1, 1);
+  const nextMonthStart = Date.UTC(year, monthNumber, 1);
+  const intervalMs = intervalDays * dayMs;
+
+  let cursor = firstCharge;
+  if (cursor < monthStart) {
+    cursor += Math.ceil((monthStart - cursor) / intervalMs) * intervalMs;
+  }
+
+  let count = 0;
+  while (cursor < nextMonthStart) {
+    if (cursor >= monthStart) count += 1;
+    cursor += intervalMs;
+  }
+  return count;
+}
+
+function utcDateValue(value) {
+  const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  return Date.UTC(year, month - 1, day);
+}
+
+function itemMetadata(item) {
+  return parseEmbeddedMetadata(item?.name, '__DZITEM__');
+}
+
+function debtMetadata(debt) {
+  return parseEmbeddedMetadata(debt?.name, '__DZMETA__');
+}
+
+function parseEmbeddedMetadata(rawName, prefix) {
+  const text = String(rawName || '').trim();
+  if (!text.startsWith(prefix)) return {};
+  try {
+    const value = JSON.parse(text.slice(prefix.length));
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  } catch {
+    return {};
+  }
+}
+
+function normalizeScopedOverride(raw) {
+  if (raw === undefined || raw === null) return null;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const mode = ['this_month', 'from_here', 'remove_from_here'].includes(raw.mode) ? raw.mode : 'this_month';
+    return {
+      mode,
+      amount: mode === 'remove_from_here' ? 0 : Number(raw.amount || 0)
+    };
+  }
+  return { mode: 'this_month', amount: Number(raw || 0) };
+}
+
+function getScopedOverrideForMonth(adjustments, overrideKey, itemId, month) {
+  const directAdjustment = adjustments.find((row) => row.month_key === month);
+  const direct = normalizeScopedOverride(directAdjustment?.[overrideKey]?.[itemId]);
+  if (direct) return direct;
+
+  let persistent = null;
+  for (const adjustment of adjustments) {
+    if (adjustment.month_key > month) break;
+    const candidate = normalizeScopedOverride(adjustment?.[overrideKey]?.[itemId]);
+    if (candidate?.mode === 'from_here' || candidate?.mode === 'remove_from_here') {
+      persistent = candidate;
+    }
+  }
+  return persistent;
+}
+
+function getScopedAmountForMonth(adjustments, overrideKey, itemId, month, fallbackAmount) {
+  const override = getScopedOverrideForMonth(adjustments, overrideKey, itemId, month);
+  if (!override) return Number(fallbackAmount || 0);
+  if (override.mode === 'remove_from_here') return 0;
+  return Number(override.amount || 0);
+}
+
+function resolveDebtMonthState(debt, month, startDefault, adjustments) {
+  const paidMonth = getDebtPaidMonth(debt, adjustments);
+
+  // A paid debt is terminal. No later custom/from_here override may reactivate it.
+  if (paidMonth && month > paidMonth) {
+    return {
+      debt_id: debt.id,
+      amount: 0,
+      active: false,
+      paid_month: paidMonth,
+      override_mode: null
+    };
+  }
+
+  const override = getDebtOverrideForMonth(debt.id, month, adjustments);
+  let amount;
+
+  if (override?.mode === 'paid') {
+    amount = Number(override.amount || debtBaseMonthlyAmount(debt, month, startDefault));
+  } else if (override?.mode === 'skip') {
+    amount = 0;
+  } else if (override?.mode === 'custom') {
+    amount = Number(override.amount || 0);
+  } else {
+    amount = debtBaseMonthlyAmount(debt, month, startDefault);
+  }
+
+  return {
+    debt_id: debt.id,
+    amount: Number(amount || 0),
+    active: Number(amount || 0) !== 0,
+    paid_month: paidMonth || null,
+    override_mode: override?.mode || null
+  };
+}
+
+function getDebtPaidMonth(debt, adjustments) {
+  const candidates = [];
+  const meta = debtMetadata(debt);
+  const settledMonth = String(debt.settled_month || meta.settledMonth || '').trim();
+  if (validMonth(settledMonth)) candidates.push(settledMonth);
+
+  for (const adjustment of adjustments) {
+    if (adjustment?.debt_overrides?.[debt.id]?.mode === 'paid' && validMonth(adjustment.month_key)) {
+      candidates.push(adjustment.month_key);
+    }
+  }
+
+  candidates.sort();
+  return candidates[0] || '';
+}
+
+function getDebtOverrideForMonth(debtId, month, adjustments) {
+  const directAdjustment = adjustments.find((row) => row.month_key === month);
+  const direct = directAdjustment?.debt_overrides?.[debtId] || null;
+  if (direct) return direct;
+
+  let persistent = null;
+  for (const adjustment of adjustments) {
+    if (adjustment.month_key > month) break;
+    const candidate = adjustment?.debt_overrides?.[debtId] || null;
+    if (candidate?.mode === 'custom' && candidate.scope === 'from_here') {
+      persistent = candidate;
+    }
+  }
+  return persistent;
+}
+
+function debtBaseMonthlyAmount(debt, month, startDefault) {
   const start = debt.start_month || startDefault;
   if (!start || month < start) return 0;
+
   const debtType = debt.debt_type || 'loan';
   const cardType = debt.card_type || null;
-  if (debtType === 'loan' || cardType === 'installment') return installmentAmount(debt, month, start);
-  if (cardType === 'pay_end_month') {
-    return applies({ start_month: start, end_month: debt.end_month || '', periodicity: debt.periodicity || 'monthly' }, month, startDefault) ? Number(debt.amount || 0) : 0;
+
+  if (debtType === 'loan' || cardType === 'installment') {
+    return installmentAmount(debt, month, start);
   }
-  if (cardType === 'revolving') return Number(debt.current_debt || 0) > 0 ? Number(debt.current_payment || 0) : 0;
+
+  if (cardType === 'pay_end_month') {
+    const meta = debtMetadata(debt);
+    return periodicityApplies(
+      normalizePeriodicity(debt.periodicity || 'monthly'),
+      start,
+      month,
+      Number(meta.intervalMonths || 1)
+    ) ? Number(debt.amount || 0) : 0;
+  }
+
+  if (cardType === 'revolving') {
+    return Number(debt.current_debt || 0) > 0 ? Number(debt.current_payment || 0) : 0;
+  }
+
   return Number(debt.monthly_payment || 0);
 }
 
 function installmentAmount(debt, month, start) {
   const monthly = Number(debt.monthly_payment || 0);
+  if (debt.last_month) {
+    return month >= start && month <= debt.last_month ? monthly : 0;
+  }
+
   if (debt.end_mode === 'remaining') {
     const diff = monthDiff(start, month);
     const remaining = Number(debt.remaining_installments || 0);
     return diff >= 0 && diff < remaining ? monthly : 0;
   }
-  if (debt.last_month) return month <= debt.last_month ? monthly : 0;
+
   return monthly;
 }
 
