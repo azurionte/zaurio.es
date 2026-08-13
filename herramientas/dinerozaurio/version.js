@@ -1,8 +1,8 @@
 window.__DINEROZAURIO_VERSION__ = {
   major: 2,
   minor: 9,
-  build: "1308262034",
-  label: "2.9.1308262034",
+  build: "1308262052",
+  label: "2.9.1308262052",
 };
 
 (() => {
@@ -13,46 +13,36 @@ window.__DINEROZAURIO_VERSION__ = {
   document.head.appendChild(gate);
 
   const scripts = [
-    './finance/accounting-core.js?v=1308262034',
-    './ui/accounts.js?v=1308262034'
+    './finance/accounting-core.js?v=1308262052',
+    './ui/accounts.js?v=1308262052',
+    './ui/account-observed-adapter.js?v=1308262052'
   ];
 
-  const modulesReady = new Promise((resolve, reject) => {
-    const loadNext = (index = 0) => {
-      if (index >= scripts.length) {
-        window.__DINEROZAURIO_UI_PATCHES_READY__ = true;
-        window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__ = 'accounting-core-2';
-        window.__DINEROZAURIO_ROUTING_AUTHORITY__ = 'accounting-core-2';
-        delete window.__DINEROZAURIO_ACCOUNT_DISPLAY_AUTHORITY__;
-        resolve(true);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = scripts[index];
-      script.async = false;
-      script.onload = () => loadNext(index + 1);
-      script.onerror = () => reject(new Error(`DineroZaurio: no se pudo cargar ${scripts[index]}`));
-      document.head.appendChild(script);
-    };
-    loadNext();
-  });
-
-  window.__DINEROZAURIO_CANONICAL_READY__ = modulesReady.then(() => new Promise((resolve, reject) => {
-    const activate = () => {
-      const installed = window.DineroZaurioAccountsUI?.install?.();
-      if (!installed) {
-        document.documentElement.classList.remove('dz-accounting-loading');
-        reject(new Error('DineroZaurio: renderer canónico no disponible'));
-        return;
-      }
-      resolve(true);
-    };
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', activate, { once: true });
-    } else {
-      activate();
+  const revealWhenPatched = () => {
+    if (window.__DZ_ACCOUNTS_UI__ !== 'accounts-ui-7' || !window.__DZ_ACCOUNT_OBSERVED_ADAPTER__) {
+      console.error('DineroZaurio: el renderer baseline o su adaptación canónica no terminaron de instalarse');
+      return;
     }
-  }));
+    window.__DINEROZAURIO_UI_PATCHES_READY__ = true;
+    window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__ = 'accounting-core-2';
+    window.__DINEROZAURIO_ROUTING_AUTHORITY__ = 'accounting-core-2';
+    delete window.__DINEROZAURIO_ACCOUNT_DISPLAY_AUTHORITY__;
+    document.documentElement.classList.remove('dz-accounting-loading');
+  };
 
-  window.__DINEROZAURIO_CANONICAL_READY__.catch(error => console.error(error));
+  const loadNext = (index = 0) => {
+    if (index >= scripts.length) {
+      if (document.readyState === 'complete') revealWhenPatched();
+      else window.addEventListener('load', revealWhenPatched, { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = scripts[index];
+    script.async = false;
+    script.onload = () => loadNext(index + 1);
+    script.onerror = () => console.error('DineroZaurio: no se pudo cargar', scripts[index]);
+    document.head.appendChild(script);
+  };
+
+  loadNext();
 })();
