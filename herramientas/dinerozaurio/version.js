@@ -1,8 +1,8 @@
 window.__DINEROZAURIO_VERSION__ = {
   major: 2,
   minor: 9,
-  build: "1308262006",
-  label: "2.9.1308262006",
+  build: "1308262034",
+  label: "2.9.1308262034",
 };
 
 (() => {
@@ -13,8 +13,8 @@ window.__DINEROZAURIO_VERSION__ = {
   document.head.appendChild(gate);
 
   const scripts = [
-    './finance/accounting-core.js?v=1308262006',
-    './ui/accounts.js?v=1308262006'
+    './finance/accounting-core.js?v=1308262034',
+    './ui/accounts.js?v=1308262034'
   ];
 
   const modulesReady = new Promise((resolve, reject) => {
