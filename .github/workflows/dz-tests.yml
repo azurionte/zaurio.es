@@ -1,0 +1,10 @@
+name: DZ tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node --check herramientas/dinerozaurio/finance/accounting-core.js
+      - run: node --check herramientas/dinerozaurio/ui/accounts.js
+      - run: node herramientas/dinerozaurio/tests/run.js
