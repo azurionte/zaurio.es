@@ -5,8 +5,9 @@ compatibility_date = "2026-08-13"
 [vars]
 FINANCE_TIMEZONE = "Europe/Madrid"
 
-# Secrets required at deploy time (never commit their values):
+# Runtime configuration:
 # SUPABASE_URL
-# SUPABASE_SERVICE_ROLE_KEY
-# DINEROZAURIO_USER_ID
-# MCP_API_KEY
+# SUPABASE_PUBLISHABLE_KEY
+#
+# This MCP uses per-user OAuth access tokens issued by Supabase Auth.
+# Do not configure SUPABASE_SERVICE_ROLE_KEY, DINEROZAURIO_USER_ID, or MCP_API_KEY.
