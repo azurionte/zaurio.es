@@ -1,28 +1,22 @@
 window.__DINEROZAURIO_VERSION__ = {
   major: 2,
-  minor: 8,
-  build: "1308261742",
-  label: "2.8.1308261742",
+  minor: 9,
+  build: "1308261755",
+  label: "2.9.1308261755",
 };
 
 (() => {
   const scripts = [
-    './folder-mode-summary-v2.js?v=1308261742',
-    './folder-mode-enhancements-v3.js?v=1308261742',
-    './folder-mode-fixes-v4.js?v=1308261742',
-    './ui-fixes-v5.js?v=1308261742',
-    './account-balance-engine-v6.js?v=1308261742',
-    './accounting-invariants-hotfix.js?v=1308261742',
-    './account-display-current.js?v=1308261742',
-    './account-routing-current.js?v=1308261742'
+    './finance/accounting-core.js?v=1308261755',
+    './ui/accounts.js?v=1308261755'
   ];
 
   const loadNext = (index = 0) => {
     if (index >= scripts.length) {
       window.__DINEROZAURIO_UI_PATCHES_READY__ = true;
-      window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__ = 'current-accounting-1';
-      window.__DINEROZAURIO_ROUTING_AUTHORITY__ = 'current-routing-1';
-      window.__DINEROZAURIO_ACCOUNT_DISPLAY_AUTHORITY__ = 'display-routing-2';
+      window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__ = 'accounting-routing-1';
+      window.__DINEROZAURIO_ROUTING_AUTHORITY__ = 'accounting-routing-1';
+      delete window.__DINEROZAURIO_ACCOUNT_DISPLAY_AUTHORITY__;
       if (typeof renderHomeDashboard === 'function' && document.getElementById('homeDashboard')) {
         setTimeout(() => renderHomeDashboard(), 0);
       }
