@@ -1,8 +1,8 @@
 window.__DINEROZAURIO_VERSION__ = {
   major: 2,
   minor: 9,
-  build: "1308262052",
-  label: "2.9.1308262052",
+  build: "1308262105",
+  label: "2.9.1308262105",
 };
 
 (() => {
@@ -13,9 +13,9 @@ window.__DINEROZAURIO_VERSION__ = {
   document.head.appendChild(gate);
 
   const scripts = [
-    './finance/accounting-core.js?v=1308262052',
-    './ui/accounts.js?v=1308262052',
-    './ui/account-observed-adapter.js?v=1308262052'
+    './finance/accounting-core.js?v=1308262105',
+    './ui/accounts.js?v=1308262105',
+    './ui/account-observed-adapter.js?v=1308262105'
   ];
 
   const revealWhenPatched = () => {
