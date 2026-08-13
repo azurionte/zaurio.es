@@ -16,7 +16,9 @@ const projected=a.resolveAccountState({...base,futureEvents:[{itemId:'charge',ty
 assert.equal(projected.secondary[0].current,30);
 assert.equal(projected.secondary[0].projected,20);
 const ui=fs.readFileSync(path.join(__dirname,'..','ui','accounts.js'),'utf8');
-assert.ok(ui.includes('C().KEYS.accountBalances'));
-assert.ok(ui.includes('accountBalance(b.dataset.updateAccountBalance)'));
-assert.equal(ui.includes('openAccountBalanceEditor(b.dataset.updateAccountBalance)'),false);
+const adapter=fs.readFileSync(path.join(__dirname,'..','ui','account-observed-adapter.js'),'utf8');
+assert.match(ui,/const V='accounts-ui-7'/);
+assert.ok(adapter.includes('core.KEYS.accountBalances'));
+assert.ok(adapter.includes('openAccountBalanceEditor=function(accountId)'));
+assert.ok(adapter.includes("kind:'account_observed'"));
 console.log('account-observed-balance ok');
