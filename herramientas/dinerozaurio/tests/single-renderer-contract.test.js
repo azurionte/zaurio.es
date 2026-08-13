@@ -20,7 +20,7 @@ assert.match(ui,/__DZ_VISUAL_STACK_INSTALLED__='5c029-canonical-1'/);
 for(const file of ['folder-mode-summary-v2.js','folder-mode-enhancements-v3.js','folder-mode-fixes-v4.js','ui-fixes-v5.js','account-routing-current.js']){
   assert.equal(ui.split(file).length-1,1,`${file} must be loaded exactly once by the recovered stack`);
 }
-assert.equal(/renderHomeDashboard\s*=/.test(ui),false,'accounts bootstrap must not replace renderHomeDashboard');
+assert.equal(/renderHomeDashboard\s*=(?!=)/.test(ui),false,'accounts bootstrap must not replace renderHomeDashboard');
 assert.equal(/function\s+draw\s*\(/.test(ui),false,'accounts bootstrap must not contain an independent Home draw pipeline');
 assert.equal(ui.includes('renderCanonicalHomeDashboard'),false);
 for(const legacy of ['account-balance-engine-v6.js','accounting-invariants-hotfix.js','account-display-current.js']){
