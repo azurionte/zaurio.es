@@ -1,0 +1,15 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const root=path.join(__dirname,'..');
+const version=fs.readFileSync(path.join(root,'version.js'),'utf8');
+const ui=fs.readFileSync(path.join(root,'ui','accounts.js'),'utf8');
+assert.match(version,/dz-accounting-loading/);
+assert.match(version,/DineroZaurioAccountsUI\?\.install/);
+assert.equal(version.includes('setTimeout'),false);
+assert.match(ui,/renderHomeDashboard=renderCanonicalHomeDashboard/);
+assert.equal(ui.includes('legacyHomeRender'),false);
+assert.equal(ui.includes('base.apply'),false);
+assert.equal(ui.includes('setTimeout'),false);
+assert.equal((ui.match(/renderHomeDashboard=renderCanonicalHomeDashboard/g)||[]).length,1);
+assert.equal((ui.match(/__DINEROZAURIO_HOME_RENDERER__/g)||[]).length,1);
+console.log('single-renderer-contract ok');
