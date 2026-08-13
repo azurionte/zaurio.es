@@ -4,10 +4,9 @@ compatibility_date = "2026-08-13"
 
 [vars]
 FINANCE_TIMEZONE = "Europe/Madrid"
+SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk"
 
-# Runtime configuration:
-# SUPABASE_URL
-# SUPABASE_PUBLISHABLE_KEY
-#
 # This MCP uses per-user OAuth access tokens issued by Supabase Auth.
+# These two Supabase values are public client configuration, not secrets.
 # Do not configure SUPABASE_SERVICE_ROLE_KEY, DINEROZAURIO_USER_ID, or MCP_API_KEY.
