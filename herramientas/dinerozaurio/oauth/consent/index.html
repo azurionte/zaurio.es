@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autorizar acceso · DineroZaurio</title>
+  <meta name="theme-color" content="#2a0046" />
+  <link rel="icon" href="/shared/assets/brand/favicon.ico" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg1:#2a0046;
+      --bg2:#12001d;
+      --bg3:#000;
+      --card:rgba(25,10,46,.92);
+      --stroke:rgba(255,255,255,.14);
+      --text:#fff;
+      --muted:rgba(255,255,255,.68);
+      --pink:#ff00aa;
+      --pink2:#ff4cc6;
+      --danger:#ff5b7f;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:24px;
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(circle at top,var(--bg1) 0%,var(--bg2) 42%,var(--bg3) 100%);
+    }
+    .card{
+      width:min(560px,100%);
+      padding:30px;
+      border:1px solid var(--stroke);
+      border-radius:28px;
+      background:var(--card);
+      box-shadow:0 30px 80px rgba(0,0,0,.48);
+      backdrop-filter:blur(18px);
+    }
+    .brand{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+    .brand img{width:48px;height:48px;border-radius:15px;box-shadow:0 12px 30px rgba(255,0,170,.18)}
+    .brand strong{display:block;font-size:18px}.brand span{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+    h1{font-size:28px;line-height:1.15;margin:0 0 12px}
+    p{color:var(--muted);line-height:1.55;margin:0 0 18px}
+    .client{
+      margin:22px 0;
+      padding:18px;
+      border:1px solid var(--stroke);
+      border-radius:20px;
+      background:rgba(255,255,255,.045);
+    }
+    .clientName{font-size:19px;font-weight:900;margin-bottom:8px;word-break:break-word}
+    .meta{font-size:13px;color:var(--muted);word-break:break-all}
+    .scopes{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+    .scope{padding:7px 10px;border-radius:999px;background:rgba(255,0,170,.11);border:1px solid rgba(255,0,170,.24);font-size:12px;font-weight:800}
+    .notice{margin:18px 0;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.055);font-size:13px;line-height:1.5;color:var(--muted)}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+    button{
+      min-height:48px;border-radius:15px;border:1px solid var(--stroke);font:inherit;font-weight:900;cursor:pointer;
+      transition:transform .15s ease,filter .15s ease,opacity .15s ease;
+    }
+    button:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.06)}
+    button:disabled{opacity:.55;cursor:wait}
+    .approve{background:linear-gradient(135deg,var(--pink),var(--pink2));color:white;border-color:transparent}
+    .deny{background:rgba(255,255,255,.06);color:white}
+    .login{width:100%;background:white;color:#171717;border-color:transparent}
+    .error{padding:14px 16px;border-radius:16px;background:rgba(255,91,127,.12);border:1px solid rgba(255,91,127,.35);color:#ffd7e0;line-height:1.45}
+    .loading{text-align:center;color:var(--muted);padding:20px 0}
+    .hidden{display:none!important}
+    @media(max-width:560px){.card{padding:22px;border-radius:22px}.actions{grid-template-columns:1fr}h1{font-size:24px}}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">
+      <img src="/herramientas/dinerozaurio/assets/piggy-app-icon-192.png" alt="" />
+      <div><strong>DineroZaurio</strong><span>Autorización segura</span></div>
+    </div>
+
+    <section id="loading" class="loading">Preparando autorización…</section>
+
+    <section id="loginPanel" class="hidden">
+      <h1>Inicia sesión para continuar</h1>
+      <p>Necesitamos verificar tu cuenta de DineroZaurio antes de mostrar la solicitud de acceso.</p>
+      <button id="loginBtn" class="login" type="button">Continuar con Google</button>
+    </section>
+
+    <section id="consentPanel" class="hidden">
+      <h1>Autorizar acceso</h1>
+      <p>La siguiente aplicación quiere conectarse a tu cuenta de DineroZaurio.</p>
+      <div class="client">
+        <div id="clientName" class="clientName">Aplicación</div>
+        <div id="redirectUri" class="meta"></div>
+        <div id="scopes" class="scopes"></div>
+      </div>
+      <div class="notice">Solo se concederá acceso dentro de los permisos de tu propia cuenta. Las políticas RLS de Supabase siguen aplicándose a las consultas realizadas con tu autorización.</div>
+      <div class="actions">
+        <button id="denyBtn" class="deny" type="button">Denegar</button>
+        <button id="approveBtn" class="approve" type="button">Autorizar</button>
+      </div>
+    </section>
+
+    <section id="errorPanel" class="error hidden"></section>
+  </main>
+
+  <script>
+    (() => {
+      const SUPABASE_URL = 'https://adpjitccwwvlydrtvvqk.supabase.co';
+      const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk';
+      const CONSENT_URL = 'https://herramientas.zaurio.es/dinerozaurio/oauth/consent/';
+      const PENDING_KEY = 'dinerozaurio_pending_oauth_authorization_id';
+
+      const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      const el = (id) => document.getElementById(id);
+      const loading = el('loading');
+      const loginPanel = el('loginPanel');
+      const consentPanel = el('consentPanel');
+      const errorPanel = el('errorPanel');
+      const loginBtn = el('loginBtn');
+      const approveBtn = el('approveBtn');
+      const denyBtn = el('denyBtn');
+
+      let authorizationId = new URLSearchParams(location.search).get('authorization_id');
+      if (authorizationId) localStorage.setItem(PENDING_KEY, authorizationId);
+      if (!authorizationId) authorizationId = localStorage.getItem(PENDING_KEY);
+
+      function show(panel) {
+        [loading, loginPanel, consentPanel, errorPanel].forEach((node) => node.classList.add('hidden'));
+        panel.classList.remove('hidden');
+      }
+
+      function fail(message) {
+        errorPanel.textContent = message || 'No se pudo completar la autorización.';
+        show(errorPanel);
+      }
+
+      function setBusy(busy) {
+        approveBtn.disabled = busy;
+        denyBtn.disabled = busy;
+        approveBtn.textContent = busy ? 'Procesando…' : 'Autorizar';
+      }
+
+      async function load() {
+        if (!authorizationId) {
+          fail('Falta el identificador de autorización. Vuelve a iniciar la conexión desde la aplicación que quiere acceder a DineroZaurio.');
+          return;
+        }
+
+        const { data: userData, error: userError } = await client.auth.getUser();
+        if (userError || !userData?.user) {
+          show(loginPanel);
+          return;
+        }
+
+        const { data, error } = await client.auth.oauth.getAuthorizationDetails(authorizationId);
+        if (error || !data) {
+          fail(error?.message || 'La solicitud de autorización ya no es válida.');
+          return;
+        }
+
+        if (!Object.prototype.hasOwnProperty.call(data, 'authorization_id')) {
+          localStorage.removeItem(PENDING_KEY);
+          location.replace(data.redirect_url);
+          return;
+        }
+
+        el('clientName').textContent = data.client?.name || 'Aplicación externa';
+        el('redirectUri').textContent = data.redirect_uri ? `Destino: ${data.redirect_uri}` : '';
+
+        const scopeBox = el('scopes');
+        scopeBox.innerHTML = '';
+        const scopes = String(data.scope || '').trim().split(/\s+/).filter(Boolean);
+        scopes.forEach((scope) => {
+          const tag = document.createElement('span');
+          tag.className = 'scope';
+          tag.textContent = scope;
+          scopeBox.appendChild(tag);
+        });
+
+        show(consentPanel);
+      }
+
+      loginBtn.addEventListener('click', async () => {
+        loginBtn.disabled = true;
+        localStorage.setItem(PENDING_KEY, authorizationId);
+        const { error } = await client.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: CONSENT_URL }
+        });
+        if (error) {
+          loginBtn.disabled = false;
+          fail(error.message);
+        }
+      });
+
+      approveBtn.addEventListener('click', async () => {
+        setBusy(true);
+        const { data, error } = await client.auth.oauth.approveAuthorization(authorizationId);
+        if (error || !data?.redirect_url) {
+          setBusy(false);
+          fail(error?.message || 'No se pudo aprobar la autorización.');
+          return;
+        }
+        localStorage.removeItem(PENDING_KEY);
+        location.replace(data.redirect_url);
+      });
+
+      denyBtn.addEventListener('click', async () => {
+        setBusy(true);
+        const { data, error } = await client.auth.oauth.denyAuthorization(authorizationId);
+        if (error || !data?.redirect_url) {
+          setBusy(false);
+          fail(error?.message || 'No se pudo denegar la autorización.');
+          return;
+        }
+        localStorage.removeItem(PENDING_KEY);
+        location.replace(data.redirect_url);
+      });
+
+      load().catch((error) => fail(error?.message || String(error)));
+    })();
+  </script>
+</body>
+</html>
