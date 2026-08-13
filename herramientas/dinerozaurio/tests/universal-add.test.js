@@ -1,6 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const ui=fs.readFileSync(path.join(__dirname,'..','ui','accounts.js'),'utf8');
-for(const token of ['dzUniversalMenu','data-add="expense"','data-add="income"','data-add="debt"','data-add="goal"','data-add="personal"']) assert.ok(ui.includes(token),token);
+const ui=fs.readFileSync(path.join(__dirname,'..','folder-mode-enhancements-v3.js'),'utf8');
+for(const token of ['dzUniversalMenu','expense','income','debt','goal','personal']) assert.ok(ui.includes(token),token);
+assert.ok(ui.includes('data-dz-add'));
 assert.equal(/prompt\(/.test(ui),false);
 console.log('universal-add ok');
