@@ -14,12 +14,13 @@ window.__DINEROZAURIO_VERSION__ = {
 
   const scripts = [
     './finance/accounting-core.js?v=1308262052',
-    './ui/accounts.js?v=1308262052'
+    './ui/accounts.js?v=1308262052',
+    './ui/account-observed-adapter.js?v=1308262052'
   ];
 
   const revealWhenPatched = () => {
-    if (window.__DZ_ACCOUNTS_UI__ !== 'accounts-ui-7') {
-      console.error('DineroZaurio: accounts-ui-7 no terminó de instalarse');
+    if (window.__DZ_ACCOUNTS_UI__ !== 'accounts-ui-7' || !window.__DZ_ACCOUNT_OBSERVED_ADAPTER__) {
+      console.error('DineroZaurio: el renderer baseline o su adaptación canónica no terminaron de instalarse');
       return;
     }
     window.__DINEROZAURIO_UI_PATCHES_READY__ = true;
