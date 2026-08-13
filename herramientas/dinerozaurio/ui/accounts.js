@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const VERSION = 'accounts-ui-1';
+  const VERSION = 'accounts-ui-2';
 
   function install() {
     if (window.__DZ_ACCOUNTS_UI__ === VERSION) return;
@@ -18,6 +18,20 @@
     if (document.getElementById('homeDashboard')) renderHomeDashboard();
   }
 
+  function effectiveAdjustments(periodYm) {
+    const next = structuredClone(state.monthAdjustments || {});
+    const transfers = next?.[periodYm]?.expenseOverrides?.__accountGeneralTransfers;
+    if (!transfers) return next;
+    Object.values(transfers).forEach(record => {
+      if (!record?.confirmedAt) return;
+      const value = new Date(record.confirmedAt);
+      if (Number.isNaN(value.getTime())) return;
+      value.setHours(0, 0, 0, 0);
+      record.confirmedAt = value.toISOString();
+    });
+    return next;
+  }
+
   function applyAuthority() {
     const root = document.getElementById('homeDashboard');
     if (!root) return;
@@ -30,7 +44,7 @@
       asOf: summary.asOf || new Date(),
       events: summary.snapshot?.events || [],
       futureEvents: summary.upcomingCharges || [],
-      monthAdjustments: state.monthAdjustments || {},
+      monthAdjustments: effectiveAdjustments(summary.periodYm),
       potentialNow: summary.potentialNow
     });
 
