@@ -1,20 +1,21 @@
 (() => {
   'use strict';
-  const VERSION='2.7-accounting-invariants';
+  const VERSION='current-accounting-1';
   const FOLDER='__folderTransfers';
   const GENERAL='__accountGeneralTransfers';
   const OBSERVED='__accountGeneralBalances';
 
   function install(){
-    if(window.__DZ_ACCOUNTING_INVARIANTS__===VERSION) return;
+    if(window.__DZ_CURRENT_ACCOUNTING__===VERSION) return;
     if(typeof renderHomeDashboard!=='function'||typeof buildTodayFinancialSnapshot!=='function'||typeof normalizeMoneyOrganization!=='function'){
       setTimeout(install,60);return;
     }
-    window.__DZ_ACCOUNTING_INVARIANTS__=VERSION;
+    window.__DZ_CURRENT_ACCOUNTING__=VERSION;
+    window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__=VERSION;
     const previous=renderHomeDashboard;
     renderHomeDashboard=function(){
       previous();
-      setTimeout(()=>{try{applyInvariantAccounting();}catch(error){console.error('DineroZaurio accounting invariant error',error);}},0);
+      setTimeout(()=>{try{applyAccounting();}catch(error){console.error('DineroZaurio accounting error',error);}},0);
     };
     if(document.getElementById('homeDashboard')) renderHomeDashboard();
   }
@@ -23,16 +24,13 @@
     const raw=state.monthAdjustments?.[ym]?.expenseOverrides?.[key];
     return raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
   }
-
   function assignmentFor(event,organization){
     if(!event?.itemId) return {accountId:organization.salaryAccountId,folderId:''};
     return organization.assignments?.[event.itemId]||{accountId:organization.salaryAccountId,folderId:''};
   }
-
   function folderTransfer(accountId,folderId,ym){
     return Number(mapFor(ym,FOLDER)[`${accountId}|${folderId}`]?.amount||0);
   }
-
   function secondaryBalance(account,ym){
     const generalObserved=Number(mapFor(ym,OBSERVED)[account.id]?.amount||0);
     const generalMoved=Number(mapFor(ym,GENERAL)[account.id]?.amount||0);
@@ -44,7 +42,6 @@
     },0);
     return generalObserved+generalMoved+folders;
   }
-
   function empiricalAdjustment(account,ym){
     let delta=Number(mapFor(ym,OBSERVED)[account.id]?.amount||0);
     (account.folders||[]).forEach(folder=>{
@@ -54,7 +51,7 @@
     return delta;
   }
 
-  function applyInvariantAccounting(){
+  function applyAccounting(){
     const root=document.getElementById('homeDashboard');
     if(!root) return;
     const organization=normalizeMoneyOrganization(state.moneyOrganization);
