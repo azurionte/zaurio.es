@@ -5,9 +5,15 @@ const v2=fs.readFileSync(path.join(root,'folder-mode-summary-v2.js'),'utf8');
 const v3=fs.readFileSync(path.join(root,'folder-mode-enhancements-v3.js'),'utf8');
 const v5=fs.readFileSync(path.join(root,'ui-fixes-v5.js'),'utf8');
 
-// Universal add keeps standard dismiss behavior and directional semantics.
+// Universal add keeps standard dismiss behavior, directional semantics and the DineroZaurio fuchsia accent.
 for(const token of ['data-dz-add="expense"','data-dz-add="income"','dzFlowIcon income','dzFlowIcon expense','pointerdown','e.key===\'Escape\''])assert.ok(v3.includes(token),token);
 assert.match(v3,/position:fixed!important;right:max\(18px,env\(safe-area-inset-right\)\)/);
+assert.ok(v3.includes('background:linear-gradient(135deg,var(--pink),var(--pink-2))'),'universal add must use the fuchsia palette');
+assert.ok(v3.includes('rgba(255,0,170,.38)'),'mobile FAB should keep a visible fuchsia glow');
+
+// UX observer must react to structural additions without creating a self-sustaining DOM mutation loop.
+for(const token of ['function enhanceModal','record.addedNodes','node.nodeType!==1','mode.dataset.dzModePolished','if(name&&name.textContent!==\'Saldo libre\')','if(set&&!set.hidden)set.hidden=true'])assert.ok(v5.includes(token),token);
+assert.equal(v5.includes("document.querySelectorAll('.dzV4Modal,.dzV3Modal,.modalCard').forEach(modal=>{if(modal.dataset.dzV5Enhanced==='1')return"),false,'observer callback must not rescan the full document on every mutation');
 
 // Account cards: no routine observed-balance action on the salary account, total secondary label and stable two-column metrics.
 for(const token of ['Modo carpetas activado','Saldo ${m.account.name} total','Antes de próxima nómina','grid-template-columns:repeat(2,minmax(0,1fr))','data-dz-update-account'])assert.ok(v2.includes(token),token);
