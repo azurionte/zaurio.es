@@ -12,7 +12,7 @@ for(const token of [
   'dzDebtManager','dzDebtCard','dzDebtPrimaryAction','dzDebtMore','dzDebtEditorSection',
   'activeDebts()','archivedDebts()','settledMonth','data-dz-restore-debt','Restaurar una archivada',
   'window.openCollectionManager','window.openDebtEditor','window.openDebtCreateFlow','window.organizationAssignableItems',
-  'scrubArchivedDebtOptions','mode!==\'paid\''
+  'scrubArchivedDebtOptions',"mode!=='paid'"
 ]) assert.ok(debt.includes(token),token);
 
 assert.ok(debt.includes('Cuando liquidas una deuda, pasa automáticamente al archivo.'),'manager should explain archive behavior');
