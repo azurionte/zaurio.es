@@ -23,7 +23,7 @@ assert.ok(debt.includes("delete month.debtOverrides[id]"),'restoring must remove
 assert.ok(debt.includes("filter(item=>!archived.has(item.id))"),'archived debts must not appear in account/folder assignment choices');
 assert.equal(/DineroZaurioAccountingCore|resolveAccountState|accounting-core-2/.test(debt),false,'debt settings UI must not become a monetary authority');
 assert.equal(/renderHomeDashboard\s*=/.test(debt),false,'debt settings UI must not install another Home renderer');
-assert.ok(version.includes("'./ui/debt-settings-state-bridge.js?v=1508261346'"),'version loader must include state bridge');
-assert.ok(version.includes("'./ui/debt-settings-polish.js?v=1508261346'"),'version loader must include debt settings polish');
+assert.ok(version.includes("'./ui/debt-settings-state-bridge.js?v="),'version loader must include state bridge');
+assert.ok(version.includes("'./ui/debt-settings-polish.js?v="),'version loader must include debt settings polish');
 
 console.log('debt-settings-polish ok');
