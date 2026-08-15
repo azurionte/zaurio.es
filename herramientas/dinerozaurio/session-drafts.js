@@ -99,7 +99,23 @@ function showRecoveryPrompt(draft){
   const root=document.getElementById('modalRoot');
   if(!root)return;
   root.className='modalRoot';
-  root.innerHTML=`<div class="modalCard dzDraftRecoveryModal"><div class="modalHead"><div><span class="dzDraftRecoveryKicker">Recuperación</span><h3>Hay datos sin guardar de tu última sesión</h3></div></div><p class="dzDraftRecoveryLead">Encontramos ${count} cambio${count===1?'':'s'} pendiente${count===1?'':'s'} guardado${count===1?'':'s'} temporalmente en ${escapeHtml(when)}.</p><p class="muted">Puedes descartarlos o revisarlos antes de decidir qué guardar definitivamente.</p><div class="btnRow dzDraftRecoveryActions"><button id="dzDiscardRecoveredDraft" class="btn danger" type="button">Descartar</button><button id="dzReviewRecoveredDraft" class="btn primary" type="button">Revisar</button></div></div>`;
+  root.innerHTML=`<div class="modalCard">
+    <div class="modalHead">
+      <div>
+        <div class="sub">Recuperación de sesión</div>
+        <h3 style="margin:4px 0 0">Hay datos sin guardar de tu última sesión</h3>
+      </div>
+    </div>
+    <div class="legendNote">
+      <span class="legendDot"></span>
+      <span>Encontramos ${count} cambio${count===1?'':'s'} pendiente${count===1?'':'s'} guardado${count===1?'':'s'} temporalmente en ${escapeHtml(when)}.</span>
+    </div>
+    <p class="muted" style="margin:14px 0 0">Puedes descartarlos o revisarlos antes de decidir qué guardar definitivamente.</p>
+    <div class="btnRow" style="margin-top:18px;justify-content:flex-end">
+      <button id="dzDiscardRecoveredDraft" class="btn danger" type="button">Descartar</button>
+      <button id="dzReviewRecoveredDraft" class="btn primary" type="button">Revisar cambios</button>
+    </div>
+  </div>`;
   document.getElementById('dzDiscardRecoveredDraft').onclick=()=>discardRecoveredDraft().catch(console.error);
   document.getElementById('dzReviewRecoveredDraft').onclick=()=>reviewRecoveredDraft(draft);
 }
@@ -134,15 +150,8 @@ function keepBrandNavigationInSession(){
     window.scrollTo({top:0,behavior:'smooth'});
   },true);
 }
-function styles(){
-  if(document.getElementById('dzDraftRecoveryStyles'))return;
-  const style=document.createElement('style');
-  style.id='dzDraftRecoveryStyles';
-  style.textContent='.dzDraftRecoveryModal{width:min(520px,94vw)}.dzDraftRecoveryKicker{display:block;color:var(--pink-2);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}.dzDraftRecoveryLead{font-size:15px;line-height:1.6;margin:18px 0 8px}.dzDraftRecoveryActions{margin-top:20px;justify-content:flex-end}@media(max-width:600px){.dzDraftRecoveryModal{width:100vw;max-width:none;margin-top:auto;border-radius:24px 24px 0 0}.dzDraftRecoveryActions{display:grid;grid-template-columns:1fr 1fr}.dzDraftRecoveryActions .btn{width:100%}}';
-  document.head.appendChild(style);
-}
 function install(){
-  if(installing)return;installing=true;styles();keepBrandNavigationInSession();
+  if(installing)return;installing=true;keepBrandNavigationInSession();
   const wait=()=>{
     wrapSaveUi();
     if(ready())checkRecovery().catch(console.error);
