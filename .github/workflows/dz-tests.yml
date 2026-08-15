@@ -13,4 +13,5 @@ jobs:
       - run: node --check herramientas/dinerozaurio/ui-fixes-v5.js
       - run: node --check herramientas/dinerozaurio/account-routing-current.js
       - run: node --check herramientas/dinerozaurio/ui/account-observed-adapter.js
+      - run: node --check herramientas/dinerozaurio/session-drafts.js
       - run: node herramientas/dinerozaurio/tests/run.js
