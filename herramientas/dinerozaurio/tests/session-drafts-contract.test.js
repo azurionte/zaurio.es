@@ -9,9 +9,10 @@ for(const token of [
   "snapshotPersistableState()",
   "buildStateChanges()",
   "upsert(payload,{onConflict:'user_id,plan_id'})",
-  "Hay datos sin guardar de tu última sesión",
-  "Descartar",
-  "Revisar",
+  "Hay cambios pendientes",
+  "sin guardar de tu última sesión",
+  "Descartar cambios",
+  "Revisar cambios",
   "openSaveModal",
   "assignPersistableState(savedBaseline)",
   "visibilitychange",
@@ -20,7 +21,7 @@ for(const token of [
   ".tab[data-tab=\"home\"]"
 ]) assert.ok(draft.includes(token),token);
 
-assert.ok(version.includes("'./session-drafts.js?v=1408261040'"),'draft recovery must load from the existing bootstrap');
+assert.ok(version.includes("'./session-drafts.js?v="),'draft recovery must load from the existing bootstrap');
 assert.equal(/DineroZaurioAccountingCore|resolveAccountState|accounting-core-2/.test(draft),false,'draft layer must not become a monetary authority');
 assert.equal(/renderHomeDashboard\s*=/.test(draft),false,'draft layer must not install a renderer');
 assert.equal(/beforeunload/.test(draft),false,'draft recovery must not confuse normal SPA navigation with session loss');

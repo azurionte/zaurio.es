@@ -16,7 +16,9 @@ window.__DINEROZAURIO_VERSION__ = {
     './finance/accounting-core.js?v=1508261346',
     './ui/accounts.js?v=1508261346',
     './ui/account-observed-adapter.js?v=1508261346',
-    './session-drafts.js?v=1508261346'
+    './session-drafts.js?v=1508261346',
+    './ui/debt-settings-state-bridge.js?v=1508261346',
+    './ui/debt-settings-polish.js?v=1508261346'
   ];
 
   const revealWhenPatched = () => {
