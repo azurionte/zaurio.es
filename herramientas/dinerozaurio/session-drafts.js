@@ -1,9 +1,11 @@
 (()=>{'use strict';
 const TABLE='dinerozaurio_temporary_drafts';
 const SESSION_KEY='dz_session_draft_id_v1';
-const WRITE_DELAY=350;
+const WRITE_DELAY=150;
 let recoveryChecked=false;
+let recoveryChecking=false;
 let recoveryPromptOpen=false;
+let nextRecoveryRetryAt=0;
 let writeTimer=null;
 let writeGeneration=0;
 let lastSerialized='';
@@ -35,9 +37,9 @@ async function deleteDraft(){
   if(error&&generation===writeGeneration)console.error('DineroZaurio: no se pudo eliminar el borrador temporal',error);
 }
 async function writeDraftNow(){
-  if(!ready()||recoveryPromptOpen)return;
+  if(!recoveryChecked||!ready()||recoveryPromptOpen)return;
   const changes=buildStateChanges();
-  if(!changes.length){if(recoveryChecked)await deleteDraft();return;}
+  if(!changes.length){await deleteDraft();return;}
   const snapshot=snapshotPersistableState();
   const payload={
     user_id:state.session.user.id,
@@ -55,11 +57,11 @@ async function writeDraftNow(){
   const {error}=await window.dzSupabase.from(TABLE).upsert(payload,{onConflict:'user_id,plan_id'});
   if(error&&generation===writeGeneration){lastSerialized='';console.error('DineroZaurio: no se pudo guardar el borrador temporal',error);}
 }
-function scheduleDraftWrite(immediate=false){
+function scheduleDraftWrite(){
   if(!recoveryChecked||recoveryPromptOpen||!ready())return;
   clearTimeout(writeTimer);
   const generation=++writeGeneration;
-  writeTimer=setTimeout(()=>{if(generation!==writeGeneration)return;writeTimer=null;writeDraftNow().catch(console.error);},immediate?0:WRITE_DELAY);
+  writeTimer=setTimeout(()=>{if(generation!==writeGeneration)return;writeTimer=null;writeDraftNow().catch(console.error);},WRITE_DELAY);
 }
 function restoreSavedBaseline(){
   if(!savedBaseline)return;
@@ -102,10 +104,12 @@ function showRecoveryPrompt(draft){
   document.getElementById('dzReviewRecoveredDraft').onclick=()=>reviewRecoveredDraft(draft);
 }
 async function checkRecovery(){
-  if(recoveryChecked||!ready())return false;
-  recoveryChecked=true;
+  if(recoveryChecked||recoveryChecking||Date.now()<nextRecoveryRetryAt||!ready())return false;
+  recoveryChecking=true;
   const {data,error}=await window.dzSupabase.from(TABLE).select('snapshot,changes,change_count,updated_at,client_session_id').eq('user_id',state.session.user.id).eq('plan_id',state.planId).maybeSingle();
-  if(error){console.error('DineroZaurio: no se pudo comprobar el borrador temporal',error);return false;}
+  recoveryChecking=false;
+  if(error){nextRecoveryRetryAt=Date.now()+1500;console.error('DineroZaurio: no se pudo comprobar el borrador temporal',error);return false;}
+  recoveryChecked=true;
   if(!data||!data.snapshot||Number(data.change_count||0)<=0){scheduleDraftWrite();return false;}
   restoreSavedBaseline();
   showRecoveryPrompt(data);
@@ -145,8 +149,8 @@ function install(){
     if(!recoveryChecked||typeof window.updateSaveUi!=='function'||!window.updateSaveUi.__dzDraftWrapped)setTimeout(wait,120);
   };
   wait();
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')scheduleDraftWrite(true);});
-  window.addEventListener('pagehide',()=>scheduleDraftWrite(true));
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&recoveryChecked)writeDraftNow().catch(console.error);});
+  window.addEventListener('pagehide',()=>{if(recoveryChecked)writeDraftNow().catch(console.error);});
 }
 window.__DZ_SESSION_DRAFTS__={table:TABLE,checkRecovery,writeDraftNow,deleteDraft};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
