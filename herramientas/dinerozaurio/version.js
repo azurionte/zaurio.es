@@ -1,8 +1,8 @@
 window.__DINEROZAURIO_VERSION__ = {
   major: 2,
   minor: 9,
-  build: "1508262214",
-  label: "2.9.1508262214",
+  build: "1508262236",
+  label: "2.9.1508262236",
 };
 
 (() => {
@@ -13,13 +13,14 @@ window.__DINEROZAURIO_VERSION__ = {
   document.head.appendChild(gate);
 
   const scripts = [
-    './finance/accounting-core.js?v=1508262214',
-    './ui/accounts.js?v=1508262214',
-    './ui/account-observed-adapter.js?v=1508262214',
-    './session-drafts.js?v=1508262214',
-    './ui/debt-settings-state-bridge.js?v=1508262214',
-    './ui/debt-settings-polish.js?v=1508262214',
-    './ui/debt-editor-wizard.js?v=1508262214'
+    './finance/accounting-core.js?v=1508262236',
+    './ui/accounts.js?v=1508262236',
+    './ui/account-observed-adapter.js?v=1508262236',
+    './session-drafts.js?v=1508262236',
+    './ui/debt-settings-state-bridge.js?v=1508262236',
+    './ui/debt-settings-polish.js?v=1508262236',
+    './ui/debt-editor-wizard.js?v=1508262236',
+    './ui/configuration-modal-polish.js?v=1508262236'
   ];
 
   const revealWhenPatched = () => {
