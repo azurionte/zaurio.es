@@ -15,7 +15,8 @@ window.__DINEROZAURIO_VERSION__ = {
   const scripts = [
     './finance/accounting-core.js?v=1408261040',
     './ui/accounts.js?v=1408261040',
-    './ui/account-observed-adapter.js?v=1408261040'
+    './ui/account-observed-adapter.js?v=1408261040',
+    './session-drafts.js?v=1408261040'
   ];
 
   const revealWhenPatched = () => {
