@@ -14,6 +14,7 @@ assert.ok(v3.includes('rgba(255,0,170,.38)'),'mobile FAB should keep a visible f
 // UX observer must react to structural additions without creating a self-sustaining DOM mutation loop.
 for(const token of ['function enhanceModal','record.addedNodes','node.nodeType!==1','mode.dataset.dzModePolished','if(name&&name.textContent!==\'Saldo libre\')','if(set&&!set.hidden)set.hidden=true'])assert.ok(v5.includes(token),token);
 assert.equal(v5.includes("document.querySelectorAll('.dzV4Modal,.dzV3Modal,.modalCard').forEach(modal=>{if(modal.dataset.dzV5Enhanced==='1')return"),false,'observer callback must not rescan the full document on every mutation');
+assert.equal(v5.includes("#dzV4Close,#dzV3Close,#closeModalBtn,.btn.danger"),false,'destructive actions must never be mistaken for modal close buttons');
 
 // Account cards: no routine observed-balance action on the salary account, total secondary label and stable two-column metrics.
 for(const token of ['Modo carpetas activado','Saldo ${m.account.name} total','Antes de próxima nómina','grid-template-columns:repeat(2,minmax(0,1fr))','data-dz-update-account'])assert.ok(v2.includes(token),token);
@@ -36,8 +37,15 @@ assert.match(v5,/querySelectorAll\('\.dzGeneralHost,\.dzFolderBalances:not\(\.dz
 assert.equal(/dzGeneralHost,\.dzFolderBalances:not\(\.dzGeneralHost\),\.dzBankCharges/.test(v5),false,'future charges must not be part of the folder accordion');
 
 // Profile menu hierarchy and form containment are polished in the existing UX module.
-for(const token of ['Exportar mis datos','Configurar de cero','dzProfileMeta','max-width:100%','min-width:0','grid-template-columns:repeat(2,minmax(0,1fr))'])assert.ok(v5.includes(token),token);
+for(const token of ['Exportar mis datos','Configurar de cero','dzProfileMeta','max-width:100%','min-width:0','grid-template-columns:repeat(2,minmax(0,1fr))','-webkit-min-logical-width:0','.modalCard.managerModal{width:min(980px,100%)'])assert.ok(v5.includes(token),token);
+assert.ok(v5.includes('.dzWizardModal{width:100%!important;max-width:100%!important'),'mobile wizard must stay inside modal root');
+assert.ok(v5.includes('.dzDaySheet{width:100%!important;max-width:100%!important'),'mobile day sheet must stay inside modal root');
 assert.equal(/renderHomeDashboard\s*=/.test(v5),false,'UX polish must not install a Home renderer');
+
+// Weekly/biweekly editors expose one charge-date concept and stale delayed review data is refreshed before opening.
+for(const token of ['normalizeRecurringChargeEditor','Fecha del próximo cobro','installFreshChargeReviewGuard','buildTodayFinancialSnapshot(now)','unconfirmedPastServiceEvents(freshSummary,now)','date.dataset.dzChargeDateReady'])assert.ok(v5.includes(token),token);
+assert.ok(v5.includes('if(ruleField)ruleField.hidden=active'),'recurring editor must hide the competing generic date rule');
+assert.ok(v5.includes('if(dueWrap)dueWrap.hidden=active'),'recurring editor must hide the competing generic due-day field');
 
 // Settings and calendar remain the existing recovered implementations.
 for(const token of ["['Cuentas','Cuenta de nómina','Carpetas','Distribución','Revisión']",'dzWizardBack','dzWizardNext','Guardar','organizationAssignableItems','normalizeMoneyOrganization','openDayDetail','dzDaySheet','dzHolidayEnabled'])assert.ok(v5.includes(token),token);
