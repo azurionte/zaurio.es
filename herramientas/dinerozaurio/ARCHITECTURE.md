@@ -2,12 +2,47 @@
 
 ## Runtime
 
-`version.js` is the only runtime loader. The consolidated runtime loads, in order:
+`version.js` is the only runtime loader. The current production runtime loads, in order:
 
 1. `finance/accounting-core.js`
 2. `ui/accounts.js`
+3. `ui/account-observed-adapter.js`
+4. `session-drafts.js`
+5. `ui/debt-settings-state-bridge.js`
+6. `ui/debt-settings-polish.js`
+7. `ui/debt-editor-wizard.js`
+8. `ui/configuration-modal-polish.js`
 
-Legacy `folder-mode-*`, `ui-fixes-v5`, `account-balance-engine-v6`, `accounting-invariants-hotfix`, `account-display-current` and `account-routing-current` files are historical only and are not production dependencies.
+The ordering matters: accounting authority is installed first, the canonical account UI consumes it, and later modules are UX/persistence adapters only.
+
+## Active UX layer registry
+
+These files are intentionally layered today, but should be treated as consolidation candidates rather than permanent parallel architecture:
+
+- `ui/accounts.js` — canonical account/home UI adapter and account-related interaction layer.
+- `ui/account-observed-adapter.js` — observed-balance UX adapter on top of canonical account state.
+- `session-drafts.js` — temporary Supabase draft/recovery layer for unsaved changes. It is persistence UX, not accounting authority.
+- `ui/debt-settings-state-bridge.js` — narrow state compatibility bridge required by the debt settings experience.
+- `ui/debt-settings-polish.js` — debt manager/editor presentation, archived-debt interaction and debt-specific configuration UX.
+- `ui/debt-editor-wizard.js` — multipage presentation for the long debt editor. It does not own debt data or saving logic.
+- `ui/configuration-modal-polish.js` — shared visual language for non-debt configuration modals such as expenses, income, savings, personal loans and manager-style configuration dialogs.
+
+When a future consolidation is planned, preserve responsibilities first and merge implementations second. In particular, `debt-settings-polish`, `debt-editor-wizard`, and `configuration-modal-polish` are presentation layers and should eventually converge into a shared configuration/modal component system instead of accumulating additional numbered patches.
+
+## Historical / obsolete runtime files
+
+The following files remain in the repository for historical/reference purposes and are not production dependencies unless explicitly reintroduced:
+
+- `folder-mode-summary-v2.js`
+- `folder-mode-enhancements-v3.js`
+- `folder-mode-fixes-v4.js`
+- `ui-fixes-v5.js`
+- `account-balance-engine-v6.js`
+- `accounting-invariants-hotfix.js`
+- `account-display-current.js`
+- `account-routing-current.js`
+
+Do not build new functionality on these historical files. Before deleting them permanently, compare their remaining helpers/tests against the active runtime and migrate any still-needed behavior deliberately.
 
 ## Accounting core
 
@@ -50,7 +85,7 @@ An observed folder balance is physical truth at its observation point. Events at
 
 The module also owns UI-side persistence actions: account/folder selection in income/expense/debt/savings editors, observed balance entry, confirmation of an already-performed internal transfer, savings movement confirmation, the visual universal add menu, personal-loan presentation and contextual future-charge editing. Personal loans preserve direction explicitly as `borrowed` (`me han prestado`) or `lent` (`he prestado`), including direction-aware repayment labels and payment records. Persistence actions mutate state and call the existing `touchState()` / `persistAndRefresh()` pipeline; monetary interpretation remains in the core.
 
-Only one canonical wrapper is installed around `renderHomeDashboard`; the former wrapper chain is not loaded.
+Only one canonical wrapper is installed around `renderHomeDashboard`; UX layers must not add another Home renderer.
 
 ## Supabase persistence
 
@@ -65,6 +100,8 @@ Special accounting records currently remain in month adjustment `expenseOverride
 - `__accountGeneralBalances`
 - `__savingsTransferConfirmations`
 - `__personalLoans`
+
+Temporary unconfirmed edits are additionally mirrored by `session-drafts.js` into the dedicated Supabase draft table. That table is a recovery layer only; confirmed domain persistence remains in the existing save pipeline.
 
 ## Forecast, debt, savings and recurrence
 
@@ -94,4 +131,4 @@ Run locally from the repository root:
 node herramientas/dinerozaurio/tests/run.js
 ```
 
-GitHub Actions runs the same suite and syntax-checks the two canonical modules via `.github/workflows/dz-tests.yml`.
+GitHub Actions runs the same suite and syntax-checks the canonical runtime modules via `.github/workflows/dz-tests.yml`.
