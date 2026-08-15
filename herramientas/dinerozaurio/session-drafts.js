@@ -103,16 +103,16 @@ function showRecoveryPrompt(draft){
     <div class="modalHead">
       <div>
         <div class="sub">Recuperación de sesión</div>
-        <h3 style="margin:4px 0 0">Hay datos sin guardar de tu última sesión</h3>
+        <h3 style="margin:4px 0 0">Hay cambios pendientes</h3>
       </div>
     </div>
+    <p style="margin:0 0 14px;line-height:1.55">DineroZaurio encontró ${count} cambio${count===1?'':'s'} sin guardar de tu última sesión.</p>
     <div class="legendNote">
       <span class="legendDot"></span>
-      <span>Encontramos ${count} cambio${count===1?'':'s'} pendiente${count===1?'':'s'} guardado${count===1?'':'s'} temporalmente en ${escapeHtml(when)}.</span>
+      <span>Última copia temporal: ${escapeHtml(when)}. Puedes revisarla antes de decidir qué guardar definitivamente.</span>
     </div>
-    <p class="muted" style="margin:14px 0 0">Puedes descartarlos o revisarlos antes de decidir qué guardar definitivamente.</p>
-    <div class="btnRow" style="margin-top:18px;justify-content:flex-end">
-      <button id="dzDiscardRecoveredDraft" class="btn danger" type="button">Descartar</button>
+    <div class="btnRow" style="margin-top:18px;justify-content:flex-end;align-items:center">
+      <button id="dzDiscardRecoveredDraft" class="btn ghost" type="button" style="color:var(--danger);border-color:rgba(255,91,127,.45)">Descartar cambios</button>
       <button id="dzReviewRecoveredDraft" class="btn primary" type="button">Revisar cambios</button>
     </div>
   </div>`;
