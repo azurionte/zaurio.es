@@ -1,13 +1,19 @@
 import { assertMinor } from './money.js';
-import { addDays, assertIsoDay, inClosedRange } from './dates.js';
+import { assertIsoDay, inClosedRange } from './dates.js';
 import { generateOccurrences } from './recurrence-engine.js';
 
-function paymentAmountFor(debt, schedule, occurrenceIndex) {
+function isBalanceDriven(debt) {
+  return debt.debtType === 'revolving' || debt.balanceKnown === true || debt.metadata?.balanceKnown === true;
+}
+
+function paymentAmountFor(debt, schedule, occurrenceIndex, balanceMinor) {
   const scheduled = Math.abs(assertMinor(Number(schedule.paymentAmountMinor || 0), 'schedule.paymentAmountMinor'));
-  const balance = Math.max(0, assertMinor(Number(debt.currentBalanceMinor || 0), 'debt.currentBalanceMinor'));
   if (schedule.remainingInstallments != null && occurrenceIndex >= Number(schedule.remainingInstallments)) return 0;
-  if (balance <= 0) return 0;
-  return Math.min(scheduled, balance);
+  if (isBalanceDriven(debt)) {
+    if (balanceMinor <= 0) return 0;
+    return Math.min(scheduled, balanceMinor);
+  }
+  return scheduled;
 }
 
 function adjustmentFor(adjustments, debtId, day) {
@@ -22,27 +28,37 @@ export function generateDebtEvents({ debt, schedule, recurrenceRule, adjustments
 
   const occurrences = generateOccurrences(recurrenceRule, { from, to });
   let balance = Math.max(0, assertMinor(Number(debt.currentBalanceMinor || 0), 'debt.currentBalanceMinor'));
+  const balanceDriven = isBalanceDriven(debt);
   const rate = Math.max(0, Number(debt.annualInterestRate || 0));
   const monthlyRate = rate / 100 / 12;
   const result = [];
 
   occurrences.forEach((occurrence, index) => {
-    if (balance <= 0) return;
+    if (balanceDriven && balance <= 0) return;
     const adjustment = adjustmentFor(adjustments, debt.id, occurrence.scheduledAt);
     if (adjustment?.adjustmentType === 'skip_payment') return;
 
-    let payment = paymentAmountFor({ ...debt, currentBalanceMinor: balance }, schedule, index);
-    if (adjustment?.adjustmentType === 'custom_payment' && adjustment.amountMinor != null) payment = Math.min(balance, Math.abs(assertMinor(Number(adjustment.amountMinor))));
-    if (adjustment?.adjustmentType === 'extra_payment' && adjustment.amountMinor != null) payment = Math.min(balance, payment + Math.abs(assertMinor(Number(adjustment.amountMinor))));
+    let payment = paymentAmountFor(debt, schedule, index, balance);
+    if (adjustment?.adjustmentType === 'custom_payment' && adjustment.amountMinor != null) {
+      const custom = Math.abs(assertMinor(Number(adjustment.amountMinor)));
+      payment = balanceDriven ? Math.min(balance, custom) : custom;
+    }
+    if (adjustment?.adjustmentType === 'extra_payment' && adjustment.amountMinor != null) {
+      const extra = Math.abs(assertMinor(Number(adjustment.amountMinor)));
+      payment = balanceDriven ? Math.min(balance, payment + extra) : payment + extra;
+    }
     if (adjustment?.adjustmentType === 'payoff') {
       const feePct = Math.max(0, Number(schedule.payoffFeePercent || 0));
-      payment = Math.min(Number.MAX_SAFE_INTEGER, balance + Math.round(balance * feePct / 100));
+      if (!balanceDriven) throw new Error('Cannot calculate payoff for a debt without a known balance');
+      payment = balance + Math.round(balance * feePct / 100);
     }
+    if (payment <= 0) return;
 
     let interestMinor = 0;
     if (debt.debtType === 'revolving' && monthlyRate > 0) interestMinor = Math.round(balance * monthlyRate);
-    const principalMinor = Math.max(0, Math.min(balance, payment - interestMinor));
-    const actualPayment = Math.max(0, Math.min(payment, balance + interestMinor));
+    const principalMinor = balanceDriven ? Math.max(0, Math.min(balance, payment - interestMinor)) : null;
+    const actualPayment = balanceDriven ? Math.max(0, Math.min(payment, balance + interestMinor)) : payment;
+    const balanceAfterMinor = balanceDriven ? Math.max(0, balance - principalMinor) : null;
 
     result.push({
       id: `expected:debt:${debt.id}:${occurrence.scheduledAt}`,
@@ -63,18 +79,20 @@ export function generateDebtEvents({ debt, schedule, recurrenceRule, adjustments
       metadata: {
         interestMinor,
         principalMinor,
-        balanceBeforeMinor: balance,
-        balanceAfterMinor: Math.max(0, balance - principalMinor),
+        balanceKnown: balanceDriven,
+        balanceBeforeMinor: balanceDriven ? balance : null,
+        balanceAfterMinor,
         adjustmentId: adjustment?.id || null
       }
     });
-    balance = Math.max(0, balance - principalMinor);
+    if (balanceDriven) balance = balanceAfterMinor;
   });
 
   return result.filter(event => inClosedRange(event.scheduledAt, from, to));
 }
 
 export function payoffQuote({ debt, schedule }) {
+  if (!isBalanceDriven(debt)) throw new Error('Cannot calculate payoff for a debt without a known balance');
   const balanceMinor = Math.max(0, assertMinor(Number(debt.currentBalanceMinor || 0), 'debt.currentBalanceMinor'));
   const feePercent = Math.max(0, Number(schedule?.payoffFeePercent || 0));
   const feeMinor = Math.round(balanceMinor * feePercent / 100);
@@ -82,12 +100,10 @@ export function payoffQuote({ debt, schedule }) {
 }
 
 export function applyConfirmedDebtPayment({ debt, actualPaymentMinor, interestMinor = 0 }) {
+  if (!isBalanceDriven(debt)) return debt;
   const paid = Math.abs(assertMinor(Number(actualPaymentMinor), 'actualPaymentMinor'));
   const interest = Math.max(0, assertMinor(Number(interestMinor), 'interestMinor'));
   const principal = Math.max(0, paid - interest);
-  return {
-    ...debt,
-    currentBalanceMinor: Math.max(0, Number(debt.currentBalanceMinor || 0) - principal),
-    status: Math.max(0, Number(debt.currentBalanceMinor || 0) - principal) === 0 ? 'settled' : debt.status
-  };
+  const nextBalance = Math.max(0, Number(debt.currentBalanceMinor || 0) - principal);
+  return { ...debt, currentBalanceMinor: nextBalance, status: nextBalance === 0 ? 'settled' : debt.status };
 }
