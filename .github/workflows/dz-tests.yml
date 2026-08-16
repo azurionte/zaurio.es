@@ -5,13 +5,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: node --check herramientas/dinerozaurio/finance/accounting-core.js
-      - run: node --check herramientas/dinerozaurio/ui/accounts.js
-      - run: node --check herramientas/dinerozaurio/folder-mode-summary-v2.js
-      - run: node --check herramientas/dinerozaurio/folder-mode-enhancements-v3.js
-      - run: node --check herramientas/dinerozaurio/folder-mode-fixes-v4.js
-      - run: node --check herramientas/dinerozaurio/ui-fixes-v5.js
-      - run: node --check herramientas/dinerozaurio/account-routing-current.js
-      - run: node --check herramientas/dinerozaurio/ui/account-observed-adapter.js
-      - run: node --check herramientas/dinerozaurio/session-drafts.js
-      - run: node herramientas/dinerozaurio/tests/run.js
+      - name: Legacy safety suite
+        run: |
+          node --check herramientas/dinerozaurio/finance/accounting-core.js
+          node --check herramientas/dinerozaurio/ui/accounts.js
+          node --check herramientas/dinerozaurio/folder-mode-summary-v2.js
+          node --check herramientas/dinerozaurio/folder-mode-enhancements-v3.js
+          node --check herramientas/dinerozaurio/folder-mode-fixes-v4.js
+          node --check herramientas/dinerozaurio/ui-fixes-v5.js
+          node --check herramientas/dinerozaurio/account-routing-current.js
+          node --check herramientas/dinerozaurio/ui/account-observed-adapter.js
+          node --check herramientas/dinerozaurio/session-drafts.js
+          node herramientas/dinerozaurio/tests/run.js
+      - name: DineroZaurio v3 financial core
+        run: node herramientas/dinerozaurio/v3/tests/run.js
