@@ -13,11 +13,11 @@ The MCP does **not** contain an alternative finance calculator. It loads the aut
 - No service-role key is used.
 - MCP tools are read-only.
 
-## PREPROD configuration
+## PREPROD isolation
 
-`wrangler.toml` points to the isolated PREPROD Supabase project.
+`wrangler.toml` points to the isolated PREPROD Supabase project and deploys a separate Worker named `dinerozaurio-mcp-preprod`.
 
-The production MCP on `main` is not changed by PREPROD development or cutover.
+The production MCP Worker is not reused or overwritten by PREPROD deployment. Production remains unchanged until explicit promotion approval.
 
 ## Tools
 
@@ -47,4 +47,6 @@ If current account truth is missing or stale, `evaluate_purchase` must return th
 
 ## Deployment
 
-This PREPROD integration intentionally has no automatic production promotion. Deploy the PREPROD worker only when its OAuth/resource URL is ready to be tested. Production remains unchanged until explicit approval.
+`.github/workflows/dz-v3-mcp-preprod-deploy.yml` deploys only the isolated PREPROD Worker when v3 MCP/core code changes on the `preprod` branch.
+
+There is no automatic production promotion.
