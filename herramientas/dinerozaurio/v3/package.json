@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/run.js"
+    "test": "node tests/run.js && node -e \"import('./tests/migrated-user-golden.js').then(m=>m.runMigratedUserGolden())\""
   }
 }
