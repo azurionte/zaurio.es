@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>DineroZaurio v3 · PREPROD</title>
+  <meta name="theme-color" content="#13051d">
+  <link rel="stylesheet" href="./app.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brandMark">DZ</span><div><strong>DineroZaurio</strong><small>v3 · Intelligent Financial Core · PREPROD</small></div></div>
+    <div class="topActions"><span id="engineBadge" class="badge">cargando…</span><button id="logoutBtn" class="ghost hidden">Salir</button></div>
+  </header>
+
+  <main class="shell">
+    <section id="authView" class="auth card">
+      <div><span class="eyebrow">PREPROD V3</span><h1>Una sola verdad financiera.</h1><p>La nueva arquitectura separa previsión, confirmación y realidad bancaria. Cada cifra puede explicarse movimiento por movimiento.</p></div>
+      <button id="loginBtn" class="primary">Entrar con Google</button>
+    </section>
+
+    <section id="appView" class="hidden">
+      <div class="hero card">
+        <div>
+          <span class="eyebrow">PERIODO FINANCIERO</span>
+          <div class="periodPicker"><button id="prevMonth" class="iconBtn">‹</button><input id="monthPicker" type="month"><button id="nextMonth" class="iconBtn">›</button></div>
+          <p id="periodCaption" class="muted"></p>
+        </div>
+        <div class="heroNumber"><span>Sobrante previsto</span><strong id="netValue">—</strong><small id="truthCaption">Expected + hechos confirmados</small></div>
+      </div>
+
+      <nav class="tabs" aria-label="Secciones">
+        <button class="active" data-tab="overview">Resumen</button>
+        <button data-tab="calendar">Movimientos</button>
+        <button data-tab="accounts">Cuentas</button>
+        <button data-tab="decision">¿Puedo comprarlo?</button>
+      </nav>
+
+      <section id="tab-overview" class="tabPanel">
+        <div class="metrics">
+          <article class="metric card"><span>Ingresos</span><strong id="incomeValue">—</strong></article>
+          <article class="metric card"><span>Gastos</span><strong id="expenseValue">—</strong></article>
+          <article class="metric card"><span>Deudas</span><strong id="debtValue">—</strong></article>
+          <article class="metric card"><span>Ahorro</span><strong id="savingValue">—</strong></article>
+        </div>
+        <div class="grid2">
+          <article class="card"><div class="sectionHead"><div><span class="eyebrow">EXPLICABILIDAD</span><h2>De dónde sale el resultado</h2></div><button id="explainBtn" class="ghost">Ver todo</button></div><div id="explainList" class="rows"></div></article>
+          <article class="card"><div class="sectionHead"><div><span class="eyebrow">OPERATIVA</span><h2>Acciones pendientes</h2></div></div><div id="riskList" class="rows"></div></article>
+        </div>
+        <article class="card"><div class="sectionHead"><div><span class="eyebrow">6 PERIODOS</span><h2>Margen futuro</h2></div></div><div id="forecastList" class="forecastList"></div></article>
+      </section>
+
+      <section id="tab-calendar" class="tabPanel hidden">
+        <article class="card"><div class="sectionHead"><div><span class="eyebrow">LEDGER</span><h2>Movimientos del periodo</h2><p class="muted">Expected, confirmado y real se muestran como estados distintos.</p></div></div><div id="eventList" class="eventList"></div></article>
+      </section>
+
+      <section id="tab-accounts" class="tabPanel hidden">
+        <div id="accountList" class="accountGrid"></div>
+      </section>
+
+      <section id="tab-decision" class="tabPanel hidden">
+        <article class="card decisionCard">
+          <span class="eyebrow">SCENARIO ENGINE</span><h2>¿Puedo comprarlo?</h2>
+          <p class="muted">No mira solo lo que tienes hoy: simula la compra contra las obligaciones futuras y transferencias pendientes.</p>
+          <div class="formGrid"><label>Importe<input id="purchaseAmount" type="number" min="0" step="0.01" placeholder="180,00"></label><label>Fecha<input id="purchaseDate" type="date"></label><label>Colchón mínimo<input id="safetyFloor" type="number" min="0" step="0.01" value="0"></label></div>
+          <button id="evaluateBtn" class="primary">Analizar compra</button>
+          <div id="decisionResult" class="decisionResult hidden"></div>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="editDialog" class="modal"><form method="dialog"><div class="modalHead"><div><span class="eyebrow">OCURRENCIA</span><h3 id="editTitle">Editar cargo</h3></div><button value="cancel" class="iconBtn">×</button></div><label>Fecha prevista<input id="editDate" type="date"></label><label>Importe previsto<input id="editAmount" type="number" min="0" step="0.01"></label><p class="muted">Este cambio afecta solo a esta ocurrencia. La regla recurrente permanece intacta.</p><div class="modalActions"><button value="cancel" class="ghost">Cancelar</button><button id="saveOccurrenceBtn" value="default" class="primary">Guardar</button></div></form></dialog>
+  <dialog id="explainDialog" class="modal wide"><form method="dialog"><div class="modalHead"><div><span class="eyebrow">AUDITORÍA DEL CÁLCULO</span><h3>Todos los movimientos</h3></div><button value="cancel" class="iconBtn">×</button></div><div id="explainDialogList" class="eventList"></div></form></dialog>
+
+  <div id="toast" class="toast hidden"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
