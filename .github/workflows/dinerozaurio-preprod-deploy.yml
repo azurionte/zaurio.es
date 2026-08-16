@@ -36,3 +36,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test PREPROD v3 runtime
+        run: |
+          root="$(curl --fail --silent --show-error --retry 5 --retry-delay 2 https://preprod.dinerozaurio.zaurio.es/)"
+          v3="$(curl --fail --silent --show-error --retry 5 --retry-delay 2 https://preprod.dinerozaurio.zaurio.es/v3/)"
+          echo "$root" | grep -q 'DineroZaurio v3'
+          echo "$v3" | grep -q 'DineroZaurio'
