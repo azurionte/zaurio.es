@@ -1,0 +1,38 @@
+name: Deploy DineroZaurio PREPROD
+
+on:
+  push:
+    branches:
+      - preprod
+    paths:
+      - 'herramientas/dinerozaurio/**'
+      - 'wrangler.jsonc'
+      - '.github/workflows/dinerozaurio-preprod-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: dinerozaurio-preprod-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout preprod
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Deploy to Cloudflare Workers
+        run: npx --yes wrangler@4 deploy --config wrangler.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
