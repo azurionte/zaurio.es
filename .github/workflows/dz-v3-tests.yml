@@ -1,0 +1,21 @@
+name: DZ v3 tests
+on:
+  push:
+    branches: [preprod]
+    paths:
+      - 'herramientas/dinerozaurio/v3/**'
+      - '.github/workflows/dz-v3-tests.yml'
+  pull_request:
+    paths:
+      - 'herramientas/dinerozaurio/v3/**'
+      - '.github/workflows/dz-v3-tests.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax check v3 core
+        run: |
+          for file in herramientas/dinerozaurio/v3/core/*.js; do node --check "$file"; done
+      - name: Run v3 financial core regression suite
+        run: node herramientas/dinerozaurio/v3/tests/run.js
