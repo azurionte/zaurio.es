@@ -1,104 +1,92 @@
-# DineroZaurio infrastructure map
+# DineroZaurio v3 infrastructure map
 
-This document records where the important DineroZaurio infrastructure and authentication settings live, so future maintenance does not require rediscovering them.
+This document records the current PREPROD infrastructure after the v3 cutover.
 
 ## GitHub
 
 Repository: `azurionte/zaurio.es`
 
-Relevant application path: `herramientas/dinerozaurio/`
-
 Branches:
-- `main` — production code
-- `preprod` — DineroZaurio preproduction code
+- `main` — production; untouched by v3 PREPROD cutover
+- `preprod` — DineroZaurio v3 construction and validation
+
+Application paths on `preprod`:
+- root redirect: `herramientas/dinerozaurio/index.html`
+- v3 runtime: `herramientas/dinerozaurio/v3/`
+- architecture: `herramientas/dinerozaurio/v3/ARCHITECTURE.md`
+- implementation status: `herramientas/dinerozaurio/v3/IMPLEMENTATION_STATUS.md`
 
 Preproduction hostname:
 - `https://preprod.dinerozaurio.zaurio.es`
 
-Production hostname currently used by the application:
-- `https://herramientas.zaurio.es/dinerozaurio/`
+The PREPROD root redirects to `/v3/`.
 
-## Cloudflare Workers
+## Cloudflare
 
-Preproduction Worker:
+PREPROD Worker:
 - `dinerozaurio-preprod`
 
-Specific Worker route:
-- `preprod.dinerozaurio.zaurio.es/*` -> `dinerozaurio-preprod`
+Deployment workflow:
+- `.github/workflows/dinerozaurio-preprod-deploy.yml`
 
-There is also a broader Zaurio Worker route covering `*.zaurio.es/*`; the explicit PREPROD route must remain present so the dedicated DineroZaurio Worker wins for the PREPROD hostname.
+Assets directory:
+- `herramientas/dinerozaurio`
+
+The PREPROD worker deploys only the isolated `preprod` branch. No automatic production promotion exists.
 
 ## Supabase
 
-### Production
+### Production — reference only
 
 Project ref:
 - `adpjitccwwvlydrtvvqk`
 
-Auth callback used by Google OAuth:
-- `https://adpjitccwwvlydrtvvqk.supabase.co/auth/v1/callback`
+Production remains the legacy data/reference source until explicit cutover approval. V3 development must not write to it.
 
-### Preproduction
+### PREPROD v3
 
-Project name:
+Project:
 - `DineroZaurio Preprod`
-
-Project ref:
-- `wsdtcsjkssvdqovdpxrq`
+- ref `wsdtcsjkssvdqovdpxrq`
 
 Project URL:
 - `https://wsdtcsjkssvdqovdpxrq.supabase.co`
 
-Google OAuth callback to authorize:
+The v3 domain uses normalized `dz3_*` tables with RLS and audit coverage. Migrated legacy data retains traceability to its source.
+
+Google OAuth callback:
 - `https://wsdtcsjkssvdqovdpxrq.supabase.co/auth/v1/callback`
 
-Application redirect / allowed app URL:
+Allowed application URL:
 - `https://preprod.dinerozaurio.zaurio.es/`
 
-PREPROD is intentionally isolated from the production Supabase project.
+## Authentication
 
-## Google OAuth
+The v3 web runtime uses Supabase OAuth and the authenticated user's RLS context. The removed legacy `preprod-guard.js` is no longer part of the runtime.
 
-Google Cloud project containing the active Zaurio OAuth client:
-- Project name: `8-doors`
-- Project ID: `doors-2dd2e`
+The application remains visibly marked as PREPROD in the v3 UI.
 
-OAuth 2.0 Client ID name:
-- `Zaurio.es`
+## MCP
 
-Authorized JavaScript origins should include:
-- `https://herramientas.zaurio.es`
-- `https://preprod.dinerozaurio.zaurio.es`
+PREPROD MCP source:
+- `integrations/dinerozaurio-mcp/`
 
-Authorized redirect URIs should include:
-- `https://adpjitccwwvlydrtvvqk.supabase.co/auth/v1/callback`
-- `https://wsdtcsjkssvdqovdpxrq.supabase.co/auth/v1/callback`
+The PREPROD MCP is configured for the PREPROD Supabase project and imports the same pure v3 Financial Core used by the web runtime. It uses per-user OAuth bearer authentication plus the public Supabase publishable key; it must never use a service-role key.
 
-Do not commit the Google OAuth client secret to this repository. The secret belongs in Supabase provider configuration / secure credential storage only.
+The production MCP on `main` is not modified by PREPROD branch changes.
 
-## PREPROD access
+## Bank integration
 
-PREPROD should use Google OAuth, not email magic links.
+The domain, persistence model, provider contract, bank-sync service and reconciliation engine exist. Live synchronization still requires selection/configuration of an Open Banking provider and provider credentials.
 
-The PREPROD guard is in:
-- `herramientas/dinerozaurio/preprod-guard.js`
+## AI integration
 
-The guard currently restricts access after Google authentication to the authorized test account and keeps the PREPROD environment visually marked.
+Scenario, Decision, audit and typed AI contracts exist. A live conversational chat still requires selection/configuration of an LLM/backend. The LLM must not become the financial calculator or write directly to financial tables.
 
-## Shared assets
+## Security rules
 
-DineroZaurio still references shared Zaurio assets under `/shared/...`.
-
-On the dedicated PREPROD hostname those root-relative URLs would otherwise resolve against `preprod.dinerozaurio.zaurio.es`. The PREPROD guard currently rewrites shared asset references to the canonical Zaurio origin so logos/icons continue to load.
-
-## Security notes
-
-- Do not store OAuth client secrets, Supabase service-role keys, Cloudflare API tokens, or other privileged secrets in Git.
-- Publishable / anon client keys may appear in client code by design, but authorization must still be enforced through RLS and server-side rules.
-- Keep production and PREPROD data/auth projects separate.
-
-## Pending DineroZaurio work
-
-- Finish PREPROD Google provider configuration in Supabase.
-- Verify PREPROD auth end-to-end after Google provider is enabled.
-- Complete and test financial data rollover behavior between accounting periods.
+- never commit privileged OAuth, bank-provider, LLM-provider, Supabase service-role or Cloudflare credentials;
+- publishable Supabase keys are public client configuration, but RLS must remain enabled;
+- PREPROD and PROD data/projects stay isolated;
+- PROD writes/cutover require explicit approval;
+- every financial figure exposed by UI/MCP must remain explainable from the v3 ledger.
