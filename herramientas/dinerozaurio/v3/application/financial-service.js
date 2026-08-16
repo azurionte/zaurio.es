@@ -1,0 +1,149 @@
+import { addDays, monthEnd, monthStart } from '../core/dates.js';
+import { generateOccurrences } from '../core/recurrence-engine.js';
+import { resolveCalendarMonthPeriod, resolveSalaryCyclePeriod } from '../core/funding-cycle-engine.js';
+import { buildFinancialState, generateDebtLedger, FINANCIAL_CORE_VERSION } from '../core/financial-core.js';
+import { buildExpectedLedger } from '../core/expected-ledger-engine.js';
+import { expectedTransferRequirement, detectMissingTransfers, explainFundingRisk } from '../core/funding-engine.js';
+import { evaluatePurchaseDecision } from '../core/decision-engine.js';
+
+function byId(rows = []) { return new Map(rows.map(row => [row.id, row])); }
+
+function normalizedRecurrence(row) {
+  return {
+    frequency: row.frequency,
+    intervalValue: Number(row.intervalValue || 1),
+    anchorDate: row.anchorDate,
+    endDate: row.endDate || null,
+    calendarRule: row.calendarRule,
+    dueDay: row.dueDay == null ? null : Number(row.dueDay),
+    leadDays: Number(row.leadDays || 0)
+  };
+}
+
+function salaryExpectedEvents(state, from, to) {
+  const salary = state.incomeRules.find(row => row.isSalary && row.enabled !== false);
+  if (!salary) return [];
+  const recurrence = state.recurrenceRules.find(row => row.id === salary.recurrenceId);
+  if (!recurrence) return [];
+  return generateOccurrences(normalizedRecurrence(recurrence), { from, to }).map(row => ({
+    id: `expected:income_rule:${salary.id}:${row.scheduledAt}`,
+    sourceType: 'income_rule', sourceId: salary.id, eventType: 'income', name: salary.name,
+    originalScheduledAt: row.scheduledAt, scheduledAt: row.scheduledAt, serviceDate: row.serviceDate,
+    amountMinor: Number(salary.amountMinor), currency: salary.currency, accountId: salary.accountId,
+    bucketId: salary.bucketId || null, status: 'expected', evidenceLevel: 'forecast'
+  }));
+}
+
+export function resolveLabelPeriod(state, labelMonth) {
+  if (state.plan.periodMode === 'calendar_month') return resolveCalendarMonthPeriod(labelMonth);
+  const searchFrom = addDays(monthStart(labelMonth), -45);
+  const searchTo = addDays(monthEnd(labelMonth), 45);
+  const salaries = salaryExpectedEvents(state, searchFrom, searchTo);
+  for (let index = 0; index < salaries.length; index += 1) {
+    const period = resolveSalaryCyclePeriod({
+      salaryEvent: salaries[index],
+      nextSalaryEvent: salaries[index + 1] || null,
+      fundingStrategy: state.plan.salaryFundingStrategy
+    });
+    if (period.labelMonth === labelMonth) return period;
+  }
+  throw new Error(`No se pudo resolver el ciclo salarial para ${labelMonth}`);
+}
+
+function historicalOpeningBalance(state, from) {
+  const initial = Number(state.plan.initialBalanceMinor || 0);
+  const prior = (state.financialEvents || []).filter(row => {
+    const day = String(row.occurredAt || row.scheduledAt || '').slice(0, 10);
+    return day && day < from && !['skipped', 'superseded'].includes(row.status);
+  });
+  return initial + prior.reduce((sum, row) => sum + Number(row.amountMinor || 0), 0);
+}
+
+function expectedTransfersForPeriod(state, expectedLedger, period, accountState) {
+  const salaryEvents = expectedLedger.filter(row => row.eventType === 'income' && state.incomeRules.some(rule => rule.id === row.sourceId && rule.isSalary));
+  const balances = new Map(accountState.accounts.map(account => [account.id, account.totalMinor]));
+  return (state.transferRules || []).filter(rule => rule.enabled !== false).flatMap(rule => {
+    const trigger = salaryEvents.find(event => !rule.triggerIncomeRuleId || event.sourceId === rule.triggerIncomeRuleId);
+    if (!trigger) return [];
+    const requirement = expectedTransferRequirement({
+      rule,
+      triggerEvent: trigger,
+      upcomingEvents: expectedLedger,
+      destinationAccountBalanceMinor: balances.get(rule.toAccountId) || 0,
+      windowEnd: period.end
+    });
+    requirement.expectedAt = addDays(requirement.expectedAt, Number(rule.offsetDays || 0));
+    return requirement.amountMinor > 0 ? [requirement] : [];
+  });
+}
+
+export function buildPeriodView(state, labelMonth, asOf = new Date().toISOString().slice(0, 10)) {
+  const period = resolveLabelPeriod(state, labelMonth);
+  const debtEvents = generateDebtLedger({
+    debts: state.debts,
+    debtSchedules: state.debtSchedules,
+    recurrenceRules: state.recurrenceRules,
+    debtAdjustments: state.debtAdjustments,
+    from: period.start,
+    to: period.end
+  });
+  const expectedLedger = buildExpectedLedger({
+    from: period.start,
+    to: period.end,
+    incomeRules: state.incomeRules,
+    expenseRules: state.expenseRules,
+    savingsGoals: state.savingsGoals,
+    recurrenceRules: state.recurrenceRules,
+    debtEvents,
+    eventOverrides: state.eventOverrides
+  });
+
+  const core = buildFinancialState({
+    range: { from: period.start, to: period.end },
+    plan: null,
+    incomeRules: state.incomeRules,
+    expenseRules: state.expenseRules,
+    savingsGoals: state.savingsGoals,
+    recurrenceRules: state.recurrenceRules,
+    debts: state.debts,
+    debtSchedules: state.debtSchedules,
+    debtAdjustments: state.debtAdjustments,
+    eventOverrides: state.eventOverrides,
+    confirmedEvents: state.financialEvents,
+    accounts: state.accounts,
+    buckets: state.buckets,
+    transfers: state.transfers,
+    observations: state.observations,
+    asOf: asOf < period.start ? period.start : asOf > period.end ? period.end : asOf
+  });
+
+  const expectedTransfers = expectedTransfersForPeriod(state, expectedLedger, period, core.accounting);
+  const missingTransfers = detectMissingTransfers({ expectedTransfers, actualTransfers: state.transfers, asOf });
+  const fundingRisks = explainFundingRisk({ missingTransfers, upcomingEvents: expectedLedger, asOf });
+
+  return {
+    engineVersion: FINANCIAL_CORE_VERSION,
+    labelMonth,
+    period,
+    openingBalanceMinor: historicalOpeningBalance(state, period.start),
+    ...core,
+    expectedTransfers,
+    missingTransfers,
+    fundingRisks
+  };
+}
+
+export function answerCanIBuy({ state, labelMonth, amountMinor, purchaseDate, horizonEnd = null, safetyFloorMinor = 0, asOf }) {
+  const view = buildPeriodView(state, labelMonth, asOf || purchaseDate);
+  const to = horizonEnd || view.period.end;
+  return evaluatePurchaseDecision({
+    openingBalanceMinor: view.openingBalanceMinor,
+    events: view.ledger,
+    from: view.period.start,
+    to,
+    amountMinor,
+    purchaseDate,
+    safetyFloorMinor,
+    missingFundingRisks: view.fundingRisks
+  });
+}
