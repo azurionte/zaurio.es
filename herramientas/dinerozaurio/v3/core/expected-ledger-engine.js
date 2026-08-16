@@ -1,6 +1,6 @@
 import { generateOccurrences } from './recurrence-engine.js';
 import { assertMinor } from './money.js';
-import { assertIsoDay, inClosedRange } from './dates.js';
+import { addDays, assertIsoDay, inClosedRange } from './dates.js';
 
 function ruleMap(recurrences = []) {
   return new Map(recurrences.map(rule => [rule.id, rule]));
@@ -15,7 +15,10 @@ function recurrenceFor(item, recurrences) {
     endDate: item.endDate || null,
     calendarRule: 'anchor',
     dueDay: null,
-    leadDays: 0
+    leadDays: 0,
+    offsetDays: 0,
+    anchorSourceType: null,
+    anchorSourceId: null
   };
 }
 
@@ -27,7 +30,10 @@ function normalizeRecurrence(rule) {
     endDate: rule.endDate || null,
     calendarRule: rule.calendarRule || 'anchor',
     dueDay: rule.dueDay == null ? null : Number(rule.dueDay),
-    leadDays: Number(rule.leadDays || 0)
+    leadDays: Number(rule.leadDays || 0),
+    offsetDays: Number(rule.offsetDays || 0),
+    anchorSourceType: rule.anchorSourceType || null,
+    anchorSourceId: rule.anchorSourceId || null
   };
 }
 
@@ -48,17 +54,28 @@ function applyOverride(event, overrides) {
   return next;
 }
 
-function buildRuleEvents({ items, recurrences, overrides, from, to, sourceType, eventType, sign }) {
+function occurrencesForRule(recurrence, { from, to, anchorEvents = [] }) {
+  const rule = normalizeRecurrence(recurrence);
+  if (rule.calendarRule !== 'funding_relative') return generateOccurrences(rule, { from, to });
+  return anchorEvents
+    .filter(event => (!rule.anchorSourceType || event.sourceType === rule.anchorSourceType) && (!rule.anchorSourceId || event.sourceId === rule.anchorSourceId))
+    .map(event => {
+      const anchorDay = String(event.occurredAt || event.scheduledAt || '').slice(0, 10);
+      if (!anchorDay) return null;
+      const scheduledAt = addDays(anchorDay, rule.offsetDays);
+      return { scheduledAt, serviceDate: scheduledAt, fundingEventId: event.id };
+    })
+    .filter(row => row && inClosedRange(row.scheduledAt, from, to));
+}
+
+function buildRuleEvents({ items, recurrences, overrides, from, to, sourceType, eventType, sign, anchorEvents = [] }) {
   const result = [];
   for (const item of items || []) {
     if (item.enabled === false) continue;
     if (item.startDate && item.startDate > to) continue;
     if (item.endDate && item.endDate < from) continue;
     const recurrence = recurrenceFor(item, recurrences);
-    const effectiveFrom = item.startDate && item.startDate > from ? item.startDate : from;
-    const effectiveTo = item.endDate && item.endDate < to ? item.endDate : to;
-    if (effectiveFrom > effectiveTo) continue;
-    const occurrences = generateOccurrences(normalizeRecurrence(recurrence), { from: effectiveFrom, to: effectiveTo });
+    const occurrences = occurrencesForRule(recurrence, { from, to, anchorEvents });
     for (const occurrence of occurrences) {
       const amount = Math.abs(assertMinor(Number(item.amountMinor), `${sourceType}.amountMinor`));
       const base = {
@@ -77,7 +94,7 @@ function buildRuleEvents({ items, recurrences, overrides, from, to, sourceType, 
         bucketId: item.bucketId || null,
         status: 'expected',
         evidenceLevel: 'forecast',
-        metadata: { category: item.category || null, ...(item.metadata || {}) }
+        metadata: { category: item.category || null, fundingEventId: occurrence.fundingEventId || null }
       };
       const event = applyOverride(base, overrides);
       const day = event.scheduledAt;
@@ -102,9 +119,9 @@ export function buildExpectedLedger({
   assertIsoDay(to, 'to');
   const recurrences = ruleMap(recurrenceRules);
   const incomeEvents = buildRuleEvents({ items: incomeRules, recurrences, overrides: eventOverrides, from, to, sourceType: 'income_rule', eventType: 'income', sign: 1 });
-  const expenseEvents = buildRuleEvents({ items: expenseRules, recurrences, overrides: eventOverrides, from, to, sourceType: 'expense_rule', eventType: 'expense', sign: -1 });
+  const expenseEvents = buildRuleEvents({ items: expenseRules, recurrences, overrides: eventOverrides, from, to, sourceType: 'expense_rule', eventType: 'expense', sign: -1, anchorEvents: incomeEvents });
   const savingItems = savingsGoals.filter(goal => goal.status !== 'paused').map(goal => ({ ...goal, amountMinor: goal.contributionMinor }));
-  const savingEvents = buildRuleEvents({ items: savingItems, recurrences, overrides: eventOverrides, from, to, sourceType: 'savings_goal', eventType: 'saving_reservation', sign: -1 });
+  const savingEvents = buildRuleEvents({ items: savingItems, recurrences, overrides: eventOverrides, from, to, sourceType: 'savings_goal', eventType: 'saving_reservation', sign: -1, anchorEvents: incomeEvents });
   return [...incomeEvents, ...expenseEvents, ...savingEvents, ...(debtEvents || []), ...(transferEvents || [])]
     .filter(event => {
       const day = String(event.occurredAt || event.scheduledAt || '').slice(0, 10);
