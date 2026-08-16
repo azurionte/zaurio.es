@@ -5,7 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const VERSION='math-engine-1';
+  const VERSION='math-engine-2';
   const DAY_MS=86400000;
   const EXPENSE_TYPES=new Set(['Presupuesto','Gasto','Gasto extraordinario','Gasto puntual']);
 
@@ -154,13 +154,21 @@
       const override=recurringOverrideForMonth(monthAdjustments,item.id,ym);
       if(override?.mode==='remove_from_here') continue;
 
+      const occurrenceOverride=override?.occurrenceOverrides?.[scheduledDay];
       const replacement=override?.dateReplacements?.[scheduledDay];
       const confirmation=override?.actualConfirmations?.[scheduledDay];
-      const actualDay=dayKey(confirmation?.actualDate||replacement||scheduledDay)||scheduledDay;
+      const actualDay=dayKey(
+        confirmation?.actualDate ||
+        occurrenceOverride?.date ||
+        occurrenceOverride?.actualDate ||
+        replacement ||
+        scheduledDay
+      )||scheduledDay;
       if(!inRange(actualDay,startDay,endDay)) continue;
 
       let amount=Number(item?.amount||0);
       if(override&&override.mode!=='remove_from_here'&&Object.prototype.hasOwnProperty.call(override,'amount')) amount=Number(override.amount||0);
+      if(occurrenceOverride&&Object.prototype.hasOwnProperty.call(occurrenceOverride,'amount')) amount=Number(occurrenceOverride.amount||0);
       if(confirmation&&Object.prototype.hasOwnProperty.call(confirmation,'amount')) amount=Number(confirmation.amount||0);
       if(!Number.isFinite(amount)||Math.abs(amount)<0.005) continue;
 
@@ -169,6 +177,7 @@
         day:actualDay,
         attributedYm:ym,
         amount:round2(amount),
+        edited:!!occurrenceOverride,
         confirmed:!!confirmation
       });
     }
@@ -209,6 +218,7 @@
           confidence:occurrence.confirmed?'confirmada':confidence,
           note,
           canonicalOccurrence:true,
+          editedOccurrence:occurrence.edited,
           scheduledDay:occurrence.scheduledDay
         });
       }
