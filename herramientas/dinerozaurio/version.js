@@ -1,8 +1,8 @@
 window.__DINEROZAURIO_VERSION__ = {
   major: 2,
   minor: 9,
-  build: "1608261557",
-  label: "2.9.1608261557",
+  build: "1608261625",
+  label: "2.9.1608261625",
 };
 
 (() => {
@@ -21,6 +21,8 @@ window.__DINEROZAURIO_VERSION__ = {
 
   const shared = [
     `./finance/accounting-core.js?v=${build}`,
+    `./finance/math-engine.js?v=${build}`,
+    `./finance/math-engine-integration.js?v=${build}`,
     `./session-drafts.js?v=${build}`,
     `./ui/debt-settings-state-bridge.js?v=${build}`,
     `./ui/budget-period-sync.js?v=${build}`
@@ -45,18 +47,19 @@ window.__DINEROZAURIO_VERSION__ = {
   ];
 
   const revealWhenPatched = () => {
-    const ready = uxMode === 'consolidated'
+    const uiReady = uxMode === 'consolidated'
       ? window.__DINEROZAURIO_CONSOLIDATED_UX__ === 'consolidated-ux-1'
       : window.__DZ_ACCOUNTS_UI__ === 'accounts-ui-7' && !!window.__DZ_ACCOUNT_OBSERVED_ADAPTER__;
+    const mathReady = window.__DINEROZAURIO_MATH_ENGINE_INTEGRATION__ === 'math-engine-integration-1';
 
-    if (!ready) {
+    if (!uiReady || !mathReady) {
       setTimeout(revealWhenPatched, 60);
       return;
     }
 
     window.__DINEROZAURIO_UI_PATCHES_READY__ = true;
-    window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__ = 'accounting-core-2';
-    window.__DINEROZAURIO_ROUTING_AUTHORITY__ = 'accounting-core-2';
+    window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__ = window.DineroZaurioMathEngine?.VERSION || 'math-engine-1';
+    window.__DINEROZAURIO_ROUTING_AUTHORITY__ = window.DineroZaurioMathEngine?.VERSION || 'math-engine-1';
     delete window.__DINEROZAURIO_ACCOUNT_DISPLAY_AUTHORITY__;
     document.documentElement.classList.remove('dz-accounting-loading');
   };
