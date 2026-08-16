@@ -41,3 +41,9 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test PREPROD MCP health
+        run: |
+          response="$(curl --fail --silent --show-error --retry 5 --retry-delay 2 https://dinerozaurio-mcp-preprod.dmnrobles.workers.dev/health)"
+          echo "$response"
+          node -e 'const x=JSON.parse(process.argv[1]); if(!x.ok || x.service!=="dinerozaurio-finance-v3") process.exit(1)' "$response"
