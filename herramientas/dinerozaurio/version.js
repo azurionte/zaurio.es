@@ -1,8 +1,8 @@
 window.__DINEROZAURIO_VERSION__ = {
   major: 2,
   minor: 9,
-  build: "1608260855",
-  label: "2.9.1608260855",
+  build: "1608261557",
+  label: "2.9.1608261557",
 };
 
 (() => {
@@ -22,7 +22,8 @@ window.__DINEROZAURIO_VERSION__ = {
   const shared = [
     `./finance/accounting-core.js?v=${build}`,
     `./session-drafts.js?v=${build}`,
-    `./ui/debt-settings-state-bridge.js?v=${build}`
+    `./ui/debt-settings-state-bridge.js?v=${build}`,
+    `./ui/budget-period-sync.js?v=${build}`
   ];
 
   const legacy = [
