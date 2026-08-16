@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Syntax check complete v3 runtime
         run: |
-          for file in herramientas/dinerozaurio/v3/core/*.js herramientas/dinerozaurio/v3/application/*.js herramientas/dinerozaurio/v3/data/*.js herramientas/dinerozaurio/v3/app.js; do node --check "$file"; done
+          for file in herramientas/dinerozaurio/v3/core/*.js herramientas/dinerozaurio/v3/application/*.js herramientas/dinerozaurio/v3/data/*.js herramientas/dinerozaurio/v3/integrations/*.js herramientas/dinerozaurio/v3/app.js; do node --check "$file"; done
       - name: Run v3 financial core and migrated golden suites
         working-directory: herramientas/dinerozaurio/v3
         run: npm test
