@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Autorizar acceso · DineroZaurio</title>
+  <title>Autorizar acceso Â· DineroZaurio</title>
   <meta name="theme-color" content="#2a0046" />
   <link rel="icon" href="/shared/assets/brand/favicon.ico" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -77,26 +77,26 @@
   <main class="card">
     <div class="brand">
       <img src="/herramientas/dinerozaurio/assets/piggy-app-icon-192.png" alt="" />
-      <div><strong>DineroZaurio</strong><span>Autorización segura</span></div>
+      <div><strong>DineroZaurio</strong><span>AutorizaciÃ³n segura</span></div>
     </div>
 
-    <section id="loading" class="loading">Preparando autorización…</section>
+    <section id="loading" class="loading">Preparando autorizaciÃ³nâ€¦</section>
 
     <section id="loginPanel" class="hidden">
-      <h1>Inicia sesión para continuar</h1>
+      <h1>Inicia sesiÃ³n para continuar</h1>
       <p>Necesitamos verificar tu cuenta de DineroZaurio antes de mostrar la solicitud de acceso.</p>
       <button id="loginBtn" class="login" type="button">Continuar con Google</button>
     </section>
 
     <section id="consentPanel" class="hidden">
       <h1>Autorizar acceso</h1>
-      <p>La siguiente aplicación quiere conectarse a tu cuenta de DineroZaurio.</p>
+      <p>La siguiente aplicaciÃ³n quiere conectarse a tu cuenta de DineroZaurio.</p>
       <div class="client">
-        <div id="clientName" class="clientName">Aplicación</div>
+        <div id="clientName" class="clientName">AplicaciÃ³n</div>
         <div id="redirectUri" class="meta"></div>
         <div id="scopes" class="scopes"></div>
       </div>
-      <div class="notice">Solo se concederá acceso dentro de los permisos de tu propia cuenta. Las políticas RLS de Supabase siguen aplicándose a las consultas realizadas con tu autorización.</div>
+      <div class="notice">Solo se concederÃ¡ acceso dentro de los permisos de tu propia cuenta. Las polÃ­ticas RLS de Supabase siguen aplicÃ¡ndose a las consultas realizadas con tu autorizaciÃ³n.</div>
       <div class="actions">
         <button id="denyBtn" class="deny" type="button">Denegar</button>
         <button id="approveBtn" class="approve" type="button">Autorizar</button>
@@ -108,8 +108,8 @@
 
   <script>
     (() => {
-      const SUPABASE_URL = 'https://adpjitccwwvlydrtvvqk.supabase.co';
-      const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk';
+      const SUPABASE_URL = 'https://wsdtcsjkssvdqovdpxrq.supabase.co';
+      const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_kWc68mbD1KZg9eu38KVEAA_mDARNb-e';
       const CONSENT_URL = 'https://herramientas.zaurio.es/dinerozaurio/oauth/consent/';
       const PENDING_KEY = 'dinerozaurio_pending_oauth_authorization_id';
 
@@ -133,19 +133,19 @@
       }
 
       function fail(message) {
-        errorPanel.textContent = message || 'No se pudo completar la autorización.';
+        errorPanel.textContent = message || 'No se pudo completar la autorizaciÃ³n.';
         show(errorPanel);
       }
 
       function setBusy(busy) {
         approveBtn.disabled = busy;
         denyBtn.disabled = busy;
-        approveBtn.textContent = busy ? 'Procesando…' : 'Autorizar';
+        approveBtn.textContent = busy ? 'Procesandoâ€¦' : 'Autorizar';
       }
 
       async function load() {
         if (!authorizationId) {
-          fail('Falta el identificador de autorización. Vuelve a iniciar la conexión desde la aplicación que quiere acceder a DineroZaurio.');
+          fail('Falta el identificador de autorizaciÃ³n. Vuelve a iniciar la conexiÃ³n desde la aplicaciÃ³n que quiere acceder a DineroZaurio.');
           return;
         }
 
@@ -157,7 +157,7 @@
 
         const { data, error } = await client.auth.oauth.getAuthorizationDetails(authorizationId);
         if (error || !data) {
-          fail(error?.message || 'La solicitud de autorización ya no es válida.');
+          fail(error?.message || 'La solicitud de autorizaciÃ³n ya no es vÃ¡lida.');
           return;
         }
 
@@ -167,7 +167,7 @@
           return;
         }
 
-        el('clientName').textContent = data.client?.name || 'Aplicación externa';
+        el('clientName').textContent = data.client?.name || 'AplicaciÃ³n externa';
         el('redirectUri').textContent = data.redirect_uri ? `Destino: ${data.redirect_uri}` : '';
 
         const scopeBox = el('scopes');
@@ -201,7 +201,7 @@
         const { data, error } = await client.auth.oauth.approveAuthorization(authorizationId);
         if (error || !data?.redirect_url) {
           setBusy(false);
-          fail(error?.message || 'No se pudo aprobar la autorización.');
+          fail(error?.message || 'No se pudo aprobar la autorizaciÃ³n.');
           return;
         }
         localStorage.removeItem(PENDING_KEY);
@@ -213,7 +213,7 @@
         const { data, error } = await client.auth.oauth.denyAuthorization(authorizationId);
         if (error || !data?.redirect_url) {
           setBusy(false);
-          fail(error?.message || 'No se pudo denegar la autorización.');
+          fail(error?.message || 'No se pudo denegar la autorizaciÃ³n.');
           return;
         }
         localStorage.removeItem(PENDING_KEY);
@@ -225,3 +225,4 @@
   </script>
 </body>
 </html>
+
