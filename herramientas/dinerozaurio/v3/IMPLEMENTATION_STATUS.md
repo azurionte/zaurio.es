@@ -8,7 +8,7 @@ Production policy: read-only reference. No v3 write has been made to PROD.
 
 **PREPROD has been cut over to DineroZaurio v3.**
 
-The root `herramientas/dinerozaurio/index.html` now redirects to the independent v3 runtime under `/herramientas/dinerozaurio/v3/`.
+The root `herramientas/dinerozaurio/index.html` redirects to the independent v3 runtime under `/herramientas/dinerozaurio/v3/`.
 
 The user authenticated against migrated PREPROD data and visually validated the September 2026 salary-cycle result in the v3 runtime:
 
@@ -20,6 +20,8 @@ The user authenticated against migrated PREPROD data and visually validated the 
 - period: 2026-08-28 through 2026-09-27
 
 The legacy PREPROD finance runtime, compatibility/account hotfix layers, legacy `finance/`, legacy `js/`, legacy DineroZaurio tests and legacy CI workflow have been removed. Git history is the archive.
+
+The legacy PREPROD financial database tables and legacy bootstrap function have also been removed after migration validation. The active PREPROD financial schema now consists only of `dz3_*` tables. Shared `profiles` authentication/profile infrastructure remains intentionally.
 
 The architecture authority is `ARCHITECTURE.md`.
 
@@ -51,7 +53,7 @@ The architecture authority is `ARCHITECTURE.md`.
 - safe AI tool/command contract
 - traceable AI orchestrator
 - standalone v3 web runtime
-- PREPROD MCP adapter using the same v3 Financial Core
+- isolated PREPROD MCP adapter using the same v3 Financial Core
 
 ## Truth model
 
@@ -74,6 +76,8 @@ Migrated configuration:
 
 Funding-relative rules can anchor to salary events rather than natural calendar months.
 
+A migrated operational transfer rule funds upcoming Revolut obligations from the BBVA salary account. Missing or partial transfers become risks only when the transfer should already have occurred; future transfers are not falsely reported as overdue.
+
 ## Golden September regression
 
 The migrated-user golden test independently asserts:
@@ -89,9 +93,9 @@ The total is derived from rules/events; `-162.92` is not used as an engine input
 
 ## PREPROD v3 schema and migrated data
 
-All v3 tables have RLS enabled and ownership policies. Audit triggers cover financial mutations and the bank/reconciliation/AI trace domain.
+There are 27 active `dz3_*` financial tables. Every one has RLS enabled and at least one ownership policy. All 25 mutable domain tables other than the audit log and migration map have mutation-audit triggers.
 
-Migrated state includes:
+Current migrated state:
 
 - 1 plan
 - 2 accounts
@@ -103,10 +107,15 @@ Migrated state includes:
 - debt schedules and adjustments
 - 2 savings goals
 - effective-dated rule versions
-- confirmed/historical financial events
+- 24 confirmed/historical financial events
 - confirmed internal transfers
 - balance observations
-- legacy-to-v3 migration trace links
+- 1 operational transfer rule
+- 42 legacy-to-v3 migration trace links
+
+All 42 migration-map targets were revalidated after legacy-table deletion: 42 valid, 0 missing.
+
+Migration lineage is documented in `supabase/DINEROZAURIO_V3_MIGRATIONS.md`. The exact executed SQL remains recorded by Supabase migration history.
 
 ## Migrated account structure
 
@@ -149,7 +158,7 @@ PROD does not contain a confirmed current **total** balance for either BBVA or R
 
 V3 intentionally does not invent these totals.
 
-Until bank synchronization is connected, the UI can ask the user to confirm current account totals. Once a bank provider supplies sufficiently fresh real balances/transactions, the same Current Position engine promotes those stronger facts automatically.
+Until bank synchronization is connected, the UI asks the user to confirm current account totals. Once a bank provider supplies sufficiently fresh real balances/transactions, the same Current Position engine promotes those stronger facts automatically.
 
 This does not affect the validated September forecast; it affects questions whose correctness depends on current physical cash, such as optional purchase safety or whether a secondary account was actually funded.
 
@@ -191,13 +200,13 @@ Implemented:
 
 External dependency for conversational natural-language AI:
 
-- selection/configuration of the LLM/provider/backend that turns chat text into the typed v3 tool calls.
+- selection/configuration of the LLM/provider/backend that turns chat text into typed v3 tool calls.
 
 Financial decisions themselves remain deterministic and are not delegated to the LLM.
 
 ## MCP
 
-The PREPROD MCP source under `integrations/dinerozaurio-mcp/` has been rebuilt for v3.
+The PREPROD MCP is deployed as the separate Cloudflare Worker `dinerozaurio-mcp-preprod`.
 
 It:
 
@@ -205,9 +214,11 @@ It:
 - reads only `dz3_*` state under RLS;
 - imports the same v3 `financial-service.js` used by the web runtime;
 - exposes period, timeline, current-position and deterministic purchase-evaluation tools;
-- contains no legacy month-adjustment calculator or folder-mode compatibility logic.
+- contains no legacy month-adjustment calculator or folder-mode compatibility logic;
+- is deployed independently from the production MCP;
+- has an automated post-deploy `/health` smoke test.
 
-Deploying/testing that separate PREPROD MCP Worker is an external integration step; the web runtime does not depend on it.
+PREPROD endpoint: `https://dinerozaurio-mcp-preprod.dmnrobles.workers.dev/mcp`
 
 ## Runtime features exposed
 
@@ -225,6 +236,18 @@ Deploying/testing that separate PREPROD MCP Worker is an external integration st
 - deterministic “Can I buy it?” scenario analysis
 - configuration/onboarding for salary funding semantics and financial rules
 
+## Automated quality gates
+
+- complete v3 JS syntax check
+- Financial Core tests
+- golden migrated September regression
+- architecture regression suite
+- MCP adapter syntax check
+- independent PREPROD MCP deployment
+- MCP `/health` post-deploy smoke test
+- PREPROD web deployment
+- PREPROD root/v3 post-deploy smoke test
+
 ## PREPROD cutover status
 
 Completed:
@@ -236,15 +259,17 @@ Completed:
 5. user visually validated the September financial result.
 6. PREPROD root switched to v3.
 7. obsolete legacy DineroZaurio runtime/tests/CI removed from PREPROD.
-8. stale DineroZaurio technical/infrastructure docs updated to v3.
-9. PREPROD MCP source rewritten to use v3 Financial Core.
+8. legacy PREPROD financial tables and bootstrap function removed.
+9. stale DineroZaurio technical/infrastructure docs updated to v3.
+10. migration trace integrity revalidated after cleanup.
+11. PREPROD MCP rebuilt on v3 and deployed as an isolated Worker.
+12. CI/deploy pipelines hardened with smoke tests.
 
-Still external/interactive:
+External/interactive inputs still required for the features that depend on external truth/services:
 
-- current physical BBVA/Revolut account totals must come from user confirmation or future bank sync when a current-position-dependent decision is requested;
-- a live Open Banking provider is required for automatic banking truth;
-- an LLM/backend is required for conversational chat;
-- the separate PREPROD MCP Worker needs deployment/OAuth testing if it is to be used before PROD cutover.
+- current physical BBVA/Revolut totals must come from user confirmation or bank sync before current-position-dependent decisions can be authoritative;
+- a live Open Banking provider and credentials are required for automatic banking truth;
+- an LLM/backend choice and credentials are required for conversational chat.
 
 ## PROD cutover
 
