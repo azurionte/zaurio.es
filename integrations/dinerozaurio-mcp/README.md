@@ -17,6 +17,14 @@ The MCP does **not** contain an alternative finance calculator. It loads the aut
 
 `wrangler.toml` points to the isolated PREPROD Supabase project and deploys a separate Worker named `dinerozaurio-mcp-preprod`.
 
+PREPROD Worker base URL:
+
+`https://dinerozaurio-mcp-preprod.dmnrobles.workers.dev`
+
+MCP endpoint:
+
+`https://dinerozaurio-mcp-preprod.dmnrobles.workers.dev/mcp`
+
 The production MCP Worker is not reused or overwritten by PREPROD deployment. Production remains unchanged until explicit promotion approval.
 
 ## Tools
