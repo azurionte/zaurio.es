@@ -55,7 +55,10 @@ function buildRuleEvents({ items, recurrences, overrides, from, to, sourceType, 
     if (item.startDate && item.startDate > to) continue;
     if (item.endDate && item.endDate < from) continue;
     const recurrence = recurrenceFor(item, recurrences);
-    const occurrences = generateOccurrences(normalizeRecurrence(recurrence), { from, to });
+    const effectiveFrom = item.startDate && item.startDate > from ? item.startDate : from;
+    const effectiveTo = item.endDate && item.endDate < to ? item.endDate : to;
+    if (effectiveFrom > effectiveTo) continue;
+    const occurrences = generateOccurrences(normalizeRecurrence(recurrence), { from: effectiveFrom, to: effectiveTo });
     for (const occurrence of occurrences) {
       const amount = Math.abs(assertMinor(Number(item.amountMinor), `${sourceType}.amountMinor`));
       const base = {
@@ -74,7 +77,7 @@ function buildRuleEvents({ items, recurrences, overrides, from, to, sourceType, 
         bucketId: item.bucketId || null,
         status: 'expected',
         evidenceLevel: 'forecast',
-        metadata: { category: item.category || null }
+        metadata: { category: item.category || null, ...(item.metadata || {}) }
       };
       const event = applyOverride(base, overrides);
       const day = event.scheduledAt;
