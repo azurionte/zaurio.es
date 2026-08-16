@@ -36,6 +36,7 @@
         <button data-tab="calendar">Movimientos</button>
         <button data-tab="accounts">Cuentas</button>
         <button data-tab="decision">¿Puedo comprarlo?</button>
+        <button data-tab="config">Configurar</button>
       </nav>
 
       <section id="tab-overview" class="tabPanel">
@@ -56,9 +57,7 @@
         <article class="card"><div class="sectionHead"><div><span class="eyebrow">LEDGER</span><h2>Movimientos del periodo</h2><p class="muted">Expected, confirmado y real se muestran como estados distintos.</p></div></div><div id="eventList" class="eventList"></div></article>
       </section>
 
-      <section id="tab-accounts" class="tabPanel hidden">
-        <div id="accountList" class="accountGrid"></div>
-      </section>
+      <section id="tab-accounts" class="tabPanel hidden"><div id="accountList" class="accountGrid"></div></section>
 
       <section id="tab-decision" class="tabPanel hidden">
         <article class="card decisionCard">
@@ -69,6 +68,8 @@
           <div id="decisionResult" class="decisionResult hidden"></div>
         </article>
       </section>
+
+      <section id="tab-config" class="tabPanel hidden"><div id="configurationRoot"></div></section>
     </section>
   </main>
 
