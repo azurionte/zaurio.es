@@ -72,4 +72,23 @@ const webel={
   assert.deepEqual(days,['2026-08-31','2026-09-13','2026-09-27']);
 }
 
+{
+  const edited={
+    '2026-09':{
+      expenseOverrides:{
+        webel:{
+          mode:'this_month',
+          amount:39.75,
+          occurrenceOverrides:{
+            '2026-09-13':{amount:45.25,date:'2026-09-14'}
+          }
+        }
+      }
+    }
+  };
+  const occurrences=engine.recurringOccurrences(webel,'2026-08-28','2026-09-27',edited);
+  assert.deepEqual(occurrences.map(item=>item.day),['2026-08-30','2026-09-14','2026-09-27']);
+  assert.deepEqual(occurrences.map(item=>item.amount),[39.75,45.25,39.75]);
+}
+
 console.log('math-engine.test.js passed');
