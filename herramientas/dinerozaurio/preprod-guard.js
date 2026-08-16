@@ -4,10 +4,46 @@
   const PREPROD_URL = 'https://wsdtcsjkssvdqovdpxrq.supabase.co';
   const PREPROD_KEY = 'sb_publishable_kWc68mbD1KZg9eu38KVEAA_mDARNb-e';
   const ALLOWED_EMAIL = 'dmnrobles@gmail.com';
+  const PREPROD_ORIGIN = 'https://preprod.dinerozaurio.zaurio.es';
   const PROD_URL = 'https://dinerozaurio.zaurio.es';
+  const SHARED_ASSET_ORIGIN = 'https://zaurio.es';
 
   window.__DINEROZAURIO_ENV__ = 'preprod';
   window.__DINEROZAURIO_PREPROD__ = true;
+  window.__DINEROZAURIO_PREPROD_ORIGIN__ = PREPROD_ORIGIN;
+
+  function normalizeSharedAssetUrl(value) {
+    const raw = String(value || '');
+    return raw.startsWith('/shared/') ? `${SHARED_ASSET_ORIGIN}${raw}` : raw;
+  }
+
+  function repairSharedAssets(root = document) {
+    root.querySelectorAll?.('[src^="/shared/"]').forEach(node => {
+      node.setAttribute('src', normalizeSharedAssetUrl(node.getAttribute('src')));
+    });
+    root.querySelectorAll?.('[href^="/shared/"]').forEach(node => {
+      node.setAttribute('href', normalizeSharedAssetUrl(node.getAttribute('href')));
+    });
+  }
+
+  function keepSharedAssetsWorking() {
+    repairSharedAssets(document);
+    const observer = new MutationObserver(mutations => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType !== Node.ELEMENT_NODE) return;
+          repairSharedAssets(node);
+          if (node.matches?.('[src^="/shared/"]')) {
+            node.setAttribute('src', normalizeSharedAssetUrl(node.getAttribute('src')));
+          }
+          if (node.matches?.('[href^="/shared/"]')) {
+            node.setAttribute('href', normalizeSharedAssetUrl(node.getAttribute('href')));
+          }
+        });
+      }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+  }
 
   const style = document.createElement('style');
   style.textContent = `
@@ -58,6 +94,12 @@
   };
 
   async function start() {
+    keepSharedAssetsWorking();
+
+    if (location.origin !== PREPROD_ORIGIN) {
+      console.warn('DineroZaurio PREPROD loaded from an unexpected origin:', location.origin);
+    }
+
     if (!window.supabase?.createClient) {
       setTimeout(start, 40);
       return;
@@ -111,7 +153,7 @@
       const { error } = await auth.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `https://${location.host}${location.pathname}`,
+          emailRedirectTo: `${PREPROD_ORIGIN}/`,
           shouldCreateUser: true
         }
       });
