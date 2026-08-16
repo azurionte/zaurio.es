@@ -8,10 +8,13 @@ export async function renderOnboarding({root,repository,onComplete}){
   root.querySelector('#obCreate').onclick=async()=>{
     const error=root.querySelector('#obError');error.textContent='';
     try{
-      const preset=root.querySelector('[name=periodPreset]:checked').value,calendar=preset==='calendar';
-      const created=await createBasicPlan({repository,periodMode:calendar?'calendar_month':'salary_cycle',salaryFundingStrategy:preset==='end'?'funds_next_month':'funds_same_month',primaryAccountName:root.querySelector('#obAccount').value.trim()||'Cuenta principal'});
-      if(!calendar){const amount=Number(root.querySelector('#obSalaryAmount').value||0),date=root.querySelector('#obSalaryDate').value;if(amount<=0||!date)throw new Error('Indica el importe y la fecha de la nómina');await configureSalary({repository,planId:created.plan.id,name:root.querySelector('#obSalaryName').value.trim()||'Sueldo neto',amount,accountId:created.account.id,firstPaymentDate:date,fundingStrategy:preset==='end'?'funds_next_month':'funds_same_month'});}
+      const preset=root.querySelector('[name=periodPreset]:checked').value,calendar=preset==='calendar',accountName=root.querySelector('#obAccount').value.trim()||'Cuenta principal';
+      const salaryInput=calendar?null:{name:root.querySelector('#obSalaryName').value.trim()||'Sueldo neto',amount:Number(root.querySelector('#obSalaryAmount').value||0),date:root.querySelector('#obSalaryDate').value};
+      if(salaryInput&&(salaryInput.amount<=0||!salaryInput.date))throw new Error('Indica el importe y la fecha de la nómina antes de crear el plan');
+      root.querySelector('#obCreate').disabled=true;
+      const created=await createBasicPlan({repository,periodMode:calendar?'calendar_month':'salary_cycle',salaryFundingStrategy:preset==='end'?'funds_next_month':'funds_same_month',primaryAccountName:accountName});
+      if(salaryInput)await configureSalary({repository,planId:created.plan.id,name:salaryInput.name,amount:salaryInput.amount,accountId:created.account.id,firstPaymentDate:salaryInput.date,fundingStrategy:preset==='end'?'funds_next_month':'funds_same_month'});
       await onComplete();
-    }catch(err){error.textContent=err.message||String(err);}
+    }catch(err){root.querySelector('#obCreate').disabled=false;error.textContent=err.message||String(err);}
   };
 }
