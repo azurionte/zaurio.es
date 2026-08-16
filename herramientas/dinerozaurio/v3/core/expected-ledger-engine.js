@@ -2,130 +2,56 @@ import { generateOccurrences } from './recurrence-engine.js';
 import { assertMinor } from './money.js';
 import { addDays, assertIsoDay, inClosedRange } from './dates.js';
 
-function ruleMap(recurrences = []) {
-  return new Map(recurrences.map(rule => [rule.id, rule]));
-}
-
+function ruleMap(recurrences = []) { return new Map(recurrences.map(rule => [rule.id, rule])); }
 function recurrenceFor(item, recurrences) {
   if (item.recurrenceId && recurrences.has(item.recurrenceId)) return recurrences.get(item.recurrenceId);
-  return {
-    frequency: 'one_time',
-    intervalValue: 1,
-    anchorDate: item.startDate,
-    endDate: item.endDate || null,
-    calendarRule: 'anchor',
-    dueDay: null,
-    leadDays: 0,
-    offsetDays: 0,
-    anchorSourceType: null,
-    anchorSourceId: null
-  };
+  return { frequency:'one_time', intervalValue:1, anchorDate:item.startDate, endDate:item.endDate||null, calendarRule:'anchor', dueDay:null, leadDays:0, offsetDays:0, anchorSourceType:null, anchorSourceId:null };
 }
-
 function normalizeRecurrence(rule) {
-  return {
-    frequency: rule.frequency,
-    intervalValue: Number(rule.intervalValue || 1),
-    anchorDate: rule.anchorDate,
-    endDate: rule.endDate || null,
-    calendarRule: rule.calendarRule || 'anchor',
-    dueDay: rule.dueDay == null ? null : Number(rule.dueDay),
-    leadDays: Number(rule.leadDays || 0),
-    offsetDays: Number(rule.offsetDays || 0),
-    anchorSourceType: rule.anchorSourceType || null,
-    anchorSourceId: rule.anchorSourceId || null
-  };
+  return { frequency:rule.frequency, intervalValue:Number(rule.intervalValue||1), anchorDate:rule.anchorDate, endDate:rule.endDate||null, calendarRule:rule.calendarRule||'anchor', dueDay:rule.dueDay==null?null:Number(rule.dueDay), leadDays:Number(rule.leadDays||0), offsetDays:Number(rule.offsetDays||0), anchorSourceType:rule.anchorSourceType||null, anchorSourceId:rule.anchorSourceId||null };
 }
-
+function activeVersion(item, day, versions) {
+  return (versions||[]).filter(v => v.sourceId===item.id && v.effectiveFrom<=day).sort((a,b)=>b.effectiveFrom.localeCompare(a.effectiveFrom))[0] || null;
+}
 function applyOverride(event, overrides) {
-  const override = (overrides || []).find(row =>
-    row.sourceType === event.sourceType &&
-    row.sourceId === event.sourceId &&
-    row.originalScheduledAt === event.originalScheduledAt
-  );
-  if (!override) return event;
-  if (override.overrideType === 'skip') return { ...event, status: 'skipped', metadata: { ...event.metadata, overrideId: override.id } };
-  const next = { ...event, metadata: { ...event.metadata, overrideId: override.id } };
-  if (override.newScheduledAt) next.scheduledAt = override.newScheduledAt;
-  if (override.newAmountMinor != null) {
-    const abs = Math.abs(assertMinor(Number(override.newAmountMinor), 'override.newAmountMinor'));
-    next.amountMinor = event.amountMinor < 0 ? -abs : abs;
-  }
+  const override=(overrides||[]).find(row=>row.sourceType===event.sourceType&&row.sourceId===event.sourceId&&row.originalScheduledAt===event.originalScheduledAt);
+  if(!override) return event;
+  if(override.overrideType==='skip') return {...event,status:'skipped',metadata:{...event.metadata,overrideId:override.id}};
+  const next={...event,metadata:{...event.metadata,overrideId:override.id}};
+  if(override.newScheduledAt) next.scheduledAt=override.newScheduledAt;
+  if(override.newAmountMinor!=null){const abs=Math.abs(assertMinor(Number(override.newAmountMinor),'override.newAmountMinor'));next.amountMinor=event.amountMinor<0?-abs:abs;}
   return next;
 }
-
-function occurrencesForRule(recurrence, { from, to, anchorEvents = [] }) {
-  const rule = normalizeRecurrence(recurrence);
-  if (rule.calendarRule !== 'funding_relative') return generateOccurrences(rule, { from, to });
-  return anchorEvents
-    .filter(event => (!rule.anchorSourceType || event.sourceType === rule.anchorSourceType) && (!rule.anchorSourceId || event.sourceId === rule.anchorSourceId))
-    .map(event => {
-      const anchorDay = String(event.occurredAt || event.scheduledAt || '').slice(0, 10);
-      if (!anchorDay) return null;
-      const scheduledAt = addDays(anchorDay, rule.offsetDays);
-      return { scheduledAt, serviceDate: scheduledAt, fundingEventId: event.id };
-    })
-    .filter(row => row && inClosedRange(row.scheduledAt, from, to));
+function occurrencesForRule(recurrence,{from,to,anchorEvents=[]}){
+  const rule=normalizeRecurrence(recurrence);
+  if(rule.calendarRule!=='funding_relative') return generateOccurrences(rule,{from,to});
+  return anchorEvents.filter(event=>(!rule.anchorSourceType||event.sourceType===rule.anchorSourceType)&&(!rule.anchorSourceId||event.sourceId===rule.anchorSourceId)).map(event=>{const anchorDay=String(event.occurredAt||event.scheduledAt||'').slice(0,10);if(!anchorDay)return null;const scheduledAt=addDays(anchorDay,rule.offsetDays);return{scheduledAt,serviceDate:scheduledAt,fundingEventId:event.id};}).filter(row=>row&&inClosedRange(row.scheduledAt,from,to));
 }
-
-function buildRuleEvents({ items, recurrences, overrides, from, to, sourceType, eventType, sign, anchorEvents = [] }) {
-  const result = [];
-  for (const item of items || []) {
-    if (item.enabled === false) continue;
-    if (item.startDate && item.startDate > to) continue;
-    if (item.endDate && item.endDate < from) continue;
-    const recurrence = recurrenceFor(item, recurrences);
-    const occurrences = occurrencesForRule(recurrence, { from, to, anchorEvents });
-    for (const occurrence of occurrences) {
-      const amount = Math.abs(assertMinor(Number(item.amountMinor), `${sourceType}.amountMinor`));
-      const base = {
-        id: `expected:${sourceType}:${item.id}:${occurrence.scheduledAt}`,
-        sourceType,
-        sourceId: item.id,
-        eventType,
-        name: item.name,
-        originalScheduledAt: occurrence.scheduledAt,
-        scheduledAt: occurrence.scheduledAt,
-        serviceDate: occurrence.serviceDate,
-        occurredAt: null,
-        amountMinor: sign * amount,
-        currency: item.currency || 'EUR',
-        accountId: item.accountId || null,
-        bucketId: item.bucketId || null,
-        status: 'expected',
-        evidenceLevel: 'forecast',
-        metadata: { category: item.category || null, fundingEventId: occurrence.fundingEventId || null }
-      };
-      const event = applyOverride(base, overrides);
-      const day = event.scheduledAt;
-      if (event.status !== 'skipped' && day && inClosedRange(day, from, to)) result.push(event);
+function buildRuleEvents({items,recurrences,overrides,versions,from,to,sourceType,eventType,sign,anchorEvents=[]}){
+  const result=[];
+  for(const item of items||[]){
+    if(item.enabled===false)continue;
+    if(item.startDate&&item.startDate>to)continue;
+    if(item.endDate&&item.endDate<from)continue;
+    const recurrence=recurrenceFor(item,recurrences);
+    for(const occurrence of occurrencesForRule(recurrence,{from,to,anchorEvents})){
+      const version=activeVersion(item,occurrence.scheduledAt,(versions||[]).filter(v=>v.sourceType===sourceType));
+      if(version?.enabled===false)continue;
+      const rawAmount=version?.amountMinor!=null?version.amountMinor:item.amountMinor;
+      const amount=Math.abs(assertMinor(Number(rawAmount),`${sourceType}.amountMinor`));
+      const base={id:`expected:${sourceType}:${item.id}:${occurrence.scheduledAt}`,sourceType,sourceId:item.id,eventType,name:item.name,originalScheduledAt:occurrence.scheduledAt,scheduledAt:occurrence.scheduledAt,serviceDate:occurrence.serviceDate,occurredAt:null,amountMinor:sign*amount,currency:item.currency||'EUR',accountId:item.accountId||null,bucketId:item.bucketId||null,status:'expected',evidenceLevel:'forecast',metadata:{category:item.category||null,fundingEventId:occurrence.fundingEventId||null,ruleVersionId:version?.id||null}};
+      const event=applyOverride(base,overrides);const day=event.scheduledAt;
+      if(event.status!=='skipped'&&day&&inClosedRange(day,from,to))result.push(event);
     }
   }
   return result;
 }
-
-export function buildExpectedLedger({
-  from,
-  to,
-  incomeRules = [],
-  expenseRules = [],
-  savingsGoals = [],
-  recurrenceRules = [],
-  debtEvents = [],
-  transferEvents = [],
-  eventOverrides = []
-}) {
-  assertIsoDay(from, 'from');
-  assertIsoDay(to, 'to');
-  const recurrences = ruleMap(recurrenceRules);
-  const incomeEvents = buildRuleEvents({ items: incomeRules, recurrences, overrides: eventOverrides, from, to, sourceType: 'income_rule', eventType: 'income', sign: 1 });
-  const expenseEvents = buildRuleEvents({ items: expenseRules, recurrences, overrides: eventOverrides, from, to, sourceType: 'expense_rule', eventType: 'expense', sign: -1, anchorEvents: incomeEvents });
-  const savingItems = savingsGoals.filter(goal => goal.status !== 'paused').map(goal => ({ ...goal, amountMinor: goal.contributionMinor }));
-  const savingEvents = buildRuleEvents({ items: savingItems, recurrences, overrides: eventOverrides, from, to, sourceType: 'savings_goal', eventType: 'saving_reservation', sign: -1, anchorEvents: incomeEvents });
-  return [...incomeEvents, ...expenseEvents, ...savingEvents, ...(debtEvents || []), ...(transferEvents || [])]
-    .filter(event => {
-      const day = String(event.occurredAt || event.scheduledAt || '').slice(0, 10);
-      return day && inClosedRange(day, from, to);
-    })
-    .sort((a, b) => String(a.occurredAt || a.scheduledAt).localeCompare(String(b.occurredAt || b.scheduledAt)) || String(a.id).localeCompare(String(b.id)));
+export function buildExpectedLedger({from,to,incomeRules=[],expenseRules=[],savingsGoals=[],recurrenceRules=[],debtEvents=[],transferEvents=[],eventOverrides=[],ruleVersions=[]}){
+  assertIsoDay(from,'from');assertIsoDay(to,'to');
+  const recurrences=ruleMap(recurrenceRules);
+  const incomeEvents=buildRuleEvents({items:incomeRules,recurrences,overrides:eventOverrides,versions:ruleVersions,from,to,sourceType:'income_rule',eventType:'income',sign:1});
+  const expenseEvents=buildRuleEvents({items:expenseRules,recurrences,overrides:eventOverrides,versions:ruleVersions,from,to,sourceType:'expense_rule',eventType:'expense',sign:-1,anchorEvents:incomeEvents});
+  const savingItems=savingsGoals.filter(goal=>goal.status!=='paused').map(goal=>({...goal,amountMinor:goal.contributionMinor}));
+  const savingEvents=buildRuleEvents({items:savingItems,recurrences,overrides:eventOverrides,versions:ruleVersions,from,to,sourceType:'savings_goal',eventType:'saving_reservation',sign:-1,anchorEvents:incomeEvents});
+  return [...incomeEvents,...expenseEvents,...savingEvents,...(debtEvents||[]),...(transferEvents||[])].filter(event=>{const day=String(event.occurredAt||event.scheduledAt||'').slice(0,10);return day&&inClosedRange(day,from,to);}).sort((a,b)=>String(a.occurredAt||a.scheduledAt).localeCompare(String(b.occurredAt||b.scheduledAt))||String(a.id).localeCompare(String(b.id)));
 }
