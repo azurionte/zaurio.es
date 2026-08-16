@@ -1,0 +1,43 @@
+name: Deploy DineroZaurio v3 MCP PREPROD
+
+on:
+  push:
+    branches: [preprod]
+    paths:
+      - 'integrations/dinerozaurio-mcp/**'
+      - 'herramientas/dinerozaurio/v3/core/**'
+      - 'herramientas/dinerozaurio/v3/application/**'
+      - '.github/workflows/dz-v3-mcp-preprod-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: dinerozaurio-v3-mcp-preprod-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout preprod
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate v3 MCP adapter
+        run: |
+          node --check integrations/dinerozaurio-mcp/src/worker.js
+          node --check integrations/dinerozaurio-mcp/src/entry.js
+
+      - name: Deploy isolated PREPROD MCP Worker
+        working-directory: integrations/dinerozaurio-mcp
+        run: npx --yes wrangler@4 deploy --config wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
