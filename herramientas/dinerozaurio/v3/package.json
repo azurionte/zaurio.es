@@ -1,0 +1,8 @@
+{
+  "name": "dinerozaurio-v3-core",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run.js"
+  }
+}
