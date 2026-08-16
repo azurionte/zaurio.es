@@ -12,9 +12,13 @@ export function runArchitectureRegressions(){
     const result=resolveCurrentPosition({accounts:[{id:'a',name:'A'}],observations:[],events:[{id:'e',sourceType:'income_rule',sourceId:'s',eventType:'income',scheduledAt:'2026-08-01',occurredAt:'2026-08-01T10:00:00Z',amountMinor:10000,status:'confirmed',evidenceLevel:'user_confirmed',accountId:'a'}],transfers:[],asOf:'2026-08-16'});
     assert.equal(result.known,false);assert.equal(result.totalMinor,null);assert.equal(result.unknownAccounts.length,1);
   });
-  test('account total observation becomes truth and later confirmed facts advance it',()=>{
-    const result=resolveCurrentPosition({accounts:[{id:'a',name:'A'}],observations:[{id:'o',accountId:'a',scope:'account_total',amountMinor:50000,observedAt:'2026-08-10T10:00:00Z'}],events:[{id:'e',sourceType:'expense_rule',sourceId:'x',eventType:'expense',scheduledAt:'2026-08-12',occurredAt:'2026-08-12T10:00:00Z',amountMinor:-1000,status:'actual',evidenceLevel:'bank_actual',accountId:'a'}],transfers:[],asOf:'2026-08-16'});
-    assert.equal(result.known,true);assert.equal(result.totalMinor,49000);
+  test('fresh account total observation becomes truth and later confirmed facts advance it',()=>{
+    const result=resolveCurrentPosition({accounts:[{id:'a',name:'A'}],observations:[{id:'o',accountId:'a',scope:'account_total',amountMinor:50000,observedAt:'2026-08-15T10:00:00Z',source:'bank_sync'}],events:[{id:'e',sourceType:'expense_rule',sourceId:'x',eventType:'expense',scheduledAt:'2026-08-16',occurredAt:'2026-08-16T10:00:00Z',amountMinor:-1000,status:'actual',evidenceLevel:'bank_actual',accountId:'a'}],transfers:[],asOf:'2026-08-16'});
+    assert.equal(result.known,true);assert.equal(result.totalMinor,49000);assert.equal(result.accounts[0].fresh,true);
+  });
+  test('stale account total is not enough to authorize an optional purchase',()=>{
+    const result=resolveCurrentPosition({accounts:[{id:'a',name:'A'}],observations:[{id:'o',accountId:'a',scope:'account_total',amountMinor:50000,observedAt:'2026-08-10T10:00:00Z',source:'user'}],events:[],transfers:[],asOf:'2026-08-16'});
+    assert.equal(result.known,false);assert.equal(result.accounts[0].reason,'stale_account_total');
   });
   test('effective rule version changes future amount without rewriting prior occurrence',()=>{
     const events=buildExpectedLedger({from:'2028-05-01',to:'2028-07-31',recurrenceRules:[{id:'rent',frequency:'monthly',intervalValue:1,anchorDate:'2026-08-01',calendarRule:'fixed_day',dueDay:1,leadDays:0}],expenseRules:[{id:'rent',name:'Rent',amountMinor:114735,currency:'EUR',recurrenceId:'rent',startDate:'2026-08-01',enabled:true}],ruleVersions:[{id:'v',sourceType:'expense_rule',sourceId:'rent',effectiveFrom:'2028-06-01',amountMinor:130000}]});
