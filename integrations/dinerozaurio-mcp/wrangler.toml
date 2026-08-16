@@ -1,12 +1,12 @@
-name = "dinerozaurio-mcp"
+name = "dinerozaurio-mcp-preprod"
 main = "src/entry.js"
-compatibility_date = "2026-08-13"
+compatibility_date = "2026-08-16"
 
 [vars]
 FINANCE_TIMEZONE = "Europe/Madrid"
-SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co"
-SUPABASE_PUBLISHABLE_KEY = "sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk"
+SUPABASE_URL = "https://wsdtcsjkssvdqovdpxrq.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_kWc68mbD1KZg9eu38KVEAA_mDARNb-e"
 
-# This MCP uses per-user OAuth access tokens issued by Supabase Auth.
-# These two Supabase values are public client configuration, not secrets.
-# Do not configure SUPABASE_SERVICE_ROLE_KEY, DINEROZAURIO_USER_ID, or MCP_API_KEY.
+# PREPROD v3 MCP. Authentication uses the user's Supabase OAuth bearer token.
+# The publishable key is public client configuration; RLS remains the data boundary.
+# Never configure a service-role key in this worker.
