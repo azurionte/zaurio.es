@@ -15,12 +15,14 @@ export class FinancialAiOrchestrator {
   setState(state){this.state=state;}
 
   async createSession(){
-    const{data,error}=await this.repository.client.from('dz3_decision_sessions').insert({plan_id:this.state.plan.id,source:'chat',metadata:{contractVersion:AI_CONTRACT_VERSION,orchestratorVersion:AI_ORCHESTRATOR_VERSION}}).select().single();
+    const session=await this.repository.session();
+    if(!session?.user?.id)throw new Error('Authenticated user is required for an AI decision session');
+    const{data,error}=await this.repository.client.from('dz3_decision_sessions').insert({plan_id:this.state.plan.id,user_id:session.user.id,source:'chat'}).select().single();
     if(error)throw error;return data;
   }
 
-  async recordRequest({sessionId,question}){
-    const{data,error}=await this.repository.client.from('dz3_decision_requests').insert({session_id:sessionId,question}).select().single();
+  async recordRequest({sessionId,question,structuredIntent={}}){
+    const{data,error}=await this.repository.client.from('dz3_decision_requests').insert({session_id:sessionId,question,structured_intent:structuredIntent}).select().single();
     if(error)throw error;return data;
   }
 
@@ -43,14 +45,14 @@ export class FinancialAiOrchestrator {
 
   async persistEvaluation({requestId,labelMonth,toolCalls,result}){
     const view=labelMonth?buildPeriodView(this.state,labelMonth):null;
-    const payload={request_id:requestId,engine_version:view?.engineVersion||'unknown',ledger_version:fingerprint(view),evaluation_type:'ai_chat',input_snapshot:{toolCalls},result,metadata:{contractVersion:AI_CONTRACT_VERSION,orchestratorVersion:AI_ORCHESTRATOR_VERSION}};
+    const payload={request_id:requestId,engine_version:view?.engineVersion||'unknown',ledger_version:fingerprint(view),evaluation_type:'ai_chat',input_snapshot:{contractVersion:AI_CONTRACT_VERSION,orchestratorVersion:AI_ORCHESTRATOR_VERSION,toolCalls},result};
     const{data,error}=await this.repository.client.from('dz3_decision_evaluations').insert(payload).select().single();
     if(error)throw error;return data;
   }
 
   async persistProposedAction({evaluationId,command}){
     const validated=aiMutationToDecisionCommand(command);
-    const{data,error}=await this.repository.client.from('dz3_decision_actions').insert({evaluation_id:evaluationId,action_type:validated.type,status:'proposed',proposed_change:validated.payload,metadata:{validatedBy:validated.validatedBy,requiresUserConfirmation:true}}).select().single();
+    const{data,error}=await this.repository.client.from('dz3_decision_actions').insert({evaluation_id:evaluationId,action_type:validated.type,status:'proposed',proposed_change:{...validated.payload,_trace:{validatedBy:validated.validatedBy,requiresUserConfirmation:true}}}).select().single();
     if(error)throw error;return data;
   }
 }
