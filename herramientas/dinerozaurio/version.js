@@ -1,8 +1,8 @@
 window.__DINEROZAURIO_VERSION__ = {
   major: 2,
   minor: 9,
-  build: "1608261625",
-  label: "2.9.1608261625",
+  build: "1608261631",
+  label: "2.9.1608261631",
 };
 
 (() => {
@@ -43,6 +43,7 @@ window.__DINEROZAURIO_VERSION__ = {
   const scripts = [
     ...shared,
     ...(uxMode === 'consolidated' ? consolidated : legacy),
+    `./ui/future-charge-editor.js?v=${build}`,
     `./ui/preprod-ux-switch.js?v=${build}`
   ];
 
@@ -58,8 +59,8 @@ window.__DINEROZAURIO_VERSION__ = {
     }
 
     window.__DINEROZAURIO_UI_PATCHES_READY__ = true;
-    window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__ = window.DineroZaurioMathEngine?.VERSION || 'math-engine-1';
-    window.__DINEROZAURIO_ROUTING_AUTHORITY__ = window.DineroZaurioMathEngine?.VERSION || 'math-engine-1';
+    window.__DINEROZAURIO_ACCOUNTING_AUTHORITY__ = window.DineroZaurioMathEngine?.VERSION || 'math-engine-2';
+    window.__DINEROZAURIO_ROUTING_AUTHORITY__ = window.DineroZaurioMathEngine?.VERSION || 'math-engine-2';
     delete window.__DINEROZAURIO_ACCOUNT_DISPLAY_AUTHORITY__;
     document.documentElement.classList.remove('dz-accounting-loading');
   };
