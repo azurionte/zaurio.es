@@ -1,2 +1,0 @@
-'use strict';
-module.exports={salaryAccountId:'p',accounts:[{id:'p',name:'Primary',folders:[]},{id:'r',name:'Secondary',folders:[{id:'f',name:'Food',actualBalance:107.72,balanceUpdatedAt:'2026-08-13'},{id:'c',name:'Cooper',actualBalance:null},{id:'o',name:'Fun',actualBalance:2.92,balanceUpdatedAt:'2026-08-13'}]}],assignments:{g:{accountId:'r',folderId:''},n:{accountId:'r',folderId:''},q:{accountId:'r',folderId:''}}};
