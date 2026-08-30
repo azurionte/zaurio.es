@@ -11,12 +11,10 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           python3 _tmp_trivialodon_velociraptor_patch.py
-          git fetch --deepen=2 origin main
-          git checkout HEAD^ -- .github/workflows/dz-tests.yml
           rm _tmp_trivialodon_velociraptor_patch.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add juegos.zaurio.es/trivialodon/index.html juegos.zaurio.es/trivialodon/live/index.html .github/workflows/dz-tests.yml _tmp_trivialodon_velociraptor_patch.py
+          git add juegos.zaurio.es/trivialodon/index.html juegos.zaurio.es/trivialodon/live/index.html _tmp_trivialodon_velociraptor_patch.py
           git commit -m "Enable Velociraptor gameplay in Trivialodon"
           git push
       - run: node --check herramientas/dinerozaurio/finance/accounting-core.js
