@@ -1062,13 +1062,12 @@
         const voters = votes[index] || [];
         const locked = isSpeed && voters.length > 0;
         const revealCorrect = !isSpeed && question.revealed && question.correct === index;
-        const revealWrong = isSpeed && question.revealed && Number(question.scores?.[index] || 0) === 0;
         const stateLine = isSpeed
-          ? (question.revealed ? `${Number(question.scores?.[index] || 0)} pts` : (locked ? "Cogida" : "Libre"))
+          ? (question.revealed ? `${Number(question.ranking?.find(item => item.text === choice)?.rank || 0) ? `#${Number(question.ranking?.find(item => item.text === choice)?.rank || 0)} · ` : ""}${Number(question.scores?.[index] || 0)} pts` : (locked ? "Cogida" : "Libre"))
           : (question.revealed ? (revealCorrect ? "Correcta" : `${voters.length} voto${voters.length === 1 ? "" : "s"}`) : `${voters.length} voto${voters.length === 1 ? "" : "s"}`);
         const visibleVoters = voters.slice(0, 6).map(player => avatarBubble(player)).join("");
         const overflow = voters.length > 6 ? `<span class="voteMore">+${voters.length - 6}</span>` : "";
-        return `<article class="answer ${locked ? "selected" : ""} ${revealCorrect ? "correct" : ""} ${revealWrong ? "wrong" : ""}">
+        return `<article class="answer ${locked ? "selected" : ""} ${revealCorrect ? "correct" : ""}">
           <div class="answerTop">
             <div class="aText"><span class="aKey">${String.fromCharCode(65 + index)}</span>${esc(choice)}</div>
             <div class="aState">${esc(stateLine)}</div>
