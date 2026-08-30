@@ -11,6 +11,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           python3 _tmp_trivialodon_velociraptor_patch.py
+          git fetch --deepen=2 origin main
           git checkout HEAD^ -- .github/workflows/dz-tests.yml
           rm _tmp_trivialodon_velociraptor_patch.py
           git config user.name "github-actions[bot]"
@@ -23,6 +24,7 @@ jobs:
       - run: node --check herramientas/dinerozaurio/folder-mode-summary-v2.js
       - run: node --check herramientas/dinerozaurio/folder-mode-enhancements-v3.js
       - run: node --check herramientas/dinerozaurio/folder-mode-fixes-v4.js
+      - run: node --check herramientas/dinerozaurio/ui-fixes-v5.js
       - run: node --check herramientas/dinerozaurio/account-routing-current.js
       - run: node --check herramientas/dinerozaurio/ui/account-observed-adapter.js
       - run: node --check herramientas/dinerozaurio/session-drafts.js
