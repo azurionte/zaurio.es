@@ -6,6 +6,7 @@ const corsHeaders = {
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
+const VELOCIRAPTOR_RATIO = 0.35;
 
 function json(body, init) {
   return new Response(JSON.stringify(body), {
@@ -22,7 +23,9 @@ function buildPrompt(input) {
   const shape = input.questionCount > 1
     ? '[{"type":"standard","question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."},{"type":"speed","question":"...","choices":[{"text":"...","score":140,"rank":1}],"explanation":"...","category":"...","difficulty":"..."}]'
     : '{"type":"standard","question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."}';
-  const speedCount = Math.max(1, Math.round(input.questionCount * 0.2));
+  const speedCount = input.questionCount > 1
+    ? Math.max(1, Math.min(input.questionCount, Math.round(input.questionCount * VELOCIRAPTOR_RATIO)))
+    : 0;
   const english = input.language === "en";
   return [
     input.questionCount > 1
@@ -44,72 +47,15 @@ function buildPrompt(input) {
     english ? "- For speed questions, choices must be an array of objects with text, score, and rank." : "- En preguntas speed, choices debe ser un array de objetos con text, score y rank.",
     english ? "- For speed questions, every answer must be valid, but some must be better than others." : "- En preguntas speed, todas las respuestas deben ser validas, pero unas mejores que otras.",
     english ? "- For speed questions, rank 1 must be the best and larger ranks must be worse." : "- En preguntas speed, rank 1 debe ser la mejor y rank mayor la peor.",
-    english ? `- If you return multiple questions, exactly ${speedCount} must be of type "speed" and the rest "standard".` : `- Si devuelves varias preguntas, exactamente ${speedCount} deben ser de tipo "speed" y el resto "standard".`,
+    english ? "- For speed questions, ranks must be unique and cover every answer from 1 to the requested answer count." : "- En preguntas speed, los ranks deben ser unicos y cubrir todas las respuestas desde 1 hasta el numero de respuestas pedido.",
+    english ? "- For speed questions, scores must be positive and strictly decrease as rank gets worse." : "- En preguntas speed, los scores deben ser positivos y bajar estrictamente a medida que empeora el rank.",
+    input.questionCount > 1
+      ? (english ? `- Exactly ${speedCount} questions must be of type "speed" (35% of the generated set, rounded to the nearest whole question) and the rest "standard".` : `- Exactamente ${speedCount} preguntas deben ser de tipo "speed" (35% del conjunto generado, redondeado a la pregunta entera mas cercana) y el resto "standard".`)
+      : "",
     english ? "- Do not repeat options or create ambiguous answers." : "- No repitas opciones ni hagas respuestas ambiguas.",
     english ? "- explanation must be brief, maximum two sentences." : "- explanation debe ser breve, maxima dos frases.",
     input.questionCount > 1 ? (english ? `- You must return exactly ${input.questionCount} questions.` : `- Debes devolver exactamente ${input.questionCount} preguntas.`) : "",
   ].filter(Boolean).join("\n");
-}
-
-function buildTranslatePrompt(input) {
-  const english = input.language === "en";
-  return [
-    english
-      ? "Translate the following trivia questions into English."
-      : "Traduce las siguientes preguntas de trivia al espanol.",
-    english
-      ? "Return only valid JSON. Keep the same structure and the same number of items."
-      : "Devuelve solo JSON valido. Mantén la misma estructura y la misma cantidad de elementos.",
-    english
-      ? "Preserve type, correct_index, score, rank, and array order."
-      : "Conserva type, correct_index, score, rank y el orden de los arrays.",
-    english
-      ? "Translate question, choices text, explanation, category, and difficulty naturally."
-      : "Traduce de forma natural question, choices text, explanation, category y difficulty.",
-    english
-      ? "Do not invent or remove answers."
-      : "No inventes ni elimines respuestas.",
-    JSON.stringify(input.questions || []),
-  ].join("\n");
-}
-
-function normalizeQuestion(raw, answerCount) {
-  const type = String(raw.type || "standard").trim();
-  if (type === "speed") {
-    const choices = Array.isArray(raw.choices) ? raw.choices : [];
-    if (choices.length !== answerCount) {
-      throw new Error(`Gemini devolvio ${choices.length} opciones speed y esperabamos ${answerCount}.`);
-    }
-    return {
-      type: "speed",
-      question: String(raw.question || "").trim(),
-      choices: choices.map((item) => ({
-        text: String(item?.text || "").trim(),
-        score: Number(item?.score || 0),
-        rank: Number(item?.rank || 0),
-      })),
-      explanation: String(raw.explanation || "").trim(),
-      category: String(raw.category || "Personalizado").trim(),
-      difficulty: String(raw.difficulty || "media").trim(),
-    };
-  }
-  const choices = Array.isArray(raw.choices) ? raw.choices.filter(Boolean).map(String) : [];
-  if (choices.length !== answerCount) {
-    throw new Error(`Gemini devolvio ${choices.length} opciones y esperabamos ${answerCount}.`);
-  }
-  const correctIndex = Number(raw.correct_index);
-  if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= choices.length) {
-    throw new Error("Gemini devolvio un correct_index invalido.");
-  }
-  return {
-    type: "standard",
-    question: String(raw.question || "").trim(),
-    choices,
-    correct_index: correctIndex,
-    explanation: String(raw.explanation || "").trim(),
-    category: String(raw.category || "Personalizado").trim(),
-    difficulty: String(raw.difficulty || "media").trim(),
-  };
 }
 
 function buildTranslatePrompt(input) {
@@ -150,14 +96,33 @@ function normalizeQuestion(raw, answerCount, language = "es") {
         ? `Gemini returned ${choices.length} speed options but we expected ${answerCount}.`
         : `Gemini devolvio ${choices.length} opciones speed y esperabamos ${answerCount}.`);
     }
+    const normalizedChoices = choices.map((item) => ({
+      text: String(item?.text || "").trim(),
+      score: Number(item?.score || 0),
+      rank: Number(item?.rank || 0),
+    }));
+    const ranks = normalizedChoices.map((item) => item.rank).sort((a, b) => a - b);
+    const expectedRanks = Array.from({ length: answerCount }, (_, index) => index + 1);
+    if (ranks.some((rank, index) => rank !== expectedRanks[index])) {
+      throw new Error(language === "en"
+        ? "Gemini returned invalid or duplicate Velociraptor ranks."
+        : "Gemini devolvio ranks Velociraptor invalidos o duplicados.");
+    }
+    const ranked = [...normalizedChoices].sort((a, b) => a.rank - b.rank);
+    if (ranked.some((item) => !item.text || !Number.isFinite(item.score) || item.score <= 0)) {
+      throw new Error(language === "en"
+        ? "Gemini returned an invalid Velociraptor answer or score."
+        : "Gemini devolvio una respuesta o puntuacion Velociraptor invalida.");
+    }
+    if (ranked.some((item, index) => index > 0 && item.score >= ranked[index - 1].score)) {
+      throw new Error(language === "en"
+        ? "Velociraptor scores must strictly decrease with rank."
+        : "Las puntuaciones Velociraptor deben bajar estrictamente con el rank.");
+    }
     return {
       type: "speed",
       question: String(raw.question || "").trim(),
-      choices: choices.map((item) => ({
-        text: String(item?.text || "").trim(),
-        score: Number(item?.score || 0),
-        rank: Number(item?.rank || 0),
-      })),
+      choices: normalizedChoices,
       explanation: String(raw.explanation || "").trim(),
       category: String(raw.category || fallback.category).trim(),
       difficulty: String(raw.difficulty || fallback.difficulty).trim(),
@@ -242,7 +207,15 @@ async function callGemini(input) {
         ? "Gemini did not return the exact number of questions."
         : "Gemini no devolvio la cantidad exacta de preguntas.");
     }
-    return parsed.map((item) => normalizeQuestion(item, input.answerCount, input.language));
+    const result = parsed.map((item) => normalizeQuestion(item, input.answerCount, input.language));
+    const expectedSpeedCount = Math.max(1, Math.min(input.questionCount, Math.round(input.questionCount * VELOCIRAPTOR_RATIO)));
+    const actualSpeedCount = result.filter((item) => item.type === "speed").length;
+    if (actualSpeedCount !== expectedSpeedCount) {
+      throw new Error(input.language === "en"
+        ? `Gemini returned ${actualSpeedCount} Velociraptor questions but exactly ${expectedSpeedCount} were required.`
+        : `Gemini devolvio ${actualSpeedCount} preguntas Velociraptor pero se exigian exactamente ${expectedSpeedCount}.`);
+    }
+    return result;
   }
   return normalizeQuestion(parsed, input.answerCount, input.language);
 }
@@ -256,6 +229,7 @@ Deno.serve(async (request) => {
     return json({ error: "Method not allowed" }, { status: 405 });
   }
 
+  const language = "es";
   try {
     const body = await request.json().catch(() => ({}));
     const language = body?.language === "en" ? "en" : "es";
