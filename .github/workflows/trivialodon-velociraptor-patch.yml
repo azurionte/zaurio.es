@@ -1,0 +1,113 @@
+name: Trivialodon Velociraptor patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/trivialodon-velociraptor-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply focused Velociraptor patch
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path('juegos.zaurio.es/trivialodon/index.html')
+          text = path.read_text(encoding='utf-8-sig')
+          original = text
+
+          old_ratio = 'const speedCount = Math.max(1, Math.round(count * 0.2));'
+          new_ratio = 'const speedCount = Math.max(1, Math.round(count * 0.35));'
+          if old_ratio not in text:
+              raise SystemExit('Could not find classic Velociraptor ratio')
+          text = text.replace(old_ratio, new_ratio, 1)
+
+          old_guest = '}).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; state.game.question.responses[payload.playerId] = {answerIndex:payload.answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); })'
+          new_guest = '}).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; const answerIndex = Number(payload.answerIndex); if(state.game.question.type === "speed"){ const occupied = Object.entries(state.game.question.responses || {}).some(([playerId,response]) => playerId !== payload.playerId && Number(response?.answerIndex) === answerIndex); if(occupied){ broadcastGame(); return; } } state.game.question.responses[payload.playerId] = {answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); })'
+          if old_guest not in text:
+              raise SystemExit('Could not find guest_answer handler')
+          text = text.replace(old_guest, new_guest, 1)
+
+          pattern = re.compile(r'    function renderScoresScene\(\)\{.*?\n    function renderVersusPlayerCard\(', re.S)
+          match = pattern.search(text)
+          if not match:
+              raise SystemExit('Could not find renderScoresScene block')
+
+          replacement = '''    function renderScoresScene(){
+      const entries = scoreEntries();
+      const leader = entries[0];
+      const finished = !!state.game.finished;
+      const myScore = Number((state.game.scores || {})[state.playerId] || 0);
+      const win = leader && leader.playerId === state.playerId;
+      const question = state.game.question || null;
+      const isSpeedRound = question?.type === "speed";
+      const speedResponses = isSpeedRound ? (question.responses || {}) : {};
+      const speedDetailFor = playerId => {
+        if(!isSpeedRound) return "";
+        const response = speedResponses[playerId];
+        if(!response || !Number.isInteger(Number(response.answerIndex))) return `<span class="playerSub">${t("speedNoAnswer")}</span>`;
+        const answerIndex = Number(response.answerIndex);
+        const answer = String(question.choices?.[answerIndex] || "");
+        const ranked = (question.ranking || []).find(item => item.text === answer);
+        const rank = Number(ranked?.rank || 0);
+        const gain = Number((state.game.lastRoundScores || {})[playerId] || 0);
+        return `<span class="playerSub speedScoreDetail"><strong>${rank ? `#${rank}` : "—"}</strong> · ${esc(answer)} · <strong>+${gain} ${t("pointsShort")}</strong></span>`;
+      };
+      const rows = entries.map((entry, index) => {
+        const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0);
+        return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "🦖"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong>${isSpeedRound ? speedDetailFor(entry.playerId) : `<span class="playerSub">${index === 0 ? t("currentLeader") : t("inRace")}</span>`}</div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`;
+      }).join("") || `<p>${t("noScoresYet")}</p>`;
+      if(finished){
+        ui.scoresTitle.textContent = win ? t("victory") : t("defeat");
+        ui.scoresLead.textContent = win ? t("championText", {score: myScore}) : t("defeatText");
+      } else if(isSpeedRound){
+        ui.scoresTitle.textContent = t("speedRoundResults");
+        ui.scoresLead.textContent = t("speedRoundLead");
+      } else {
+        ui.scoresTitle.textContent = leader ? t("leadsGame", {name: leader.name}) : t("scoreRound");
+        ui.scoresLead.textContent = leader ? t("accumulatedPoints", {score: leader.score}) : t("noScoresYet");
+      }
+      ui.scoresRows.innerHTML = rows;
+      ui.scoreModalRows.innerHTML = rows;
+      const showButtons = finished && state.game.finishedAt && Date.now() - state.game.finishedAt >= 2000;
+      ui.finalActions.innerHTML = showButtons ? `<button class="btn btnOk" id="btnContinueGame" type="button">${t("continueSession")}</button><button class="btn btnGhost" id="btnNewGame" type="button">${t("newSession")}</button>` : "";
+      if(showButtons){
+        $("btnContinueGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(false); await broadcastGame(); renderCurrentScene(); };
+        $("btnNewGame").onclick = async () => { if(state.role !== "host") return; resetGameToSetup(true); await broadcastGame(); renderCurrentScene(); };
+      }
+    }
+    function renderVersusPlayerCard('''
+          text = pattern.sub(replacement, text, count=1)
+
+          es_anchor = '        correctOrder:"Orden correcto",\n'
+          es_add = '        correctOrder:"Orden correcto",\n        speedRoundResults:"Resultados Velociraptor",\n        speedRoundLead:"Puesto elegido, puntos ganados y total acumulado.",\n        speedNoAnswer:"Sin respuesta",\n'
+          if es_anchor not in text:
+              raise SystemExit('Could not find Spanish i18n anchor')
+          text = text.replace(es_anchor, es_add, 1)
+
+          en_anchor = '        correctOrder:"Correct order",\n'
+          en_add = '        correctOrder:"Correct order",\n        speedRoundResults:"Velociraptor results",\n        speedRoundLead:"Chosen rank, points earned and accumulated total.",\n        speedNoAnswer:"No answer",\n'
+          if en_anchor not in text:
+              raise SystemExit('Could not find English i18n anchor')
+          text = text.replace(en_anchor, en_add, 1)
+
+          if text == original:
+              raise SystemExit('Patch made no changes')
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit patch and remove one-shot workflow
+        shell: bash
+        run: |
+          rm .github/workflows/trivialodon-velociraptor-patch.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add juegos.zaurio.es/trivialodon/index.html .github/workflows/trivialodon-velociraptor-patch.yml
+          git commit -m "Enable Velociraptor gameplay in Trivialodon"
+          git push
