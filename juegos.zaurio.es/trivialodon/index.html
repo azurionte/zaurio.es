@@ -1040,8 +1040,8 @@
         preparingAnswers:"Preparando respuestas...",
         timeUp:"Tiempo. Mira la correcta y quedate con el dato curioso.",
         timeUpSpeed:"Tiempo. Mira el ranking completo del Modo Velociraptor!.",
-        speedReadyInfo:"Modo Velociraptor! Cada respuesta se bloquea al instante y da puntos distintos.",
-        speedCountdownNotice:"Atencion: se acerca un Modo Velociraptor!",
+        speedReadyInfo:"¡VELOCIRAPTOR! Todas son correctas · mejor respuesta = más puntos · cada opción se bloquea al elegirla.",
+        speedCountdownNotice:"⚠️ ¡ATENCIÓN! Todas las respuestas son correctas, pero unas son MEJORES que otras y dan más puntos. Elige rápido: cuando alguien escoge una opción, queda bloqueada.",
         category:"Categoria",
         pointsShort:"pts",
         correct:"Correcta",
@@ -1235,8 +1235,8 @@
         preparingAnswers:"Preparing answers...",
         timeUp:"Time. See the correct answer and take the fun fact.",
         timeUpSpeed:"Time. See the full Velociraptor Mode ranking.",
-        speedReadyInfo:"Velociraptor Mode! Each answer locks instantly and gives different points.",
-        speedCountdownNotice:"Heads up: Velociraptor Mode is coming!",
+        speedReadyInfo:"VELOCIRAPTOR! Every answer is correct · better answer = more points · each option locks when chosen.",
+        speedCountdownNotice:"⚠️ ATTENTION! Every answer is correct, but some are BETTER than others and score more points. Choose fast: once someone picks an option, it locks.",
         category:"Category",
         pointsShort:"pts",
         correct:"Correct",
@@ -3261,7 +3261,7 @@
       const choices = Array.isArray(question.choices) ? question.choices : [];
       const answersVisible = !question.answersVisibleAt || now >= question.answersVisibleAt;
       const left = answersVisible ? Math.max(0, Math.ceil((question.endAt - now) / 1000)) : Math.max(0, Math.ceil((question.answersVisibleAt - now) / 1000));
-      const total = answersVisible ? Math.max(1, Number(state.game.answerSeconds || 15)) : Math.max(1, Number(state.game.questionLeadSeconds || 6));
+      const total = answersVisible ? Math.max(1, Number(state.game.answerSeconds || 15)) : Math.max(1, Number(question.leadSeconds || state.game.questionLeadSeconds || 6));
       const progress = Math.max(0, Math.min(1, left / total));
       const isSpeed = question.type === "speed";
       const wasCorrect = isSpeed ? question.scores?.[state.localAnswer] > 0 : state.localAnswer === question.correct;
@@ -3347,11 +3347,11 @@
           const bank = activeQuestionSet();
           const q = bank[state.game.questionIndex || 0];
           const prepared = prepareQuestion(q);
-          const leadMs = Math.max(0, Number(state.game.questionLeadSeconds || 6)) * 1000;
+          const leadSeconds = prepared.type === "speed" ? Math.max(8, Number(state.game.questionLeadSeconds || 6)) : Math.max(0, Number(state.game.questionLeadSeconds || 6)); const leadMs = leadSeconds * 1000;
           const answerMs = Math.max(5, Number(state.game.answerSeconds || 15)) * 1000;
           const answersVisibleAt = Date.now() + leadMs;
           state.game.phase = "question";
-          state.game.question = {type:prepared.type || "standard",prompt:prepared.prompt, category:prepared.category, choices:prepared.choices, correct:prepared.correct, scores:prepared.scores || [], ranking:prepared.ranking || [], answersVisibleAt, endAt:answersVisibleAt + answerMs, responses:{}, revealed:false, explanation:prepared.explanation || ""};
+          state.game.question = {type:prepared.type || "standard",prompt:prepared.prompt, category:prepared.category, choices:prepared.choices, correct:prepared.correct, scores:prepared.scores || [], ranking:prepared.ranking || [], leadSeconds, answersVisibleAt, endAt:answersVisibleAt + answerMs, responses:{}, revealed:false, explanation:prepared.explanation || ""};
           await broadcastGame();
           renderCurrentScene();
         }
