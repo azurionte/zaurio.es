@@ -4,9 +4,14 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const OPENAI_MODEL = Deno.env.get("OPENAI_TRIVIA_MODEL") || Deno.env.get("OPENAI_MODEL") || "gpt-5.6-terra";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
 const VELOCIRAPTOR_RATIO = 0.35;
+const MAX_AI_BATCH_SIZE = 10;
+const MAX_AI_CONCURRENCY = 3;
+const AI_TIMEOUT_MS = 35000;
 
 function json(body, init) {
   return new Response(JSON.stringify(body), {
@@ -24,7 +29,9 @@ function buildPrompt(input) {
     ? '[{"type":"standard","question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."},{"type":"speed","question":"...","choices":[{"text":"...","score":140,"rank":1}],"explanation":"...","category":"...","difficulty":"..."}]'
     : '{"type":"standard","question":"...","choices":["..."],"correct_index":0,"explanation":"...","category":"...","difficulty":"..."}';
   const speedCount = input.questionCount > 1
-    ? Math.max(1, Math.min(input.questionCount, Math.round(input.questionCount * VELOCIRAPTOR_RATIO)))
+    ? (Number.isInteger(input.speedCountOverride)
+      ? Math.max(0, Math.min(input.questionCount, input.speedCountOverride))
+      : Math.max(1, Math.min(input.questionCount, Math.round(input.questionCount * VELOCIRAPTOR_RATIO))))
     : 0;
   const english = input.language === "en";
   return [
@@ -189,9 +196,126 @@ function deterministicVelociraptorIssue(question) {
   return "";
 }
 
-async function callGeminiJson(prompt, temperature = 0.9) {
-  if (!GEMINI_API_KEY) throw new Error("Falta GEMINI_API_KEY en los secrets de Supabase.");
-  const response = await fetch(
+async function fetchWithTimeout(url, init, timeoutMs = AI_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function standardQuestionSchema(answerCount) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["type","question","choices","correct_index","explanation","category","difficulty"],
+    properties: {
+      type: { type: "string", enum: ["standard"] },
+      question: { type: "string" },
+      choices: { type: "array", minItems: answerCount, maxItems: answerCount, items: { type: "string" } },
+      correct_index: { type: "integer", minimum: 0, maximum: answerCount - 1 },
+      explanation: { type: "string" },
+      category: { type: "string" },
+      difficulty: { type: "string" },
+    },
+  };
+}
+
+function speedQuestionSchema(answerCount) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["type","question","choices","explanation","category","difficulty"],
+    properties: {
+      type: { type: "string", enum: ["speed"] },
+      question: { type: "string" },
+      choices: {
+        type: "array",
+        minItems: answerCount,
+        maxItems: answerCount,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["text","score","rank"],
+          properties: {
+            text: { type: "string" },
+            score: { type: "integer", minimum: 1 },
+            rank: { type: "integer", minimum: 1, maximum: answerCount },
+          },
+        },
+      },
+      explanation: { type: "string" },
+      category: { type: "string" },
+      difficulty: { type: "string" },
+    },
+  };
+}
+
+function questionSetSchema(questionCount, answerCount) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["questions"],
+    properties: {
+      questions: {
+        type: "array",
+        minItems: questionCount,
+        maxItems: questionCount,
+        items: { anyOf: [standardQuestionSchema(answerCount), speedQuestionSchema(answerCount)] },
+      },
+    },
+  };
+}
+
+function extractOpenAIText(payload) {
+  if (typeof payload?.output_text === "string") return payload.output_text;
+  for (const item of payload?.output || []) {
+    for (const part of item?.content || []) {
+      if (part?.type === "output_text" && typeof part?.text === "string") return part.text;
+    }
+  }
+  return "";
+}
+
+async function callOpenAIJson(prompt, questionCount, answerCount) {
+  if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured.");
+  const response = await fetchWithTimeout("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      store: false,
+      reasoning: { effort: "low" },
+      max_output_tokens: Math.min(8000, 1800 + questionCount * 550),
+      instructions: "You are the factual trivia engine for Trivialodon. Accuracy matters more than cleverness. Follow the requested language and all Velociraptor rules exactly.",
+      input: prompt + "\nReturn the result under the top-level key questions.",
+      text: {
+        format: {
+          type: "json_schema",
+          name: "trivialodon_question_batch",
+          strict: true,
+          schema: questionSetSchema(questionCount, answerCount),
+        },
+      },
+    }),
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(payload?.error?.message || `OpenAI request failed (${response.status}).`);
+  const text = extractOpenAIText(payload);
+  if (!text) throw new Error("OpenAI returned no usable output.");
+  const parsed = JSON.parse(text);
+  if (!Array.isArray(parsed?.questions)) throw new Error("OpenAI returned an invalid question set.");
+  return parsed.questions;
+}
+
+async function callGeminiJson(prompt) {
+  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
+  const response = await fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
     {
       method: "POST",
@@ -203,103 +327,141 @@ async function callGeminiJson(prompt, temperature = 0.9) {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           responseMimeType: "application/json",
-          temperature,
+          temperature: 0.8,
         },
       }),
     },
   );
-  const payload = await response.json();
-  if (!response.ok) throw new Error(payload?.error?.message || "Gemini no devolvio una respuesta valida.");
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(payload?.error?.message || `Gemini request failed (${response.status}).`);
   const text = payload?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("Gemini no devolvio contenido util.");
+  if (!text) throw new Error("Gemini returned no usable output.");
   return JSON.parse(text);
 }
 
-async function validateVelociraptorBatch(speedQuestions, language) {
-  if (!speedQuestions.length) return { valid: true, issues: [] };
-  const english = language === "en";
-  const payload = speedQuestions.map((question, index) => ({
-    index,
-    question: question.question,
-    choices: [...(question.choices || [])]
-      .sort((a, b) => a.rank - b.rank)
-      .map((choice) => ({ text: choice.text, rank: choice.rank })),
-  }));
-  const prompt = [
-    english ? "You are the strict factual quality gate for Velociraptor trivia questions." : "Eres el control de calidad factual estricto de preguntas de trivia Modo Velociraptor.",
-    english ? "Return ONLY JSON with this exact shape: {\"valid\":true,\"issues\":[]}." : "Devuelve SOLO JSON con esta forma exacta: {\"valid\":true,\"issues\":[]}.",
-    english ? "Set valid=false if ANY question fails ANY rule. Add a short issue for each failure." : "Pon valid=false si CUALQUIER pregunta incumple CUALQUIER regla. Incluye un motivo breve por cada fallo.",
-    english ? "Rules for every question:" : "Reglas para cada pregunta:",
-    english ? "1. Every single option must be factually true and genuinely belong to the exact comparison asked. There are NO wrong answers in Velociraptor mode." : "1. Todas y cada una de las opciones deben ser factualmente verdaderas y pertenecer de verdad a la comparacion exacta planteada. En Velociraptor NO hay respuestas incorrectas.",
-    english ? "2. Reject any distractor, joke, fictional/category intruder, misleading item, or option that only earns points despite being false." : "2. Rechaza cualquier distractor, broma, intruso de otra categoria, elemento enganoso u opcion que reciba puntos pese a ser falsa.",
-    english ? "3. The rank from 1 onward must follow one objective factual criterion and be defensible." : "3. El rank desde 1 debe seguir un unico criterio factual objetivo y ser defendible.",
-    english ? "4. Reject near-identical answers and answers made by progressively shortening, lengthening, or reordering the same list." : "4. Rechaza respuestas casi identicas y respuestas creadas recortando, ampliando o reordenando progresivamente la misma lista.",
-    english ? "5. The question must be good trivia: clear, interesting, and not a contrived completeness-ranking trick." : "5. La pregunta debe ser buena trivia: clara, interesante y no un truco forzado de ordenar por completitud.",
-    english ? "Be conservative: if you are not confident every option is valid and the ranking is sound, reject it." : "Se conservador: si no estas seguro de que todas las opciones sean validas y el ranking sea solido, rechazala.",
-    JSON.stringify(payload),
-  ].join("\n");
-  const verdict = await callGeminiJson(prompt, 0.1);
-  return {
-    valid: verdict?.valid === true,
-    issues: Array.isArray(verdict?.issues) ? verdict.issues.map(String) : ["semantic validator rejected the batch"],
-  };
+function unwrapQuestions(parsed) {
+  if (Array.isArray(parsed)) return parsed;
+  if (Array.isArray(parsed?.questions)) return parsed.questions;
+  return [];
 }
 
-async function callGemini(input) {
-  if (input.mode === "translate") {
-    const parsed = await callGeminiJson(buildTranslatePrompt(input), 0.2);
-    if (!Array.isArray(parsed) || parsed.length !== input.questions.length) {
-      throw new Error(input.language === "en"
-        ? "Gemini did not return the exact number of translated questions."
-        : "Gemini no devolvio la cantidad exacta de preguntas traducidas.");
-    }
-    return parsed.map((item) => normalizeQuestion(item, input.answerCount, input.language));
+function validateGeneratedBatch(raw, input, expectedCount, expectedSpeedCount) {
+  const items = unwrapQuestions(raw);
+  if (items.length !== expectedCount) throw new Error(`Expected ${expectedCount} questions, got ${items.length}.`);
+  const normalized = items.map((item) => normalizeQuestion(item, input.answerCount, input.language));
+  const speed = normalized.filter((item) => item.type === "speed");
+  if (speed.length !== expectedSpeedCount) throw new Error(`Expected ${expectedSpeedCount} Velociraptor questions, got ${speed.length}.`);
+  const issue = speed.map(deterministicVelociraptorIssue).find(Boolean);
+  if (issue) throw new Error(issue);
+  const promptKeys = normalized.map((item) => normalizeComparableText(item.question));
+  if (new Set(promptKeys).size !== promptKeys.length) throw new Error("duplicate questions in batch");
+  for (const item of normalized.filter((q) => q.type !== "speed")) {
+    const keys = item.choices.map(normalizeComparableText);
+    if (new Set(keys).size !== keys.length) throw new Error("duplicate standard answers");
   }
+  return normalized;
+}
 
-  if (input.questionCount <= 1) {
-    const parsed = await callGeminiJson(buildPrompt(input));
-    return normalizeQuestion(parsed, input.answerCount, input.language);
+function buildBatchPlan(total) {
+  let remaining = total;
+  let remainingSpeed = total > 1
+    ? Math.max(1, Math.min(total, Math.round(total * VELOCIRAPTOR_RATIO)))
+    : 0;
+  const plans = [];
+  while (remaining > 0) {
+    const count = Math.min(MAX_AI_BATCH_SIZE, remaining);
+    const speedCount = remainingSpeed > 0
+      ? Math.min(count, Math.max(0, Math.round((count * remainingSpeed) / remaining)))
+      : 0;
+    plans.push({ count, speedCount });
+    remaining -= count;
+    remainingSpeed -= speedCount;
   }
+  if (remainingSpeed !== 0 && plans.length) plans[plans.length - 1].speedCount += remainingSpeed;
+  return plans;
+}
 
-  const expectedSpeedCount = Math.max(1, Math.min(input.questionCount, Math.round(input.questionCount * VELOCIRAPTOR_RATIO)));
-  let lastReason = "quality validation failed";
+async function generateProviderBatch(input, plan) {
+  const batchInput = { ...input, questionCount: plan.count, speedCountOverride: plan.speedCount };
+  const prompt = buildPrompt(batchInput);
+  let openAIError = "";
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  if (OPENAI_API_KEY) {
     try {
-      const parsed = await callGeminiJson(buildPrompt(input));
-      if (!Array.isArray(parsed) || parsed.length !== input.questionCount) {
-        lastReason = input.language === "en" ? "wrong question count" : "cantidad incorrecta de preguntas";
-        continue;
-      }
-      const result = parsed.map((item) => normalizeQuestion(item, input.answerCount, input.language));
-      const speedQuestions = result.filter((item) => item.type === "speed");
-      if (speedQuestions.length !== expectedSpeedCount) {
-        lastReason = input.language === "en"
-          ? `Gemini returned ${speedQuestions.length} Velociraptor questions but exactly ${expectedSpeedCount} were required.`
-          : `Gemini devolvio ${speedQuestions.length} preguntas Velociraptor pero se exigian exactamente ${expectedSpeedCount}.`;
-        continue;
-      }
+      const raw = await callOpenAIJson(prompt, plan.count, input.answerCount);
+      return { questions: validateGeneratedBatch(raw, input, plan.count, plan.speedCount), provider: "openai" };
+    } catch (error) {
+      openAIError = error instanceof Error ? error.message : String(error);
+    }
+  }
 
-      const deterministicIssue = speedQuestions.map(deterministicVelociraptorIssue).find(Boolean);
-      if (deterministicIssue) {
-        lastReason = deterministicIssue;
-        continue;
-      }
+  if (GEMINI_API_KEY) {
+    const raw = await callGeminiJson(prompt);
+    return {
+      questions: validateGeneratedBatch(raw, input, plan.count, plan.speedCount),
+      provider: OPENAI_API_KEY ? "gemini_fallback" : "gemini",
+    };
+  }
 
-      const verdict = await validateVelociraptorBatch(speedQuestions, input.language);
-      if (!verdict.valid) {
-        lastReason = verdict.issues.join("; ") || "semantic validator rejected the batch";
-        continue;
-      }
-      return result;
+  throw new Error(openAIError || "No AI provider is configured.");
+}
+
+async function generateValidatedBatch(input, plan) {
+  let lastReason = "generation failed";
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      return await generateProviderBatch(input, plan);
     } catch (error) {
       lastReason = error instanceof Error ? error.message : String(error);
     }
   }
+  throw new Error(`Batch failed after 2 attempts: ${lastReason}`);
+}
 
-  throw new Error(input.language === "en"
-    ? `I could not generate a Velociraptor-safe question set after 3 attempts: ${lastReason}`
-    : `No he podido generar un lote Velociraptor seguro tras 3 intentos: ${lastReason}`);
+async function callGemini(input) {
+  if (input.mode === "translate") {
+    const prompt = buildTranslatePrompt(input);
+    let raw;
+    let provider;
+    if (OPENAI_API_KEY) {
+      try {
+        raw = await callOpenAIJson(prompt, input.questions.length, input.answerCount);
+        provider = "openai";
+      } catch (_) {
+        raw = await callGeminiJson(prompt + "\nReturn a JSON object with top-level key questions.");
+        provider = "gemini_fallback";
+      }
+    } else {
+      raw = await callGeminiJson(prompt + "\nReturn a JSON object with top-level key questions.");
+      provider = "gemini";
+    }
+    const speedCount = input.questions.filter((item) => item?.type === "speed").length;
+    const translated = validateGeneratedBatch(raw, input, input.questions.length, speedCount);
+    translated.provider = provider;
+    return translated;
+  }
+
+  const plans = buildBatchPlan(input.questionCount);
+  const results = new Array(plans.length);
+  let cursor = 0;
+
+  async function worker() {
+    while (true) {
+      const index = cursor++;
+      if (index >= plans.length) return;
+      results[index] = await generateValidatedBatch(input, plans[index]);
+    }
+  }
+
+  await Promise.all(Array.from(
+    { length: Math.min(MAX_AI_CONCURRENCY, plans.length) },
+    () => worker(),
+  ));
+
+  const questions = results.flatMap((item) => item.questions);
+  const providers = [...new Set(results.map((item) => item.provider))];
+  questions.provider = providers.length === 1 ? providers[0] : "mixed";
+  return questions;
 }
 
 Deno.serve(async (request) => {
@@ -333,8 +495,11 @@ Deno.serve(async (request) => {
     }
 
     const result = await callGemini(input);
+    const provider = result?.provider || (OPENAI_API_KEY ? "openai" : "gemini");
     return json({
       ok: true,
+      provider,
+      model: provider.startsWith("openai") ? OPENAI_MODEL : GEMINI_MODEL,
       question: Array.isArray(result) ? result[0] : result,
       questions: Array.isArray(result) ? result : [result],
     });
