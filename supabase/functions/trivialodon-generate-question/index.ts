@@ -4,8 +4,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-const OPENAI_MODEL = Deno.env.get("OPENAI_TRIVIA_MODEL") || Deno.env.get("OPENAI_MODEL") || "gpt-5.6-terra";
+const TRIVIALODON_RELAY_TOKEN = Deno.env.get("TRIVIALODON_RELAY_TOKEN");
+const KUTUN_TRIVIA_ENDPOINT = "https://tynnjgnpkzwhyblwevrt.supabase.co/functions/v1/trivialodon-openai";
+const OPENAI_MODEL = "gpt-5.6-terra";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash";
 const VELOCIRAPTOR_RATIO = 0.35;
@@ -381,25 +382,65 @@ function buildBatchPlan(total) {
   return plans;
 }
 
+async function callKutunOpenAI(input, plan) {
+  if (!TRIVIALODON_RELAY_TOKEN) throw new Error("TRIVIALODON_RELAY_TOKEN not configured.");
+
+  const standardCount = plan.count - plan.speedCount;
+  const tasks = [];
+
+  const invoke = async (type, count) => {
+    if (!count) return [];
+    const response = await fetchWithTimeout(KUTUN_TRIVIA_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-trivialodon-relay-token": TRIVIALODON_RELAY_TOKEN,
+      },
+      body: JSON.stringify({
+        type,
+        count,
+        language: input.language,
+        theme: input.theme,
+        tone: input.tone,
+        difficulty: input.difficulty,
+        audience: input.audience,
+        answerCount: input.answerCount,
+        customPrompt: input.customPrompt,
+      }),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || payload?.ok !== true || !Array.isArray(payload?.questions)) {
+      throw new Error(payload?.error || `Kutun OpenAI relay failed (${response.status}).`);
+    }
+    return payload.questions;
+  };
+
+  if (standardCount) tasks.push(invoke("standard", standardCount));
+  if (plan.speedCount) tasks.push(invoke("speed", plan.speedCount));
+
+  const chunks = await Promise.all(tasks);
+  return chunks.flat();
+}
+
 async function generateProviderBatch(input, plan) {
-  const batchInput = { ...input, questionCount: plan.count, speedCountOverride: plan.speedCount };
-  const prompt = buildPrompt(batchInput);
   let openAIError = "";
 
-  if (OPENAI_API_KEY) {
-    try {
-      const raw = await callOpenAIJson(prompt, plan.count, input.answerCount);
-      return { questions: validateGeneratedBatch(raw, input, plan.count, plan.speedCount), provider: "openai" };
-    } catch (error) {
-      openAIError = error instanceof Error ? error.message : String(error);
-    }
+  try {
+    const raw = await callKutunOpenAI(input, plan);
+    return {
+      questions: validateGeneratedBatch(raw, input, plan.count, plan.speedCount),
+      provider: "openai_kutun",
+    };
+  } catch (error) {
+    openAIError = error instanceof Error ? error.message : String(error);
   }
 
   if (GEMINI_API_KEY) {
-    const raw = await callGeminiJson(prompt);
+    const batchInput = { ...input, questionCount: plan.count, speedCountOverride: plan.speedCount };
+    const raw = await callGeminiJson(buildPrompt(batchInput));
     return {
       questions: validateGeneratedBatch(raw, input, plan.count, plan.speedCount),
-      provider: OPENAI_API_KEY ? "gemini_fallback" : "gemini",
+      provider: "gemini_fallback",
     };
   }
 
@@ -421,23 +462,10 @@ async function generateValidatedBatch(input, plan) {
 async function callGemini(input) {
   if (input.mode === "translate") {
     const prompt = buildTranslatePrompt(input);
-    let raw;
-    let provider;
-    if (OPENAI_API_KEY) {
-      try {
-        raw = await callOpenAIJson(prompt, input.questions.length, input.answerCount);
-        provider = "openai";
-      } catch (_) {
-        raw = await callGeminiJson(prompt + "\nReturn a JSON object with top-level key questions.");
-        provider = "gemini_fallback";
-      }
-    } else {
-      raw = await callGeminiJson(prompt + "\nReturn a JSON object with top-level key questions.");
-      provider = "gemini";
-    }
+    const raw = await callGeminiJson(prompt + "\nReturn a JSON object with top-level key questions.");
     const speedCount = input.questions.filter((item) => item?.type === "speed").length;
     const translated = validateGeneratedBatch(raw, input, input.questions.length, speedCount);
-    translated.provider = provider;
+    translated.provider = "gemini_translate";
     return translated;
   }
 
@@ -495,7 +523,7 @@ Deno.serve(async (request) => {
     }
 
     const result = await callGemini(input);
-    const provider = result?.provider || (OPENAI_API_KEY ? "openai" : "gemini");
+    const provider = result?.provider || "openai_kutun";
     return json({
       ok: true,
       provider,
