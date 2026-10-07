@@ -1,9 +1,9 @@
-version: 5.0.57
+version: 5.0.58
 files:
-  - url: DemoBuildingToolsSetup-5.0.57.exe
-    sha512: sNybpO9ffojgKWpx/j9ihugeKxPhTojik5JkVTn2bLAG2xiYqZZRgE40W26jhBpEqK+Q08MvoKkV/jlXPCOd0Q==
-    size: 101851835
-path: DemoBuildingToolsSetup-5.0.57.exe
-sha512: sNybpO9ffojgKWpx/j9ihugeKxPhTojik5JkVTn2bLAG2xiYqZZRgE40W26jhBpEqK+Q08MvoKkV/jlXPCOd0Q==
-releaseNotes: Celergo Monthly Changes now syncs shared employee deletions across computers and prevents deleted cloud employees from reappearing locally.
-releaseDate: '2026-06-30T14:22:24.976Z'
+  - url: DemoBuildingToolsSetup-5.0.58.exe
+    sha512: bs5GTq81Ur7pI3zN5c5WlxOGXGXHJmeblcYKc4L6+niNt4+flxpBXEad+5wOmz8tRTG4LYE5nMLnRI2j7gOHeQ==
+    size: 101842689
+path: DemoBuildingToolsSetup-5.0.58.exe
+sha512: bs5GTq81Ur7pI3zN5c5WlxOGXGXHJmeblcYKc4L6+niNt4+flxpBXEad+5wOmz8tRTG4LYE5nMLnRI2j7gOHeQ==
+releaseNotes: Renames Monthly changes input to Celergo Payroll Processing Tool and includes the France/Germany PRR workflow with corrected country-switch navigation.
+releaseDate: '2026-10-07T13:34:13.878Z'
