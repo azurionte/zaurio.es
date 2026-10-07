@@ -52,7 +52,7 @@ function prrEditableConfig(country){
   if(!root.configByCountry[country]) root.configByCountry[country]={rateMin:base.rateMin,rateMax:base.rateMax,weights:base.weights.slice()};
   var cfg=root.configByCountry[country];
   if(!Array.isArray(cfg.weights) || cfg.weights.length!==base.recurring.length) cfg.weights=base.weights.slice();
-  return cg;
+  return cfg;
 }
 function prrCountryData(country){
   var root=prrStateRoot();

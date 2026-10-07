@@ -112,7 +112,7 @@ $('next').onclick=function(){
   show(step+1);
 };
 $('back').onclick=function(){show(step-1);};
-APP_DATA.version='1.14';
+APP_DATA.version='1.15';
 var prrVersionBadge=document.querySelector('[data-mini-version="celergo-monthly-changes"]');
-if(prrVersionBadge)prrVersionBadge.textContent='V1.14';
+if(prrVersionBadge)prrVersionBadge.textContent='V1.15';
 renderSteps();
