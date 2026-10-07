@@ -97,6 +97,14 @@ prrInstallStyle();
 prrInstallScreens();
 document.addEventListener('click',prrHandleClick,true);
 document.addEventListener('change',prrHandleChange,true);
+// Country selection is handled by the original mini-app listener first. This later bubble listener
+// resets navigation against the newly selected country's PRR capability so an unsupported country
+// can never leave the PRR screens stuck in the coming-soon state when switching to FR/DE.
+document.addEventListener('click',function(e){
+  var countryButton=e.target.closest('[data-country]');
+  if(!countryButton)return;
+  show(0);
+},false);
 $('next').onclick=function(){
   var terminal=(prrSupported(state.country)&&step===8)||(!prrSupported(state.country)&&step===5);
   if(terminal){show(0);return;}
@@ -104,7 +112,7 @@ $('next').onclick=function(){
   show(step+1);
 };
 $('back').onclick=function(){show(step-1);};
-APP_DATA.version='1.13';
+APP_DATA.version='1.14';
 var prrVersionBadge=document.querySelector('[data-mini-version="celergo-monthly-changes"]');
-if(prrVersionBadge)prrVersionBadge.textContent='V1.13';
+if(prrVersionBadge)prrVersionBadge.textContent='V1.14';
 renderSteps();

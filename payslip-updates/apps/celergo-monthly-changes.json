@@ -1,41 +1,41 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.13",
+  "version": "1.14",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
-  "updatedAt": "2026-10-07T12:15:00.000Z",
-  "notes": "Renames the mini-app to Celergo Payroll Processing Tool and adds a PRR phase after Payments & Deductions. France and Germany include salary setup, country-rule single elements, dynamically balanced deductions, and exact-template PRR export; other countries show PRR coming soon.",
+  "updatedAt": "2026-10-07T12:55:00.000Z",
+  "notes": "Fixes PRR navigation state when switching from an unsupported country to France or Germany. Country changes now reset the active workflow against the newly selected country's PRR capability.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.13"
+      "url": "celergo-monthly-changes.html?v=1.14"
     },
     {
       "path": "celergo-payroll-prr-core.js",
-      "url": "celergo-payroll-prr-core.js?v=1.13"
+      "url": "celergo-payroll-prr-core.js?v=1.14"
     },
     {
       "path": "celergo-payroll-prr-ui.js",
-      "url": "celergo-payroll-prr-ui.js?v=1.13"
+      "url": "celergo-payroll-prr-ui.js?v=1.14"
     },
     {
       "path": "celergo-payroll-prr-nav.js",
-      "url": "celergo-payroll-prr-nav.js?v=1.13"
+      "url": "celergo-payroll-prr-nav.js?v=1.14"
     },
     {
       "path": "celergo-prr-template-1.txt",
-      "url": "celergo-prr-template-1.txt?v=1.13"
+      "url": "celergo-prr-template-1.txt?v=1.14"
     },
     {
       "path": "celergo-prr-template-2.txt",
-      "url": "celergo-prr-template-2.txt?v=1.13"
+      "url": "celergo-prr-template-2.txt?v=1.14"
     },
     {
       "path": "celergo-prr-template-3.txt",
-      "url": "celergo-prr-template-3.txt?v=1.13"
+      "url": "celergo-prr-template-3.txt?v=1.14"
     },
     {
       "path": "celergo-prr-template-4.txt",
-      "url": "celergo-prr-template-4.txt?v=1.13"
+      "url": "celergo-prr-template-4.txt?v=1.14"
     }
   ]
 }
