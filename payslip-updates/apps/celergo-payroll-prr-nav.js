@@ -48,9 +48,19 @@ renderSteps=function(){
   else html+='<button class="step-dot '+(step===5?'active':'')+'" type="button" data-step="5">PRR · Coming soon</button>';
   $('steps').innerHTML=html;
 };
+function prrShowRuntimeError(targetStep,error){
+  var hostId={5:'prrSalaryHost',6:'prrSinglesHost',7:'prrDeductionsHost',8:'prrExportHost'}[targetStep];
+  var host=hostId&&document.getElementById(hostId);
+  if(!host)return;
+  host.innerHTML=prrPhaseBanner()+'<div class="panel"><h2>PRR could not render</h2><p>Runtime error: '+esc(String(error&&error.message||error||'Unknown PRR error'))+'</p></div>';
+}
+function prrSafeRender(targetStep,renderer){
+  try{renderer();}catch(error){console.error('PRR render failed',error);prrShowRuntimeError(targetStep,error);}
+}
 show=function(i){
   var supported=prrSupported(state.country), max=supported?8:5;
   if(i<0||i>max)return;
+  if(i>=5)prrInstallScreens();
   step=i;
   document.querySelectorAll('.screen').forEach(function(x){x.classList.toggle('active',Number(x.dataset.screen)===step);});
   $('back').disabled=step===0;
@@ -62,10 +72,10 @@ show=function(i){
   renderSteps();
   if(step===2)renderEmployees();
   if(step===4)renderPreview();
-  if(step===5)prrRenderSalary();
-  if(step===6)prrRenderSingles();
-  if(step===7)prrRenderDeductions();
-  if(step===8)prrRenderExport();
+  if(step===5)prrSafeRender(5,prrRenderSalary);
+  if(step===6)prrSafeRender(6,prrRenderSingles);
+  if(step===7)prrSafeRender(7,prrRenderDeductions);
+  if(step===8)prrSafeRender(8,prrRenderExport);
 };
 jumpTo=function(i){
   if(!canLeaveCountry(i))return;
@@ -112,7 +122,7 @@ $('next').onclick=function(){
   show(step+1);
 };
 $('back').onclick=function(){show(step-1);};
-APP_DATA.version='1.15';
+APP_DATA.version='1.16';
 var prrVersionBadge=document.querySelector('[data-mini-version="celergo-monthly-changes"]');
-if(prrVersionBadge)prrVersionBadge.textContent='V1.15';
+if(prrVersionBadge)prrVersionBadge.textContent='V1.16';
 renderSteps();
