@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.57",
+  "version": "5.0.58",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Celergo Monthly Changes now syncs shared employee deletions across computers and prevents deleted cloud employees from reappearing locally."
+      "releaseNotes": "Renames Monthly changes input to Celergo Payroll Processing Tool and includes the France/Germany PRR workflow with corrected country-switch navigation."
     },
     "nsis": {
       "perMachine": false,
