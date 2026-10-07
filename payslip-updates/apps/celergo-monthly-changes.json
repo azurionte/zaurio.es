@@ -1,41 +1,41 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.15",
+  "version": "1.16",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
-  "updatedAt": "2026-10-07T14:07:00.000Z",
-  "notes": "Fixes the blank PRR Salaries screen in France and Germany caused by a configuration variable typo. Salary rendering and subsequent PRR steps now initialize correctly.",
+  "updatedAt": "2026-10-07T15:35:00.000Z",
+  "notes": "Reloads Celergo after a mini-app update so corrected PRR code becomes active immediately, and adds guarded PRR rendering so runtime errors are shown instead of a blank screen.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.15"
+      "url": "celergo-monthly-changes.html?v=1.16"
     },
     {
       "path": "celergo-payroll-prr-core.js",
-      "url": "celergo-payroll-prr-core.js?v=1.15"
+      "url": "celergo-payroll-prr-core.js?v=1.16"
     },
     {
       "path": "celergo-payroll-prr-ui.js",
-      "url": "celergo-payroll-prr-ui.js?v=1.15"
+      "url": "celergo-payroll-prr-ui.js?v=1.16"
     },
     {
       "path": "celergo-payroll-prr-nav.js",
-      "url": "celergo-payroll-prr-nav.js?v=1.15"
+      "url": "celergo-payroll-prr-nav.js?v=1.16"
     },
     {
       "path": "celergo-prr-template-1.txt",
-      "url": "celergo-prr-template-1.txt?v=1.15"
+      "url": "celergo-prr-template-1.txt?v=1.16"
     },
     {
       "path": "celergo-prr-template-2.txt",
-      "url": "celergo-prr-template-2.txt?v=1.15"
+      "url": "celergo-prr-template-2.txt?v=1.16"
     },
     {
       "path": "celergo-prr-template-3.txt",
-      "url": "celergo-prr-template-3.txt?v=1.15"
+      "url": "celergo-prr-template-3.txt?v=1.16"
     },
     {
       "path": "celergo-prr-template-4.txt",
-      "url": "celergo-prr-template-4.txt?v=1.15"
+      "url": "celergo-prr-template-4.txt?v=1.16"
     }
   ]
 }
