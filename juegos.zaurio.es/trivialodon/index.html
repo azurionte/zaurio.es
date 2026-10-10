@@ -2023,7 +2023,7 @@
     const HUNGER_CARROT_BURST_BODY = 20;
     const HUNGER_CARROT_BURST_TAIL = 5;
     const HUNGER_BOMB_PENALTY = 3;
-    const HUNGER_PLACEMENT_POINTS = [120,90,70,50,30,20,15,10,8,6];
+    const HUNGER_POINT_VALUE = 10;
     const HUNGER_COLORS = [0x39dbff,0xff77cb,0xffd83a,0x88e16e,0xb877ff,0xff7a4d,0x5ee0bd,0x7e9cff,0xff5fa2,0xc9ef5d];
     const HUNGER_MODEL_URL = "https://assets.codepen.io/264161/rabbit6.glb";
     const TOWER_PLACEMENT_POINTS = [120,90,70,50,30,20];
@@ -2060,7 +2060,7 @@
     const state = {
       playerId:crypto.randomUUID(), role:"", roomCode:"", name:"", ready:false, waitingLine:"", channel:null, players:[], avatarIndex:0, localAnswer:null,
       avatar:{kind:"preset",src:AVATAR_OPTIONS[0].src,rendered:AVATAR_OPTIONS[0].src,avatarId:AVATAR_OPTIONS[0].id},
-      game:{phase:"lobby",selectedMode:"",selectedDuration:"",selectedDurationValue:15,question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,skill:null,hunger:null,hungerVariant:"normal",pasabolas:null,activityMix:{trivia:65,tower:15,hunger:15,versus:5},activityPlan:[],activityIndex:0,currentActivity:"",lastActivityType:"",hostNotice:"",lang:currentLang,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}}
+      game:{phase:"lobby",selectedMode:"",selectedDuration:"",selectedDurationValue:15,question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,skill:null,hunger:null,hungerVariant:"normal",pasabolas:null,lastDuelType:"rps",activityMix:{trivia:65,tower:15,hunger:15,versus:5},activityPlan:[],activityIndex:0,currentActivity:"",lastActivityType:"",hostNotice:"",lang:currentLang,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}}
     };
     const audioState = {
       muted: localStorage.getItem(SOUND_KEY) === "1",
@@ -2184,7 +2184,7 @@
         : `Dato flash: la respuesta correcta era ${answer}. Ahora ya no se te escapa en la siguiente ronda.`);
     };
     const activeQuestionSet = () => Array.isArray(state.game.questionSet) && state.game.questionSet.length ? state.game.questionSet : buildMixedQuestionSet(CLASSIC_TOTAL_QUESTIONS, QUESTION_BANK);
-    const gameDefaults = () => ({phase:"lobby",selectedMode:"",selectedDuration:"",selectedDurationValue:15,question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,skill:null,hunger:null,hungerVariant:"normal",pasabolas:null,activityMix:{trivia:65,tower:15,hunger:15,versus:5},activityPlan:[],activityIndex:0,currentActivity:"",lastActivityType:"",hostNotice:"",lang:currentLang,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}});
+    const gameDefaults = () => ({phase:"lobby",selectedMode:"",selectedDuration:"",selectedDurationValue:15,question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,skill:null,hunger:null,hungerVariant:"normal",pasabolas:null,lastDuelType:"rps",activityMix:{trivia:65,tower:15,hunger:15,versus:5},activityPlan:[],activityIndex:0,currentActivity:"",lastActivityType:"",hostNotice:"",lang:currentLang,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}});
     function serializeQuestionForTranslation(question){
       if(question?.type === "speed"){
         return {
@@ -2412,8 +2412,7 @@
           state.game.phase = "skill_intro";
           return;
         }
-        state.game.versus = createVersusState(pair,"scheduled");
-        state.game.phase = "versus_intro";
+        startDuel(pair,"scheduled");
         return;
       }
       state.game.phase = "countdown";
@@ -2553,6 +2552,7 @@
       state.game.activityIndex = 0;
       state.game.currentActivity = "";
       state.game.lastActivityType = "";
+      state.game.lastDuelType = "rps";
       state.game.activityMix = modeMixPreset("classic");
       state.game.hostNotice = "";
       state.game.selectedMode = "classic";
@@ -2560,20 +2560,26 @@
       state.game.selectedDurationValue = 15;
       if(clearScores) state.game.scores = {};
     }
+    function startDuel(pair,source="tie"){
+      const nextType=state.game.lastDuelType==="pasabolas"?"rps":"pasabolas";
+      state.game.lastDuelType=nextType;
+      if(nextType==="pasabolas"){
+        state.game.versus=null;
+        state.game.pasabolas=createPasabolasState(pair);
+        state.game.pasabolas.source=source;
+        state.game.phase="pasabolas_intro";
+      }else{
+        state.game.pasabolas=null;
+        state.game.versus=createVersusState(pair,source);
+        state.game.phase="versus_intro";
+      }
+      return nextType;
+    }
     function maybeStartVersus(){
       const nextTie = evaluateTieTracker(state.game.scores || {});
       state.game.tieTracker = nextTie;
       if(Number(nextTie.streak || 0) >= 2 && (nextTie.pair || []).length === 2){
-        const usePasabolas = Math.random() < .5;
-        if(usePasabolas){
-          state.game.versus = null;
-          state.game.pasabolas = createPasabolasState(nextTie.pair);
-          state.game.phase = "pasabolas_intro";
-        } else {
-          state.game.pasabolas = null;
-          state.game.phase = "versus_intro";
-          state.game.versus = createVersusState(nextTie.pair);
-        }
+        startDuel(nextTie.pair,"tie");
         return true;
       }
       state.game.versus = null;
@@ -4457,7 +4463,7 @@
     function renderHungerIntroScene(){const hunger=state.game.hunger||{};ui.hungerIntroKicker.textContent=t("hungerKicker");ui.hungerIntroTitle.textContent=t("hungerTitle");ui.hungerIntroLead.textContent=t(hunger.variant==="bombs"?"hungerBombIntroLead":"hungerIntroLead");ui.hungerIntroCount.textContent=String(Math.max(0,Math.ceil((Number(hunger.introEndsAt||0)-sharedNow())/1000)));}
     function renderHungerScoreStrip(){if(!ui.hungerScoreStrip)return;const hunger=state.game.hunger||{},scores=hunger.scores||{};const players=readyPlayers().map(player=>({player,score:Number(scores[player.playerId]||0),color:Number(hunger.players?.[player.playerId]?.color||hungerPlayerColor(player.playerId))})).sort((a,b)=>b.score-a.score);ui.hungerScoreStrip.innerHTML=players.map(({player,score,color})=>{const mine=player.playerId===state.playerId;const hex=hungerColorHex(color);return `<article class="hungerScoreChip ${mine?"me":""}" style="${mine?`border-color:${hex};box-shadow:0 0 0 1px ${hex}55,0 0 18px ${hex}28`:""}">${hungerBunnySvg(hex)}<div class="hungerPlayerId"><div class="hungerNameRow"><div class="hungerScoreName">${esc(player.name||t("player"))}</div>${mine?`<span class="hungerYouTag">${t("towerYou")}</span>`:""}</div></div><div class="hungerScoreValue"><span class="carrot">🥕</span><strong>${score}</strong></div></article>`;}).join("");}
     function renderHungerScene(){const hunger=state.game.hunger||{};ui.hungerKicker.textContent=t("hungerKicker");ui.hungerTitle.textContent=t("hungerTitle");ui.hungerLead.textContent=t(hunger.variant==="bombs"?"hungerBombIntroLead":"hungerLead");ui.hungerTimeLabel.textContent=t("hungerTime");ui.hungerInstruction.textContent=t("hungerInstruction");ui.hungerTime.textContent=String(Math.max(0,Math.ceil((Number(hunger.endsAt||0)-sharedNow())/1000)));renderHungerScoreStrip();initHungerRuntime();}
-    function resolveHungerRound(){const hunger=state.game.hunger;if(!hunger||hunger.awarded)return;const ranking=readyPlayers().map(player=>({playerId:player.playerId,count:Number(hunger.scores?.[player.playerId]||0)})).sort((a,b)=>b.count-a.count);const scores={...(state.game.scores||{})},deltas={};ranking.forEach((entry,index)=>{const gain=Number(HUNGER_PLACEMENT_POINTS[index]??5);scores[entry.playerId]=Number(scores[entry.playerId]||0)+gain;deltas[entry.playerId]=gain;});hunger.rankings=ranking;hunger.awarded=true;state.game.scores=scores;state.game.lastRoundScores=deltas;state.game.lastActivityType="hunger";state.game.phase="scores";state.game.scoresShownAt=Date.now();disposeHunger();}
+    function resolveHungerRound(){const hunger=state.game.hunger;if(!hunger||hunger.awarded)return;const ranking=readyPlayers().map(player=>({playerId:player.playerId,count:Number(hunger.scores?.[player.playerId]||0)})).sort((a,b)=>b.count-a.count);const scores={...(state.game.scores||{})},deltas={};ranking.forEach(entry=>{const gain=Math.round(Number(entry.count||0)*HUNGER_POINT_VALUE);scores[entry.playerId]=Math.max(0,Number(scores[entry.playerId]||0)+gain);deltas[entry.playerId]=gain;});hunger.rankings=ranking;hunger.awarded=true;state.game.scores=scores;state.game.lastRoundScores=deltas;state.game.lastActivityType="hunger";state.game.phase="scores";state.game.scoresShownAt=Date.now();disposeHunger();}
     function renderGeneratingScene(){ const lines = GENERATING_LINES[currentLang] || GENERATING_LINES.es; const line = lines[Math.floor(Date.now() / 3200) % lines.length]; ui.generatingLine.textContent = line; }
     function showScene(name){ Object.entries(ui.scenes).forEach(([key,node]) => node.classList.toggle("on", key === name)); }
     function currentScene(){ if(state.role === "guest" && !state.roomCode) return "join"; if(!state.ready) return "profile"; if(state.game.phase === "lobby") return "lobby"; if(state.game.phase === "setup") return state.role === "host" ? "setup" : "lobby"; if(state.game.phase === "generating") return "generating"; if(state.game.phase === "paused") return "paused"; if(state.game.phase === "countdown") return "countdown"; if(state.game.phase === "question" || state.game.phase === "answer") return "question"; if(state.game.phase === "skill_intro") return "skillIntro"; if(state.game.phase === "skill") return "skill"; if(state.game.phase === "hunger_intro") return "hungerIntro"; if(state.game.phase === "hunger") return "hunger"; if(state.game.phase === "pasabolas_intro") return "pasabolasIntro"; if(state.game.phase === "pasabolas") return "pasabolas"; if(state.game.phase === "scores") return "scores"; if(state.game.phase === "versus_intro") return "versusIntro"; if(state.game.phase === "versus") return "versus"; return "lobby"; }
@@ -5011,13 +5017,20 @@
         if(state.role==="host"&&state.game.pasabolas){
           const game=state.game.pasabolas;
           if(game.finalWinnerId&&!game.awarded){
-            state.game.scores={...(state.game.scores||{}),[game.finalWinnerId]:Number((state.game.scores||{})[game.finalWinnerId]||0)+VERSUS_BONUS_POINTS};
-            state.game.lastRoundScores={[game.finalWinnerId]:VERSUS_BONUS_POINTS};state.game.tieTracker={streak:0,pair:[]};game.awarded=true;await broadcastGame();renderCurrentScene();return;
+            const pasabolasGain=game.source==="scheduled"?VERSUS_PARTY_POINTS:VERSUS_BONUS_POINTS;
+            state.game.scores={...(state.game.scores||{}),[game.finalWinnerId]:Number((state.game.scores||{})[game.finalWinnerId]||0)+pasabolasGain};
+            state.game.lastRoundScores={[game.finalWinnerId]:pasabolasGain};state.game.tieTracker={streak:0,pair:[]};game.awarded=true;await broadcastGame();renderCurrentScene();return;
           }
           if(game.finalWinnerId&&game.awarded&&Date.now()>=Number(game.revealUntil||0)){
             disposePasabolas();
-            if(Array.isArray(state.game.activityPlan)&&state.game.activityPlan.length&&state.game.currentActivity==="trivia"){
-              state.game.questionIndex=Number(state.game.questionIndex||0)+1;state.game.pasabolas=null;advancePlannedActivity();await broadcastGame();renderCurrentScene();return;
+            if(Array.isArray(state.game.activityPlan)&&state.game.activityPlan.length){
+              if(game.source==="scheduled"){
+                state.game.lastActivityType="versus";state.game.pasabolas=null;state.game.phase="scores";state.game.scoresShownAt=Date.now();await broadcastGame();renderCurrentScene();return;
+              }
+              if(game.source==="tie"){
+                if(state.game.currentActivity==="trivia")state.game.questionIndex=Number(state.game.questionIndex||0)+1;
+                state.game.pasabolas=null;advancePlannedActivity();await broadcastGame();renderCurrentScene();return;
+              }
             }
             if((state.game.questionIndex||0)+1<activeQuestionSet().length){
               state.game.questionIndex=Number(state.game.questionIndex||0)+1;state.game.phase="countdown";state.game.question=null;state.game.pasabolas=null;state.game.countdownEndAt=Date.now()+4000;await broadcastGame();renderCurrentScene();return;
