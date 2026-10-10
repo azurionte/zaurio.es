@@ -424,7 +424,7 @@
   
     /* Trivialodon Party */
     .mixPanel{display:grid;gap:14px;padding:18px;border:1px solid rgba(255,255,255,.1);border-radius:24px;background:linear-gradient(135deg,rgba(57,219,255,.06),rgba(255,119,203,.07))}
-    .mixGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mixItem{display:grid;gap:9px;padding:14px;border-radius:20px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08)}.mixItemHead{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:900}.mixPct{color:var(--yellow);font-size:1.05rem}.mixItem input[type="range"]{width:100%;accent-color:#ff77cb}.mixNote{font-size:.9rem;color:var(--muted)}
+    .mixGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.mixItem{display:grid;gap:9px;padding:14px;border-radius:20px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08)}.mixItemHead{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:900}.mixPct{color:var(--yellow);font-size:1.05rem}.mixItem input[type="range"]{width:100%;accent-color:#ff77cb}.mixNote{font-size:.9rem;color:var(--muted)}
     .partyBadge{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:linear-gradient(135deg,rgba(255,216,58,.16),rgba(255,119,203,.16));border:1px solid rgba(255,216,58,.22);font-size:.78rem;font-weight:900}
     .skillIntroCard,.towerCard{width:min(980px,100%);overflow:hidden;position:relative}.skillIntroCard:before,.towerCard:before{content:"";position:absolute;inset:-35%;background:conic-gradient(from 90deg,rgba(57,219,255,.11),rgba(255,119,203,.13),rgba(255,216,58,.09),rgba(136,225,110,.09),rgba(57,219,255,.11));filter:blur(48px);animation:partyAura 10s linear infinite;pointer-events:none}.skillIntroInner,.towerInner{position:relative;z-index:1}
     .skillGlyph{font-size:clamp(4rem,10vw,7rem);filter:drop-shadow(0 14px 24px rgba(0,0,0,.35));animation:skillFloat 2.4s ease-in-out infinite}.skillIntroMeta{display:grid;justify-items:center;gap:14px;text-align:center}.skillIntroCount{font-size:clamp(3.4rem,10vw,7rem);font-weight:1000;line-height:1;color:var(--yellow);text-shadow:0 0 30px rgba(255,216,58,.34)}
@@ -432,7 +432,13 @@
     .towerLiveWrap{display:grid;gap:6px;margin:0 0 8px;min-width:0}.towerLiveWrap[hidden]{display:none}.towerLiveHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px}.towerLiveHead strong{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan)}.towerLiveHead span{font-size:.72rem;color:var(--muted);font-weight:800}.towerLiveGrid{display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;overflow-y:hidden;min-width:0;padding:1px 1px 5px;scrollbar-width:thin;overscroll-behavior-x:contain}.towerLivePlayer{flex:0 0 158px;display:grid;grid-template-columns:27px minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px 9px;border-radius:14px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08);transition:.2s ease}.towerLivePlayer.me{border-color:rgba(255,216,58,.48);box-shadow:0 0 0 1px rgba(255,216,58,.08)}.towerLivePlayer.out{opacity:.52;filter:saturate(.5)}.towerLivePlayer.winner{border-color:rgba(136,225,110,.75);box-shadow:0 0 22px rgba(136,225,110,.15)}.towerLiveAvatar{width:27px;height:27px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:.95rem}.towerLiveAvatar img{width:100%;height:100%;object-fit:cover}.towerLiveMeta{min-width:0;display:grid;gap:1px}.towerLiveName{font-size:.78rem;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.towerLiveStatus{font-size:.62rem;color:var(--muted);font-weight:800}.towerLiveFloors{display:grid;text-align:right;line-height:1}.towerLiveFloors strong{font-size:1.08rem;color:var(--yellow)}.towerLiveFloors span{font-size:.54rem;color:var(--muted);font-weight:900;text-transform:uppercase}.towerCanvasWrap.spectating{box-shadow:inset 0 0 0 2px rgba(255,119,203,.18),inset 0 0 70px rgba(0,0,0,.42),0 20px 50px rgba(0,0,0,.26)}.towerElimBanner{position:absolute;z-index:6;left:50%;top:18px;transform:translateX(-50%);width:min(88%,560px);padding:11px 16px;border-radius:18px;background:rgba(26,4,38,.92);border:1px solid rgba(255,119,203,.45);box-shadow:0 14px 36px rgba(0,0,0,.32);text-align:center;pointer-events:none;backdrop-filter:blur(10px)}.towerElimBanner[hidden]{display:none}.towerElimBanner strong{display:block;color:#fff;font-size:1rem}.towerElimBanner span{display:block;margin-top:2px;color:var(--muted);font-size:.8rem;font-weight:800}
     .towerCanvasWrap{position:relative;width:100%;aspect-ratio:16/9;min-height:300px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:radial-gradient(circle at 50% 15%,rgba(57,219,255,.16),transparent 34%),linear-gradient(180deg,#190329 0%,#09000f 72%,#020003 100%);box-shadow:inset 0 0 60px rgba(0,0,0,.34),0 20px 50px rgba(0,0,0,.26);touch-action:none;user-select:none}
     #towerCanvas{display:block;width:100%;height:100%;touch-action:none;cursor:pointer}.towerOverlay{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.towerMessage{padding:12px 18px;border-radius:999px;background:rgba(18,3,31,.86);border:1px solid rgba(255,255,255,.13);font-weight:1000;opacity:0;transform:translateY(8px) scale(.96);transition:.18s ease}.towerMessage.on{opacity:1;transform:none}.towerInstruction{text-align:center;color:var(--muted);font-weight:800;margin-top:12px}
-    @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
+    
+    .hungerIntroCard,.hungerCard{width:min(1040px,100%);overflow:hidden;position:relative}.hungerIntroCard:before,.hungerCard:before{content:"";position:absolute;inset:-30%;background:conic-gradient(from 90deg,rgba(255,136,48,.15),rgba(136,225,110,.12),rgba(57,219,255,.1),rgba(255,119,203,.1),rgba(255,136,48,.15));filter:blur(50px);animation:partyAura 11s linear infinite;pointer-events:none}.hungerInner{position:relative;z-index:1}.hungerIntroMeta{display:grid;justify-items:center;gap:13px;text-align:center}.hungerGlyph{font-size:clamp(4.5rem,11vw,8rem);filter:drop-shadow(0 16px 26px rgba(0,0,0,.32));animation:skillFloat 2.2s ease-in-out infinite}.hungerIntroCount{font-size:clamp(3.5rem,10vw,7rem);font-weight:1000;line-height:1;color:#ff9f45;text-shadow:0 0 28px rgba(255,159,69,.32)}
+    .hungerTop{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;margin-bottom:10px}.hungerTimer{display:grid;place-items:center;min-width:72px;padding:10px 14px;border-radius:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}.hungerTimer span{font-size:.62rem;color:var(--muted);font-weight:900;text-transform:uppercase}.hungerTimer strong{font-size:1.65rem;color:#fff;line-height:1.05}
+    .hungerScoreStrip{display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;padding:1px 1px 7px;margin-bottom:8px;scrollbar-width:thin}.hungerScoreChip{flex:0 0 144px;display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px 9px;border-radius:15px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08)}.hungerScoreChip.me{border-color:rgba(255,216,58,.5)}.hungerScoreAvatar{width:28px;height:28px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08)}.hungerScoreAvatar img{width:100%;height:100%;object-fit:cover}.hungerScoreName{font-size:.76rem;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hungerScoreValue{display:grid;text-align:right;line-height:1}.hungerScoreValue strong{font-size:1.16rem;color:#ff9f45}.hungerScoreValue span{font-size:.52rem;color:var(--muted);font-weight:900;text-transform:uppercase}
+    .hungerArena{position:relative;width:100%;aspect-ratio:16/9;min-height:340px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:radial-gradient(circle at 50% 35%,rgba(123,238,255,.08),transparent 35%),linear-gradient(180deg,#271b2b,#100b14);box-shadow:inset 0 0 70px rgba(0,0,0,.3),0 20px 50px rgba(0,0,0,.25);touch-action:none;user-select:none}.hungerArena canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}.hungerArena.dragging canvas{cursor:grabbing}.hungerInstruction{text-align:center;color:var(--muted);font-weight:800;margin-top:10px}.hungerEatFlash{position:absolute;z-index:5;left:50%;top:18px;transform:translateX(-50%) translateY(-5px);padding:9px 14px;border-radius:999px;background:rgba(22,6,28,.88);border:1px solid rgba(255,159,69,.48);font-weight:1000;opacity:0;transition:.18s ease;pointer-events:none}.hungerEatFlash.on{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media(max-width:720px){.hungerArena{min-height:420px;aspect-ratio:10/12}.hungerScoreChip{flex-basis:128px}.hungerTop{grid-template-columns:1fr auto}}
+  @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
     @media(max-width:720px){.mixGrid{grid-template-columns:1fr}.towerHud{grid-template-columns:repeat(3,1fr)}.towerCanvasWrap{min-height:360px;aspect-ratio:10/12}}
   </style>
 </head>
@@ -638,11 +644,15 @@
                     <input id="mixTriviaInput" type="range" min="0" max="100" step="5" value="70">
                   </label>
                   <label class="mixItem">
-                    <span class="mixItemHead"><span id="mixTowerLabel">Torre Zaurio</span><strong class="mixPct" id="mixTowerPct">20%</strong></span>
-                    <input id="mixTowerInput" type="range" min="0" max="100" step="5" value="20">
+                    <span class="mixItemHead"><span id="mixTowerLabel">Torre Zaurio</span><strong class="mixPct" id="mixTowerPct">15%</strong></span>
+                    <input id="mixTowerInput" type="range" min="0" max="100" step="5" value="15">
                   </label>
                   <label class="mixItem">
-                    <span class="mixItemHead"><span id="mixVersusLabel">Versus</span><strong class="mixPct" id="mixVersusPct">10%</strong></span>
+                    <span class="mixItemHead"><span id="mixHungerLabel">Hambre Voraz</span><strong class="mixPct" id="mixHungerPct">15%</strong></span>
+                    <input id="mixHungerInput" type="range" min="0" max="100" step="5" value="15">
+                  </label>
+                  <label class="mixItem">
+                    <span class="mixItemHead"><span id="mixVersusLabel">Versus</span><strong class="mixPct" id="mixVersusPct">5%</strong></span>
                     <input id="mixVersusInput" type="range" min="0" max="100" step="5" value="10">
                   </label>
                 </div>
@@ -750,7 +760,41 @@
         </article>
       </section>
 
-  <section class="scene sceneCenter sceneWrap" id="scoresScene">
+  
+      <section class="scene sceneCenter sceneWrap" id="hungerIntroScene">
+        <article class="panel hungerIntroCard">
+          <div class="hungerInner hungerIntroMeta">
+            <span class="kicker" id="hungerIntroKicker">Competitivo</span>
+            <div class="hungerGlyph">🥕🐇</div>
+            <h1 class="title" id="hungerIntroTitle">Hambre Voraz</h1>
+            <p id="hungerIntroLead">Patina, roba zanahorias y no dejes ni las hojas.</p>
+            <div class="hungerIntroCount" id="hungerIntroCount">4</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="scene sceneCenter sceneWrap" id="hungerScene">
+        <article class="panel hungerCard">
+          <div class="hungerInner">
+            <div class="hungerTop">
+              <div class="sceneStack" style="gap:5px">
+                <span class="kicker" id="hungerKicker">Competitivo</span>
+                <h2 class="subtitle" id="hungerTitle">Hambre Voraz</h2>
+                <p id="hungerLead">Arrastra a tu conejo por el hielo y llévate las zanahorias antes que los demás.</p>
+              </div>
+              <div class="hungerTimer"><span id="hungerTimeLabel">Tiempo</span><strong id="hungerTime">30</strong></div>
+            </div>
+            <div class="hungerScoreStrip" id="hungerScoreStrip"></div>
+            <div class="hungerArena" id="hungerArena">
+              <canvas id="hungerCanvas" width="960" height="540"></canvas>
+              <div class="hungerEatFlash" id="hungerEatFlash">+1 🥕</div>
+            </div>
+            <p class="hungerInstruction" id="hungerInstruction">Mantén pulsado y arrastra para patinar.</p>
+          </div>
+        </article>
+      </section>
+
+<section class="scene sceneCenter sceneWrap" id="scoresScene">
         <article class="panel scoreBoard" style="width:min(980px,100%)">
           <div class="scoreHero">
             <span class="kicker" id="scoresKicker">Marcador</span>
@@ -911,6 +955,7 @@
   </div>
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r124/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.124.0/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -1013,6 +1058,7 @@
         mixLead:"La trivia sigue llevando el volante; decide cuanto espacio dejamos a las pruebas.",
         mixTrivia:"Preguntas",
         mixTower:"Torre Zaurio",
+        mixHunger:"Hambre Voraz",
         mixVersus:"Versus",
         mixTriviaNote:"En Party, Trivialodon abre con trivia y evita encadenar demasiadas pruebas.",
         mixMinigamesNote:"Modo laboratorio: aqui si puedes jugar sin una sola pregunta.",
@@ -1044,6 +1090,18 @@
         towerLastStanding:"Último en pie",
         towerLastStandingResult:"{name} gana por ser el último dino en pie.",
         towerTimeResult:"Se acabó el tiempo: gana la mejor torre.",
+        hungerKicker:"Competitivo",
+        hungerTitle:"Hambre Voraz",
+        hungerIntroLead:"Patina, roba zanahorias y no dejes ni las hojas.",
+        hungerLead:"Arrastra a tu conejo por el hielo y llévate las zanahorias antes que los demás.",
+        hungerInstruction:"Mantén pulsado y arrastra para patinar.",
+        hungerTime:"Tiempo",
+        hungerCarrots:"Zanahorias",
+        hungerEat:"+1 zanahoria!",
+        hungerResults:"Resultados de Hambre Voraz",
+        hungerResultLead:"Treinta segundos de caos y una sola misión: comer más.",
+        hungerPlayerDetail:"{count} zanahorias",
+        hungerWinner:"{name} devoró {count} zanahorias y gana Hambre Voraz.",
         versusPartyLead:"Cambio de ritmo: duelo directo entre dos dinos.",
         versusPartyCopy:"Piedra, papel o tijera. El resto mira, juzga y mete presion.",
         versusPartyResults:"Resultado del Versus",
@@ -1251,6 +1309,7 @@
         mixLead:"Trivia still drives the show; choose how much room the challenges get.",
         mixTrivia:"Questions",
         mixTower:"Zaurio Tower",
+        mixHunger:"Feeding Frenzy",
         mixVersus:"Versus",
         mixTriviaNote:"In Party mode, Trivialodon opens with trivia and avoids stacking too many challenges.",
         mixMinigamesNote:"Lab mode: this is the one place where you can play with zero questions.",
@@ -1282,6 +1341,18 @@
         towerLastStanding:"Last one standing",
         towerLastStandingResult:"{name} wins as the last dino standing.",
         towerTimeResult:"Time's up: the best tower wins.",
+        hungerKicker:"Competitive",
+        hungerTitle:"Feeding Frenzy",
+        hungerIntroLead:"Skate, steal carrots and leave nothing behind.",
+        hungerLead:"Drag your rabbit across the ice and grab the carrots before everyone else.",
+        hungerInstruction:"Hold and drag to skate.",
+        hungerTime:"Time",
+        hungerCarrots:"Carrots",
+        hungerEat:"+1 carrot!",
+        hungerResults:"Feeding Frenzy results",
+        hungerResultLead:"Thirty seconds of chaos with one mission: eat more.",
+        hungerPlayerDetail:"{count} carrots",
+        hungerWinner:"{name} ate {count} carrots and wins Feeding Frenzy.",
         versusPartyLead:"Rhythm break: a direct duel between two dinos.",
         versusPartyCopy:"Rock, paper, scissors. Everyone else gets to watch and apply pressure.",
         versusPartyResults:"Versus result",
@@ -1868,6 +1939,13 @@
     const VERSUS_ROUND_SECONDS = 5;
     const SKILL_INTRO_SECONDS = 4;
     const TOWER_ROUND_SECONDS = 30;
+    const HUNGER_INTRO_SECONDS = 4;
+    const HUNGER_ROUND_SECONDS = 30;
+    const HUNGER_ARENA_RADIUS = 5.7;
+    const HUNGER_MOVE_INTERVAL = 80;
+    const HUNGER_PLACEMENT_POINTS = [120,90,70,50,30,20,15,10,8,6];
+    const HUNGER_COLORS = [0x39dbff,0xff77cb,0xffd83a,0x88e16e,0xb877ff,0xff7a4d,0x5ee0bd,0x7e9cff,0xff5fa2,0xc9ef5d];
+    const HUNGER_MODEL_URL = "https://assets.codepen.io/264161/rabbit6.glb";
     const TOWER_PLACEMENT_POINTS = [120,90,70,50,30,20];
     const CAST_APP_ID = "C5432B88";
     const CAST_NAMESPACE = "urn:x-cast:zaurio.trivialodon";
@@ -1875,17 +1953,18 @@
     const ui = {
       introScene:$("introScene"), shell:$("shell"), btnHost:$("btnHost"), btnGuest:$("btnGuest"), btnContinue:$("btnContinue"), menuWrap:$("menuWrap"), menuBtn:$("menuBtn"), menuHomeLinkLabel:$("menuHomeLinkLabel"),
       identity:$("identity"), scoreChipValue:$("scoreChipValue"), identityPointsLabel:$("identityPointsLabel"), soundWrap:$("soundWrap"), soundPanel:$("soundPanel"), soundChip:$("soundChip"), soundChipGlyph:$("soundChipGlyph"), soundChipLabel:$("soundChipLabel"), btnToggleMute:$("btnToggleMute"), soundMini:$("soundMini"), soundVolumeInput:$("soundVolumeInput"), soundVolumeLabel:$("soundVolumeLabel"), settingsCast:$("settingsCast"), btnEndGame:$("btnEndGame"), btnExitGame:$("btnExitGame"), identityAvatar:$("identityAvatar"), identityName:$("identityName"), identityRole:$("identityRole"),
-      scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), skillIntro:$("skillIntroScene"), skill:$("skillScene"), scores:$("scoresScene"), versusIntro:$("versusIntroScene"), versus:$("versusScene")},
+      scenes:{join:$("joinScene"), profile:$("profileScene"), lobby:$("lobbyScene"), setup:$("setupScene"), generating:$("generatingScene"), paused:$("pausedScene"), countdown:$("countdownScene"), question:$("questionScene"), answer:$("answerScene"), skillIntro:$("skillIntroScene"), skill:$("skillScene"), hungerIntro:$("hungerIntroScene"), hunger:$("hungerScene"), scores:$("scoresScene"), versusIntro:$("versusIntroScene"), versus:$("versusScene")},
       joinCodeOnlyInput:$("joinCodeOnlyInput"), joinStatus:$("joinStatus"), btnJoinBack:$("btnJoinBack"), btnJoinNext:$("btnJoinNext"),
       profileLayout:$("profileLayout"), profileSideCard:$("profileSideCard"), lobbyLayout:$("lobbyLayout"), setupLayout:$("setupLayout"), profileKicker:$("profileKicker"), profileTitle:$("profileTitle"), roomBadge:$("roomBadge"), joinCodeField:$("joinCodeField"), joinCodeInput:$("joinCodeInput"), joinCodeLabel:$("joinCodeLabel"),
       nameInput:$("nameInput"), avatarViewport:$("avatarViewport"), avatarRail:$("avatarRail"), avatarLegend:$("avatarLegend"), avatarEditorKicker:$("avatarEditorKicker"), btnAvatarPrev:$("btnAvatarPrev"), btnAvatarNext:$("btnAvatarNext"), profileStatus:$("profileStatus"), btnBack:$("btnBack"), btnReady:$("btnReady"),
       joinKicker:$("joinKicker"), joinTitle:$("joinTitle"), joinLead:$("joinLead"), joinCodeOnlyLabel:$("joinCodeOnlyLabel"), profilePlayers:$("profilePlayers"), profileSideKicker:$("profileSideKicker"), profileSideTitle:$("profileSideTitle"), profileSideText:$("profileSideText"), lobbySide:$("lobbySide"), lobbyKicker:$("lobbyKicker"), lobbyTitle:$("lobbyTitle"),
       lobbyDesc:$("lobbyDesc"), lobbyPlayers:$("lobbyPlayers"), modesLead:$("modesLead"), btnToSetup:$("btnToSetup"), setupSide:$("setupSide"), setupKicker:$("setupKicker"), setupTitle:$("setupTitle"), setupDesc:$("setupDesc"), modesKicker:$("modesKicker"), durationKicker:$("durationKicker"), durationLead:$("durationLead"), generatingTitle:$("generatingTitle"), generatingKicker:$("generatingKicker"), hostVoteWrap:$("hostVoteWrap"),
       hostVoteCountdown:$("hostVoteCountdown"), voteToggle:$("voteToggle"), modeGrid:$("modeGrid"), durationGrid:$("durationGrid"), setupActions:$("setupActions"),
-      mixSection:$("mixSection"), mixKicker:$("mixKicker"), mixLead:$("mixLead"), mixTriviaLabel:$("mixTriviaLabel"), mixTowerLabel:$("mixTowerLabel"), mixVersusLabel:$("mixVersusLabel"), mixTriviaInput:$("mixTriviaInput"), mixTowerInput:$("mixTowerInput"), mixVersusInput:$("mixVersusInput"), mixTriviaPct:$("mixTriviaPct"), mixTowerPct:$("mixTowerPct"), mixVersusPct:$("mixVersusPct"), mixNote:$("mixNote"),
+      mixSection:$("mixSection"), mixKicker:$("mixKicker"), mixLead:$("mixLead"), mixTriviaLabel:$("mixTriviaLabel"), mixTowerLabel:$("mixTowerLabel"), mixHungerLabel:$("mixHungerLabel"), mixVersusLabel:$("mixVersusLabel"), mixTriviaInput:$("mixTriviaInput"), mixTowerInput:$("mixTowerInput"), mixHungerInput:$("mixHungerInput"), mixVersusInput:$("mixVersusInput"), mixTriviaPct:$("mixTriviaPct"), mixTowerPct:$("mixTowerPct"), mixHungerPct:$("mixHungerPct"), mixVersusPct:$("mixVersusPct"), mixNote:$("mixNote"),
       generatingLine:$("generatingLine"), generatingKicker:$("generatingKicker"), pausedTitle:$("pausedTitle"), pausedKicker:$("pausedKicker"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownKicker:$("countdownKicker"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionKicker:$("questionKicker"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerKicker:$("answerKicker"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
       skillIntroKicker:$("skillIntroKicker"), skillIntroTitle:$("skillIntroTitle"), skillIntroLead:$("skillIntroLead"), skillIntroCount:$("skillIntroCount"), skillKicker:$("skillKicker"), skillTitle:$("skillTitle"), skillPartyBadge:$("skillPartyBadge"), towerCanvas:$("towerCanvas"), towerCanvasWrap:$("towerCanvasWrap"), towerMessage:$("towerMessage"), towerInstruction:$("towerInstruction"), towerLayers:$("towerLayers"), towerPerfects:$("towerPerfects"), towerTime:$("towerTime"), towerLayersLabel:$("towerLayersLabel"), towerPerfectsLabel:$("towerPerfectsLabel"), towerTimeLabel:$("towerTimeLabel"), towerLiveWrap:$("towerLiveWrap"), towerLiveTitle:$("towerLiveTitle"), towerLiveRule:$("towerLiveRule"), towerLiveBoard:$("towerLiveBoard"), towerElimBanner:$("towerElimBanner"), towerElimTitle:$("towerElimTitle"), towerElimCopy:$("towerElimCopy"),
+      hungerIntroKicker:$("hungerIntroKicker"), hungerIntroTitle:$("hungerIntroTitle"), hungerIntroLead:$("hungerIntroLead"), hungerIntroCount:$("hungerIntroCount"), hungerKicker:$("hungerKicker"), hungerTitle:$("hungerTitle"), hungerLead:$("hungerLead"), hungerTimeLabel:$("hungerTimeLabel"), hungerTime:$("hungerTime"), hungerScoreStrip:$("hungerScoreStrip"), hungerArena:$("hungerArena"), hungerCanvas:$("hungerCanvas"), hungerEatFlash:$("hungerEatFlash"), hungerInstruction:$("hungerInstruction"),
       scoresKicker:$("scoresKicker"), scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroKicker:$("versusIntroKicker"), versusIntroTitle:$("versusIntroTitle"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusKicker:$("versusKicker"), versusTitle:$("versusTitle"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalKicker:$("scoreModalKicker"), scoreModalTitle:$("scoreModalTitle"), scoreModalRows:$("scoreModalRows"),
       btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), resumeKicker:$("resumeKicker"), resumeTitle:$("resumeTitle"), resumeText:$("resumeText"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
       durationModal:$("durationModal"), durationModalKicker:$("durationModalKicker"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
@@ -1900,7 +1979,7 @@
     const state = {
       playerId:crypto.randomUUID(), role:"", roomCode:"", name:"", ready:false, waitingLine:"", channel:null, players:[], avatarIndex:0, localAnswer:null,
       avatar:{kind:"preset",src:AVATAR_OPTIONS[0].src,rendered:AVATAR_OPTIONS[0].src,avatarId:AVATAR_OPTIONS[0].id},
-      game:{phase:"lobby",selectedMode:"",selectedDuration:"",selectedDurationValue:15,question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,skill:null,activityMix:{trivia:70,tower:20,versus:10},activityPlan:[],activityIndex:0,currentActivity:"",lastActivityType:"",hostNotice:"",lang:currentLang,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}}
+      game:{phase:"lobby",selectedMode:"",selectedDuration:"",selectedDurationValue:15,question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,skill:null,hunger:null,activityMix:{trivia:65,tower:15,hunger:15,versus:5},activityPlan:[],activityIndex:0,currentActivity:"",lastActivityType:"",hostNotice:"",lang:currentLang,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}}
     };
     const audioState = {
       muted: localStorage.getItem(SOUND_KEY) === "1",
@@ -2024,7 +2103,7 @@
         : `Dato flash: la respuesta correcta era ${answer}. Ahora ya no se te escapa en la siguiente ronda.`);
     };
     const activeQuestionSet = () => Array.isArray(state.game.questionSet) && state.game.questionSet.length ? state.game.questionSet : buildMixedQuestionSet(CLASSIC_TOTAL_QUESTIONS, QUESTION_BANK);
-    const gameDefaults = () => ({phase:"lobby",selectedMode:"",selectedDuration:"",selectedDurationValue:15,question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,skill:null,activityMix:{trivia:70,tower:20,versus:10},activityPlan:[],activityIndex:0,currentActivity:"",lastActivityType:"",hostNotice:"",lang:currentLang,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}});
+    const gameDefaults = () => ({phase:"lobby",selectedMode:"",selectedDuration:"",selectedDurationValue:15,question:null,questionIndex:0,scores:{},questionSet:[],questionLeadSeconds:6,answerSeconds:15,lastRoundScores:{},tieTracker:{streak:0,pair:[]},versus:null,skill:null,hunger:null,activityMix:{trivia:65,tower:15,hunger:15,versus:5},activityPlan:[],activityIndex:0,currentActivity:"",lastActivityType:"",hostNotice:"",lang:currentLang,customConfig:{theme:"",tone:"divertido",difficulty:"media",customPrompt:""}});
     function serializeQuestionForTranslation(question){
       if(question?.type === "speed"){
         return {
@@ -2076,33 +2155,27 @@
     }
     const roundSeconds = () => Number(state.game.questionLeadSeconds || 6) + Number(state.game.answerSeconds || 15) + 10;
     const modeMixPreset = mode => {
-      if(mode === "classic") return {trivia:100,tower:0,versus:0};
-      if(mode === "minigames") return {trivia:0,tower:65,versus:35};
-      if(mode === "custom") return {trivia:60,tower:25,versus:15};
-      return {trivia:70,tower:20,versus:10};
+      if(mode === "classic") return {trivia:100,tower:0,hunger:0,versus:0};
+      if(mode === "minigames") return {trivia:0,tower:35,hunger:45,versus:20};
+      if(mode === "custom") return {trivia:55,tower:15,hunger:20,versus:10};
+      return {trivia:65,tower:15,hunger:15,versus:5};
     };
     const normalizeActivityMix = (mix, mode = state.game.selectedMode) => {
-      const raw = {
-        trivia:Math.max(0,Number(mix?.trivia || 0)),
-        tower:Math.max(0,Number(mix?.tower || 0)),
-        versus:Math.max(0,Number(mix?.versus || 0))
-      };
-      if(mode === "classic") return {trivia:100,tower:0,versus:0};
+      const keys = ["trivia","tower","hunger","versus"];
+      const raw = {};
+      keys.forEach(key => raw[key] = Math.max(0,Number(mix?.[key] || 0)));
+      if(mode === "classic") return modeMixPreset("classic");
       if(mode === "minigames") raw.trivia = 0;
-      let total = raw.trivia + raw.tower + raw.versus;
+      const allowed = keys.filter(key => !(mode === "minigames" && key === "trivia"));
+      const total = allowed.reduce((sum,key)=>sum+raw[key],0);
       if(total <= 0) return modeMixPreset(mode);
-      const normalized = {
-        trivia:Math.round((raw.trivia / total) * 100),
-        tower:Math.round((raw.tower / total) * 100),
-        versus:0
-      };
-      normalized.versus = Math.max(0,100 - normalized.trivia - normalized.tower);
-      if(mode === "minigames"){
-        normalized.trivia = 0;
-        const miniTotal = normalized.tower + normalized.versus || 1;
-        normalized.tower = Math.round((normalized.tower / miniTotal) * 100);
-        normalized.versus = 100 - normalized.tower;
-      }
+      const normalized = {trivia:0,tower:0,hunger:0,versus:0};
+      let used = 0;
+      allowed.forEach((key,index)=>{
+        if(index === allowed.length-1){ normalized[key] = Math.max(0,100-used); return; }
+        normalized[key] = Math.round((raw[key]/total)*100);
+        used += normalized[key];
+      });
       return normalized;
     };
     const effectiveActivityMix = () => normalizeActivityMix(state.game.activityMix || modeMixPreset(state.game.selectedMode));
@@ -2121,38 +2194,42 @@
     function buildActivityPlan(total, mix){
       total = Math.max(1,Number(total || 1));
       mix = normalizeActivityMix(mix);
-      let trivia = Math.round(total * mix.trivia / 100);
-      let tower = Math.round(total * mix.tower / 100);
-      let versus = Math.max(0,total - trivia - tower);
-      if(readyPlayers().length < 2){ tower += versus; versus = 0; }
-      if(mix.trivia > 0 && total >= 2){
-        trivia = Math.max(2,trivia);
-        while(trivia + tower + versus > total){
-          if(tower >= versus && tower > 0) tower--; else if(versus > 0) versus--; else trivia--;
-        }
+      const keys = ["trivia","tower","hunger","versus"];
+      const counts = {};
+      let used = 0;
+      keys.forEach((key,index)=>{
+        if(index === keys.length-1){ counts[key] = Math.max(0,total-used); return; }
+        counts[key] = Math.max(0,Math.round(total * Number(mix[key]||0)/100));
+        used += counts[key];
+      });
+      while(keys.reduce((sum,key)=>sum+counts[key],0) > total){
+        const candidates = keys.filter(key=>counts[key]>0).sort((a,b)=>counts[b]-counts[a]);
+        const key = candidates.find(key=>key!=="trivia" || counts.trivia>2) || candidates[0];
+        counts[key]--;
       }
-      while(trivia + tower + versus < total){
-        if(mix.trivia >= mix.tower && mix.trivia >= mix.versus) trivia++;
-        else if(mix.tower >= mix.versus) tower++;
-        else versus++;
+      while(keys.reduce((sum,key)=>sum+counts[key],0) < total){
+        const key = [...keys].sort((a,b)=>Number(mix[b]||0)-Number(mix[a]||0))[0];
+        counts[key]++;
       }
-      let bag = [
-        ...Array.from({length:trivia},()=>({type:"trivia"})),
-        ...Array.from({length:tower},()=>({type:"tower"})),
-        ...Array.from({length:versus},()=>({type:"versus"}))
-      ];
+      if(readyPlayers().length < 2 && counts.versus > 0){ counts.hunger += counts.versus; counts.versus = 0; }
+      if(mix.trivia > 0 && total >= 2 && counts.trivia < 2){
+        const donor = ["hunger","tower","versus"].sort((a,b)=>counts[b]-counts[a]).find(key=>counts[key]>0);
+        if(donor){ counts[donor]--; counts.trivia++; }
+      }
+      let bag = [];
+      keys.forEach(key=>{ for(let i=0;i<counts[key];i++) bag.push({type:key}); });
       bag = shuffle(bag);
-      if(trivia > 0){
-        const firstTrivia = bag.findIndex(item => item.type === "trivia");
+      if(counts.trivia > 0){
+        const firstTrivia = bag.findIndex(item=>item.type==="trivia");
         if(firstTrivia > 0) [bag[0],bag[firstTrivia]] = [bag[firstTrivia],bag[0]];
-        if(trivia > 1){
+        if(counts.trivia > 1){
           const lastTrivia = bag.map(item=>item.type).lastIndexOf("trivia");
-          if(lastTrivia >= 0 && lastTrivia !== bag.length - 1) [bag[bag.length - 1],bag[lastTrivia]] = [bag[lastTrivia],bag[bag.length - 1]];
+          if(lastTrivia >= 0 && lastTrivia !== bag.length-1) [bag[bag.length-1],bag[lastTrivia]] = [bag[lastTrivia],bag[bag.length-1]];
         }
         for(let i=1;i<bag.length-1;i++){
           if(bag[i-1].type !== "trivia" && bag[i].type !== "trivia"){
-            const later = bag.findIndex((item,index)=>index>i && item.type === "trivia");
-            if(later > i) [bag[i],bag[later]] = [bag[later],bag[i]];
+            const later = bag.findIndex((item,index)=>index>i && item.type==="trivia");
+            if(later>i) [bag[i],bag[later]] = [bag[later],bag[i]];
           }
         }
       }
@@ -2173,6 +2250,38 @@
       });
       return {id,seed:Date.now(),introEndsAt:Date.now()+(SKILL_INTRO_SECONDS*1000),endsAt:0,results:{},live,rankings:[],winnerId:"",winReason:"",awarded:false};
     }
+    function hungerRandomPoint(existing = []){
+      for(let attempt=0;attempt<30;attempt++){
+        const angle = Math.random()*Math.PI*2;
+        const radius = Math.sqrt(Math.random())*(HUNGER_ARENA_RADIUS-1);
+        const point = {x:Math.cos(angle)*radius,z:Math.sin(angle)*radius};
+        if(existing.every(item=>Math.hypot(Number(item.x||0)-point.x,Number(item.z||0)-point.z)>1.25)) return point;
+      }
+      return {x:(Math.random()-.5)*8,z:(Math.random()-.5)*8};
+    }
+    function hungerSpawnCarrot(hunger){
+      const point = hungerRandomPoint([...(hunger.carrots||[]),...Object.values(hunger.players||{})]);
+      hunger.nextCarrotId = Number(hunger.nextCarrotId||0)+1;
+      return {id:`c${hunger.nextCarrotId}`,x:point.x,z:point.z,spin:Math.random()*Math.PI*2};
+    }
+    function hungerRefillCarrots(hunger,targetCount = null){
+      if(!hunger) return;
+      const target = targetCount == null ? 3+Math.floor(Math.random()*5) : Math.max(3,Math.min(7,Number(targetCount||3)));
+      hunger.carrots = Array.isArray(hunger.carrots) ? hunger.carrots : [];
+      while(hunger.carrots.length < target) hunger.carrots.push(hungerSpawnCarrot(hunger));
+      if(hunger.carrots.length > 7) hunger.carrots = hunger.carrots.slice(0,7);
+    }
+    function createHungerState(){
+      const players = {}; const scores = {}; const ready = readyPlayers();
+      ready.forEach((player,index)=>{
+        const angle = (Math.PI*2*index)/Math.max(1,ready.length);
+        players[player.playerId] = {x:Math.cos(angle)*2.2,z:Math.sin(angle)*2.2,color:HUNGER_COLORS[index%HUNGER_COLORS.length],updatedAt:Date.now()};
+        scores[player.playerId] = 0;
+      });
+      const hunger = {seed:Date.now(),introEndsAt:Date.now()+HUNGER_INTRO_SECONDS*1000,endsAt:0,players,scores,carrots:[],nextCarrotId:0,rankings:[],awarded:false};
+      hungerRefillCarrots(hunger,5);
+      return hunger;
+    }
     function finishPlannedGame(){
       state.game.finished = true;
       state.game.finishedAt = Date.now();
@@ -2187,11 +2296,17 @@
       state.game.lastRoundScores = {};
       state.game.versus = null;
       state.game.skill = null;
+      state.game.hunger = null;
       if(!activity){ finishPlannedGame(); return; }
       state.game.currentActivity = activity.type;
       if(activity.type === "tower"){
         state.game.skill = createSkillState("tower");
         state.game.phase = "skill_intro";
+        return;
+      }
+      if(activity.type === "hunger"){
+        state.game.hunger = createHungerState();
+        state.game.phase = "hunger_intro";
         return;
       }
       if(activity.type === "versus"){
@@ -2316,6 +2431,7 @@
       state.game.tieTracker = next.tieTracker;
       state.game.versus = null;
       state.game.skill = null;
+      state.game.hunger = null;
       state.game.activityPlan = [];
       state.game.activityIndex = 0;
       state.game.currentActivity = "";
@@ -2573,6 +2689,8 @@
         scene === "question" ||
         scene === "skillIntro" ||
         scene === "skill" ||
+        scene === "hungerIntro" ||
+        scene === "hunger" ||
         (scene === "countdown" && state.game.countdownEndAt && (state.game.countdownEndAt - Date.now()) <= 3200);
       const target = useAnswering ? audioState.decks.answering : audioState.decks.waiting;
       const other = useAnswering ? audioState.decks.waiting : audioState.decks.answering;
@@ -2997,7 +3115,7 @@
       const current = effectiveActivityMix();
       if(mode === "minigames" && key === "trivia") return;
       const value = Math.max(0,Math.min(100,Number(rawValue || 0)));
-      const keys = ["trivia","tower","versus"];
+      const keys = ["trivia","tower","hunger","versus"];
       const others = keys.filter(item => item !== key && !(mode === "minigames" && item === "trivia"));
       const remaining = Math.max(0,100-value);
       const otherTotal = others.reduce((sum,item)=>sum+Number(current[item]||0),0);
@@ -3028,16 +3146,19 @@
       ui.mixLead.textContent = t("mixLead");
       ui.mixTriviaLabel.textContent = t("mixTrivia");
       ui.mixTowerLabel.textContent = t("mixTower");
+      ui.mixHungerLabel.textContent = t("mixHunger");
       ui.mixVersusLabel.textContent = t("mixVersus");
       ui.mixTriviaInput.value = String(mix.trivia);
       ui.mixTowerInput.value = String(mix.tower);
+      ui.mixHungerInput.value = String(mix.hunger);
       ui.mixVersusInput.value = String(mix.versus);
       ui.mixTriviaPct.textContent = mix.trivia + "%";
       ui.mixTowerPct.textContent = mix.tower + "%";
+      ui.mixHungerPct.textContent = mix.hunger + "%";
       ui.mixVersusPct.textContent = mix.versus + "%";
       ui.mixTriviaInput.disabled = mode === "minigames";
       ui.mixNote.textContent = mode === "minigames" ? t("mixMinigamesNote") : t("mixTriviaNote");
-      [["trivia",ui.mixTriviaInput],["tower",ui.mixTowerInput],["versus",ui.mixVersusInput]].forEach(([key,input])=>{
+      [["trivia",ui.mixTriviaInput],["tower",ui.mixTowerInput],["hunger",ui.mixHungerInput],["versus",ui.mixVersusInput]].forEach(([key,input])=>{
         input.oninput = async ev => {
           setActivityMixValue(key,ev.target.value);
           renderMixControls();
@@ -3187,11 +3308,13 @@
       const question = state.game.question || null;
       const isSpeedRound = question?.type === "speed";
       const isTowerRound = state.game.lastActivityType === "skill" && state.game.skill?.id === "tower";
+      const isHungerRound = state.game.lastActivityType === "hunger";
       const isPartyVersusRound = state.game.lastActivityType === "versus";
       const towerDetailFor = playerId => {
         const result = state.game.skill?.results?.[playerId] || {};
         return `<span class="playerSub">${t("towerPlayerDetail",{layers:Number(result.layers||0),perfects:Number(result.perfects||0)})}</span>`;
       };
+      const hungerDetailFor = playerId => `<span class="playerSub">${t("hungerPlayerDetail",{count:Number(state.game.hunger?.scores?.[playerId]||0)})}</span>`;
       const speedDetailFor = playerId => {
         if(!isSpeedRound) return "";
         const response = question.responses?.[playerId];
@@ -3204,7 +3327,7 @@
       };
       const rows = entries.map((entry, index) => {
         const gain = Number((state.game.lastRoundScores || {})[entry.playerId] || 0);
-        const detail = isSpeedRound ? speedDetailFor(entry.playerId) : (isTowerRound ? towerDetailFor(entry.playerId) : `<span class="playerSub">${index === 0 ? t("currentLeader") : t("inRace")}</span>`);
+        const detail = isSpeedRound ? speedDetailFor(entry.playerId) : (isTowerRound ? towerDetailFor(entry.playerId) : (isHungerRound ? hungerDetailFor(entry.playerId) : `<span class="playerSub">${index === 0 ? t("currentLeader") : t("inRace")}</span>`));
         return `<article class="scoreRow"><div class="rankAvatar">${entry.avatarSrc ? `<img src="${entry.avatarSrc}" alt="">` : "🦖"}</div><div class="sceneStack" style="gap:4px"><strong>#${index + 1} ${esc(entry.name)}</strong>${detail}</div><div class="scoreValueWrap">${gain > 0 ? `<span class="scoreDelta">+${gain}</span><span class="scoreGlitter">✦</span>` : ""}<strong>${entry.score}</strong></div></article>`;
       }).join("") || `<p>${t("noScoresYet")}</p>`;
       if(finished){
@@ -3224,6 +3347,11 @@
             : (state.game.skill?.winReason === "solo_out"
               ? t("towerSoloOutResult",{layers:Number(myTowerResult.layers||0)})
               : t("towerResultLead")));
+      } else if(isHungerRound){
+        const winner = state.game.hunger?.rankings?.[0];
+        const winnerPlayer = winner ? findPlayer(winner.playerId) : null;
+        ui.scoresTitle.textContent = t("hungerResults");
+        ui.scoresLead.textContent = winner ? t("hungerWinner",{name:winnerPlayer?.name||t("player"),count:Number(winner.count||0)}) : t("hungerResultLead");
       } else if(isPartyVersusRound){
         ui.scoresTitle.textContent = t("versusPartyResults");
         ui.scoresLead.textContent = t("versusPartyLead");
@@ -3823,14 +3951,61 @@
       disposeTower();
     }
 
+
+    let hungerRuntime = null;
+    function clampHungerPoint(x,z){x=Number(x||0);z=Number(z||0);const len=Math.hypot(x,z);if(len>HUNGER_ARENA_RADIUS){const s=HUNGER_ARENA_RADIUS/Math.max(.001,len);x*=s;z*=s;}return{x,z};}
+    function hungerPlayerColor(playerId){const ready=readyPlayers();const index=Math.max(0,ready.findIndex(player=>player.playerId===playerId));return HUNGER_COLORS[index%HUNGER_COLORS.length];}
+    function showHungerEatFlash(playerId){if(!ui.hungerEatFlash||playerId!==state.playerId)return;ui.hungerEatFlash.textContent=t("hungerEat");ui.hungerEatFlash.classList.add("on");clearTimeout(ui.hungerEatFlash._timer);ui.hungerEatFlash._timer=setTimeout(()=>ui.hungerEatFlash.classList.remove("on"),650);zaurioFx("perfect");}
+    function hungerCreateFallbackRabbit(THREE,color){
+      const group=new THREE.Group();const mat=new THREE.MeshToonMaterial({color});const dark=new THREE.MeshToonMaterial({color:0x291c31});const white=new THREE.MeshToonMaterial({color:0xf8f2ff});
+      const body=new THREE.Mesh(new THREE.SphereGeometry(.46,18,14),mat);body.scale.set(1,.8,1.3);body.position.y=.46;group.add(body);
+      const head=new THREE.Mesh(new THREE.SphereGeometry(.31,16,12),mat);head.position.set(0,.82,.34);group.add(head);
+      [-.14,.14].forEach(x=>{const ear=new THREE.Mesh(new THREE.SphereGeometry(.1,10,8),mat);ear.position.set(x,1.22,.25);ear.scale.set(.75,2.1,.65);group.add(ear);});
+      const tail=new THREE.Mesh(new THREE.SphereGeometry(.15,12,10),white);tail.position.set(0,.55,-.58);group.add(tail);
+      [-.16,.16].forEach(x=>{const foot=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),dark);foot.scale.set(1,.45,1.6);foot.position.set(x,.12,.25);group.add(foot);});
+      group.traverse(obj=>{if(obj.isMesh){obj.castShadow=true;obj.receiveShadow=true;}});return group;
+    }
+    function hungerRecolorRabbit(root,THREE,color){root.traverse(obj=>{if(!obj.isMesh)return;const name=String(obj.name||"").toLowerCase();obj.material=new THREE.MeshToonMaterial({color:(name.includes("eye")||name.includes("foot"))?0x24182b:color});obj.castShadow=true;obj.receiveShadow=true;});return root;}
+    function hungerCreateCarrotMesh(THREE,carrot){const group=new THREE.Group();group.userData.carrotId=carrot.id;const orange=new THREE.MeshToonMaterial({color:0xff7f2a});const green=new THREE.MeshToonMaterial({color:0x78d96a});const root=new THREE.Mesh(new THREE.CylinderGeometry(.2,.035,.7,9),orange);root.position.y=.37;root.castShadow=true;group.add(root);for(let i=0;i<3;i++){const leaf=new THREE.Mesh(new THREE.ConeGeometry(.08,.38,7),green);leaf.position.set((i-1)*.09,.83,0);leaf.rotation.z=(i-1)*.25;leaf.castShadow=true;group.add(leaf);}group.position.set(Number(carrot.x||0),0,Number(carrot.z||0));group.rotation.y=Number(carrot.spin||0);return group;}
+    function disposeHunger(){const game=hungerRuntime;if(!game)return;try{cancelAnimationFrame(game.rafId||0);window.removeEventListener("resize",game.resizeHandler);game.renderer?.dispose?.();game.scene?.traverse?.(obj=>{if(obj.geometry?.dispose)obj.geometry.dispose();if(obj.material?.dispose)obj.material.dispose();});}catch(_){}hungerRuntime=null;if(ui.hungerArena)ui.hungerArena.classList.remove("dragging");}
+    function hungerSyncCarrots(){const game=hungerRuntime;const hunger=state.game.hunger;if(!game||!hunger)return;const wanted=new Set((hunger.carrots||[]).map(c=>c.id));[...game.carrots.entries()].forEach(([id,mesh])=>{if(!wanted.has(id)){game.scene.remove(mesh);game.carrots.delete(id);}});(hunger.carrots||[]).forEach(carrot=>{let mesh=game.carrots.get(carrot.id);if(!mesh){mesh=hungerCreateCarrotMesh(game.THREE,carrot);game.carrots.set(carrot.id,mesh);game.scene.add(mesh);}mesh.position.x=Number(carrot.x||0);mesh.position.z=Number(carrot.z||0);});}
+    function hungerEnsureRabbit(player){const game=hungerRuntime;if(!game||game.rabbits.has(player.playerId))return game?.rabbits.get(player.playerId);const info=state.game.hunger?.players?.[player.playerId]||{};const color=Number(info.color||hungerPlayerColor(player.playerId));const root=hungerCreateFallbackRabbit(game.THREE,color);root.position.set(Number(info.x||0),0,Number(info.z||0));game.scene.add(root);const entry={root,x:root.position.x,z:root.position.z,targetX:root.position.x,targetZ:root.position.z,vx:0,vz:0,color};game.rabbits.set(player.playerId,entry);if(game.rabbitTemplate){const clone=hungerRecolorRabbit(game.rabbitTemplate.clone(true),game.THREE,color);clone.scale.set(.78,.78,.78);clone.position.copy(root.position);game.scene.remove(root);entry.root=clone;game.scene.add(clone);}return entry;}
+    function hungerApplyModelTemplate(template){const game=hungerRuntime;if(!game||game.rabbitTemplate)return;game.rabbitTemplate=template;readyPlayers().forEach(player=>{const entry=game.rabbits.get(player.playerId);if(!entry)return;const clone=hungerRecolorRabbit(template.clone(true),game.THREE,entry.color);clone.scale.set(.78,.78,.78);clone.position.copy(entry.root.position);clone.rotation.copy(entry.root.rotation);game.scene.remove(entry.root);entry.root=clone;game.scene.add(clone);});}
+    function initHungerRuntime(){
+      const hunger=state.game.hunger;if(!hunger||state.game.phase!=="hunger"||!ui.hungerCanvas||!window.THREE)return;if(hungerRuntime?.seed===hunger.seed){hungerSyncCarrots();readyPlayers().forEach(hungerEnsureRabbit);return;}disposeHunger();
+      const THREE=window.THREE;const scene=new THREE.Scene();scene.background=new THREE.Color(0x221827);scene.fog=new THREE.Fog(0x221827,10,22);const renderer=new THREE.WebGLRenderer({canvas:ui.hungerCanvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+      const camera=new THREE.PerspectiveCamera(52,16/9,.1,50);camera.position.set(0,8.3,10.5);camera.lookAt(0,0,0);scene.add(new THREE.HemisphereLight(0xe9fbff,0x2b1730,1.1));const light=new THREE.DirectionalLight(0xffffff,.95);light.position.set(5,10,6);light.castShadow=true;scene.add(light);
+      const floor=new THREE.Mesh(new THREE.CircleGeometry(HUNGER_ARENA_RADIUS+1.1,72),new THREE.MeshPhongMaterial({color:0x4b4050,shininess:110,transparent:true,opacity:.96}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);const ring=new THREE.Mesh(new THREE.RingGeometry(HUNGER_ARENA_RADIUS,HUNGER_ARENA_RADIUS+.08,96),new THREE.MeshBasicMaterial({color:0x7beeff,transparent:true,opacity:.45,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.012;scene.add(ring);
+      const game={seed:hunger.seed,THREE,scene,renderer,camera,floor,rabbits:new Map(),carrots:new Map(),raycaster:new THREE.Raycaster(),pointer:new THREE.Vector2(),dragging:false,target:{x:0,z:0},lastFrame:performance.now(),lastMoveSent:0,claiming:new Map(),rafId:0,rabbitTemplate:null,resizeHandler:null};hungerRuntime=game;readyPlayers().forEach(hungerEnsureRabbit);hungerSyncCarrots();
+      if(window.THREE.GLTFLoader){try{new THREE.GLTFLoader().load(HUNGER_MODEL_URL,gltf=>{if(hungerRuntime!==game)return;const template=gltf.scene.getObjectByName("Rabbit");if(template)hungerApplyModelTemplate(template);},undefined,()=>{});}catch(_){}}
+      const resize=()=>{if(hungerRuntime!==game)return;const rect=ui.hungerArena.getBoundingClientRect();const width=Math.max(320,rect.width),height=Math.max(300,rect.height);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();};game.resizeHandler=resize;window.addEventListener("resize",resize,{passive:true});resize();
+      const updateTarget=ev=>{const rect=ui.hungerCanvas.getBoundingClientRect();game.pointer.x=((ev.clientX-rect.left)/rect.width)*2-1;game.pointer.y=-((ev.clientY-rect.top)/rect.height)*2+1;game.raycaster.setFromCamera(game.pointer,camera);const hit=game.raycaster.intersectObject(floor)[0];if(hit){const p=clampHungerPoint(hit.point.x,hit.point.z);game.target.x=p.x;game.target.z=p.z;}};
+      ui.hungerCanvas.onpointerdown=ev=>{game.dragging=true;ui.hungerArena.classList.add("dragging");try{ui.hungerCanvas.setPointerCapture(ev.pointerId);}catch(_){}updateTarget(ev);};ui.hungerCanvas.onpointermove=ev=>{if(game.dragging)updateTarget(ev);};const release=()=>{game.dragging=false;ui.hungerArena.classList.remove("dragging");};ui.hungerCanvas.onpointerup=release;ui.hungerCanvas.onpointercancel=release;game.rafId=requestAnimationFrame(hungerFrame);
+    }
+    async function sendHungerMove(x,z,vx=0,vz=0){if(!state.channel||!state.game.hunger||state.game.phase!=="hunger")return;const payload={playerId:state.playerId,x,z,vx,vz,sentAt:Date.now()};if(state.role==="host"){applyHostHungerMove(payload);await state.channel.send({type:"broadcast",event:"hunger_move",payload});}else await state.channel.send({type:"broadcast",event:"guest_hunger_move",payload});}
+    function applyHostHungerMove(payload){const hunger=state.game.hunger;if(!hunger||!payload?.playerId||!hunger.players?.[payload.playerId])return null;const point=clampHungerPoint(payload.x,payload.z),current=hunger.players[payload.playerId],now=Date.now();const elapsed=Math.max(.05,(now-Number(current.updatedAt||now))/1000),maxDistance=Math.max(1.2,elapsed*18);const dx=point.x-Number(current.x||0),dz=point.z-Number(current.z||0),dist=Math.hypot(dx,dz),scale=dist>maxDistance?maxDistance/dist:1;const accepted={...current,x:Number(current.x||0)+dx*scale,z:Number(current.z||0)+dz*scale,updatedAt:now};hunger.players[payload.playerId]=accepted;return accepted;}
+    function applyHungerMove(payload){const hunger=state.game.hunger;if(!hunger||!payload?.playerId)return;const point=clampHungerPoint(payload.x,payload.z);hunger.players=hunger.players||{};hunger.players[payload.playerId]={...(hunger.players[payload.playerId]||{}),x:point.x,z:point.z,updatedAt:Date.now(),color:hunger.players[payload.playerId]?.color||hungerPlayerColor(payload.playerId)};const entry=hungerRuntime?.rabbits?.get(payload.playerId);if(entry&&payload.playerId!==state.playerId){entry.targetX=point.x;entry.targetZ=point.z;}}
+    async function broadcastHungerState(eaterId=""){const hunger=state.game.hunger;if(!state.channel||!hunger)return;await state.channel.send({type:"broadcast",event:"hunger_state",payload:{seed:hunger.seed,carrots:hunger.carrots,scores:hunger.scores,eaterId}});}
+    async function handleHungerEatClaim(payload){if(state.role!=="host"||state.game.phase!=="hunger"||!state.game.hunger||!payload)return;const hunger=state.game.hunger,playerId=payload.playerId;if(!readyPlayers().some(player=>player.playerId===playerId))return;const point=clampHungerPoint(payload.x,payload.z);applyHostHungerMove({playerId,...point,sentAt:Date.now()});const index=(hunger.carrots||[]).findIndex(carrot=>carrot.id===payload.carrotId);if(index<0)return;const carrot=hunger.carrots[index];if(Math.hypot(point.x-carrot.x,point.z-carrot.z)>1.05)return;hunger.carrots.splice(index,1);hunger.scores[playerId]=Number(hunger.scores[playerId]||0)+1;hungerRefillCarrots(hunger,3+Math.floor(Math.random()*5));await broadcastHungerState(playerId);}
+    async function claimHungerCarrot(carrot){const game=hungerRuntime;if(!game||!carrot||game.claiming.has(carrot.id))return;const me=game.rabbits.get(state.playerId);if(!me)return;game.claiming.set(carrot.id,Date.now());setTimeout(()=>game?.claiming?.delete(carrot.id),650);const payload={playerId:state.playerId,carrotId:carrot.id,x:me.x,z:me.z,sentAt:Date.now()};if(state.role==="host")await handleHungerEatClaim(payload);else if(state.channel)await state.channel.send({type:"broadcast",event:"guest_hunger_eat",payload});}
+    function applyHungerState(payload){if(!state.game.hunger||!payload||payload.seed!==state.game.hunger.seed)return;state.game.hunger.carrots=Array.isArray(payload.carrots)?payload.carrots:[];state.game.hunger.scores={...(payload.scores||{})};hungerSyncCarrots();if(payload.eaterId)showHungerEatFlash(payload.eaterId);renderHungerScoreStrip();}
+    function hungerFrame(now){
+      const game=hungerRuntime;if(!game||state.game.phase!=="hunger")return;const dt=Math.min(.05,(now-game.lastFrame)/1000||.016);game.lastFrame=now;
+      readyPlayers().forEach(player=>{const entry=hungerEnsureRabbit(player);if(!entry)return;if(player.playerId===state.playerId){const dx=game.target.x-entry.x,dz=game.target.z-entry.z;entry.vx+=dx*11*dt;entry.vz+=dz*11*dt;const damping=Math.exp(-3.2*dt);entry.vx*=damping;entry.vz*=damping;entry.x+=entry.vx*dt*2.8;entry.z+=entry.vz*dt*2.8;const p=clampHungerPoint(entry.x,entry.z);entry.x=p.x;entry.z=p.z;entry.root.position.x=entry.x;entry.root.position.z=entry.z;const speed=Math.hypot(entry.vx,entry.vz);if(speed>.03){const rot=Math.atan2(entry.vx,entry.vz);entry.root.rotation.y+=(rot-entry.root.rotation.y)*Math.min(1,dt*8);}entry.root.position.y=.04+Math.sin(now*.009+entry.x)*Math.min(.06,speed*.02);if(now-game.lastMoveSent>=HUNGER_MOVE_INTERVAL){game.lastMoveSent=now;sendHungerMove(entry.x,entry.z,entry.vx,entry.vz);}for(const carrot of state.game.hunger?.carrots||[]){if(Math.hypot(entry.x-Number(carrot.x||0),entry.z-Number(carrot.z||0))<=.72)claimHungerCarrot(carrot);}}else{entry.x+=(entry.targetX-entry.x)*Math.min(1,dt*10);entry.z+=(entry.targetZ-entry.z)*Math.min(1,dt*10);const dx=entry.targetX-entry.x,dz=entry.targetZ-entry.z;entry.root.position.x=entry.x;entry.root.position.z=entry.z;if(Math.hypot(dx,dz)>.015){const rot=Math.atan2(dx,dz);entry.root.rotation.y+=(rot-entry.root.rotation.y)*Math.min(1,dt*7);}entry.root.position.y=.03+Math.sin(now*.008+entry.z)*.025;}});
+      let i=0;game.carrots.forEach(mesh=>{mesh.rotation.y+=dt*(1.2+(i++%3)*.2);mesh.position.y=.04+Math.sin(now*.004+i)*.08;});game.renderer.render(game.scene,game.camera);game.rafId=requestAnimationFrame(hungerFrame);
+    }
+    function renderHungerIntroScene(){const hunger=state.game.hunger||{};ui.hungerIntroKicker.textContent=t("hungerKicker");ui.hungerIntroTitle.textContent=t("hungerTitle");ui.hungerIntroLead.textContent=t("hungerIntroLead");ui.hungerIntroCount.textContent=String(Math.max(0,Math.ceil((Number(hunger.introEndsAt||0)-sharedNow())/1000)));}
+    function renderHungerScoreStrip(){if(!ui.hungerScoreStrip)return;const hunger=state.game.hunger||{},scores=hunger.scores||{};const players=readyPlayers().map(player=>({player,score:Number(scores[player.playerId]||0)})).sort((a,b)=>b.score-a.score);ui.hungerScoreStrip.innerHTML=players.map(({player,score})=>`<article class="hungerScoreChip ${player.playerId===state.playerId?"me":""}"><div class="hungerScoreAvatar">${player.avatarSrc?`<img src="${player.avatarSrc}" alt="">`:"🐇"}</div><div class="hungerScoreName">${esc(player.name||t("player"))}</div><div class="hungerScoreValue"><strong>${score}</strong><span>🥕</span></div></article>`).join("");}
+    function renderHungerScene(){const hunger=state.game.hunger||{};ui.hungerKicker.textContent=t("hungerKicker");ui.hungerTitle.textContent=t("hungerTitle");ui.hungerLead.textContent=t("hungerLead");ui.hungerTimeLabel.textContent=t("hungerTime");ui.hungerInstruction.textContent=t("hungerInstruction");ui.hungerTime.textContent=String(Math.max(0,Math.ceil((Number(hunger.endsAt||0)-sharedNow())/1000)));renderHungerScoreStrip();initHungerRuntime();}
+    function resolveHungerRound(){const hunger=state.game.hunger;if(!hunger||hunger.awarded)return;const ranking=readyPlayers().map(player=>({playerId:player.playerId,count:Number(hunger.scores?.[player.playerId]||0)})).sort((a,b)=>b.count-a.count);const scores={...(state.game.scores||{})},deltas={};ranking.forEach((entry,index)=>{const gain=Number(HUNGER_PLACEMENT_POINTS[index]??5);scores[entry.playerId]=Number(scores[entry.playerId]||0)+gain;deltas[entry.playerId]=gain;});hunger.rankings=ranking;hunger.awarded=true;state.game.scores=scores;state.game.lastRoundScores=deltas;state.game.lastActivityType="hunger";state.game.phase="scores";state.game.scoresShownAt=Date.now();disposeHunger();}
     function renderGeneratingScene(){ const lines = GENERATING_LINES[currentLang] || GENERATING_LINES.es; const line = lines[Math.floor(Date.now() / 3200) % lines.length]; ui.generatingLine.textContent = line; }
     function showScene(name){ Object.entries(ui.scenes).forEach(([key,node]) => node.classList.toggle("on", key === name)); }
-    function currentScene(){ if(state.role === "guest" && !state.roomCode) return "join"; if(!state.ready) return "profile"; if(state.game.phase === "lobby") return "lobby"; if(state.game.phase === "setup") return state.role === "host" ? "setup" : "lobby"; if(state.game.phase === "generating") return "generating"; if(state.game.phase === "paused") return "paused"; if(state.game.phase === "countdown") return "countdown"; if(state.game.phase === "question" || state.game.phase === "answer") return "question"; if(state.game.phase === "skill_intro") return "skillIntro"; if(state.game.phase === "skill") return "skill"; if(state.game.phase === "scores") return "scores"; if(state.game.phase === "versus_intro") return "versusIntro"; if(state.game.phase === "versus") return "versus"; return "lobby"; }
-    function renderCurrentScene(){ const scene=currentScene(); showScene(scene); updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderGeneratingScene(); renderPausedScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); renderSkillIntroScene(); if(state.game.phase === "skill") renderSkillScene(); renderScoresScene(); renderVersusIntroScene(); renderVersusScene(); saveSession(); syncAudio(); syncCastSession(); }
+    function currentScene(){ if(state.role === "guest" && !state.roomCode) return "join"; if(!state.ready) return "profile"; if(state.game.phase === "lobby") return "lobby"; if(state.game.phase === "setup") return state.role === "host" ? "setup" : "lobby"; if(state.game.phase === "generating") return "generating"; if(state.game.phase === "paused") return "paused"; if(state.game.phase === "countdown") return "countdown"; if(state.game.phase === "question" || state.game.phase === "answer") return "question"; if(state.game.phase === "skill_intro") return "skillIntro"; if(state.game.phase === "skill") return "skill"; if(state.game.phase === "hunger_intro") return "hungerIntro"; if(state.game.phase === "hunger") return "hunger"; if(state.game.phase === "scores") return "scores"; if(state.game.phase === "versus_intro") return "versusIntro"; if(state.game.phase === "versus") return "versus"; return "lobby"; }
+    function renderCurrentScene(){ const scene=currentScene(); showScene(scene); updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderGeneratingScene(); renderPausedScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); renderSkillIntroScene(); if(state.game.phase === "skill") renderSkillScene(); renderHungerIntroScene(); if(state.game.phase === "hunger") renderHungerScene(); renderScoresScene(); renderVersusIntroScene(); renderVersusScene(); saveSession(); syncAudio(); syncCastSession(); }
     async function updatePresence(){ if(!state.channel) return; await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready ? (state.avatar.rendered || state.avatar.src) : "",updatedAt:Date.now()}); }
     async function broadcastGame(){ if(state.role !== "host" || !state.channel) return; await state.channel.send({type:"broadcast",event:"game_state",payload:{...state.game,__hostNow:Date.now()}}); }
     function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
-    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); if(role === "host") clockOffsetMs = 0; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; syncClock(payload.__hostNow); const nextGame = {...payload}; delete nextGame.__hostNow; if(!["question","answer"].includes(nextGame.phase)) state.localAnswer = null; if(nextGame.phase === "question" && state.game.question && nextGame.question && nextGame.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...nextGame}; if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; const answerIndex = Number(payload.answerIndex); if(!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= (state.game.question.choices || []).length) return; if(state.game.question.type === "speed"){ if(state.game.question.responses?.[payload.playerId]){ broadcastGame(); return; } const occupied = Object.entries(state.game.question.responses || {}).some(([playerId,response]) => playerId !== payload.playerId && Number(response?.answerIndex) === answerIndex); if(occupied){ broadcastGame(); return; } } state.game.question.responses[payload.playerId] = {answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_progress"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; applyTowerProgress(payload.playerId,payload.result || {},!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_result"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; const result = sanitizeTowerProgress(payload.result || {},!!payload.eliminated); state.game.skill.results = {...(state.game.skill.results || {}),[payload.playerId]:{layers:result.layers,perfects:result.perfects,precision:result.precision,rawScore:result.rawScore}}; applyTowerProgress(payload.playerId,result,!!payload.eliminated); broadcastGame(); renderCurrentScene(); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(role !== "host"){ await channel.send({type:"broadcast",event:"request_state",payload:{playerId:state.playerId,requestedAt:Date.now()}}); } if(!options.silentStatus) setStatus("","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
+    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); if(role === "host") clockOffsetMs = 0; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; syncClock(payload.__hostNow); const nextGame = {...payload}; delete nextGame.__hostNow; if(!["question","answer"].includes(nextGame.phase)) state.localAnswer = null; if(nextGame.phase === "question" && state.game.question && nextGame.question && nextGame.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...nextGame}; if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; const answerIndex = Number(payload.answerIndex); if(!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= (state.game.question.choices || []).length) return; if(state.game.question.type === "speed"){ if(state.game.question.responses?.[payload.playerId]){ broadcastGame(); return; } const occupied = Object.entries(state.game.question.responses || {}).some(([playerId,response]) => playerId !== payload.playerId && Number(response?.answerIndex) === answerIndex); if(occupied){ broadcastGame(); return; } } state.game.question.responses[payload.playerId] = {answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_progress"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; applyTowerProgress(payload.playerId,payload.result || {},!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_result"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; const result = sanitizeTowerProgress(payload.result || {},!!payload.eliminated); state.game.skill.results = {...(state.game.skill.results || {}),[payload.playerId]:{layers:result.layers,perfects:result.perfects,precision:result.precision,rawScore:result.rawScore}}; applyTowerProgress(payload.playerId,result,!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_hunger_move"},({payload})=>{ if(state.role!=="host"||state.game.phase!=="hunger")return; const accepted=applyHostHungerMove(payload); if(accepted&&state.channel) state.channel.send({type:"broadcast",event:"hunger_move",payload:{playerId:payload.playerId,x:accepted.x,z:accepted.z,sentAt:Date.now()}}); }).on("broadcast",{event:"hunger_move"},({payload})=>{ if(state.game.phase!=="hunger")return; applyHungerMove(payload); }).on("broadcast",{event:"guest_hunger_eat"},({payload})=>{ if(state.role!=="host")return; handleHungerEatClaim(payload); }).on("broadcast",{event:"hunger_state"},({payload})=>{ applyHungerState(payload); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(role !== "host"){ await channel.send({type:"broadcast",event:"request_state",payload:{playerId:state.playerId,requestedAt:Date.now()}}); } if(!options.silentStatus) setStatus("","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
     function sampleStandardQuestion(){
       const picked = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)] || QUESTION_BANK[0];
       return {...prepareQuestion(picked), responses:{}, revealed:false};
@@ -4231,6 +4406,19 @@
     setInterval(async () => {
       if(state.game.phase === "generating"){
         renderGeneratingScene();
+      }
+      if(state.game.phase === "hunger_intro"){
+        renderHungerIntroScene();
+        if(state.role==="host" && state.game.hunger && sharedNow()>=Number(state.game.hunger.introEndsAt||0)){
+          state.game.phase="hunger";state.game.hunger.endsAt=Date.now()+HUNGER_ROUND_SECONDS*1000;
+          await broadcastGame();await broadcastHungerState();renderCurrentScene();
+        }
+      }
+      if(state.game.phase === "hunger"){
+        renderHungerScene();
+        if(state.role==="host" && state.game.hunger && sharedNow()>=Number(state.game.hunger.endsAt||0)){
+          resolveHungerRound();await broadcastGame();renderCurrentScene();return;
+        }
       }
       if(state.game.phase === "skill_intro"){
         renderSkillIntroScene();
