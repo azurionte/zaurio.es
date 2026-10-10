@@ -446,7 +446,7 @@
     .hungerArena.bombed{animation:hungerShake .34s ease}@keyframes hungerShake{0%,100%{transform:none}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(3px,-1px)}}
 
     
-    .pasabolasCard{width:min(900px,100%);position:relative;overflow:hidden}.pasabolasCard:before{content:"";position:absolute;inset:-28%;background:conic-gradient(from 45deg,rgba(57,219,255,.11),rgba(255,119,203,.12),rgba(255,216,58,.08),rgba(57,219,255,.11));filter:blur(55px);animation:partyAura 12s linear infinite;pointer-events:none}.pasabolasInner{position:relative;z-index:1}.pasabolasMeta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:8px}.pasabolasArena{position:relative;width:min(680px,100%);margin:0 auto;aspect-ratio:4/5;min-height:520px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#251231,#0d0a12 48%,#2c0d2a);box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 18px 50px rgba(0,0,0,.25);touch-action:none;user-select:none}.pasabolasArena canvas{display:block;width:100%;height:100%;touch-action:none}.pasabolasScore{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:1000}.pasabolasScore span{font-size:1.35rem}.pasabolasScore .vs{font-size:.7rem;color:var(--muted);letter-spacing:.08em}.pasabolasHint{text-align:center;color:var(--muted);font-weight:800;margin:9px 0 0}.pasabolasNames{display:flex;justify-content:space-between;gap:12px;width:min(680px,100%);margin:0 auto 6px;font-size:.8rem;font-weight:1000;color:#fff}.pasabolasNames span:last-child{text-align:right}.pasabolasWinner{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,3,16,.5);backdrop-filter:blur(4px);font-size:clamp(1.8rem,5vw,4rem);font-weight:1000;color:var(--yellow);text-shadow:0 0 28px rgba(255,216,58,.3);pointer-events:none}.pasabolasWinner[hidden]{display:none}.pasabolasControls{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(680px,100%);margin:10px auto 0}.pasabolasHit{border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px 12px;background:rgba(255,255,255,.07);color:#fff;font-weight:1000;font-size:1rem;cursor:pointer;transition:.16s ease}.pasabolasHit:first-child{box-shadow:inset 0 -2px 0 rgba(57,219,255,.25)}.pasabolasHit:last-child{box-shadow:inset 0 -2px 0 rgba(255,119,203,.25)}.pasabolasHit:not(:disabled):active{transform:scale(.97)}.pasabolasHit:disabled{opacity:.32;cursor:default}.pasabolasTurn{width:min(680px,100%);margin:7px auto 0;text-align:center;font-weight:1000;color:var(--yellow);min-height:22px}.pasabolasChip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}@media(max-width:720px){.pasabolasArena{min-height:min(62vh,580px);aspect-ratio:3/4}.pasabolasCard{padding:14px}.pasabolasMeta{grid-template-columns:1fr auto}.pasabolasHit{padding:15px 10px;font-size:.95rem}}
+    .pasabolasCard{width:min(900px,100%);position:relative;overflow:hidden}.pasabolasCard:before{content:"";position:absolute;inset:-28%;background:conic-gradient(from 45deg,rgba(57,219,255,.11),rgba(255,119,203,.12),rgba(255,216,58,.08),rgba(57,219,255,.11));filter:blur(55px);animation:partyAura 12s linear infinite;pointer-events:none}.pasabolasInner{position:relative;z-index:1}.pasabolasMeta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:8px}.pasabolasArena{position:relative;width:min(680px,100%);margin:0 auto;aspect-ratio:4/5;min-height:520px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#251231,#0d0a12 48%,#2c0d2a);box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 18px 50px rgba(0,0,0,.25);touch-action:none;user-select:none}.pasabolasArena canvas{display:block;width:100%;height:100%;touch-action:none}.pasabolasScore{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:1000}.pasabolasScore span{font-size:1.35rem}.pasabolasScore .vs{font-size:.7rem;color:var(--muted);letter-spacing:.08em}.pasabolasHint{text-align:center;color:var(--muted);font-weight:800;margin:9px 0 0}.pasabolasNames{display:flex;justify-content:space-between;gap:12px;width:min(680px,100%);margin:0 auto 6px;font-size:.8rem;font-weight:1000;color:#fff}.pasabolasNames span:last-child{text-align:right}.pasabolasWinner{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,3,16,.5);backdrop-filter:blur(4px);font-size:clamp(1.8rem,5vw,4rem);font-weight:1000;color:var(--yellow);text-shadow:0 0 28px rgba(255,216,58,.3);pointer-events:none}.pasabolasWinner[hidden]{display:none}.pasabolasServeBtn{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(255,216,58,.62);border-radius:999px;padding:13px 22px;background:rgba(28,10,34,.9);color:#fff;font-weight:1000;font-size:1rem;box-shadow:0 0 28px rgba(255,216,58,.18),inset 0 0 0 1px rgba(255,255,255,.04);cursor:pointer;backdrop-filter:blur(8px)}.pasabolasServeBtn[hidden]{display:none}.pasabolasArena.ready-hit:before,.pasabolasArena.ready-hit:after{content:"";position:absolute;z-index:4;top:0;bottom:0;width:50%;pointer-events:none;opacity:.16}.pasabolasArena.ready-hit:before{left:0;background:linear-gradient(90deg,rgba(57,219,255,.55),transparent)}.pasabolasArena.ready-hit:after{right:0;background:linear-gradient(270deg,rgba(255,119,203,.55),transparent)}.pasabolasArena.ready-hit{cursor:crosshair}.pasabolasTurn{width:min(680px,100%);margin:7px auto 0;text-align:center;font-weight:1000;color:var(--yellow);min-height:22px}.pasabolasChip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}@media(max-width:720px){.pasabolasArena{min-height:min(62vh,580px);aspect-ratio:3/4}.pasabolasCard{padding:14px}.pasabolasMeta{grid-template-columns:1fr auto}}
 @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
     @media(max-width:720px){.mixGrid{grid-template-columns:1fr}.towerHud{grid-template-columns:repeat(3,1fr)}.towerCanvasWrap{min-height:360px;aspect-ratio:10/12}}
   </style>
@@ -839,14 +839,11 @@
             <div class="pasabolasNames"><span id="pasabolasNameA">Jugador A</span><span id="pasabolasNameB">Jugador B</span></div>
             <div class="pasabolasArena" id="pasabolasArena">
               <canvas id="pasabolasCanvas" width="960" height="540"></canvas>
+              <button class="pasabolasServeBtn" id="pasabolasServeBtn" type="button" hidden>SACAR</button>
               <div class="pasabolasWinner" id="pasabolasWinner" hidden></div>
             </div>
             <div class="pasabolasTurn" id="pasabolasTurn"></div>
-            <div class="pasabolasControls" id="pasabolasControls">
-              <button class="pasabolasHit" id="pasabolasHitLeft" type="button">← Izquierda</button>
-              <button class="pasabolasHit" id="pasabolasHitRight" type="button">Derecha →</button>
-            </div>
-            <p class="pasabolasHint" id="pasabolasHint">Cuando la bola llegue a ti, elige hacia qué lado devolverla.</p>
+            <p class="pasabolasHint" id="pasabolasHint">Cuando la bola llegue a ti, toca el lado de la pista al que quieras devolverla.</p>
           </div>
         </article>
       </section>
@@ -1172,9 +1169,8 @@
         pasabolasTitle:"Pasabolas",
         pasabolasIntroLead:"Dos dinos, una pelota y cero excusas.",
         pasabolasLead:"Devuelve la bola a izquierda o derecha. Primero en llegar a 3 gana.",
-        pasabolasHint:"Cuando la bola llegue a ti, elige hacia qué lado devolverla.",
-        pasabolasLeft:"← Izquierda",
-        pasabolasRight:"Derecha →",
+        pasabolasHint:"Cuando la bola llegue a ti, toca el lado de la pista al que quieras devolverla.",
+        pasabolasServeButton:"SACAR",
         pasabolasYourTurn:"¡TU GOLPE!",
         pasabolasWaiting:"Esperando a {name}...",
         pasabolasServe:"Saque de {name}",
@@ -1442,9 +1438,8 @@
         pasabolasTitle:"Pass-a-ball",
         pasabolasIntroLead:"Two dinos, one ball, no excuses.",
         pasabolasLead:"Return the ball left or right. First to 3 wins.",
-        pasabolasHint:"When the ball reaches you, choose where to return it.",
-        pasabolasLeft:"← Left",
-        pasabolasRight:"Right →",
+        pasabolasHint:"When the ball reaches you, tap the side of the court where you want to return it.",
+        pasabolasServeButton:"SERVE",
         pasabolasYourTurn:"YOUR SHOT!",
         pasabolasWaiting:"Waiting for {name}...",
         pasabolasServe:"{name} serves",
@@ -2066,7 +2061,7 @@
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerKicker:$("answerKicker"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
       skillIntroKicker:$("skillIntroKicker"), skillIntroTitle:$("skillIntroTitle"), skillIntroLead:$("skillIntroLead"), skillIntroCount:$("skillIntroCount"), skillKicker:$("skillKicker"), skillTitle:$("skillTitle"), skillPartyBadge:$("skillPartyBadge"), towerCanvas:$("towerCanvas"), towerCanvasWrap:$("towerCanvasWrap"), towerMessage:$("towerMessage"), towerInstruction:$("towerInstruction"), towerLayers:$("towerLayers"), towerPerfects:$("towerPerfects"), towerTime:$("towerTime"), towerLayersLabel:$("towerLayersLabel"), towerPerfectsLabel:$("towerPerfectsLabel"), towerTimeLabel:$("towerTimeLabel"), towerLiveWrap:$("towerLiveWrap"), towerLiveTitle:$("towerLiveTitle"), towerLiveRule:$("towerLiveRule"), towerLiveBoard:$("towerLiveBoard"), towerElimBanner:$("towerElimBanner"), towerElimTitle:$("towerElimTitle"), towerElimCopy:$("towerElimCopy"),
       hungerIntroKicker:$("hungerIntroKicker"), hungerIntroTitle:$("hungerIntroTitle"), hungerIntroLead:$("hungerIntroLead"), hungerIntroCount:$("hungerIntroCount"), hungerKicker:$("hungerKicker"), hungerTitle:$("hungerTitle"), hungerLead:$("hungerLead"), hungerMyRabbitBadge:$("hungerMyRabbitBadge"), hungerMyRabbitDot:$("hungerMyRabbitDot"), hungerMyRabbitText:$("hungerMyRabbitText"), hungerModeBadge:$("hungerModeBadge"), hungerTimeLabel:$("hungerTimeLabel"), hungerTime:$("hungerTime"), hungerScoreStrip:$("hungerScoreStrip"), hungerArena:$("hungerArena"), hungerCanvas:$("hungerCanvas"), hungerEatFlash:$("hungerEatFlash"), hungerInstruction:$("hungerInstruction"),
-      pasabolasIntroKicker:$("pasabolasIntroKicker"), pasabolasIntroTitle:$("pasabolasIntroTitle"), pasabolasIntroLead:$("pasabolasIntroLead"), pasabolasIntroNames:$("pasabolasIntroNames"), pasabolasIntroCount:$("pasabolasIntroCount"), pasabolasKicker:$("pasabolasKicker"), pasabolasTitle:$("pasabolasTitle"), pasabolasLead:$("pasabolasLead"), pasabolasScoreA:$("pasabolasScoreA"), pasabolasScoreB:$("pasabolasScoreB"), pasabolasNameA:$("pasabolasNameA"), pasabolasNameB:$("pasabolasNameB"), pasabolasArena:$("pasabolasArena"), pasabolasCanvas:$("pasabolasCanvas"), pasabolasWinner:$("pasabolasWinner"), pasabolasHint:$("pasabolasHint"), pasabolasTurn:$("pasabolasTurn"), pasabolasControls:$("pasabolasControls"), pasabolasHitLeft:$("pasabolasHitLeft"), pasabolasHitRight:$("pasabolasHitRight"),
+      pasabolasIntroKicker:$("pasabolasIntroKicker"), pasabolasIntroTitle:$("pasabolasIntroTitle"), pasabolasIntroLead:$("pasabolasIntroLead"), pasabolasIntroNames:$("pasabolasIntroNames"), pasabolasIntroCount:$("pasabolasIntroCount"), pasabolasKicker:$("pasabolasKicker"), pasabolasTitle:$("pasabolasTitle"), pasabolasLead:$("pasabolasLead"), pasabolasScoreA:$("pasabolasScoreA"), pasabolasScoreB:$("pasabolasScoreB"), pasabolasNameA:$("pasabolasNameA"), pasabolasNameB:$("pasabolasNameB"), pasabolasArena:$("pasabolasArena"), pasabolasCanvas:$("pasabolasCanvas"), pasabolasServeBtn:$("pasabolasServeBtn"), pasabolasWinner:$("pasabolasWinner"), pasabolasHint:$("pasabolasHint"), pasabolasTurn:$("pasabolasTurn"),
       scoresKicker:$("scoresKicker"), scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroKicker:$("versusIntroKicker"), versusIntroTitle:$("versusIntroTitle"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusKicker:$("versusKicker"), versusTitle:$("versusTitle"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalKicker:$("scoreModalKicker"), scoreModalTitle:$("scoreModalTitle"), scoreModalRows:$("scoreModalRows"),
       btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), resumeKicker:$("resumeKicker"), resumeTitle:$("resumeTitle"), resumeText:$("resumeText"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
       durationModal:$("durationModal"), durationModalKicker:$("durationModalKicker"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
@@ -2583,7 +2578,7 @@
       game.fromLane=Math.random()<.5?"left":"right";
       game.toLane=Math.random()<.5?"left":"right";
       game.phase="serve";
-      game.flightStart=Date.now()+500;
+      game.flightStart=0;
       game.flightDuration=920;
       game.hitDeadline=0;
       game.rally=0;
@@ -3665,6 +3660,34 @@
     function pasabolasCanHit(game,playerId){
       return !!game && game.phase==="awaiting" && game.receiverId===playerId && Date.now()<=Number(game.hitDeadline||0);
     }
+    async function sendPasabolasServe(){
+      const game=state.game.pasabolas;
+      if(!game||state.game.phase!=="pasabolas"||game.phase!=="serve"||game.serverId!==state.playerId)return;
+      const payload={playerId:state.playerId,sentAt:Date.now()};
+      if(state.role==="host"){
+        applyPasabolasServe(payload);
+        await broadcastPasabolasSnapshot();
+      }else if(state.channel){
+        await state.channel.send({type:"broadcast",event:"guest_pasabolas_serve",payload});
+      }
+    }
+    function applyPasabolasServe(payload){
+      const game=state.game.pasabolas;
+      if(state.role!=="host"||!game||!payload||game.phase!=="serve"||game.serverId!==payload.playerId)return false;
+      const receiver=pasabolasOther(game,payload.playerId);
+      game.strikerId=payload.playerId;
+      game.receiverId=receiver;
+      game.fromSide=payload.playerId===game.pair[0]?"top":"bottom";
+      game.toSide=receiver===game.pair[0]?"top":"bottom";
+      game.fromLane=game.fromLane|| (Math.random()<.5?"left":"right");
+      game.toLane=Math.random()<.5?"left":"right";
+      game.phase="flight";
+      game.flightStart=Date.now();
+      game.flightDuration=900;
+      game.hitDeadline=0;
+      game.pointMessage="";
+      return true;
+    }
     async function sendPasabolasHit(lane){
       const game=state.game.pasabolas;
       if(!pasabolasCanHit(game,state.playerId))return;
@@ -3725,8 +3748,15 @@
       pasabolasRuntime=runtime;
       const resize=()=>{const rect=ui.pasabolasArena.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);canvas.width=Math.max(480,Math.round(rect.width*dpr));canvas.height=Math.max(600,Math.round(rect.height*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);runtime.w=rect.width;runtime.h=rect.height;};
       runtime.resize=resize;window.addEventListener("resize",resize,{passive:true});resize();
-      ui.pasabolasHitLeft.onclick=()=>sendPasabolasHit("left");
-      ui.pasabolasHitRight.onclick=()=>sendPasabolasHit("right");
+      ui.pasabolasArena.onpointerdown=ev=>{
+        if(ev.target===ui.pasabolasServeBtn)return;
+        const current=state.game.pasabolas;
+        if(!pasabolasCanHit(current,state.playerId))return;
+        const rect=ui.pasabolasArena.getBoundingClientRect();
+        const lane=(ev.clientX-rect.left)<rect.width/2?"left":"right";
+        sendPasabolasHit(lane);
+      };
+      ui.pasabolasServeBtn.onclick=ev=>{ev.stopPropagation();sendPasabolasServe();};
       runtime.rafId=requestAnimationFrame(pasabolasFrame);
     }
     function disposePasabolas(){
@@ -3738,15 +3768,7 @@
     function pasabolasHostStep(){
       const game=state.game.pasabolas;if(state.role!=="host"||!game||game.finalWinnerId)return;
       const now=Date.now();
-      if(game.phase==="serve"&&now>=Number(game.flightStart||0)){
-        game.phase="flight";
-        game.strikerId=game.serverId;
-        game.receiverId=pasabolasOther(game,game.serverId);
-        game.fromSide=game.serverId===game.pair[0]?"top":"bottom";
-        game.toSide=game.receiverId===game.pair[0]?"top":"bottom";
-        game.flightStart=now;
-        game.flightDuration=900;
-      }else if(game.phase==="flight"&&now>=Number(game.flightStart||0)+Number(game.flightDuration||900)){
+      if(game.phase==="flight"&&now>=Number(game.flightStart||0)+Number(game.flightDuration||900)){
         game.phase="awaiting";
         game.hitDeadline=now+780;
       }else if(game.phase==="awaiting"&&now>Number(game.hitDeadline||0)){
@@ -3759,14 +3781,65 @@
       const game=state.game.pasabolas;if(state.role!=="host"||!state.channel||!game)return;
       await state.channel.send({type:"broadcast",event:"pasabolas_state",payload:{...game}});
     }
-    function drawPasabolasPerson(ctx,x,y,flip,color,hit=false){
+    function pasabolasPlayerColor(playerId){
+      let hash=0;for(const ch of String(playerId||""))hash=(hash*31+ch.charCodeAt(0))>>>0;
+      const colors=["#39dbff","#ff77cb","#ffd83a","#88e16e","#b877ff","#ff7a4d","#5ee0bd","#7e9cff"];
+      return colors[hash%colors.length];
+    }
+    function drawPasabolasPerson(ctx,x,y,flip,color,hit=false,isLocal=false,name=""){
       ctx.save();ctx.translate(x,y);if(flip)ctx.scale(-1,1);
-      ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=5;ctx.lineCap="round";
-      ctx.beginPath();ctx.arc(0,-30,12,0,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.moveTo(0,-18);ctx.lineTo(hit?18:8,4);ctx.lineTo(hit?34:20,hit?-8:8);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(6,-2);ctx.lineTo(-10,25);ctx.moveTo(7,-2);ctx.lineTo(20,25);ctx.stroke();
-      ctx.strokeStyle="#ffd83a";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(hit?31:18,hit?-10:6);ctx.lineTo(hit?43:28,hit?-18:0);ctx.stroke();
+      const scale=isLocal?1.08:.96;ctx.scale(scale,scale);
+      ctx.lineCap="round";ctx.lineJoin="round";
+
+      // tail
+      ctx.fillStyle=color;ctx.strokeStyle="rgba(15,8,20,.72)";ctx.lineWidth=3.5;
+      ctx.beginPath();ctx.moveTo(-18,5);ctx.quadraticCurveTo(-45,1,-49,22);ctx.quadraticCurveTo(-29,18,-10,17);ctx.closePath();ctx.fill();ctx.stroke();
+
+      // body
+      ctx.beginPath();ctx.ellipse(0,7,24,30,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+      // belly
+      ctx.fillStyle="rgba(255,255,255,.22)";ctx.beginPath();ctx.ellipse(5,12,10,18,0,0,Math.PI*2);ctx.fill();
+
+      // head
+      ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(4,-27,24,21,-.08,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+      // snout
+      ctx.fillStyle="rgba(255,255,255,.16)";ctx.beginPath();ctx.ellipse(17,-22,13,9,.08,0,Math.PI*2);ctx.fill();
+
+      // spikes
+      ctx.fillStyle="#ffd83a";
+      for(let i=0;i<4;i++){
+        const sx=-13+i*10,sy=-47+Math.abs(i-1.5)*2;
+        ctx.beginPath();ctx.moveTo(sx,sy+7);ctx.lineTo(sx+5,sy-6);ctx.lineTo(sx+10,sy+7);ctx.closePath();ctx.fill();
+      }
+
+      // eyes
+      ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(-3,-31,6,0,Math.PI*2);ctx.arc(10,-30,6,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#231526";ctx.beginPath();ctx.arc(-1,-30,2.7,0,Math.PI*2);ctx.arc(12,-29,2.7,0,Math.PI*2);ctx.fill();
+
+      // smile
+      ctx.strokeStyle="#35162b";ctx.lineWidth=2.6;ctx.beginPath();ctx.arc(13,-20,7,.15,1.45);ctx.stroke();
+
+      // legs
+      ctx.strokeStyle=color;ctx.lineWidth=11;ctx.beginPath();ctx.moveTo(-10,27);ctx.lineTo(-15,42);ctx.moveTo(11,27);ctx.lineTo(18,42);ctx.stroke();
+      ctx.strokeStyle="#ffd83a";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-22,43);ctx.lineTo(-10,43);ctx.moveTo(13,43);ctx.lineTo(26,43);ctx.stroke();
+
+      // arm + paddle
+      ctx.strokeStyle=color;ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(16,-2);ctx.lineTo(hit?36:29,hit?-20:5);ctx.stroke();
+      ctx.strokeStyle="#8b5a35";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(hit?35:28,hit?-18:4);ctx.lineTo(hit?48:41,hit?-31:-9);ctx.stroke();
+      ctx.fillStyle=isLocal?"#ff77cb":"#39dbff";ctx.strokeStyle="#fff";ctx.lineWidth=2;
+      ctx.beginPath();ctx.ellipse(hit?53:46,hit?-36:-14,10,13,.45,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+      // local marker/crown-ish glow
+      if(isLocal){ctx.strokeStyle="#fff";ctx.globalAlpha=.6;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,47,31,8,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
       ctx.restore();
+
+      // name plate (not flipped)
+      ctx.save();ctx.font="1000 14px system-ui,sans-serif";ctx.textAlign="center";
+      const tw=Math.max(74,ctx.measureText(name||"").width+22);
+      ctx.fillStyle="rgba(14,7,20,.76)";ctx.beginPath();ctx.roundRect(x-tw/2,y+(isLocal?58:-75),tw,24,12);ctx.fill();
+      ctx.fillStyle=color;ctx.fillText(name||"",x,y+(isLocal?75:-58));ctx.restore();
     }
     function pasabolasBallPosition(game,w,h){
       const fromX=pasabolasLaneX(game.fromLane,w),toX=pasabolasLaneX(game.toLane,w);
@@ -3786,12 +3859,14 @@
       const rt=pasabolasRuntime,game=state.game.pasabolas;if(!rt||!game)return;
       const {ctx}=rt,w=rt.w||680,h=rt.h||780;ctx.clearRect(0,0,w,h);
       const bg=ctx.createLinearGradient(0,0,w,h);bg.addColorStop(0,"#31143e");bg.addColorStop(.5,"#0d0c13");bg.addColorStop(1,"#32112f");ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+      ctx.globalAlpha=.18;ctx.fillStyle="#39dbff";ctx.beginPath();ctx.arc(w*.12,h*.18,w*.22,0,Math.PI*2);ctx.fill();ctx.fillStyle="#ff77cb";ctx.beginPath();ctx.arc(w*.88,h*.82,w*.22,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
 
-      // ambient Zaurio lights
-      ctx.globalAlpha=.18;ctx.fillStyle="#39dbff";ctx.beginPath();ctx.arc(w*.12,h*.18,w*.22,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="#ff77cb";ctx.beginPath();ctx.arc(w*.88,h*.82,w*.22,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+      const pair=game.pair||[];
+      const localInPair=pair.includes(state.playerId);
+      const bottomId=localInPair?state.playerId:(pair[1]||pair[0]);
+      const topId=pair.find(id=>id!==bottomId)||pair[0];
 
-      // top player, table, bottom player — same vertical composition as the reference
+      // table
       const tableTop=h*.34,tableBottom=h*.66,left=w*.18,right=w*.82;
       ctx.fillStyle="#23344f";ctx.strokeStyle="#f3f5ff";ctx.lineWidth=3;
       ctx.beginPath();ctx.moveTo(left,tableTop);ctx.lineTo(right,tableTop);ctx.lineTo(w*.9,tableBottom);ctx.lineTo(w*.1,tableBottom);ctx.closePath();ctx.fill();ctx.stroke();
@@ -3799,27 +3874,44 @@
       ctx.strokeStyle="#39dbff";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(w*.13,h*.5);ctx.lineTo(w*.87,h*.5);ctx.stroke();
       ctx.strokeStyle="#ff77cb";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(w*.13,h*.49);ctx.lineTo(w*.87,h*.49);ctx.stroke();
 
-      const pair=game.pair||[];
-      const topId=pair[0],bottomId=pair[1];
-      const ball=pasabolasBallPosition(game,w,h);
-      const topHit=game.phase==="flight"&&game.strikerId===topId&&ball.t<.25;
-      const bottomHit=game.phase==="flight"&&game.strikerId===bottomId&&ball.t<.25;
-      const topX=pasabolasLaneX(game.fromSide==="top"?game.fromLane:game.toLane,w);
-      const bottomX=pasabolasLaneX(game.fromSide==="bottom"?game.fromLane:game.toLane,w);
-      drawPasabolasPerson(ctx,topX,h*.19,false,"#39dbff",topHit);
-      drawPasabolasPerson(ctx,bottomX,h*.83,true,"#ff77cb",bottomHit);
+      // Map shared game coordinates to this viewer: me at bottom, rival at top.
+      const displaySide=id=>id===bottomId?"bottom":"top";
+      const sharedFromId=game.strikerId||game.serverId;
+      const sharedToId=game.receiverId||pasabolasOther(game,sharedFromId);
+      const fromSideDisplay=displaySide(sharedFromId);
+      const toSideDisplay=displaySide(sharedToId);
+      const fromX=pasabolasLaneX(game.fromLane,w),toX=pasabolasLaneX(game.toLane,w);
+      const fromY=pasabolasSideY(fromSideDisplay,h),toY=pasabolasSideY(toSideDisplay,h);
+      let t=0;
+      if(game.phase==="flight")t=Math.max(0,Math.min(1,(Date.now()-Number(game.flightStart||0))/Math.max(1,Number(game.flightDuration||900))));
+      else if(game.phase==="awaiting")t=1;
+      else if(game.phase==="serve")t=0;
+      else if(game.phase==="point")t=1;
+      const ease=t*t*(3-2*t);
+      const ball={x:fromX+(toX-fromX)*ease,y:fromY+(toY-fromY)*ease-Math.sin(Math.PI*t)*Math.min(82,h*.11),t};
 
-      // player labels
-      ctx.font="900 15px system-ui,sans-serif";ctx.textAlign="center";
-      ctx.fillStyle="#9af0ff";ctx.fillText(findPlayer(topId)?.name||"",w*.5,h*.075);
-      ctx.fillStyle="#ffb6e2";ctx.fillText(findPlayer(bottomId)?.name||"",w*.5,h*.94);
+      const topHit=game.phase==="flight"&&sharedFromId===topId&&t<.25;
+      const bottomHit=game.phase==="flight"&&sharedFromId===bottomId&&t<.25;
+      const topLane=sharedFromId===topId?game.fromLane:game.toLane;
+      const bottomLane=sharedFromId===bottomId?game.fromLane:game.toLane;
+      const topX=pasabolasLaneX(topLane,w),bottomX=pasabolasLaneX(bottomLane,w);
 
-      // ball trail and ball
+      const topColor=pasabolasPlayerColor(topId),bottomColor=pasabolasPlayerColor(bottomId);
+      drawPasabolasPerson(ctx,topX,h*.19,false,topColor,topHit,false,findPlayer(topId)?.name||"");
+      drawPasabolasPerson(ctx,bottomX,h*.82,true,bottomColor,bottomHit,bottomId===state.playerId,findPlayer(bottomId)?.name||"");
+
+      // subtle left/right landing cues only when it is your turn
+      if(pasabolasCanHit(game,state.playerId)){
+        ctx.globalAlpha=.12;ctx.fillStyle="#39dbff";ctx.fillRect(0,0,w/2,h);
+        ctx.fillStyle="#ff77cb";ctx.fillRect(w/2,0,w/2,h);ctx.globalAlpha=1;
+      }
+
+      // ball
       ctx.shadowBlur=18;ctx.shadowColor="#ffd83a";ctx.fillStyle="#ffd83a";ctx.beginPath();ctx.arc(ball.x,ball.y,9,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
       if(game.phase==="awaiting"){
         const pulse=13+Math.sin(Date.now()*.02)*4;ctx.strokeStyle="#ffd83a";ctx.lineWidth=3;ctx.globalAlpha=.55;ctx.beginPath();ctx.arc(ball.x,ball.y,pulse,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
       }
-      if(game.pointMessage){ctx.fillStyle="#fff";ctx.font="1000 19px system-ui,sans-serif";ctx.fillText(game.pointMessage,w*.5,h*.53);}
+      if(game.pointMessage){ctx.fillStyle="#fff";ctx.font="1000 19px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText(game.pointMessage,w*.5,h*.53);}
     }
     function pasabolasFrame(now){
       const rt=pasabolasRuntime;if(!rt||state.game.phase!=="pasabolas")return;
@@ -3828,19 +3920,30 @@
       rt.rafId=requestAnimationFrame(pasabolasFrame);
     }
     function renderPasabolasScene(){
-      const game=state.game.pasabolas||{},[a,b]=game.pair||[];
+      const game=state.game.pasabolas||{},pair=game.pair||[];
+      const localInPair=pair.includes(state.playerId);
+      const bottomId=localInPair?state.playerId:(pair[1]||pair[0]);
+      const topId=pair.find(id=>id!==bottomId)||pair[0];
+
       ui.pasabolasKicker.textContent=t("pasabolasKicker");ui.pasabolasTitle.textContent=t("pasabolasTitle");ui.pasabolasLead.textContent=t("pasabolasLead");
-      ui.pasabolasNameA.textContent=findPlayer(a)?.name||t("player");ui.pasabolasNameB.textContent=findPlayer(b)?.name||t("player");
-      ui.pasabolasScoreA.textContent=String(Number(game.score?.[a]||0));ui.pasabolasScoreB.textContent=String(Number(game.score?.[b]||0));
-      ui.pasabolasHitLeft.textContent=t("pasabolasLeft");ui.pasabolasHitRight.textContent=t("pasabolasRight");
+      ui.pasabolasNameA.textContent=findPlayer(topId)?.name||t("player");
+      ui.pasabolasNameB.textContent=findPlayer(bottomId)?.name||t("player");
+      ui.pasabolasScoreA.textContent=String(Number(game.score?.[bottomId]||0));
+      ui.pasabolasScoreB.textContent=String(Number(game.score?.[topId]||0));
+
       const canHit=pasabolasCanHit(game,state.playerId);
-      ui.pasabolasHitLeft.disabled=!canHit;ui.pasabolasHitRight.disabled=!canHit;
-      ui.pasabolasControls.hidden=!(game.pair||[]).includes(state.playerId);
+      ui.pasabolasArena.classList.toggle("ready-hit",canHit);
+
+      const canServe=localInPair&&game.phase==="serve"&&game.serverId===state.playerId&&!game.finalWinnerId;
+      ui.pasabolasServeBtn.hidden=!canServe;
+      ui.pasabolasServeBtn.textContent=t("pasabolasServeButton");
+
       if(canHit)ui.pasabolasTurn.textContent=t("pasabolasYourTurn");
       else if(game.phase==="serve")ui.pasabolasTurn.textContent=t("pasabolasServe",{name:findPlayer(game.serverId)?.name||t("player")});
       else if(game.receiverId)ui.pasabolasTurn.textContent=t("pasabolasWaiting",{name:findPlayer(game.receiverId)?.name||t("player")});
       else ui.pasabolasTurn.textContent="";
-      ui.pasabolasHint.textContent=(game.pair||[]).includes(state.playerId)?t("pasabolasHint"):t("pasabolasSpectator");
+
+      ui.pasabolasHint.textContent=localInPair?t("pasabolasHint"):t("pasabolasSpectator");
       if(game.finalWinnerId){ui.pasabolasWinner.hidden=false;ui.pasabolasWinner.textContent=t("pasabolasWinner",{name:findPlayer(game.finalWinnerId)?.name||t("player")});}else ui.pasabolasWinner.hidden=true;
       initPasabolasRuntime();drawPasabolas();
     }
@@ -4828,7 +4931,7 @@
     async function updatePresence(){ if(!state.channel) return; await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready ? (state.avatar.rendered || state.avatar.src) : "",updatedAt:Date.now()}); }
     async function broadcastGame(){ if(state.role !== "host" || !state.channel) return; await state.channel.send({type:"broadcast",event:"game_state",payload:{...state.game,__hostNow:Date.now()}}); }
     function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
-    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); if(role === "host") clockOffsetMs = 0; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; syncClock(payload.__hostNow); const nextGame = {...payload}; delete nextGame.__hostNow; if(!["question","answer"].includes(nextGame.phase)) state.localAnswer = null; if(nextGame.phase === "question" && state.game.question && nextGame.question && nextGame.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...nextGame}; if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; const answerIndex = Number(payload.answerIndex); if(!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= (state.game.question.choices || []).length) return; if(state.game.question.type === "speed"){ if(state.game.question.responses?.[payload.playerId]){ broadcastGame(); return; } const occupied = Object.entries(state.game.question.responses || {}).some(([playerId,response]) => playerId !== payload.playerId && Number(response?.answerIndex) === answerIndex); if(occupied){ broadcastGame(); return; } } state.game.question.responses[payload.playerId] = {answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_pasabolas_hit"},({payload})=>{if(state.role!=="host"||state.game.phase!=="pasabolas"||!state.game.pasabolas||!payload)return;if(applyPasabolasHit(payload))broadcastPasabolasSnapshot();}).on("broadcast",{event:"pasabolas_state"},({payload})=>{const game=state.game.pasabolas;if(!game||!payload||payload.seed!==game.seed)return;state.game.pasabolas={...game,...payload};renderPasabolasScene();}).on("broadcast",{event:"guest_skill_progress"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; applyTowerProgress(payload.playerId,payload.result || {},!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_result"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; const result = sanitizeTowerProgress(payload.result || {},!!payload.eliminated); state.game.skill.results = {...(state.game.skill.results || {}),[payload.playerId]:{layers:result.layers,perfects:result.perfects,precision:result.precision,rawScore:result.rawScore}}; applyTowerProgress(payload.playerId,result,!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_hunger_move"},({payload})=>{ if(state.role!=="host"||state.game.phase!=="hunger")return; const accepted=applyHostHungerMove(payload); if(accepted&&state.channel) state.channel.send({type:"broadcast",event:"hunger_move",payload:{playerId:payload.playerId,x:accepted.x,z:accepted.z,sentAt:Date.now()}}); }).on("broadcast",{event:"hunger_move"},({payload})=>{ if(state.game.phase!=="hunger")return; applyHungerMove(payload); }).on("broadcast",{event:"guest_hunger_eat"},({payload})=>{ if(state.role!=="host")return; handleHungerEatClaim(payload); }).on("broadcast",{event:"guest_hunger_bomb"},({payload})=>{ if(state.role!=="host")return; handleHungerBombClaim(payload); }).on("broadcast",{event:"hunger_state"},({payload})=>{ applyHungerState(payload); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(role !== "host"){ await channel.send({type:"broadcast",event:"request_state",payload:{playerId:state.playerId,requestedAt:Date.now()}}); } if(!options.silentStatus) setStatus("","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
+    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); if(role === "host") clockOffsetMs = 0; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; syncClock(payload.__hostNow); const nextGame = {...payload}; delete nextGame.__hostNow; if(!["question","answer"].includes(nextGame.phase)) state.localAnswer = null; if(nextGame.phase === "question" && state.game.question && nextGame.question && nextGame.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...nextGame}; if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; const answerIndex = Number(payload.answerIndex); if(!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= (state.game.question.choices || []).length) return; if(state.game.question.type === "speed"){ if(state.game.question.responses?.[payload.playerId]){ broadcastGame(); return; } const occupied = Object.entries(state.game.question.responses || {}).some(([playerId,response]) => playerId !== payload.playerId && Number(response?.answerIndex) === answerIndex); if(occupied){ broadcastGame(); return; } } state.game.question.responses[payload.playerId] = {answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_pasabolas_serve"},({payload})=>{if(state.role!=="host"||state.game.phase!=="pasabolas"||!state.game.pasabolas||!payload)return;if(applyPasabolasServe(payload))broadcastPasabolasSnapshot();}).on("broadcast",{event:"guest_pasabolas_hit"},({payload})=>{if(state.role!=="host"||state.game.phase!=="pasabolas"||!state.game.pasabolas||!payload)return;if(applyPasabolasHit(payload))broadcastPasabolasSnapshot();}).on("broadcast",{event:"pasabolas_state"},({payload})=>{const game=state.game.pasabolas;if(!game||!payload||payload.seed!==game.seed)return;state.game.pasabolas={...game,...payload};renderPasabolasScene();}).on("broadcast",{event:"guest_skill_progress"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; applyTowerProgress(payload.playerId,payload.result || {},!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_result"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; const result = sanitizeTowerProgress(payload.result || {},!!payload.eliminated); state.game.skill.results = {...(state.game.skill.results || {}),[payload.playerId]:{layers:result.layers,perfects:result.perfects,precision:result.precision,rawScore:result.rawScore}}; applyTowerProgress(payload.playerId,result,!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_hunger_move"},({payload})=>{ if(state.role!=="host"||state.game.phase!=="hunger")return; const accepted=applyHostHungerMove(payload); if(accepted&&state.channel) state.channel.send({type:"broadcast",event:"hunger_move",payload:{playerId:payload.playerId,x:accepted.x,z:accepted.z,sentAt:Date.now()}}); }).on("broadcast",{event:"hunger_move"},({payload})=>{ if(state.game.phase!=="hunger")return; applyHungerMove(payload); }).on("broadcast",{event:"guest_hunger_eat"},({payload})=>{ if(state.role!=="host")return; handleHungerEatClaim(payload); }).on("broadcast",{event:"guest_hunger_bomb"},({payload})=>{ if(state.role!=="host")return; handleHungerBombClaim(payload); }).on("broadcast",{event:"hunger_state"},({payload})=>{ applyHungerState(payload); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(role !== "host"){ await channel.send({type:"broadcast",event:"request_state",payload:{playerId:state.playerId,requestedAt:Date.now()}}); } if(!options.silentStatus) setStatus("","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
     function sampleStandardQuestion(){
       const picked = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)] || QUESTION_BANK[0];
       return {...prepareQuestion(picked), responses:{}, revealed:false};
@@ -5366,7 +5469,7 @@
       if(state.game.phase === "pasabolas_intro"){
         renderPasabolasIntroScene();
         if(state.role==="host"&&state.game.pasabolas&&Date.now()>=Number(state.game.pasabolas.introEndsAt||0)){
-          state.game.phase="pasabolas";resetPasabolasBall(state.game.pasabolas,state.game.pasabolas.serverId);await broadcastGame();renderCurrentScene();return;
+          state.game.phase="pasabolas";resetPasabolasBall(state.game.pasabolas,state.game.pasabolas.serverId);state.game.pasabolas.phase="serve";await broadcastGame();renderCurrentScene();return;
         }
       }
       if(state.game.phase === "pasabolas"){
