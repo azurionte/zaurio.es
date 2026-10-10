@@ -1172,6 +1172,8 @@
         pasabolasHint:"Cuando la bola llegue a ti, toca el lado de la pista al que quieras devolverla.",
         pasabolasServeButton:"SACAR",
         pasabolasYourTurn:"¡TU GOLPE!",
+        pasabolasReady:"¡PREPÁRATE!",
+        pasabolasQueued:"Golpe preparado ✓",
         pasabolasWaiting:"Esperando a {name}...",
         pasabolasServe:"Saque de {name}",
         pasabolasMiss:"{name} falló el golpe.",
@@ -1441,6 +1443,8 @@
         pasabolasHint:"When the ball reaches you, tap the side of the court where you want to return it.",
         pasabolasServeButton:"SERVE",
         pasabolasYourTurn:"YOUR SHOT!",
+        pasabolasReady:"GET READY!",
+        pasabolasQueued:"Shot queued ✓",
         pasabolasWaiting:"Waiting for {name}...",
         pasabolasServe:"{name} serves",
         pasabolasMiss:"{name} missed.",
@@ -2030,6 +2034,9 @@
     const PASABOLAS_TARGET_SCORE = 3;
     const PASABOLAS_INTRO_SECONDS = 4;
     const PASABOLAS_SNAPSHOT_MS = 70;
+    const PASABOLAS_HIT_WINDOW_MS = 1250;
+    const PASABOLAS_EARLY_HIT_PROGRESS = 0.58;
+    const PASABOLAS_LATE_GRACE_MS = 300;
     const SKILL_INTRO_SECONDS = 4;
     const TOWER_ROUND_SECONDS = 30;
     const HUNGER_INTRO_SECONDS = 4;
@@ -2581,6 +2588,7 @@
       game.flightStart=0;
       game.flightDuration=920;
       game.hitDeadline=0;
+      game.queuedHit=null;
       game.rally=0;
       game.pointMessage="";
       game.resetAt=Date.now()+500;
@@ -3657,8 +3665,34 @@
     function pasabolasLaneX(lane,w){return lane==="left"?w*.34:w*.66;}
     function pasabolasSideY(side,h){return side==="top"?h*.27:h*.73;}
     function pasabolasOther(game,id){return (game.pair||[]).find(x=>x!==id)||"";}
+    function pasabolasFlightProgress(game){
+      if(!game || game.phase!=="flight") return 0;
+      const now=typeof sharedNow==="function"?sharedNow():Date.now();
+      return Math.max(0,Math.min(1.5,(now-Number(game.flightStart||0))/Math.max(1,Number(game.flightDuration||900))));
+    }
     function pasabolasCanHit(game,playerId){
-      return !!game && game.phase==="awaiting" && game.receiverId===playerId && Date.now()<=Number(game.hitDeadline||0);
+      if(!game || game.finalWinnerId || game.receiverId!==playerId) return false;
+      if(game.queuedHit?.playerId===playerId) return false;
+      const now=typeof sharedNow==="function"?sharedNow():Date.now();
+      if(game.phase==="flight") return pasabolasFlightProgress(game)>=PASABOLAS_EARLY_HIT_PROGRESS;
+      if(game.phase==="awaiting") return now<=Number(game.hitDeadline||0)+PASABOLAS_LATE_GRACE_MS;
+      return false;
+    }
+    function pasabolasLaunchReturn(game,hitter,lane){
+      const nextReceiver=pasabolasOther(game,hitter);
+      game.strikerId=hitter;
+      game.receiverId=nextReceiver;
+      game.fromSide=hitter===game.pair[0]?"top":"bottom";
+      game.toSide=nextReceiver===game.pair[0]?"top":"bottom";
+      game.fromLane=game.toLane;
+      game.toLane=lane==="right"?"right":"left";
+      game.phase="flight";
+      game.flightStart=Date.now();
+      game.flightDuration=Math.max(520,900-Math.min(260,Number(game.rally||0)*42));
+      game.hitDeadline=0;
+      game.rally=Number(game.rally||0)+1;
+      game.pointMessage="";
+      game.queuedHit=null;
     }
     async function sendPasabolasServe(){
       const game=state.game.pasabolas;
@@ -3685,37 +3719,42 @@
       game.flightStart=Date.now();
       game.flightDuration=900;
       game.hitDeadline=0;
+      game.queuedHit=null;
       game.pointMessage="";
       return true;
     }
     async function sendPasabolasHit(lane){
       const game=state.game.pasabolas;
       if(!pasabolasCanHit(game,state.playerId))return;
-      const payload={playerId:state.playerId,lane:lane==="right"?"right":"left",sentAt:Date.now()};
+      const normalizedLane=lane==="right"?"right":"left";
+      const payload={playerId:state.playerId,lane:normalizedLane,sentAt:Date.now()};
+      // Optimistic local feedback so a guest immediately knows the tap registered.
+      game.queuedHit={playerId:state.playerId,lane:normalizedLane,pending:true};
+      renderPasabolasScene();
       if(state.role==="host"){
-        applyPasabolasHit(payload);
-        await broadcastPasabolasSnapshot();
+        if(applyPasabolasHit(payload)) await broadcastPasabolasSnapshot();
       }else if(state.channel){
         await state.channel.send({type:"broadcast",event:"guest_pasabolas_hit",payload});
       }
     }
     function applyPasabolasHit(payload){
-      const game=state.game.pasabolas;if(state.role!=="host"||!game||!payload||!pasabolasCanHit(game,payload.playerId))return false;
-      const hitter=payload.playerId;
-      const nextReceiver=pasabolasOther(game,hitter);
-      game.strikerId=hitter;
-      game.receiverId=nextReceiver;
-      game.fromSide=hitter===game.pair[0]?"top":"bottom";
-      game.toSide=nextReceiver===game.pair[0]?"top":"bottom";
-      game.fromLane=game.toLane;
-      game.toLane=payload.lane==="right"?"right":"left";
-      game.phase="flight";
-      game.flightStart=Date.now();
-      game.flightDuration=Math.max(520,900-Math.min(260,game.rally*42));
-      game.hitDeadline=0;
-      game.rally=Number(game.rally||0)+1;
-      game.pointMessage="";
-      return true;
+      const game=state.game.pasabolas;
+      if(state.role!=="host"||!game||!payload||game.finalWinnerId||game.receiverId!==payload.playerId)return false;
+      const now=Date.now();
+      const lane=payload.lane==="right"?"right":"left";
+
+      if(game.phase==="flight"){
+        const progress=(now-Number(game.flightStart||0))/Math.max(1,Number(game.flightDuration||900));
+        if(progress<PASABOLAS_EARLY_HIT_PROGRESS)return false;
+        game.queuedHit={playerId:payload.playerId,lane,receivedAt:now};
+        return true;
+      }
+
+      if(game.phase==="awaiting" && now<=Number(game.hitDeadline||0)+PASABOLAS_LATE_GRACE_MS){
+        pasabolasLaunchReturn(game,payload.playerId,lane);
+        return true;
+      }
+      return false;
     }
     function awardPasabolasPoint(winnerId,loserId){
       const game=state.game.pasabolas;if(!game||game.finalWinnerId)return;
@@ -3769,10 +3808,20 @@
       const game=state.game.pasabolas;if(state.role!=="host"||!game||game.finalWinnerId)return;
       const now=Date.now();
       if(game.phase==="flight"&&now>=Number(game.flightStart||0)+Number(game.flightDuration||900)){
-        game.phase="awaiting";
-        game.hitDeadline=now+780;
-      }else if(game.phase==="awaiting"&&now>Number(game.hitDeadline||0)){
-        awardPasabolasPoint(game.strikerId,game.receiverId);
+        const queued=game.queuedHit;
+        if(queued && queued.playerId===game.receiverId){
+          pasabolasLaunchReturn(game,queued.playerId,queued.lane);
+        }else{
+          game.phase="awaiting";
+          game.hitDeadline=now+PASABOLAS_HIT_WINDOW_MS;
+        }
+      }else if(game.phase==="awaiting"){
+        const queued=game.queuedHit;
+        if(queued && queued.playerId===game.receiverId){
+          pasabolasLaunchReturn(game,queued.playerId,queued.lane);
+        }else if(now>Number(game.hitDeadline||0)+PASABOLAS_LATE_GRACE_MS){
+          awardPasabolasPoint(game.strikerId,game.receiverId);
+        }
       }else if(game.phase==="point"&&now>=Number(game.resetAt||0)){
         resetPasabolasBall(game,game.serverId);
       }
@@ -3932,13 +3981,17 @@
       ui.pasabolasScoreB.textContent=String(Number(game.score?.[topId]||0));
 
       const canHit=pasabolasCanHit(game,state.playerId);
-      ui.pasabolasArena.classList.toggle("ready-hit",canHit);
+      const queuedMine=game.queuedHit?.playerId===state.playerId;
+      const approachingMine=game.receiverId===state.playerId && game.phase==="flight" && pasabolasFlightProgress(game)>=.38;
+      ui.pasabolasArena.classList.toggle("ready-hit",canHit||queuedMine);
 
       const canServe=localInPair&&game.phase==="serve"&&game.serverId===state.playerId&&!game.finalWinnerId;
       ui.pasabolasServeBtn.hidden=!canServe;
       ui.pasabolasServeBtn.textContent=t("pasabolasServeButton");
 
-      if(canHit)ui.pasabolasTurn.textContent=t("pasabolasYourTurn");
+      if(queuedMine)ui.pasabolasTurn.textContent=t("pasabolasQueued");
+      else if(canHit)ui.pasabolasTurn.textContent=t("pasabolasYourTurn");
+      else if(approachingMine)ui.pasabolasTurn.textContent=t("pasabolasReady");
       else if(game.phase==="serve")ui.pasabolasTurn.textContent=t("pasabolasServe",{name:findPlayer(game.serverId)?.name||t("player")});
       else if(game.receiverId)ui.pasabolasTurn.textContent=t("pasabolasWaiting",{name:findPlayer(game.receiverId)?.name||t("player")});
       else ui.pasabolasTurn.textContent="";
@@ -4931,7 +4984,7 @@
     async function updatePresence(){ if(!state.channel) return; await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready ? (state.avatar.rendered || state.avatar.src) : "",updatedAt:Date.now()}); }
     async function broadcastGame(){ if(state.role !== "host" || !state.channel) return; await state.channel.send({type:"broadcast",event:"game_state",payload:{...state.game,__hostNow:Date.now()}}); }
     function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
-    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); if(role === "host") clockOffsetMs = 0; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; syncClock(payload.__hostNow); const nextGame = {...payload}; delete nextGame.__hostNow; if(!["question","answer"].includes(nextGame.phase)) state.localAnswer = null; if(nextGame.phase === "question" && state.game.question && nextGame.question && nextGame.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...nextGame}; if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; const answerIndex = Number(payload.answerIndex); if(!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= (state.game.question.choices || []).length) return; if(state.game.question.type === "speed"){ if(state.game.question.responses?.[payload.playerId]){ broadcastGame(); return; } const occupied = Object.entries(state.game.question.responses || {}).some(([playerId,response]) => playerId !== payload.playerId && Number(response?.answerIndex) === answerIndex); if(occupied){ broadcastGame(); return; } } state.game.question.responses[payload.playerId] = {answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_pasabolas_serve"},({payload})=>{if(state.role!=="host"||state.game.phase!=="pasabolas"||!state.game.pasabolas||!payload)return;if(applyPasabolasServe(payload))broadcastPasabolasSnapshot();}).on("broadcast",{event:"guest_pasabolas_hit"},({payload})=>{if(state.role!=="host"||state.game.phase!=="pasabolas"||!state.game.pasabolas||!payload)return;if(applyPasabolasHit(payload))broadcastPasabolasSnapshot();}).on("broadcast",{event:"pasabolas_state"},({payload})=>{const game=state.game.pasabolas;if(!game||!payload||payload.seed!==game.seed)return;state.game.pasabolas={...game,...payload};renderPasabolasScene();}).on("broadcast",{event:"guest_skill_progress"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; applyTowerProgress(payload.playerId,payload.result || {},!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_result"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; const result = sanitizeTowerProgress(payload.result || {},!!payload.eliminated); state.game.skill.results = {...(state.game.skill.results || {}),[payload.playerId]:{layers:result.layers,perfects:result.perfects,precision:result.precision,rawScore:result.rawScore}}; applyTowerProgress(payload.playerId,result,!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_hunger_move"},({payload})=>{ if(state.role!=="host"||state.game.phase!=="hunger")return; const accepted=applyHostHungerMove(payload); if(accepted&&state.channel) state.channel.send({type:"broadcast",event:"hunger_move",payload:{playerId:payload.playerId,x:accepted.x,z:accepted.z,sentAt:Date.now()}}); }).on("broadcast",{event:"hunger_move"},({payload})=>{ if(state.game.phase!=="hunger")return; applyHungerMove(payload); }).on("broadcast",{event:"guest_hunger_eat"},({payload})=>{ if(state.role!=="host")return; handleHungerEatClaim(payload); }).on("broadcast",{event:"guest_hunger_bomb"},({payload})=>{ if(state.role!=="host")return; handleHungerBombClaim(payload); }).on("broadcast",{event:"hunger_state"},({payload})=>{ applyHungerState(payload); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(role !== "host"){ await channel.send({type:"broadcast",event:"request_state",payload:{playerId:state.playerId,requestedAt:Date.now()}}); } if(!options.silentStatus) setStatus("","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
+    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); if(role === "host") clockOffsetMs = 0; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; syncClock(payload.__hostNow); const nextGame = {...payload}; delete nextGame.__hostNow; if(!["question","answer"].includes(nextGame.phase)) state.localAnswer = null; if(nextGame.phase === "question" && state.game.question && nextGame.question && nextGame.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...nextGame}; if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; const answerIndex = Number(payload.answerIndex); if(!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= (state.game.question.choices || []).length) return; if(state.game.question.type === "speed"){ if(state.game.question.responses?.[payload.playerId]){ broadcastGame(); return; } const occupied = Object.entries(state.game.question.responses || {}).some(([playerId,response]) => playerId !== payload.playerId && Number(response?.answerIndex) === answerIndex); if(occupied){ broadcastGame(); return; } } state.game.question.responses[payload.playerId] = {answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_pasabolas_serve"},({payload})=>{if(state.role!=="host"||state.game.phase!=="pasabolas"||!state.game.pasabolas||!payload)return;if(applyPasabolasServe(payload))broadcastPasabolasSnapshot();}).on("broadcast",{event:"guest_pasabolas_hit"},({payload})=>{if(state.role!=="host"||state.game.phase!=="pasabolas"||!state.game.pasabolas||!payload)return;if(applyPasabolasHit(payload))broadcastPasabolasSnapshot();}).on("broadcast",{event:"pasabolas_state"},({payload})=>{const game=state.game.pasabolas;if(!game||!payload||payload.seed!==game.seed)return;const optimistic=game.queuedHit?.pending&&game.queuedHit?.playerId===state.playerId?game.queuedHit:null;state.game.pasabolas={...game,...payload};if(optimistic&&!payload.queuedHit&&payload.phase==="flight"&&payload.receiverId===state.playerId)state.game.pasabolas.queuedHit=optimistic;renderPasabolasScene();}).on("broadcast",{event:"guest_skill_progress"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; applyTowerProgress(payload.playerId,payload.result || {},!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_result"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; const result = sanitizeTowerProgress(payload.result || {},!!payload.eliminated); state.game.skill.results = {...(state.game.skill.results || {}),[payload.playerId]:{layers:result.layers,perfects:result.perfects,precision:result.precision,rawScore:result.rawScore}}; applyTowerProgress(payload.playerId,result,!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_hunger_move"},({payload})=>{ if(state.role!=="host"||state.game.phase!=="hunger")return; const accepted=applyHostHungerMove(payload); if(accepted&&state.channel) state.channel.send({type:"broadcast",event:"hunger_move",payload:{playerId:payload.playerId,x:accepted.x,z:accepted.z,sentAt:Date.now()}}); }).on("broadcast",{event:"hunger_move"},({payload})=>{ if(state.game.phase!=="hunger")return; applyHungerMove(payload); }).on("broadcast",{event:"guest_hunger_eat"},({payload})=>{ if(state.role!=="host")return; handleHungerEatClaim(payload); }).on("broadcast",{event:"guest_hunger_bomb"},({payload})=>{ if(state.role!=="host")return; handleHungerBombClaim(payload); }).on("broadcast",{event:"hunger_state"},({payload})=>{ applyHungerState(payload); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(role !== "host"){ await channel.send({type:"broadcast",event:"request_state",payload:{playerId:state.playerId,requestedAt:Date.now()}}); } if(!options.silentStatus) setStatus("","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
     function sampleStandardQuestion(){
       const picked = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)] || QUESTION_BANK[0];
       return {...prepareQuestion(picked), responses:{}, revealed:false};
