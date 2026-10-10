@@ -2530,17 +2530,14 @@
         safePlay(audioState.versus);
         return;
       }
-      if(scene === "skillIntro" || scene === "skill"){
-        pauseBackgroundAudio();
-        safePause(audioState.versus);
-        safePause(audioState.winner);
-        safePause(audioState.loser);
-        return;
-      }
       safePause(audioState.versus);
       safePause(audioState.winner);
       safePause(audioState.loser);
-      const useAnswering = scene === "question" || (scene === "countdown" && state.game.countdownEndAt && (state.game.countdownEndAt - Date.now()) <= 3200);
+      const useAnswering =
+        scene === "question" ||
+        scene === "skillIntro" ||
+        scene === "skill" ||
+        (scene === "countdown" && state.game.countdownEndAt && (state.game.countdownEndAt - Date.now()) <= 3200);
       const target = useAnswering ? audioState.decks.answering : audioState.decks.waiting;
       const other = useAnswering ? audioState.decks.waiting : audioState.decks.answering;
       ensureDeckPlaying(target);
