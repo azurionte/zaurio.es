@@ -429,7 +429,7 @@
     .skillIntroCard,.towerCard{width:min(980px,100%);overflow:hidden;position:relative}.skillIntroCard:before,.towerCard:before{content:"";position:absolute;inset:-35%;background:conic-gradient(from 90deg,rgba(57,219,255,.11),rgba(255,119,203,.13),rgba(255,216,58,.09),rgba(136,225,110,.09),rgba(57,219,255,.11));filter:blur(48px);animation:partyAura 10s linear infinite;pointer-events:none}.skillIntroInner,.towerInner{position:relative;z-index:1}
     .skillGlyph{font-size:clamp(4rem,10vw,7rem);filter:drop-shadow(0 14px 24px rgba(0,0,0,.35));animation:skillFloat 2.4s ease-in-out infinite}.skillIntroMeta{display:grid;justify-items:center;gap:14px;text-align:center}.skillIntroCount{font-size:clamp(3.4rem,10vw,7rem);font-weight:1000;line-height:1;color:var(--yellow);text-shadow:0 0 30px rgba(255,216,58,.34)}
     .towerHud{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.towerStat{padding:10px 14px;border-radius:18px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.08);display:grid;gap:2px;text-align:center}.towerStat span{font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}.towerStat strong{font-size:1.25rem;color:#fff}
-    .towerLiveWrap{display:grid;gap:9px;margin:0 0 12px}.towerLiveHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px}.towerLiveHead strong{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan)}.towerLiveHead span{font-size:.78rem;color:var(--muted);font-weight:800}.towerLiveGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.towerLivePlayer{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px 11px;border-radius:16px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08);transition:.2s ease}.towerLivePlayer.me{border-color:rgba(255,216,58,.48);box-shadow:0 0 0 1px rgba(255,216,58,.08)}.towerLivePlayer.out{opacity:.58;filter:saturate(.55)}.towerLivePlayer.winner{border-color:rgba(136,225,110,.75);box-shadow:0 0 22px rgba(136,225,110,.15)}.towerLiveAvatar{width:34px;height:34px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:1.15rem}.towerLiveAvatar img{width:100%;height:100%;object-fit:cover}.towerLiveMeta{min-width:0;display:grid;gap:2px}.towerLiveName{font-size:.88rem;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.towerLiveStatus{font-size:.7rem;color:var(--muted);font-weight:800}.towerLiveFloors{display:grid;text-align:right;line-height:1}.towerLiveFloors strong{font-size:1.28rem;color:var(--yellow)}.towerLiveFloors span{font-size:.62rem;color:var(--muted);font-weight:900;text-transform:uppercase}.towerCanvasWrap.spectating{box-shadow:inset 0 0 0 2px rgba(255,119,203,.18),inset 0 0 70px rgba(0,0,0,.42),0 20px 50px rgba(0,0,0,.26)}
+    .towerLiveWrap{display:grid;gap:6px;margin:0 0 8px;min-width:0}.towerLiveWrap[hidden]{display:none}.towerLiveHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px}.towerLiveHead strong{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan)}.towerLiveHead span{font-size:.72rem;color:var(--muted);font-weight:800}.towerLiveGrid{display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;overflow-y:hidden;min-width:0;padding:1px 1px 5px;scrollbar-width:thin;overscroll-behavior-x:contain}.towerLivePlayer{flex:0 0 158px;display:grid;grid-template-columns:27px minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px 9px;border-radius:14px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08);transition:.2s ease}.towerLivePlayer.me{border-color:rgba(255,216,58,.48);box-shadow:0 0 0 1px rgba(255,216,58,.08)}.towerLivePlayer.out{opacity:.52;filter:saturate(.5)}.towerLivePlayer.winner{border-color:rgba(136,225,110,.75);box-shadow:0 0 22px rgba(136,225,110,.15)}.towerLiveAvatar{width:27px;height:27px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:.95rem}.towerLiveAvatar img{width:100%;height:100%;object-fit:cover}.towerLiveMeta{min-width:0;display:grid;gap:1px}.towerLiveName{font-size:.78rem;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.towerLiveStatus{font-size:.62rem;color:var(--muted);font-weight:800}.towerLiveFloors{display:grid;text-align:right;line-height:1}.towerLiveFloors strong{font-size:1.08rem;color:var(--yellow)}.towerLiveFloors span{font-size:.54rem;color:var(--muted);font-weight:900;text-transform:uppercase}.towerCanvasWrap.spectating{box-shadow:inset 0 0 0 2px rgba(255,119,203,.18),inset 0 0 70px rgba(0,0,0,.42),0 20px 50px rgba(0,0,0,.26)}.towerElimBanner{position:absolute;z-index:6;left:50%;top:18px;transform:translateX(-50%);width:min(88%,560px);padding:11px 16px;border-radius:18px;background:rgba(26,4,38,.92);border:1px solid rgba(255,119,203,.45);box-shadow:0 14px 36px rgba(0,0,0,.32);text-align:center;pointer-events:none;backdrop-filter:blur(10px)}.towerElimBanner[hidden]{display:none}.towerElimBanner strong{display:block;color:#fff;font-size:1rem}.towerElimBanner span{display:block;margin-top:2px;color:var(--muted);font-size:.8rem;font-weight:800}
     .towerCanvasWrap{position:relative;width:100%;aspect-ratio:16/9;min-height:300px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:radial-gradient(circle at 50% 15%,rgba(57,219,255,.16),transparent 34%),linear-gradient(180deg,#190329 0%,#09000f 72%,#020003 100%);box-shadow:inset 0 0 60px rgba(0,0,0,.34),0 20px 50px rgba(0,0,0,.26);touch-action:none;user-select:none}
     #towerCanvas{display:block;width:100%;height:100%;touch-action:none;cursor:pointer}.towerOverlay{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.towerMessage{padding:12px 18px;border-radius:999px;background:rgba(18,3,31,.86);border:1px solid rgba(255,255,255,.13);font-weight:1000;opacity:0;transform:translateY(8px) scale(.96);transition:.18s ease}.towerMessage.on{opacity:1;transform:none}.towerInstruction{text-align:center;color:var(--muted);font-weight:800;margin-top:12px}
     @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
@@ -736,11 +736,12 @@
               <div class="towerStat"><span id="towerPerfectsLabel">Perfectos</span><strong id="towerPerfects">0</strong></div>
               <div class="towerStat"><span id="towerTimeLabel">Tiempo</span><strong id="towerTime">30</strong></div>
             </div>
-            <div class="towerLiveWrap">
+            <div class="towerLiveWrap" id="towerLiveWrap">
               <div class="towerLiveHead"><strong id="towerLiveTitle">En directo</strong><span id="towerLiveRule">Último en pie gana</span></div>
               <div class="towerLiveGrid" id="towerLiveBoard"></div>
             </div>
             <div class="towerCanvasWrap" id="towerCanvasWrap">
+              <div class="towerElimBanner" id="towerElimBanner" hidden><strong id="towerElimTitle">Has caído</strong><span id="towerElimCopy">Esperando al resto...</span></div>
               <canvas id="towerCanvas" width="960" height="540"></canvas>
               <div class="towerOverlay"><div class="towerMessage" id="towerMessage">PERFECT!</div></div>
             </div>
@@ -1036,6 +1037,10 @@
         towerOut:"Fuera",
         towerYou:"Tú",
         towerSpectating:"Has caído · ahora mira cómo siguen los demás",
+        towerLostTitle:"Has caído",
+        towerWaitingOthers:"Quedan {count} dinos en pie. Esperando al resto...",
+        towerSoloRule:"Reto individual",
+        towerSoloOutResult:"Has caído con {layers} pisos.",
         towerLastStanding:"Último en pie",
         towerLastStandingResult:"{name} gana por ser el último dino en pie.",
         towerTimeResult:"Se acabó el tiempo: gana la mejor torre.",
@@ -1270,6 +1275,10 @@
         towerOut:"Out",
         towerYou:"You",
         towerSpectating:"You're out · watch the others keep climbing",
+        towerLostTitle:"You're out",
+        towerWaitingOthers:"{count} dinos are still standing. Waiting for the rest...",
+        towerSoloRule:"Solo challenge",
+        towerSoloOutResult:"You fell with {layers} floors.",
         towerLastStanding:"Last one standing",
         towerLastStandingResult:"{name} wins as the last dino standing.",
         towerTimeResult:"Time's up: the best tower wins.",
@@ -1876,7 +1885,7 @@
       mixSection:$("mixSection"), mixKicker:$("mixKicker"), mixLead:$("mixLead"), mixTriviaLabel:$("mixTriviaLabel"), mixTowerLabel:$("mixTowerLabel"), mixVersusLabel:$("mixVersusLabel"), mixTriviaInput:$("mixTriviaInput"), mixTowerInput:$("mixTowerInput"), mixVersusInput:$("mixVersusInput"), mixTriviaPct:$("mixTriviaPct"), mixTowerPct:$("mixTowerPct"), mixVersusPct:$("mixVersusPct"), mixNote:$("mixNote"),
       generatingLine:$("generatingLine"), generatingKicker:$("generatingKicker"), pausedTitle:$("pausedTitle"), pausedKicker:$("pausedKicker"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownKicker:$("countdownKicker"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionKicker:$("questionKicker"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerKicker:$("answerKicker"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
-      skillIntroKicker:$("skillIntroKicker"), skillIntroTitle:$("skillIntroTitle"), skillIntroLead:$("skillIntroLead"), skillIntroCount:$("skillIntroCount"), skillKicker:$("skillKicker"), skillTitle:$("skillTitle"), skillPartyBadge:$("skillPartyBadge"), towerCanvas:$("towerCanvas"), towerCanvasWrap:$("towerCanvasWrap"), towerMessage:$("towerMessage"), towerInstruction:$("towerInstruction"), towerLayers:$("towerLayers"), towerPerfects:$("towerPerfects"), towerTime:$("towerTime"), towerLayersLabel:$("towerLayersLabel"), towerPerfectsLabel:$("towerPerfectsLabel"), towerTimeLabel:$("towerTimeLabel"), towerLiveTitle:$("towerLiveTitle"), towerLiveRule:$("towerLiveRule"), towerLiveBoard:$("towerLiveBoard"),
+      skillIntroKicker:$("skillIntroKicker"), skillIntroTitle:$("skillIntroTitle"), skillIntroLead:$("skillIntroLead"), skillIntroCount:$("skillIntroCount"), skillKicker:$("skillKicker"), skillTitle:$("skillTitle"), skillPartyBadge:$("skillPartyBadge"), towerCanvas:$("towerCanvas"), towerCanvasWrap:$("towerCanvasWrap"), towerMessage:$("towerMessage"), towerInstruction:$("towerInstruction"), towerLayers:$("towerLayers"), towerPerfects:$("towerPerfects"), towerTime:$("towerTime"), towerLayersLabel:$("towerLayersLabel"), towerPerfectsLabel:$("towerPerfectsLabel"), towerTimeLabel:$("towerTimeLabel"), towerLiveWrap:$("towerLiveWrap"), towerLiveTitle:$("towerLiveTitle"), towerLiveRule:$("towerLiveRule"), towerLiveBoard:$("towerLiveBoard"), towerElimBanner:$("towerElimBanner"), towerElimTitle:$("towerElimTitle"), towerElimCopy:$("towerElimCopy"),
       scoresKicker:$("scoresKicker"), scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroKicker:$("versusIntroKicker"), versusIntroTitle:$("versusIntroTitle"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusKicker:$("versusKicker"), versusTitle:$("versusTitle"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalKicker:$("scoreModalKicker"), scoreModalTitle:$("scoreModalTitle"), scoreModalRows:$("scoreModalRows"),
       btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), resumeKicker:$("resumeKicker"), resumeTitle:$("resumeTitle"), resumeText:$("resumeText"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
       durationModal:$("durationModal"), durationModalKicker:$("durationModalKicker"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
@@ -3207,9 +3216,14 @@
       } else if(isTowerRound){
         ui.scoresTitle.textContent = t("towerResults");
         const towerWinner = findPlayer(state.game.skill?.winnerId);
+        const myTowerResult = state.game.skill?.results?.[state.playerId] || {};
         ui.scoresLead.textContent = state.game.skill?.winReason === "last_standing"
           ? t("towerLastStandingResult",{name:towerWinner?.name || t("player")})
-          : (state.game.skill?.winReason === "time" ? t("towerTimeResult") : t("towerResultLead"));
+          : (state.game.skill?.winReason === "time"
+            ? t("towerTimeResult")
+            : (state.game.skill?.winReason === "solo_out"
+              ? t("towerSoloOutResult",{layers:Number(myTowerResult.layers||0)})
+              : t("towerResultLead")));
       } else if(isPartyVersusRound){
         ui.scoresTitle.textContent = t("versusPartyResults");
         ui.scoresLead.textContent = t("versusPartyLead");
@@ -3400,6 +3414,11 @@
       const skill = state.game.skill;
       if(state.role !== "host" || !skill || skill.id !== "tower" || skill.awarded) return false;
       const players = readyPlayers();
+      if(players.length === 1 && skill.live?.[players[0].playerId]?.eliminated){
+        skill.winReason = "solo_out";
+        resolveSkillRound();
+        return true;
+      }
       if(players.length < 2) return false;
       const eliminatedCount = players.filter(player => !!skill.live?.[player.playerId]?.eliminated).length;
       const survivors = towerSurvivors();
@@ -3424,7 +3443,9 @@
       if(state.role === "host"){
         state.game.skill.results = {...(state.game.skill.results || {}),[state.playerId]:result};
         applyTowerProgress(state.playerId,result,eliminated);
+        if(eliminated) maybeResolveTowerSurvival();
         await broadcastGame();
+        renderCurrentScene();
       } else if(state.channel){
         await state.channel.send({type:"broadcast",event:"guest_skill_result",payload:{playerId:state.playerId,skillId:"tower",result,eliminated}});
       }
@@ -3706,9 +3727,11 @@
     function renderTowerLiveBoard(){
       const skill = state.game.skill || {};
       if(!ui.towerLiveBoard) return;
+      const ready = readyPlayers();
+      if(ui.towerLiveWrap) ui.towerLiveWrap.hidden = ready.length <= 1;
       ui.towerLiveTitle.textContent = t("towerLiveTitle");
-      ui.towerLiveRule.textContent = t("towerLiveRule");
-      const players = readyPlayers().map(player => {
+      ui.towerLiveRule.textContent = ready.length <= 1 ? t("towerSoloRule") : t("towerLiveRule");
+      const players = ready.map(player => {
         const progress = skill.live?.[player.playerId] || {layers:0,perfects:0,eliminated:false};
         return {player,progress};
       }).sort((a,b) => {
@@ -3733,8 +3756,17 @@
       ui.skillTitle.textContent = t("towerTitle");
       const myLive = skill.live?.[state.playerId];
       const spectating = !!(localTower?.gameEnded || myLive?.eliminated);
+      const survivors = towerSurvivors();
       ui.towerInstruction.textContent = spectating ? t("towerSpectating") : t("towerInstruction");
       ui.towerCanvasWrap.classList.toggle("spectating",spectating);
+      if(ui.towerElimBanner){
+        const multiplayerWait = spectating && readyPlayers().length > 1 && state.game.phase === "skill";
+        ui.towerElimBanner.hidden = !multiplayerWait;
+        if(multiplayerWait){
+          ui.towerElimTitle.textContent = t("towerLostTitle");
+          ui.towerElimCopy.textContent = t("towerWaitingOthers",{count:survivors.length});
+        }
+      }
       renderTowerLiveBoard();
       ui.towerLayersLabel.textContent = t("towerLayers");
       ui.towerPerfectsLabel.textContent = t("towerPerfects");
