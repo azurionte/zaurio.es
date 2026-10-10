@@ -429,6 +429,7 @@
     .skillIntroCard,.towerCard{width:min(980px,100%);overflow:hidden;position:relative}.skillIntroCard:before,.towerCard:before{content:"";position:absolute;inset:-35%;background:conic-gradient(from 90deg,rgba(57,219,255,.11),rgba(255,119,203,.13),rgba(255,216,58,.09),rgba(136,225,110,.09),rgba(57,219,255,.11));filter:blur(48px);animation:partyAura 10s linear infinite;pointer-events:none}.skillIntroInner,.towerInner{position:relative;z-index:1}
     .skillGlyph{font-size:clamp(4rem,10vw,7rem);filter:drop-shadow(0 14px 24px rgba(0,0,0,.35));animation:skillFloat 2.4s ease-in-out infinite}.skillIntroMeta{display:grid;justify-items:center;gap:14px;text-align:center}.skillIntroCount{font-size:clamp(3.4rem,10vw,7rem);font-weight:1000;line-height:1;color:var(--yellow);text-shadow:0 0 30px rgba(255,216,58,.34)}
     .towerHud{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.towerStat{padding:10px 14px;border-radius:18px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.08);display:grid;gap:2px;text-align:center}.towerStat span{font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}.towerStat strong{font-size:1.25rem;color:#fff}
+    .towerLiveWrap{display:grid;gap:9px;margin:0 0 12px}.towerLiveHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px}.towerLiveHead strong{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--cyan)}.towerLiveHead span{font-size:.78rem;color:var(--muted);font-weight:800}.towerLiveGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.towerLivePlayer{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px 11px;border-radius:16px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.08);transition:.2s ease}.towerLivePlayer.me{border-color:rgba(255,216,58,.48);box-shadow:0 0 0 1px rgba(255,216,58,.08)}.towerLivePlayer.out{opacity:.58;filter:saturate(.55)}.towerLivePlayer.winner{border-color:rgba(136,225,110,.75);box-shadow:0 0 22px rgba(136,225,110,.15)}.towerLiveAvatar{width:34px;height:34px;border-radius:999px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:1.15rem}.towerLiveAvatar img{width:100%;height:100%;object-fit:cover}.towerLiveMeta{min-width:0;display:grid;gap:2px}.towerLiveName{font-size:.88rem;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.towerLiveStatus{font-size:.7rem;color:var(--muted);font-weight:800}.towerLiveFloors{display:grid;text-align:right;line-height:1}.towerLiveFloors strong{font-size:1.28rem;color:var(--yellow)}.towerLiveFloors span{font-size:.62rem;color:var(--muted);font-weight:900;text-transform:uppercase}.towerCanvasWrap.spectating{box-shadow:inset 0 0 0 2px rgba(255,119,203,.18),inset 0 0 70px rgba(0,0,0,.42),0 20px 50px rgba(0,0,0,.26)}
     .towerCanvasWrap{position:relative;width:100%;aspect-ratio:16/9;min-height:300px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:radial-gradient(circle at 50% 15%,rgba(57,219,255,.16),transparent 34%),linear-gradient(180deg,#190329 0%,#09000f 72%,#020003 100%);box-shadow:inset 0 0 60px rgba(0,0,0,.34),0 20px 50px rgba(0,0,0,.26);touch-action:none;user-select:none}
     #towerCanvas{display:block;width:100%;height:100%;touch-action:none;cursor:pointer}.towerOverlay{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.towerMessage{padding:12px 18px;border-radius:999px;background:rgba(18,3,31,.86);border:1px solid rgba(255,255,255,.13);font-weight:1000;opacity:0;transform:translateY(8px) scale(.96);transition:.18s ease}.towerMessage.on{opacity:1;transform:none}.towerInstruction{text-align:center;color:var(--muted);font-weight:800;margin-top:12px}
     @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
@@ -735,6 +736,10 @@
               <div class="towerStat"><span id="towerPerfectsLabel">Perfectos</span><strong id="towerPerfects">0</strong></div>
               <div class="towerStat"><span id="towerTimeLabel">Tiempo</span><strong id="towerTime">30</strong></div>
             </div>
+            <div class="towerLiveWrap">
+              <div class="towerLiveHead"><strong id="towerLiveTitle">En directo</strong><span id="towerLiveRule">Último en pie gana</span></div>
+              <div class="towerLiveGrid" id="towerLiveBoard"></div>
+            </div>
             <div class="towerCanvasWrap" id="towerCanvasWrap">
               <canvas id="towerCanvas" width="960" height="540"></canvas>
               <div class="towerOverlay"><div class="towerMessage" id="towerMessage">PERFECT!</div></div>
@@ -1025,6 +1030,15 @@
         towerResults:"Resultados de Torre Zaurio",
         towerResultLead:"La precision tambien da puntos.",
         towerPlayerDetail:"{layers} pisos · {perfects} perfectos",
+        towerLiveTitle:"En directo",
+        towerLiveRule:"Último en pie gana",
+        towerAlive:"En pie",
+        towerOut:"Fuera",
+        towerYou:"Tú",
+        towerSpectating:"Has caído · ahora mira cómo siguen los demás",
+        towerLastStanding:"Último en pie",
+        towerLastStandingResult:"{name} gana por ser el último dino en pie.",
+        towerTimeResult:"Se acabó el tiempo: gana la mejor torre.",
         versusPartyLead:"Cambio de ritmo: duelo directo entre dos dinos.",
         versusPartyCopy:"Piedra, papel o tijera. El resto mira, juzga y mete presion.",
         versusPartyResults:"Resultado del Versus",
@@ -1250,6 +1264,15 @@
         towerResults:"Zaurio Tower results",
         towerResultLead:"Precision scores too.",
         towerPlayerDetail:"{layers} floors · {perfects} perfects",
+        towerLiveTitle:"Live",
+        towerLiveRule:"Last one standing wins",
+        towerAlive:"Standing",
+        towerOut:"Out",
+        towerYou:"You",
+        towerSpectating:"You're out · watch the others keep climbing",
+        towerLastStanding:"Last one standing",
+        towerLastStandingResult:"{name} wins as the last dino standing.",
+        towerTimeResult:"Time's up: the best tower wins.",
         versusPartyLead:"Rhythm break: a direct duel between two dinos.",
         versusPartyCopy:"Rock, paper, scissors. Everyone else gets to watch and apply pressure.",
         versusPartyResults:"Versus result",
@@ -1853,7 +1876,7 @@
       mixSection:$("mixSection"), mixKicker:$("mixKicker"), mixLead:$("mixLead"), mixTriviaLabel:$("mixTriviaLabel"), mixTowerLabel:$("mixTowerLabel"), mixVersusLabel:$("mixVersusLabel"), mixTriviaInput:$("mixTriviaInput"), mixTowerInput:$("mixTowerInput"), mixVersusInput:$("mixVersusInput"), mixTriviaPct:$("mixTriviaPct"), mixTowerPct:$("mixTowerPct"), mixVersusPct:$("mixVersusPct"), mixNote:$("mixNote"),
       generatingLine:$("generatingLine"), generatingKicker:$("generatingKicker"), pausedTitle:$("pausedTitle"), pausedKicker:$("pausedKicker"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownKicker:$("countdownKicker"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionKicker:$("questionKicker"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerKicker:$("answerKicker"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
-      skillIntroKicker:$("skillIntroKicker"), skillIntroTitle:$("skillIntroTitle"), skillIntroLead:$("skillIntroLead"), skillIntroCount:$("skillIntroCount"), skillKicker:$("skillKicker"), skillTitle:$("skillTitle"), skillPartyBadge:$("skillPartyBadge"), towerCanvas:$("towerCanvas"), towerCanvasWrap:$("towerCanvasWrap"), towerMessage:$("towerMessage"), towerInstruction:$("towerInstruction"), towerLayers:$("towerLayers"), towerPerfects:$("towerPerfects"), towerTime:$("towerTime"), towerLayersLabel:$("towerLayersLabel"), towerPerfectsLabel:$("towerPerfectsLabel"), towerTimeLabel:$("towerTimeLabel"),
+      skillIntroKicker:$("skillIntroKicker"), skillIntroTitle:$("skillIntroTitle"), skillIntroLead:$("skillIntroLead"), skillIntroCount:$("skillIntroCount"), skillKicker:$("skillKicker"), skillTitle:$("skillTitle"), skillPartyBadge:$("skillPartyBadge"), towerCanvas:$("towerCanvas"), towerCanvasWrap:$("towerCanvasWrap"), towerMessage:$("towerMessage"), towerInstruction:$("towerInstruction"), towerLayers:$("towerLayers"), towerPerfects:$("towerPerfects"), towerTime:$("towerTime"), towerLayersLabel:$("towerLayersLabel"), towerPerfectsLabel:$("towerPerfectsLabel"), towerTimeLabel:$("towerTimeLabel"), towerLiveTitle:$("towerLiveTitle"), towerLiveRule:$("towerLiveRule"), towerLiveBoard:$("towerLiveBoard"),
       scoresKicker:$("scoresKicker"), scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroKicker:$("versusIntroKicker"), versusIntroTitle:$("versusIntroTitle"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusKicker:$("versusKicker"), versusTitle:$("versusTitle"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalKicker:$("scoreModalKicker"), scoreModalTitle:$("scoreModalTitle"), scoreModalRows:$("scoreModalRows"),
       btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), resumeKicker:$("resumeKicker"), resumeTitle:$("resumeTitle"), resumeText:$("resumeText"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
       durationModal:$("durationModal"), durationModalKicker:$("durationModalKicker"), durationModalTitle:$("durationModalTitle"), durationMinutesField:$("durationMinutesField"), durationQuestionsField:$("durationQuestionsField"),
@@ -2135,7 +2158,11 @@
       return [sorted[start].playerId,sorted[start+1].playerId];
     }
     function createSkillState(id = "tower"){
-      return {id,seed:Date.now(),introEndsAt:Date.now()+(SKILL_INTRO_SECONDS*1000),endsAt:0,results:{},rankings:[],awarded:false};
+      const live = {};
+      readyPlayers().forEach(player => {
+        live[player.playerId] = {layers:0,perfects:0,precision:0,rawScore:0,eliminated:false,updatedAt:Date.now()};
+      });
+      return {id,seed:Date.now(),introEndsAt:Date.now()+(SKILL_INTRO_SECONDS*1000),endsAt:0,results:{},live,rankings:[],winnerId:"",winReason:"",awarded:false};
     }
     function finishPlannedGame(){
       state.game.finished = true;
@@ -3179,7 +3206,10 @@
         ui.scoresLead.textContent = t("speedRoundLead");
       } else if(isTowerRound){
         ui.scoresTitle.textContent = t("towerResults");
-        ui.scoresLead.textContent = t("towerResultLead");
+        const towerWinner = findPlayer(state.game.skill?.winnerId);
+        ui.scoresLead.textContent = state.game.skill?.winReason === "last_standing"
+          ? t("towerLastStandingResult",{name:towerWinner?.name || t("player")})
+          : (state.game.skill?.winReason === "time" ? t("towerTimeResult") : t("towerResultLead"));
       } else if(isPartyVersusRound){
         ui.scoresTitle.textContent = t("versusPartyResults");
         ui.scoresLead.textContent = t("versusPartyLead");
@@ -3332,15 +3362,71 @@
       };
     }
 
-    async function submitTowerResult(){
+    function sanitizeTowerProgress(result = {}, eliminated = false){
+      return {
+        layers:Math.max(0,Math.min(500,Number(result.layers||0))),
+        perfects:Math.max(0,Math.min(500,Number(result.perfects||0))),
+        precision:Math.max(0,Math.min(1,Number(result.precision||0))),
+        rawScore:Math.max(0,Math.min(100000,Number(result.rawScore||0))),
+        eliminated:!!eliminated,
+        updatedAt:Date.now()
+      };
+    }
+
+    function applyTowerProgress(playerId,result,eliminated=false){
+      const skill = state.game.skill;
+      if(!skill || skill.id !== "tower" || !playerId) return;
+      skill.live = {...(skill.live || {}),[playerId]:sanitizeTowerProgress(result,eliminated)};
+    }
+
+    async function publishTowerProgress(eliminated=false){
+      if(!localTower || !state.game.skill || state.game.skill.id !== "tower") return;
+      const result = towerResultPayload();
+      if(state.role === "host"){
+        applyTowerProgress(state.playerId,result,eliminated);
+        await broadcastGame();
+      } else if(state.channel){
+        await state.channel.send({type:"broadcast",event:"guest_skill_progress",payload:{playerId:state.playerId,skillId:"tower",result,eliminated}});
+      }
+    }
+
+    function towerSurvivors(){
+      const skill = state.game.skill || {};
+      const players = readyPlayers();
+      return players.filter(player => !skill.live?.[player.playerId]?.eliminated);
+    }
+
+    function maybeResolveTowerSurvival(){
+      const skill = state.game.skill;
+      if(state.role !== "host" || !skill || skill.id !== "tower" || skill.awarded) return false;
+      const players = readyPlayers();
+      if(players.length < 2) return false;
+      const eliminatedCount = players.filter(player => !!skill.live?.[player.playerId]?.eliminated).length;
+      const survivors = towerSurvivors();
+      if(eliminatedCount > 0 && survivors.length === 1){
+        skill.winnerId = survivors[0].playerId;
+        skill.winReason = "last_standing";
+        resolveSkillRound();
+        return true;
+      }
+      if(eliminatedCount === players.length && survivors.length === 0){
+        skill.winReason = "all_out";
+        resolveSkillRound();
+        return true;
+      }
+      return false;
+    }
+
+    async function submitTowerResult(eliminated=false){
       if(!localTower || localTower.submitted || !state.game.skill || state.game.skill.id !== "tower") return;
       localTower.submitted = true;
       const result = towerResultPayload();
       if(state.role === "host"){
         state.game.skill.results = {...(state.game.skill.results || {}),[state.playerId]:result};
+        applyTowerProgress(state.playerId,result,eliminated);
         await broadcastGame();
       } else if(state.channel){
-        await state.channel.send({type:"broadcast",event:"guest_skill_result",payload:{playerId:state.playerId,skillId:"tower",result}});
+        await state.channel.send({type:"broadcast",event:"guest_skill_result",payload:{playerId:state.playerId,skillId:"tower",result,eliminated}});
       }
     }
 
@@ -3503,7 +3589,8 @@
         game.gameEnded = true;
         zaurioFx("miss");
         showTowerMessage(t("towerMiss"));
-        setTimeout(submitTowerResult,700);
+        publishTowerProgress(true);
+        setTimeout(()=>submitTowerResult(true),350);
       }
 
       function place(){
@@ -3541,6 +3628,7 @@
         if(perfect) game.perfects++;
         zaurioFx(perfect ? "perfect" : "place");
         showTowerMessage(perfect ? t("towerPerfect") : t("towerGood"));
+        publishTowerProgress(false);
 
         const newWidth = top.width;
         const newDepth = top.depth;
@@ -3615,11 +3703,39 @@
       ui.skillIntroCount.textContent = String(Math.max(0,Math.ceil((Number(skill.introEndsAt||0)-sharedNow())/1000)));
     }
 
+    function renderTowerLiveBoard(){
+      const skill = state.game.skill || {};
+      if(!ui.towerLiveBoard) return;
+      ui.towerLiveTitle.textContent = t("towerLiveTitle");
+      ui.towerLiveRule.textContent = t("towerLiveRule");
+      const players = readyPlayers().map(player => {
+        const progress = skill.live?.[player.playerId] || {layers:0,perfects:0,eliminated:false};
+        return {player,progress};
+      }).sort((a,b) => {
+        if(!!a.progress.eliminated !== !!b.progress.eliminated) return a.progress.eliminated ? 1 : -1;
+        return Number(b.progress.layers||0)-Number(a.progress.layers||0);
+      });
+      ui.towerLiveBoard.innerHTML = players.map(({player,progress}) => {
+        const mine = player.playerId === state.playerId;
+        const winner = skill.winnerId === player.playerId;
+        const status = winner ? t("towerLastStanding") : (progress.eliminated ? t("towerOut") : t("towerAlive"));
+        return `<article class="towerLivePlayer ${mine ? "me" : ""} ${progress.eliminated ? "out" : ""} ${winner ? "winner" : ""}">
+          <div class="towerLiveAvatar">${player.avatarSrc ? `<img src="${player.avatarSrc}" alt="">` : "🦖"}</div>
+          <div class="towerLiveMeta"><div class="towerLiveName">${esc(player.name || t("player"))}${mine ? ` · ${t("towerYou")}` : ""}</div><div class="towerLiveStatus">${esc(status)}</div></div>
+          <div class="towerLiveFloors"><strong>${Number(progress.layers||0)}</strong><span>${t("towerLayers")}</span></div>
+        </article>`;
+      }).join("");
+    }
+
     function renderSkillScene(){
       const skill = state.game.skill || {};
       ui.skillKicker.textContent = t("skillKicker");
       ui.skillTitle.textContent = t("towerTitle");
-      ui.towerInstruction.textContent = localTower?.gameEnded ? t("towerMiss") : t("towerInstruction");
+      const myLive = skill.live?.[state.playerId];
+      const spectating = !!(localTower?.gameEnded || myLive?.eliminated);
+      ui.towerInstruction.textContent = spectating ? t("towerSpectating") : t("towerInstruction");
+      ui.towerCanvasWrap.classList.toggle("spectating",spectating);
+      renderTowerLiveBoard();
       ui.towerLayersLabel.textContent = t("towerLayers");
       ui.towerPerfectsLabel.textContent = t("towerPerfects");
       ui.towerTimeLabel.textContent = t("towerTime");
@@ -3629,7 +3745,7 @@
       initLocalTower();
       if(sharedNow() >= Number(skill.endsAt||0) && localTower && !localTower.submitted){
         localTower.gameEnded = true;
-        submitTowerResult();
+        submitTowerResult(false);
       }
     }
 
@@ -3637,8 +3753,26 @@
       const skill = state.game.skill;
       if(!skill || skill.awarded) return;
       const results = {...(skill.results || {})};
-      readyPlayers().forEach(player=>{ if(!results[player.playerId]) results[player.playerId]={layers:0,perfects:0,precision:0,rawScore:0}; });
-      const ranking = Object.entries(results).sort((a,b)=>Number(b[1]?.rawScore||0)-Number(a[1]?.rawScore||0));
+      readyPlayers().forEach(player=>{
+        if(!results[player.playerId]){
+          const live = skill.live?.[player.playerId] || {};
+          results[player.playerId] = {
+            layers:Number(live.layers||0),
+            perfects:Number(live.perfects||0),
+            precision:Number(live.precision||0),
+            rawScore:Number(live.rawScore||0)
+          };
+        }
+      });
+      const ranking = Object.entries(results).sort((a,b)=>{
+        if(skill.winnerId){
+          if(a[0] === skill.winnerId) return -1;
+          if(b[0] === skill.winnerId) return 1;
+        }
+        return Number(b[1]?.rawScore||0)-Number(a[1]?.rawScore||0) || Number(b[1]?.layers||0)-Number(a[1]?.layers||0);
+      });
+      if(!skill.winnerId && ranking.length) skill.winnerId = ranking[0][0];
+      if(!skill.winReason) skill.winReason = "time";
       const scores = {...(state.game.scores || {})};
       const deltas = {};
       ranking.forEach(([playerId,result],index)=>{
@@ -3664,7 +3798,7 @@
     async function updatePresence(){ if(!state.channel) return; await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready ? (state.avatar.rendered || state.avatar.src) : "",updatedAt:Date.now()}); }
     async function broadcastGame(){ if(state.role !== "host" || !state.channel) return; await state.channel.send({type:"broadcast",event:"game_state",payload:{...state.game,__hostNow:Date.now()}}); }
     function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
-    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); if(role === "host") clockOffsetMs = 0; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; syncClock(payload.__hostNow); const nextGame = {...payload}; delete nextGame.__hostNow; if(!["question","answer"].includes(nextGame.phase)) state.localAnswer = null; if(nextGame.phase === "question" && state.game.question && nextGame.question && nextGame.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...nextGame}; if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; const answerIndex = Number(payload.answerIndex); if(!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= (state.game.question.choices || []).length) return; if(state.game.question.type === "speed"){ if(state.game.question.responses?.[payload.playerId]){ broadcastGame(); return; } const occupied = Object.entries(state.game.question.responses || {}).some(([playerId,response]) => playerId !== payload.playerId && Number(response?.answerIndex) === answerIndex); if(occupied){ broadcastGame(); return; } } state.game.question.responses[payload.playerId] = {answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_result"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; const result = payload.result || {}; state.game.skill.results = {...(state.game.skill.results || {}),[payload.playerId]:{layers:Math.max(0,Math.min(200,Number(result.layers||0))),perfects:Math.max(0,Math.min(200,Number(result.perfects||0))),precision:Math.max(0,Math.min(1,Number(result.precision||0))),rawScore:Math.max(0,Math.min(50000,Number(result.rawScore||0)))}}; broadcastGame(); renderCurrentScene(); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(role !== "host"){ await channel.send({type:"broadcast",event:"request_state",payload:{playerId:state.playerId,requestedAt:Date.now()}}); } if(!options.silentStatus) setStatus("","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
+    async function connectRoom(role, code, options = {}){ if(state.channel){ try{ await sb.removeChannel(state.channel); } catch(_){} } const keepName = state.name; const keepAvatar = {...state.avatar}; const keepReady = !!state.ready; const keepGame = options.keepGame ? state.game : null; state.role = role; state.roomCode = code; state.ready = options.keepReady ? keepReady : false; state.waitingLine = lineFor(state.playerId); state.localAnswer = null; state.name = keepName; state.avatar = keepAvatar; state.game = keepGame || gameDefaults(); if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); if(role === "host") clockOffsetMs = 0; applyAvatar(); const channel = sb.channel(`trivialodon:session:${code}`, {config:{broadcast:{self:true},presence:{key:state.playerId}}}); state.channel = channel; channel.on("presence",{event:"sync"},syncPlayers).on("broadcast",{event:"game_state"},({payload}) => { if(!payload) return; syncClock(payload.__hostNow); const nextGame = {...payload}; delete nextGame.__hostNow; if(!["question","answer"].includes(nextGame.phase)) state.localAnswer = null; if(nextGame.phase === "question" && state.game.question && nextGame.question && nextGame.question.endAt !== state.game.question.endAt) state.localAnswer = null; state.game = {...gameDefaults(), ...nextGame}; if(state.game?.lang === "es" || state.game?.lang === "en") applyCurrentLanguage(state.game.lang, true); renderCurrentScene(); }).on("broadcast",{event:"request_state"},async () => { if(state.role !== "host") return; await broadcastGame(); }).on("broadcast",{event:"guest_answer"},({payload}) => { if(state.role !== "host" || !state.game.question || !payload) return; const answerIndex = Number(payload.answerIndex); if(!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= (state.game.question.choices || []).length) return; if(state.game.question.type === "speed"){ if(state.game.question.responses?.[payload.playerId]){ broadcastGame(); return; } const occupied = Object.entries(state.game.question.responses || {}).some(([playerId,response]) => playerId !== payload.playerId && Number(response?.answerIndex) === answerIndex); if(occupied){ broadcastGame(); return; } } state.game.question.responses[payload.playerId] = {answerIndex,answeredAt:payload.answeredAt || Date.now()}; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_versus_choice"},({payload}) => { if(state.role !== "host" || !state.game.versus || !payload) return; if(!(state.game.versus.pair || []).includes(payload.playerId)) return; state.game.versus.choices[payload.playerId] = payload.move || ""; broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_progress"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; applyTowerProgress(payload.playerId,payload.result || {},!!payload.eliminated); broadcastGame(); renderCurrentScene(); }).on("broadcast",{event:"guest_skill_result"},({payload}) => { if(state.role !== "host" || !state.game.skill || !payload || payload.skillId !== state.game.skill.id) return; if(!readyPlayers().some(player => player.playerId === payload.playerId)) return; const result = sanitizeTowerProgress(payload.result || {},!!payload.eliminated); state.game.skill.results = {...(state.game.skill.results || {}),[payload.playerId]:{layers:result.layers,perfects:result.perfects,precision:result.precision,rawScore:result.rawScore}}; applyTowerProgress(payload.playerId,result,!!payload.eliminated); broadcastGame(); renderCurrentScene(); }); await new Promise(resolve => { channel.subscribe(async status => { if(status === "SUBSCRIBED"){ await updatePresence(); syncPlayers(); if(role !== "host"){ await channel.send({type:"broadcast",event:"request_state",payload:{playerId:state.playerId,requestedAt:Date.now()}}); } if(!options.silentStatus) setStatus("","info"); if(role === "host" && !options.keepGame){ setTimeout(async () => { if(state.players.some(player => player.role === "host" && player.playerId !== state.playerId)) await connectRoom("host", roomCode()); }, 280); } resolve(status); } else if(status === "CHANNEL_ERROR" || status === "TIMED_OUT"){ setStatus("No he podido abrir la sala realtime en Supabase.","danger"); resolve(status); } }); }); }
     function sampleStandardQuestion(){
       const picked = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)] || QUESTION_BANK[0];
       return {...prepareQuestion(picked), responses:{}, revealed:false};
@@ -4078,9 +4212,18 @@
       if(state.game.phase === "skill"){
         renderSkillScene();
         if(state.role === "host" && state.game.skill){
-          const readyIds = readyPlayers().map(player=>player.playerId);
-          const got = Object.keys(state.game.skill.results || {}).filter(playerId=>readyIds.includes(playerId));
-          if((readyIds.length && got.length >= readyIds.length) || sharedNow() >= Number(state.game.skill.endsAt || 0) + 1200){
+          const skill = state.game.skill;
+          skill.live = {...(skill.live || {})};
+          readyPlayers().forEach(player=>{
+            if(!skill.live[player.playerId]) skill.live[player.playerId] = {layers:0,perfects:0,precision:0,rawScore:0,eliminated:false,updatedAt:Date.now()};
+          });
+          if(maybeResolveTowerSurvival()){
+            await broadcastGame();
+            renderCurrentScene();
+            return;
+          }
+          if(sharedNow() >= Number(skill.endsAt || 0) + 1200){
+            skill.winReason = "time";
             resolveSkillRound();
             await broadcastGame();
             renderCurrentScene();
