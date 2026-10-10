@@ -3343,8 +3343,20 @@
     function initLocalTower(){
       const skill = state.game.skill;
       if(!skill || skill.id !== "tower" || !ui.towerCanvas) return;
-      if(localTower?.seed === skill.seed) return;
       const canvas = ui.towerCanvas;
+      if(localTower?.seed === skill.seed){
+        const rect = canvas.getBoundingClientRect();
+        if(rect.width > 10 && rect.height > 10 && (localTower.viewW < 10 || localTower.viewH < 10)){
+          localTower.resize();
+          drawTower();
+          if(!localTower.rafRunning){
+            localTower.rafRunning = true;
+            localTower.lastFrame = performance.now();
+            requestAnimationFrame(towerFrame);
+          }
+        }
+        return;
+      }
       const ctx = canvas.getContext("2d");
       const resize = () => {
         const rect = canvas.getBoundingClientRect();
@@ -3356,10 +3368,11 @@
         localTower.viewH = rect.height;
       };
       localTower = {
-        seed:skill.seed,ctx,canvas,viewW:960,viewH:540,layers:0,perfects:0,precisions:[],submitted:false,ended:false,
+        seed:skill.seed,ctx,canvas,viewW:0,viewH:0,layers:0,perfects:0,precisions:[],submitted:false,ended:false,rafRunning:false,
         fixed:[{x:.5,width:.34}],moving:{x:.15,width:.34,dir:1,speed:.42},lastFrame:performance.now(),resize
       };
       resize();
+      drawTower();
       const place = async ev => {
         if(ev?.preventDefault) ev.preventDefault();
         if(state.game.phase !== "skill" || !localTower || localTower.ended) return;
@@ -3394,10 +3407,14 @@
       }
       localTower.resizeHandler = () => { if(localTower?.resize) localTower.resize(); };
       window.addEventListener("resize",localTower.resizeHandler,{passive:true});
+      localTower.rafRunning = true;
       requestAnimationFrame(towerFrame);
     }
     function towerFrame(now){
-      if(!localTower || state.game.phase !== "skill") return;
+      if(!localTower || state.game.phase !== "skill"){
+        if(localTower) localTower.rafRunning = false;
+        return;
+      }
       const tstate = localTower;
       const dt = Math.min(.04,(now-tstate.lastFrame)/1000 || .016);
       tstate.lastFrame = now;
@@ -3497,7 +3514,7 @@
     function renderGeneratingScene(){ const lines = GENERATING_LINES[currentLang] || GENERATING_LINES.es; const line = lines[Math.floor(Date.now() / 3200) % lines.length]; ui.generatingLine.textContent = line; }
     function showScene(name){ Object.entries(ui.scenes).forEach(([key,node]) => node.classList.toggle("on", key === name)); }
     function currentScene(){ if(state.role === "guest" && !state.roomCode) return "join"; if(!state.ready) return "profile"; if(state.game.phase === "lobby") return "lobby"; if(state.game.phase === "setup") return state.role === "host" ? "setup" : "lobby"; if(state.game.phase === "generating") return "generating"; if(state.game.phase === "paused") return "paused"; if(state.game.phase === "countdown") return "countdown"; if(state.game.phase === "question" || state.game.phase === "answer") return "question"; if(state.game.phase === "skill_intro") return "skillIntro"; if(state.game.phase === "skill") return "skill"; if(state.game.phase === "scores") return "scores"; if(state.game.phase === "versus_intro") return "versusIntro"; if(state.game.phase === "versus") return "versus"; return "lobby"; }
-    function renderCurrentScene(){ updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderGeneratingScene(); renderPausedScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); renderSkillIntroScene(); if(state.game.phase === "skill") renderSkillScene(); renderScoresScene(); renderVersusIntroScene(); renderVersusScene(); saveSession(); showScene(currentScene()); syncAudio(); syncCastSession(); }
+    function renderCurrentScene(){ const scene=currentScene(); showScene(scene); updateIdentity(); renderProfileScene(); renderLobbyScene(); renderSetupScene(); renderGeneratingScene(); renderPausedScene(); renderCountdownScene(); if(state.game.question) renderQuestionScene(); renderSkillIntroScene(); if(state.game.phase === "skill") renderSkillScene(); renderScoresScene(); renderVersusIntroScene(); renderVersusScene(); saveSession(); syncAudio(); syncCastSession(); }
     async function updatePresence(){ if(!state.channel) return; await state.channel.track({playerId:state.playerId,role:state.role,ready:state.ready,name:state.name,waitingLine:state.waitingLine,avatarSrc:state.ready ? (state.avatar.rendered || state.avatar.src) : "",updatedAt:Date.now()}); }
     async function broadcastGame(){ if(state.role !== "host" || !state.channel) return; await state.channel.send({type:"broadcast",event:"game_state",payload:{...state.game,__hostNow:Date.now()}}); }
     function syncPlayers(){ if(!state.channel) return; const raw = []; Object.values(state.channel.presenceState()).forEach(entries => (entries || []).forEach(entry => raw.push(entry))); state.players = dedupePlayers(raw); renderCurrentScene(); }
