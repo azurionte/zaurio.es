@@ -795,7 +795,10 @@
                 <h2 class="subtitle" id="hungerTitle">Hambre Voraz</h2>
                 <p id="hungerLead">Arrastra a tu conejo por el hielo y llévate las zanahorias antes que los demás.</p>
               </div>
-              <div class="hungerTimer"><span id="hungerTimeLabel">Tiempo</span><strong id="hungerTime">30</strong></div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+                <div class="partyBadge" id="hungerModeBadge">🥕 NORMAL</div>
+                <div class="hungerTimer"><span id="hungerTimeLabel">Tiempo</span><strong id="hungerTime">30</strong></div>
+              </div>
             </div>
             <div class="hungerScoreStrip" id="hungerScoreStrip"></div>
             <div class="hungerArena" id="hungerArena">
@@ -2044,7 +2047,7 @@
       generatingLine:$("generatingLine"), generatingKicker:$("generatingKicker"), pausedTitle:$("pausedTitle"), pausedKicker:$("pausedKicker"), pausedCopy:$("pausedCopy"), pausedActions:$("pausedActions"), countdownKicker:$("countdownKicker"), countdownCategory:$("countdownCategory"), countdownCategoryArt:$("countdownCategoryArt"), countdownValue:$("countdownValue"), countdownActions:$("countdownActions"), questionKicker:$("questionKicker"), questionPrompt:$("questionPrompt"), questionCopy:$("questionCopy"), questionTimerRing:$("questionTimerRing"),
       questionTimer:$("questionTimer"), questionAnswers:$("questionAnswers"), answerKicker:$("answerKicker"), answerCorrect:$("answerCorrect"), answerPrompt:$("answerPrompt"),
       skillIntroKicker:$("skillIntroKicker"), skillIntroTitle:$("skillIntroTitle"), skillIntroLead:$("skillIntroLead"), skillIntroCount:$("skillIntroCount"), skillKicker:$("skillKicker"), skillTitle:$("skillTitle"), skillPartyBadge:$("skillPartyBadge"), towerCanvas:$("towerCanvas"), towerCanvasWrap:$("towerCanvasWrap"), towerMessage:$("towerMessage"), towerInstruction:$("towerInstruction"), towerLayers:$("towerLayers"), towerPerfects:$("towerPerfects"), towerTime:$("towerTime"), towerLayersLabel:$("towerLayersLabel"), towerPerfectsLabel:$("towerPerfectsLabel"), towerTimeLabel:$("towerTimeLabel"), towerLiveWrap:$("towerLiveWrap"), towerLiveTitle:$("towerLiveTitle"), towerLiveRule:$("towerLiveRule"), towerLiveBoard:$("towerLiveBoard"), towerElimBanner:$("towerElimBanner"), towerElimTitle:$("towerElimTitle"), towerElimCopy:$("towerElimCopy"),
-      hungerIntroKicker:$("hungerIntroKicker"), hungerIntroTitle:$("hungerIntroTitle"), hungerIntroLead:$("hungerIntroLead"), hungerIntroCount:$("hungerIntroCount"), hungerKicker:$("hungerKicker"), hungerTitle:$("hungerTitle"), hungerLead:$("hungerLead"), hungerMyRabbitBadge:$("hungerMyRabbitBadge"), hungerMyRabbitDot:$("hungerMyRabbitDot"), hungerMyRabbitText:$("hungerMyRabbitText"), hungerTimeLabel:$("hungerTimeLabel"), hungerTime:$("hungerTime"), hungerScoreStrip:$("hungerScoreStrip"), hungerArena:$("hungerArena"), hungerCanvas:$("hungerCanvas"), hungerEatFlash:$("hungerEatFlash"), hungerInstruction:$("hungerInstruction"),
+      hungerIntroKicker:$("hungerIntroKicker"), hungerIntroTitle:$("hungerIntroTitle"), hungerIntroLead:$("hungerIntroLead"), hungerIntroCount:$("hungerIntroCount"), hungerKicker:$("hungerKicker"), hungerTitle:$("hungerTitle"), hungerLead:$("hungerLead"), hungerMyRabbitBadge:$("hungerMyRabbitBadge"), hungerMyRabbitDot:$("hungerMyRabbitDot"), hungerMyRabbitText:$("hungerMyRabbitText"), hungerModeBadge:$("hungerModeBadge"), hungerTimeLabel:$("hungerTimeLabel"), hungerTime:$("hungerTime"), hungerScoreStrip:$("hungerScoreStrip"), hungerArena:$("hungerArena"), hungerCanvas:$("hungerCanvas"), hungerEatFlash:$("hungerEatFlash"), hungerInstruction:$("hungerInstruction"),
       pasabolasIntroKicker:$("pasabolasIntroKicker"), pasabolasIntroTitle:$("pasabolasIntroTitle"), pasabolasIntroLead:$("pasabolasIntroLead"), pasabolasIntroNames:$("pasabolasIntroNames"), pasabolasIntroCount:$("pasabolasIntroCount"), pasabolasKicker:$("pasabolasKicker"), pasabolasTitle:$("pasabolasTitle"), pasabolasLead:$("pasabolasLead"), pasabolasScoreA:$("pasabolasScoreA"), pasabolasScoreB:$("pasabolasScoreB"), pasabolasNameA:$("pasabolasNameA"), pasabolasNameB:$("pasabolasNameB"), pasabolasArena:$("pasabolasArena"), pasabolasCanvas:$("pasabolasCanvas"), pasabolasWinner:$("pasabolasWinner"), pasabolasHint:$("pasabolasHint"),
       scoresKicker:$("scoresKicker"), scoresTitle:$("scoresTitle"), scoresLead:$("scoresLead"), scoresRows:$("scoresRows"), finalActions:$("finalActions"), versusIntroKicker:$("versusIntroKicker"), versusIntroTitle:$("versusIntroTitle"), versusIntroLead:$("versusIntroLead"), versusIntroNames:$("versusIntroNames"), versusIntroCopy:$("versusIntroCopy"), versusIntroCount:$("versusIntroCount"), versusKicker:$("versusKicker"), versusTitle:$("versusTitle"), versusLead:$("versusLead"), versusRoundBadge:$("versusRoundBadge"), versusBurst:$("versusBurst"), versusChampionFx:$("versusChampionFx"), versusChampionText:$("versusChampionText"), versusHandA:$("versusHandA"), versusHandB:$("versusHandB"), versusPlayerA:$("versusPlayerA"), versusPlayerB:$("versusPlayerB"), versusScoreline:$("versusScoreline"), versusTimer:$("versusTimer"), versusRoundCopy:$("versusRoundCopy"), versusButtons:$("versusButtons"), scoreModal:$("scoreModal"), scoreModalKicker:$("scoreModalKicker"), scoreModalTitle:$("scoreModalTitle"), scoreModalRows:$("scoreModalRows"),
       btnCloseScore:$("btnCloseScore"), resumeModal:$("resumeModal"), resumeKicker:$("resumeKicker"), resumeTitle:$("resumeTitle"), resumeText:$("resumeText"), btnResumeContinue:$("btnResumeContinue"), btnResumeNew:$("btnResumeNew"),
@@ -2352,7 +2355,15 @@
       if(hunger.carrots.length > 7) hunger.carrots = hunger.carrots.slice(0,7);
     }
     function hungerSpawnBomb(hunger){
-      const point=hungerRandomPoint([...(hunger.carrots||[]),...(hunger.bombs||[]),...Object.values(hunger.players||{})]);
+      const existing=[...(hunger.carrots||[]),...(hunger.bombs||[]),...Object.values(hunger.players||{})];
+      let point=null;
+      for(let attempt=0;attempt<40;attempt++){
+        const candidate={x:(Math.random()*2-1)*4.4,z:(Math.random()*2-1)*4.4};
+        if(existing.every(item=>Math.hypot(Number(item.x||0)-candidate.x,Number(item.z||0)-candidate.z)>1.35)){
+          point=candidate;break;
+        }
+      }
+      if(!point) point={x:(Math.random()*2-1)*3.5,z:(Math.random()*2-1)*3.5};
       hunger.nextBombId=Number(hunger.nextBombId||0)+1;
       return {id:`b${hunger.nextBombId}`,x:point.x,z:point.z,spin:Math.random()*Math.PI*2};
     }
@@ -2373,7 +2384,7 @@
       });
       const hunger = {seed:Date.now(),variant:state.game.hungerVariant==="bombs"?"bombs":"normal",introEndsAt:Date.now()+HUNGER_INTRO_SECONDS*1000,endsAt:0,players,scores,carrots:[],bombs:[],nextCarrotId:0,nextBombId:0,rankings:[],awarded:false};
       hungerRefillCarrots(hunger,5);
-      hungerRefillBombs(hunger);
+      hungerRefillBombs(hunger,hunger.variant==="bombs"?2:0);
       return hunger;
     }
     function finishPlannedGame(){
@@ -4555,7 +4566,7 @@
       });
       const sprite=new THREE.Sprite(spriteMaterial);
       sprite.position.set(0,.92,0);
-      sprite.scale.set(1.75,1.75,1.75);
+      sprite.scale.set(2.35,2.35,2.35);
       sprite.userData.bombSprite=true;
       group.add(sprite);
 
@@ -4677,7 +4688,7 @@
     }
     function renderHungerIntroScene(){const hunger=state.game.hunger||{};ui.hungerIntroKicker.textContent=t("hungerKicker");ui.hungerIntroTitle.textContent=t("hungerTitle");ui.hungerIntroLead.textContent=t(hunger.variant==="bombs"?"hungerBombIntroLead":"hungerIntroLead");ui.hungerIntroCount.textContent=String(Math.max(0,Math.ceil((Number(hunger.introEndsAt||0)-sharedNow())/1000)));}
     function renderHungerScoreStrip(){if(!ui.hungerScoreStrip)return;const hunger=state.game.hunger||{},scores=hunger.scores||{};const players=readyPlayers().map(player=>({player,score:Number(scores[player.playerId]||0),color:Number(hunger.players?.[player.playerId]?.color||hungerPlayerColor(player.playerId))})).sort((a,b)=>b.score-a.score);ui.hungerScoreStrip.innerHTML=players.map(({player,score,color})=>{const mine=player.playerId===state.playerId;const hex=hungerColorHex(color);return `<article class="hungerScoreChip ${mine?"me":""}" style="${mine?`border-color:${hex};box-shadow:0 0 0 1px ${hex}55,0 0 18px ${hex}28`:""}">${hungerBunnySvg(hex)}<div class="hungerPlayerId"><div class="hungerNameRow"><div class="hungerScoreName">${esc(player.name||t("player"))}</div>${mine?`<span class="hungerYouTag">${t("towerYou")}</span>`:""}</div></div><div class="hungerScoreValue"><span class="carrot">🥕</span><strong>${score}</strong></div></article>`;}).join("");}
-    function renderHungerScene(){const hunger=state.game.hunger||{};ui.hungerKicker.textContent=t("hungerKicker");ui.hungerTitle.textContent=t("hungerTitle");ui.hungerLead.textContent=t(hunger.variant==="bombs"?"hungerBombIntroLead":"hungerLead");ui.hungerTimeLabel.textContent=t("hungerTime");ui.hungerInstruction.textContent=t("hungerInstruction");ui.hungerTime.textContent=String(Math.max(0,Math.ceil((Number(hunger.endsAt||0)-sharedNow())/1000)));renderHungerScoreStrip();initHungerRuntime();}
+    function renderHungerScene(){const hunger=state.game.hunger||{};ui.hungerKicker.textContent=t("hungerKicker");ui.hungerTitle.textContent=t("hungerTitle");ui.hungerLead.textContent=t(hunger.variant==="bombs"?"hungerBombIntroLead":"hungerLead");ui.hungerTimeLabel.textContent=t("hungerTime");ui.hungerInstruction.textContent=t("hungerInstruction");ui.hungerTime.textContent=String(Math.max(0,Math.ceil((Number(hunger.endsAt||0)-sharedNow())/1000)));if(ui.hungerModeBadge){const bombCount=Array.isArray(hunger.bombs)?hunger.bombs.length:0;ui.hungerModeBadge.textContent=hunger.variant==="bombs"?`💣 BOMBAS · ${bombCount} ACTIVAS`:"🥕 NORMAL";ui.hungerModeBadge.style.borderColor=hunger.variant==="bombs"?"rgba(255,79,112,.65)":"rgba(255,216,58,.28)";}if(state.role==="host"&&hunger.variant==="bombs"&&(!Array.isArray(hunger.bombs)||hunger.bombs.length===0)){hunger.bombs=[];hungerRefillBombs(hunger,2);broadcastHungerState();}renderHungerScoreStrip();initHungerRuntime();}
     function resolveHungerRound(){const hunger=state.game.hunger;if(!hunger||hunger.awarded)return;const ranking=readyPlayers().map(player=>({playerId:player.playerId,count:Number(hunger.scores?.[player.playerId]||0)})).sort((a,b)=>b.count-a.count);const scores={...(state.game.scores||{})},deltas={};ranking.forEach(entry=>{const gain=Math.round(Number(entry.count||0)*HUNGER_POINT_VALUE);scores[entry.playerId]=Math.max(0,Number(scores[entry.playerId]||0)+gain);deltas[entry.playerId]=gain;});hunger.rankings=ranking;hunger.awarded=true;state.game.scores=scores;state.game.lastRoundScores=deltas;state.game.lastActivityType="hunger";state.game.phase="scores";state.game.scoresShownAt=Date.now();disposeHunger();}
     function renderGeneratingScene(){ const lines = GENERATING_LINES[currentLang] || GENERATING_LINES.es; const line = lines[Math.floor(Date.now() / 3200) % lines.length]; ui.generatingLine.textContent = line; }
     function showScene(name){ Object.entries(ui.scenes).forEach(([key,node]) => node.classList.toggle("on", key === name)); }
