@@ -446,7 +446,15 @@
     .hungerArena.bombed{animation:hungerShake .34s ease}@keyframes hungerShake{0%,100%{transform:none}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(3px,-1px)}}
 
     
-    .pasabolasCard{width:min(900px,100%);position:relative;overflow:hidden}.pasabolasCard:before{content:"";position:absolute;inset:-28%;background:conic-gradient(from 45deg,rgba(57,219,255,.11),rgba(255,119,203,.12),rgba(255,216,58,.08),rgba(57,219,255,.11));filter:blur(55px);animation:partyAura 12s linear infinite;pointer-events:none}.pasabolasInner{position:relative;z-index:1}.pasabolasMeta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:8px}.pasabolasArena{position:relative;width:min(680px,100%);margin:0 auto;aspect-ratio:4/5;min-height:500px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#251231,#0d0a12 48%,#2c0d2a);box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 18px 50px rgba(0,0,0,.25);touch-action:none;user-select:none}.pasabolasArena canvas{display:block;width:100%;height:100%;touch-action:none}.pasabolasScore{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:1000}.pasabolasScore span{font-size:1.35rem}.pasabolasScore .vs{font-size:.7rem;color:var(--muted);letter-spacing:.08em}.pasabolasHint{text-align:center;color:var(--muted);font-weight:800;margin:9px 0 0}.pasabolasNames{display:flex;justify-content:space-between;gap:12px;width:min(680px,100%);margin:0 auto 6px;font-size:.8rem;font-weight:1000;color:#fff}.pasabolasNames span:last-child{text-align:right}.pasabolasWinner{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,3,16,.5);backdrop-filter:blur(4px);font-size:clamp(1.8rem,5vw,4rem);font-weight:1000;color:var(--yellow);text-shadow:0 0 28px rgba(255,216,58,.3);pointer-events:none}.pasabolasWinner[hidden]{display:none}.pasabolasServeBtn{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(255,216,58,.62);border-radius:999px;padding:13px 22px;background:rgba(28,10,34,.9);color:#fff;font-weight:1000;font-size:1rem;box-shadow:0 0 28px rgba(255,216,58,.18),inset 0 0 0 1px rgba(255,255,255,.04);cursor:pointer;backdrop-filter:blur(8px)}.pasabolasServeBtn[hidden]{display:none}.pasabolasArena.ready-hit:before,.pasabolasArena.ready-hit:after{content:"";position:absolute;z-index:4;top:0;bottom:0;width:50%;pointer-events:none;opacity:.16}.pasabolasArena.ready-hit:before{left:0;background:linear-gradient(90deg,rgba(57,219,255,.55),transparent)}.pasabolasArena.ready-hit:after{right:0;background:linear-gradient(270deg,rgba(255,119,203,.55),transparent)}.pasabolasArena.ready-hit{cursor:crosshair}.pasabolasTurn{width:min(680px,100%);margin:7px auto 0;text-align:center;font-weight:1000;color:var(--yellow);min-height:22px}.pasabolasChip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}@media(max-width:720px){.pasabolasArena{min-height:min(58vh,540px);aspect-ratio:3/4}.pasabolasCard{padding:12px}.pasabolasMeta{grid-template-columns:1fr auto;gap:8px}.pasabolasNames{display:none}.pasabolasTurn{font-size:.9rem}}
+    .pasabolasCard{width:min(900px,100%);position:relative;overflow:hidden}.pasabolasCard:before{content:"";position:absolute;inset:-28%;background:conic-gradient(from 45deg,rgba(57,219,255,.11),rgba(255,119,203,.12),rgba(255,216,58,.08),rgba(57,219,255,.11));filter:blur(55px);animation:partyAura 12s linear infinite;pointer-events:none}.pasabolasInner{position:relative;z-index:1}.pasabolasMeta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:8px}.pasabolasArena{position:relative;width:min(680px,100%);margin:0 auto;aspect-ratio:4/5;min-height:500px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#251231,#0d0a12 48%,#2c0d2a);box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 18px 50px rgba(0,0,0,.25);touch-action:none;user-select:none}.pasabolasArena canvas{display:block;width:100%;height:100%;touch-action:none}.pasabolasScore{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:1000}.pasabolasScore span{font-size:1.35rem}.pasabolasScore .vs{font-size:.7rem;color:var(--muted);letter-spacing:.08em}.pasabolasHint{text-align:center;color:var(--muted);font-weight:800;margin:9px 0 0}.pasabolasNames{display:flex;justify-content:space-between;gap:12px;width:min(680px,100%);margin:0 auto 6px;font-size:.8rem;font-weight:1000;color:#fff}.pasabolasNames span:last-child{text-align:right}.pasabolasWinner{position:absolute;inset:0;z-index:12;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(9,2,19,.77);backdrop-filter:blur(9px);pointer-events:none}.pasabolasWinner[hidden]{display:none}
+    .pasabolasVictoryCard{width:min(100%,365px);padding:28px 20px 24px;text-align:center;border:2px solid rgba(255,216,58,.56);border-radius:28px;background:radial-gradient(circle at 50% -20%,rgba(255,216,58,.24),transparent 60%),linear-gradient(150deg,#4c176b,#260d43 72%,#1a0a32);box-shadow:0 24px 65px rgba(0,0,0,.55),0 0 35px rgba(255,216,58,.14),inset 0 1px 0 rgba(255,255,255,.17);color:white;animation:pasoVictoryPop .35s cubic-bezier(.2,1.4,.3,1) both}
+    .pasabolasVictoryIcon{display:block;font-size:3.4rem;line-height:1;margin:0 auto 12px;filter:drop-shadow(0 0 14px rgba(255,216,58,.35))}
+    .pasabolasVictoryKicker{font-size:.73rem;font-weight:1000;letter-spacing:.16em;text-transform:uppercase;color:#39dbff;margin-bottom:9px}
+    .pasabolasVictoryName{font-size:clamp(1.5rem,5vw,2.15rem);font-weight:1000;line-height:1.1;color:#ffd83a;overflow-wrap:anywhere;text-shadow:0 2px 16px rgba(255,216,58,.24)}
+    .pasabolasVictoryCopy{margin-top:10px;font-size:1rem;font-weight:800;color:#f7eafb}
+    .pasabolasVictoryScore{display:inline-flex;align-items:center;gap:12px;margin-top:18px;padding:9px 20px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);font-size:1.2rem;font-weight:1000}
+    .pasabolasVictoryScore small{font-size:.7rem;color:#d2b8df}
+    @keyframes pasoVictoryPop{from{opacity:0;transform:translateY(16px) scale(.85)}to{opacity:1;transform:translateY(0) scale(1)}}.pasabolasServeBtn{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(255,216,58,.62);border-radius:999px;padding:13px 22px;background:rgba(28,10,34,.9);color:#fff;font-weight:1000;font-size:1rem;box-shadow:0 0 28px rgba(255,216,58,.18),inset 0 0 0 1px rgba(255,255,255,.04);cursor:pointer;backdrop-filter:blur(8px)}.pasabolasServeBtn[hidden]{display:none}.pasabolasArena.ready-hit:before,.pasabolasArena.ready-hit:after{content:"";position:absolute;z-index:4;top:0;bottom:0;width:50%;pointer-events:none;opacity:.16}.pasabolasArena.ready-hit:before{left:0;background:linear-gradient(90deg,rgba(57,219,255,.55),transparent)}.pasabolasArena.ready-hit:after{right:0;background:linear-gradient(270deg,rgba(255,119,203,.55),transparent)}.pasabolasArena.ready-hit{cursor:crosshair}.pasabolasTurn{width:min(680px,100%);margin:7px auto 0;text-align:center;font-weight:1000;color:var(--yellow);min-height:22px}.pasabolasChip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}@media(max-width:720px){.pasabolasArena{min-height:min(58vh,540px);aspect-ratio:3/4}.pasabolasCard{padding:12px}.pasabolasMeta{grid-template-columns:1fr auto;gap:8px}.pasabolasNames{display:none}.pasabolasTurn{font-size:.9rem}}
 
 
 
@@ -466,10 +474,10 @@
     .pasoHead{width:60%;height:50%;top:0;left:40%;transform:translateX(-50%);filter:drop-shadow(-.5px -.6px #1c1620) drop-shadow(.5px .7px #1c1620)}
     .pasoFace{width:80%;height:90%;border-radius:100% 100% 60% 60%;background:var(--skin);right:0;top:0}
     .pasoFace::before{content:"";width:110%;height:60%;background:var(--skin);top:50%;right:0;border-radius:100% 0 100% 100%}
-    .pasoEye{width:25%;aspect-ratio:1/1.1;border-radius:50%;background:#050505;top:45%;left:5%;z-index:4;transform-origin:center;animation:pasoBlink 5s infinite}
+    .pasoEye{width:25%;aspect-ratio:1/1.1;border-radius:50%;background:#050505;top:45%;left:5%;z-index:4;transform-origin:center;animation:pasoBlink 5.3s infinite;animation-delay:var(--blink-offset,0s)}
     .pasoEye::before{content:"";width:45%;aspect-ratio:1;background:white;top:17%;left:9%;border-radius:50%}
     .pasoEye::after{content:"";width:15%;aspect-ratio:1;background:white;top:9%;left:40%;border-radius:50%}
-    .pasoEye.b{left:45%;top:46%;animation-delay:.08s}
+    .pasoEye.b{left:45%;top:46%}
     .pasoCheek{width:25%;height:18%;background:repeating-linear-gradient(-40deg,transparent 0 17%,#f001 0 21%),#f002;border-radius:50%;top:67%;left:-4%;z-index:3}
     .pasoCheek.b{left:55%;top:69%}
     .pasoNose{width:5%;aspect-ratio:1;background:#111;border-radius:50%;left:64%;top:72%;z-index:5}
@@ -484,9 +492,13 @@
     .pasoBody{width:50%;height:45%;top:35%;left:45%;transform:translateX(-50%);filter:drop-shadow(-.5px -.5px #1c1620) drop-shadow(.5px .5px #1c1620)}
     .pasoChest{inset:0;border-radius:150% 0 50% 100%;background:radial-gradient(130% 160% at 35% 85%,transparent 29%,#17101a 29.1% 30%,var(--skin) 30.1%),repeating-radial-gradient(100% 100% at 40% 0,transparent 0 20%,#0002 0 22%),var(--skin2)}
     .pasoTail{width:50%;height:60%;bottom:-.25%;left:90%;transform-origin:0 100%;border-radius:0 0 100% 0;box-shadow:inset 2px -30px 0 -6px var(--skin);animation:pasoTail 3s alternate ease-in-out infinite}
-    .pasoLeg{width:18%;height:23%;background:var(--skin);border-radius:50% / 0 0 100% 100%;top:69%;left:24%;transform:rotate(-25deg);border:1.5px solid #1c1620;border-top:0}
-    .pasoLeg.b{top:73%;left:53.5%;transform:rotate(45deg)}
-    .pasoFoot{width:100%;height:18%;bottom:0;border-radius:50%;background:var(--skin2)}
+    .pasoLeg{width:15%;height:22%;background:var(--skin);border-radius:38% 38% 38% 38% / 18% 18% 65% 65%;top:71%;left:30%;transform:rotate(-7deg);transform-origin:50% 12%;border:1.5px solid #1c1620;z-index:2}
+    .pasoLeg.b{top:71%;left:54%;transform:rotate(7deg);z-index:4}
+    .pasoLeg::after{content:"";position:absolute;width:142%;height:31%;left:-23%;bottom:-9%;border:1.5px solid #1c1620;border-radius:65% 80% 48% 48%;background:var(--skin);transform:rotate(-5deg)}
+    @keyframes pasoWalkA{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(25deg)}}
+    @keyframes pasoWalkB{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-25deg)}}
+    .pasabolasDino.walking .pasoLeg:not(.b){animation:pasoWalkA .24s ease-in-out 3}
+    .pasabolasDino.walking .pasoLeg.b{animation:pasoWalkB .24s ease-in-out 3;animation-delay:-.12s}
     .pasoArm{width:20%;height:10%;background:var(--skin);border-radius:120% / 100% 0 0 100%;transform:rotate(30deg);transform-origin:100% 50%;top:52%;left:10%;filter:drop-shadow(-.5px 0 #1c1620) drop-shadow(0 .5px #1c1620)}
     .pasoArm::before{content:"";color:var(--skin);width:17%;aspect-ratio:1;background:var(--skin);border-radius:50%;left:0;top:50%;transform:translate(-80%,-50%);box-shadow:3px -5px,3px 5px}
     .pasoArm.front{width:15%;transform:rotate(-190deg);left:48%;z-index:7;animation:pasoArm 2.33s reverse infinite}
@@ -498,7 +510,7 @@
     .pasabolasDino.top .pasoName{bottom:-12px}.pasabolasDino.bottom .pasoName{top:-13px}
     .pasoLocalTag{margin-left:4px;color:var(--yellow);font-size:.57rem}
     @media(max-width:720px){.pasabolasDino{width:118px;height:118px;transform:translateX(-50%) scale(.9);transform-origin:center}.pasabolasDino.top{top:3.5%}.pasabolasDino.bottom{bottom:4%}.pasoName{font-size:.63rem;max-width:98px;padding:3px 6px}}
-    @media(prefers-reduced-motion:reduce){.pasabolasDinoFigure,.pasoTail,.pasoArm,.pasoEye{animation:none!important}}
+    @media(prefers-reduced-motion:reduce){.pasabolasDinoFigure,.pasoTail,.pasoArm,.pasoEye,.pasoLeg,.pasabolasVictoryCard{animation:none!important}}
 @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
     @media(max-width:720px){.mixGrid{grid-template-columns:1fr}.towerHud{grid-template-columns:repeat(3,1fr)}.towerCanvasWrap{min-height:360px;aspect-ratio:10/12}}
   </style>
@@ -894,7 +906,7 @@
               <div class="pasabolasDino top" id="pasabolasTopDino" aria-hidden="true"></div>
               <div class="pasabolasDino bottom" id="pasabolasBottomDino" aria-hidden="true"></div>
               <button class="pasabolasServeBtn" id="pasabolasServeBtn" type="button" hidden>SACAR</button>
-              <div class="pasabolasWinner" id="pasabolasWinner" hidden></div>
+              <div class="pasabolasWinner" id="pasabolasWinner" role="status" aria-live="polite" hidden></div>
             </div>
             <div class="pasabolasTurn" id="pasabolasTurn"></div>
             <p class="pasabolasHint" id="pasabolasHint">Cuando la bola llegue a ti, toca el lado de la pista al que quieras devolverla.</p>
@@ -2919,7 +2931,7 @@
         playFinalCue(win);
         return;
       }
-      if(scene === "versusIntro" || scene === "versus" || scene === "pasabolasIntro" || scene === "pasabolas"){
+      if(scene === "versusIntro" || scene === "versus" || scene === "pasabolasIntro" || scene === "pasabolas" || scene === "hungerIntro" || scene === "hunger"){
         pauseBackgroundAudio();
         safePause(audioState.winner);
         safePause(audioState.loser);
@@ -2933,8 +2945,6 @@
         scene === "question" ||
         scene === "skillIntro" ||
         scene === "skill" ||
-        scene === "hungerIntro" ||
-        scene === "hunger" ||
         (scene === "countdown" && state.game.countdownEndAt && (state.game.countdownEndAt - Date.now()) <= 3200);
       const target = useAnswering ? audioState.decks.answering : audioState.decks.waiting;
       const other = useAnswering ? audioState.decks.waiting : audioState.decks.answering;
@@ -3816,7 +3826,7 @@
       game.pointMessage=t("pasabolasMiss",{name:findPlayer(loserId)?.name||t("player")});
       if(game.score[winnerId]>=Number(game.target||3)){
         game.finalWinnerId=winnerId;
-        game.revealUntil=Date.now()+2400;
+        game.revealUntil=Date.now()+3600;
         game.phase="finished";
       }else{
         game.phase="point";
@@ -3919,6 +3929,17 @@
       el.style.setProperty("--skin",color);
       el.style.setProperty("--skin2",accent);
       el.style.setProperty("--paddle",isLocal?"#ff77cb":"#39dbff");
+      // Both eyes of one dinosaur use exactly the same blink timeline.
+      let blinkHash=0;for(const ch of String(playerId||""))blinkHash=(blinkHash*31+ch.charCodeAt(0))>>>0;
+      el.style.setProperty("--blink-offset",(-((blinkHash%4000)/1000))+"s");
+      if(el.dataset.lane&&el.dataset.lane!==lane){
+        el.classList.remove("walking");
+        void el.offsetWidth;
+        el.classList.add("walking");
+        clearTimeout(el._walkTimer);
+        el._walkTimer=setTimeout(()=>el.classList.remove("walking"),760);
+      }
+      el.dataset.lane=lane;
       el.style.left=(lane==="left"?"34%":"66%");
       el.classList.toggle("is-local",!!isLocal);
       el.classList.toggle("hitting",!!hit);
@@ -4086,7 +4107,25 @@
       else ui.pasabolasTurn.textContent="";
 
       ui.pasabolasHint.textContent=localInPair?t("pasabolasHint"):t("pasabolasSpectator");
-      if(game.finalWinnerId){ui.pasabolasWinner.hidden=false;ui.pasabolasWinner.textContent=t("pasabolasWinner",{name:findPlayer(game.finalWinnerId)?.name||t("player")});}else ui.pasabolasWinner.hidden=true;
+      if(game.finalWinnerId){
+        const winnerName=findPlayer(game.finalWinnerId)?.name||t("player");
+        const loserId=pair.find(id=>id!==game.finalWinnerId);
+        const winnerScore=Number(game.score?.[game.finalWinnerId]||0);
+        const loserScore=Number(game.score?.[loserId]||0);
+        const victoryKey=[game.seed,game.finalWinnerId,winnerScore,loserScore,currentLang].join("|");
+        if(ui.pasabolasWinner.dataset.victoryKey!==victoryKey){
+          const isSpanish=currentLang!=="en";
+          ui.pasabolasWinner.innerHTML=`<div class="pasabolasVictoryCard">
+            <span class="pasabolasVictoryIcon" aria-hidden="true">🏆</span>
+            <div class="pasabolasVictoryKicker">${isSpanish?"DESEMPATE JURÁSICO":"JURASSIC TIEBREAKER"}</div>
+            <div class="pasabolasVictoryName">${esc(winnerName)}</div>
+            <div class="pasabolasVictoryCopy">${isSpanish?"¡Gana Pasabolas!":"Wins Pass-a-ball!"}</div>
+            <div class="pasabolasVictoryScore"><span>${winnerScore}</span><small>VS</small><span>${loserScore}</span></div>
+          </div>`;
+          ui.pasabolasWinner.dataset.victoryKey=victoryKey;
+        }
+        ui.pasabolasWinner.hidden=false;
+      }else{ui.pasabolasWinner.hidden=true;ui.pasabolasWinner.dataset.victoryKey="";}
       initPasabolasRuntime();drawPasabolas();
     }
 
