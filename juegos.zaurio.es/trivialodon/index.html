@@ -3862,8 +3862,19 @@
       const canvas=ui.pasabolasCanvas,ctx=canvas.getContext("2d");
       const runtime={seed:game.seed,canvas,ctx,lastFrame:performance.now(),lastSnapshot:0,rafId:0};
       pasabolasRuntime=runtime;
-      const resize=()=>{const rect=ui.pasabolasArena.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);canvas.width=Math.max(480,Math.round(rect.width*dpr));canvas.height=Math.max(600,Math.round(rect.height*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);runtime.w=rect.width;runtime.h=rect.height;};
-      runtime.resize=resize;window.addEventListener("resize",resize,{passive:true});resize();
+      const resize=()=>{
+        const rect=ui.pasabolasArena.getBoundingClientRect();
+        if(rect.width<1||rect.height<1)return;
+        const dpr=Math.min(2,window.devicePixelRatio||1);
+        const cw=Math.max(1,Math.round(rect.width*dpr)),ch=Math.max(1,Math.round(rect.height*dpr));
+        if(canvas.width!==cw||canvas.height!==ch){canvas.width=cw;canvas.height=ch;}
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        runtime.w=rect.width;runtime.h=rect.height;
+      };
+      runtime.resize=resize;
+      runtime.resizeObserver=typeof ResizeObserver!=="undefined"?new ResizeObserver(resize):null;
+      runtime.resizeObserver?.observe(ui.pasabolasArena);
+      window.addEventListener("resize",resize,{passive:true});resize();
       ui.pasabolasArena.onpointerdown=ev=>{
         if(ev.target===ui.pasabolasServeBtn)return;
         const current=state.game.pasabolas;
@@ -3879,6 +3890,7 @@
       if(!pasabolasRuntime)return;
       cancelAnimationFrame(pasabolasRuntime.rafId||0);
       if(pasabolasRuntime.resize)window.removeEventListener("resize",pasabolasRuntime.resize);
+      pasabolasRuntime.resizeObserver?.disconnect();
       pasabolasRuntime=null;
     }
     function pasabolasHostStep(){
@@ -4018,7 +4030,7 @@
       const fromX=pasabolasLaneX(game.fromLane,w),toX=pasabolasLaneX(game.toLane,w);
       const fromY=pasabolasSideY(game.fromSide,h),toY=pasabolasSideY(game.toSide,h);
       let t=0;
-      if(game.phase==="flight")t=Math.max(0,Math.min(1,(Date.now()-Number(game.flightStart||0))/Math.max(1,Number(game.flightDuration||900))));
+      if(game.phase==="flight")t=Math.max(0,Math.min(1,(sharedNow()-Number(game.flightStart||0))/Math.max(1,Number(game.flightDuration||900))));
       else if(game.phase==="awaiting")t=1;
       else if(game.phase==="serve")t=0;
       else if(game.phase==="point")t=1;
@@ -4056,12 +4068,17 @@
       const fromX=pasabolasLaneX(game.fromLane,w),toX=pasabolasLaneX(game.toLane,w);
       const fromY=pasabolasSideY(fromSideDisplay,h),toY=pasabolasSideY(toSideDisplay,h);
       let t=0;
-      if(game.phase==="flight")t=Math.max(0,Math.min(1,(Date.now()-Number(game.flightStart||0))/Math.max(1,Number(game.flightDuration||900))));
+      if(game.phase==="flight")t=Math.max(0,Math.min(1,(sharedNow()-Number(game.flightStart||0))/Math.max(1,Number(game.flightDuration||900))));
       else if(game.phase==="awaiting")t=1;
       else if(game.phase==="serve")t=0;
       else if(game.phase==="point")t=1;
       const ease=t*t*(3-2*t);
-      const ball={x:fromX+(toX-fromX)*ease,y:fromY+(toY-fromY)*ease-Math.sin(Math.PI*t)*Math.min(82,h*.11),t};
+      const arcHeight=Math.min(82,h*.11);
+      const trajectory=progress=>{
+        const eased=progress*progress*(3-2*progress);
+        return {x:fromX+(toX-fromX)*eased,y:fromY+(toY-fromY)*eased-Math.sin(Math.PI*progress)*arcHeight};
+      };
+      const ball={...trajectory(t),t};
 
       const topHit=game.phase==="flight"&&sharedFromId===topId&&t<.25;
       const bottomHit=game.phase==="flight"&&sharedFromId===bottomId&&t<.25;
@@ -4078,8 +4095,41 @@
         ctx.fillStyle="#ff77cb";ctx.fillRect(w/2,0,w/2,h);ctx.globalAlpha=1;
       }
 
-      // ball
-      ctx.shadowBlur=18;ctx.shadowColor="#ffd83a";ctx.fillStyle="#ffd83a";ctx.beginPath();ctx.arc(ball.x,ball.y,9,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+      // The landing marker and trailing glow make the fast desktop flight readable.
+      // They share the exact same synchronized trajectory as the game logic.
+      if(game.phase==="flight"){
+        ctx.save();
+        const desktop=w>=540;
+        const targetRadius=desktop?19:14;
+        const pulse=.5+.5*Math.sin(sharedNow()*.012);
+        ctx.strokeStyle=toSideDisplay==="bottom"?"#39dbff":"#ff77cb";
+        ctx.lineWidth=desktop?2.5:1.8;
+        ctx.globalAlpha=.3+.22*pulse;
+        ctx.beginPath();ctx.ellipse(toX,toY,targetRadius,targetRadius*.48,0,0,Math.PI*2);ctx.stroke();
+        ctx.beginPath();ctx.arc(toX,toY,3,0,Math.PI*2);ctx.fillStyle=ctx.strokeStyle;ctx.fill();
+        ctx.restore();
+        const trailDuration=desktop?.29:.19;
+        const start=Math.max(0,t-trailDuration);
+        if(t>0.015){
+          ctx.save();
+          ctx.lineCap="round";ctx.lineJoin="round";
+          for(let i=1;i<=14;i++){
+            const a=start+(t-start)*(i-1)/14;
+            const b=start+(t-start)*i/14;
+            const p=trajectory(a),q=trajectory(b);
+            ctx.globalAlpha=.045+.63*(i/14)**2;
+            ctx.strokeStyle=i>9?"#fff0b0":"#ffd83a";
+            ctx.lineWidth=(desktop?2.5:2)+(desktop?9:6)*(i/14);
+            ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+      ctx.save();
+      ctx.shadowBlur=w>=540?25:18;ctx.shadowColor="#ffd83a";
+      ctx.fillStyle="#ffd83a";ctx.beginPath();ctx.arc(ball.x,ball.y,w>=540?12:9,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#fff9d4";ctx.beginPath();ctx.arc(ball.x-2.5,ball.y-3,w>=540?4:3,0,Math.PI*2);ctx.fill();
+      ctx.restore();
       if(game.phase==="awaiting"){
         const pulse=13+Math.sin(Date.now()*.02)*4;ctx.strokeStyle="#ffd83a";ctx.lineWidth=3;ctx.globalAlpha=.55;ctx.beginPath();ctx.arc(ball.x,ball.y,pulse,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
       }
