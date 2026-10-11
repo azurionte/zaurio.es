@@ -446,12 +446,12 @@
     .hungerArena.bombed{animation:hungerShake .34s ease}@keyframes hungerShake{0%,100%{transform:none}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(3px,-1px)}}
 
     
-    .pasabolasCard{width:min(900px,100%);position:relative;overflow:hidden}.pasabolasCard:before{content:"";position:absolute;inset:-28%;background:conic-gradient(from 45deg,rgba(57,219,255,.11),rgba(255,119,203,.12),rgba(255,216,58,.08),rgba(57,219,255,.11));filter:blur(55px);animation:partyAura 12s linear infinite;pointer-events:none}.pasabolasInner{position:relative;z-index:1}.pasabolasMeta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:8px}.pasabolasArena{position:relative;width:min(680px,100%);margin:0 auto;aspect-ratio:4/5;min-height:520px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#251231,#0d0a12 48%,#2c0d2a);box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 18px 50px rgba(0,0,0,.25);touch-action:none;user-select:none}.pasabolasArena canvas{display:block;width:100%;height:100%;touch-action:none}.pasabolasScore{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:1000}.pasabolasScore span{font-size:1.35rem}.pasabolasScore .vs{font-size:.7rem;color:var(--muted);letter-spacing:.08em}.pasabolasHint{text-align:center;color:var(--muted);font-weight:800;margin:9px 0 0}.pasabolasNames{display:flex;justify-content:space-between;gap:12px;width:min(680px,100%);margin:0 auto 6px;font-size:.8rem;font-weight:1000;color:#fff}.pasabolasNames span:last-child{text-align:right}.pasabolasWinner{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,3,16,.5);backdrop-filter:blur(4px);font-size:clamp(1.8rem,5vw,4rem);font-weight:1000;color:var(--yellow);text-shadow:0 0 28px rgba(255,216,58,.3);pointer-events:none}.pasabolasWinner[hidden]{display:none}.pasabolasServeBtn{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(255,216,58,.62);border-radius:999px;padding:13px 22px;background:rgba(28,10,34,.9);color:#fff;font-weight:1000;font-size:1rem;box-shadow:0 0 28px rgba(255,216,58,.18),inset 0 0 0 1px rgba(255,255,255,.04);cursor:pointer;backdrop-filter:blur(8px)}.pasabolasServeBtn[hidden]{display:none}.pasabolasArena.ready-hit:before,.pasabolasArena.ready-hit:after{content:"";position:absolute;z-index:4;top:0;bottom:0;width:50%;pointer-events:none;opacity:.16}.pasabolasArena.ready-hit:before{left:0;background:linear-gradient(90deg,rgba(57,219,255,.55),transparent)}.pasabolasArena.ready-hit:after{right:0;background:linear-gradient(270deg,rgba(255,119,203,.55),transparent)}.pasabolasArena.ready-hit{cursor:crosshair}.pasabolasTurn{width:min(680px,100%);margin:7px auto 0;text-align:center;font-weight:1000;color:var(--yellow);min-height:22px}.pasabolasChip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}@media(max-width:720px){.pasabolasArena{min-height:min(62vh,580px);aspect-ratio:3/4}.pasabolasCard{padding:14px}.pasabolasMeta{grid-template-columns:1fr auto}}
+    .pasabolasCard{width:min(900px,100%);position:relative;overflow:hidden}.pasabolasCard:before{content:"";position:absolute;inset:-28%;background:conic-gradient(from 45deg,rgba(57,219,255,.11),rgba(255,119,203,.12),rgba(255,216,58,.08),rgba(57,219,255,.11));filter:blur(55px);animation:partyAura 12s linear infinite;pointer-events:none}.pasabolasInner{position:relative;z-index:1}.pasabolasMeta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:8px}.pasabolasArena{position:relative;width:min(680px,100%);margin:0 auto;aspect-ratio:4/5;min-height:500px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#251231,#0d0a12 48%,#2c0d2a);box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 18px 50px rgba(0,0,0,.25);touch-action:none;user-select:none}.pasabolasArena canvas{display:block;width:100%;height:100%;touch-action:none}.pasabolasScore{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:1000}.pasabolasScore span{font-size:1.35rem}.pasabolasScore .vs{font-size:.7rem;color:var(--muted);letter-spacing:.08em}.pasabolasHint{text-align:center;color:var(--muted);font-weight:800;margin:9px 0 0}.pasabolasNames{display:flex;justify-content:space-between;gap:12px;width:min(680px,100%);margin:0 auto 6px;font-size:.8rem;font-weight:1000;color:#fff}.pasabolasNames span:last-child{text-align:right}.pasabolasWinner{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,3,16,.5);backdrop-filter:blur(4px);font-size:clamp(1.8rem,5vw,4rem);font-weight:1000;color:var(--yellow);text-shadow:0 0 28px rgba(255,216,58,.3);pointer-events:none}.pasabolasWinner[hidden]{display:none}.pasabolasServeBtn{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(255,216,58,.62);border-radius:999px;padding:13px 22px;background:rgba(28,10,34,.9);color:#fff;font-weight:1000;font-size:1rem;box-shadow:0 0 28px rgba(255,216,58,.18),inset 0 0 0 1px rgba(255,255,255,.04);cursor:pointer;backdrop-filter:blur(8px)}.pasabolasServeBtn[hidden]{display:none}.pasabolasArena.ready-hit:before,.pasabolasArena.ready-hit:after{content:"";position:absolute;z-index:4;top:0;bottom:0;width:50%;pointer-events:none;opacity:.16}.pasabolasArena.ready-hit:before{left:0;background:linear-gradient(90deg,rgba(57,219,255,.55),transparent)}.pasabolasArena.ready-hit:after{right:0;background:linear-gradient(270deg,rgba(255,119,203,.55),transparent)}.pasabolasArena.ready-hit{cursor:crosshair}.pasabolasTurn{width:min(680px,100%);margin:7px auto 0;text-align:center;font-weight:1000;color:var(--yellow);min-height:22px}.pasabolasChip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}@media(max-width:720px){.pasabolasArena{min-height:min(58vh,540px);aspect-ratio:3/4}.pasabolasCard{padding:12px}.pasabolasMeta{grid-template-columns:1fr auto;gap:8px}.pasabolasNames{display:none}.pasabolasTurn{font-size:.9rem}}
 
-    .pasabolasDino{position:absolute;z-index:3;width:118px;height:132px;left:50%;transform:translateX(-50%);transition:left .16s ease;pointer-events:none;--skin:#88e16e;--skin2:#ffd83a;--paddle:#39dbff}
-    .pasabolasDino.top{top:5%}.pasabolasDino.bottom{bottom:3%}
+    .pasabolasDino{position:absolute;z-index:3;width:104px;height:118px;left:50%;transform:translateX(-50%);transition:left .16s ease;pointer-events:none;--skin:#88e16e;--skin2:#ffd83a;--paddle:#39dbff}
+    .pasabolasDino.top{top:3%}.pasabolasDino.bottom{bottom:1.5%}
     .pasabolasDinoFigure{position:absolute;inset:0;transform-origin:50% 88%;animation:pasoDinoIdle 2.4s ease-in-out infinite}
-    .pasabolasDino.bottom .pasabolasDinoFigure{transform:scale(1.06)}
+    .pasabolasDino.bottom .pasabolasDinoFigure{transform:scale(.96)}
     .pasabolasDino.is-local .pasabolasDinoFigure{filter:drop-shadow(0 0 12px color-mix(in srgb,var(--skin) 55%,transparent))}
     @keyframes pasoDinoIdle{0%,100%{translate:0 0;rotate:-1deg}50%{translate:0 -3px;rotate:1deg}}
     @keyframes pasoTail{from{rotate:-5deg}to{rotate:5deg}}
@@ -483,9 +483,9 @@
     .pasoPaddleHandle{position:absolute;width:5px;height:28px;background:#875632;right:-12px;top:-11px;rotate:35deg;border-radius:4px}
     .pasoPaddle{position:absolute;width:22px;height:28px;border-radius:50%;background:var(--paddle);border:3px solid #fff;right:-28px;top:-28px;rotate:25deg;box-shadow:0 0 10px color-mix(in srgb,var(--paddle) 55%,transparent)}
     .pasoName{position:absolute;left:50%;translate:-50% 0;min-width:86px;max-width:130px;padding:5px 9px;border-radius:999px;background:rgba(14,7,20,.82);border:1px solid color-mix(in srgb,var(--skin) 45%,transparent);font-size:.72rem;font-weight:1000;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 14px rgba(0,0,0,.22)}
-    .pasabolasDino.top .pasoName{top:-1px}.pasabolasDino.bottom .pasoName{bottom:-2px}
+    .pasabolasDino.top .pasoName{bottom:-6px}.pasabolasDino.bottom .pasoName{top:-15px}
     .pasoLocalTag{margin-left:5px;color:var(--yellow);font-size:.58rem}
-    @media(max-width:720px){.pasabolasDino{width:94px;height:110px;transform:translateX(-50%) scale(.82);transform-origin:center}.pasabolasDino.top{top:4%}.pasabolasDino.bottom{bottom:2%}}
+    @media(max-width:720px){.pasabolasDino{width:104px;height:118px;transform:translateX(-50%) scale(.58);transform-origin:center}.pasabolasDino.top{top:1%}.pasabolasDino.bottom{bottom:-1%}.pasabolasDino.top .pasoName{bottom:-2px}.pasabolasDino.bottom .pasoName{top:-10px}.pasoName{font-size:.66rem;min-width:74px;max-width:105px;padding:4px 7px}}
 @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
     @media(max-width:720px){.mixGrid{grid-template-columns:1fr}.towerHud{grid-template-columns:repeat(3,1fr)}.towerCanvasWrap{min-height:360px;aspect-ratio:10/12}}
   </style>
@@ -875,7 +875,7 @@
               </div>
               <div class="pasabolasScore"><span id="pasabolasScoreA">0</span><span class="vs">VS</span><span id="pasabolasScoreB">0</span></div>
             </div>
-            <div class="pasabolasNames"><span id="pasabolasNameA">Jugador A</span><span id="pasabolasNameB">Jugador B</span></div>
+            <div class="pasabolasNames" aria-hidden="true" style="display:none"><span id="pasabolasNameA">Jugador A</span><span id="pasabolasNameB">Jugador B</span></div>
             <div class="pasabolasArena" id="pasabolasArena">
               <canvas id="pasabolasCanvas" width="960" height="540"></canvas>
               <div class="pasabolasDino top" id="pasabolasTopDino" aria-hidden="true"></div>
@@ -3980,7 +3980,7 @@
       const rt=pasabolasRuntime,game=state.game.pasabolas;if(!rt||!game)return;
       const {ctx}=rt,w=rt.w||680,h=rt.h||780;ctx.clearRect(0,0,w,h);
       const bg=ctx.createLinearGradient(0,0,w,h);bg.addColorStop(0,"#31143e");bg.addColorStop(.5,"#0d0c13");bg.addColorStop(1,"#32112f");ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
-      ctx.globalAlpha=.18;ctx.fillStyle="#39dbff";ctx.beginPath();ctx.arc(w*.12,h*.18,w*.22,0,Math.PI*2);ctx.fill();ctx.fillStyle="#ff77cb";ctx.beginPath();ctx.arc(w*.88,h*.82,w*.22,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+      ctx.save();ctx.globalAlpha=.075;ctx.strokeStyle="#39dbff";ctx.lineWidth=1;for(let y=34;y<h;y+=52){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y+10);ctx.stroke();}ctx.strokeStyle="#ff77cb";for(let x=40;x<w;x+=72){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+26,h);ctx.stroke();}ctx.globalAlpha=.16;ctx.fillStyle="#ffd83a";for(let i=0;i<18;i++){const px=(i*97)%Math.max(1,w),py=(i*61)%Math.max(1,h);ctx.beginPath();ctx.arc(px,py,1.3+(i%3)*.35,0,Math.PI*2);ctx.fill();}ctx.restore();
 
       const pair=game.pair||[];
       const localInPair=pair.includes(state.playerId);
@@ -3988,9 +3988,9 @@
       const topId=pair.find(id=>id!==bottomId)||pair[0];
 
       // table
-      const tableTop=h*.34,tableBottom=h*.66,left=w*.18,right=w*.82;
+      const tableTop=h*.31,tableBottom=h*.69,left=w*.14,right=w*.86;
       ctx.fillStyle="#23344f";ctx.strokeStyle="#f3f5ff";ctx.lineWidth=3;
-      ctx.beginPath();ctx.moveTo(left,tableTop);ctx.lineTo(right,tableTop);ctx.lineTo(w*.9,tableBottom);ctx.lineTo(w*.1,tableBottom);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.moveTo(left,tableTop);ctx.lineTo(right,tableTop);ctx.lineTo(w*.94,tableBottom);ctx.lineTo(w*.06,tableBottom);ctx.closePath();ctx.fill();ctx.stroke();
       ctx.strokeStyle="rgba(255,255,255,.72)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(w*.5,tableTop);ctx.lineTo(w*.5,tableBottom);ctx.stroke();
       ctx.strokeStyle="#39dbff";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(w*.13,h*.5);ctx.lineTo(w*.87,h*.5);ctx.stroke();
       ctx.strokeStyle="#ff77cb";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(w*.13,h*.49);ctx.lineTo(w*.87,h*.49);ctx.stroke();
@@ -4015,7 +4015,7 @@
       const bottomHit=game.phase==="flight"&&sharedFromId===bottomId&&t<.25;
       const topLane=sharedFromId===topId?game.fromLane:game.toLane;
       const bottomLane=sharedFromId===bottomId?game.fromLane:game.toLane;
-      const topX=pasabolasLaneX(topLane,w),bottomX=pasabolasLaneX(bottomLane,w);
+      const topX=(topLane==="left"?w*.30:w*.70),bottomX=(bottomLane==="left"?w*.30:w*.70);
 
       updatePasabolasDino(ui.pasabolasTopDino,topId,topLane,false,topHit,0);
       updatePasabolasDino(ui.pasabolasBottomDino,bottomId,bottomLane,bottomId===state.playerId,bottomHit,1);
