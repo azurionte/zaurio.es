@@ -93,6 +93,10 @@
     .versusRoundGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
     .versusMove{padding:14px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);display:grid;gap:6px;justify-items:center;text-align:center;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
     .versusMove:hover{transform:translateY(-2px)}
+    .versusMove:focus-visible{outline:3px solid #39dbff;outline-offset:3px}
+    .versusMove strong{font-size:clamp(.82rem,2.8vw,1rem);line-height:1.2;color:#fff;overflow-wrap:break-word}
+    .versusMove.active strong{color:#39dbff}
+    .versusMove{color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
     .versusMove.active{border-color:rgba(57,219,255,.48);background:linear-gradient(135deg,rgba(57,219,255,.16),rgba(255,119,203,.12))}
     .versusMove.win{border-color:rgba(136,225,110,.78);background:linear-gradient(135deg,rgba(136,225,110,.24),rgba(57,219,255,.08));box-shadow:0 0 24px rgba(136,225,110,.18)}
     .versusMove:disabled{opacity:.55;transform:none;cursor:not-allowed}
@@ -1342,7 +1346,8 @@
         yourDuel:"Tu duelo",
         inDuel:"En duelo",
         markNow:"Marca ya",
-        haveSecondsToMark:"Teneis 5 segundos para marcar.",
+        haveSecondsToMark:"Elige piedra, papel o tijera antes de que termine el tiempo.",
+        versusReplay:"¡Repetimos! Hubo empate.",
         timeResolving:"Tiempo. Resolviendo la mano...",
         onlyDuelists:"Solo los duelistas pueden marcar. El resto observa.",
         drawHands:"Empate. Otra vez a las manos.",
@@ -1612,7 +1617,8 @@
         yourDuel:"Your duel",
         inDuel:"In duel",
         markNow:"Pick now",
-        haveSecondsToMark:"You have 5 seconds to choose.",
+        haveSecondsToMark:"Choose rock, paper or scissors before time runs out.",
+        versusReplay:"Replay! It was a draw.",
         timeResolving:"Time's up. Resolving the hand...",
         onlyDuelists:"Only the duelists can choose. Everyone else watches.",
         drawHands:"Draw. Hands again.",
@@ -3668,7 +3674,9 @@
       const visibleChoiceA = (revealActive || versus.finalWinnerId || versus.roundWinnerId) ? ((versus.revealChoices || {})[playerA] || "") : ownChoiceA;
       const visibleChoiceB = (revealActive || versus.finalWinnerId || versus.roundWinnerId) ? ((versus.revealChoices || {})[playerB] || "") : ownChoiceB;
       ui.versusLead.textContent = t(versus.source === "scheduled" ? "versusPartyLead" : "tiebreakLead");
-      ui.versusRoundBadge.textContent = versus.finalWinnerId ? t("duelResolved") : ((winsA === neededWins - 1 && winsB === neededWins - 1) ? t("decisiveRound") : t("versusRound", {round: Number(versus.roundNumber || 1)}));
+      const resolvedHands = winsA + winsB;
+      const isReplay = Number(versus.roundNumber || 1) > resolvedHands + 1;
+      ui.versusRoundBadge.textContent = versus.finalWinnerId ? t("duelResolved") : ((winsA === neededWins - 1 && winsB === neededWins - 1) ? t("decisiveRound") : (isReplay ? t("versusReplay") : t("versusRound", {round: resolvedHands + 1})));
       const handMoveA = visibleChoiceA || "rock";
       const handMoveB = visibleChoiceB || "rock";
       ui.versusHandA.dataset.move = handMoveA;
@@ -3700,14 +3708,17 @@
       } else if(countdown === 0){
         ui.versusRoundCopy.textContent = t("timeResolving");
       } else if(isContender){
-        ui.versusRoundCopy.textContent = t("haveSecondsToMark");
+        const ownMove=(versus.choices||{})[state.playerId];
+        ui.versusRoundCopy.textContent = ownMove
+          ? (currentLang==="en" ? "Choice locked in. Waiting for the reveal…" : "¡Elección registrada! Esperando a revelar las manos…")
+          : t("haveSecondsToMark");
       } else {
         ui.versusRoundCopy.textContent = t("onlyDuelists");
       }
       ui.versusButtons.innerHTML = canPick ? VERSUS_MOVES.map(move => {
         const mine = (versus.choices || {})[state.playerId] === move.id;
         const winningMove = versus.roundWinnerId && Object.entries(versus.revealChoices || {}).some(([playerId, value]) => playerId === versus.roundWinnerId && value === move.id);
-        return `<button class="versusMove ${mine ? "active" : ""} ${winningMove ? "win" : ""}" data-versus-move="${move.id}" type="button"><span class="versusGlyph">${move.glyph}</span><strong>${move.label}</strong></button>`;
+        return `<button class="versusMove ${mine ? "active" : ""} ${winningMove ? "win" : ""}" data-versus-move="${move.id}" type="button" aria-label="${esc(versusMoveLabel(move))}" aria-pressed="${mine ? "true" : "false"}"><span class="versusGlyph" aria-hidden="true">${move.glyph}</span><strong>${esc(versusMoveLabel(move))}</strong></button>`;
       }).join("") : "";
       ui.versusButtons.querySelectorAll("[data-versus-move]").forEach(btn => {
         btn.onclick = async () => {
