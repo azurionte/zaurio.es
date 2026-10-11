@@ -449,61 +449,56 @@
     .pasabolasCard{width:min(900px,100%);position:relative;overflow:hidden}.pasabolasCard:before{content:"";position:absolute;inset:-28%;background:conic-gradient(from 45deg,rgba(57,219,255,.11),rgba(255,119,203,.12),rgba(255,216,58,.08),rgba(57,219,255,.11));filter:blur(55px);animation:partyAura 12s linear infinite;pointer-events:none}.pasabolasInner{position:relative;z-index:1}.pasabolasMeta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:8px}.pasabolasArena{position:relative;width:min(680px,100%);margin:0 auto;aspect-ratio:4/5;min-height:500px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#251231,#0d0a12 48%,#2c0d2a);box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 18px 50px rgba(0,0,0,.25);touch-action:none;user-select:none}.pasabolasArena canvas{display:block;width:100%;height:100%;touch-action:none}.pasabolasScore{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:1000}.pasabolasScore span{font-size:1.35rem}.pasabolasScore .vs{font-size:.7rem;color:var(--muted);letter-spacing:.08em}.pasabolasHint{text-align:center;color:var(--muted);font-weight:800;margin:9px 0 0}.pasabolasNames{display:flex;justify-content:space-between;gap:12px;width:min(680px,100%);margin:0 auto 6px;font-size:.8rem;font-weight:1000;color:#fff}.pasabolasNames span:last-child{text-align:right}.pasabolasWinner{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,3,16,.5);backdrop-filter:blur(4px);font-size:clamp(1.8rem,5vw,4rem);font-weight:1000;color:var(--yellow);text-shadow:0 0 28px rgba(255,216,58,.3);pointer-events:none}.pasabolasWinner[hidden]{display:none}.pasabolasServeBtn{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(255,216,58,.62);border-radius:999px;padding:13px 22px;background:rgba(28,10,34,.9);color:#fff;font-weight:1000;font-size:1rem;box-shadow:0 0 28px rgba(255,216,58,.18),inset 0 0 0 1px rgba(255,255,255,.04);cursor:pointer;backdrop-filter:blur(8px)}.pasabolasServeBtn[hidden]{display:none}.pasabolasArena.ready-hit:before,.pasabolasArena.ready-hit:after{content:"";position:absolute;z-index:4;top:0;bottom:0;width:50%;pointer-events:none;opacity:.16}.pasabolasArena.ready-hit:before{left:0;background:linear-gradient(90deg,rgba(57,219,255,.55),transparent)}.pasabolasArena.ready-hit:after{right:0;background:linear-gradient(270deg,rgba(255,119,203,.55),transparent)}.pasabolasArena.ready-hit{cursor:crosshair}.pasabolasTurn{width:min(680px,100%);margin:7px auto 0;text-align:center;font-weight:1000;color:var(--yellow);min-height:22px}.pasabolasChip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}@media(max-width:720px){.pasabolasArena{min-height:min(58vh,540px);aspect-ratio:3/4}.pasabolasCard{padding:12px}.pasabolasMeta{grid-template-columns:1fr auto;gap:8px}.pasabolasNames{display:none}.pasabolasTurn{font-size:.9rem}}
 
 
-    .pasabolasDino{position:absolute;z-index:3;width:132px;height:132px;left:50%;transform:translateX(-50%);transition:left .16s ease;pointer-events:none;--skin:#88cc55;--skin2:#eeee55;--paddle:#39dbff}
-    .pasabolasDino.top{top:1.5%}.pasabolasDino.bottom{bottom:-.5%}
-    .pasabolasDinoFigure{position:absolute;inset:0;transform-origin:50% 92%;animation:pasoDinoIdle 3.2s ease-in-out infinite}
-    .pasabolasDino.is-local .pasabolasDinoFigure{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--skin) 38%,transparent))}
-    @keyframes pasoDinoIdle{0%,100%{transform:translate(-1%,0) rotate(0)}25%{transform:translate(-3%,0) rotate(1.2deg)}75%{transform:translate(2%,0) rotate(-1.2deg)}}
-    @keyframes pasoTail{from{transform:rotate(0)}to{transform:rotate(4deg)}}
-    @keyframes pasoArm{0%,100%{transform:rotate(24deg)}50%{transform:rotate(29deg)}}
-    @keyframes pasoHit{0%{transform:rotate(24deg)}45%{transform:rotate(-42deg)}100%{transform:rotate(24deg)}}
-    @keyframes pasoBlink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.06)}}
 
-    .pasoHead{position:absolute;width:60%;height:50%;top:0;left:40%;transform:translateX(-50%);filter:drop-shadow(-1px -1px rgba(0,0,0,.75)) drop-shadow(1px 1px rgba(0,0,0,.75))}
-    .pasoFace{position:absolute;width:80%;height:90%;right:0;top:0;border-radius:100% 100% 60% 60%;background:var(--skin)}
-    .pasoFace:before{content:"";position:absolute;width:110%;height:60%;background:var(--skin);top:50%;right:0;border-radius:100% 0 100% 100%}
-    .pasoEye{position:absolute;width:25%;aspect-ratio:1/1.1;border-radius:50%;background:#060606;top:45%;left:5%;z-index:3;transform-origin:center;animation:pasoBlink 4.4s infinite}
-    .pasoEye:before{content:"";position:absolute;width:45%;aspect-ratio:1;background:#fff;top:17%;left:9%;border-radius:50%}
-    .pasoEye:after{content:"";position:absolute;width:15%;aspect-ratio:1;background:#fff;top:9%;left:40%;border-radius:50%}
-    .pasoEye.b{left:45%;top:46%;transform:scale(1.05)}
-    .pasoCheek{position:absolute;width:25%;height:18%;background:repeating-linear-gradient(-40deg,transparent 0 17%,rgba(255,0,80,.08) 17% 21%),rgba(255,0,80,.12);border-radius:50%;top:67%;left:-4%;filter:blur(.3px);z-index:2}
+    /* Pasabolas: the original Aarzoo dinosaur structure, scaled to the court.
+       Head spikes are INSIDE the head and tail INSIDE the body. */
+    .pasabolasDino{position:absolute;z-index:3;width:132px;height:132px;left:50%;transform:translateX(-50%);transition:left .16s ease;pointer-events:none;--skin:#8c5;--skin2:#ee5;--paddle:#39dbff}
+    .pasabolasDino.top{top:3.5%}.pasabolasDino.bottom{bottom:3.5%}
+    .pasabolasDinoFigure{position:absolute;inset:0;transform-origin:50% 92%;animation:pasoDinoIdle 3.4s ease-in-out infinite}
+    .pasabolasDinoFigure *,.pasabolasDinoFigure *::before,.pasabolasDinoFigure *::after{position:absolute;box-sizing:border-box}
+    .pasabolasDino.is-local .pasabolasDinoFigure{filter:drop-shadow(0 0 7px color-mix(in srgb,var(--skin) 30%,transparent))}
+    @keyframes pasoDinoIdle{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-2px) rotate(1deg)}75%{transform:translateY(0) rotate(-1deg)}}
+    @keyframes pasoTail{from{transform:rotate(0)}to{transform:rotate(3deg)}}
+    @keyframes pasoArm{0%,100%{transform:rotate(-190deg)}50%{transform:rotate(-200deg)}}
+    @keyframes pasoHit{0%{transform:rotate(-190deg)}45%{transform:rotate(-245deg)}100%{transform:rotate(-190deg)}}
+    @keyframes pasoBlink{0%,43%,47%,100%{transform:scaleY(1)}45%{transform:scaleY(.12)}}
+
+    .pasoHead{width:60%;height:50%;top:0;left:40%;transform:translateX(-50%);filter:drop-shadow(-.5px -.6px #1c1620) drop-shadow(.5px .7px #1c1620)}
+    .pasoFace{width:80%;height:90%;border-radius:100% 100% 60% 60%;background:var(--skin);right:0;top:0}
+    .pasoFace::before{content:"";width:110%;height:60%;background:var(--skin);top:50%;right:0;border-radius:100% 0 100% 100%}
+    .pasoEye{width:25%;aspect-ratio:1/1.1;border-radius:50%;background:#050505;top:45%;left:5%;z-index:4;transform-origin:center;animation:pasoBlink 5s infinite}
+    .pasoEye::before{content:"";width:45%;aspect-ratio:1;background:white;top:17%;left:9%;border-radius:50%}
+    .pasoEye::after{content:"";width:15%;aspect-ratio:1;background:white;top:9%;left:40%;border-radius:50%}
+    .pasoEye.b{left:45%;top:46%;animation-delay:.08s}
+    .pasoCheek{width:25%;height:18%;background:repeating-linear-gradient(-40deg,transparent 0 17%,#f001 0 21%),#f002;border-radius:50%;top:67%;left:-4%;z-index:3}
     .pasoCheek.b{left:55%;top:69%}
-    .pasoNose{position:absolute;width:5%;aspect-ratio:1;background:#111;border-radius:50%;left:64%;top:72%;z-index:4}
-    .pasoMouth{position:absolute;width:5%;height:10%;background:#111;border-radius:50%;top:90%;left:35%;transform:rotate(-10deg);z-index:4}
-
-    .pasoSpikes{position:absolute;inset:0;z-index:-1}
-    .pasoSpike{position:absolute;width:30%;aspect-ratio:1;background:conic-gradient(at 50% 0,transparent 160deg,var(--skin2) 0 200deg,transparent 0);top:-25%;left:45%}
+    .pasoNose{width:5%;aspect-ratio:1;background:#111;border-radius:50%;left:64%;top:72%;z-index:5}
+    .pasoMouth{width:5%;height:10%;background:#111;border-radius:50%;top:90%;left:35%;transform:rotate(-10deg);z-index:5}
+    .pasoSpike{width:30%;aspect-ratio:1;background:conic-gradient(at 50% 0,transparent 160deg,var(--skin2) 0 200deg,transparent 0);top:-25%;left:45%}
     .pasoSpike:nth-child(2){transform:rotate(30deg);left:65%;top:-20%}
     .pasoSpike:nth-child(3){transform:rotate(45deg);left:80%;top:-8%}
     .pasoSpike:nth-child(4){transform:rotate(60deg);left:85%;top:11%}
     .pasoSpike:nth-child(5){transform:rotate(90deg);left:85%;top:29%}
     .pasoSpike:nth-child(6){transform:rotate(90deg);left:81%;top:42%}
     .pasoSpike:nth-child(7){transform:rotate(90deg);left:77%;top:51%}
-
-    .pasoBody{position:absolute;width:50%;height:45%;top:35%;left:45%;transform:translateX(-50%);filter:drop-shadow(-1px -1px rgba(0,0,0,.72)) drop-shadow(1px 1px rgba(0,0,0,.72))}
-    .pasoChest{position:absolute;inset:0;border-radius:150% 0 50% 100%;background:radial-gradient(130% 160% at 35% 85%,transparent 29%,rgba(0,0,0,.85) 29.1% 30%,var(--skin) 30.1%),repeating-radial-gradient(100% 100% at 40% 0,transparent 0 20%,rgba(0,0,0,.10) 0 22%),var(--skin2)}
-    .pasoTail{position:absolute;width:50%;height:60%;bottom:-.25%;left:90%;transform-origin:0 100%;border-radius:0 0 100% 0;box-shadow:inset 4px -50px 0 -10px var(--skin);animation:pasoTail 2.8s alternate ease-in-out infinite}
-
-    .pasoLeg{position:absolute;width:18%;height:23%;background:var(--skin);border-radius:50% / 0 0 100% 100%;top:69%;left:24%;transform:rotate(-25deg);border:3px solid rgba(0,0,0,.82);border-top:0}
-    .pasoLeg.b{top:73%;left:48%;transform:rotate(45deg)}
-    .pasoFoot{position:absolute;width:125%;height:24%;left:-18%;bottom:-8%;border-radius:50%;background:var(--skin2)}
-
-    .pasoArm{position:absolute;width:20%;height:10%;background:var(--skin);border-radius:120% / 100% 0 0 100%;transform:rotate(24deg);transform-origin:100% 50%;top:52%;left:10%;filter:drop-shadow(-2px 0 rgba(0,0,0,.78)) drop-shadow(1px 1px rgba(0,0,0,.78));animation:pasoArm 2s infinite;z-index:5}
-    .pasabolasDino.hitting .pasoArm{animation:pasoHit .28s ease-out}
-    .pasoHand{position:absolute;width:18%;aspect-ratio:1;background:var(--skin);border-radius:50%;left:-8%;top:40%;box-shadow:5px -7px 0 -1px var(--skin),5px 7px 0 -1px var(--skin)}
-    .pasoPaddleHandle{position:absolute;width:5px;height:30px;background:#8a5a32;right:-19px;top:-8px;transform:rotate(28deg);border-radius:4px}
-    .pasoPaddle{position:absolute;width:25px;height:31px;border-radius:50%;background:var(--paddle);border:3px solid white;right:-37px;top:-25px;transform:rotate(22deg);box-shadow:0 0 8px color-mix(in srgb,var(--paddle) 50%,transparent)}
-
-    .pasoName{position:absolute;left:50%;translate:-50% 0;min-width:82px;max-width:124px;padding:4px 8px;border-radius:999px;background:rgba(14,7,20,.82);border:1px solid color-mix(in srgb,var(--skin) 45%,transparent);font-size:.68rem;font-weight:1000;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 14px rgba(0,0,0,.22)}
-    .pasabolasDino.top .pasoName{bottom:-3px}.pasabolasDino.bottom .pasoName{top:-8px}
-    .pasoLocalTag{margin-left:5px;color:var(--yellow);font-size:.56rem}
-
-    @media(max-width:720px){
-      .pasabolasDino{width:116px;height:116px;transform:translateX(-50%) scale(.72);transform-origin:center}
-      .pasabolasDino.top{top:0}.pasabolasDino.bottom{bottom:-2%}
-      .pasabolasDino.top .pasoName{bottom:-1px}.pasabolasDino.bottom .pasoName{top:-6px}
-      .pasoName{font-size:.62rem;min-width:72px;max-width:100px;padding:3px 6px}
-    }
+    .pasoBody{width:50%;height:45%;top:35%;left:45%;transform:translateX(-50%);filter:drop-shadow(-.5px -.5px #1c1620) drop-shadow(.5px .5px #1c1620)}
+    .pasoChest{inset:0;border-radius:150% 0 50% 100%;background:radial-gradient(130% 160% at 35% 85%,transparent 29%,#17101a 29.1% 30%,var(--skin) 30.1%),repeating-radial-gradient(100% 100% at 40% 0,transparent 0 20%,#0002 0 22%),var(--skin2)}
+    .pasoTail{width:50%;height:60%;bottom:-.25%;left:90%;transform-origin:0 100%;border-radius:0 0 100% 0;box-shadow:inset 2px -30px 0 -6px var(--skin);animation:pasoTail 3s alternate ease-in-out infinite}
+    .pasoLeg{width:18%;height:23%;background:var(--skin);border-radius:50% / 0 0 100% 100%;top:69%;left:24%;transform:rotate(-25deg);border:1.5px solid #1c1620;border-top:0}
+    .pasoLeg.b{top:73%;left:53.5%;transform:rotate(45deg)}
+    .pasoFoot{width:100%;height:18%;bottom:0;border-radius:50%;background:var(--skin2)}
+    .pasoArm{width:20%;height:10%;background:var(--skin);border-radius:120% / 100% 0 0 100%;transform:rotate(30deg);transform-origin:100% 50%;top:52%;left:10%;filter:drop-shadow(-.5px 0 #1c1620) drop-shadow(0 .5px #1c1620)}
+    .pasoArm::before{content:"";color:var(--skin);width:17%;aspect-ratio:1;background:var(--skin);border-radius:50%;left:0;top:50%;transform:translate(-80%,-50%);box-shadow:3px -5px,3px 5px}
+    .pasoArm.front{width:15%;transform:rotate(-190deg);left:48%;z-index:7;animation:pasoArm 2.33s reverse infinite}
+    .pasabolasDino.hitting .pasoArm.front{animation:pasoHit .32s ease-out}
+    .pasoPaddle{left:68%;top:47%;z-index:8;transform:rotate(27deg)}
+    .pasoPaddle::before{content:"";width:5px;height:30px;border-radius:3px;background:#b88b55;top:4px;left:9px}
+    .pasoPaddle::after{content:"";width:24px;height:30px;border-radius:50%;background:var(--paddle);border:3px solid #fff;box-shadow:0 0 7px var(--paddle);top:-18px;left:0}
+    .pasoName{position:absolute;left:50%;transform:translateX(-50%);min-width:68px;max-width:112px;padding:4px 8px;border-radius:999px;background:rgba(14,7,20,.92);border:1px solid color-mix(in srgb,var(--skin) 40%,transparent);font-size:.68rem;font-weight:900;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 12px rgba(0,0,0,.24);z-index:9}
+    .pasabolasDino.top .pasoName{bottom:-12px}.pasabolasDino.bottom .pasoName{top:-13px}
+    .pasoLocalTag{margin-left:4px;color:var(--yellow);font-size:.57rem}
+    @media(max-width:720px){.pasabolasDino{width:118px;height:118px;transform:translateX(-50%) scale(.9);transform-origin:center}.pasabolasDino.top{top:3.5%}.pasabolasDino.bottom{bottom:4%}.pasoName{font-size:.63rem;max-width:98px;padding:3px 6px}}
+    @media(prefers-reduced-motion:reduce){.pasabolasDinoFigure,.pasoTail,.pasoArm,.pasoEye{animation:none!important}}
 @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
     @media(max-width:720px){.mixGrid{grid-template-columns:1fr}.towerHud{grid-template-columns:repeat(3,1fr)}.towerCanvasWrap{min-height:360px;aspect-ratio:10/12}}
   </style>
@@ -3896,14 +3891,19 @@
     }
 
     function pasabolasDinoMarkup(name,isLocal=false){
+      // Original HTML/CSS character hierarchy (Aarzoo): limbs, body/tail, head/spikes/face.
       return `
         <div class="pasabolasDinoFigure">
-          <div class="pasoSpikes"><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i></div>
-          <div class="pasoHead"><div class="pasoFace"><i class="pasoEye a"></i><i class="pasoEye b"></i><i class="pasoCheek a"></i><i class="pasoCheek b"></i><i class="pasoNose"></i><i class="pasoMouth"></i></div></div>
-          <div class="pasoBody"><i class="pasoChest"></i></div>
-          <i class="pasoTail"></i>
-          <div class="pasoLeg a"><i class="pasoFoot"></i></div><div class="pasoLeg b"><i class="pasoFoot"></i></div>
-          <div class="pasoArm"><i class="pasoHand"></i><i class="pasoPaddleHandle"></i><i class="pasoPaddle"></i></div>
+          <div class="pasoArm"></div>
+          <div class="pasoLeg"></div>
+          <div class="pasoBody"><div class="pasoChest"></div><div class="pasoTail"></div></div>
+          <div class="pasoHead">
+            <i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i>
+            <div class="pasoFace"><i class="pasoCheek"></i><i class="pasoCheek b"></i><i class="pasoEye"></i><i class="pasoEye b"></i><i class="pasoMouth"></i><i class="pasoNose"></i></div>
+          </div>
+          <div class="pasoLeg b"></div>
+          <div class="pasoArm front"></div>
+          <div class="pasoPaddle"></div>
         </div>
         <div class="pasoName">${esc(name||t("player"))}${isLocal?'<span class="pasoLocalTag">'+esc(t("towerYou"))+'</span>':""}</div>`;
     }
