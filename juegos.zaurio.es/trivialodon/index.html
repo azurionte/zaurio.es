@@ -448,44 +448,62 @@
     
     .pasabolasCard{width:min(900px,100%);position:relative;overflow:hidden}.pasabolasCard:before{content:"";position:absolute;inset:-28%;background:conic-gradient(from 45deg,rgba(57,219,255,.11),rgba(255,119,203,.12),rgba(255,216,58,.08),rgba(57,219,255,.11));filter:blur(55px);animation:partyAura 12s linear infinite;pointer-events:none}.pasabolasInner{position:relative;z-index:1}.pasabolasMeta{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-bottom:8px}.pasabolasArena{position:relative;width:min(680px,100%);margin:0 auto;aspect-ratio:4/5;min-height:500px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,#251231,#0d0a12 48%,#2c0d2a);box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 18px 50px rgba(0,0,0,.25);touch-action:none;user-select:none}.pasabolasArena canvas{display:block;width:100%;height:100%;touch-action:none}.pasabolasScore{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:1000}.pasabolasScore span{font-size:1.35rem}.pasabolasScore .vs{font-size:.7rem;color:var(--muted);letter-spacing:.08em}.pasabolasHint{text-align:center;color:var(--muted);font-weight:800;margin:9px 0 0}.pasabolasNames{display:flex;justify-content:space-between;gap:12px;width:min(680px,100%);margin:0 auto 6px;font-size:.8rem;font-weight:1000;color:#fff}.pasabolasNames span:last-child{text-align:right}.pasabolasWinner{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,3,16,.5);backdrop-filter:blur(4px);font-size:clamp(1.8rem,5vw,4rem);font-weight:1000;color:var(--yellow);text-shadow:0 0 28px rgba(255,216,58,.3);pointer-events:none}.pasabolasWinner[hidden]{display:none}.pasabolasServeBtn{position:absolute;z-index:7;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(255,216,58,.62);border-radius:999px;padding:13px 22px;background:rgba(28,10,34,.9);color:#fff;font-weight:1000;font-size:1rem;box-shadow:0 0 28px rgba(255,216,58,.18),inset 0 0 0 1px rgba(255,255,255,.04);cursor:pointer;backdrop-filter:blur(8px)}.pasabolasServeBtn[hidden]{display:none}.pasabolasArena.ready-hit:before,.pasabolasArena.ready-hit:after{content:"";position:absolute;z-index:4;top:0;bottom:0;width:50%;pointer-events:none;opacity:.16}.pasabolasArena.ready-hit:before{left:0;background:linear-gradient(90deg,rgba(57,219,255,.55),transparent)}.pasabolasArena.ready-hit:after{right:0;background:linear-gradient(270deg,rgba(255,119,203,.55),transparent)}.pasabolasArena.ready-hit{cursor:crosshair}.pasabolasTurn{width:min(680px,100%);margin:7px auto 0;text-align:center;font-weight:1000;color:var(--yellow);min-height:22px}.pasabolasChip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}@media(max-width:720px){.pasabolasArena{min-height:min(58vh,540px);aspect-ratio:3/4}.pasabolasCard{padding:12px}.pasabolasMeta{grid-template-columns:1fr auto;gap:8px}.pasabolasNames{display:none}.pasabolasTurn{font-size:.9rem}}
 
-    .pasabolasDino{position:absolute;z-index:3;width:104px;height:118px;left:50%;transform:translateX(-50%);transition:left .16s ease;pointer-events:none;--skin:#88e16e;--skin2:#ffd83a;--paddle:#39dbff}
-    .pasabolasDino.top{top:3%}.pasabolasDino.bottom{bottom:1.5%}
-    .pasabolasDinoFigure{position:absolute;inset:0;transform-origin:50% 88%;animation:pasoDinoIdle 2.4s ease-in-out infinite}
-    .pasabolasDino.bottom .pasabolasDinoFigure{transform:scale(.96)}
-    .pasabolasDino.is-local .pasabolasDinoFigure{filter:drop-shadow(0 0 12px color-mix(in srgb,var(--skin) 55%,transparent))}
-    @keyframes pasoDinoIdle{0%,100%{translate:0 0;rotate:-1deg}50%{translate:0 -3px;rotate:1deg}}
-    @keyframes pasoTail{from{rotate:-5deg}to{rotate:5deg}}
-    @keyframes pasoArm{0%,100%{rotate:-8deg}50%{rotate:4deg}}
-    @keyframes pasoHit{0%{rotate:-12deg}45%{rotate:-78deg}100%{rotate:-12deg}}
-    @keyframes pasoBlink{0%,43%,47%,100%{scale:1 1}45%{scale:1 .08}}
-    .pasoBody{position:absolute;width:58px;height:60px;left:30px;top:58px;border:3px solid rgba(15,8,20,.72);border-radius:65% 38% 50% 60%;background:radial-gradient(120% 150% at 30% 90%,transparent 28%,rgba(0,0,0,.16) 29% 31%,var(--skin) 32%),repeating-radial-gradient(100% 100% at 40% 0,transparent 0 20%,rgba(0,0,0,.08) 0 22%),var(--skin2)}
-    .pasoChest{position:absolute;width:27px;height:38px;left:11px;top:14px;border-radius:60%;background:rgba(255,255,255,.18)}
-    .pasoTail{position:absolute;width:54px;height:26px;left:74px;top:84px;border-radius:0 0 100% 0;box-shadow:inset 18px -22px 0 -9px var(--skin);transform-origin:0 70%;animation:pasoTail 1.8s ease-in-out alternate infinite}
-    .pasoHead{position:absolute;width:70px;height:63px;left:20px;top:8px;filter:drop-shadow(0 2px 0 rgba(15,8,20,.75))}
-    .pasoFace{position:absolute;width:62px;height:56px;right:0;top:5px;border-radius:62% 62% 46% 54%;background:var(--skin);border:3px solid rgba(15,8,20,.72)}
-    .pasoFace:before{content:"";position:absolute;width:69px;height:31px;right:-4px;top:27px;border-radius:70% 12% 65% 65%;background:var(--skin)}
-    .pasoEye{position:absolute;width:17px;height:19px;border-radius:50%;background:#19131c;top:25px;z-index:2;animation:pasoBlink 4s infinite;transform-origin:center}
-    .pasoEye:before{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:#fff;left:3px;top:3px}
-    .pasoEye.a{left:11px}.pasoEye.b{left:34px;top:26px}
-    .pasoCheek{position:absolute;width:18px;height:10px;border-radius:50%;background:repeating-linear-gradient(-35deg,transparent 0 16%,rgba(255,80,120,.16) 17% 23%),rgba(255,80,120,.13);top:43px;z-index:2;filter:blur(.2px)}
-    .pasoCheek.a{left:2px}.pasoCheek.b{left:38px}
-    .pasoNose{position:absolute;width:5px;height:4px;border-radius:50%;background:#2a1827;left:48px;top:37px;z-index:3}
-    .pasoMouth{position:absolute;width:13px;height:7px;border-bottom:3px solid #2a1827;border-radius:0 0 50% 50%;left:34px;top:45px;z-index:3}
-    .pasoSpikes{position:absolute;left:11px;top:-5px;width:68px;height:28px}
-    .pasoSpike{position:absolute;width:20px;height:20px;background:conic-gradient(at 50% 0,transparent 160deg,var(--skin2) 0 200deg,transparent 0);transform-origin:50% 100%}
-    .pasoSpike:nth-child(1){left:2px;top:8px;rotate:-18deg}.pasoSpike:nth-child(2){left:16px;top:1px;rotate:-6deg}.pasoSpike:nth-child(3){left:31px;top:0;rotate:8deg}.pasoSpike:nth-child(4){left:45px;top:7px;rotate:24deg}
-    .pasoLeg{position:absolute;width:17px;height:27px;background:var(--skin);border:3px solid rgba(15,8,20,.72);border-top:0;border-radius:45% / 0 0 100% 100%;top:105px;transform-origin:50% 0}
-    .pasoLeg.a{left:37px;rotate:-11deg}.pasoLeg.b{left:64px;rotate:14deg}
-    .pasoFoot{position:absolute;width:22px;height:7px;border-radius:50%;background:var(--skin2);bottom:-4px;left:-3px}
-    .pasoArm{position:absolute;width:36px;height:13px;background:var(--skin);border:3px solid rgba(15,8,20,.72);border-radius:120% / 100% 0 0 100%;left:66px;top:70px;transform-origin:5% 50%;animation:pasoArm 2s ease-in-out infinite}
+
+    .pasabolasDino{position:absolute;z-index:3;width:132px;height:132px;left:50%;transform:translateX(-50%);transition:left .16s ease;pointer-events:none;--skin:#88cc55;--skin2:#eeee55;--paddle:#39dbff}
+    .pasabolasDino.top{top:1.5%}.pasabolasDino.bottom{bottom:-.5%}
+    .pasabolasDinoFigure{position:absolute;inset:0;transform-origin:50% 92%;animation:pasoDinoIdle 3.2s ease-in-out infinite}
+    .pasabolasDino.is-local .pasabolasDinoFigure{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--skin) 38%,transparent))}
+    @keyframes pasoDinoIdle{0%,100%{transform:translate(-1%,0) rotate(0)}25%{transform:translate(-3%,0) rotate(1.2deg)}75%{transform:translate(2%,0) rotate(-1.2deg)}}
+    @keyframes pasoTail{from{transform:rotate(0)}to{transform:rotate(4deg)}}
+    @keyframes pasoArm{0%,100%{transform:rotate(24deg)}50%{transform:rotate(29deg)}}
+    @keyframes pasoHit{0%{transform:rotate(24deg)}45%{transform:rotate(-42deg)}100%{transform:rotate(24deg)}}
+    @keyframes pasoBlink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.06)}}
+
+    .pasoHead{position:absolute;width:60%;height:50%;top:0;left:40%;transform:translateX(-50%);filter:drop-shadow(-1px -1px rgba(0,0,0,.75)) drop-shadow(1px 1px rgba(0,0,0,.75))}
+    .pasoFace{position:absolute;width:80%;height:90%;right:0;top:0;border-radius:100% 100% 60% 60%;background:var(--skin)}
+    .pasoFace:before{content:"";position:absolute;width:110%;height:60%;background:var(--skin);top:50%;right:0;border-radius:100% 0 100% 100%}
+    .pasoEye{position:absolute;width:25%;aspect-ratio:1/1.1;border-radius:50%;background:#060606;top:45%;left:5%;z-index:3;transform-origin:center;animation:pasoBlink 4.4s infinite}
+    .pasoEye:before{content:"";position:absolute;width:45%;aspect-ratio:1;background:#fff;top:17%;left:9%;border-radius:50%}
+    .pasoEye:after{content:"";position:absolute;width:15%;aspect-ratio:1;background:#fff;top:9%;left:40%;border-radius:50%}
+    .pasoEye.b{left:45%;top:46%;transform:scale(1.05)}
+    .pasoCheek{position:absolute;width:25%;height:18%;background:repeating-linear-gradient(-40deg,transparent 0 17%,rgba(255,0,80,.08) 17% 21%),rgba(255,0,80,.12);border-radius:50%;top:67%;left:-4%;filter:blur(.3px);z-index:2}
+    .pasoCheek.b{left:55%;top:69%}
+    .pasoNose{position:absolute;width:5%;aspect-ratio:1;background:#111;border-radius:50%;left:64%;top:72%;z-index:4}
+    .pasoMouth{position:absolute;width:5%;height:10%;background:#111;border-radius:50%;top:90%;left:35%;transform:rotate(-10deg);z-index:4}
+
+    .pasoSpikes{position:absolute;inset:0;z-index:-1}
+    .pasoSpike{position:absolute;width:30%;aspect-ratio:1;background:conic-gradient(at 50% 0,transparent 160deg,var(--skin2) 0 200deg,transparent 0);top:-25%;left:45%}
+    .pasoSpike:nth-child(2){transform:rotate(30deg);left:65%;top:-20%}
+    .pasoSpike:nth-child(3){transform:rotate(45deg);left:80%;top:-8%}
+    .pasoSpike:nth-child(4){transform:rotate(60deg);left:85%;top:11%}
+    .pasoSpike:nth-child(5){transform:rotate(90deg);left:85%;top:29%}
+    .pasoSpike:nth-child(6){transform:rotate(90deg);left:81%;top:42%}
+    .pasoSpike:nth-child(7){transform:rotate(90deg);left:77%;top:51%}
+
+    .pasoBody{position:absolute;width:50%;height:45%;top:35%;left:45%;transform:translateX(-50%);filter:drop-shadow(-1px -1px rgba(0,0,0,.72)) drop-shadow(1px 1px rgba(0,0,0,.72))}
+    .pasoChest{position:absolute;inset:0;border-radius:150% 0 50% 100%;background:radial-gradient(130% 160% at 35% 85%,transparent 29%,rgba(0,0,0,.85) 29.1% 30%,var(--skin) 30.1%),repeating-radial-gradient(100% 100% at 40% 0,transparent 0 20%,rgba(0,0,0,.10) 0 22%),var(--skin2)}
+    .pasoTail{position:absolute;width:50%;height:60%;bottom:-.25%;left:90%;transform-origin:0 100%;border-radius:0 0 100% 0;box-shadow:inset 4px -50px 0 -10px var(--skin);animation:pasoTail 2.8s alternate ease-in-out infinite}
+
+    .pasoLeg{position:absolute;width:18%;height:23%;background:var(--skin);border-radius:50% / 0 0 100% 100%;top:69%;left:24%;transform:rotate(-25deg);border:3px solid rgba(0,0,0,.82);border-top:0}
+    .pasoLeg.b{top:73%;left:48%;transform:rotate(45deg)}
+    .pasoFoot{position:absolute;width:125%;height:24%;left:-18%;bottom:-8%;border-radius:50%;background:var(--skin2)}
+
+    .pasoArm{position:absolute;width:20%;height:10%;background:var(--skin);border-radius:120% / 100% 0 0 100%;transform:rotate(24deg);transform-origin:100% 50%;top:52%;left:10%;filter:drop-shadow(-2px 0 rgba(0,0,0,.78)) drop-shadow(1px 1px rgba(0,0,0,.78));animation:pasoArm 2s infinite;z-index:5}
     .pasabolasDino.hitting .pasoArm{animation:pasoHit .28s ease-out}
-    .pasoHand{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--skin);right:-7px;top:0}
-    .pasoPaddleHandle{position:absolute;width:5px;height:28px;background:#875632;right:-12px;top:-11px;rotate:35deg;border-radius:4px}
-    .pasoPaddle{position:absolute;width:22px;height:28px;border-radius:50%;background:var(--paddle);border:3px solid #fff;right:-28px;top:-28px;rotate:25deg;box-shadow:0 0 10px color-mix(in srgb,var(--paddle) 55%,transparent)}
-    .pasoName{position:absolute;left:50%;translate:-50% 0;min-width:86px;max-width:130px;padding:5px 9px;border-radius:999px;background:rgba(14,7,20,.82);border:1px solid color-mix(in srgb,var(--skin) 45%,transparent);font-size:.72rem;font-weight:1000;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 14px rgba(0,0,0,.22)}
-    .pasabolasDino.top .pasoName{bottom:-6px}.pasabolasDino.bottom .pasoName{top:-15px}
-    .pasoLocalTag{margin-left:5px;color:var(--yellow);font-size:.58rem}
-    @media(max-width:720px){.pasabolasDino{width:104px;height:118px;transform:translateX(-50%) scale(.58);transform-origin:center}.pasabolasDino.top{top:1%}.pasabolasDino.bottom{bottom:-1%}.pasabolasDino.top .pasoName{bottom:-2px}.pasabolasDino.bottom .pasoName{top:-10px}.pasoName{font-size:.66rem;min-width:74px;max-width:105px;padding:4px 7px}}
+    .pasoHand{position:absolute;width:18%;aspect-ratio:1;background:var(--skin);border-radius:50%;left:-8%;top:40%;box-shadow:5px -7px 0 -1px var(--skin),5px 7px 0 -1px var(--skin)}
+    .pasoPaddleHandle{position:absolute;width:5px;height:30px;background:#8a5a32;right:-19px;top:-8px;transform:rotate(28deg);border-radius:4px}
+    .pasoPaddle{position:absolute;width:25px;height:31px;border-radius:50%;background:var(--paddle);border:3px solid white;right:-37px;top:-25px;transform:rotate(22deg);box-shadow:0 0 8px color-mix(in srgb,var(--paddle) 50%,transparent)}
+
+    .pasoName{position:absolute;left:50%;translate:-50% 0;min-width:82px;max-width:124px;padding:4px 8px;border-radius:999px;background:rgba(14,7,20,.82);border:1px solid color-mix(in srgb,var(--skin) 45%,transparent);font-size:.68rem;font-weight:1000;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 14px rgba(0,0,0,.22)}
+    .pasabolasDino.top .pasoName{bottom:-3px}.pasabolasDino.bottom .pasoName{top:-8px}
+    .pasoLocalTag{margin-left:5px;color:var(--yellow);font-size:.56rem}
+
+    @media(max-width:720px){
+      .pasabolasDino{width:116px;height:116px;transform:translateX(-50%) scale(.72);transform-origin:center}
+      .pasabolasDino.top{top:0}.pasabolasDino.bottom{bottom:-2%}
+      .pasabolasDino.top .pasoName{bottom:-1px}.pasabolasDino.bottom .pasoName{top:-6px}
+      .pasoName{font-size:.62rem;min-width:72px;max-width:100px;padding:3px 6px}
+    }
 @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
     @media(max-width:720px){.mixGrid{grid-template-columns:1fr}.towerHud{grid-template-columns:repeat(3,1fr)}.towerCanvasWrap{min-height:360px;aspect-ratio:10/12}}
   </style>
@@ -3880,7 +3898,7 @@
     function pasabolasDinoMarkup(name,isLocal=false){
       return `
         <div class="pasabolasDinoFigure">
-          <div class="pasoSpikes"><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i></div>
+          <div class="pasoSpikes"><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i></div>
           <div class="pasoHead"><div class="pasoFace"><i class="pasoEye a"></i><i class="pasoEye b"></i><i class="pasoCheek a"></i><i class="pasoCheek b"></i><i class="pasoNose"></i><i class="pasoMouth"></i></div></div>
           <div class="pasoBody"><i class="pasoChest"></i></div>
           <i class="pasoTail"></i>
@@ -3890,7 +3908,7 @@
         <div class="pasoName">${esc(name||t("player"))}${isLocal?'<span class="pasoLocalTag">'+esc(t("towerYou"))+'</span>':""}</div>`;
     }
     function pasabolasDinoAccent(color,index=0){
-      const palette=["#ffd83a","#ff9a4b","#aef76f","#ff8bd7","#8fe7ff","#d3a5ff"];
+      const palette=["#eeee55","#ffd85a","#e9ef72","#f3d95c","#e5ef77","#ffdd67"];
       return palette[index%palette.length];
     }
     function updatePasabolasDino(el,playerId,lane,isLocal,hit,index){
