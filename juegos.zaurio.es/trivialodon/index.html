@@ -475,7 +475,7 @@
     @keyframes pasoHit{0%{transform:rotate(-190deg)}45%{transform:rotate(-245deg)}100%{transform:rotate(-190deg)}}
     @keyframes pasoBlink{0%,43%,47%,100%{transform:scaleY(1)}45%{transform:scaleY(.12)}}
 
-    .pasoHead{width:60%;height:50%;top:0;left:40%;transform:translateX(-50%);filter:drop-shadow(-.5px -.6px #1c1620) drop-shadow(.5px .7px #1c1620)}
+    .pasoHead{width:60%;height:50%;top:0;left:40%;z-index:5;transform:translateX(-50%);filter:drop-shadow(-.5px -.6px #1c1620) drop-shadow(.5px .7px #1c1620)}
     .pasoFace{width:80%;height:90%;border-radius:100% 100% 60% 60%;background:var(--skin);right:0;top:0}
     .pasoFace::before{content:"";width:110%;height:60%;background:var(--skin);top:50%;right:0;border-radius:100% 0 100% 100%}
     .pasoEye{width:25%;aspect-ratio:1/1.1;border-radius:50%;background:#050505;top:45%;left:5%;z-index:4;transform-origin:center;animation:pasoBlink 5.3s infinite;animation-delay:var(--blink-offset,0s)}
@@ -493,14 +493,16 @@
     .pasoSpike:nth-child(5){transform:rotate(90deg);left:85%;top:29%}
     .pasoSpike:nth-child(6){transform:rotate(90deg);left:81%;top:42%}
     .pasoSpike:nth-child(7){transform:rotate(90deg);left:77%;top:51%}
-    .pasoBody{width:50%;height:45%;top:35%;left:45%;transform:translateX(-50%);filter:drop-shadow(-.5px -.5px #1c1620) drop-shadow(.5px .5px #1c1620)}
+    .pasoBody{width:50%;height:45%;top:35%;left:45%;z-index:3;transform:translateX(-50%);filter:drop-shadow(-.5px -.5px #1c1620) drop-shadow(.5px .5px #1c1620)}
     .pasoChest{inset:0;border-radius:150% 0 50% 100%;background:radial-gradient(130% 160% at 35% 85%,transparent 29%,#17101a 29.1% 30%,var(--skin) 30.1%),repeating-radial-gradient(100% 100% at 40% 0,transparent 0 20%,#0002 0 22%),var(--skin2)}
     .pasoTail{width:50%;height:60%;bottom:-.25%;left:90%;transform-origin:0 100%;border-radius:0 0 100% 0;box-shadow:inset 2px -30px 0 -6px var(--skin);animation:pasoTail 3s alternate ease-in-out infinite}
-    .pasoLeg{width:15%;height:22%;background:var(--skin);border-radius:38% 38% 38% 38% / 18% 18% 65% 65%;top:71%;left:30%;transform:rotate(-7deg);transform-origin:50% 12%;border:1.5px solid #1c1620;z-index:2}
-    .pasoLeg.b{top:71%;left:54%;transform:rotate(7deg);z-index:4}
-    .pasoLeg::after{content:"";position:absolute;width:142%;height:31%;left:-23%;bottom:-9%;border:1.5px solid #1c1620;border-radius:65% 80% 48% 48%;background:var(--skin);transform:rotate(-5deg)}
-    @keyframes pasoWalkA{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(25deg)}}
-    @keyframes pasoWalkB{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-25deg)}}
+    /* Both legs attach behind the torso. Only their lower portion and toes peek out.
+       The body masks the hip joint, instead of displaying two front-facing boots. */
+    .pasoLeg{width:17%;height:25%;background:var(--skin);border-radius:45% 45% 40% 45%;top:65%;left:30%;transform:rotate(-11deg);transform-origin:50% 14%;border:1.5px solid #1c1620;z-index:1}
+    .pasoLeg.b{top:65%;left:54%;transform:rotate(11deg);z-index:1}
+    .pasoLeg::after{content:"";position:absolute;width:133%;height:27%;left:-16%;bottom:-5%;border:1.5px solid #1c1620;border-radius:65% 75% 42% 38%;background:var(--skin);transform:rotate(-5deg)}
+    @keyframes pasoWalkA{0%,100%{transform:rotate(-11deg)}50%{transform:rotate(20deg)}}
+    @keyframes pasoWalkB{0%,100%{transform:rotate(11deg)}50%{transform:rotate(-20deg)}}
     .pasabolasDino.walking .pasoLeg:not(.b){animation:pasoWalkA .24s ease-in-out 3}
     .pasabolasDino.walking .pasoLeg.b{animation:pasoWalkB .24s ease-in-out 3;animation-delay:-.12s}
     .pasoArm{width:20%;height:10%;background:var(--skin);border-radius:120% / 100% 0 0 100%;transform:rotate(30deg);transform-origin:100% 50%;top:52%;left:10%;filter:drop-shadow(-.5px 0 #1c1620) drop-shadow(0 .5px #1c1620)}
@@ -3917,12 +3919,12 @@
         <div class="pasabolasDinoFigure">
           <div class="pasoArm"></div>
           <div class="pasoLeg"></div>
+          <div class="pasoLeg b"></div>
           <div class="pasoBody"><div class="pasoChest"></div><div class="pasoTail"></div></div>
           <div class="pasoHead">
             <i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i><i class="pasoSpike"></i>
             <div class="pasoFace"><i class="pasoCheek"></i><i class="pasoCheek b"></i><i class="pasoEye"></i><i class="pasoEye b"></i><i class="pasoMouth"></i><i class="pasoNose"></i></div>
           </div>
-          <div class="pasoLeg b"></div>
           <div class="pasoArm front"></div>
           <div class="pasoPaddle"></div>
         </div>
