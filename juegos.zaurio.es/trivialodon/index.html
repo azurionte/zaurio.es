@@ -519,7 +519,67 @@
     @media(prefers-reduced-motion:reduce){.pasabolasDinoFigure,.pasoTail,.pasoArm,.pasoEye,.pasoLeg,.pasabolasVictoryCard{animation:none!important}}
 @keyframes partyAura{to{transform:rotate(360deg)}}@keyframes skillFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
     @media(max-width:720px){.mixGrid{grid-template-columns:1fr}.towerHud{grid-template-columns:repeat(3,1fr)}.towerCanvasWrap{min-height:360px;aspect-ratio:10/12}}
-  </style>
+  
+    /* Versus: each player's hand belongs to their own half of the arena.
+       On phones, avoid squeezing two hands + VS into a tiny center column. */
+    @media (max-width:720px){
+      .versusArena{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        grid-template-rows:auto auto;
+        column-gap:12px;
+        row-gap:8px;
+        padding:16px 12px 14px;
+        align-items:stretch;
+      }
+      .versusArena .versusPlayer{
+        min-width:0;
+        min-height:0;
+        width:100%;
+        padding:4px 6px 8px;
+        align-content:start;
+        justify-items:center;
+        text-align:center;
+        gap:5px;
+      }
+      .versusArena #versusPlayerA{grid-column:1;grid-row:1}
+      .versusArena #versusPlayerB{grid-column:2;grid-row:1}
+      .versusArena .versusCenter,
+      .versusArena .versusHands{display:contents}
+      .versusArena .versusHandWrap{
+        display:grid;
+        place-items:center;
+        align-self:center;
+        min-width:0;
+        width:100%;
+        height:106px;
+        padding:0;
+      }
+      .versusArena .versusHandWrap:first-child{grid-column:1;grid-row:2}
+      .versusArena .versusHandWrap:last-child{grid-column:2;grid-row:2}
+      .versusArena .versusHand{width:96px;height:96px;margin:0}
+      .versusArena .versusBurst{
+        grid-column:1 / -1;
+        grid-row:2;
+        place-self:center;
+        z-index:2;
+        width:46px;
+        height:46px;
+        font-size:.84rem;
+      }
+      .versusArena .versusAvatar{width:74px;height:74px}
+      .versusArena .versusPlayerName{font-size:clamp(.9rem,3.6vw,1.05rem);overflow-wrap:anywhere}
+      .versusArena .versusPlayerSub{font-size:.76rem}
+      .versusArena .versusChoice{font-size:.78rem}
+    }
+    @media (max-width:390px){
+      .versusArena{column-gap:8px;padding:12px 8px}
+      .versusArena .versusHandWrap{height:94px}
+      .versusArena .versusHand{width:88px;height:88px}
+      .versusArena .versusBurst{width:40px;height:40px;font-size:.75rem}
+      .versusArena .versusAvatar{width:64px;height:64px}
+    }
+</style>
 </head>
 <body>
   <main class="app">
