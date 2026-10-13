@@ -20,8 +20,13 @@
   h1{margin:0;font-size:22px;font-weight:950;letter-spacing:0}
   .sub{color:var(--muted);font-size:13px;margin-top:3px}
 
-  main{display:grid;grid-template-columns:minmax(560px, 780px) 1fr;gap:16px;align-items:start;padding:16px;max-width:1560px;margin:0 auto}
-  @media (max-width:1200px){ main{grid-template-columns:1fr} }
+  main{display:grid;grid-template-columns:var(--config-panel-width, 640px) 12px minmax(420px,1fr);gap:8px;align-items:start;padding:16px;max-width:1560px;margin:0 auto}
+  .panel-splitter{align-self:stretch;min-height:520px;cursor:col-resize;position:relative;border-radius:999px;touch-action:none;outline:none}
+  .panel-splitter:before{content:"";position:absolute;top:12px;bottom:12px;left:50%;width:4px;transform:translateX(-50%);border-radius:999px;background:rgba(148,163,184,.28);transition:background .15s,width .15s}
+  .panel-splitter:hover:before,.panel-splitter:focus-visible:before,body.resizing-panels .panel-splitter:before{background:#60a5fa;width:6px}
+  .panel-splitter:after{content:"⋮";position:sticky;display:flex;align-items:center;justify-content:center;top:48%;margin-top:220px;width:12px;height:34px;color:#94a3b8;font-size:18px;font-weight:900;line-height:1}
+  body.resizing-panels{cursor:col-resize;user-select:none}
+  @media (max-width:900px){ main{grid-template-columns:1fr;gap:16px} .panel-splitter{display:none} }
 
   .card{border:1px solid var(--line);border-radius:8px;background:#0c1729;padding:0 0 10px;box-shadow:none;overflow:hidden;}
   .card h2{margin:0;font-size:16.5px;letter-spacing:0;color:#fff;font-weight:900;text-shadow:none;padding:14px 16px;border-bottom:1px solid var(--line);}
@@ -555,6 +560,8 @@
       </div>
     </div>
   </section>
+
+  <div id="panelSplitter" class="panel-splitter" role="separator" aria-orientation="vertical" aria-label="Resize configuration and calendar panels" tabindex="0" title="Drag to resize panels · Double-click to reset"></div>
 
   <!-- PREVIEW -->
   <section class="card">
@@ -3241,6 +3248,47 @@ EMPLOYEES.forEach(e=>idDir.set(String(e.id||'').trim(), {name:e.name, manager:e.
       toast('Advanced sickness settings saved.','ok');
     });
   }
+
+  /* ========= Resizable configuration/calendar panels ========= */
+  (function initPanelSplitter(){
+    var main=document.querySelector('main'),split=document.getElementById('panelSplitter');
+    if(!main||!split) return;
+    var storageKey='dbt.ukLeave.configWidth', defaultWidth=640, active=false;
+    function limits(){
+      var w=main.getBoundingClientRect().width-32;
+      return {min:360,max:Math.max(360,w-12-420)};
+    }
+    function apply(px,persist){
+      var l=limits(); px=Math.max(l.min,Math.min(l.max,Math.round(px)));
+      main.style.setProperty('--config-panel-width',px+'px');
+      split.setAttribute('aria-valuenow',String(px));
+      split.setAttribute('aria-valuemin',String(l.min));
+      split.setAttribute('aria-valuemax',String(l.max));
+      if(persist){try{localStorage.setItem(storageKey,String(px));}catch(e){}}
+    }
+    var saved=null;try{saved=Number(localStorage.getItem(storageKey));}catch(e){}
+    apply(Number.isFinite(saved)&&saved>0?saved:defaultWidth,false);
+    split.addEventListener('pointerdown',function(e){
+      if(window.innerWidth<=900) return; active=true; document.body.classList.add('resizing-panels');
+      try{split.setPointerCapture(e.pointerId);}catch(err){} e.preventDefault();
+    });
+    split.addEventListener('pointermove',function(e){
+      if(!active) return; var r=main.getBoundingClientRect(); apply(e.clientX-r.left-16,false);
+    });
+    function stop(e){
+      if(!active) return; active=false; document.body.classList.remove('resizing-panels');
+      var raw=getComputedStyle(main).getPropertyValue('--config-panel-width'); apply(parseFloat(raw)||defaultWidth,true);
+      try{split.releasePointerCapture(e.pointerId);}catch(err){}
+    }
+    split.addEventListener('pointerup',stop); split.addEventListener('pointercancel',stop);
+    split.addEventListener('dblclick',function(){apply(defaultWidth,true);});
+    split.addEventListener('keydown',function(e){
+      if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight'&&e.key!=='Home') return;
+      e.preventDefault(); var cur=parseFloat(getComputedStyle(main).getPropertyValue('--config-panel-width'))||defaultWidth;
+      if(e.key==='Home') apply(defaultWidth,true); else apply(cur+(e.key==='ArrowRight'?1:-1)*(e.shiftKey?50:20),true);
+    });
+    window.addEventListener('resize',function(){var cur=parseFloat(getComputedStyle(main).getPropertyValue('--config-panel-width'))||defaultWidth;apply(cur,false);});
+  })();
 
   renderUkSicknessTable(); enableSplitExports(false);
 
