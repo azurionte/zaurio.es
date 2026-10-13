@@ -4757,7 +4757,7 @@
       group.traverse(obj=>{if(obj.isMesh){obj.castShadow=true;obj.receiveShadow=true;}});return group;
     }
     function hungerRecolorRabbit(root,THREE,color){root.traverse(obj=>{if(!obj.isMesh)return;const name=String(obj.name||"").toLowerCase();obj.material=new THREE.MeshToonMaterial({color:(name.includes("eye")||name.includes("foot"))?0x24182b:color});obj.castShadow=true;obj.receiveShadow=true;});return root;}
-    function hungerCreateCarrotMesh(THREE,carrot){const group=new THREE.Group();group.userData.carrotId=carrot.id;group.userData.spawnedAt=performance.now();group.userData.targetY=.08;group.scale.set(.001,.001,.001);const orange=new THREE.MeshToonMaterial({color:0xff7f2a});const green=new THREE.MeshToonMaterial({color:0x78d96a});const root=new THREE.Mesh(new THREE.CylinderGeometry(.2,.035,.7,9),orange);root.position.y=.37;root.castShadow=true;group.add(root);for(let i=0;i<3;i++){const leaf=new THREE.Mesh(new THREE.ConeGeometry(.08,.38,7),green);leaf.position.set((i-1)*.09,.83,0);leaf.rotation.z=(i-1)*.25;leaf.castShadow=true;group.add(leaf);}group.position.set(Number(carrot.x||0),-.8,Number(carrot.z||0));group.rotation.y=Number(carrot.spin||0);return group;}
+    function hungerCreateCarrotMesh(THREE,carrot){const group=new THREE.Group();group.userData.carrotId=carrot.id;group.userData.spawnedAt=performance.now();group.userData.targetY=.08;group.scale.set(.001,.001,.001);const orange=new THREE.MeshToonMaterial({color:0xff7f2a});const green=new THREE.MeshToonMaterial({color:0x78d96a});const root=new THREE.Mesh(new THREE.ConeGeometry(.24,.76,9),orange);root.rotation.z=Math.PI;root.position.y=.4;root.castShadow=true;group.add(root);for(let i=0;i<3;i++){const leaf=new THREE.Mesh(new THREE.ConeGeometry(.08,.38,7),green);leaf.position.set((i-1)*.09,.83,0);leaf.rotation.z=(i-1)*.25;leaf.castShadow=true;group.add(leaf);}group.position.set(Number(carrot.x||0),-.8,Number(carrot.z||0));group.rotation.y=Number(carrot.spin||0);return group;}
 
     function hungerColorHex(color){
       return "#" + Number(color || 0xffffff).toString(16).padStart(6,"0").slice(-6);
@@ -4901,7 +4901,7 @@
         ].join('\n')
       });
       const overlay=new THREE.Mesh(new THREE.PlaneGeometry(34,34),overlayMaterial);
-      overlay.rotation.x=-Math.PI/2;overlay.position.y=.018;overlay.renderOrder=2;
+      overlay.rotation.x=-Math.PI/2;overlay.position.y=.012;overlay.renderOrder=0;overlay.material.depthTest=true;
       game.scene.add(overlay);
       const oldTarget=game.renderer.getRenderTarget();
       game.renderer.setRenderTarget(targetA);game.renderer.setClearColor(0x000000,1);game.renderer.clear();
@@ -5190,7 +5190,14 @@
       const hunger=state.game.hunger;if(!hunger||state.game.phase!=="hunger"||!ui.hungerCanvas||!window.THREE)return;if(hungerRuntime?.seed===hunger.seed){hungerSyncCarrots();hungerSyncBombs();readyPlayers().forEach(hungerEnsureRabbit);return;}disposeHunger();
       const THREE=window.THREE;const scene=new THREE.Scene();scene.background=new THREE.Color(0x221827);scene.fog=new THREE.Fog(0x221827,10,22);const renderer=new THREE.WebGLRenderer({canvas:ui.hungerCanvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
       const camera=new THREE.PerspectiveCamera(60,16/9,.1,80);camera.position.set(0,4.8,8.8);camera.lookAt(0,0,0);scene.add(new THREE.HemisphereLight(0xf3fcff,0x2b1730,1.15));const light=new THREE.DirectionalLight(0xffffff,1);light.position.set(2,8,4);light.castShadow=true;scene.add(light);
-      const floor=new THREE.Mesh(new THREE.PlaneGeometry(34,34),new THREE.MeshPhongMaterial({color:0x51485a,shininess:145,specular:0x8cdfff}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+      const iceMaterial=new THREE.MeshPhongMaterial({color:0x8b93ac,shininess:220,specular:0xc7edff,transparent:false});
+      const floor=new THREE.Mesh(new THREE.PlaneGeometry(34,34),iceMaterial);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+      // Ice sheen and blurred reflection of the sky, kept below every collectible.
+      const sheen=new THREE.Mesh(new THREE.PlaneGeometry(34,34),new THREE.ShaderMaterial({
+        transparent:true,depthWrite:false,
+        vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+        fragmentShader:'varying vec2 vUv;void main(){float streak=pow(max(0.0,sin(vUv.x*39.0+vUv.y*6.0)),16.0)*0.045;float glow=0.10+0.10*pow(1.0-abs(vUv.y-0.5)*2.0,2.0);gl_FragColor=vec4(vec3(0.67,0.86,1.0),glow+streak);}'
+      }));sheen.rotation.x=-Math.PI/2;sheen.position.y=.004;sheen.renderOrder=0;scene.add(sheen);
       const game={seed:hunger.seed,THREE,scene,renderer,camera,floor,scratch:null,rabbits:new Map(),carrots:new Map(),bombs:new Map(),explosions:[],bombArtTexture:null,explosionArtTexture:null,raycaster:new THREE.Raycaster(),pointer:new THREE.Vector2(),dragging:false,target:{x:0,z:0},lastFrame:performance.now(),lastMoveSent:0,claiming:new Map(),rafId:0,rabbitTemplate:null,resizeHandler:null,particles:[]};hungerRuntime=game;game.scratch=hungerCreateScratchSim(game);hungerCreateParticlePool(game);readyPlayers().forEach(hungerEnsureRabbit);hungerSyncCarrots();hungerSyncBombs();
       if(window.THREE.GLTFLoader){try{new THREE.GLTFLoader().load(HUNGER_MODEL_URL,gltf=>{if(hungerRuntime!==game)return;const template=gltf.scene.getObjectByName("Rabbit");if(template)hungerApplyModelTemplate(template);},undefined,()=>{});}catch(_){}}
       const resize=()=>{if(hungerRuntime!==game)return;const rect=ui.hungerArena.getBoundingClientRect();const width=Math.max(320,rect.width),height=Math.max(300,rect.height);renderer.setSize(width,height,false);camera.aspect=width/height;const portrait=camera.aspect<1;const compact=width<720;if(portrait){camera.fov=67;camera.position.set(0,9.4,13.8);}else if(compact){camera.fov=62;camera.position.set(0,6.1,10.6);}else{camera.fov=60;camera.position.set(0,4.8,8.8);}camera.lookAt(0,0,0);camera.updateProjectionMatrix();};game.resizeHandler=resize;window.addEventListener("resize",resize,{passive:true});resize();
