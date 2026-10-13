@@ -260,6 +260,10 @@
   .day{border-color:rgba(148,163,184,.24);background:#071024;border-radius:8px;}
   .toast,.modal-card{border-color:rgba(148,163,184,.24);background:#0c1729;box-shadow:none;}
   .preview-controls{background:#0c1729;}
+
+  .copy-table{width:100%;min-width:0;border-collapse:collapse;border-spacing:0}.copy-table th,.copy-table td{border-bottom:1px solid var(--line);padding:7px 9px}.copy-table tbody tr{background:transparent}
+  .copy-table-wrap{overflow:auto;max-height:280px;border:1px solid var(--line);border-radius:8px;background:#071024}
+  .toolbar-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.toolbar-row .spacer{flex:1}
 </style>
 </head>
 <body class="dbt-mini-app">
@@ -534,14 +538,20 @@
           <div class="label-line"><span>Start/End time (HH:MM → HH:MM)</span></div>
           <div class="row cols2"><input type="time" id="startTime" value="09:00"><input type="time" id="endTime" value="17:30"></div>
         </label>
-        <div class="row cols2" style="margin-top:8px">
-          <div class="btn-row"><button class="btn export" id="exportBtn" type="button" disabled>Download Import CSV</button></div>
-          <div class="btn-row">
-            <input type="file" id="csvFile" accept=".csv" style="display:none">
-            <button class="btn" id="importBtn" type="button">Load Calendar CSV → Preview</button>
+        <h3 style="margin-top:16px">Import files</h3>
+        <div class="section-wrap">
+          <div class="small" style="margin-bottom:8px">Use the split files for the demo environment: January–September (through 30 September) and October–December.</div>
+          <div class="toolbar-row">
+            <button class="btn export" id="exportJanSepBtn" type="button" disabled>Download Jan–Sep import file</button>
+            <button class="btn export" id="exportOctDecBtn" type="button" disabled>Download Oct–Dec import file</button>
+            <button class="btn" id="exportBtn" type="button" disabled>Download full-period file</button>
           </div>
+          <div class="divider"></div>
+          <div class="btn-row"><input type="file" id="csvFile" accept=".csv" style="display:none"><button class="btn" id="importBtn" type="button">Load Calendar CSV → Preview</button></div>
+          <div class="hint" style="padding:8px 0 0">Export includes AL and Maternity rows. Import merges into the preview (<strong>AL rows only</strong>).</div>
         </div>
-        <div class="hint">Export includes AL and Maternity rows. Import merges into the preview (<strong>AL rows only</strong>).</div>
+        <h3 style="margin-top:16px">Sickness table for Excel</h3>
+        <div class="section-wrap"><div class="toolbar-row" style="margin-bottom:8px"><span class="small">Manager · Full name · Start date · End date</span><span class="spacer"></span><button class="btn" id="copySicknessBtn" type="button">Copy table</button></div><div class="copy-table-wrap" id="sicknessTableWrap"></div></div>
       </div>
     </div>
   </section>
@@ -1491,7 +1501,7 @@
 
       // Enable export if any AL or MAT
       let any=false; SCHEDULE.forEach(r=>{ if((r.AL||[]).length || (r.mat||[]).length) any=true; });
-      document.getElementById('exportBtn').disabled = !any;
+      document.getElementById('exportBtn').disabled = !any; enableSplitExports(any); renderUkSicknessTable();
 
       // Render
       buildCalendarPreview(start,end);
@@ -1713,7 +1723,7 @@
   /* ========= Export CSV (AL + MAT) ========= */
   function csvEscape(v){ var s=(v==null?'':String(v)); if(s.indexOf('"')>-1) s=s.replace(/\"/g,'\"\"'); return '"'+s+'"'; }
 
-  function exportCSV(){
+  function exportCSV(rangeStart, rangeEnd, fileName){
     try{
       var startVal=document.getElementById('start').value;
       var endVal=document.getElementById('end').value;
@@ -1760,9 +1770,10 @@
 
       function pushRows(map, code, typeLabel){
         map.forEach(function(dates,key){
-          if(!dates.length) return;
+          var filteredDates=dates.filter(function(d){ return (!rangeStart || d>=rangeStart) && (!rangeEnd || d<=rangeEnd); });
+          if(!filteredDates.length) return;
           var parts=key.split('|'); var team=parts[0], person=parts[1], id=parts[2];
-          var groups=groupConsecutive(dates);
+          var groups=groupConsecutive(filteredDates);
           for(var gi=0; gi<groups.length; gi++){
             var g=groups[gi], s=g[0], e=g[1];
             var workDays=0, d=new Date(s); while(d<=e){ if(isBiz(d)) workDays++; d=addDays(d,1); }
@@ -1786,7 +1797,7 @@
       var csv=rows.join('\r\n');
       var blob=new Blob([csv], {type:'text/csv;charset=utf-8;'});
       var url=URL.createObjectURL(blob);
-      var a=document.createElement('a'); a.href=url; a.download='uk-annual-leave-import.csv'; document.body.appendChild(a); a.click(); a.remove();
+      var a=document.createElement('a'); a.href=url; a.download=fileName||'uk-annual-leave-import.csv'; document.body.appendChild(a); a.click(); a.remove();
       setTimeout(()=>URL.revokeObjectURL(url), 500);
       toast('CSV downloaded.','ok');
     }catch(err){
@@ -1860,7 +1871,7 @@ EMPLOYEES.forEach(e=>idDir.set(String(e.id||'').trim(), {name:e.name, manager:e.
 
           renderEmpTable();
           var any=false; SCHEDULE.forEach(r=>{ if((r.AL||[]).length || (r.mat||[]).length) any=true; });
-          document.getElementById('exportBtn').disabled = !any;
+          document.getElementById('exportBtn').disabled = !any; enableSplitExports(any); renderUkSicknessTable();
 
           if(added>0){
             var startInput=document.getElementById('start');
@@ -1890,6 +1901,40 @@ EMPLOYEES.forEach(e=>idDir.set(String(e.id||'').trim(), {name:e.name, manager:e.
     };
     fileInput.click();
   }
+
+  /* ========= Split exports + Excel sickness table ========= */
+  function ukSicknessRanges(){
+    var by=new Map();
+    SCHEDULE.forEach(function(rec,k){
+      (rec.sick||[]).forEach(function(x){
+        if(x.lts) return;
+        var key=x.team+'|'+x.person+'|'+(x.id||'');
+        var arr=by.get(key)||[]; arr.push(fromYMD(k)); by.set(key,arr);
+      });
+    });
+    var out=[];
+    by.forEach(function(ds,key){
+      ds.sort(function(a,b){return a-b}); var parts=key.split('|'),st=null,en=null;
+      ds.forEach(function(d){
+        if(!st){st=en=d;return;}
+        if(ymd(nextBusinessDay(en))===ymd(d)){en=d;}else{out.push({manager:parts[0],name:parts[1],start:st,end:en});st=en=d;}
+      });
+      if(st) out.push({manager:parts[0],name:parts[1],start:st,end:en});
+    });
+    return out.sort(function(a,b){return a.start-b.start||a.manager.localeCompare(b.manager)});
+  }
+  function ukEscape(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function renderUkSicknessTable(){
+    var box=document.getElementById('sicknessTableWrap'); if(!box) return; var rows=ukSicknessRanges();
+    if(!rows.length){box.innerHTML='<div class="small" style="padding:10px">No generated sickness yet.</div>';return;}
+    box.innerHTML='<table class="copy-table"><thead><tr><th>Manager</th><th>Full name</th><th>Start date</th><th>End date</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td>'+ukEscape(r.manager)+'</td><td>'+ukEscape(r.name)+'</td><td>'+dmy(r.start)+'</td><td>'+dmy(r.end)+'</td></tr>';}).join('')+'</tbody></table>';
+  }
+  function copyUkSicknessTable(){
+    var text='Manager\tFull name\tStart date\tEnd date\n'+ukSicknessRanges().map(function(r){return [r.manager,r.name,dmy(r.start),dmy(r.end)].join('\t');}).join('\n');
+    function fallback(){var t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();toast('Sickness table copied for Excel.','ok');}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('Sickness table copied for Excel.','ok');}).catch(fallback);}else fallback();
+  }
+  function enableSplitExports(enabled){ var a=document.getElementById('exportJanSepBtn'),b=document.getElementById('exportOctDecBtn');if(a)a.disabled=!enabled;if(b)b.disabled=!enabled; }
 
   /* ========= Special leaves modal logic ========= */
 
@@ -2071,8 +2116,11 @@ EMPLOYEES.forEach(e=>idDir.set(String(e.id||'').trim(), {name:e.name, manager:e.
   document.getElementById('reshuffle').addEventListener('click', function(){ document.getElementById('seed').value=''; generate(); });
 
   // export / import calendar
-  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+  document.getElementById('exportBtn').addEventListener('click', function(){var st=parseISODateInput(document.getElementById('start').value),en=parseISODateInput(document.getElementById('end').value);exportCSV(st,en,'uk-annual-leave-full-period.csv');});
   document.getElementById('importBtn').addEventListener('click', importCalendarCSV);
+  document.getElementById('exportJanSepBtn').addEventListener('click', function(){var y=Number(document.getElementById('scheduleYear').value)||new Date().getFullYear();exportCSV(new Date(y,0,1),new Date(y,8,30),'uk-annual-leave-Jan-Sep-'+y+'.csv');});
+  document.getElementById('exportOctDecBtn').addEventListener('click', function(){var y=Number(document.getElementById('scheduleYear').value)||new Date().getFullYear();exportCSV(new Date(y,9,1),new Date(y,11,31),'uk-annual-leave-Oct-Dec-'+y+'.csv');});
+  document.getElementById('copySicknessBtn').addEventListener('click', copyUkSicknessTable);
 
   // enforce weeks
   document.getElementById('enforceWeeksBtn').addEventListener('click', enforceWeeksBtn);
@@ -3193,6 +3241,8 @@ EMPLOYEES.forEach(e=>idDir.set(String(e.id||'').trim(), {name:e.name, manager:e.
       toast('Advanced sickness settings saved.','ok');
     });
   }
+
+  renderUkSicknessTable(); enableSplitExports(false);
 
   // Done
 })();
