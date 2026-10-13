@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.59",
+  "version": "5.0.60",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Adds NL Leave Scheduler V2, split Jan-Sep and Oct-Dec import files for UK/NL, Excel-ready sickness tables, and NL scheduling/UX improvements."
+      "releaseNotes": "Adds draggable resizable split panels to both UK and NL Leave Schedulers, with saved panel width and keyboard/double-click reset support."
     },
     "nsis": {
       "perMachine": false,
