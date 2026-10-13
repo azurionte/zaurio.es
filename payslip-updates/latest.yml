@@ -1,9 +1,9 @@
-version: 5.0.59
+version: 5.0.60
 files:
-  - url: DemoBuildingToolsSetup-5.0.59.exe
-    sha512: FdKKAeZUlP3C/1xPHlo8uvF2GvNo+v54M+wPIpFhkFGQKwF8pXZUFCGfhfuILuNl57x/teACYcw90qh2/akS9g==
-    size: 101857399
-path: DemoBuildingToolsSetup-5.0.59.exe
-sha512: FdKKAeZUlP3C/1xPHlo8uvF2GvNo+v54M+wPIpFhkFGQKwF8pXZUFCGfhfuILuNl57x/teACYcw90qh2/akS9g==
-releaseNotes: Adds NL Leave Scheduler V2, split Jan-Sep and Oct-Dec import files for UK/NL, Excel-ready sickness tables, and NL scheduling/UX improvements.
-releaseDate: '2026-10-13T11:19:14.731Z'
+  - url: DemoBuildingToolsSetup-5.0.60.exe
+    sha512: mRo2u9sK4j3dOkrRROk1g2epB5z5dZHdKLhnCcORIzWAlAMD9wGSf2gq1SgDoFY1+G/HbdPP1ZXyrbbemtAhWA==
+    size: 101858253
+path: DemoBuildingToolsSetup-5.0.60.exe
+sha512: mRo2u9sK4j3dOkrRROk1g2epB5z5dZHdKLhnCcORIzWAlAMD9wGSf2gq1SgDoFY1+G/HbdPP1ZXyrbbemtAhWA==
+releaseNotes: Adds draggable resizable split panels to both UK and NL Leave Schedulers, with saved panel width and keyboard/double-click reset support.
+releaseDate: '2026-10-13T11:27:39.530Z'
