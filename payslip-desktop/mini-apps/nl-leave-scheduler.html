@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NL Leave Scheduler V2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#0e1117; --panel:#111827; --ink:#e6e8ef; --muted:#a7b0c0; --line:#1f2937;
+    --ok:#22c55e; --warn:#facc15; --bad:#ef4444;
+    --julia:#6ee7b7; --nienke:#93c5fd; --peter:#fca5a5; --sick:#fde68a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:#e6e8ef;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;overflow-x:hidden}
+  header{padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,var(--panel),rgba(17,24,39,.92));position:sticky;top:0;z-index:10}
+  h1{margin:0;font-size:18px}
+  .sub{color:var(--muted);font-size:13px;margin-top:3px}
+
+  /* Wider sidebar */
+  main{display:grid;grid-template-columns:minmax(560px, 780px) 1fr;gap:16px;align-items:start;padding:16px}
+  @media (max-width:1200px){ main{grid-template-columns:1fr} }
+
+  /* Cards */
+  .card{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(30,41,59,0.98),var(--panel) 90%);padding:0 0 10px;box-shadow:0 2px 16px 0 #0002;overflow:hidden;}
+  .card h2{margin:0;font-size:16.5px;letter-spacing:0.01em;color:#fff;font-weight:700;text-shadow:0 1px 2px #0004;padding:14px 16px;border-bottom:1px solid var(--line);}
+
+  /* Sidebar tabs */
+  .tabs{display:flex;gap:6px;padding:10px 10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;background:linear-gradient(180deg,rgba(30,41,59,.6),rgba(17,24,39,.4))}
+  .tab{padding:8px 10px;border:1px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;background:#0b1220;cursor:pointer;font-weight:600;color:#cbd5e1}
+  .tab.active{background:#172132;}
+  .tab-panels{padding:12px 14px;}
+  .panel{display:none}
+  .panel.show{display:block}
+
+  /* Forms */
+  .row{display:grid;gap:10px;grid-template-columns:1fr;}
+  .row.cols2{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:end;gap:14px;}
+  .row.cols3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+  .row.months{grid-template-columns:repeat(auto-fit,minmax(90px,1fr));}
+  .row.weekdays{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+
+  label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#cbd5e1;font-weight:500;min-width:0}
+  .label-line{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
+  .label-line span, .label-line strong{white-space:nowrap}
+  input, select, button, textarea{background:#0b1220;border:1px solid var(--line);color:#e6e8ef;padding:9px 10px;border-radius:10px;transition:box-shadow .15s,border-color .15s;width:100%;min-width:0}
+  input:focus, select:focus, textarea:focus{outline:none;border-color:#60a5fa;box-shadow:0 0 0 2px #60a5fa44;}
+  input[type="checkbox"]{width:18px;height:18px;margin:0;vertical-align:middle;accent-color:#60a5fa;cursor:pointer;border-radius:6px;box-shadow:0 1px 2px #0002;width:auto;}
+  input[type=number]{-moz-appearance:textfield}
+  input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .small{font-size:12px;color:#9aa4b5}
+  .btn{cursor:pointer;width:auto}
+  .btn.primary{background:#1f2937;border-color:#334155}
+  .btn.run{background:#0b3b1a;border-color:#134e4a}
+  .btn.export{background:#1e2a44;border-color:#32456c}
+  .btn.icon{padding:6px 8px;font-size:12px}
+  .btn.round{width:38px;height:38px;border-radius:50%}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .divider{height:1px;background:#1f2937;margin:10px 0}
+
+  /* info tooltip */
+  .info{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:#23304a;color:#cbd5e1;font-size:11px;line-height:1;margin-left:2px;cursor:help;position:relative;flex:0 0 auto}
+  .info::before{content:"i";font-weight:700}
+  .info:hover::after,.info:focus::after{content:attr(data-tip);position:absolute;left:50%;bottom:140%;transform:translateX(-50%);background:#0b1220;border:1px solid var(--line);color:#e6e8ef;padding:8px 10px;border-radius:10px;box-shadow:0 8px 24px #0009;min-width:240px;max-width:74vw;z-index:80;white-space:normal}
+  .info:hover::before,.info:focus::before{content:"i"}
+
+  /* Check rows with right-aligned checkbox (name; info; checkbox) */
+  .checks{display:grid;grid-template-columns:1fr;gap:8px}
+  .checks .checkline{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0b1220;border:1px solid var(--line);padding:8px 10px;border-radius:10px}
+  .checks .checktext{display:inline-flex;align-items:center;gap:6px}
+  .checks input[type=checkbox]{margin-left:8px}
+
+  /* Table */
+  .table-wrap{ overflow-x:auto; max-width:100%; }
+  table{width:100%;border-collapse:separate;border-spacing:0 6px;min-width:760px;}
+  th,td{padding:8px 10px;text-align:left;vertical-align:middle;}
+  thead th{color:#cbd5e1;font-weight:600;border-bottom:1px solid var(--line)}
+  tbody tr{background:#0b1220}
+  tbody td{border-top:1px solid #101827;border-bottom:1px solid #101827}
+
+  .pill{display:inline-flex;gap:7px;align-items:center;padding:4px 12px 4px 6px;border:1.5px solid #23304a;border-radius:999px;background:linear-gradient(90deg,#1e293b 80%,#23304a 100%);min-height:28px;justify-content:flex-start;}
+  .pill input{width:auto}
+
+  .legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px}
+  .legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .dot.julia{background:var(--julia)} .dot.nienke{background:var(--nienke)} .dot.peter{background:var(--peter)} .dot.sick{background:var(--sick)}
+
+  /* Preview + controls */
+  .preview-controls{display:flex;align-items:center;gap:8px;padding:8px 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{background:#0b1220;border:none;padding:6px 10px;color:#cbd5e1;cursor:pointer}
+  .seg button.active{background:#172132}
+  .month-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--line)}
+  .month-tab{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#0b1220;cursor:pointer}
+  .month-tab.active{background:#172132}
+
+  .dow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;color:#cbd5e1aa;text-transform:uppercase;font-size:12px;letter-spacing:.06em;padding:8px 16px}
+  .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;padding:8px 16px 16px}
+  .day{border:1px solid var(--line);background:#0b1220;border-radius:12px;min-height:120px;padding:8px;display:flex;flex-direction:column;gap:6px}
+  .date{display:flex;justify-content:space-between;color:#cbd5e1;font-size:12px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{border-radius:999px;padding:4px 8px;font-size:12px;border:1px solid transparent;white-space:nowrap;cursor:pointer}
+  .tag.julia{background:rgba(110,231,183,.22);border-color:var(--julia)}
+  .tag.nienke{background:rgba(147,197,253,.22);border-color:var(--nienke)}
+  .tag.peter{background:rgba(252,165,165,.22);border-color:var(--peter)}
+  .tag.sick{background:rgba(253,230,138,.2);border-color:var(--sick);color:#111}
+
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+  .hint{color:#9aa4b5;font-size:12.5px;margin-top:4px;line-height:1.5;padding:0 16px}
+
+  /* Toasts */
+  .toasts{position:fixed;bottom:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:50}
+  .toast{background:#0b1220;border:1px solid #34415a;color:#e6e8ef;padding:10px 12px;border-radius:10px;box-shadow:0 8px 24px #0009;max-width:360px;animation:pop .15s ease-out}
+  .toast.ok{border-color:#164e2e}
+  .toast.warn{border-color:#5a4a16}
+  .toast.bad{border-color:#6b1a1a}
+  @keyframes pop{from{transform:translateY(6px);opacity:.0}to{transform:translateY(0);opacity:1}}
+
+  /* Modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:60;}
+  .modal.show{display:flex}
+  .modal-card{width:min(620px,94vw);background:linear-gradient(180deg,rgba(30,41,59,.98),var(--panel));border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 10px 30px #0009}
+  .modal-card h3{margin:0 0 8px;font-size:16px}
+  .radio-row{display:grid;gap:8px;margin-top:8px}
+  .radio{display:flex;align-items:center;gap:8px}
+  .modal-actions{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
+  .modal-actions .right{display:flex;gap:8px}
+
+  /* Floating scroll buttons */
+  .fabs{position:fixed;right:12px;bottom:80px;display:flex;flex-direction:column;gap:8px;z-index:55}
+  .fab{background:#1f2937;border:1px solid #334155;border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px #0008;color:#cbd5e1}
+  .fab:hover{filter:brightness(1.08)}
+
+
+  /* DBT / V2 shared scheduler UX */
+  body{background:#07111f;color:#e5edf8;min-height:100vh}
+  body.dbt-mini-app header{display:none}
+  body.dbt-mini-app main{padding-top:18px;max-width:1560px;margin:0 auto}
+  body.dbt-mini-app main:before{content:"NL Leave Scheduler";grid-column:1/-1;display:flex;align-items:center;min-height:44px;padding:0 2px;color:#fff;font-size:24px;font-weight:950}
+  .card{border-radius:8px;background:#0c1729;box-shadow:none}
+  .card h2{font-weight:900;text-shadow:none}
+  .tab{border-radius:8px 8px 0 0;font-weight:900;background:#071024}
+  .tab.active{background:#1d4ed8;color:#fff}.tab .stepno{opacity:.8;margin-right:6px}
+  .section-wrap{border:1px solid rgba(96,165,250,.38);border-radius:8px;padding:12px 14px;margin:12px 0;background:rgba(7,16,36,.34)}
+  input,select,textarea{border-color:rgba(148,163,184,.32);background:#071024;color:#f8fafc;border-radius:8px}
+  button,.btn{border-radius:999px;font-weight:900}
+  .btn.primary{background:#1d4ed8;border-color:#60a5fa;color:#fff}.btn.run{background:#15803d;border-color:#22c55e;color:#fff}.btn.export{background:#2563eb;border-color:#60a5fa;color:#fff}
+  .num-control{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:#071024;overflow:hidden;height:34px}
+  .num-control input{flex:1;height:100%;text-align:center;border:0;background:transparent;padding:0}.num-control button{flex:0 0 34px;height:100%;border:0;background:transparent;color:#9aa4b5;font-size:18px;padding:0}
+  .collapsible{display:none}.collapsible.show{display:block}
+  .health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;padding:10px 16px}
+  .health-item{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#071024}.health-item.ok{border-color:#14532d}.health-item.warn{border-color:#713f12}.health-item.bad{border-color:#7f1d1d}
+  .copy-table{width:100%;min-width:0;border-collapse:collapse;border-spacing:0}.copy-table th,.copy-table td{border-bottom:1px solid var(--line);padding:7px 9px}.copy-table tbody tr{background:transparent}
+  .copy-table-wrap{overflow:auto;max-height:280px;border:1px solid var(--line);border-radius:8px;background:#071024}
+  .toolbar-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.toolbar-row .spacer{flex:1}
+  .day{border-color:rgba(148,163,184,.24);background:#071024;border-radius:8px}.tag{cursor:pointer}.tag:hover{filter:brightness(1.15)}
+  .preview-controls{background:#0c1729}.toast,.modal-card{background:#0c1729;box-shadow:none}
+
+</style>
+</head>
+<body class="dbt-mini-app">
+<header>
+  <h1>NL Leave Scheduler V2</h1>
+  <div class="sub">NL annual leave planning with configurable sickness/LTS, Dutch holiday realism, review checks and split import files.</div>
+</header>
+
+<main>
+  <section class="card" id="leftCard">
+    <div class="tabs" id="sidebarTabs">
+      <div class="tab active" data-tab="step1"><span class="stepno">1.</span> People &amp; period</div>
+      <div class="tab" data-tab="step2"><span class="stepno">2.</span> Sickness &amp; LTS</div>
+      <div class="tab" data-tab="step3"><span class="stepno">3.</span> Annual leave strategy</div>
+      <div class="tab" data-tab="step4"><span class="stepno">4.</span> Review &amp; export</div>
+    </div>
+    <div class="tab-panels">
+      <div class="panel show" id="tab-step1">
+        <h3 style="margin:8px 0 4px">Period</h3>
+        <div class="section-wrap">
+          <div class="row cols2"><label><div class="label-line"><span>Select year to schedule</span></div><select id="scheduleYear"></select></label><div class="btn-row" style="align-self:end"><button class="btn" id="toggleManualRange" type="button">Manual range selection</button></div></div>
+          <div id="manualRangeWrap" style="display:none;margin-top:8px"><div class="row cols2"><label><div class="label-line"><span>Start date</span></div><input type="date" id="start"></label><label><div class="label-line"><span>End date</span></div><input type="date" id="end"></label></div></div>
+        </div>
+        <h3 style="margin:16px 0 4px">Employees &amp; quotas</h3>
+        <div class="section-wrap">
+          <div class="toolbar-row"><button class="btn primary" id="seedEmp" type="button">Load NL demo users</button><button class="btn" id="toggleManualEmp" type="button">Manual employee addition</button><button class="btn" id="loadEmpCsv" type="button">Load employees CSV</button><button class="btn" id="dlEmpTpl" type="button">Download template</button><span class="spacer"></span><button class="btn" id="clearEmp" type="button">Clear list</button></div>
+          <input type="file" id="empCsvFile" accept=".csv" style="display:none">
+          <div id="manualEmpWrap" style="display:none;margin-top:10px">
+            <div class="row cols3"><label><span>Employee name</span><input type="text" id="empName" placeholder="e.g., Noa Klaster"></label><label><span>Employee ID</span><input type="text" id="empId" placeholder="e.g., 34708-85"></label><label><span>Remaining days</span><input type="number" id="empDays" min="0" step="1"></label></div>
+            <div class="row cols2" style="margin-top:8px"><label><span>Manager</span><div class="row cols2"><select id="empMgr"></select><input id="otherMgr" placeholder="Type manager name" style="display:none"></div></label><div class="btn-row" style="align-items:flex-end"><button class="btn primary" id="addEmp" type="button">Add employee</button></div></div>
+          </div>
+          <div class="table-wrap" style="margin-top:10px"><table id="empTable"><thead><tr><th>Manager</th><th>Employee</th><th>ID</th><th>Days</th><th></th></tr></thead><tbody><tr><td colspan="5" class="small">No employees yet.</td></tr></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="panel" id="tab-step2">
+        <h3 style="margin:8px 0 4px">Sickness configuration</h3>
+        <div class="section-wrap">
+          <div class="row cols3"><label><div class="label-line"><span>Generate sickness</span><input type="checkbox" id="sickEnabled" checked></div></label><label><span>Strategy</span><select id="sickStrategy"><option value="everyOtherWeek">Every other week</option><option value="everyWeek">Every week</option><option value="everyMonth" selected>Every month</option><option value="everyQuarter">Every quarter</option></select></label><label><span>People per period</span><div class="num-control"><button type="button" class="dec" data-target="sickPeopleCount">−</button><input type="number" id="sickPeopleCount" min="1" max="10" value="1"><button type="button" class="inc" data-target="sickPeopleCount">+</button></div></label></div>
+          <div class="toolbar-row" style="margin-top:8px"><button class="btn" id="sickRandomBtn" type="button">Randomize sickness</button><button class="btn" id="sickAdvBtn" type="button">Advanced controls</button></div>
+        </div>
+        <h3 style="margin:16px 0 4px">Long-term sickness</h3>
+        <div class="section-wrap"><div class="small" style="margin-bottom:8px">Set LTS per employee. LTS now blocks annual leave only during the configured dates — employees remain available outside that period.</div><div id="ltsConfigList"></div></div>
+        <h3 style="margin:16px 0 4px">Sickness table</h3>
+        <div class="section-wrap"><div class="toolbar-row" style="margin-bottom:8px"><span class="small">Copy/paste directly into Excel.</span><span class="spacer"></span><button class="btn" id="copySicknessBtn" type="button">Copy sickness table</button></div><div class="copy-table-wrap" id="sicknessTableWrap"></div></div>
+      </div>
+
+      <div class="panel" id="tab-step3">
+        <h3 style="margin:8px 0 4px">Recommended strategy</h3>
+        <div class="section-wrap"><div class="row cols2"><label><span>Strategy</span><select id="strategy"><option value="balanced">Balanced</option><option value="holiday" selected>Holiday-aware (recommended)</option><option value="advanced">Custom</option></select></label><label><span>Prefer Fri → Mon clusters</span><select id="preferFriMon"><option value="on" selected>On</option><option value="off">Off</option></select></label></div><div class="hint" style="padding:8px 0 0">Holiday-aware avoids Dutch bank holidays and favours realistic bridge days, long weekends and the Christmas/New Year period.</div></div>
+        <h3 style="margin-top:16px">Daily distribution</h3>
+        <div class="section-wrap"><div class="row cols3"><label><span>Maximum people off per day</span><div class="num-control"><button type="button" class="dec" data-target="maxPerDay">−</button><input type="number" id="maxPerDay" min="1" value="6"><button type="button" class="inc" data-target="maxPerDay">+</button></div></label><label><span>Typical people off per day</span><div class="num-control"><button type="button" class="dec" data-target="baseIntensity">−</button><input type="number" id="baseIntensity" min="1" max="10" value="2"><button type="button" class="inc" data-target="baseIntensity">+</button></div></label><label><span>Distribution variety</span><div class="num-control"><button type="button" class="dec" data-target="randomness">−</button><input type="number" id="randomness" min="0" max="100" value="40"><button type="button" class="inc" data-target="randomness">+</button></div></label></div><div class="checks" style="margin-top:8px"><div class="checkline"><span class="checktext">Aim for at least two teams per day</span><input type="checkbox" id="enforceTwoTeams" checked></div><div class="checkline"><span class="checktext">Allow consecutive days</span><input type="checkbox" id="allowConsecutive" checked></div></div></div>
+        <h3 style="margin-top:16px">Busy leave periods</h3>
+        <div class="section-wrap"><div class="row cols2"><label><span>Select month</span><select id="moreMonth"></select></label><div><div class="label-line" style="margin-bottom:4px"><span>Select weeks</span></div><div id="moreWeekWrap" style="display:flex;gap:8px;flex-wrap:wrap"></div></div></div><div class="row cols2" style="margin-top:8px"><label><span>Intensity</span><select id="moreIntensity"><option value="normal" selected>Higher than normal</option><option value="all">All available workforce</option></select></label></div><div class="small" style="margin-top:6px">Choose specific weeks where you want noticeably more annual leave.</div></div>
+        <div class="toolbar-row" style="margin-top:10px"><button class="btn" id="toggleAdvanced" type="button">Advanced settings</button></div>
+        <div id="advancedWrap" class="collapsible section-wrap">
+          <div class="checks"><div class="checkline"><span class="checktext">Avoid Dutch bank holidays entirely</span><input type="checkbox" id="avoidNLHolidays" checked></div></div>
+          <div class="row cols3" style="margin-top:8px"><label><span>Good Friday</span><select id="inclGoodFriday"><option value="off" selected>Off</option><option value="on">Treat as holiday</option></select></label><label><span>Liberation Day (May 5)</span><select id="liberationDayMode"><option value="off">Off</option><option value="every">Every year</option><option value="five" selected>Every 5th year</option></select></label><label><span>Boost around holidays</span><select id="boostAround"><option value="off">Off</option><option value="on" selected>On</option></select></label></div>
+          <div class="row cols3" style="margin-top:8px"><label><span>± days window</span><input type="number" id="boostWindow" min="1" max="5" value="2"></label><label><span>Boost weight</span><input type="number" id="boostWeight" min="1" max="5" value="3"></label><label><span>Prefer bridge days</span><select id="preferBridge"><option value="off">Off</option><option value="on" selected>On</option></select></label></div>
+          <div class="row cols3" style="margin-top:8px"><label><span>Bridge weight</span><input type="number" id="bridgeWeight" min="1" max="5" value="3"></label><label><span>Christmas start</span><input type="number" id="christmasStartDay" min="15" max="31" value="20"></label><label><span>New Year end</span><input type="number" id="newYearEndDay" min="1" max="15" value="5"></label></div>
+          <div class="row cols3" style="margin-top:8px"><label><span>Christmas preference</span><select id="christmasOn"><option value="off">Off</option><option value="on" selected>On</option></select></label><label><span>Christmas weight</span><input type="number" id="christmasWeight" min="1" max="5" value="4"></label><label><span>Fri/Mon bias</span><input type="number" id="friMonBias" min="1" max="5" value="2"></label></div>
+          <label style="margin-top:8px"><span>Weekday weights (Mon–Fri)</span><div class="row weekdays"><input type="number" id="wMon" min="1" max="5" value="1"><input type="number" id="wTue" min="1" max="5" value="1"><input type="number" id="wWed" min="1" max="5" value="1"><input type="number" id="wThu" min="1" max="5" value="1"><input type="number" id="wFri" min="1" max="5" value="1"></div></label>
+          <label style="margin-top:8px"><span>Reproducibility seed</span><input type="text" id="seed" placeholder="auto"></label>
+        </div>
+        <div class="toolbar-row" style="margin-top:10px"><button class="btn run" id="run" type="button">Generate schedule</button><button class="btn" id="reshuffle" type="button">Generate another variation</button></div>
+        <!-- compatibility controls no longer surfaced -->
+        <input type="hidden" id="monthWeight" value="3">
+      </div>
+
+      <div class="panel" id="tab-step4">
+        <h3 style="margin:8px 0 4px">Schedule health</h3><div class="section-wrap" style="padding:0"><div id="healthSummary" class="health-grid"></div><div class="toolbar-row" style="padding:0 16px 12px"><button class="btn" id="enforceWeeksBtn" type="button">Fix schedule automatically</button></div></div>
+        <h3 style="margin-top:16px">Export settings</h3>
+        <div class="section-wrap"><div class="row cols2"><label><span>AL Absence Code</span><input type="text" id="alCode" value="NLJV"></label><label><span>Hours per AL day</span><input type="number" id="hoursPerDay" min="1" value="8"></label></div><label><span>Start / End time</span><div class="row cols2"><input type="time" id="startTime" value="08:00"><input type="time" id="endTime" value="17:00"></div></label></div>
+        <h3 style="margin-top:16px">Import files</h3>
+        <div class="section-wrap"><div class="small" style="margin-bottom:8px">Use the split files when loading the demo environment: January–September and October–December.</div><div class="toolbar-row"><button class="btn export" id="exportJanSepBtn" type="button" disabled>Download Jan–Sep import file</button><button class="btn export" id="exportOctDecBtn" type="button" disabled>Download Oct–Dec import file</button><button class="btn" id="exportBtn" type="button" disabled>Download full-period file</button></div><div class="divider"></div><div class="toolbar-row"><input type="file" id="csvFile" accept=".csv" style="display:none"><button class="btn" id="importBtn" type="button">Load calendar CSV → Preview</button></div></div>
+        <h3 style="margin-top:16px">Sickness table for Excel</h3>
+        <div class="section-wrap"><div class="toolbar-row" style="margin-bottom:8px"><span class="small">Manager · Full name · Start date · End date</span><span class="spacer"></span><button class="btn" id="copySicknessBtn2" type="button">Copy table</button></div><div class="copy-table-wrap" id="sicknessTableWrap2"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Review calendar</h2>
+    <div class="legend" id="legend"><span class="dot julia"></span> Julia <span class="dot nienke"></span> Nienke <span class="dot peter"></span> Peter <span class="dot sick"></span> Sick / LTS</div>
+    <div class="preview-controls"><div class="seg" id="viewMode"><button data-mode="full" class="active">Full range</button><button data-mode="tabs">Months</button></div><div id="monthNav" style="display:none"></div><div style="flex:1"></div><div id="status" class="small"></div></div>
+    <div id="availabilitySummary" class="small" style="padding:0 16px"></div>
+    <div id="calWrap" class="small" style="padding:16px;color:#94a3b8">No calendar yet. Load people and generate a schedule.</div>
+  </section>
+</main>
+
+<!-- Floating scroll buttons -->
+<div class="fabs">
+  <div class="fab" id="toTop" title="Scroll to top">↑</div>
+  <div class="fab" id="toBottom" title="Scroll to bottom">↓</div>
+</div>
+
+<!-- Toasts -->
+<div class="toasts" id="toasts"></div>
+
+<!-- LTS modal -->
+<div class="modal" id="ltsModal" aria-hidden="true">
+  <div class="modal-card">
+    <h3 id="ltsTitle">Long-term sickness period</h3>
+    <div class="radio-row">
+      <div class="btn-row" style="flex-wrap:wrap">
+        <button class="btn icon" data-lts-preset="cal">Calendar year</button>
+        <button class="btn icon" data-lts-preset="juljun">Jul → Jun</button>
+        <button class="btn icon" data-lts-preset="qtr">This quarter</button>
+        <button class="btn icon" data-lts-preset="clear" style="margin-left:auto;background:#3a1620;border-color:#5b2130">Clear LTS</button>
+      </div>
+      <div class="row cols3" style="margin-top:6px">
+        <label>From <input type="date" id="ltsFrom"></label>
+        <label>To <input type="date" id="ltsTo"></label>
+        <label>Base year <input type="number" id="ltsBaseYear" min="2000" max="2100"></label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <div class="small" id="ltsHint" style="opacity:.9">Pick a preset or set custom dates.</div>
+      <div class="right">
+        <button class="btn" id="ltsCancel" type="button">Cancel</button>
+        <button class="btn primary" id="ltsApply" type="button">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal" id="sickAdvancedModal" aria-hidden="true"><div class="modal-card"><h3>Sickness advanced controls</h3><div class="row cols3"><label>Blocks per period<input type="number" id="sickBlocksPerPeriod" min="1" max="10" value="1"></label><label>Minimum block length<input type="number" id="sickMinLen" min="1" max="20" value="2"></label><label>Maximum block length<input type="number" id="sickMaxLen" min="1" max="30" value="5"></label></div><div class="modal-actions"><span class="small">Business days per sickness block.</span><div class="right"><button class="btn" id="sickAdvCancel" type="button">Cancel</button><button class="btn primary" id="sickAdvSave" type="button">Save</button></div></div></div></div>
+
+<script>
+(function(){
+  /* ========= Toasts ========= */
+  function toast(msg, type){
+    var box=document.getElementById('toasts');
+    var el=document.createElement('div');
+    el.className='toast'+(type?(' '+type):'');
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(6px)'; }, 3000);
+    setTimeout(()=>{ el.remove(); }, 3600);
+  }
+
+  /* ========= Constants ========= */
+  var TEAM_CLASS = {'Julia Block':'julia','Nienke Burghout':'nienke','Peter Derks':'peter'};
+  var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var ORDER_TEAMS = ['Julia Block','Nienke Burghout','Peter Derks'];
+
+  var DEFAULT_LIST = [
+    {manager:'Julia Block',   name:'Nienke Burghout',  days:15, id:'34708-14'},
+    {manager:'Julia Block',   name:'Bart Derickssen',  days:17, id:'34709-4'},
+    {manager:'Julia Block',   name:'Martine Kosters',  days:24, id:'34708-9'},
+    {manager:'Julia Block',   name:'Robbert Verhagen', days:20, id:'34709-2'},
+    {manager:'Julia Block',   name:'Tom de Graaf',     days:23, id:'34708-524'},
+    {manager:'Julia Block',   name:'Vera Buddingh',    days:22, id:'34709-3'},
+    {manager:'Nienke Burghout', name:'Chantal Nieuwlaat',  days:14, id:'34708-525'},
+    {manager:'Nienke Burghout', name:'Charissa Jonhnson',  days:20, id:'34708-413'},
+    {manager:'Nienke Burghout', name:'Christina Wong',     days:15, id:'34708-410'},
+    {manager:'Nienke Burghout', name:'Emma Jansen',        days:0,  id:'34708-509'},
+    {manager:'Nienke Burghout', name:'Gregory Winter',     days:18, id:'34708-11'},
+    {manager:'Nienke Burghout', name:'Harm Mulder',        days:14, id:'34708-106'},
+    {manager:'Nienke Burghout', name:'Ilias Nort',         days:14, id:'34708-105'},
+    {manager:'Nienke Burghout', name:'Jack de Ridder',     days:15, id:'34708-414'},
+    {manager:'Nienke Burghout', name:'Laura Steenbergen',  days:15, id:'34708-194'},
+    {manager:'Nienke Burghout', name:'Noa Klaster',        days:28, id:'34708-85'},
+    {manager:'Nienke Burghout', name:'Sander Keemskerk',   days:14, id:'34708-518'},
+    {manager:'Peter Derks', name:'Alexandra Swijgels', days:15, id:'34708-19'},
+    {manager:'Peter Derks', name:'Kim Celestijn',      days:14, id:'34708-89'},
+    {manager:'Peter Derks', name:'Laurence Nageldjik', days:14, id:'34709-5'},
+    {manager:'Peter Derks', name:'Samuel Kalloe',      days:15, id:'34708-87'},
+    {manager:'Peter Derks', name:'Robin Vermeulen',    days:13, id:'34708-86'},
+    {manager:'Peter Derks', name:'Sara Kramer',        days:20, id:'34708-667'},
+    {manager:'Peter Derks', name:'Slik Stokkers',      days:14, id:'34708-22'},
+    {manager:'Peter Derks', name:'Rosanne de Wit',     days:14, id:'34708-12'},
+    {manager:'Peter Derks', name:'Arnoold Pompen',     days:16, id:'34708-77'}
+  ].map(function(e){ e.lts=false; e.ltsFrom=null; e.ltsTo=null; return e; });
+
+  var NEW_BALANCES = {
+    '34708-14':25,'34709-4':25,'34708-9':25,'34709-2':25,'34708-524':25,'34709-3':25,
+    '34708-525':25,'34708-413':25,'34708-410':25,'34708-509':25,'34708-11':25,'34708-106':25,
+    '34708-105':25,'34708-414':25,'34708-194':25,'34708-85':25,'34708-518':25,
+    '34708-19':25,'34708-89':25,'34709-5':25,'34708-87':25,'34708-86':25,'34708-667':25,
+    '34708-22':25,'34708-12':25,'34708-77':25
+  };
+
+  /* ========= State ========= */
+  var EMPLOYEES = [];
+  var SCHEDULE = new Map(); // ymd -> { AL:[{team,person,id}], sick:[{team,person,id,lts?:true}] }
+  var VIEW_MODE = 'full';
+  var VIEW_MONTH = null; // Date of first of month when in tabs mode
+  var LTS_TARGET = null;
+
+  /* ========= Utils ========= */
+  function pad(n){ return (n<10?'0':'')+n; }
+  function ymd(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function dmy(d){ return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(); }
+  function parseDMY(s){ var p=(s||'').split('/'); if(p.length!==3) return new Date('invalid'); return new Date(+p[2], +p[1]-1, +p[0]); }
+  function parseISODateInput(s){ if(!s) return new Date('invalid'); var p=s.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+  function isBiz(d){ var g=d.getDay(); return g>=1 && g<=5; }
+  function isWeekend(d){ var g=d.getDay(); return g===0 || g===6; }
+  function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
+  function mondayOf(d){ var x=new Date(d); var wd=(x.getDay()+6)%7; x.setDate(x.getDate()-wd); return x; }
+  function sundayOf(d){ return addDays(mondayOf(d),6); }
+  function buildDays(start,end){ var out=[], t=new Date(start); while(t<=end){ if(isBiz(t)) out.push(new Date(t)); t=addDays(t,1);} return out; }
+  function buildWeeks(start,end){ var weeks=[], cur=mondayOf(start); while(cur<=end){ weeks.push([new Date(cur), sundayOf(cur)]); cur=addDays(cur,7);} return weeks; }
+  function ensureDay(k){ if(!SCHEDULE.has(k)) SCHEDULE.set(k,{AL:[],sick:[]}); return SCHEDULE.get(k); }
+  function nextBusinessDay(d){ var x=addDays(d,1); while(isWeekend(x)) x=addDays(x,1); return x; }
+  function teamLimit(activeCount){ if(activeCount<=0) return 0; if(activeCount===1) return 1; var lim=Math.floor(activeCount*0.8); return Math.max(1,lim); }
+  function fromYMD(k){ var p=k.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
+
+  /* ID directory + Note metadata */
+  function buildIdDirectory(){
+    var map=new Map();
+    DEFAULT_LIST.forEach(function(d){ var id=String(d.id||'').trim(); if(id) map.set(id,{name:d.name, manager:d.manager}); });
+    EMPLOYEES.forEach(function(e){ var id=String(e.id||'').trim(); if(id) map.set(id,{name:e.name, manager:e.manager}); });
+    return map;
+  }
+  function parseNoteMeta(note){
+    var out={}; if(!note) return out;
+    var mEmp=note.match(/(?:EMP|NAME)\s*[:=]\s*([^;|]+)/i);
+    var mMgr=note.match(/(?:MGR|MANAGER)\s*[:=]\s*([^;|]+)/i);
+    if(mEmp) out.name=mEmp[1].trim();
+    if(mMgr) out.manager=mMgr[1].trim();
+    return out;
+  }
+
+  /* ========= NL Holidays ========= */
+  function easterSunday(y){
+    var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3);
+    var h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+    var month=Math.floor((h+l-7*m+114)/31), day=((h+l-7*m+114)%31)+1; return new Date(y,month-1,day);
+  }
+  function addHoliday(set, d){ if(!isNaN(d)) set.add(ymd(d)); }
+  function nlHolidaysForYear(y, opts){
+    var s=new Set();
+    addHoliday(s, new Date(y,0,1)); // New Year
+    var kd = new Date(y,3,27); if(kd.getDay()===0) kd=new Date(y,3,26); addHoliday(s,kd); // King's Day
+    addHoliday(s, new Date(y,11,25)); addHoliday(s, new Date(y,11,26)); // Xmas
+    var es=easterSunday(y); if(opts.goodFriday) addHoliday(s, addDays(es,-2));
+    addHoliday(s, addDays(es,1)); addHoliday(s, addDays(es,39)); addHoliday(s, addDays(es,50)); // Easter Mon, Ascension, Whit Mon
+    if(opts.liberation==='every' || (opts.liberation==='five' && y%5===0)) addHoliday(s, new Date(y,4,5));
+    return s;
+  }
+  function mergeHolidaySets(years, opts){ var out=new Set(); years.forEach(y=>nlHolidaysForYear(y,opts).forEach(k=>out.add(k))); return out; }
+  function computeHolidayAdjacency(holidaysSet, windowDays){
+    var boost=new Set(); holidaysSet.forEach(function(k){
+      var d=fromYMD(k);
+      for(var i=-windowDays;i<=windowDays;i++){
+        if(i===0) continue; var t=addDays(d,i);
+        if(isBiz(t) && !holidaysSet.has(ymd(t))) boost.add(ymd(t));
+      }
+    }); return boost;
+  }
+  function isBridgeDay(d, hol){ if(!isBiz(d)) return false; var prev=addDays(d,-1), next=addDays(d,1); var ph=hol.has(ymd(prev)), nh=hol.has(ymd(next)); var pw=isWeekend(prev), nw=isWeekend(next); return (ph&&(nw||nh)) || (nh&&(pw||ph)); }
+  function inChristmasWindow(d, sDec, eJan){ var m=d.getMonth(), day=d.getDate(); return (m===11 && day>=sDec) || (m===0 && day<=eJan); }
+
+  /* ========= Sidebar tabs ========= */
+  function switchTab(id){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.getAttribute('data-tab')===id));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', p.id==='tab-'+id));
+  }
+  document.getElementById('sidebarTabs').addEventListener('click', function(e){
+    var el=e.target.closest('.tab'); if(!el) return; switchTab(el.getAttribute('data-tab'));
+  });
+
+  /* ========= Employees table ========= */
+  function renderEmpTable(){
+    var empBody=document.querySelector('#empTable tbody'); if(!empBody) return; empBody.innerHTML='';
+    if(!EMPLOYEES.length){ empBody.innerHTML='<tr><td colspan="5" class="small">No employees yet. Click “Load NL demo users” or add/import employees.</td></tr>'; renderLtsConfigList(); return; }
+    EMPLOYEES.forEach(function(e,i){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+escapeHtml(e.manager)+'</td><td>'+escapeHtml(e.name)+'</td><td>'+escapeHtml(e.id||'')+'</td><td><input type="number" min="0" step="1" class="days-input" data-i="'+i+'" value="'+(e.days||0)+'" style="width:92px"></td><td><button class="btn" type="button" data-remove="'+i+'">Remove</button></td>';
+      empBody.appendChild(tr);
+    });
+    rebuildManagerSelects(); renderLtsConfigList(); renderLegendV2();
+  }
+  function escapeHtml(v){ return String(v==null?'':v).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c];}); }
+  function teamColor(name){ var h=0,s=String(name||'Team'); for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))%360; return 'hsl('+h+' 72% 68%)'; }
+  function renderLegendV2(){ var box=document.getElementById('legend'); if(!box)return; var teams=Array.from(new Set(EMPLOYEES.map(function(e){return e.manager}).filter(Boolean))); box.innerHTML=teams.map(function(t){var c=TEAM_CLASS[t],dot=c?'<span class="dot '+c+'"></span>':'<span class="dot" style="background:'+teamColor(t)+'"></span>';return dot+' '+escapeHtml(t);}).join(' &nbsp; ')+' &nbsp; <span class="dot sick"></span> Sick / LTS'; }
+  function rebuildManagerSelects(){
+    var sel=document.getElementById('empMgr'); if(!sel) return; var current=sel.value;
+    var mgrs=[]; DEFAULT_LIST.concat(EMPLOYEES).forEach(function(e){ if(e.manager && mgrs.indexOf(e.manager)<0) mgrs.push(e.manager); });
+    sel.innerHTML=mgrs.map(function(m){return '<option>'+escapeHtml(m)+'</option>';}).join('')+'<option value="__OTHER__">Other…</option>';
+    if(current && mgrs.indexOf(current)>=0) sel.value=current;
+  }
+  function renderLtsConfigList(){
+    var box=document.getElementById('ltsConfigList'); if(!box) return;
+    if(!EMPLOYEES.length){ box.innerHTML='<em class="small">Load employees first.</em>'; return; }
+    box.innerHTML=EMPLOYEES.map(function(e,i){ var txt=(e.lts&&e.ltsFrom&&e.ltsTo)?dmy(e.ltsFrom)+' → '+dmy(e.ltsTo):'No LTS'; return '<div class="toolbar-row" style="padding:6px 0;border-bottom:1px solid var(--line)"><strong>'+escapeHtml(e.name)+'</strong><span class="small">'+escapeHtml(e.manager)+'</span><span class="spacer"></span><span class="small">'+txt+'</span><button class="btn icon lts-edit" data-i="'+i+'" type="button">Configure</button></div>'; }).join('');
+  }
+  function addEmployee(){
+    var name = document.getElementById('empName').value.trim();
+    var id = document.getElementById('empId').value.trim();
+    var daysRaw = document.getElementById('empDays').value;
+    var manager = document.getElementById('empMgr').value; if(manager==='__OTHER__') manager=(document.getElementById('otherMgr').value||'').trim();
+    if(!name){ alert('Please enter a name.'); return; } if(!manager){ alert('Please enter a manager.'); return; }
+    var days = Number(daysRaw); if(isNaN(days)||days<0){ alert('Please enter remaining days (number).'); return; }
+    EMPLOYEES.push({name, id, days:Math.round(days), manager, lts:false, ltsFrom:null, ltsTo:null});
+    document.getElementById('empName').value=''; document.getElementById('empId').value=''; document.getElementById('empDays').value='';
+    renderEmpTable(); toast('Added: '+name+' ('+manager+'), days: '+days, 'ok');
+  }
+  function clearEmployees(){ EMPLOYEES=[]; renderEmpTable(); toast('Employees cleared.','warn'); }
+  function seedEmployees(){
+    EMPLOYEES = DEFAULT_LIST.map(function(x){
+      var copy=Object.assign({},x);
+      if(NEW_BALANCES[copy.id]!=null) copy.days=NEW_BALANCES[copy.id];
+      copy.name=(copy.name||'').replace(/^"\s*|\s*"$/g,'');
+      copy.lts=false; copy.ltsFrom=null; copy.ltsTo=null;
+      return copy;
+    });
+    renderEmpTable(); toast('Demo list loaded (updated balances).','ok');
+  }
+
+  /* ========= Preview rendering ========= */
+  function buildMonthGrid(monthStart, monthEnd){
+    var frag=document.createDocumentFragment();
+
+    var dow=document.createElement('div'); dow.className='dow';
+    ['Mon','Tue','Wed','Thu','Fri'].forEach(function(t){ var d=document.createElement('div'); d.textContent=t; dow.appendChild(d); });
+    frag.appendChild(dow);
+
+    var grid=document.createElement('div'); grid.className='grid';
+    var wStart = mondayOf(monthStart);
+    while(wStart <= monthEnd){
+      for(var i=0;i<5;i++){
+        var d = addDays(wStart,i);
+        var cell = document.createElement('div'); cell.className='day';
+        if(d.getMonth()!==monthStart.getMonth()) cell.style.opacity=.35;
+        var head = document.createElement('div'); head.className='date';
+        head.innerHTML = '<span>'+d.getDate()+'</span><span>'+MONTH_NAMES[d.getMonth()]+'</span>';
+        cell.appendChild(head);
+
+        var box = document.createElement('div'); box.className='tags';
+        var rec = SCHEDULE.get(ymd(d));
+        if(rec){
+          (rec.AL||[]).forEach(function(x){
+            var tag=document.createElement('span');
+            tag.className='tag '+(TEAM_CLASS[x.team]||''); if(!TEAM_CLASS[x.team]){ var tc=teamColor(x.team); tag.style.background=tc+'33'; tag.style.borderColor=tc; }
+            tag.textContent = x.person+' ('+x.team.split(' ')[0]+')';
+            box.appendChild(tag);
+          });
+          (rec.sick||[]).forEach(function(x){
+            var tag=document.createElement('span');
+            tag.className='tag sick';
+            tag.textContent=(x.lts?'LTS: ':'SICK: ')+x.person+' ('+x.team.split(' ')[0]+')';
+            box.appendChild(tag);
+          });
+        }
+        cell.appendChild(box); grid.appendChild(cell);
+      }
+      wStart = addDays(wStart,7);
+    }
+    frag.appendChild(grid);
+    return frag;
+  }
+
+  function buildCalendarPreview(start,end){
+    var wrap=document.getElementById('calWrap'); wrap.innerHTML='';
+
+    if(!start||!end||isNaN(start)||isNaN(end)){ wrap.textContent='No calendar yet. Generate a schedule or import a CSV.'; return; }
+
+    if(VIEW_MODE==='full'){
+      var cursor=new Date(start.getFullYear(), start.getMonth(), 1);
+      while(cursor<=end){
+        var monthStart=new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+        var monthEnd=new Date(cursor.getFullYear(), cursor.getMonth()+1, 0);
+        var title=document.createElement('div'); title.style.margin='12px 16px 6px'; title.innerHTML='<strong>'+MONTH_NAMES[monthStart.getMonth()]+' '+monthStart.getFullYear()+'</strong>';
+        wrap.appendChild(title);
+        wrap.appendChild(buildMonthGrid(monthStart, monthEnd));
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth()+1, 1);
+      }
+    }else{
+      var nav=document.getElementById('monthNav'); nav.innerHTML=''; nav.style.display='inline-flex';
+      var months=[];
+      var cur=new Date(start.getFullYear(), start.getMonth(), 1);
+      while(cur<=end){ months.push(new Date(cur)); cur=new Date(cur.getFullYear(), cur.getMonth()+1, 1); }
+      months.forEach(function(m,ix){
+        var b=document.createElement('button'); b.className='month-tab'+((!VIEW_MONTH && ix===0)||(VIEW_MONTH && m.getTime()===VIEW_MONTH.getTime())?' active':'');
+        b.textContent = MONTH_NAMES[m.getMonth()]+' '+m.getFullYear();
+        b.addEventListener('click', function(){ VIEW_MONTH=m; buildCalendarPreview(start,end); document.querySelectorAll('.month-tab').forEach(x=>x.classList.toggle('active', x===b)); });
+        nav.appendChild(b);
+      });
+      if(!VIEW_MONTH) VIEW_MONTH = months[0];
+
+      var monthStart=new Date(VIEW_MONTH.getFullYear(), VIEW_MONTH.getMonth(), 1);
+      var monthEnd=new Date(VIEW_MONTH.getFullYear(), VIEW_MONTH.getMonth()+1, 0);
+      wrap.appendChild(buildMonthGrid(monthStart, monthEnd));
+    }
+  }
+
+  /* ========= Strategy presets ========= */
+  function applyPreset(strategy){
+    function setVal(id,v){ var el=document.getElementById(id); if(!el) return; if(el.tagName==='INPUT' && (el.type==='checkbox')) el.checked=!!v; else el.value=String(v); }
+    if(strategy==='balanced'){
+      setVal('avoidNLHolidays', true);
+      setVal('inclGoodFriday','off'); setVal('liberationDayMode','five');
+      setVal('boostAround','off'); setVal('boostWindow',2); setVal('boostWeight',3);
+      setVal('preferBridge','off'); setVal('bridgeWeight',3);
+      setVal('christmasOn','off'); setVal('christmasWeight',4);
+      setVal('friMonBias',2);
+      ['wMon','wTue','wWed','wThu','wFri'].forEach(id=>setVal(id,1));
+      setVal('preferFriMon','on');
+    }else if(strategy==='holiday'){
+      setVal('avoidNLHolidays', true);
+      setVal('inclGoodFriday','off'); setVal('liberationDayMode','five');
+      setVal('boostAround','on'); setVal('boostWindow',2); setVal('boostWeight',3);
+      setVal('preferBridge','on'); setVal('bridgeWeight',3);
+      setVal('christmasOn','on'); setVal('christmasWeight',4);
+      setVal('friMonBias',2);
+      ['wMon','wTue','wWed','wThu','wFri'].forEach(id=>setVal(id,1));
+      setVal('preferFriMon','on');
+    }
+  }
+
+  /* ========= RNG (seeded) ========= */
+  function makePRNG(seedStr){
+    function xmur3(str){ for(var i=0,h=1779033703^str.length;i<str.length;i++){ h=Math.imul(h^str.charCodeAt(i),3432918353); h=h<<13|h>>>19; } return function(){ h=Math.imul(h^h>>>16,2246822507); h=Math.imul(h^h>>>13,3266489909); return (h^h>>>16)>>>0; } }
+    function sfc32(a,b,c,d){ return function(){ a|=0;b|=0;c|=0;d|=0; var t=(a+b|0)+d|0; d=d+1|0; a=b^b>>>9; b=c+(c<<3)|0; c=(c<<21|c>>>11); c=c+t|0; return (t>>>0)/4294967296; } }
+    var seed = (seedStr && String(seedStr).trim().length) ? seedStr : (Date.now().toString(36)+Math.random().toString(36).slice(2));
+    var seeder=xmur3(seed); var prng=sfc32(seeder(),seeder(),seeder(),seeder()); prng._seed=seed; return prng;
+  }
+
+  /* ========= Scheduling ========= */
+  function generate(){
+    try{
+      SCHEDULE.clear();
+
+      var sVal=document.getElementById('start').value;
+      var eVal=document.getElementById('end').value;
+      if(!sVal||!eVal){ alert('Please set start/end dates.'); return; }
+      var start=parseISODateInput(sVal), end=parseISODateInput(eVal);
+      if(isNaN(start.getTime())||isNaN(end.getTime())||start>end){ alert('Invalid date range.'); return; }
+      if(EMPLOYEES.length===0){ alert('Please add at least one employee.'); return; }
+
+      var strategy=document.getElementById('strategy').value;
+      // Apply preset first (so reads reflect it) unless advanced
+      if(strategy!=='advanced') applyPreset(strategy);
+
+      var enforceTwoTeams = document.getElementById('enforceTwoTeams').checked;
+      var preferFriMon = (document.getElementById('preferFriMon').value||'on')==='on';
+      var allowConsec = document.getElementById('allowConsecutive').checked;
+      var maxPerDaySoft = Math.max(1, Number(document.getElementById('maxPerDay').value)||6);
+      var baseIntensity = Math.max(1, Math.min(5, Number(document.getElementById('baseIntensity').value)||2));
+      var monthWeight = Math.max(1, Math.min(5, (Number(document.querySelector('#monthWeight').value)||3)));
+      var friMonBias  = Math.max(1, Math.min(5, Number(document.getElementById('friMonBias').value)||2));
+      var randomness = Math.max(0, Math.min(100, Number(document.getElementById('randomness').value)||40));
+      var prng = makePRNG(document.getElementById('seed').value); document.getElementById('seed').value = prng._seed;
+      function rand(){ return prng(); }
+
+      // === Weekly Team Order Helpers ===
+      // Map from week (identified by Monday date) to a shuffled team order. This avoids bias by varying the order each week.
+      var weekTeamOrder = new Map();
+      function weekKeyOf(date){
+        var day = new Date(date);
+        var dow = day.getDay();
+        // Compute offset to Monday; treat Sunday as belonging to the previous week
+        var diff = (dow === 0 ? -6 : 1) - dow;
+        var monday = new Date(day.getFullYear(), day.getMonth(), day.getDate() + diff);
+        return ymd(monday);
+      }
+      function getWeeklyTeamOrder(date){
+        var wk = weekKeyOf(date);
+        if(weekTeamOrder.has(wk)) return weekTeamOrder.get(wk);
+        var order = ORDER_TEAMS.slice();
+        // Shuffle using the seeded random generator for reproducibility
+        for(var i = order.length - 1; i > 0; i--){
+          var j = Math.floor(rand() * (i + 1));
+          var tmp = order[i];
+          order[i] = order[j];
+          order[j] = tmp;
+        }
+        weekTeamOrder.set(wk, order);
+        return order;
+      }
+
+      // Advanced (read after preset so values are current)
+      var avoidNLHolidays = document.getElementById('avoidNLHolidays').checked;
+      var inclGoodFriday  = document.getElementById('inclGoodFriday').value === 'on';
+      var liberationMode  = document.getElementById('liberationDayMode').value;
+      var boostAround     = document.getElementById('boostAround').value === 'on';
+      var boostWindow     = Math.max(1, Math.min(5, Number(document.getElementById('boostWindow').value)||2));
+      var boostWeight     = Math.max(1, Math.min(5, Number(document.getElementById('boostWeight').value)||3));
+      var preferBridge    = document.getElementById('preferBridge').value === 'on';
+      var bridgeWeight    = Math.max(1, Math.min(5, Number(document.getElementById('bridgeWeight').value)||3));
+      var christmasOn     = document.getElementById('christmasOn').value === 'on';
+      var christmasWeight = Math.max(1, Math.min(5, Number(document.getElementById('christmasWeight').value)||4));
+      var christmasStartDay = Math.max(15, Math.min(31, Number(document.getElementById('christmasStartDay').value)||20));
+      var newYearEndDay     = Math.max(1,  Math.min(15, Number(document.getElementById('newYearEndDay').value)||5));
+      var weekdayW = {
+        1: Math.max(1, Math.min(5, Number(document.getElementById('wMon').value)||1)),
+        2: Math.max(1, Math.min(5, Number(document.getElementById('wTue').value)||1)),
+        3: Math.max(1, Math.min(5, Number(document.getElementById('wWed').value)||1)),
+        4: Math.max(1, Math.min(5, Number(document.getElementById('wThu').value)||1)),
+        5: Math.max(1, Math.min(5, Number(document.getElementById('wFri').value)||1))
+      };
+
+      // Weighted months
+      var weightedMonths={};
+
+      // Years + holidays
+      var YEARS=[]; for(var y=start.getFullYear(); y<=end.getFullYear(); y++) YEARS.push(y);
+      var NL_HOLIDAYS = mergeHolidaySets(YEARS, {goodFriday:inclGoodFriday, liberation:liberationMode});
+
+      // Days/Weeks
+      var DAYS_LIST = buildDays(start,end);
+      if(avoidNLHolidays){ DAYS_LIST = DAYS_LIST.filter(d=>!NL_HOLIDAYS.has(ymd(d))); }
+      var WEEKS = buildWeeks(start,end);
+      var HOLIDAY_AROUND = boostAround ? computeHolidayAdjacency(NL_HOLIDAYS, boostWindow) : new Set();
+
+      // Split employees
+      var LTS = EMPLOYEES.filter(e=>!!e.lts && e.ltsFrom && e.ltsTo);
+      var ACTIVE = EMPLOYEES.slice();
+      var byTeam={'Julia Block':[], 'Nienke Burghout':[], 'Peter Derks':[]};
+      ACTIVE.forEach(function(e){ if(byTeam[e.manager]) byTeam[e.manager].push({name:e.name,id:e.id,days:e.days,manager:e.manager}); });
+      var activeCounts={}; ORDER_TEAMS.forEach(t=>activeCounts[t]=(byTeam[t]||[]).length);
+
+      // Place LTS
+      if(LTS.length){
+        for(var di=0; di<DAYS_LIST.length; di++){
+          var d=DAYS_LIST[di], k=ymd(d), rec=ensureDay(k);
+          for(var i=0;i<LTS.length;i++){
+            var x=LTS[i];
+            if(d>=x.ltsFrom && d<=x.ltsTo){
+              rec.sick.push({team:x.manager, person:x.name, id:x.id||'', lts:true});
+            }
+          }
+        }
+      }
+
+      // Balances & cursors
+      var balances=new Map(), rr={};
+      ORDER_TEAMS.forEach(function(t){ rr[t]=0; (byTeam[t]||[]).forEach(p=>balances.set(t+'|'+p.name+'|'+(p.id||''), Math.max(0, Number(p.days)||0))); });
+
+       // Sickness generation (configurable, visible and exportable)
+       (function(){
+         if(!document.getElementById('sickEnabled') || !document.getElementById('sickEnabled').checked) return;
+         var strategy=(document.getElementById('sickStrategy')||{}).value||'everyMonth';
+         var peopleCount=Math.max(1,Number((document.getElementById('sickPeopleCount')||{}).value)||1);
+         var cfg=window.SICK_ADVANCED_CONFIG||{blocksPerPeriod:1,minLen:2,maxLen:5};
+         var periods=[];
+         function addPeriod(a,b){ if(a<start)a=new Date(start); if(b>end)b=new Date(end); if(a<=b)periods.push([a,b]); }
+         if(strategy==='everyWeek'||strategy==='everyOtherWeek'){
+           WEEKS.forEach(function(w,ix){ if(strategy==='everyOtherWeek'&&ix%2) return; addPeriod(w[0],w[1]); });
+         }else if(strategy==='everyQuarter'){
+           for(var yy=start.getFullYear();yy<=end.getFullYear();yy++) for(var q=0;q<4;q++) addPeriod(new Date(yy,q*3,1),new Date(yy,q*3+3,0));
+         }else{
+           var mc=new Date(start.getFullYear(),start.getMonth(),1); while(mc<=end){ addPeriod(new Date(mc),new Date(mc.getFullYear(),mc.getMonth()+1,0)); mc=new Date(mc.getFullYear(),mc.getMonth()+1,1); }
+         }
+         var cursor=0; var all=EMPLOYEES.slice();
+         periods.forEach(function(period){
+           for(var block=0;block<Math.max(1,cfg.blocksPerPeriod||1);block++){
+             var periodBiz=buildDays(period[0],period[1]); if(!periodBiz.length) continue;
+             var available=all.filter(function(e){
+               if(!(e.lts&&e.ltsFrom&&e.ltsTo)) return true;
+               return period[1]<e.ltsFrom || period[0]>e.ltsTo;
+             });
+             if(!available.length) continue;
+             for(var pc=0;pc<Math.min(peopleCount,available.length);pc++){
+               var e=available[(cursor+pc)%available.length];
+               var len=Math.max(1,Math.min(periodBiz.length,Math.round((cfg.minLen||2)+rand()*Math.max(0,(cfg.maxLen||5)-(cfg.minLen||2)))));
+               var maxStart=Math.max(0,periodBiz.length-len); var si=Math.floor(rand()*(maxStart+1));
+               for(var dd=0;dd<len;dd++){ var day=periodBiz[si+dd]; var rec=ensureDay(ymd(day)); if(!(rec.sick||[]).some(function(x){return x.person===e.name;})) rec.sick.push({team:e.manager,person:e.name,id:e.id||'',lts:false}); }
+             }
+             cursor=(cursor+peopleCount)%Math.max(1,available.length);
+           }
+         });
+       })();
+
+      // Month bias map
+      function weekIndexInMonth(d){ var first=new Date(d.getFullYear(),d.getMonth(),1); var fm=new Date(first); while(fm.getDay()!==1) fm=addDays(fm,1); var mon=mondayOf(d); return Math.floor((mon-fm)/(7*86400000)); }
+       function isBusyLeaveDay(d){ var arr=(window.MORE_DAYS_IN&&window.MORE_DAYS_IN[d.getMonth()])||[]; return arr.indexOf(weekIndexInMonth(d))>=0; }
+       var monthCapBias={}; DAYS_LIST.forEach(function(dd){monthCapBias[ymd(dd)]=isBusyLeaveDay(dd)?2:1;});
+
+      // Scoring
+      function scoreOf(d){
+        var score=1, dow=d.getDay(), k=ymd(d);
+        score*= (weekdayW[dow] || 1);
+        if(preferFriMon && (dow===1||dow===5)){ score *= (1 + 0.15*(Math.max(1,friMonBias)-1)); }
+        if(HOLIDAY_AROUND.has(k)) score *= boostWeight;
+        if(preferBridge && isBridgeDay(d, NL_HOLIDAYS)) score *= bridgeWeight;
+        if(christmasOn && inChristmasWindow(d, christmasStartDay, newYearEndDay)) score *= christmasWeight;
+        return score;
+      }
+      var dayScores=new Map(); DAYS_LIST.forEach(d=>dayScores.set(ymd(d), scoreOf(d)));
+      var dayOrder=DAYS_LIST.slice().sort((a,b)=> (dayScores.get(ymd(b)) - dayScores.get(ymd(a))) || (a-b));
+
+      // Cluster templates
+      var CLUSTERS = [
+        {name:'Thu-Fri', len:2, startDow:4},
+        {name:'Fri-Mon', len:2, startDow:5, includeNextMon:true},
+        {name:'Fri-Tue', len:3, startDow:5, includeNextMon:true},
+        {name:'Mon-Thu', len:4, startDow:1},
+        {name:'Mon-Wed', len:3, startDow:1},
+        {name:'Single', len:1}
+      ];
+      function maybeApplyCluster(d){
+        if(rand() > randomness/100) return [];
+        var dow=d.getDay();
+        var candidates = CLUSTERS.filter(c=>!c.startDow || c.startDow===dow);
+        if(candidates.length===0) candidates=[{name:'Single', len:1}];
+        var cluster = candidates[Math.floor(rand()*candidates.length)];
+        var dates=[d];
+        if(cluster.len>1){
+          var cur=d, added=1;
+          while(added<cluster.len){
+            var nx=nextBusinessDay(cur);
+            dates.push(nx);
+            cur=nx; added++;
+          }
+        }
+        if(cluster.includeNextMon && dow===5){
+          dates = [d, nextBusinessDay(d)];
+          if(cluster.len===3) dates.push(nextBusinessDay(nextBusinessDay(d)));
+        }
+        return dates;
+      }
+
+      var totalRemaining=0; balances.forEach(v=>totalRemaining+=v);
+      var carryMap=new Map(); // ymd -> [{team,person,id}]
+
+      function balanceKey(team,name,id){ return team+'|'+name+'|'+(id||''); }
+      function canPlace(team, person, id, k){
+        var rec0=SCHEDULE.get(k); rec0=rec0?rec0:{AL:[],sick:[]};
+        for(var si=0; si<rec0.sick.length; si++){ var srec=rec0.sick[si]; if(srec.team===team && srec.person===person){ return false; } }
+        return true;
+      }
+      function pushCarry(targetDate, rec){
+        var key=ymd(targetDate); var list=carryMap.get(key)||[];
+        for(var i=0;i<list.length;i++){ if(list[i].team===rec.team && list[i].person===rec.person) return; }
+        carryMap.set(key, list.concat([{team:rec.team, person:rec.person, id:rec.id||''}]));
+      }
+
+      // MAIN PASS
+      for(var di2=0; di2<dayOrder.length; di2++){
+        var d=dayOrder[di2], k=ymd(d);
+        var teamCount={'Julia Block':0,'Nienke Burghout':0,'Peter Derks':0};
+        var teamCap={'Julia Block':teamLimit(activeCounts['Julia Block']), 'Nienke Burghout':teamLimit(activeCounts['Nienke Burghout']), 'Peter Derks':teamLimit(activeCounts['Peter Derks'])};
+        var cap=Math.round(Math.max(maxPerDaySoft, baseIntensity)*(monthCapBias[k]||1)); if(isBusyLeaveDay(d)&&((document.getElementById('moreIntensity')||{}).value==='all')) cap=ACTIVE.length;
+
+        var assigned=[]; var todayKeys=new Set();
+
+        // Forced carries first
+        var forced = carryMap.get(k) || [];
+        if(forced.length){
+          for(var i=0;i<forced.length;i++){
+            var f=forced[i]; var bkey=balanceKey(f.team,f.person,f.id); var left=Number(balances.get(bkey))||0;
+            if(left>0 && !todayKeys.has(f.team+'|'+f.person) && canPlace(f.team,f.person,f.id,k) && teamCount[f.team] < teamCap[f.team]){
+              assigned.push({team:f.team, person:f.person, id:f.id||''});
+              balances.set(bkey, left-1); totalRemaining--;
+              todayKeys.add(f.team+'|'+f.person); teamCount[f.team]++;
+            }
+          }
+          carryMap.delete(k);
+        }
+
+        function assignFromTeam(team){
+          if(teamCount[team] >= teamCap[team]) return false;
+          var arr=byTeam[team]; if(!arr||!arr.length) return false;
+
+          var tries=Math.min(arr.length, 3);
+          for(var t=0;t<tries;t++){
+            var idx=(Math.floor(rand()*arr.length));
+            var e=arr[idx], key=balanceKey(team,e.name,e.id), left=Number(balances.get(key))||0;
+            if(left<=0 || todayKeys.has(team+'|'+e.name) || !canPlace(team,e.name,e.id,k)) continue;
+            if(!allowConsec){
+              var ystr=ymd(addDays(d,-1)); var prev=SCHEDULE.get(ystr); prev=prev?prev.AL:[];
+              var hadPrev=false; for(var pi=0; pi<prev.length; pi++){ if(prev[pi].team===team && prev[pi].person===e.name){ hadPrev=true; break; } }
+              if(hadPrev) continue;
+            }
+            var clusterDates = maybeApplyCluster(d);
+            var placed=false;
+            for(var cd=0; cd<clusterDates.length; cd++){
+              var dt=clusterDates[cd], kk=ymd(dt);
+              if(avoidNLHolidays && NL_HOLIDAYS.has(kk)) continue;
+              var rec0=ensureDay(kk);
+              var capTeam=teamLimit(activeCounts[team]);
+              var countTeamToday=(rec0.AL.filter(a=>a.team===team).length);
+              if(countTeamToday >= capTeam) continue;
+              if(!canPlace(team,e.name,e.id,kk)) continue;
+              rec0.AL.push({team:team, person:e.name, id:e.id||''});
+              balances.set(key, left-1); left--; totalRemaining--;
+              placed=true; if(left<=0) break;
+            }
+            if(placed){
+              todayKeys.add(team+'|'+e.name); teamCount[team]++; return true;
+            }
+          }
+
+          // fallback: simple round-robin
+          var loops=0;
+          while(loops < arr.length){
+            var e2 = arr[(rr[team]++) % arr.length];
+            var key2=balanceKey(team,e2.name,e2.id);
+            var left2=Number(balances.get(key2))||0; if(left2<=0){loops++; continue;}
+            if(todayKeys.has(team+'|'+e2.name)){loops++; continue;}
+            if(!canPlace(team,e2.name,e2.id,k)){loops++; continue;}
+            if(!allowConsec){
+              var y2=ymd(addDays(d,-1)); var prev2=SCHEDULE.get(y2); prev2=prev2?prev2.AL:[];
+              var had=false; for(var pp=0; pp<prev2.length; pp++){ if(prev2[pp].team===team && prev2[pp].person===e2.name){ had=true; break; } }
+              if(had){loops++; continue;}
+            }
+            assigned.push({team:team, person:e2.name, id:e2.id||''});
+            balances.set(key2, left2-1); totalRemaining--;
+            todayKeys.add(team+'|'+e2.name); teamCount[team]++;
+            return true;
+          }
+          return false;
+        }
+
+        var remainingCap=Math.max(0, cap - assigned.length);
+
+        // Regular allocation
+        while(remainingCap>0 && totalRemaining>0){
+          var picked=false;
+          if(enforceTwoTeams){
+            var presentTeams = new Set(assigned.map(a=>a.team));
+            if(presentTeams.size < 2){
+              // Use week-specific team order to reduce bias across weeks
+              var teamOrderEarly = getWeeklyTeamOrder(d);
+              for(var t1=0; t1<teamOrderEarly.length; t1++){
+                var tt = teamOrderEarly[t1];
+                if(!presentTeams.has(tt) && assignFromTeam(tt)){
+                  picked = true;
+                  break;
+                }
+              }
+            }
+          }
+          if(!picked){
+            // Use week-specific team order instead of fixed ORDER_TEAMS
+            var teamOrder = getWeeklyTeamOrder(d);
+            for(var t2=0; t2<teamOrder.length; t2++){
+              var tname = teamOrder[t2];
+              if(assignFromTeam(tname)){
+                picked = true;
+                break;
+              }
+            }
+          }
+          if(!picked) break;
+          remainingCap--;
+        }
+
+        // Soft carries
+        if((monthCapBias[k]||1)>1){
+          for(var i3=0;i3<assigned.length;i3++){ var aH=assigned[i3]; var nxt=nextBusinessDay(d); if(nxt<=end){ pushCarry(nxt,aH); } }
+        }
+        if(preferFriMon && d.getDay()===5){
+          for(var i4=0;i4<assigned.length;i4++){ var aF=assigned[i4]; var mon=nextBusinessDay(d); if(mon<=end){ pushCarry(mon,aF); } }
+        }
+
+        var recToday=ensureDay(k);
+        Array.prototype.push.apply(recToday.AL, assigned);
+      }
+
+      /* === Week diversity enforcement (≥2 teams / ≥2 total) === */
+      (function enforceWeeklyDiversity(){
+        for(var w=0; w<WEEKS.length; w++){
+          var mon=WEEKS[w][0], sun=WEEKS[w][1];
+          var teams=new Set(), totalAL=0;
+          for(var d=new Date(mon); d<=sun; d=addDays(d,1)){
+            if(!isBiz(d) || d<start || d>end) continue; var rec=SCHEDULE.get(ymd(d)); if(!rec) continue;
+            (rec.AL||[]).forEach(a=>{ teams.add(a.team); totalAL++; });
+          }
+          if(teams.size>=2 && totalAL>=2) continue;
+
+          var needed = Math.max(0, 2 - totalAL);
+          var haveTeams = new Set(teams);
+          var missingTeams = ORDER_TEAMS.filter(function(t){ return !haveTeams.has(t); });
+          if(missingTeams.length === 0) missingTeams = ORDER_TEAMS.slice();
+          // Shuffle missing teams using seeded rand() to avoid a fixed order preference
+          for(var mi = missingTeams.length - 1; mi > 0; mi--){
+            var mj = Math.floor(rand() * (mi + 1));
+            var tmpMT = missingTeams[mi];
+            missingTeams[mi] = missingTeams[mj];
+            missingTeams[mj] = tmpMT;
+          }
+
+          var weekDays=[]; for(var d2=new Date(mon); d2<=sun; d2=addDays(d2,1)){ if(!isBiz(d2) || d2<start || d2>end) continue; if(avoidNLHolidays && NL_HOLIDAYS.has(ymd(d2))) continue; weekDays.push(new Date(d2)); }
+          weekDays.sort((a,b)=> (dayScores.get(ymd(b)) - dayScores.get(ymd(a))) || (a-b));
+
+          var placed=0;
+          for(var md=0; md<weekDays.length && (teams.size<2 || placed<needed); md++){
+            var day=weekDays[md], k2=ymd(day), rec=ensureDay(k2);
+            var countByTeam={}; ORDER_TEAMS.forEach(function(t){countByTeam[t]=0;});
+            rec.AL.forEach(a=>countByTeam[a.team]=(countByTeam[a.team]||0)+1);
+            var capByTeam={}; ORDER_TEAMS.forEach(function(t){capByTeam[t]=teamLimit(activeCounts[t]);});
+
+            // Pick order from missing teams or all teams, and shuffle it to reduce bias
+            var order = (missingTeams.length ? missingTeams.slice() : ORDER_TEAMS.slice());
+            for(var oi = order.length - 1; oi > 0; oi--){
+              var oj = Math.floor(rand() * (oi + 1));
+              var tmpO = order[oi];
+              order[oi] = order[oj];
+              order[oj] = tmpO;
+            }
+            outer:
+            for(var ti=0; ti<order.length; ti++){
+              var team=order[ti]; var arr=byTeam[team]; if(!arr||!arr.length) continue;
+              if(countByTeam[team] >= capByTeam[team]) continue;
+              for(var j=0;j<arr.length;j++){
+                var e=arr[(rr[team] + j) % arr.length];
+                var key=balanceKey(team,e.name,e.id), left=Number(balances.get(key))||0;
+                if(left<=0) continue;
+                var sickHere=false; (rec.sick||[]).forEach(s=>{ if(s.team===team && s.person===e.name) sickHere=true; });
+                var dup = rec.AL.some(a=>a.team===team && a.person===e.name);
+                if(sickHere || dup) continue;
+                rec.AL.push({team:team, person:e.name, id:e.id||''});
+                balances.set(key, left-1); totalRemaining--; teams.add(team); placed++;
+                rr[team]++;
+                break outer;
+              }
+            }
+          }
+        }
+      })();
+
+      /* === Force-fill pass === */
+      (function forceFill(){
+        var availDays = buildDays(start,end).filter(function(d){
+          var k=ymd(d); return !(avoidNLHolidays && NL_HOLIDAYS.has(k));
+        }).sort((a,b)=> (dayScores.get(ymd(b)) - dayScores.get(ymd(a))) || (a-b));
+
+        var maxIterations=3;
+        for(var iter=0; iter<maxIterations; iter++){
+          var relaxedFactor = 1 + iter; // 1x, 2x, 3x caps
+          var anyPlaced=false;
+
+          balances.forEach(function(left, key){
+            while(left>0){
+              var parts=key.split('|'); var team=parts[0], person=parts[1], id=parts[2];
+              var placed=false;
+
+              for(var di=0; di<availDays.length; di++){
+                var day=availDays[di], k=ymd(day);
+                var rec=ensureDay(k);
+                var dup = rec.AL.some(a=>a.team===team && a.person===person);
+                if(dup) continue;
+                var sickHere=false; (rec.sick||[]).forEach(s=>{ if(s.team===team && s.person===person) sickHere=true; });
+                if(sickHere) continue;
+                var curTeamCount=rec.AL.filter(a=>a.team===team).length;
+                var baseCap=teamLimit(activeCounts[team]);
+                if(curTeamCount >= baseCap*relaxedFactor) continue;
+
+                rec.AL.push({team, person, id});
+                left--; balances.set(key,left); totalRemaining--; placed=true; anyPlaced=true;
+                break;
+              }
+              if(!placed) break;
+            }
+          });
+          if(!anyPlaced || totalRemaining<=0) break;
+        }
+      })();
+
+      // Status
+      var leftover=0; balances.forEach(v=>leftover+=v);
+      var statusEl=document.getElementById('status');
+      if(leftover===0) statusEl.innerHTML='<span class="ok">All quotas used ✔</span>';
+      else statusEl.innerHTML='<span class="warn">'+leftover+' day(s) unplaced (caps/limits). Final fill attempted.</span>';
+
+      // Enable export if any AL
+      var anyAL=false; SCHEDULE.forEach(r=>{ if((r.AL||[]).length) anyAL=true; });
+      document.getElementById('exportBtn').disabled = !anyAL; document.getElementById('exportJanSepBtn').disabled=!anyAL; document.getElementById('exportOctDecBtn').disabled=!anyAL;
+
+      // Render
+      buildCalendarPreview(start,end);
+
+      toast('Schedule generated.','ok');
+    }catch(err){
+      console.error(err);
+      toast('Error: '+(err&&err.message?err.message:String(err)),'bad');
+    }
+  }
+
+  /* ========= Enforce ≥1 absence every week (button) ========= */
+  function enforceWeeks(){
+    var sVal=document.getElementById('start').value;
+    var eVal=document.getElementById('end').value;
+    if(!sVal||!eVal){ toast('Set start/end dates first.','warn'); return; }
+    var start=parseISODateInput(sVal), end=parseISODateInput(eVal);
+    if(isNaN(start)||isNaN(end)||start>end){ toast('Invalid date range.','bad'); return; }
+
+    var remaining = new Map();
+    EMPLOYEES.forEach(function(e){ remaining.set(e.id||e.name, Math.max(0, Number(e.days)||0)); });
+    SCHEDULE.forEach(function(rec){ (rec.AL||[]).forEach(function(a){ var k=a.id||a.person; remaining.set(k, Math.max(0,(remaining.get(k)||0)-1)); }); });
+
+    var YEARS=[], y=start.getFullYear(); for(;y<=end.getFullYear();y++) YEARS.push(y);
+    var NL_HOLIDAYS = mergeHolidaySets(YEARS, {goodFriday:false, liberation:'off'});
+
+    var WEEKS = buildWeeks(start,end);
+    var added=0;
+
+    for(var w=0; w<WEEKS.length; w++){
+      var mon=WEEKS[w][0], sun=WEEKS[w][1];
+      var got=false;
+      for(var d=new Date(mon); d<=sun; d=addDays(d,1)){
+        if(!isBiz(d) || d<start || d>end) continue; var rec=SCHEDULE.get(ymd(d));
+        if(rec && rec.AL && rec.AL.length){ got=true; break; }
+      }
+      if(got) continue;
+
+      var candidates=[]; for(var d2=new Date(mon); d2<=sun; d2=addDays(d2,1)){ if(!isBiz(d2)) continue; if(NL_HOLIDAYS.has(ymd(d2))) continue; candidates.push(new Date(d2)); }
+      candidates.sort(function(a,b){ return (a-b); });
+      if(!candidates.length) continue;
+      var day=candidates[0], k=ymd(day), recDay=ensureDay(k);
+
+      var pick=null, team=null;
+      outer:
+      for(var t=0;t<ORDER_TEAMS.length;t++){
+        var teamName=ORDER_TEAMS[t];
+        var pool=EMPLOYEES.filter(e=>!e.lts && e.manager===teamName);
+        for(var i=0;i<pool.length;i++){
+          var e=pool[i]; var rem=remaining.get(e.id||e.name)||0;
+          if(rem<=0) continue;
+          var sickHere=false; (recDay.sick||[]).forEach(s=>{ if(s.team===teamName && s.person===e.name) sickHere=true; });
+          var dup = (recDay.AL||[]).some(a=>a.team===teamName && a.person===e.name);
+          if(sickHere || dup) continue;
+          pick=e; team=teamName; break outer;
+        }
+      }
+      if(pick){
+        recDay.AL.push({team:team, person:pick.name, id:pick.id||''});
+        remaining.set(pick.id||pick.name,(remaining.get(pick.id||pick.name)||0)-1);
+        added++;
+      }
+    }
+
+    if(added>0){
+      document.getElementById('exportBtn').disabled=false;
+      buildCalendarPreview(start,end);
+      toast('Added absences to '+added+' week(s) with none.','ok');
+    }else{
+      toast('All weeks already have at least one absence (or none could be added).','warn');
+    }
+  }
+
+  /* ========= Export CSV (rows/columns, grouped ranges) ========= */
+  function csvEscape(v){ var s=(v==null?'':String(v)); if(s.indexOf('"')>-1) s=s.replace(/"/g,'""'); return '"'+s+'"'; }
+  function exportCSV(rangeStart, rangeEnd, fileName){
+    try{
+      var startVal=document.getElementById('start').value;
+      var endVal=document.getElementById('end').value;
+      if(!startVal||!endVal){ alert('Set start/end dates first.'); return; }
+
+      var startTime = (document.getElementById('startTime')||{}).value || '08:00';
+      var endTime   = (document.getElementById('endTime')||{}).value   || '17:00';
+      var alCode    = (document.getElementById('alCode')||{}).value    || 'NLJV';
+      var hoursPerDay = Math.max(1, Number((document.getElementById('hoursPerDay')||{}).value)||8);
+
+      var byPerson = new Map();
+      SCHEDULE.forEach(function(rec,k){
+        var d=new Date(k);
+        (rec.AL||[]).forEach(function(a){
+          var key=a.team+'|'+a.person+'|'+(a.id||'');
+          var arr = byPerson.get(key); if(!arr){ arr=[]; byPerson.set(key,arr); }
+          if((!rangeStart || d>=rangeStart) && (!rangeEnd || d<=rangeEnd)) arr.push(d);
+        });
+      });
+
+      function groupConsecutive(dates){
+        dates=dates.slice().sort((a,b)=>a-b);
+        var groups=[]; if(!dates.length) return groups;
+        var curStart=dates[0], curEnd=dates[0];
+        function isNextBiz(a,b){ var n=nextBusinessDay(a); return ymd(n)===ymd(b); }
+        for(var i=1;i<dates.length;i++){
+          if(isNextBiz(curEnd, dates[i])){ curEnd=dates[i]; }
+          else{ groups.push([curStart,curEnd]); curStart=dates[i]; curEnd=dates[i]; }
+        }
+        groups.push([curStart,curEnd]); return groups;
+      }
+
+      var rows=[];
+      var header=['Reference Number','Action','Absence Code','Start Date','Start Time','End Date','End Time','Evidence','Expected End Date','Note','Payroll','Do Not Process Before','Duration In Hours','Days','Working Days','Processed'];
+      rows.push(header.map(csvEscape).join(','));
+
+      byPerson.forEach(function(dates,key){
+        if(!dates.length) return;
+        var parts=key.split('|'); var team=parts[0], person=parts[1], id=parts[2];
+        var groups=groupConsecutive(dates);
+        for(var gi=0; gi<groups.length; gi++){
+          var g=groups[gi], s=g[0], e=g[1];
+          var workDays=0, d=new Date(s); while(d<=e){ if(isBiz(d)) workDays++; d=addDays(d,1); }
+          var duration = workDays * hoursPerDay;
+          var note = 'EMP='+person+';MGR='+team; // embed metadata for import
+
+          var row=[
+            id||'', 'ADD', alCode,
+            dmy(s), startTime,
+            dmy(e), endTime,
+            '', '', note, '', '',
+            String(duration), '', '', 'Processed'
+          ];
+          rows.push(row.map(csvEscape).join(','));
+        }
+      });
+
+      var csv=rows.join('\r\n');
+      var blob=new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a'); a.href=url; a.download=fileName||'nl-annual-leave-import.csv'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 500);
+      toast('CSV downloaded.','ok');
+    }catch(err){
+      console.error(err);
+      toast('CSV export error: '+(err&&err.message?err.message:String(err)),'bad');
+    }
+  }
+
+  /* ========= Import CSV → Calendar ========= */
+  function parseCSV(text){
+    var lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(Boolean);
+    if(!lines.length) return [];
+    function splitLine(l){
+      var out=[], cur='', i=0, inQ=false;
+      while(i<l.length){
+        var ch=l[i];
+        if(ch==='"' ){ if(inQ && l[i+1]==='"'){ cur+='"'; i+=2; continue; } inQ=!inQ; i++; continue; }
+        if(ch===',' && !inQ){ out.push(cur); cur=''; i++; continue; }
+        cur+=ch; i++;
+      }
+      out.push(cur); return out;
+    }
+    var header=splitLine(lines[0]).map(s=>s.trim().toLowerCase());
+    var rows=[];
+    for(var i=1;i<lines.length;i++){
+      var cells=splitLine(lines[i]);
+      if(!cells.length) continue;
+      var row={}; for(var c=0;c<header.length;c++){ row[header[c]]=(cells[c]||'').trim(); }
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function importCSV(){
+    var fileInput=document.getElementById('csvFile');
+    fileInput.onchange=function(){
+      var f=fileInput.files[0]; if(!f){ return; }
+      var reader=new FileReader();
+      reader.onload=function(){
+        try{
+          var rows=parseCSV(String(reader.result||''));
+          if(!rows.length){ toast('No rows found in CSV.','warn'); return; }
+
+          function col(row, name){
+            var keys=Object.keys(row);
+            var exact=keys.find(k=>k===name.toLowerCase()); if(exact) return row[exact];
+            for(var k of keys){ if(k.replace(/\s+/g,'')===name.toLowerCase().replace(/\s+/g,'')) return row[k]; }
+            return '';
+          }
+
+          var idDir = buildIdDirectory();
+          var added=0, minD=null, maxD=null;
+
+          rows.forEach(function(r){
+            var ref= (col(r,'reference number') || col(r,'reference') || col(r,'id') || '').trim();
+            var sd = col(r,'start date') || col(r,'startdate');
+            var ed = col(r,'end date')   || col(r,'enddate');
+            if(!sd||!ed||!ref) return;
+
+            var s=parseDMY(sd), e=parseDMY(ed);
+            if(isNaN(s)||isNaN(e)) return;
+
+            var meta = parseNoteMeta(col(r,'note'));
+            var personRec = EMPLOYEES.find(x=>String(x.id||'').trim()===ref);
+            if(!personRec){
+              var hint=idDir.get(ref) || meta || {};
+              var name = hint.name || ('ID '+ref);
+              var manager = hint.manager || ORDER_TEAMS[ (EMPLOYEES.length) % ORDER_TEAMS.length ];
+              personRec = { id:ref, name:name, manager:manager, days:0, lts:false };
+              EMPLOYEES.push(personRec);
+            }
+
+            for(var cur=new Date(s); cur<=e; cur=addDays(cur,1)){
+              if(!isBiz(cur)) continue;
+              var k=ymd(cur), rec=ensureDay(k);
+              if(!rec.AL.some(a=>a.id===personRec.id)){
+                rec.AL.push({team:personRec.manager, person:personRec.name, id:personRec.id});
+                added++;
+              }
+              if(!minD || cur<minD) minD=new Date(cur);
+              if(!maxD || cur>maxD) maxD=new Date(cur);
+            }
+          });
+
+          renderEmpTable();
+          var anyAL=false; SCHEDULE.forEach(r=>{ if((r.AL||[]).length) anyAL=true; });
+          document.getElementById('exportBtn').disabled = !anyAL; document.getElementById('exportJanSepBtn').disabled=!anyAL; document.getElementById('exportOctDecBtn').disabled=!anyAL;
+
+          if(added>0){
+            var startInput=document.getElementById('start');
+            var endInput=document.getElementById('end');
+            var curStart=parseISODateInput(startInput.value);
+            var curEnd=parseISODateInput(endInput.value);
+            var noDatesSet = isNaN(curStart) || isNaN(curEnd);
+            var noOverlap = !noDatesSet && (curEnd < minD || curStart > maxD);
+            if(noDatesSet || noOverlap){
+              startInput.value = minD.toISOString().slice(0,10);
+              endInput.value   = maxD.toISOString().slice(0,10);
+              curStart=minD; curEnd=maxD;
+            }
+            buildCalendarPreview(curStart, curEnd);
+            document.getElementById('status').innerHTML =
+              '<span class="ok">Imported '+added+' day(s). Range: '+dmy(minD)+' → '+dmy(maxD)+'</span>';
+          }else{
+            toast('Nothing to import from the file.','warn');
+          }
+        }catch(err){
+          console.error(err); toast('CSV parse error: '+(err&&err.message?err.message:String(err)),'bad');
+        }finally{
+          fileInput.value='';
+        }
+      };
+      reader.readAsText(f);
+    };
+    fileInput.click();
+  }
+
+  /* ========= LTS Modal ========= */
+  function openLTS(i){
+    LTS_TARGET=i;
+    var e=EMPLOYEES[i];
+    document.getElementById('ltsTitle').textContent='Long-term sickness — '+e.name;
+    document.getElementById('ltsBaseYear').value = new Date().getFullYear();
+    document.getElementById('ltsFrom').value = '';
+    document.getElementById('ltsTo').value = '';
+    document.getElementById('ltsModal').classList.add('show');
+  }
+  function closeLTS(){ document.getElementById('ltsModal').classList.remove('show'); }
+
+  /* ========= Events ========= */
+  document.getElementById('run').addEventListener('click', generate);
+  document.getElementById('reshuffle').addEventListener('click', function(){ document.getElementById('seed').value=''; generate(); });
+  document.getElementById('exportBtn').addEventListener('click', function(){ var s=parseISODateInput(document.getElementById('start').value),e=parseISODateInput(document.getElementById('end').value); exportCSV(s,e,'nl-annual-leave-full-period.csv'); });
+  document.getElementById('importBtn').addEventListener('click', importCSV);
+  document.getElementById('enforceWeeksBtn').addEventListener('click', enforceWeeks);
+
+  document.getElementById('viewMode').addEventListener('click', function(e){
+    var b=e.target.closest('button[data-mode]'); if(!b) return;
+    document.querySelectorAll('#viewMode button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    VIEW_MODE=b.getAttribute('data-mode'); document.getElementById('monthNav').style.display=(VIEW_MODE==='tabs'?'inline-flex':'none');
+    var s=document.getElementById('start').value, e=document.getElementById('end').value;
+    buildCalendarPreview(s?parseISODateInput(s):null, e?parseISODateInput(e):null);
+  });
+
+  document.getElementById('addEmp').addEventListener('click', addEmployee);
+  document.getElementById('clearEmp').addEventListener('click', clearEmployees);
+  document.getElementById('seedEmp').addEventListener('click', seedEmployees);
+
+  document.getElementById('empTable').addEventListener('input', function(e){
+    if(e.target.classList.contains('days-input')){
+      var i=Number(e.target.getAttribute('data-i')); if(isNaN(i)||!EMPLOYEES[i]) return;
+      EMPLOYEES[i].days = Math.max(0, Math.round(Number(e.target.value)||0));
+    }
+  });
+  document.getElementById('empTable').addEventListener('click', function(e){
+    var rm=e.target.getAttribute('data-remove');
+    if(rm!=null){ EMPLOYEES.splice(Number(rm),1); renderEmpTable(); return; }
+    if(e.target.classList.contains('lts-edit')){ openLTS(Number(e.target.getAttribute('data-i'))); }
+  });
+  document.getElementById('empTable').addEventListener('change', function(e){
+    if(e.target.classList.contains('lts-toggle')){
+      var i=Number(e.target.getAttribute('data-i')); if(!EMPLOYEES[i]) return;
+      EMPLOYEES[i].lts = e.target.checked;
+    }
+  });
+
+  // LTS modal buttons
+  document.querySelectorAll('[data-lts-preset]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var mode=this.getAttribute('data-lts-preset');
+      var y=Number(document.getElementById('ltsBaseYear').value)||new Date().getFullYear();
+      if(mode==='clear'){ document.getElementById('ltsFrom').value=''; document.getElementById('ltsTo').value=''; return; }
+      if(mode==='cal'){ document.getElementById('ltsFrom').value=y+'-01-01'; document.getElementById('ltsTo').value=y+'-12-31'; }
+      if(mode==='juljun'){ document.getElementById('ltsFrom').value=y+'-07-01'; document.getElementById('ltsTo').value=(y+1)+'-06-30'; }
+      if(mode==='qtr'){
+        var qStart=[0,3,6,9][Math.floor((new Date().getMonth())/3)];
+        var s=new Date(y,qStart,1), e=new Date(y,qStart+3,0);
+        document.getElementById('ltsFrom').value = s.toISOString().slice(0,10);
+        document.getElementById('ltsTo').value   = e.toISOString().slice(0,10);
+      }
+    });
+  });
+  document.getElementById('ltsCancel').addEventListener('click', closeLTS);
+  document.getElementById('ltsApply').addEventListener('click', function(){
+    if(LTS_TARGET==null) return closeLTS();
+    var from=document.getElementById('ltsFrom').value, to=document.getElementById('ltsTo').value;
+    var s=parseISODateInput(from), e=parseISODateInput(to);
+    var ok=!isNaN(s)&&!isNaN(e)&&s<=e;
+    EMPLOYEES[LTS_TARGET].lts = ok;
+    EMPLOYEES[LTS_TARGET].ltsFrom = ok?s:null;
+    EMPLOYEES[LTS_TARGET].ltsTo   = ok?e:null;
+    renderEmpTable(); renderLtsConfigList(); closeLTS();
+  });
+
+
+  /* ========= V2 shared UX helpers ========= */
+  window.MORE_DAYS_IN=window.MORE_DAYS_IN||{};
+  window.SICK_ADVANCED_CONFIG=window.SICK_ADVANCED_CONFIG||{blocksPerPeriod:1,minLen:2,maxLen:5};
+  function setupYearAndRange(){
+    var ySel=document.getElementById('scheduleYear'); if(!ySel) return; var now=new Date().getFullYear(); ySel.innerHTML='';
+    for(var y=now-1;y<=now+4;y++){ var o=document.createElement('option');o.value=y;o.textContent=y;if(y===now)o.selected=true;ySel.appendChild(o); }
+    function applyYear(){ var y=Number(ySel.value)||now; document.getElementById('start').value=y+'-01-01'; document.getElementById('end').value=y+'-12-31'; setupMoreDaysUI(); }
+    ySel.addEventListener('change',applyYear); applyYear();
+    document.getElementById('toggleManualRange').addEventListener('click',function(){ var w=document.getElementById('manualRangeWrap'); w.style.display=w.style.display==='none'?'block':'none'; });
+  }
+  function setupMoreDaysUI(){
+    var m=document.getElementById('moreMonth'),wrap=document.getElementById('moreWeekWrap'); if(!m||!wrap)return;
+    if(!m.options.length) MONTH_NAMES.forEach(function(n,i){var o=document.createElement('option');o.value=i;o.textContent=n;m.appendChild(o);});
+    function render(){ var month=Number(m.value)||0;wrap.innerHTML='';var y=Number((document.getElementById('scheduleYear')||{}).value)||new Date().getFullYear();var fm=new Date(y,month,1);while(fm.getDay()!==1)fm=addDays(fm,1);var count=0,d=new Date(fm);while(d.getMonth()===month){count++;d=addDays(d,7);}for(var i=0;i<5;i++){var lbl=document.createElement('label');lbl.style.cssText='display:inline-flex;align-items:center;gap:4px';var cb=document.createElement('input');cb.type='checkbox';cb.value=i;cb.disabled=i>=count;cb.checked=((window.MORE_DAYS_IN[month]||[]).indexOf(i)>=0);cb.addEventListener('change',function(){var ix=Number(this.value),a=window.MORE_DAYS_IN[month]||(window.MORE_DAYS_IN[month]=[]);if(this.checked&&a.indexOf(ix)<0)a.push(ix);if(!this.checked&&a.indexOf(ix)>=0)a.splice(a.indexOf(ix),1);});lbl.appendChild(cb);var sp=document.createElement('span');sp.textContent='Week '+(i+1);lbl.appendChild(sp);wrap.appendChild(lbl);} }
+    m.onchange=render;render();
+  }
+  function downloadEmployeesTemplate(){ var csv='Manager,Employee,ID,Days\r\nJulia Block,Example Employee,12345,25\r\n'; var b=new Blob([csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='nl-leave-scheduler-employees-template.csv';a.click();setTimeout(function(){URL.revokeObjectURL(u)},300); }
+  function importEmployeesCSV(){ var inp=document.getElementById('empCsvFile'); inp.onchange=function(){var f=inp.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var rows=parseCSV(String(r.result||''));var added=0;rows.forEach(function(x){var manager=x.manager||x.mgr||'',name=x.employee||x.name||'',id=x.id||x['reference number']||'',days=Number(x.days||x.quota||0)||0;if(!name)return;EMPLOYEES.push({manager:manager||'Julia Block',name:name,id:id,days:Math.max(0,Math.round(days)),lts:false,ltsFrom:null,ltsTo:null});added++;});renderEmpTable();toast('Imported '+added+' employee(s).','ok');}catch(e){toast('Employees CSV error: '+e.message,'bad')}finally{inp.value='';}};r.readAsText(f);};inp.click(); }
+  function sicknessRanges(){
+    var by=new Map();SCHEDULE.forEach(function(rec,k){(rec.sick||[]).forEach(function(x){if(x.lts)return;var key=x.team+'|'+x.person+'|'+(x.id||'');var a=by.get(key)||[];a.push(fromYMD(k));by.set(key,a);});});var out=[];
+    by.forEach(function(ds,key){ds.sort(function(a,b){return a-b});var p=key.split('|'),s=null,e=null;ds.forEach(function(d){if(!s){s=e=d;return;}var n=nextBusinessDay(e);if(ymd(n)===ymd(d)){e=d;}else{out.push({manager:p[0],name:p[1],start:s,end:e});s=e=d;}});if(s)out.push({manager:p[0],name:p[1],start:s,end:e});});return out.sort(function(a,b){return a.start-b.start||a.manager.localeCompare(b.manager)});
+  }
+  function renderSicknessTables(){ var rows=sicknessRanges();var html='<table class="copy-table"><thead><tr><th>Manager</th><th>Full name</th><th>Start date</th><th>End date</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td>'+escapeHtml(r.manager)+'</td><td>'+escapeHtml(r.name)+'</td><td>'+dmy(r.start)+'</td><td>'+dmy(r.end)+'</td></tr>';}).join('')+'</tbody></table>';['sicknessTableWrap','sicknessTableWrap2'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=rows.length?html:'<div class="small" style="padding:10px">No generated sickness yet.</div>';}); }
+  function copySicknessTable(){ var text='Manager\tFull name\tStart date\tEnd date\n'+sicknessRanges().map(function(r){return [r.manager,r.name,dmy(r.start),dmy(r.end)].join('\t');}).join('\n'); function done(){toast('Sickness table copied for Excel.','ok')} if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(function(){fallbackCopy(text);done();});}else{fallbackCopy(text);done();} }
+  function fallbackCopy(text){var t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  function computeAvailabilitySummaryV2(start,end){ var box=document.getElementById('availabilitySummary');if(!box||!start||!end)return;var teams=Array.from(new Set(EMPLOYEES.map(function(e){return e.manager}))).filter(Boolean),sizes={};teams.forEach(function(t){sizes[t]=EMPLOYEES.filter(function(e){return e.manager===t}).length;});var data={};for(var d=new Date(start);d<=end;d=addDays(d,1)){if(!isBiz(d))continue;var mk=d.getFullYear()+'-'+pad(d.getMonth()+1),rec=SCHEDULE.get(ymd(d))||{AL:[],sick:[]};if(!data[mk])data[mk]={};teams.forEach(function(t){if(!data[mk][t])data[mk][t]={days:0,sum:0};var unavailable=new Set();(rec.AL||[]).concat(rec.sick||[]).forEach(function(x){if(x.team===t)unavailable.add(x.person)});var sz=sizes[t]||0;data[mk][t].days++;data[mk][t].sum+=sz?Math.max(0,(sz-unavailable.size)/sz):1;});}var keys=Object.keys(data).sort();if(!keys.length){box.innerHTML='';return;}box.innerHTML='<h3 style="margin:12px 0 6px">Team availability</h3><div class="copy-table-wrap"><table class="copy-table"><thead><tr><th>Month</th>'+teams.map(function(t){return '<th>'+escapeHtml(t)+'</th>';}).join('')+'</tr></thead><tbody>'+keys.map(function(k){return '<tr><td>'+k+'</td>'+teams.map(function(t){var r=data[k][t],pct=r&&r.days?Math.round(r.sum/r.days*100):100;return '<td>'+pct+'%</td>';}).join('')+'</tr>';}).join('')+'</tbody></table></div>'; }
+  function updateHealth(start,end){ var box=document.getElementById('healthSummary');if(!box||!start||!end)return;var years=[];for(var y=start.getFullYear();y<=end.getFullYear();y++)years.push(y);var hol=mergeHolidaySets(years,{goodFriday:(document.getElementById('inclGoodFriday')||{}).value==='on',liberation:(document.getElementById('liberationDayMode')||{}).value||'five'});var used={},conflicts=0,holidayAL=0,weeksEmpty=0;EMPLOYEES.forEach(function(e){used[e.id||e.name]=0});SCHEDULE.forEach(function(rec,k){var seen=new Set();(rec.AL||[]).forEach(function(a){used[a.id||a.person]=(used[a.id||a.person]||0)+1;var kk=(a.id||a.person);if(seen.has(kk))conflicts++;seen.add(kk);if(hol.has(k))holidayAL++;if((rec.sick||[]).some(function(x){return (x.id||x.person)===kk}))conflicts++;});});buildWeeks(start,end).forEach(function(w){var any=false;for(var d=new Date(w[0]);d<=w[1];d=addDays(d,1)){if(d<start||d>end||!isBiz(d))continue;var r=SCHEDULE.get(ymd(d));if(r&&r.AL&&r.AL.length){any=true;break;}}if(!any)weeksEmpty++;});var remaining=0;EMPLOYEES.forEach(function(e){remaining+=Math.max(0,(Number(e.days)||0)-(used[e.id||e.name]||0));});var items=[['Quotas',remaining===0?'ok':'warn',remaining===0?'All quotas used':' '+remaining+' day(s) still unplaced'],['Conflicts',conflicts===0?'ok':'bad',conflicts===0?'No double-booking / sickness overlap':conflicts+' conflict(s)'],['Dutch holidays',holidayAL===0?'ok':'bad',holidayAL===0?'No AL on bank holidays':holidayAL+' AL day(s) on holidays'],['Weekly coverage',weeksEmpty===0?'ok':'warn',weeksEmpty===0?'Every week contains leave':weeksEmpty+' empty week(s)']];box.innerHTML=items.map(function(x){return '<div class="health-item '+x[1]+'"><strong>'+x[0]+'</strong><div class="small">'+x[2]+'</div></div>';}).join(''); }
+  function refreshV2Summaries(start,end){renderSicknessTables();computeAvailabilitySummaryV2(start,end);updateHealth(start,end);document.getElementById('exportJanSepBtn').disabled=false;document.getElementById('exportOctDecBtn').disabled=false;}
+  function initV2(){
+    setupYearAndRange();setupMoreDaysUI();rebuildManagerSelects();renderLtsConfigList();renderSicknessTables();
+    var mm=document.getElementById('empMgr');if(mm)mm.addEventListener('change',function(){document.getElementById('otherMgr').style.display=this.value==='__OTHER__'?'block':'none';});
+    document.getElementById('toggleManualEmp').addEventListener('click',function(){var w=document.getElementById('manualEmpWrap');w.style.display=w.style.display==='none'?'block':'none';});document.getElementById('loadEmpCsv').addEventListener('click',importEmployeesCSV);document.getElementById('dlEmpTpl').addEventListener('click',downloadEmployeesTemplate);
+    document.getElementById('toggleAdvanced').addEventListener('click',function(){document.getElementById('advancedWrap').classList.toggle('show');});
+    document.getElementById('strategy').addEventListener('change',function(){if(this.value==='advanced')document.getElementById('advancedWrap').classList.add('show');});
+    document.getElementById('ltsConfigList').addEventListener('click',function(e){var b=e.target.closest('.lts-edit');if(b)openLTS(Number(b.dataset.i));});
+    document.getElementById('copySicknessBtn').addEventListener('click',copySicknessTable);document.getElementById('copySicknessBtn2').addEventListener('click',copySicknessTable);
+    document.getElementById('sickRandomBtn').addEventListener('click',function(){document.getElementById('seed').value='';generate();});
+    document.getElementById('sickAdvBtn').addEventListener('click',function(){var c=window.SICK_ADVANCED_CONFIG;document.getElementById('sickBlocksPerPeriod').value=c.blocksPerPeriod;document.getElementById('sickMinLen').value=c.minLen;document.getElementById('sickMaxLen').value=c.maxLen;document.getElementById('sickAdvancedModal').classList.add('show');});
+    document.getElementById('sickAdvCancel').addEventListener('click',function(){document.getElementById('sickAdvancedModal').classList.remove('show');});document.getElementById('sickAdvSave').addEventListener('click',function(){var min=Math.max(1,Number(document.getElementById('sickMinLen').value)||2),max=Math.max(min,Number(document.getElementById('sickMaxLen').value)||5);window.SICK_ADVANCED_CONFIG={blocksPerPeriod:Math.max(1,Number(document.getElementById('sickBlocksPerPeriod').value)||1),minLen:min,maxLen:max};document.getElementById('sickAdvancedModal').classList.remove('show');toast('Sickness settings saved.','ok');});
+    document.getElementById('exportJanSepBtn').addEventListener('click',function(){var y=Number(document.getElementById('scheduleYear').value)||new Date().getFullYear();exportCSV(new Date(y,0,1),new Date(y,8,30),'nl-annual-leave-Jan-Sep-'+y+'.csv');});
+    document.getElementById('exportOctDecBtn').addEventListener('click',function(){var y=Number(document.getElementById('scheduleYear').value)||new Date().getFullYear();exportCSV(new Date(y,9,1),new Date(y,11,31),'nl-annual-leave-Oct-Dec-'+y+'.csv');});
+    document.querySelectorAll('.num-control button').forEach(function(b){b.addEventListener('click',function(){var i=document.getElementById(this.dataset.target);if(!i)return;var v=Number(i.value)||0,min=Number(i.min),max=Number(i.max);v+=this.classList.contains('inc')?1:-1;if(!isNaN(min))v=Math.max(min,v);if(!isNaN(max))v=Math.min(max,v);i.value=v;});});
+    document.getElementById('calWrap').addEventListener('click',function(e){var t=e.target.closest('.tag[data-type="al"]');if(!t)return;var rec=SCHEDULE.get(t.dataset.date);if(!rec)return;rec.AL=rec.AL.filter(function(a){return !(a.person===t.dataset.person&&a.team===t.dataset.team)});var st=parseISODateInput(document.getElementById('start').value),en=parseISODateInput(document.getElementById('end').value);buildCalendarPreview(st,en);refreshV2Summaries(st,en);toast('Removed '+t.dataset.person+' from '+t.dataset.date+'.','warn');});
+  }
+
+  // Top/bottom fabs
+  document.getElementById('toTop').addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
+  document.getElementById('toBottom').addEventListener('click', ()=>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}));
+
+  // Init: empty state (no data until user acts)
+  initV2();
+  renderEmpTable();
+  document.getElementById('exportBtn').disabled=true;
+})();
+</script>
+</body>
+</html>
