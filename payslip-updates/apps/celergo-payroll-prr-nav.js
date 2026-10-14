@@ -93,6 +93,7 @@ function prrHandleClick(e){
   b=e.target.closest('[data-prr-apply-elements]'); if(b){e.preventDefault();var cfgEl=prrEditableConfig(state.country),modal=$('prrElementPctModal');if(modal)modal.hidden=true;var de=prrEnsureCountry(state.country);prrRebalanceAll(state.country,de);save();prrRenderDeductions();return;}
   var b=e.target.closest('[data-prr-random-salaries]'); if(b){e.preventDefault();prrRandomizeSalaries(state.country);prrRenderSalary();return;}
   b=e.target.closest('[data-prr-random-salary]'); if(b){e.preventDefault();var d=prrEnsureCountry(state.country),id=b.dataset.prrRandomSalary;d.salaries[id]=prrRandomSalary(state.country);prrRebalanceEmployee(state.country,id,d);save();prrRenderSalary();return;}
+  b=e.target.closest('[data-prr-remove-temp]'); if(b){e.preventDefault();prrRemoveTemporaryEmployee(state.country,b.dataset.prrRemoveTemp);save();prrRenderSalary();return;}
   b=e.target.closest('[data-prr-random-singles]'); if(b){e.preventDefault();var ds=prrEnsureCountry(state.country);prrGenerateSingles(state.country,ds);ds.singlesGenerated=true;prrRebalanceAll(state.country,ds);save();prrRenderSingles();return;}
   b=e.target.closest('[data-prr-remove-single]'); if(b){e.preventDefault();var p=b.dataset.prrRemoveSingle.split('|'),dr=prrEnsureCountry(state.country);delete dr.singles[p[0]][p.slice(1).join('|')];prrRebalanceEmployee(state.country,p[0],dr);save();prrRenderSingles();return;}
   b=e.target.closest('[data-prr-add-single]'); if(b){e.preventDefault();var id=b.dataset.prrAddSingle,sel=document.querySelector('[data-prr-add-select="'+CSS.escape(id)+'"]'),da=prrEnsureCountry(state.country);if(sel&&sel.value){da.singles[id][sel.value]=prrSingleAmount(state.country,sel.value,da.salaries[id]);prrRebalanceEmployee(state.country,id,da);save();prrRenderSingles();}return;}
@@ -108,7 +109,7 @@ function prrHandleChange(e){
   input=e.target.closest('[data-prr-bucket]'); if(input){var pb=input.dataset.prrBucket.split('|');prrSetBucket(state.country,pb[0],pb.slice(1).join('|'),input.value);prrRenderDeductions();return;}
   input=e.target.closest('[data-prr-flat-rate]'); if(input){var cfgFlat=prrEditableConfig(state.country);cfgFlat.flatRate=Math.max(0,Number(input.value)||0);save();return;}
   input=e.target.closest('[data-prr-range]'); if(input){var cfg=prrEditableConfig(state.country),kind=input.dataset.prrRange;cfg[kind==='min'?'rateMin':'rateMax']=Math.max(0,Number(input.value)||0);save();return;}
-  input=e.target.closest('[data-prr-weight]'); if(input){var cfgw=prrEditableConfig(state.country),idx=Number(input.dataset.prrWeight);cfgw.weights[idx]=Math.max(0,Number(input.value)||0);var dw=prrEnsureCountry(state.country);prrRebalanceAll(state.country,dw);save();prrRenderDeductions();return;}
+  input=e.target.closest('[data-prr-weight]'); if(input){var cfgw=prrEditableConfig(state.country),idx=Number(input.dataset.prrWeight);cfgw.weights[idx]=Math.max(0,Number(input.value)||0);save();return;}
 }
 
 prrInstallStyle();
