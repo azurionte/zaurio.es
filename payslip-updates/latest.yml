@@ -1,9 +1,9 @@
-version: 5.0.61
+version: 5.0.62
 files:
-  - url: DemoBuildingToolsSetup-5.0.61.exe
-    sha512: CzflbtcvicgYi42v37k1lylaftVcGY7141wj61vg+RMq2YOkmxMGpp9VX8uQG3FVilhwYnWx3EaTgIvm9dAdFQ==
-    size: 101862712
-path: DemoBuildingToolsSetup-5.0.61.exe
-sha512: CzflbtcvicgYi42v37k1lylaftVcGY7141wj61vg+RMq2YOkmxMGpp9VX8uQG3FVilhwYnWx3EaTgIvm9dAdFQ==
-releaseNotes: 'NL Leave Scheduler V3: realistic demo-scenario engine with two-person weekly AL coverage, monthly sickness, Jan/Jul rotating LTS pairs, meaningful scenario controls, staffing guardrails and stronger validation.'
-releaseDate: '2026-10-14T15:05:52.411Z'
+  - url: DemoBuildingToolsSetup-5.0.62.exe
+    sha512: nkDX1cePPJQ2A74y2dODv48uTawz5GZTkAVBl+nBtZ1jSXgp8Q6fXKLa5tuCcALoBaT+eiW6ncS605gcTF/Bag==
+    size: 101865319
+path: DemoBuildingToolsSetup-5.0.62.exe
+sha512: nkDX1cePPJQ2A74y2dODv48uTawz5GZTkAVBl+nBtZ1jSXgp8Q6fXKLa5tuCcALoBaT+eiW6ncS605gcTF/Bag==
+releaseNotes: Adds PRR Builder as a standalone Celergo mini-app and updates Celergo Payroll Processing Tool to PRR V1.17 with temporary users, cleaner employee labels, and modal-based deduction configuration.
+releaseDate: '2026-10-14T15:14:04.210Z'
