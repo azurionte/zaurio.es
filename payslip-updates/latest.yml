@@ -1,9 +1,9 @@
-version: 5.0.60
+version: 5.0.61
 files:
-  - url: DemoBuildingToolsSetup-5.0.60.exe
-    sha512: mRo2u9sK4j3dOkrRROk1g2epB5z5dZHdKLhnCcORIzWAlAMD9wGSf2gq1SgDoFY1+G/HbdPP1ZXyrbbemtAhWA==
-    size: 101858253
-path: DemoBuildingToolsSetup-5.0.60.exe
-sha512: mRo2u9sK4j3dOkrRROk1g2epB5z5dZHdKLhnCcORIzWAlAMD9wGSf2gq1SgDoFY1+G/HbdPP1ZXyrbbemtAhWA==
-releaseNotes: Adds draggable resizable split panels to both UK and NL Leave Schedulers, with saved panel width and keyboard/double-click reset support.
-releaseDate: '2026-10-13T11:27:39.530Z'
+  - url: DemoBuildingToolsSetup-5.0.61.exe
+    sha512: QeWTM5Q0UJuWk/2L9f9t9ZyVsKASNLCBoZfnKpHarAh7d2Ftb6qFc2aHiGqtggkq79XhxN0igDGfPtS5QBJvtg==
+    size: 101861135
+path: DemoBuildingToolsSetup-5.0.61.exe
+sha512: QeWTM5Q0UJuWk/2L9f9t9ZyVsKASNLCBoZfnKpHarAh7d2Ftb6qFc2aHiGqtggkq79XhxN0igDGfPtS5QBJvtg==
+releaseNotes: 'NL Leave Scheduler V3: realistic demo-scenario engine with two-person weekly AL coverage, monthly sickness, Jan/Jul rotating LTS pairs, meaningful scenario controls, staffing guardrails and stronger validation.'
+releaseDate: '2026-10-14T02:12:53.655Z'
