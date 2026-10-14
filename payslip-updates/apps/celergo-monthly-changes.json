@@ -1,13 +1,13 @@
 {
   "app": "celergo-monthly-changes",
-  "version": "1.17",
+  "version": "1.18",
   "entry": "celergo-monthly-changes.html?app=monthly-changes",
-  "updatedAt": "2026-10-14T14:55:00.000Z",
-  "notes": "PRR UX update: removes source/rule reference boxes, adds session-only temporary employees, highlights employee IDs, and moves deduction percentage and element percentage setup into dedicated modals.",
+  "updatedAt": "2026-10-14T15:24:00.000Z",
+  "notes": "PRR V1.18: forces delivery of the completed PRR UX update so existing V1.17 installations refresh correctly. Removes source/rule reference boxes, adds session-only temporary employees, highlights employee IDs, and moves deduction percentage and element percentage setup into dedicated modals.",
   "files": [
     {
       "path": "celergo-monthly-changes.html",
-      "url": "celergo-monthly-changes.html?v=1.17"
+      "url": "celergo-monthly-changes.html?v=1.18"
     },
     {
       "path": "celergo-payroll-prr-core.js",
