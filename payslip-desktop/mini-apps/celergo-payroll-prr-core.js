@@ -115,7 +115,7 @@ function prrEnsureCountry(country){
   var d=prrCountryData(country), cfg=prrEditableConfig(country), emps=prrCurrentEmployees();
   emps.forEach(function(emp,i){
     var id=String(emp.id);
-    if(!(id in d.salaries)) d.salaries[id]=prrSampleSalary(country,i,emps.length);
+    if(!(id in d.salaries)) d.salaries[id]=emp.prrSalaryProvided?prrRound(emp.salary):prrSampleSalary(country,i,emps.length);
     if(!d.singles[id]) d.singles[id]={};
     if(!(id in d.deductionPct)) d.deductionPct[id]=prrInitialDeductionPct(cfg);
     if(!d.buckets[id]) d.buckets[id]={};

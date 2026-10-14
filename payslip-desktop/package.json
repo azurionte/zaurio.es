@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.61",
+  "version": "5.0.62",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "NL Leave Scheduler V3: realistic demo-scenario engine with two-person weekly AL coverage, monthly sickness, Jan/Jul rotating LTS pairs, meaningful scenario controls, staffing guardrails and stronger validation."
+      "releaseNotes": "Adds PRR Builder as a standalone Celergo mini-app and updates Celergo Payroll Processing Tool to PRR V1.17 with temporary users, cleaner employee labels, and modal-based deduction configuration."
     },
     "nsis": {
       "perMachine": false,

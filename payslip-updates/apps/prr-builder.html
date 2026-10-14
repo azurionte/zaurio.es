@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PRR Builder</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{--bg:#07111f;--panel:#0b1728;--line:rgba(148,163,184,.26);--text:#e5edf8;--muted:#9fb0c9;--blue:#60a5fa;--green:#86efac;--field:#071024}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}.app{min-height:100vh;background:linear-gradient(180deg,#07111f,#0b1020);padding-bottom:82px}.bar{min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:#101827;padding:10px 18px;position:sticky;top:0;z-index:40}.title{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:950}.tag{display:inline-flex;padding:4px 8px;border-radius:999px;border:1px solid rgba(134,239,172,.34);background:rgba(22,163,74,.13);color:#bbf7d0;font-size:12px}.steps{display:flex;gap:8px;flex-wrap:wrap}.step-dot{border:1px solid var(--line);background:#071024;color:#9fb0c9;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900}.step-dot.active{border-color:rgba(96,165,250,.62);background:rgba(37,99,235,.18);color:#bfdbfe}.step-dot.done{border-color:rgba(134,239,172,.4);color:#bbf7d0}.content{padding:22px}.screen{display:none;width:min(1180px,100%);margin:0 auto}.screen.active{display:block}.panel{border:1px solid var(--line);background:rgba(15,23,42,.72);border-radius:10px;padding:18px}.panel h2{margin:0 0 8px}.panel p{color:var(--muted);line-height:1.45}.grid{display:grid;gap:12px}.two{grid-template-columns:1fr 1fr}label{display:block;font-size:12px;color:#cbd5e1;font-weight:850;margin-bottom:6px}input,select{width:100%;border:1px solid var(--line);background:var(--field);color:#fff;border-radius:8px;padding:10px 11px;min-height:42px}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0}.btn{border:1px solid rgba(96,165,250,.38);background:rgba(37,99,235,.16);color:#eaf2ff;border-radius:999px;padding:10px 14px;font-weight:900;display:inline-flex;align-items:center;gap:8px;cursor:pointer}.btn.primary{background:var(--blue);border-color:var(--blue);color:#05111f}.btn.good{background:#22c55e;border-color:#22c55e;color:#04130a}.mini-btn{border:1px solid var(--line);background:#111827;color:#fff;border-radius:8px;padding:8px 9px;cursor:pointer}.muted{color:var(--muted)}.notice{border:1px solid var(--line);background:rgba(96,165,250,.1);border-radius:8px;padding:12px}.footer{position:fixed;left:0;right:0;bottom:0;background:#101827;border-top:1px solid var(--line);padding:12px 22px;display:flex;justify-content:space-between;z-index:50}.employee-list{display:grid;gap:9px;margin-top:12px}.employee-row{display:grid;grid-template-columns:1fr 180px auto;gap:10px;align-items:center;border:1px solid var(--line);background:#071024;border-radius:9px;padding:10px}.employee-pill{display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(96,165,250,.3);background:rgba(96,165,250,.1);border-radius:999px;padding:6px 10px}.future-import{border:1px dashed rgba(148,163,184,.45);border-radius:10px;padding:14px;margin:14px 0;background:rgba(148,163,184,.04)}.scroll{overflow:auto;max-height:430px;border:1px solid var(--line);border-radius:8px}table{width:100%;border-collapse:collapse;background:#071024}th,td{border-bottom:1px solid rgba(148,163,184,.18);padding:9px;text-align:left;font-size:12px;white-space:nowrap}th{background:#101827;color:#cbd5e1;position:sticky;top:0}@media(max-width:700px){.two,.employee-row{grid-template-columns:1fr}.footer{position:sticky}.app{padding-bottom:0}}
+</style>
+</head>
+<body><div class="app">
+<header class="bar"><div class="title"><i class="fa-solid fa-file-invoice-dollar"></i> PRR Builder <span class="tag">V1.0</span></div><div class="steps" id="steps"></div></header>
+<main class="content">
+<section class="screen active" data-screen="0"><div class="panel">
+<h2>Build the employee population</h2>
+<p>Start a standalone PRR for France or Germany. For now, add employees manually. A file-import source will plug into this same employee model in the next iteration.</p>
+<div class="grid two"><div><label>Country</label><select id="country"><option value="FR">France</option><option value="DE">Germany</option></select></div><div><label>Pay month</label><input id="month" type="month"></div></div>
+<div class="future-import"><b><i class="fa-solid fa-file-arrow-up"></i> Employee file import</b><div class="muted" style="margin-top:5px">Prepared as the future source. Once we define the files, imported Employee ID + Salary records will feed the exact same PRR steps below.</div></div>
+<h3>Manual employees</h3>
+<div class="grid two"><div><label>Employee ID</label><input id="manualId" placeholder="e.g. 10001"></div><div><label>Salary</label><input id="manualSalary" type="number" min="0" step="0.01" placeholder="5000.00"></div></div>
+<div class="toolbar"><button class="btn primary" id="addManual" type="button"><i class="fa-solid fa-plus"></i>Add employee</button></div>
+<div id="manualMsg" class="notice" hidden></div><div id="employeeList" class="employee-list"></div>
+</div></section>
+</main>
+<footer class="footer"><button class="btn" id="back" type="button"><i class="fa-solid fa-arrow-left"></i>Back</button><button class="btn primary" id="next" type="button">Next<i class="fa-solid fa-arrow-right"></i></button></footer>
+</div>
+<script>
+var state={country:'FR',month:(new Date()).toISOString().slice(0,7),employees:[]};
+var step=0;
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]})}
+function money(n){return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+function n2(n){return Number(n||0).toFixed(2)}
+function currentMonth(){return state.month}
+function save(){}
+function employees(){return state.employees}
+function template(){return {label:state.country==='FR'?'France':'Germany'}}
+function download(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},2000)}
+function xmlDoc(text){return new DOMParser().parseFromString(text,'application/xml')}
+function xmlOut(doc){return new XMLSerializer().serializeToString(doc)}
+function childEls(el,name){return Array.from(el.children).filter(function(x){return !name||x.localName===name})}
+function relTargetPath(target){var clean=String(target||'').replace(/^\/+/, '');return clean.indexOf('xl/')===0?clean:'xl/'+clean}
+function cellRef(rowNum,colIndex){var n=colIndex+1,s='';while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s+rowNum}
+function colFromRef(ref){var n=0;String(ref).replace(/[0-9]/g,'').split('').forEach(function(ch){n=n*26+(ch.charCodeAt(0)-64)});return n-1}
+function findRow(sheetData,rowNum){return childEls(sheetData,'row').find(function(r){return Number(r.getAttribute('r'))===rowNum})}
+function ensureRow(doc,sheetData,rowNum){var row=findRow(sheetData,rowNum);if(row)return row;row=doc.createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','row');row.setAttribute('r',String(rowNum));var next=childEls(sheetData,'row').find(function(r){return Number(r.getAttribute('r'))>rowNum});sheetData.insertBefore(row,next||null);return row}
+function findCell(row,addr){return childEls(row,'c').find(function(c){return c.getAttribute('r')===addr})}
+function ensureCell(doc,row,addr,colIndex,styleCell){var cell=findCell(row,addr);if(cell)return cell;cell=doc.createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','c');cell.setAttribute('r',addr);if(styleCell&&styleCell.getAttribute('s'))cell.setAttribute('s',styleCell.getAttribute('s'));var next=childEls(row,'c').find(function(c){return colFromRef(c.getAttribute('r'))>colIndex});row.insertBefore(cell,next||null);return cell}
+function clearCell(cell){Array.from(cell.children).forEach(function(ch){cell.removeChild(ch)});cell.removeAttribute('t')}
+</script>
+<script src="celergo-payroll-prr-core.js"></script>
+<script src="celergo-payroll-prr-ui.js"></script>
+<script>
+prrInstallStyle();prrInstallScreens();
+prrPhaseBanner=function(){return '<div class="phase-banner prr-phase"><span>STANDALONE PRR</span><strong>PRR Builder</strong><small>Country rules, salary setup, single elements, deductions and exact-template export.</small></div>'};
+document.querySelectorAll('.screen[data-screen="0"]').forEach(function(s){var b=s.querySelector('.phase-banner');if(b)b.remove()});
+var order=[0,5,6,7,8], labels=['Employees','Salaries','Single elements','Deductions','Export'];
+function renderSteps(){var pos=order.indexOf(step);$('steps').innerHTML=labels.map(function(l,i){return '<button class="step-dot '+(i===pos?'active':i<pos?'done':'')+'" type="button" data-standalone-step="'+order[i]+'">'+(i+1)+'. '+l+'</button>'}).join('')}
+function renderEmployees(){
+ $('employeeList').innerHTML=state.employees.length?state.employees.map(function(emp){return '<div class="employee-row"><div><span class="employee-pill"><span class="muted">Employee</span><b>'+esc(emp.id)+'</b></span></div><div>'+money(emp.salary)+'</div><button class="mini-btn" data-remove-manual="'+esc(emp.id)+'" type="button"><i class="fa-solid fa-trash"></i> Remove</button></div>'}).join(''):'<div class="muted">No employees added yet.</div>';
+}
+function resetPRRForPopulation(){state.prr={countries:{},configByCountry:{}};PRR_TEMP_EMPLOYEES={};}
+function show(target){
+ if(order.indexOf(target)<0)return;
+ if(target!==0&&!state.employees.length){$('manualMsg').hidden=false;$('manualMsg').textContent='Add at least one employee before continuing.';return}
+ step=target;document.querySelectorAll('.screen').forEach(function(x){x.classList.toggle('active',Number(x.dataset.screen)===step)});
+ var pos=order.indexOf(step);$('back').disabled=pos===0;$('next').innerHTML=pos===order.length-1?'Done':'Next<i class="fa-solid fa-arrow-right"></i>';renderSteps();
+ if(step===5)prrRenderSalary();if(step===6)prrRenderSingles();if(step===7)prrRenderDeductions();if(step===8)prrRenderExport();
+}
+$('month').value=state.month;$('country').value=state.country;renderEmployees();renderSteps();show(0);
+$('addManual').onclick=function(){var id=$('manualId').value.trim(),salary=Number($('manualSalary').value);if(!id||!Number.isFinite(salary)||salary<=0){$('manualMsg').hidden=false;$('manualMsg').textContent='Employee ID and a positive salary are required.';return}if(state.employees.some(function(e){return String(e.id)===id})){ $('manualMsg').hidden=false;$('manualMsg').textContent='That Employee ID already exists.';return}state.employees.push({id:id,salary:salary,prrSalaryProvided:true});$('manualId').value='';$('manualSalary').value='';$('manualMsg').hidden=true;renderEmployees()};
+$('country').onchange=function(){state.country=this.value;resetPRRForPopulation();};
+$('month').onchange=function(){state.month=this.value||state.month};
+$('next').onclick=function(){var pos=order.indexOf(step);if(pos===order.length-1){show(0);return}show(order[pos+1])};
+$('back').onclick=function(){var pos=order.indexOf(step);if(pos>0)show(order[pos-1])};
+document.addEventListener('click',function(e){var s=e.target.closest('[data-standalone-step]');if(s){show(Number(s.dataset.standaloneStep));return}var r=e.target.closest('[data-remove-manual]');if(r){state.employees=state.employees.filter(function(emp){return String(emp.id)!==r.dataset.removeManual});resetPRRForPopulation();renderEmployees();return}
+ var b=e.target.closest('[data-prr-toggle-temp]');if(b){var f=$('prrTempEmployeeForm');if(f)f.hidden=!f.hidden;return}
+ b=e.target.closest('[data-prr-add-temp]');if(b){try{prrAddTemporaryEmployee(state.country,$('prrTempEmployeeId').value,$('prrTempEmployeeSalary').value);$('prrTempEmployeeId').value='';$('prrTempEmployeeSalary').value='';$('prrTempEmployeeForm').hidden=true;prrRenderSalary()}catch(err){alert(err.message)}return}
+ b=e.target.closest('[data-prr-random-salaries]');if(b){prrRandomizeSalaries(state.country);prrRenderSalary();return}
+ b=e.target.closest('[data-prr-random-salary]');if(b){var d=prrEnsureCountry(state.country),id=b.dataset.prrRandomSalary;d.salaries[id]=prrRandomSalary(state.country);prrRebalanceEmployee(state.country,id,d);prrRenderSalary();return}
+ b=e.target.closest('[data-prr-random-singles]');if(b){var ds=prrEnsureCountry(state.country);prrGenerateSingles(state.country,ds);ds.singlesGenerated=true;prrRebalanceAll(state.country,ds);prrRenderSingles();return}
+ b=e.target.closest('[data-prr-remove-single]');if(b){var p=b.dataset.prrRemoveSingle.split('|'),dr=prrEnsureCountry(state.country);delete dr.singles[p[0]][p.slice(1).join('|')];prrRebalanceEmployee(state.country,p[0],dr);prrRenderSingles();return}
+ b=e.target.closest('[data-prr-add-single]');if(b){var id2=b.dataset.prrAddSingle,sel=document.querySelector('[data-prr-add-select="'+CSS.escape(id2)+'"]'),da=prrEnsureCountry(state.country);if(sel&&sel.value){da.singles[id2][sel.value]=prrSingleAmount(state.country,sel.value,da.salaries[id2]);prrRebalanceEmployee(state.country,id2,da);prrRenderSingles()}return}
+ b=e.target.closest('[data-prr-open-modal]');if(b){var m=$(b.dataset.prrOpenModal);if(m)m.hidden=false;return}
+ b=e.target.closest('[data-prr-close-modal]');if(b){var cm=$(b.dataset.prrCloseModal);if(cm)cm.hidden=true;return}
+ b=e.target.closest('[data-prr-rate-mode]');if(b){var cfg=prrEditableConfig(state.country);cfg.rateMode=b.dataset.prrRateMode;prrRenderDeductions();var mm=$('prrDeductionPctModal');if(mm)mm.hidden=false;return}
+ b=e.target.closest('[data-prr-apply-rate-setup]');if(b){prrRandomizeDeductions(state.country);prrRenderDeductions();return}
+ b=e.target.closest('[data-prr-apply-elements]');if(b){var de=prrEnsureCountry(state.country);prrRebalanceAll(state.country,de);prrRenderDeductions();return}
+ b=e.target.closest('[data-prr-random-deductions]');if(b){prrRandomizeDeductions(state.country);prrRenderDeductions();return}
+ b=e.target.closest('[data-prr-reset-locks]');if(b){var dl=prrEnsureCountry(state.country);prrCurrentEmployees().forEach(function(emp){dl.locks[String(emp.id)]={};prrRebalanceEmployee(state.country,String(emp.id),dl)});prrRenderDeductions();return}
+ b=e.target.closest('[data-prr-download]');if(b){prrDownloadXLSX().catch(function(err){console.error(err);alert('Could not build the PRR workbook.')});return}
+});
+document.addEventListener('change',function(e){var input=e.target.closest('[data-prr-salary]');if(input){var d=prrEnsureCountry(state.country),id=input.dataset.prrSalary;d.salaries[id]=Math.max(0,prrRound(input.value));prrRebalanceEmployee(state.country,id,d);return}
+ input=e.target.closest('[data-prr-single-amount]');if(input){var p=input.dataset.prrSingleAmount.split('|'),ds=prrEnsureCountry(state.country),sid=p[0],el=p.slice(1).join('|');ds.singles[sid][el]=Math.max(0,prrRound(input.value));prrRebalanceEmployee(state.country,sid,ds);return}
+ input=e.target.closest('[data-prr-pct]');if(input){var dd=prrEnsureCountry(state.country),pid=input.dataset.prrPct;dd.deductionPct[pid]=Math.max(0,Number(input.value)||0);prrRebalanceEmployee(state.country,pid,dd);prrRenderDeductions();return}
+ input=e.target.closest('[data-prr-bucket]');if(input){var pb=input.dataset.prrBucket.split('|');prrSetBucket(state.country,pb[0],pb.slice(1).join('|'),input.value);prrRenderDeductions();return}
+ input=e.target.closest('[data-prr-flat-rate]');if(input){prrEditableConfig(state.country).flatRate=Math.max(0,Number(input.value)||0);return}
+ input=e.target.closest('[data-prr-range]');if(input){var c=prrEditableConfig(state.country),k=input.dataset.prrRange;c[k==='min'?'rateMin':'rateMax']=Math.max(0,Number(input.value)||0);return}
+ input=e.target.closest('[data-prr-weight]');if(input){var cw=prrEditableConfig(state.country),ix=Number(input.dataset.prrWeight);cw.weights[ix]=Math.max(0,Number(input.value)||0);var dw=prrEnsureCountry(state.country);prrRebalanceAll(state.country,dw);return}
+});
+async function prrDownloadXLSX(){
+ var rows=prrBuildRows(state.country),config=prrCountryConfig(state.country),names=['celergo-prr-template-1.txt','celergo-prr-template-2.txt','celergo-prr-template-3.txt','celergo-prr-template-4.txt'];
+ var chunks=await Promise.all(names.map(async function(n){var r=await fetch(n);if(!r.ok)throw new Error('Template unavailable');return r.text()}));
+ var raw=atob(chunks.join('').replace(/\s+/g,'')),bytes=new Uint8Array(raw.length);for(var bi=0;bi<raw.length;bi++)bytes[bi]=raw.charCodeAt(bi);
+ var zip=await JSZip.loadAsync(bytes),workbook=xmlDoc(await zip.file('xl/workbook.xml').async('string')),rels=xmlDoc(await zip.file('xl/_rels/workbook.xml.rels').async('string'));
+ var first=workbook.getElementsByTagNameNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','sheet')[0]||workbook.getElementsByTagName('sheet')[0],rid=first.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id')||first.getAttribute('r:id');
+ var rel=Array.from(rels.getElementsByTagName('Relationship')).find(function(x){return x.getAttribute('Id')===rid}),path=relTargetPath(rel&&rel.getAttribute('Target')||'worksheets/sheet1.xml'),doc=xmlDoc(await zip.file(path).async('string')),sheetData=doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','sheetData')[0]||doc.getElementsByTagName('sheetData')[0],styleRow=findRow(sheetData,2)||findRow(sheetData,3);
+ function setCell(cell,value,col){clearCell(cell);var numeric=(col===4&&value!==''&&value!=null)||(col===3&&/^\d+$/.test(String(value)));if(numeric){var v=doc.createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','v');v.textContent=String(Number(value));cell.appendChild(v);return}cell.setAttribute('t','inlineStr');var is=doc.createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','is'),t=doc.createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','t');t.textContent=value==null?'':String(value);is.appendChild(t);cell.appendChild(is)}
+ rows.forEach(function(row,ri){var rn=2+ri,re=ensureRow(doc,sheetData,rn);PRR_COLUMNS.forEach(function(h,ci){var addr=cellRef(rn,ci),sc=styleRow&&findCell(styleRow,cellRef(2,ci)),cell=ensureCell(doc,re,addr,ci,sc);setCell(cell,row[ci],ci)})});
+ var dim=doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','dimension')[0]||doc.getElementsByTagName('dimension')[0];if(dim&&rows.length+1>85)dim.setAttribute('ref','A1:L'+(rows.length+1));zip.file(path,xmlOut(doc));
+ var blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});download(blob,'PRR_DEMO_'+config.label+' Local Monthly_template.xlsx')
+}
+</script></body></html>

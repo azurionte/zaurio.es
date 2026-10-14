@@ -1,0 +1,37 @@
+{
+  "app": "prr-builder",
+  "version": "1.0",
+  "entry": "prr-builder.html",
+  "updatedAt": "2026-10-14T15:05:00.000Z",
+  "notes": "Standalone PRR Builder for France and Germany using the shared PRR engine. Starts with manual Employee ID + Salary entry and is structured for a future file-import source.",
+  "files": [
+    {
+      "path": "prr-builder.html",
+      "url": "prr-builder.html?v=1.0"
+    },
+    {
+      "path": "celergo-payroll-prr-core.js",
+      "url": "celergo-payroll-prr-core.js?v=1.17"
+    },
+    {
+      "path": "celergo-payroll-prr-ui.js",
+      "url": "celergo-payroll-prr-ui.js?v=1.17"
+    },
+    {
+      "path": "celergo-prr-template-1.txt",
+      "url": "celergo-prr-template-1.txt?v=1.17"
+    },
+    {
+      "path": "celergo-prr-template-2.txt",
+      "url": "celergo-prr-template-2.txt?v=1.17"
+    },
+    {
+      "path": "celergo-prr-template-3.txt",
+      "url": "celergo-prr-template-3.txt?v=1.17"
+    },
+    {
+      "path": "celergo-prr-template-4.txt",
+      "url": "celergo-prr-template-4.txt?v=1.17"
+    }
+  ]
+}
