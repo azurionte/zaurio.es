@@ -39,7 +39,38 @@ function prrRound(value){ return Math.round((Number(value)||0)*100)/100; }
 function prrRandom(min,max){ return min + Math.random()*(max-min); }
 function prrRandomInt(min,max){ return Math.floor(prrRandom(min,max+1)); }
 function prrCountryConfig(country){ return PRR_CONFIG[country] || null; }
-function prrCurrentEmployees(){ return employees(); }
+var PRR_TEMP_EMPLOYEES = {};
+function prrTempEmployees(country){
+  country=country||state.country;
+  PRR_TEMP_EMPLOYEES[country]=PRR_TEMP_EMPLOYEES[country]||[];
+  return PRR_TEMP_EMPLOYEES[country];
+}
+function prrCurrentEmployees(){
+  var base=typeof employees==='function'?employees():[];
+  return base.concat(prrTempEmployees(state.country));
+}
+function prrAddTemporaryEmployee(country,id,salary){
+  country=country||state.country;
+  id=String(id||'').trim();
+  salary=Math.max(0,prrRound(salary));
+  if(!id||!salary) throw new Error('Employee ID and salary are required.');
+  var exists=prrCurrentEmployees().some(function(emp){return String(emp.id)===id;});
+  if(exists) throw new Error('Employee ID '+id+' already exists in this PRR session.');
+  var emp={id:id,salary:salary,temporary:true};
+  prrTempEmployees(country).push(emp);
+  var d=prrCountryData(country), cfg=prrEditableConfig(country);
+  d.salaries[id]=salary; d.singles[id]={}; d.buckets[id]={}; d.locks[id]={}; d.jitter[id]={};
+  d.deductionPct[id]=prrInitialDeductionPct(cfg);
+  prrCountryConfig(country).recurring.forEach(function(el){d.jitter[id][el]=prrRandom(.88,1.12);});
+  prrRebalanceEmployee(country,id,d);
+  return emp;
+}
+function prrRemoveTemporaryEmployee(country,id){
+  country=country||state.country; id=String(id);
+  PRR_TEMP_EMPLOYEES[country]=prrTempEmployees(country).filter(function(emp){return String(emp.id)!==id;});
+  var d=prrCountryData(country);
+  ['salaries','singles','deductionPct','buckets','locks','jitter'].forEach(function(k){if(d[k])delete d[k][id];});
+}
 function prrStateRoot(){
   state.prr = state.prr || { countries:{}, configByCountry:{} };
   state.prr.countries = state.prr.countries || {};
@@ -49,9 +80,11 @@ function prrStateRoot(){
 function prrEditableConfig(country){
   var root=prrStateRoot(), base=prrCountryConfig(country);
   if(!base) return null;
-  if(!root.configByCountry[country]) root.configByCountry[country]={rateMin:base.rateMin,rateMax:base.rateMax,weights:base.weights.slice()};
+  if(!root.configByCountry[country]) root.configByCountry[country]={rateMode:'range',flatRate:base.rateMin,rateMin:base.rateMin,rateMax:base.rateMax,weights:base.weights.slice()};
   var cfg=root.configByCountry[country];
   if(!Array.isArray(cfg.weights) || cfg.weights.length!==base.recurring.length) cfg.weights=base.weights.slice();
+  if(cfg.rateMode!=='flat'&&cfg.rateMode!=='range') cfg.rateMode='range';
+  if(!Number.isFinite(Number(cfg.flatRate))) cfg.flatRate=base.rateMin;
   return cfg;
 }
 function prrCountryData(country){
@@ -73,6 +106,10 @@ function prrRandomSalary(country){
   var base=sample[Math.floor(Math.random()*sample.length)] || 5000;
   return prrRound(base*prrRandom(.97,1.03));
 }
+function prrInitialDeductionPct(cfg){
+  if(cfg&&cfg.rateMode==='flat') return prrRound(Math.max(0,Number(cfg.flatRate)||0));
+  return prrRound(prrRandom(Number(cfg&&cfg.rateMin)||0,Number(cfg&&cfg.rateMax)||0));
+}
 function prrEnsureCountry(country){
   if(!prrSupported(country)) return null;
   var d=prrCountryData(country), cfg=prrEditableConfig(country), emps=prrCurrentEmployees();
@@ -80,7 +117,7 @@ function prrEnsureCountry(country){
     var id=String(emp.id);
     if(!(id in d.salaries)) d.salaries[id]=prrSampleSalary(country,i,emps.length);
     if(!d.singles[id]) d.singles[id]={};
-    if(!(id in d.deductionPct)) d.deductionPct[id]=prrRound(prrRandom(Number(cfg.rateMin)||0,Number(cfg.rateMax)||0));
+    if(!(id in d.deductionPct)) d.deductionPct[id]=prrInitialDeductionPct(cfg);
     if(!d.buckets[id]) d.buckets[id]={};
     if(!d.locks[id]) d.locks[id]={};
     if(!d.jitter[id]){
@@ -199,7 +236,7 @@ function prrRandomizeDeductions(country){
   var d=prrEnsureCountry(country), cfg=prrEditableConfig(country), config=prrCountryConfig(country);
   prrCurrentEmployees().forEach(function(emp){
     var id=String(emp.id);
-    d.deductionPct[id]=prrRound(prrRandom(Number(cfg.rateMin)||0,Number(cfg.rateMax)||0));
+    d.deductionPct[id]=prrInitialDeductionPct(cfg);
     d.locks[id]={}; d.jitter[id]={};
     config.recurring.forEach(function(el){d.jitter[id][el]=prrRandom(.88,1.12);});
     prrRebalanceEmployee(country,id,d);
