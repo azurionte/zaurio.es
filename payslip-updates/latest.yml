@@ -1,9 +1,9 @@
 version: 5.0.61
 files:
   - url: DemoBuildingToolsSetup-5.0.61.exe
-    sha512: QeWTM5Q0UJuWk/2L9f9t9ZyVsKASNLCBoZfnKpHarAh7d2Ftb6qFc2aHiGqtggkq79XhxN0igDGfPtS5QBJvtg==
-    size: 101861135
+    sha512: CzflbtcvicgYi42v37k1lylaftVcGY7141wj61vg+RMq2YOkmxMGpp9VX8uQG3FVilhwYnWx3EaTgIvm9dAdFQ==
+    size: 101862712
 path: DemoBuildingToolsSetup-5.0.61.exe
-sha512: QeWTM5Q0UJuWk/2L9f9t9ZyVsKASNLCBoZfnKpHarAh7d2Ftb6qFc2aHiGqtggkq79XhxN0igDGfPtS5QBJvtg==
+sha512: CzflbtcvicgYi42v37k1lylaftVcGY7141wj61vg+RMq2YOkmxMGpp9VX8uQG3FVilhwYnWx3EaTgIvm9dAdFQ==
 releaseNotes: 'NL Leave Scheduler V3: realistic demo-scenario engine with two-person weekly AL coverage, monthly sickness, Jan/Jul rotating LTS pairs, meaningful scenario controls, staffing guardrails and stronger validation.'
-releaseDate: '2026-10-14T02:12:53.655Z'
+releaseDate: '2026-10-14T15:05:52.411Z'
