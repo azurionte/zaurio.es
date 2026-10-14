@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.62",
+  "version": "5.0.63",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Adds PRR Builder as a standalone Celergo mini-app and updates Celergo Payroll Processing Tool to PRR V1.17 with temporary users, cleaner employee labels, and modal-based deduction configuration."
+      "releaseNotes": "Ensures the completed Celergo PRR UX is delivered to existing installations: Celergo Payroll Processing Tool V1.18 and standalone PRR Builder V1.1, including temporary session-only employees, employee ID pills, cleaner PRR screens, and modal-based deduction configuration."
     },
     "nsis": {
       "perMachine": false,
