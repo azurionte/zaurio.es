@@ -890,12 +890,24 @@
         }
       }
 
-      var balances=new Map();EMPLOYEES.forEach(function(e){balances.set(employeeRef(e),Math.max(0,Math.round(Number(e.days)||0)));});
+      function hasWorkingDayOutsideLts(e){
+        return schedulable.some(function(d){
+          var rec=SCHEDULE.get(ymd(d))||{sick:[]};
+          return !(rec.sick||[]).some(function(x){return x.lts&&(x.id||x.person)===(e.id||e.name);});
+        });
+      }
+      var excludedFullLts=new Set();
+      var balances=new Map();EMPLOYEES.forEach(function(e){
+        var quota=Math.max(0,Math.round(Number(e.days)||0));
+        if(quota>0&&!hasWorkingDayOutsideLts(e)){excludedFullLts.add(employeeRef(e));quota=0;}
+        balances.set(employeeRef(e),quota);
+      });
       function totalRemaining(){var n=0;balances.forEach(function(v){n+=Math.max(0,v);});return n;}
 
       function isChristmas(d){return cfg.christmasOn&&inChristmasWindow(d,cfg.christmasStart,cfg.newYearEnd);}
       function isSummer(d){return d.getMonth()===6||d.getMonth()===7;}
       function isHotspot(d){var k=ymd(d);return isManualBusyWeek(d)||holidayAround.has(k)||(cfg.preferBridge&&isBridgeDay(d,holidays))||isChristmas(d)||(cfg.seasonality==='strong'&&isSummer(d));}
+      var scoreJitter=new Map();schedulable.forEach(function(d){scoreJitter.set(ymd(d),.85+rand()*.3);});
       function dayScore(d){
         var score=1,k=ymd(d),dow=d.getDay();
         if(cfg.preferFriMon&&(dow===1||dow===5))score*=1.25;
@@ -904,7 +916,7 @@
         if(isChristmas(d))score*=cfg.christmasWeight*(cfg.seasonality==='strong'?1.35:1);
         if(isSummer(d))score*=cfg.seasonality==='strong'?1.7:1.2;
         if(isManualBusyWeek(d))score*=cfg.manualBusyIntensity==='veryhigh'?4:2.5;
-        score*=.85+rand()*.3;
+        score*=scoreJitter.get(k)||1;
         return score;
       }
       function weeklyTarget(mon,sun){
@@ -1027,7 +1039,9 @@
       });
 
       var leftover=totalRemaining(),anyAL=false;SCHEDULE.forEach(function(r){if((r.AL||[]).length)anyAL=true;});
-      var status=document.getElementById('status');status.innerHTML=leftover===0?'<span class="ok">All Annual Leave quotas used ✔</span>':'<span class="warn">'+leftover+' Annual Leave day(s) could not be placed without breaking hard constraints.</span>';
+      var status=document.getElementById('status'),excludedCount=excludedFullLts.size;
+      if(leftover===0) status.innerHTML='<span class="ok">All schedulable Annual Leave quotas used ✔</span>'+(excludedCount?'<span class="small"> · '+excludedCount+' full-period LTS employee(s) excluded from AL consumption</span>':'');
+      else status.innerHTML='<span class="warn">'+leftover+' Annual Leave day(s) could not be placed without breaking hard constraints.</span>';
       ['exportBtn','exportJanSepBtn','exportOctDecBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=!anyAL;});
       buildCalendarPreview(start,end);refreshV2Summaries(start,end);
       toast(leftover===0?'Scenario generated and validated.':'Scenario generated with '+leftover+' unplaced leave day(s).',leftover===0?'ok':'warn');
@@ -1327,8 +1341,16 @@
     var box=document.getElementById('healthSummary'),ready=document.getElementById('scenarioReadiness');if(!box||!start||!end)return;
     var cfg=getScenarioConfig(),years=[];for(var y=start.getFullYear();y<=end.getFullYear();y++)years.push(y);
     var hol=mergeHolidaySets(years,{goodFriday:cfg.goodFriday,liberation:cfg.liberation});
-    var requested={},used={},conflicts=0,holidayAL=0,availabilityViolations=0;
-    EMPLOYEES.forEach(function(e){var k=e.id||e.name;requested[k]=Math.max(0,Math.round(Number(e.days)||0));used[k]=0;});
+    var requested={},used={},conflicts=0,holidayAL=0,availabilityViolations=0,fullPeriodLtsExcluded=0;
+    var expectedLtsForQuota=ltsIntervalsForRange(start,end);
+    EMPLOYEES.forEach(function(e){
+      var k=e.id||e.name,quota=Math.max(0,Math.round(Number(e.days)||0));
+      var workingDayExists=buildDays(start,end).some(function(d){
+        return !expectedLtsForQuota.some(function(intv){return (intv.employee.id||intv.employee.name)===k&&d>=intv.start&&d<=intv.end;});
+      });
+      if(quota>0&&!workingDayExists){quota=0;fullPeriodLtsExcluded++;}
+      requested[k]=quota;used[k]=0;
+    });
     SCHEDULE.forEach(function(rec,k){
       var seen=new Set(),d=fromYMD(k);
       (rec.AL||[]).forEach(function(a){
@@ -1356,7 +1378,7 @@
     }
     var sickEnabled=!!(document.getElementById('sickEnabled')||{}).checked;
     var items=[
-      ['Annual Leave quotas',quotaRemaining===0&&quotaOver===0?'ok':'bad',quotaRemaining===0&&quotaOver===0?'All requested days used exactly':quotaRemaining+' unplaced · '+quotaOver+' over quota'],
+      ['Annual Leave quotas',quotaRemaining===0&&quotaOver===0?'ok':'bad',quotaRemaining===0&&quotaOver===0?('All schedulable requested days used exactly'+(fullPeriodLtsExcluded?' · '+fullPeriodLtsExcluded+' full-period LTS quota excluded':'')):quotaRemaining+' unplaced · '+quotaOver+' over quota'],
       ['Weekly AL coverage',weeksGood===weeks.length?'ok':'bad',weeksGood+'/'+weeks.length+' weeks have ≥2 different people on Annual Leave'],
       ['Monthly sickness',!sickEnabled?'warn':(sickMonths.size===monthKeys.length?'ok':'bad'),!sickEnabled?'Disabled by configuration':sickMonths.size+'/'+monthKeys.length+' months contain visible sickness'],
       ['LTS rotations',lts.ok&&badLts===0?'ok':'bad',lts.ok?(badLts===0?'January and July rotations valid':'Missing '+badLts+' expected LTS day(s)'):lts.message],
