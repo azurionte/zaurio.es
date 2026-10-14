@@ -967,8 +967,8 @@
         var attempts=0;
         while(used.size<target&&attempts<EMPLOYEES.length*4){
           attempts++;
-          var candidates=EMPLOYEES.filter(function(e){return (balances.get(employeeRef(e))||0)>0&&!used.has(e.id||e.name);})
-            .sort(function(a,b){var diff=(balances.get(employeeRef(b))||0)-(balances.get(employeeRef(a))||0);return diff||((rand()-.5)*2);});
+          var candidates=shuffledCopy(EMPLOYEES.filter(function(e){return (balances.get(employeeRef(e))||0)>0&&!used.has(e.id||e.name);}),rand)
+            .sort(function(a,b){return (balances.get(employeeRef(b))||0)-(balances.get(employeeRef(a))||0);});
           if(!candidates.length)break;
           var placed=false;
           for(var ci=0;ci<candidates.length&&!placed;ci++){
@@ -1341,6 +1341,10 @@
     var box=document.getElementById('healthSummary'),ready=document.getElementById('scenarioReadiness');if(!box||!start||!end)return;
     var cfg=getScenarioConfig(),years=[];for(var y=start.getFullYear();y<=end.getFullYear();y++)years.push(y);
     var hol=mergeHolidaySets(years,{goodFriday:cfg.goodFriday,liberation:cfg.liberation});
+    var healthHolidayAround=cfg.boostAround?computeHolidayAdjacency(hol,cfg.boostWindow):new Set();
+    function healthHotspot(d){
+      return isManualBusyWeek(d)||healthHolidayAround.has(ymd(d))||(cfg.preferBridge&&isBridgeDay(d,hol))||(cfg.christmasOn&&inChristmasWindow(d,cfg.christmasStart,cfg.newYearEnd))||(cfg.seasonality==='strong'&&(d.getMonth()===6||d.getMonth()===7));
+    }
     var requested={},used={},conflicts=0,holidayAL=0,availabilityViolations=0,fullPeriodLtsExcluded=0;
     var expectedLtsForQuota=ltsIntervalsForRange(start,end);
     EMPLOYEES.forEach(function(e){
@@ -1362,7 +1366,7 @@
       teams.forEach(function(t){
         var size=EMPLOYEES.filter(function(e){return e.manager===t;}).length;if(!size)return;
         var unavailable=new Set();(rec.AL||[]).concat(rec.sick||[]).forEach(function(x){if(x.team===t)unavailable.add(x.id||x.person);});
-        var min=cfg.minTeamAvailability;if(cfg.allowBusyDip&&isManualBusyWeek(d))min=Math.max(.4,min-.10);
+        var min=cfg.minTeamAvailability;if(cfg.allowBusyDip&&healthHotspot(d))min=Math.max(.4,min-.10);
         if(size-unavailable.size<Math.ceil(size*min))availabilityViolations++;
       });
     });
@@ -1392,7 +1396,7 @@
   }
   function refreshV2Summaries(start,end){renderSicknessTables();computeAvailabilitySummaryV2(start,end);updateHealth(start,end);var any=false;SCHEDULE.forEach(function(r){if((r.AL||[]).length)any=true;});['exportBtn','exportJanSepBtn','exportOctDecBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=!any;});}
   function persistScenarioControls(){
-    var ids=['scenarioRichness','alActivity','leavePattern','seasonality','minTeamAvailability','allowBusyAvailabilityDip','sickEnabled','sickActivity','sickDuration','sickAvoidRepeats','moreIntensity'];
+    var ids=['scenarioRichness','alActivity','leavePattern','seasonality','minTeamAvailability','allowBusyAvailabilityDip','sickEnabled','sickActivity','sickDuration','sickAvoidRepeats','moreIntensity','useTechnicalOverrides','maxPerDay','randomness','preferFriMon','avoidNLHolidays','inclGoodFriday','liberationDayMode','boostAround','boostWindow','boostWeight','preferBridge','bridgeWeight','christmasStartDay','newYearEndDay','christmasOn','christmasWeight'];
     var data={};ids.forEach(function(id){var el=document.getElementById(id);if(el)data[id]=el.type==='checkbox'?el.checked:el.value;});
     data.moreDays=window.MORE_DAYS_IN||{};try{localStorage.setItem('dbt.nlLeave.scenario',JSON.stringify(data));}catch(e){}
   }
@@ -1408,7 +1412,7 @@
     document.getElementById('copySicknessBtn').addEventListener('click',copySicknessTable);document.getElementById('copySicknessBtn2').addEventListener('click',copySicknessTable);
     document.getElementById('autoAssignLts').addEventListener('click',function(){autoAssignLtsRotations(true);});
     ['ltsRotationsEnabled','ltsJanA','ltsJanB','ltsJulA','ltsJulB','ltsJanBaseYear','ltsJulBaseYear','ltsJanBaseActive','ltsJulBaseActive'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',syncLtsStateFromControls);});
-    ['scenarioRichness','alActivity','leavePattern','seasonality','minTeamAvailability','allowBusyAvailabilityDip','sickEnabled','sickActivity','sickDuration','sickAvoidRepeats','moreIntensity'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',persistScenarioControls);});
+    ['scenarioRichness','alActivity','leavePattern','seasonality','minTeamAvailability','allowBusyAvailabilityDip','sickEnabled','sickActivity','sickDuration','sickAvoidRepeats','moreIntensity','useTechnicalOverrides','maxPerDay','randomness','preferFriMon','avoidNLHolidays','inclGoodFriday','liberationDayMode','boostAround','boostWindow','boostWeight','preferBridge','bridgeWeight','christmasStartDay','newYearEndDay','christmasOn','christmasWeight'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',persistScenarioControls);});
     document.getElementById('clearBusyPeriods').addEventListener('click',function(){window.MORE_DAYS_IN={};setupMoreDaysUI();persistScenarioControls();toast('Busy leave periods cleared.','ok');});
 
     document.getElementById('sickAdvBtn').addEventListener('click',function(){
