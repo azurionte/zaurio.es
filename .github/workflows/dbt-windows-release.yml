@@ -92,4 +92,5 @@ jobs:
           }
 
           git commit -m "Publish DBT $env:DBT_VERSION Windows release"
+          git pull --rebase origin main
           git push origin HEAD:main
