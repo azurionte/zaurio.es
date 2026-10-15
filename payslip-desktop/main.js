@@ -17,6 +17,8 @@ let lastUpdateStatus = {
 };
 
 const MINI_APP_BASE_URL = 'https://zaurio.es/payslip-updates/apps/';
+const UPDATE_FEED_PRIMARY = 'https://zaurio.es/payslip-updates/';
+const UPDATE_FEED_FALLBACK = 'https://raw.githubusercontent.com/azurionte/zaurio.es/main/payslip-updates/';
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -87,12 +89,12 @@ function sendUpdateStatus(state, message, extra = {}) {
 function readableUpdateError(error) {
   const raw = String(error?.message || error || '');
   if (raw.includes('latest.yml') && (raw.includes('404') || raw.includes('Cannot find channel'))) {
-    return 'No update feed found yet. Upload latest.yml and the installer files in the Zaurio admin panel.';
+    return 'No update feed found yet. Ask Max Robles to verify the update files.';
   }
   if (/net::|ENOTFOUND|ECONN|ETIMEDOUT|fetch failed/i.test(raw)) {
     return 'Could not reach the update server. Check your internet connection and try again.';
   }
-  return 'Update check failed. Try again later or ask Zaurio admin to verify the update files.';
+  return 'Update check failed. Try again later or ask Max Robles to verify the update files.';
 }
 
 function registerUpdaterEvents() {
@@ -123,9 +125,15 @@ function registerUpdaterEvents() {
       return lastUpdateStatus;
     }
     try {
+      autoUpdater.setFeedURL({ provider: 'generic', url: UPDATE_FEED_PRIMARY });
       await autoUpdater.checkForUpdates();
-    } catch (error) {
-      sendUpdateStatus('error', readableUpdateError(error));
+    } catch (primaryError) {
+      try {
+        autoUpdater.setFeedURL({ provider: 'generic', url: UPDATE_FEED_FALLBACK });
+        await autoUpdater.checkForUpdates();
+      } catch (fallbackError) {
+        sendUpdateStatus('error', readableUpdateError(fallbackError || primaryError));
+      }
     }
     return lastUpdateStatus;
   });
