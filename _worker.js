@@ -474,7 +474,7 @@ async function fetchPayslipUpdateAsset(request, env, path) {
     objectName.endsWith(".nsis.7z") ||
     /^(PayslipCreatorSetup|DemoBuildingToolsSetup)-\d+\.\d+\.\d+\.exe$/i.test(objectName)
   ) {
-    if (objectName === "latest.yml" || objectName.endsWith(".json")) {
+    if (objectName.endsWith(".json")) {
       const apiUrl = `https://api.github.com/repos/azurionte/zaurio.es/contents/payslip-updates/${objectName.split("/").map(encodeURIComponent).join("/")}?ref=main&ts=${Date.now()}`;
       const apiResponse = await fetch(apiUrl, {
         headers: {
