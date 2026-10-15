@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.64",
+  "version": "5.0.65",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixes Celergo Specific tools so the standalone PRR Builder V1.1 is actually visible and launchable as a third mini-app alongside Payslip V6 and Celergo Payroll Processing Tool."
+      "releaseNotes": "Fixes desktop update reliability with a dedicated update feed route, adds a GitHub fallback for update checks, and replaces Zaurio admin wording with Max Robles in support errors. Includes the visible standalone PRR Builder in Celergo tools."
     },
     "nsis": {
       "perMachine": false,
