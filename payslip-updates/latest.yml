@@ -1,9 +1,9 @@
 version: 5.0.64
 files:
   - url: DemoBuildingToolsSetup-5.0.64.exe
-    sha512: ZWyK49MDi44ghpKZV8zTi3OVjeXbsvRVq5lsBTv6gxQZwYWEn9gWyE3T/ubXJubMk+p6w7uHMQNB084WbMA6ow==
-    size: 101865331
+    sha512: hXGDs9qqfyiqZcH2uT1kAEKu0n0qA37OFzEsoR6mOGf0ZgUGkhygDnZ8/dkTkMsAiNKnJIha6rGIJzjgy9xWkA==
+    size: 101865441
 path: DemoBuildingToolsSetup-5.0.64.exe
-sha512: ZWyK49MDi44ghpKZV8zTi3OVjeXbsvRVq5lsBTv6gxQZwYWEn9gWyE3T/ubXJubMk+p6w7uHMQNB084WbMA6ow==
+sha512: hXGDs9qqfyiqZcH2uT1kAEKu0n0qA37OFzEsoR6mOGf0ZgUGkhygDnZ8/dkTkMsAiNKnJIha6rGIJzjgy9xWkA==
 releaseNotes: Fixes Celergo Specific tools so the standalone PRR Builder V1.1 is actually visible and launchable as a third mini-app alongside Payslip V6 and Celergo Payroll Processing Tool.
-releaseDate: '2026-10-15T12:26:58.138Z'
+releaseDate: '2026-10-15T15:46:47.648Z'
