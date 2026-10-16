@@ -1,0 +1,12 @@
+begin;
+create table public.dinofit_documents (user_id uuid primary key references auth.users(id) on delete cascade, document jsonb not null check (jsonb_typeof(document) = 'object' and document->>'schemaVersion' = '1' and octet_length(document::text) <= 2097152), revision bigint not null default 1, updated_at timestamptz not null default now());
+alter table public.dinofit_documents enable row level security;
+revoke all on public.dinofit_documents from anon, authenticated;
+grant select, insert, update on public.dinofit_documents to authenticated;
+create policy dinofit_select_own on public.dinofit_documents for select to authenticated using ((select auth.uid()) = user_id);
+create policy dinofit_insert_own on public.dinofit_documents for insert to authenticated with check ((select auth.uid()) = user_id);
+create policy dinofit_update_own on public.dinofit_documents for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+create function public.dinofit_document_version() returns trigger language plpgsql security invoker set search_path = '' as $$ begin new.revision := old.revision + 1; new.updated_at := now(); return new; end; $$;
+revoke all on function public.dinofit_document_version() from public, anon, authenticated;
+create trigger dinofit_document_version before update on public.dinofit_documents for each row execute function public.dinofit_document_version();
+commit;

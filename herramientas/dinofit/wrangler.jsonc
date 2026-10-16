@@ -1,0 +1,28 @@
+{
+  "name": "dinofit",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-16",
+  "rules": [
+    {
+      "type": "Text",
+      "globs": [
+        "**/*.html"
+      ],
+      "fallthrough": true
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "herramientas.zaurio.es/dinofit",
+      "zone_name": "zaurio.es"
+    },
+    {
+      "pattern": "herramientas.zaurio.es/dinofit/*",
+      "zone_name": "zaurio.es"
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "redact_query_string": true
+  }
+}
