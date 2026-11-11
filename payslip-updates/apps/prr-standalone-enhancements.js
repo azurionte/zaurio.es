@@ -150,6 +150,14 @@ function undo(){
   prrRenderDeductions();
 }
 window.prrStandaloneResetUndo=function(){undoStack=[];updateUndoButton();};
+var originalRenderExport=prrRenderExport;
+prrRenderExport=function(){
+  originalRenderExport();
+  var host=document.getElementById('prrExportHost');
+  if(!host)return;
+  var paragraph=host.querySelector('.panel > p');
+  if(paragraph)paragraph.textContent='Download a clean Excel workbook with the 12 required PRR columns. Employee IDs are preserved as text, amounts as numbers, and all generated rows are included.';
+};
 var originalRenderDeductions=prrRenderDeductions;
 prrRenderDeductions=function(){
   originalRenderDeductions();
