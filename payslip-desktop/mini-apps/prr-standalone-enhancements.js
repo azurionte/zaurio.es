@@ -66,7 +66,7 @@ function rulesMarkup(){
       input('Min. amount (optional)','amountMin',r.amountMin,'number','min="0" step="0.01"')+
       input('Max. amount (optional)','amountMax',r.amountMax,'number','min="0" step="0.01"')+
       '<label>Keep changes<select data-prr-rule-id="'+id+'" data-prr-rule-field="scope"><option value="session"'+(r.scope==='session'?' selected':'')+'>This session only</option><option value="permanent"'+(r.scope==='permanent'?' selected':'')+'>Save on this computer</option></select></label>'+
-      '<label class="prr-rule-wide">Exclude employees already assigned any of these elements (comma-separated)<input type="text" data-prr-rule-id="'+id+'" data-prr-rule-field="excludeElements" value="'+esc(r.excludeElements.join(', '))+'" placeholder="e.g. Bonus, Commission"></label></div>'+
+      '<label class="prr-rule-wide">Elements this rule can assign<select multiple size="'+Math.min(7,config.singles.length)+'" data-prr-rule-id="'+id+'" data-prr-rule-field="elements">'+config.singles.map(function(el){return '<option value="'+esc(el)+'"'+(r.elements.indexOf(el)>=0?' selected':'')+'>'+esc(el)+'</option>';}).join('')+'</select><small class="muted">Use Ctrl or Shift to select multiple pay elements.</small></label>'+'<label class="prr-rule-wide">Exclude employees already assigned any of these elements (comma-separated)<input type="text" data-prr-rule-id="'+id+'" data-prr-rule-field="excludeElements" value="'+esc(r.excludeElements.join(', '))+'" placeholder="e.g. Bonus, Commission"></label></div>'+
       '<div class="prr-rule-actions">'+(r.builtin?'<button class="mini-btn" type="button" data-prr-rule-reset="'+id+'">Restore default</button>':'<button class="mini-btn" type="button" data-prr-rule-remove="'+id+'">Remove rule</button>')+'</div></details>';
   }).join('');
   return '<section class="prr-rules-manager" id="prrRulesPanel" '+(rulesOpen?'':'hidden')+'><h3>Single element assignment rules</h3><p class="muted">Rules determine who receives each demo pay element when you click Randomize elements. Existing manual amounts are not changed until you randomize. Temporary changes last for this PRR session; permanent changes are saved on this computer only.</p>'+
@@ -200,6 +200,7 @@ document.addEventListener('change',function(e){
     if(prop==='enabled')rule.enabled=value==='yes';
     else if(prop==='scope')rule.scope=value==='permanent'?'permanent':'session';
     else if(prop==='mode')rule.mode=value==='block'?'block':'file';
+    else if(prop==='elements')rule.elements=Array.from(field.selectedOptions).map(function(x){return x.value;});
     else if(prop==='excludeElements')rule.excludeElements=value.split(',').map(function(x){return x.trim();}).filter(function(el){return prrCountryConfig(cc).singles.indexOf(el)>=0;});
     else if(['min','max','block'].indexOf(prop)>=0){
       if(!/^[0-9]+$/.test(value)||((prop==='block')&&Number(value)<1)){noteRules('Enter a non-negative whole number (block size must be at least 1).');return;}
