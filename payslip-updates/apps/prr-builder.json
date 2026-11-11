@@ -3,7 +3,7 @@
   "version": "1.2",
   "entry": "prr-builder.html",
   "updatedAt": "2026-11-11T11:29:00.000Z",
-  "notes": "Standalone PRR Builder V1.2: editable temporary and locally saved single-element rules, deduction undo, larger salary employee IDs, calendar contrast, import coming-soon badge and offline Excel export library with clearer errors.",
+  "notes": "Standalone PRR Builder V1.2: assignment-rule editor, temporary or locally saved rules, deduction undo, employee ID emphasis, improved navigation and generated Excel workbook. Replaces invalid legacy ZIP template.",
   "files": [
     {
       "path": "prr-builder.html",
@@ -16,6 +16,10 @@
     {
       "path": "prr-jszip.min.js",
       "url": "prr-jszip.min.js?v=1.2"
+    },
+    {
+      "path": "prr-standalone-xlsx.js",
+      "url": "prr-standalone-xlsx.js?v=1.2"
     },
     {
       "path": "celergo-payroll-prr-core.js",
