@@ -1,9 +1,9 @@
-version: 5.0.64
+version: 5.0.65
 files:
-  - url: DemoBuildingToolsSetup-5.0.64.exe
-    sha512: hXGDs9qqfyiqZcH2uT1kAEKu0n0qA37OFzEsoR6mOGf0ZgUGkhygDnZ8/dkTkMsAiNKnJIha6rGIJzjgy9xWkA==
-    size: 101865441
-path: DemoBuildingToolsSetup-5.0.64.exe
-sha512: hXGDs9qqfyiqZcH2uT1kAEKu0n0qA37OFzEsoR6mOGf0ZgUGkhygDnZ8/dkTkMsAiNKnJIha6rGIJzjgy9xWkA==
-releaseNotes: Fixes Celergo Specific tools so the standalone PRR Builder V1.1 is actually visible and launchable as a third mini-app alongside Payslip V6 and Celergo Payroll Processing Tool.
-releaseDate: '2026-10-15T15:46:47.648Z'
+  - url: DemoBuildingToolsSetup-5.0.65.exe
+    sha512: 5+e8A+w//yPEwTfb4CflC9wLDV6eQwiy42E8jQfZbciv1tqbgFg0f5FRYO4vJe/GP0TsfjPympKzc4No31V2/Q==
+    size: 101895265
+path: DemoBuildingToolsSetup-5.0.65.exe
+sha512: 5+e8A+w//yPEwTfb4CflC9wLDV6eQwiy42E8jQfZbciv1tqbgFg0f5FRYO4vJe/GP0TsfjPympKzc4No31V2/Q==
+releaseNotes: Fixes desktop update reliability with a dedicated update feed route, adds a GitHub fallback for update checks, and replaces Zaurio admin wording with Max Robles in support errors. Includes the visible standalone PRR Builder in Celergo tools.
+releaseDate: '2026-11-11T12:12:22.506Z'
