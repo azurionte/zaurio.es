@@ -1,13 +1,21 @@
 {
   "app": "prr-builder",
-  "version": "1.1",
+  "version": "1.2",
   "entry": "prr-builder.html",
-  "updatedAt": "2026-10-14T15:24:00.000Z",
-  "notes": "Standalone PRR Builder V1.1 for France and Germany using the shared PRR engine. Starts with manual Employee ID + Salary entry and is structured for a future file-import source; version bumped so existing installations discover it reliably.",
+  "updatedAt": "2026-11-11T11:29:00.000Z",
+  "notes": "Standalone PRR Builder V1.2: editable temporary and locally saved single-element rules, deduction undo, larger salary employee IDs, calendar contrast, import coming-soon badge and offline Excel export library with clearer errors.",
   "files": [
     {
       "path": "prr-builder.html",
-      "url": "prr-builder.html?v=1.1"
+      "url": "prr-builder.html?v=1.2"
+    },
+    {
+      "path": "prr-standalone-enhancements.js",
+      "url": "prr-standalone-enhancements.js?v=1.2"
+    },
+    {
+      "path": "prr-jszip.min.js",
+      "url": "prr-jszip.min.js?v=1.2"
     },
     {
       "path": "celergo-payroll-prr-core.js",
