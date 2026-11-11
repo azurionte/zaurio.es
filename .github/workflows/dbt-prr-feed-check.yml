@@ -1,0 +1,86 @@
+name: Verify DBT PRR public update feed
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'payslip-updates/apps/prr-builder.json'
+      - '.github/workflows/dbt-prr-feed-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify live mini-app manifest, assets and original workbook
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64
+          import io
+          import json
+          import time
+          import urllib.parse
+          import urllib.request
+          import zipfile
+
+          BASE = 'https://zaurio.es/payslip-updates/apps/'
+          def fetch(path):
+              separator = '&' if '?' in path else '?'
+              url = BASE + path + separator + 'smoke=' + str(int(time.time()))
+              request = urllib.request.Request(url, headers={
+                  'User-Agent': 'DBT-PRR-update-smoke/1.0',
+                  'Cache-Control': 'no-cache'
+              })
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  if response.status != 200:
+                      raise AssertionError(f'{path}: HTTP {response.status}')
+                  data = response.read()
+                  if not data:
+                      raise AssertionError(f'{path}: empty response')
+                  print(f'HTTP {response.status}  {path}: {len(data)} bytes')
+                  return data
+
+          manifest = json.loads(fetch('prr-builder.json'))
+          version = tuple(int(x) for x in str(manifest.get('version', '0')).split('.'))
+          assert version >= (1, 2), f'Expected PRR v1.2+, got {manifest.get("version")}'
+          assert manifest.get('app') == 'prr-builder', 'Unexpected package application'
+          files = {item['path']: item['url'] for item in manifest['files']}
+          required = {
+              'prr-builder.html',
+              'prr-standalone-enhancements.js',
+              'prr-jszip.min.js',
+              'prr-standalone-template.txt',
+              'celergo-payroll-prr-core.js',
+              'celergo-payroll-prr-ui.js',
+          }
+          assert required.issubset(files), f'Missing package files: {required-set(files)}'
+
+          assets = {name: fetch(files[name]) for name in sorted(required)}
+          assert b'V1.2' in assets['prr-builder.html'], 'Standalone PRR HTML is not v1.2'
+          assert b'prr-standalone-template.txt' in assets['prr-builder.html'], 'Original template not referenced'
+          assert b'JSZip v3.10.1' in assets['prr-jszip.min.js'], 'Bundled Excel library is not present'
+
+          raw = base64.b64decode(assets['prr-standalone-template.txt'], validate=False)
+          with zipfile.ZipFile(io.BytesIO(raw)) as template:
+              names = template.namelist()
+              assert len(names) == 20, f'Unexpected original template structure: {len(names)} files'
+              assert template.testzip() is None, 'Recovered original template failed CRC validation'
+              for name in (
+                  'xl/worksheets/sheet1.xml',
+                  'xl/styles.xml',
+                  'xl/sharedStrings.xml',
+                  'customXml/item1.xml',
+                  'customXml/item2.xml',
+                  'customXml/item3.xml',
+              ):
+                  assert name in names, f'Original template lacks {name}'
+              print(f'Original Excel template verified: {len(names)} OOXML components, CRC32 pass')
+
+          print(f'LIVE UPDATE FEED VERIFIED: PRR Builder v{manifest["version"]}')
+          PY
