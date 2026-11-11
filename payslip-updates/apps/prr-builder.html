@@ -113,6 +113,6 @@ async function prrDownloadXLSX(){
  function setCell(cell,value,col){clearCell(cell);var numeric=(col===4&&value!==''&&value!=null);if(numeric){var v=doc.createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','v');v.textContent=String(Number(value));cell.appendChild(v);return}cell.setAttribute('t','inlineStr');var is=doc.createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','is'),t=doc.createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','t');t.textContent=value==null?'':String(value);is.appendChild(t);cell.appendChild(is)}
  rows.forEach(function(row,ri){var rn=2+ri,re=ensureRow(doc,sheetData,rn);PRR_COLUMNS.forEach(function(h,ci){var addr=cellRef(rn,ci),sc=styleRow&&findCell(styleRow,cellRef(2,ci)),cell=ensureCell(doc,re,addr,ci,sc);setCell(cell,row[ci],ci)})});
  var dim=doc.getElementsByTagNameNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main','dimension')[0]||doc.getElementsByTagName('dimension')[0];if(dim&&rows.length+1>85)dim.setAttribute('ref','A1:L'+(rows.length+1));zip.file(path,xmlOut(doc));
- var blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});download(blob,'PRR_DEMO_'+config.label+' Local Monthly_template.xlsx')
+ var blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});download(blob,'PRR_DEMO_'+config.label+' Local Monthly_template.xlsx')
 }
 </script></body></html>
