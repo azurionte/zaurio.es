@@ -1,9 +1,9 @@
-version: 5.0.66
+version: 5.0.67
 files:
-  - url: DemoBuildingToolsSetup-5.0.66.exe
-    sha512: aXAB3WblVqg+Xeg6FTGw86dtmmCJELRS3RuX/mPFgpMIcfnFLqpxwYSpZ1E6FdqqidQRIwsSeMJSHno0qZ3eJw==
-    size: 101923382
-path: DemoBuildingToolsSetup-5.0.66.exe
-sha512: aXAB3WblVqg+Xeg6FTGw86dtmmCJELRS3RuX/mPFgpMIcfnFLqpxwYSpZ1E6FdqqidQRIwsSeMJSHno0qZ3eJw==
-releaseNotes: 'Adds a new Global View folder with GlobalView Demo Builder v0.1: Australia P2001/P2010 annual scenario planning, country setup, event review, TXT export, checkpoints and manual project handovers.'
-releaseDate: '2026-11-16T14:34:58.349Z'
+  - url: DemoBuildingToolsSetup-5.0.67.exe
+    sha512: 8w+q/NB7N0fCHqyLf0th/QnkambhHF7PX+bezx5WcDCSTgy9erQBUZzto3JAU9Uo6oF40ecFrSMHMXJ02W1eCQ==
+    size: 101934544
+path: DemoBuildingToolsSetup-5.0.67.exe
+sha512: 8w+q/NB7N0fCHqyLf0th/QnkambhHF7PX+bezx5WcDCSTgy9erQBUZzto3JAU9Uo6oF40ecFrSMHMXJ02W1eCQ==
+releaseNotes: 'Replaces the GlobalView Builder overview with a country-first experience: visible preparation/import progress, a five-step annual planner, easier event review and monthly import tracking. Existing projects are preserved.'
+releaseDate: '2026-11-16T15:15:24.467Z'
