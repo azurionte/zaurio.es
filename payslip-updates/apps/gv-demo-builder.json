@@ -1,0 +1,21 @@
+{
+  "app": "gv-demo-builder",
+  "version": "0.1",
+  "entry": "Global View/Global View Demo Builder/index.html",
+  "updatedAt": "2026-11-16T15:00:00.000Z",
+  "notes": "GlobalView Demo Builder 0.1: Australia P2001/P2010 scenario planning, local country builder, export of SAP-format TXT bundles and manual project handover.",
+  "files": [
+    {
+      "path": "Global View/Global View Demo Builder/index.html",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/index.html?v=0.1"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/core.js",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/core.js?v=0.1"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/app.js",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/app.js?v=0.1"
+    }
+  ]
+}
