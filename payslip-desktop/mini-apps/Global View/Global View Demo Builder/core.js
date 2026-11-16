@@ -60,7 +60,7 @@
       field("P2001-DOCSY","Log. system","CHAR",10),
       field("P2001-DOCNR","Document number","NUMC",20)
     ];
-    function tmpl(type,fields,desc,route,filename,nameSuffix,time){
+    function tmpl(type,fields,desc,route,nameSuffix,time){
       var marks={P2010:"AUS_it2010_OTwagetypes",P2001:"AUS- it 2001 absences 2027"};
       return {type:type,label:typeNames[type],fields:fields,route:route,
         fileNamePattern:"PU4030_{timestamp}_"+route+".txt",
@@ -201,7 +201,7 @@
     var header=h?h.header.slice():t.header.slice(),name=h?h.name.slice():t.name.slice(),ctext=h?h.ctext.slice():[type,"CTEXT"].concat(t.fields.map(function(f){return f.label;})),
       fieldLine=h?h.field.slice():[type,"FIELD"].concat(t.fields.map(function(f){return f.name;})),
       spec=h?h.fspec.slice():[type,"FSPEC"].concat(t.fields.map(function(f){return f.required?"R":"";}),[""]);
-    if(!h&&header.length>8){header[8]=project.year+"0101";header[7]=String(header[7]||"").replace(/\b20\d{2}\b/g,String(project.year));var at=exportedAt||new Date();if(header.length>9)header[9]=pad(at.getHours())+":"+pad(at.getMinutes())+":"+pad(at.getSeconds());}
+    if(!h&&header.length>8){header[8]=project.year+"0101";header[7]=String(header[7]||"").replace(/\b2027\b/g,String(project.year));var at=exportedAt||new Date();if(header.length>9)header[9]=pad(at.getHours())+":"+pad(at.getMinutes())+":"+pad(at.getSeconds());}
     if(!h&&header.length>3)header[3]=profile.client||header[3];
     if(!h&&name.length>3)name[3]=profile.name;
     var arranged=events.slice().sort(function(a,b){if(a.sourceIndex!=null&&b.sourceIndex!=null&&a.sourceFile===b.sourceFile)return a.sourceIndex-b.sourceIndex;
