@@ -43,11 +43,11 @@ jobs:
 
           latest, _ = fetch('latest.yml', 20000)
           latest = latest.decode('utf-8-sig')
-          assert re.search(r'(?m)^version: 5\\.0\\.66$', latest), 'Updater does not advertise DBT 5.0.66'
+          assert re.search(r'(?m)^version: 5[.]0[.]66$', latest), 'Updater does not advertise DBT 5.0.66'
           assert 'DemoBuildingToolsSetup-5.0.66.exe' in latest, 'New installer missing from feed'
 
           _, installer_headers = fetch('DemoBuildingToolsSetup-5.0.66.exe', method='HEAD')
-          declared_size = re.search(r'(?m)^    size: (\\d+)$', latest)
+          declared_size = re.search(r'(?m)^    size: ([0-9]+)$', latest)
           if installer_headers.get('Content-Length') and declared_size:
               assert int(installer_headers['Content-Length']) == int(declared_size.group(1)), 'Installer size differs from latest.yml'
 
