@@ -1,4 +1,4 @@
-/* GlobalView Demo Builder 0.2 — guided country-first experience, no new dependencies. */
+/* GlobalView Demo Builder 0.1.1 — guided country-first experience, no new dependencies. */
 (function(){
   "use strict";
   var G=window.GVCore,F=window.GVWorkflow,B,UI;
