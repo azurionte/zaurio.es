@@ -1,4 +1,4 @@
-name: Verify DBT 5.0.66 live updater and GlobalView package
+name: Verify DBT 5.0.67 live updater and GlobalView package
 
 on:
   push:
@@ -43,10 +43,10 @@ jobs:
 
           latest, _ = fetch('latest.yml', 20000)
           latest = latest.decode('utf-8-sig')
-          assert re.search(r'(?m)^version: 5[.]0[.]66$', latest), 'Updater does not advertise DBT 5.0.66'
-          assert 'DemoBuildingToolsSetup-5.0.66.exe' in latest, 'New installer missing from feed'
+          assert re.search(r'(?m)^version: 5[.]0[.]66$', latest), 'Updater does not advertise DBT 5.0.67'
+          assert 'DemoBuildingToolsSetup-5.0.67.exe' in latest, 'New installer missing from feed'
 
-          _, installer_headers = fetch('DemoBuildingToolsSetup-5.0.66.exe', method='HEAD')
+          _, installer_headers = fetch('DemoBuildingToolsSetup-5.0.67.exe', method='HEAD')
           declared_size = re.search(r'(?m)^    size: ([0-9]+)$', latest)
           if installer_headers.get('Content-Length') and declared_size:
               assert int(installer_headers['Content-Length']) == int(declared_size.group(1)), 'Installer size differs from latest.yml'
@@ -54,8 +54,8 @@ jobs:
           manifest_bytes, _ = fetch('apps/gv-demo-builder.json')
           manifest = json.loads(manifest_bytes)
           assert manifest['app'] == 'gv-demo-builder'
-          assert manifest['version'] == '0.1'
-          expected = {'index.html', 'core.js', 'app.js'}
+          assert manifest['version'] == '0.1.1'
+          expected = {'index.html', 'core.js', 'workflow.js', 'app.js', 'guided.js'}
           files = manifest.get('files', [])
           assert {f['path'].split('/')[-1] for f in files} == expected
           assets = {}
@@ -64,5 +64,7 @@ jobs:
           assert b'GlobalView Demo Builder' in assets['index.html']
           assert b'GVCore' in assets['core.js']
           assert b'Export center' in assets['app.js']
-          print('PUBLIC DBT 5.0.66 UPDATE AND GLOBALVIEW 0.1 ASSETS VERIFIED')
+          assert b'GVWorkflow' in assets['workflow.js']
+          assert b'GVGuided' in assets['guided.js']
+          print('PUBLIC DBT 5.0.67 UPDATE AND GLOBALVIEW 0.1.1 ASSETS VERIFIED')
           PY
