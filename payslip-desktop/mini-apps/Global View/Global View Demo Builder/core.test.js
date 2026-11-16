@@ -11,6 +11,16 @@ assert.equal(p.templates.P2001.fields.length,11);
 assert.equal(p.templates.P2010.fields.length,23);
 assert.equal(p.templates.P2001.fields[0].name,"ZHRKEY-PERNR");
 assert.equal(p.templates.P2010.fields[3].name,"P2010-LGART");
+const p2001Header=C.dataLines(C.newProject(p,"Reference",2027,[]),p,"P2001",[]).split("\r\n");
+const p2010Header=C.dataLines(C.newProject(p,"Reference",2027,[]),p,"P2010",[]).split("\r\n");
+assert.equal(p2001Header[0].split("\t")[7],"AUS- it 2001 absences 2027");
+assert.equal(p2001Header[1],"P2001\tNAME\tP2001\tAustralia\tLeave");
+assert.equal(p2010Header[1],"P2010\tNAME\tP2010\tAustralia\t");
+assert.equal(p2001Header[4].split("\t").length,14,"P2001 FSPEC has one additional trailing empty field");
+assert.equal(p2010Header[4].split("\t").length,26,"P2010 FSPEC has one additional trailing empty field");
+const futureYear=C.dataLines(C.newProject(p,"Future",2028,[]),p,"P2001",[]).split("\r\n");
+assert.equal(futureYear[0].split("\t")[7],"AUS- it 2001 absences 2028");
+
 
 const project=C.newProject(p,"AU example",2027,C.exampleEmployees(76));project.seed=835735;
 const first=C.generate(project,p,true);
