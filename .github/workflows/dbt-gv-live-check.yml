@@ -43,7 +43,7 @@ jobs:
 
           latest, _ = fetch('latest.yml', 20000)
           latest = latest.decode('utf-8-sig')
-          assert re.search(r'(?m)^version: 5[.]0[.]66$', latest), 'Updater does not advertise DBT 5.0.67'
+          assert re.search(r'(?m)^version: 5[.]0[.]67$', latest), 'Updater does not advertise DBT 5.0.67'
           assert 'DemoBuildingToolsSetup-5.0.67.exe' in latest, 'New installer missing from feed'
 
           _, installer_headers = fetch('DemoBuildingToolsSetup-5.0.67.exe', method='HEAD')
