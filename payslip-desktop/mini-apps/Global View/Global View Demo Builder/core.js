@@ -17,6 +17,8 @@
   function dateFromSAP(s){if(!/^\d{8}$/.test(String(s||"")))return null;var d=new Date(Date.UTC(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8)));return yyyyMMdd(d)===s?d:null;}
   function fromISO(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||"");if(!m)return "";return dateFromSAP(m[1]+m[2]+m[3])?m[1]+m[2]+m[3]:"";}
   function dateAdd(start,days){var d=dateFromSAP(start);if(!d)return start;d.setUTCDate(d.getUTCDate()+days);return yyyyMMdd(d);}
+  function businessEnd(start,count){var d=dateFromSAP(start);if(!d)return start;var left=Math.max(1,Math.min(366,Number(count)||1));while(left>1){d.setUTCDate(d.getUTCDate()+1);if(d.getUTCDay()!==0&&d.getUTCDay()!==6)left--;}return yyyyMMdd(d);}
+  function businessDays(start,end){var d=dateFromSAP(start),limit=dateFromSAP(end),count=0;if(!d||!limit)return 0;while(d<=limit){if(d.getUTCDay()!==0&&d.getUTCDay()!==6)count++;d.setUTCDate(d.getUTCDate()+1);}return count;}
   function field(name,label,type,length,required,role,def){return {name:name,label:label,type:type||"CHAR",length:length||20,required:!!required,role:role||"none",defaultValue:def==null?"":String(def)};}
   function auProfile(){
     var p={id:"AU",code:"AU",name:"Australia",currency:"AUD",system:"GVXADP",interface:"VIEWPOINT",client:"13Australia (AU)",systemCode:"PU4030",year:2027,revision:1,templates:{},rules:[]};
@@ -113,10 +115,10 @@
     var month=pickMonth(r,rule.weights);
     var start=randomDay(r,project.year,month,rule.weekdays);
     var duration=Math.max(1,randomBetween(r,rule.durationMin,rule.durationMax));
-    var end=rule.infotype==="P2001"?dateAdd(start,duration-1):start;
+    var end=rule.infotype==="P2001"?businessEnd(start,duration):start;
     if(end>String(project.year)+"1231")end=String(project.year)+"1231";
     var quantity=rule.mode==="money"?"0":String(randomBetween(r,rule.quantityMin,rule.quantityMax));
-    if(rule.infotype==="P2001")quantity=String(Math.max(1,duration*8));
+    if(rule.infotype==="P2001")quantity=String(Math.max(1,businessDays(start,end))*8);
     var amount=rule.mode==="money"?String(rule.amount||0):"0";
     var values={employee:employee,start:start,end:end,code:rule.code||"",hours:rule.infotype==="P2001"?quantity:"0",quantity:rule.infotype==="P2001"?"":quantity,
       unit:rule.mode==="hours"?"001":"",amount:amount,currency:profile.currency.padEnd(5," ")};
