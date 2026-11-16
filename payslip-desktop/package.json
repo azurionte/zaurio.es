@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.65",
+  "version": "5.0.66",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Fixes desktop update reliability with a dedicated update feed route, adds a GitHub fallback for update checks, and replaces Zaurio admin wording with Max Robles in support errors. Includes the visible standalone PRR Builder in Celergo tools."
+      "releaseNotes": "Adds a new Global View folder with GlobalView Demo Builder v0.1: Australia P2001/P2010 annual scenario planning, country setup, event review, TXT export, checkpoints and manual project handovers."
     },
     "nsis": {
       "perMachine": false,
