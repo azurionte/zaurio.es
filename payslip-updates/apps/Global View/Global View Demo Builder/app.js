@@ -107,7 +107,7 @@
       fieldLabel("Minimum duration (days)",inp("r-durationMin",r.durationMin,"number",1,365))+
       fieldLabel("Maximum duration (days)",inp("r-durationMax",r.durationMax,"number",1,365))+
       '<div class="wide actions"><label class="checkitem"><input type="checkbox" id="r-weekdays" '+(r.weekdays?"checked":"")+'> Start on weekdays</label><label class="checkitem"><input type="checkbox" id="r-enabled" '+(r.enabled?"checked":"")+'> Include in generation</label></div></div>';
-    html+='<div class="divider"></div><h3>Seasonality & spikes</h3><p class="muted small">Higher intensity means more events in that month, not higher payment amounts. Zero excludes the month.</p><div class="months-edit">'+r.weights.map(function(w,i){return '<div class="weightcell"><b>'+C.MONTHS[i]+'</b><span class="monthweight" data-weight-label="'+i+'">'+w+'</span><input type="range" min="0" max="10" step="1" data-monthweight="'+i+'" value="'+h(w)+'" aria-label="'+C.MONTHS[i]+' intensity"></div>';}).join("")+'</div>';
+    html+='<div class="divider"></div><h3>Seasonality & spikes</h3><p class="muted small">Higher intensity means more events in that month, not higher payment amounts. Zero excludes the month.</p><div class="actions" style="margin:12px 0 16px">'+button("Even year","preset-even","ghost small")+button("Summer slowdown","preset-summer","ghost small")+button("Year-end rush","preset-yearend","ghost small")+button("Mid-year spike","preset-midyear","ghost small")+'</div><div class="months-edit">'+r.weights.map(function(w,i){return '<div class="weightcell"><b>'+C.MONTHS[i]+'</b><span class="monthweight" data-weight-label="'+i+'">'+w+'</span><input type="range" min="0" max="10" step="1" data-monthweight="'+i+'" value="'+h(w)+'" aria-label="'+C.MONTHS[i]+' intensity"></div>';}).join("")+'</div>';
     html+='<div class="divider"></div><div class="flex-between"><span class="small muted">Changes affect the next generation, not existing events.</span>'+button("Save this pattern","save-rule","primary")+'</div>';
     return html;
   }
@@ -150,7 +150,7 @@
     html+='<div class="summary-strip" style="margin-top:12px">'+selected.map(function(t){return pill(t+": "+num(pre.counts[t]||0));}).join("")+'</div>';
     if(pre.ongoing)html+='<div class="tip warning" style="margin-top:14px">'+pre.ongoing+' leave records remain active from earlier months. They are shown in the planner but excluded from this batch by start date to prevent duplicate uploads. Confirm the earlier batch was loaded.</div>';
     if(pre.repeats.length)html+='<div class="tip warning" style="margin-top:14px">'+pre.repeats.length+' records have already been marked as uploaded. Confirm before re-exporting any overlapping period.</div>';
-    html+='<p class="small muted">Files use the format observed in the Australia templates (UTF-16LE, tab-delimited, HEADR/NAME/CTEXT/FIELD/FSPEC/DATA/TRAIL). GlobalView acceptance has not yet been tested. Imported headers are preserved for round-trip exports.</p>';
+    html+='<p class="small muted">The Australia file profile follows the supplied sample structure. Imported headers are preserved. Check the first upload with your target GlobalView environment before relying on new batches.</p>';
     html+='<div class="actions">'+button("Download TXT bundle (.zip)","download-bundle","primary",(!pre.rows.length||pre.errors.length||!selected.length?'disabled':''))+
       button("Share project snapshot","share-snapshot","ghost")+'</div></div>';
     html+='<div class="card">'+panelTitle("Export & upload history","Downloaded and uploaded are different states. Upload confirmation is recorded manually.");
@@ -162,7 +162,7 @@
   function renderCountries(){
     var ids=Object.keys(W.countries);if(!W.countries[UI.countryId])UI.countryId=ids[0]||"AU";var pf=W.countries[UI.countryId];
     var html='<div class="card">'+panelTitle("Country profiles","The same engine works with a blank profile built entirely in this interface.",button("+ Build a country","new-country","primary small"))+
-      '<div class="filters">'+fieldLabel("Country",selectList("countryChoice",ids.map(function(id){var c=W.countries[id];return [id,c.name+" ("+id+")"];}),UI.countryId))+
+      '<div class="filters">'+fieldLabel("Country",selectList("countryChoice",ids.map(function(id){var c=W.countries[id];return [id,c.name+" ("+id+")"+(Object.keys(c.templates).length?"":" · setup required")];}),UI.countryId))+
       button("Duplicate profile","clone-country","ghost small")+'</div>';
     if(!pf)return html+'</div>';
     html+='<div class="formgrid">'+fieldLabel("Display name",inp("c-name",pf.name))+fieldLabel("Country ISO code",inp("c-code",pf.code))+
@@ -193,8 +193,8 @@
     html+=p.annotations.length?p.annotations.slice().reverse().map(function(n){return '<div class="audit-item"><div><strong>'+h(n.title||"Note")+'</strong><div class="small muted">'+h(n.by)+' · '+h(new Date(n.at).toLocaleString())+(n.month?' · '+C.MONTHS[n.month-1]:"")+'</div><p>'+h(n.body)+'</p></div></div>';}).join(""):'<div class="empty">No notes have been added.</div>';html+='</div>';
     html+='<div class="card">'+panelTitle("Activity log","Changes are attributable and included in each shared snapshot.")+'<div class="actions">'+button("Share snapshot","share-snapshot","ghost small")+button("Import snapshot","import-snapshot","ghost small")+'</div><div class="divider"></div>';
     html+=p.activity.length?p.activity.slice(0,55).map(function(a){return '<div class="audit-item"><div><strong>'+h(a.action)+'</strong> <time>'+h(new Date(a.at).toLocaleString())+'</time><p>'+h(a.by)+' · '+h(a.detail)+'</p></div></div>';}).join(""):'<div class="empty">Changes to this project will be recorded here.</div>';html+='</div></div>';
-    html+='<div class="card" style="margin-top:15px">'+panelTitle("Sharing & sync","Manual two-way snapshots in v0.1; no external employee data is transmitted.")+
-      '<div class="tip">Share snapshot downloads a versioned JSON project. Another analyst can import it, review the revision and replace their local copy. Automatic server-side synchronization and conflict merging require an approved corporate backend.</div>'+
+    html+='<div class="card" style="margin-top:15px">'+panelTitle("Sharing & sync","Versioned project snapshots for handovers between analysts.")+
+      '<div class="tip">Share snapshot downloads a versioned JSON project. Another analyst can import it, review the revision and replace their local copy. Snapshots are exchanged manually; compare revision numbers before replacing a local project.</div>'+
       '<div class="control-row" style="margin-top:14px">'+fieldLabel("Your display name",inp("editorName",editor()))+button("Save name","save-editor","primary")+'</div></div>';
     return html;
   }
@@ -440,6 +440,7 @@
     else if(action==="select-rule"){UI.ruleId=id;render();}
     else if(action==="duplicate-rule"){var pf=country(),r=activeRule(pf);if(r){var copy=C.clone(r);copy.id=C.uid();copy.label=copy.label+" copy";pf.rules.push(copy);UI.ruleId=copy.id;pf.revision++;save();render();}}
     else if(action==="delete-rule"){var pf=country(),r=activeRule(pf);if(r)confirmBox("Delete scenario?","Existing events remain; only the pattern is removed.",function(){pf.rules=pf.rules.filter(function(x){return x.id!==r.id;});UI.ruleId=null;pf.revision++;noteLog(current(),"Scenario removed",r.label);render();});}
+    else if(action.indexOf("preset-")===0){var pattern=action.slice(7),patterns={even:[5,5,5,5,5,5,5,5,5,5,5,5],summer:[6,7,7,7,8,7,3,2,5,7,8,8],yearend:[3,4,4,4,4,5,5,6,7,8,10,10],midyear:[3,3,4,5,9,10,10,9,5,4,3,3]};var weights=patterns[pattern];if(weights){qa("[data-monthweight]").forEach(function(el,i){el.value=weights[i];var n=q('[data-weight-label="'+i+'"]');if(n)n.textContent=weights[i];});notify("Monthly intensity adjusted. Save this pattern to keep it.");}}
     else if(action==="save-rule"){if(saveRuleForm()){noteLog(current(),"Scenario updated",activeRule(country()).label);render();notify("Pattern saved.","success");}}
     else if(action==="save-seed"){current().seed=numberValue("seedValue");noteLog(current(),"Simulation seed updated",String(current().seed));render();}
     else if(action==="generate"){if(q("#r-label")&&!saveRuleForm())return;generateEvents();}
