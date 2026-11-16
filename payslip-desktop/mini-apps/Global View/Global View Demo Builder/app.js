@@ -370,7 +370,7 @@
     if(types.some(function(t){return !pf.templates[t].exportReady;})){notify("One of the data formats is not export-enabled. Review country setup.","error");return;}
     var make=function(){
       var files=[],at=new Date(),revs={};pre.rows.forEach(function(e){revs[e.id]=e.revision||1;});
-      types.forEach(function(t){var rows=pre.rows.filter(function(e){return e.infotype===t;});if(rows.length){files.push({name:C.makeFilename(pf,t,at),data:C.generateTxt(p,pf,t,rows)});}});
+      types.forEach(function(t){var rows=pre.rows.filter(function(e){return e.infotype===t;});if(rows.length){files.push({name:C.makeFilename(pf,t,at),data:C.generateTxt(p,pf,t,rows,at)});}});
       if(!files.length){notify("No eligible records in these types.","error");return;}
       var zip=C.zipFiles(files),period=C.MONTHS[UI.periodStart-1]+"–"+C.MONTHS[UI.periodEnd-1],
         filename="GV_"+pf.code+"_"+p.year+"_"+C.pad(UI.periodStart)+"-"+C.pad(UI.periodEnd)+"_r"+(p.revision+1)+".zip";
