@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.66",
+  "version": "5.0.67",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Adds a new Global View folder with GlobalView Demo Builder v0.1: Australia P2001/P2010 annual scenario planning, country setup, event review, TXT export, checkpoints and manual project handovers."
+      "releaseNotes": "Replaces the GlobalView Builder overview with a country-first experience: visible preparation/import progress, a five-step annual planner, easier event review and monthly import tracking. Existing projects are preserved."
     },
     "nsis": {
       "perMachine": false,
