@@ -1,7 +1,7 @@
 /* GlobalView Demo Builder 0.1 — workspace, interface and interactions */
 (function(){
   "use strict";
-  var C=window.GVCore,STORAGE="dbt.gv.demo.builder.v01",W,UI={page:"dashboard",month:0,prepStep:0,detail:"",ruleId:null,eventPage:0,search:"",kind:"all",periodStart:1,periodEnd:3,selectedTypes:null,countryId:"AU",templateId:"P2001"};
+  var C=window.GVCore,STORAGE="dbt.gv.demo.builder.v01",W,UI={page:"overview",month:0,prepStep:0,detail:"",ruleId:null,eventPage:0,search:"",kind:"all",periodStart:1,periodEnd:3,selectedTypes:null,countryId:"AU",templateId:"P2001"};
   var TITLES={overview:["Overview","See the entire calendar and spot unusual patterns at a glance."],
     planner:["Event planner","Define natural event patterns, seasonal peaks, and employee variability."],
     employees:["Employees & events","Inspect, adjust and annotate every employee event."],
