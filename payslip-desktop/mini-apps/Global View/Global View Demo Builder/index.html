@@ -15,30 +15,94 @@
     .rule-list{display:grid;gap:8px}.rule-line{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid #334359;border-radius:10px;background:#182335;text-align:left;color:white;width:100%}.rule-line:hover,.rule-line.selected{border-color:#d24d65;background:#283146}.rule-line .tag{border-radius:8px;background:#334157;font-size:10px;padding:4px 6px;color:#d5e3f4}.rule-line span{flex:1}.rule-line small{display:block;color:#9daec2;margin-top:4px}.rule-line strong{font-size:12px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.formgrid .wide{grid-column:1/-1}.months-edit{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.weightcell{background:#101925;padding:10px;border:1px solid #304153;border-radius:9px;text-align:center}.weightcell b{display:block;font-size:12px}.weightcell label{font-size:10px;color:var(--muted);display:block}.monthweight{font-size:16px;color:#f6cad0;font-weight:800}.period-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px}.month-check{border:1px solid #34465f;background:#1c2b40;color:#d0dff2;border-radius:9px;padding:11px 3px;font-size:11px;font-weight:800}.month-check.active{background:#a42c43;border-color:#ee6073;color:#fff}.tablewrap{overflow:auto;border:1px solid #304054;border-radius:11px}.data{border-collapse:collapse;width:100%;min-width:750px}.data th{background:#1a2639;color:#9daec3;font-size:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:700;text-align:left;padding:13px 12px;position:sticky;top:0}.data td{border-top:1px solid #2c3a4d;padding:11px 12px;font-size:12px;color:#d9e3ef}.data tr:hover td{background:#1e2b3b}.data tr{cursor:pointer}.data .rowbtn{padding:4px 8px;border:1px solid #425a75;border-radius:7px;color:#e2eaf4;background:#27384b}.table-footer{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap}.progress-list{display:grid;gap:8px}.progress-row{display:grid;grid-template-columns:75px 1fr auto;align-items:center;gap:12px;border:1px solid #304056;border-radius:10px;padding:10px 13px}.barline{height:7px;border-radius:9px;background:#2b3a50;overflow:hidden}.barline div{height:100%;border-radius:9px;background:linear-gradient(90deg,#ed3349,#ff8690)}.checkitem{display:flex;align-items:center;gap:8px;color:#cdd8e8}.checkitem input{margin:0}.eventedit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:50vh;overflow:auto}.eventedit label{min-width:0}.tip{padding:12px 15px;border-left:3px solid #7ca8e3;background:#1b2e44;border-radius:7px;font-size:12px;line-height:1.6;color:#c5d5e7}.tip.warning{background:#382d2a;border-color:#e6a55b;color:#f9d8af}.tip.danger{background:#492733;border-color:#eb6d78;color:#ffccd1}.alertbar{margin-bottom:14px}.audit-item{padding:12px 0;border-bottom:1px solid #29384b;display:flex;gap:11px;align-items:start}.audit-item:last-child{border-bottom:0}.audit-item time{color:var(--muted);font-size:11px}.audit-item p{margin:4px 0 0;font-size:12px;color:#d5deea}.modal-layer{position:fixed;inset:0;background:#07101bdc;z-index:100;display:flex;align-items:center;justify-content:center;padding:14px}.modal{width:min(660px,100%);max-height:90vh;overflow:auto;border-radius:18px;border:1px solid #53667f;background:#172236;box-shadow:0 18px 75px #0009;padding:24px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.modal-head h2{margin:0}.modal-foot{margin-top:20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.close{border:0;background:transparent;color:#cbd9e8;font-size:24px}.toast{position:fixed;bottom:22px;right:20px;z-index:200;border:1px solid #516179;background:#233349;border-radius:11px;padding:13px 17px;box-shadow:0 12px 40px #0009;max-width:360px;line-height:1.5}.toc{display:grid;gap:8px}.toc .rule-line{padding:10px}.form-card{padding:14px;border:1px solid #33435a;border-radius:10px}.flex-between{display:flex;justify-content:space-between;align-items:center;gap:9px;flex-wrap:wrap}.eTag{font-size:10px;color:#aac6e0;border:1px solid #44617c;padding:3px 7px;border-radius:5px}
     @media(max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g5{grid-template-columns:repeat(3,minmax(0,1fr))}.months-edit{grid-template-columns:repeat(4,minmax(0,1fr))}}
     @media(max-width:800px){#shell{grid-template-columns:1fr}.side{position:static;height:auto;padding:10px;gap:8px}.brand{padding:2px 6px}.nav{display:flex;overflow:auto}.side-section,.side-foot{display:none}.nav-btn{width:auto;white-space:nowrap;padding:9px 11px}.main{padding:18px 12px 45px}.g2,.g3{grid-template-columns:1fr}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.heatmap{grid-template-columns:repeat(6,minmax(0,1fr))}.bars{gap:3px}.bar-btn{height:185px}.bar-frame{height:145px}.bar-btn small{font-size:9px}.formgrid{grid-template-columns:1fr}.months-edit{grid-template-columns:repeat(3,minmax(0,1fr))}.period-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.eventedit{grid-template-columns:1fr}.modal{padding:16px}}
+  
+  /* Country-first flow: existing DBT typography/palette, fewer visible controls. */
+  .country-intro{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+  .country-intro h2{font-size:25px;margin-bottom:6px}
+  .country-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .country-card{padding:20px;border:1px solid #304158;background:linear-gradient(155deg,#1c293a,#141c2a 75%);border-radius:15px;min-width:0;display:flex;flex-direction:column;gap:15px;text-align:left;color:var(--text);transition:transform .15s ease,border-color .15s ease}
+  .country-card:hover,.country-card:focus-visible{border-color:#d65c71;transform:translateY(-2px);outline:none;box-shadow:0 8px 30px #0004}
+  .country-card .country-heading{display:flex;align-items:center;gap:13px}
+  .country-flag{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;background:#2a394d;border:1px solid #3d516b;border-radius:12px;font-size:23px}
+  .country-card .country-heading strong{font-size:16px;display:block}
+  .country-card .country-heading small{color:var(--muted);display:block;margin-top:5px}
+  .country-progress{display:grid;gap:11px}
+  .country-progress-line{display:grid;gap:6px}
+  .country-progress-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px}
+  .country-progress-top strong{font-size:14px}
+  .track{height:7px;background:#354154;border-radius:20px;overflow:hidden;min-width:45px}
+  .track > span{height:100%;display:block;background:linear-gradient(90deg,#ec4761,#ff8b89);border-radius:20px}
+  .track.import > span{background:linear-gradient(90deg,#529be8,#67cfef)}
+  .country-foot{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-top:auto;border-top:1px solid #314158;padding-top:13px}
+  .country-foot em{font-size:11px;color:#aebcd1;font-style:normal}
+  .country-foot .arrow{font-size:20px;color:#fa8794}
+  .journey-hero{display:grid;gap:14px;padding:20px 22px;background:linear-gradient(135deg,#202e41,#131c2a 70%);border:1px solid #354760;border-radius:17px;margin-bottom:16px}
+  .journey-hero .journey-heading{display:flex;align-items:center;gap:13px;justify-content:space-between;flex-wrap:wrap}
+  .journey-title{display:flex;gap:13px;align-items:center}.journey-title h2{font-size:22px}
+  .journey-title p{margin:4px 0 0;color:var(--muted);font-size:12px}
+  .journey-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .journey-phase{border:1px solid #374960;border-radius:12px;background:#121d2b88;padding:14px 16px;min-width:0}
+  .journey-phase .percent{font-size:23px;font-weight:800;letter-spacing:-.5px}
+  .journey-phase .percent small{font-size:12px;font-weight:600;margin-left:3px;color:var(--muted)}
+  .journey-phase .flex-between{margin-bottom:8px}
+  .journey-phase.active{border-color:#dd6179}
+  .journey-phase .track{margin-top:10px}
+  .phase-badge{font-size:11px;color:#b1bfd0}
+  .journey-tabs{display:flex;gap:7px;flex-wrap:wrap}
+  .journey-tab{background:#202d40;border:1px solid #374960;color:#ced9e9;border-radius:9px;padding:10px 15px;font-weight:700;font-size:12px}
+  .journey-tab.active{background:#6b263a;border-color:#c2556a;color:#fff}
+  .journey-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:16px}
+  .journey-step{border:1px solid #34475e;background:#172334;color:#c8d6e7;text-align:left;padding:12px;border-radius:11px;min-width:0}
+  .journey-step.active{border-color:#f05e75;background:#352b3b;color:white}
+  .journey-step.complete{border-color:#2b7261;background:#183b37}
+  .step-number{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#33465e;margin-bottom:9px;font-size:12px;font-weight:800}
+  .journey-step.complete .step-number{background:#286b57}
+  .journey-step strong{display:block;font-size:12px}.journey-step small{display:block;color:#9faec0;font-size:10px;margin-top:4px}
+  .guided-content{display:grid;gap:14px}.guided-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;flex-wrap:wrap}
+  .guided-intro h2{font-size:20px}.guided-intro p{margin:5px 0 0;color:var(--muted);max-width:600px;font-size:13px}
+  .guided-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:18px}
+  .guided-note{background:#203149;border:1px solid #37506b;border-radius:11px;padding:12px 15px;color:#d2e1ee;font-size:12px;line-height:1.6}
+  .insight-stack{display:grid;gap:10px}.insight-item{background:#1c293a;border:1px solid #344860;border-radius:11px;padding:13px}
+  .insight-item strong{display:block;font-size:13px}.insight-item small{color:#9fb0c6}
+  .flow-row{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:12px;border:1px solid #33475d;background:#182436;border-radius:12px;padding:13px}
+  .flow-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#273b51;color:#dceaf7}
+  .flow-row strong{font-size:13px}.flow-row p{font-size:11px;color:#9eafc5;margin:4px 0 0}
+  .flow-row .btn{font-size:11px}
+  .mini-months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:7px}
+  .mini-month{border:1px solid #3a4a60;padding:11px 3px;background:#1d2a3d;border-radius:8px;text-align:center;font-size:11px}
+  .mini-month strong{display:block;margin-top:5px;font-size:10px;color:#9fb2c8}
+  .mini-month.done{background:#16483d;border-color:#36a583}.mini-month.done strong{color:#9fe9c7}
+  .mini-month.pending{background:#4c3341;border-color:#a45c6c}
+  .mini-month.downloaded{background:#203e56;border-color:#467a9b}
+  .mini-month.nodata{opacity:.55}.muted-inline{font-size:12px;color:var(--muted)}
+  .shell-footer{margin-top:17px;color:#899bad;font-size:11px}
+  .step-ok{display:inline-flex;gap:6px;align-items:center;color:#72e4b2;font-weight:700;font-size:12px}
+  .step-warn{display:inline-flex;gap:6px;align-items:center;color:#ffc184;font-weight:700;font-size:12px}
+  .goto-back{display:inline-flex;align-items:center;gap:9px;margin-bottom:12px}
+  @media(max-width:1100px){.country-board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:800px){.country-board{grid-template-columns:1fr}.journey-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.journey-stats{grid-template-columns:1fr}.mini-months{grid-template-columns:repeat(6,minmax(0,1fr))}.country-intro h2{font-size:21px}.journey-hero{padding:14px}}
+
   </style>
 </head>
 <body>
 <div id="shell">
   <aside class="side">
     <div class="brand"><div class="mark">GV</div><div><strong>GlobalView</strong><small>DEMO BUILDER · 0.1</small></div></div>
-    <div class="side-section">Workspace</div>
+    <div class="side-section">YOUR WORK</div>
     <nav class="nav" aria-label="GlobalView Builder navigation">
-      <button type="button" class="nav-btn active" data-page="overview"><span>◈</span><span>Overview</span></button>
-      <button type="button" class="nav-btn" data-page="planner"><span>▦</span><span>Event planner</span></button>
-      <button type="button" class="nav-btn" data-page="employees"><span>♙</span><span>Employees & events</span></button>
-      <button type="button" class="nav-btn" data-page="exports"><span>⇩</span><span>Export center</span></button>
-      <button type="button" class="nav-btn" data-page="countries"><span>⚙</span><span>Country setup</span></button>
-      <button type="button" class="nav-btn" data-page="activity"><span>◷</span><span>Activity & notes</span></button>
+      <button type="button" class="nav-btn active" data-page="dashboard"><span>◈</span><span>Countries</span></button>
+      <button type="button" class="nav-btn" data-page="preparation"><span>▦</span><span>Preparation</span></button>
+      <button type="button" class="nav-btn" data-page="import"><span>⇩</span><span>Import</span></button>
     </nav>
-    <div class="side-foot"><b>Keep your work safe</b><p>Projects are saved on this device. Share a snapshot to continue working on another approved workstation.</p></div>
+    <div class="side-foot"><b>One country at a time</b><p>Prepare the calendar year, then track the monthly GlobalView imports. Your work stays on this device.</p></div>
   </aside>
   <main class="main">
     <header class="top">
-      <div><div class="eyebrow" id="page-eyebrow">Demo Building Tools / GlobalView</div><h1 id="page-title">Overview</h1><div class="muted small" id="page-subtitle">Annual employee event planning and export</div></div>
+      <div><div class="eyebrow" id="page-eyebrow">Demo Building Tools / GlobalView</div><h1 id="page-title">Countries</h1><div class="muted small" id="page-subtitle">Annual employee event planning and export</div></div>
       <div class="top-actions">
-        <select aria-label="Current project" id="projectSelect"><option value="">No project selected</option></select>
-        <button class="btn ghost" id="shareBtn" type="button" title="Export project snapshot for another analyst">Share snapshot</button>
-        <button class="btn primary" id="newBtn" type="button">+ New project</button>
+        <select aria-label="Previously saved plan" id="projectSelect" hidden><option value="">No plan selected</option></select>
+        <button class="btn ghost" id="shareBtn" type="button" hidden title="Export project snapshot for another analyst">Share snapshot</button>
+        <button class="btn primary" id="newBtn" type="button" hidden>+ New project</button>
       </div>
     </header>
     <div id="notices"></div>
@@ -50,6 +114,7 @@
 <div id="modal-root"></div>
 <div id="toast-root" aria-live="polite"></div>
 <script src="core.js"></script>
+<script src="workflow.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
