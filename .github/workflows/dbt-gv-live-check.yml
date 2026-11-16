@@ -1,0 +1,68 @@
+name: Verify DBT 5.0.66 live updater and GlobalView package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/dbt-gv-live-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check public latest.yml, installer and GlobalView module
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import re
+          import urllib.request
+          import urllib.parse
+          import time
+
+          BASE = 'https://zaurio.es/payslip-updates/'
+          stamp = str(int(time.time()))
+
+          def fetch(path, limit=1048576, method='GET'):
+              url = BASE + path + ('&' if '?' in path else '?') + 'check=' + stamp
+              req = urllib.request.Request(url, method=method, headers={
+                  'User-Agent': 'DBT-live-update-check/1.0',
+                  'Cache-Control': 'no-cache'
+              })
+              with urllib.request.urlopen(req, timeout=35) as res:
+                  data = res.read(limit + 1) if method == 'GET' else b''
+                  assert len(data) <= limit, f'{path}: response too large for smoke check'
+                  assert res.status == 200, f'{path}: HTTP {res.status}'
+                  print(f'HTTP {res.status}: {path}: {len(data)} bytes, content-length {res.headers.get("Content-Length")}')
+                  return data, res.headers
+
+          latest, _ = fetch('latest.yml', 20000)
+          latest = latest.decode('utf-8-sig')
+          assert re.search(r'(?m)^version: 5\\.0\\.66$', latest), 'Updater does not advertise DBT 5.0.66'
+          assert 'DemoBuildingToolsSetup-5.0.66.exe' in latest, 'New installer missing from feed'
+
+          _, installer_headers = fetch('DemoBuildingToolsSetup-5.0.66.exe', method='HEAD')
+          declared_size = re.search(r'(?m)^    size: (\\d+)$', latest)
+          if installer_headers.get('Content-Length') and declared_size:
+              assert int(installer_headers['Content-Length']) == int(declared_size.group(1)), 'Installer size differs from latest.yml'
+
+          manifest_bytes, _ = fetch('apps/gv-demo-builder.json')
+          manifest = json.loads(manifest_bytes)
+          assert manifest['app'] == 'gv-demo-builder'
+          assert manifest['version'] == '0.1'
+          expected = {'index.html', 'core.js', 'app.js'}
+          files = manifest.get('files', [])
+          assert {f['path'].split('/')[-1] for f in files} == expected
+          assets = {}
+          for item in files:
+              assets[item['path'].split('/')[-1]] = fetch('apps/' + item['url'], 200000)[0]
+          assert b'GlobalView Demo Builder' in assets['index.html']
+          assert b'GVCore' in assets['core.js']
+          assert b'Export center' in assets['app.js']
+          print('PUBLIC DBT 5.0.66 UPDATE AND GLOBALVIEW 0.1 ASSETS VERIFIED')
+          PY
