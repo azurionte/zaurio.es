@@ -195,13 +195,13 @@
     project.importHeaders[parsed.type]={header:parsed.header,name:parsed.name,ctext:parsed.ctext,field:parsed.field,fspec:parsed.fspec,sourceFile:parsed.filename};
     return added;
   }
-  function dataLines(project,profile,type,events){
+  function dataLines(project,profile,type,events,exportedAt){
     var t=profile.templates[type];if(!t)throw new Error("No template configured for "+type);
     var h=project.importHeaders[type]||null;
     var header=h?h.header.slice():t.header.slice(),name=h?h.name.slice():t.name.slice(),ctext=h?h.ctext.slice():[type,"CTEXT"].concat(t.fields.map(function(f){return f.label;})),
       fieldLine=h?h.field.slice():[type,"FIELD"].concat(t.fields.map(function(f){return f.name;})),
       spec=h?h.fspec.slice():[type,"FSPEC"].concat(t.fields.map(function(f){return f.required?"R":"";}));
-    if(!h&&header.length>8){header[8]=project.year+"0101";header[7]=String(header[7]||"").replace(/\b20\d{2}\b/g,String(project.year));}
+    if(!h&&header.length>8){header[8]=project.year+"0101";header[7]=String(header[7]||"").replace(/\b20\d{2}\b/g,String(project.year));var at=exportedAt||new Date();if(header.length>9)header[9]=pad(at.getHours())+":"+pad(at.getMinutes())+":"+pad(at.getSeconds());}
     if(!h&&header.length>3)header[3]=profile.client||header[3];
     if(!h&&name.length>3)name[3]=profile.name;
     var arranged=events.slice().sort(function(a,b){if(a.sourceIndex!=null&&b.sourceIndex!=null&&a.sourceFile===b.sourceFile)return a.sourceIndex-b.sourceIndex;
@@ -213,7 +213,7 @@
     return lines.join("\r\n")+"\r\n";
   }
   function utf16le(text){var out=new Uint8Array(2+text.length*2);out[0]=255;out[1]=254;for(var i=0;i<text.length;i++){var ch=text.charCodeAt(i);out[i*2+2]=ch&255;out[i*2+3]=ch>>8;}return out;}
-  function generateTxt(project,profile,type,events){return utf16le(dataLines(project,profile,type,events));}
+  function generateTxt(project,profile,type,events,exportedAt){return utf16le(dataLines(project,profile,type,events,exportedAt));}
   function batchEvents(project,types,startMonth,endMonth){
     var tset=new Set(types),a=String(project.year)+pad(startMonth)+"01",b=String(project.year)+pad(endMonth)+pad(new Date(Date.UTC(project.year,endMonth,0)).getUTCDate());
     return project.events.filter(function(e){return tset.has(e.infotype)&&e.start>=a&&e.start<=b;});
