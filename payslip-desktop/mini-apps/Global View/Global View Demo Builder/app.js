@@ -1,7 +1,7 @@
 /* GlobalView Demo Builder 0.1 — workspace, interface and interactions */
 (function(){
   "use strict";
-  var C=window.GVCore,STORAGE="dbt.gv.demo.builder.v01",W,UI={page:"overview",month:0,ruleId:null,eventPage:0,search:"",kind:"all",periodStart:1,periodEnd:3,selectedTypes:null,countryId:"AU",templateId:"P2001"};
+  var C=window.GVCore,STORAGE="dbt.gv.demo.builder.v01",W,UI={page:"dashboard",month:0,prepStep:0,detail:"",ruleId:null,eventPage:0,search:"",kind:"all",periodStart:1,periodEnd:3,selectedTypes:null,countryId:"AU",templateId:"P2001"};
   var TITLES={overview:["Overview","See the entire calendar and spot unusual patterns at a glance."],
     planner:["Event planner","Define natural event patterns, seasonal peaks, and employee variability."],
     employees:["Employees & events","Inspect, adjust and annotate every employee event."],
@@ -37,6 +37,7 @@
   function originalValue(id){return String(byId(id)?.value||"");}
   function numberValue(id,fallback){var el=byId(id);return el?Number(el.value):fallback;}
   function render(){
+    if(window.GVGuided&&typeof window.GVGuided.render==="function"){window.GVGuided.render();return;}
     var meta=TITLES[UI.page];byId("page-title").textContent=meta[0];byId("page-subtitle").textContent=meta[1];byId("page-eyebrow").textContent="Demo Building Tools / GlobalView / "+meta[0];
     qa("[data-page]").forEach(function(b){b.classList.toggle("active",b.dataset.page===UI.page);});
     var sel=byId("projectSelect");sel.innerHTML='<option value="">Select a project</option>'+W.projects.map(function(p){var c=W.countries[p.profileId];return option(p.id,(c?c.code:"?")+" · "+p.name+" ("+p.year+")",p.id===W.selectedProject);}).join("");
@@ -487,5 +488,20 @@
     byId("importSnapshot").addEventListener("change",function(e){importSnapshotFile(e.target.files[0]);e.target.value="";});
     render();
   }
+
+  window.GVBridge={
+    get W(){return W;}, UI:UI, C:C,
+    current:current, country:country, save:save, noteLog:noteLog, notify:notify,
+    render:render, renderOverview:renderOverview, renderPlanner:renderPlanner,
+    renderEmployees:renderEmployees, renderExports:renderExports,
+    renderCountries:renderCountries, renderActivity:renderActivity,
+    editRoster:editRoster, generateEvents:generateEvents,
+    newCountryModal:newCountryModal, newProjectModal:newProjectModal,
+    markUserAction:function(action,detail){var p=current();if(p)noteLog(p,action,detail);},
+    shareSnapshot:shareSnapshot, addNote:addNote,
+    closeModal:closeModal, modal:modal,
+    getValidation:function(){var p=current();return p&&country()?C.validateProject(p,country()):[];}
+  };
+
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
 })();
