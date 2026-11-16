@@ -137,6 +137,29 @@
       press(st.steps.patterns?"Patterns confirmed":"Confirm patterns","confirm-patterns","primary",!F.patternsReady(pf))+
       press("Next: Generate","next-step","ghost")+'</div></div>');
   }
+  function yearlyReview(){
+    var p=current(),series=G.monthlySeries(p),total=series.reduce(function(sum,m){return sum+m.total;},0),average=total/12;
+    var peak=series.reduce(function(a,b){return b.total>a.total?b:a;},series[0]);
+    var low=series.reduce(function(a,b){return b.total<a.total?b:a;},series[0]);
+    var max=Math.max(1,...series.map(function(m){return m.total;}));
+    var color={P2001:"#58a6ff",P2010:"#ed4459",P0008:"#a991ff",P0015:"#52d7b0",P0267:"#ffbb6b"};
+    var types=Array.from(new Set(p.events.map(function(e){return e.infotype;}))).sort();
+    var chart=series.map(function(m){
+      var parts=types.map(function(t){var v=m.byType[t]||0;return v&&m.total?
+        '<span class="bar-piece" style="height:'+(v/m.total*100)+'%;background:'+(color[t]||"#93abbf")+'"></span>':'';}).join("");
+      return '<button type="button" class="bar-btn" data-guide="month-review" data-month="'+m.month+'" title="Review '+m.label+': '+m.total+' events">'+
+        '<b>'+money(m.total)+'</b><span class="bar-frame"><span class="bar-stack" style="height:'+Math.max(3,m.total/max*100)+'%">'+parts+'</span></span>'+
+        '<small>'+h(m.label)+'</small></button>';
+    }).join("");
+    var legend=types.map(function(t){return '<span class="small"><span class="dot" style="background:'+(color[t]||"#93abbf")+'"></span>'+h(t)+' '+h(G.typeNames[t]||"")+'</span>';}).join("");
+    return '<div class="card">'+intro(p.year+" · Monthly distribution","Compare monthly activity at a glance. Select any month to inspect its employees and events.")+
+      '<div class="legend" style="margin-top:12px">'+legend+'</div><div class="bars" role="group" aria-label="Events by month">'+chart+'</div>'+
+      '<div class="grid g3" style="margin-top:16px">'+
+        '<div class="form-card"><span class="small muted">Busiest month</span><strong style="display:block;font-size:18px;margin-top:6px">'+h(peak.label)+' · '+money(peak.total)+'</strong></div>'+
+        '<div class="form-card"><span class="small muted">Quietest month</span><strong style="display:block;font-size:18px;margin-top:6px">'+h(low.label)+' · '+money(low.total)+'</strong></div>'+
+        '<div class="form-card"><span class="small muted">Monthly average</span><strong style="display:block;font-size:18px;margin-top:6px">'+money(Math.round(average))+' events</strong></div></div>'+
+      '</div>';
+  }
   function stepSimulation(){
     var p=current(),pf=profile(),n=p.events.length,issues=B.getValidation().filter(function(x){return x.severity==="error";}).length;
     if(UI.detail==="events")return wrap('<div class="card">'+press("← Back to annual review","close-detail","ghost small")+'</div>'+B.renderEmployees());
@@ -148,7 +171,7 @@
       '<p class="muted small">'+(blocked?"Add employees and configure event patterns before generating.":"A new generation changes only records that have not already been exported.")+'</p>'+
       '<div class="guided-actions">'+press("Generate annual calendar","generate","primary",blocked)+
       press("Inspect employee records","events","ghost",!n)+press("Next: Approve","next-step","ghost",!n)+'</div></div>';
-    if(n)body+=B.renderOverview();
+    if(n)body+=yearlyReview();
     return wrap(body);
   }
   function stepApproval(){
@@ -244,6 +267,7 @@
     if(op==="config"){UI.detail="config";render();return;}
     if(op==="patterns"){UI.detail="patterns";render();return;}
     if(op==="events"){UI.detail="events";render();return;}
+    if(op==="month-review"){UI.month=Number(btn.dataset.month);UI.detail="events";render();return;}
     if(op==="handover"){UI.detail="handover";render();return;}
     if(op==="show-history"){UI.detail="history";render();return;}
     if(op==="edit-roster"){B.editRoster();return;}
