@@ -1,0 +1,52 @@
+name: GlobalView guided country workflow
+
+on:
+  pull_request:
+    paths:
+      - 'payslip-desktop/mini-apps/Global View/**'
+      - 'payslip-updates/apps/Global View/**'
+      - 'payslip-updates/apps/gv-demo-builder.json'
+      - '.github/workflows/gv-guided-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'payslip-desktop/mini-apps/Global View/**'
+      - 'payslip-updates/apps/Global View/**'
+      - '.github/workflows/gv-guided-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  guided-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate existing Australia import/export engine
+        run: node "payslip-desktop/mini-apps/Global View/Global View Demo Builder/core.test.js"
+      - name: Validate guided 0–100% checkpoints and monthly import progress
+        run: node "payslip-desktop/mini-apps/Global View/Global View Demo Builder/workflow.test.js"
+      - name: Verify JavaScript syntax
+        run: |
+          node --check "payslip-desktop/mini-apps/Global View/Global View Demo Builder/core.js"
+          node --check "payslip-desktop/mini-apps/Global View/Global View Demo Builder/app.js"
+          node --check "payslip-desktop/mini-apps/Global View/Global View Demo Builder/workflow.js"
+          node --check "payslip-desktop/mini-apps/Global View/Global View Demo Builder/guided.js"
+          node --check "payslip-desktop/mini-apps/Global View/Global View Demo Builder/ui-smoke.cjs"
+      - name: Test real guided experience in headless Chrome
+        env:
+          GV_SCREENSHOT_DIR: ${{ runner.temp }}/gv-ui-screens
+        run: |
+          command -v google-chrome || command -v chromium
+          node "payslip-desktop/mini-apps/Global View/Global View Demo Builder/ui-smoke.cjs"
+      - name: Save UI screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GV-guided-ui-screenshots
+          path: ${{ runner.temp }}/gv-ui-screens/*.png
+          if-no-files-found: ignore
