@@ -108,8 +108,9 @@
   }
   function importing(project,profile){
     var months=Array.from({length:12},function(_,i){return monthStatus(project,profile,i+1);});
-    var completed=months.filter(function(m){return m.complete;}).length;
-    return {months:months,completed:completed,total:12,percent:Math.round(completed/12*100)};
+    var relevant=months.filter(function(m){return m.total>0;});
+    var completed=relevant.filter(function(m){return m.complete;}).length;
+    return {months:months,completed:completed,total:relevant.length,percent:relevant.length?Math.round(completed/relevant.length*100):0};
   }
   return {PREPARATION_STEPS:PREPARATION_STEPS,preparation:preparation,importing:importing,monthStatus:monthStatus,
     mark:mark,setupSignature:setupSignature,patternSignature:patternSignature,planSignature:planSignature,
