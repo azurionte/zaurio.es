@@ -96,8 +96,9 @@
       name:[type,"NAME",type,"",""],exportReady:false,verified:"unverified"};
   }
   function defaultWorkspace(){
-    var country=auProfile();
-    return {schema:1,settings:{device:uid(),editor:"Demo Analyst"},countries:{AU:country},projects:[],selectedProject:null,updatedAt:new Date().toISOString()};
+    var country=auProfile(),countries={AU:country};
+    [["US","United States","USD"],["CA","Canada","CAD"],["ES","Spain","EUR"],["MX","Mexico","MXN"],["GB","United Kingdom","GBP"],["CN","China","CNY"],["DE","Germany","EUR"],["NL","Netherlands","EUR"],["FR","France","EUR"]].forEach(function(c){countries[c[0]]=blankCountry(c[0],c[1],c[2]);});
+    return {schema:1,settings:{device:uid(),editor:"Demo Analyst"},countries:countries,projects:[],selectedProject:null,updatedAt:new Date().toISOString()};
   }
   function newProject(profile,name,year,employeeIds){
     return {id:uid(),name:name||profile.name+" "+year,profileId:profile.id,year:Number(year),employeeIds:Array.from(new Set((employeeIds||[]).map(function(x){return String(x).trim();}).filter(Boolean))),
@@ -200,7 +201,7 @@
     var header=h?h.header.slice():t.header.slice(),name=h?h.name.slice():t.name.slice(),ctext=h?h.ctext.slice():[type,"CTEXT"].concat(t.fields.map(function(f){return f.label;})),
       fieldLine=h?h.field.slice():[type,"FIELD"].concat(t.fields.map(function(f){return f.name;})),
       spec=h?h.fspec.slice():[type,"FSPEC"].concat(t.fields.map(function(f){return f.required?"R":"";}));
-    if(!h&&header.length>8)header[8]=project.year+"0101";
+    if(!h&&header.length>8){header[8]=project.year+"0101";header[7]=String(header[7]||"").replace(/\b20\d{2}\b/g,String(project.year));}
     if(!h&&header.length>3)header[3]=profile.client||header[3];
     if(!h&&name.length>3)name[3]=profile.name;
     var arranged=events.slice().sort(function(a,b){if(a.sourceIndex!=null&&b.sourceIndex!=null&&a.sourceFile===b.sourceFile)return a.sourceIndex-b.sourceIndex;
