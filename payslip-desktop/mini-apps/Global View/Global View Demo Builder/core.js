@@ -200,7 +200,7 @@
     var h=project.importHeaders[type]||null;
     var header=h?h.header.slice():t.header.slice(),name=h?h.name.slice():t.name.slice(),ctext=h?h.ctext.slice():[type,"CTEXT"].concat(t.fields.map(function(f){return f.label;})),
       fieldLine=h?h.field.slice():[type,"FIELD"].concat(t.fields.map(function(f){return f.name;})),
-      spec=h?h.fspec.slice():[type,"FSPEC"].concat(t.fields.map(function(f){return f.required?"R":"";}));
+      spec=h?h.fspec.slice():[type,"FSPEC"].concat(t.fields.map(function(f){return f.required?"R":"";}),[""]);
     if(!h&&header.length>8){header[8]=project.year+"0101";header[7]=String(header[7]||"").replace(/\b20\d{2}\b/g,String(project.year));var at=exportedAt||new Date();if(header.length>9)header[9]=pad(at.getHours())+":"+pad(at.getMinutes())+":"+pad(at.getSeconds());}
     if(!h&&header.length>3)header[3]=profile.client||header[3];
     if(!h&&name.length>3)name[3]=profile.name;
