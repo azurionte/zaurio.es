@@ -1,29 +1,73 @@
 {
   "app": "gv-demo-builder",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "entry": "Global View/Global View Demo Builder/index.html",
-  "updatedAt": "2026-11-16T15:10:00.000Z",
-  "notes": "Country-first guided interface: preparation 0-100%, monthly confirmed-import checkpoints, scenario and country setup in five steps, persisted plans and visual month review.",
+  "updatedAt": "2026-11-17T14:28:30.419Z",
+  "notes": "Country dashboard without duplicate navigation, local flag assets, project-scoped scenario simulator with live random/manual peak controls, annual approval and due import reminders.",
   "files": [
     {
       "path": "Global View/Global View Demo Builder/index.html",
-      "url": "Global%20View/Global%20View%20Demo%20Builder/index.html?v=0.1.1"
+      "url": "Global%20View/Global%20View%20Demo%20Builder/index.html?v=0.1.2"
     },
     {
       "path": "Global View/Global View Demo Builder/core.js",
-      "url": "Global%20View/Global%20View%20Demo%20Builder/core.js?v=0.1.1"
+      "url": "Global%20View/Global%20View%20Demo%20Builder/core.js?v=0.1.2"
     },
     {
       "path": "Global View/Global View Demo Builder/workflow.js",
-      "url": "Global%20View/Global%20View%20Demo%20Builder/workflow.js?v=0.1.1"
+      "url": "Global%20View/Global%20View%20Demo%20Builder/workflow.js?v=0.1.2"
     },
     {
       "path": "Global View/Global View Demo Builder/app.js",
-      "url": "Global%20View/Global%20View%20Demo%20Builder/app.js?v=0.1.1"
+      "url": "Global%20View/Global%20View%20Demo%20Builder/app.js?v=0.1.2"
     },
     {
       "path": "Global View/Global View Demo Builder/guided.js",
-      "url": "Global%20View/Global%20View%20Demo%20Builder/guided.js?v=0.1.1"
+      "url": "Global%20View/Global%20View%20Demo%20Builder/guided.js?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/LICENSE.txt",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/LICENSE.txt?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/au.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/au.svg?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/us.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/us.svg?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/ca.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/ca.svg?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/es.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/es.svg?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/mx.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/mx.svg?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/gb.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/gb.svg?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/cn.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/cn.svg?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/de.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/de.svg?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/nl.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/nl.svg?v=0.1.2"
+    },
+    {
+      "path": "Global View/Global View Demo Builder/flags/fr.svg",
+      "url": "Global%20View/Global%20View%20Demo%20Builder/flags/fr.svg?v=0.1.2"
     }
   ]
 }

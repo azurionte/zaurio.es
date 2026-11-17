@@ -22,14 +22,17 @@
     return fp({id:profile.id,code:profile.code,name:profile.name,currency:profile.currency,
       system:profile.system,client:profile.client,interface:profile.interface,systemCode:profile.systemCode,templates:profile.templates});
   }
-  function patternSignature(profile){
-    return profile?fp(profile.rules||[]):"";
+  function patternSignature(profile,project){
+    if(!profile)return "";
+    var scenarios=project&&project.scenarios||{};
+    return Object.keys(scenarios).length?fp({rules:profile.rules||[],scenarios:scenarios}):fp(profile.rules||[]);
   }
   function planSignature(project,profile){
     if(!project||!profile)return "";
-    return fp({country:setupSignature(profile),rules:patternSignature(profile),
+    var payload={country:setupSignature(profile),rules:patternSignature(profile,project),
       year:project.year,seed:project.seed,employees:project.employeeIds,
-      events:project.events.map(function(e){return [e.id,e.infotype,e.employee,e.start,e.end,e.code,e.revision,e.raw];})});
+      events:project.events.map(function(e){return [e.id,e.infotype,e.employee,e.start,e.end,e.code,e.revision,e.raw];})};
+    return fp(payload);
   }
   function templatesReady(profile){
     if(!profile||!profile.templates)return false;
@@ -55,7 +58,7 @@
     var w=project&&project.workflow||{},steps={
       setup:!!(project&&templatesReady(profile)&&w.setup===setupSignature(profile)),
       roster:!!(project&&project.employeeIds&&project.employeeIds.length>0),
-      patterns:!!(project&&patternsReady(profile)&&w.patterns===patternSignature(profile)),
+      patterns:!!(project&&patternsReady(profile)&&w.patterns===patternSignature(profile,project)),
       simulation:!!(project&&validPlan(project,profile,validate))
     };
     steps.review=!!(project&&steps.setup&&steps.roster&&steps.patterns&&steps.simulation&&w.approvedPlan===planSignature(project,profile));
@@ -71,7 +74,7 @@
       project.workflow.setup=setupSignature(profile);
     }else if(key==="patterns"){
       if(!patternsReady(profile))throw new Error("At least one enabled scenario must use an export-ready data type.");
-      project.workflow.patterns=patternSignature(profile);
+      project.workflow.patterns=patternSignature(profile,project);
     }else if(key==="review"){
       var status=preparation(project,profile,validate);
       if(!status.steps.setup||!status.steps.roster||!status.steps.patterns||!status.steps.simulation)

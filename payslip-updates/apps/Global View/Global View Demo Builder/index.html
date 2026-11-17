@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <title>GlobalView Demo Builder · DBT</title>
   <style>
     :root{--bg:#0c121b;--surface:#141d2a;--raised:#1a2535;--muted:#8f9cad;--text:#f1f4fa;--line:#2a3749;--red:#ed3349;--red2:#c62237;--green:#4ce0ad;--blue:#5da3ff;--gold:#ffbe6a;--radius:14px;color-scheme:dark;font-family:Inter,Segoe UI,Arial,sans-serif}
@@ -82,20 +83,61 @@
   @media(max-width:1100px){.country-board{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:800px){.country-board{grid-template-columns:1fr}.journey-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.journey-stats{grid-template-columns:1fr}.mini-months{grid-template-columns:repeat(6,minmax(0,1fr))}.country-intro h2{font-size:21px}.journey-hero{padding:14px}}
 
+
+  /* Compact embedded workspace: DBT already owns navigation and updates. */
+  #shell{display:block;min-height:100vh}.side{display:none}.main{max-width:1700px;padding:24px clamp(16px,2.8vw,44px) 50px}.top{display:none}
+  .country-board{grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:14px}
+  .country-card{padding:0;overflow:hidden;gap:0;transform:none!important}
+  .country-card:hover{box-shadow:0 10px 30px #0004}
+  .country-main{background:none;color:inherit;border:0;display:flex;align-items:center;width:100%;text-align:left;gap:12px;padding:20px 18px 13px;cursor:pointer}
+  .country-main strong{font-size:16px;display:block}.country-main small{color:var(--muted);display:block;margin-top:5px}
+  .country-main .arrow{margin-left:auto;color:var(--muted)}.country-main:hover .arrow{color:#fff}
+  .country-flag{border-radius:8px;background:#223044;width:48px;height:39px;overflow:hidden;padding:3px;display:flex;align-items:center;justify-content:center}
+  .country-flag img{width:100%;height:100%;object-fit:cover;border-radius:4px;display:block}
+  .country-flag .fa-earth-europe{font-size:21px;color:#9fb3cb}
+  .mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px 14px 13px}
+  .mini-grid button{border:1px solid #34475d;background:#1a2739;padding:12px;border-radius:10px;color:inherit;text-align:left;min-width:0;cursor:pointer}
+  .mini-grid button:hover{border-color:#e05b73}.mini-progress{display:grid;gap:7px;font-size:11px}
+  .mini-progress strong{font-size:15px;font-weight:750;min-height:20px}.mini-progress .fa-check-circle{color:#69dfad}
+  .mini-progress.complete{color:#9ef2d1}.mini-progress.complete .track span{background:#30b98e}
+  .mini-progress .track{height:5px}.country-foot{padding:10px 16px;border-top:1px solid #314158;font-size:11px}
+  .country-board-foot{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-top:15px;color:var(--muted);font-size:12px}
+  .year-selector{position:relative;z-index:20}.year-popover{position:absolute;top:calc(100% + 8px);right:0;min-width:230px;max-height:320px;overflow:auto;background:#1b2a3c;border:1px solid #445b75;border-radius:12px;padding:6px;box-shadow:0 14px 50px #0009}
+  .year-item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 12px;border:1px solid transparent;border-radius:8px;color:#d8e5f5;background:transparent;text-align:left}
+  .year-item:hover,.year-item.selected{background:#314158}.year-item span{font-size:10px}
+  .year-item.year-complete{color:#7fe0b1}.year-item.year-pending{color:#ffd089}
+  .country-matches{display:grid;gap:5px;max-height:330px;overflow:auto;margin-top:12px}
+  .country-choice{display:flex;gap:12px;align-items:center;background:#1d2b3d;border:1px solid #32475e;color:white;border-radius:10px;padding:8px 12px;text-align:left}
+  .country-choice:hover{border-color:#e25b74}.country-choice span:nth-child(2){flex:1}.country-choice small{color:var(--muted)}
+  .journey-hero{padding:17px 20px}.journey-stats{display:flex;gap:10px}.journey-phase{flex:1;cursor:pointer;text-align:left;color:var(--text);display:grid;grid-template-columns:1fr auto;gap:6px 12px}
+  .journey-phase .track{grid-column:1/-1;margin:0}.journey-phase.active{border-color:#e26780}.journey-phase .percent{font-size:19px}
+  .mini-month.overdue{background:#463523;border-color:#ba8749;color:#ffe0ae}.mini-month.overdue strong{color:#fbd292}
+  .prep-summary{margin-bottom:15px}.prep-checkpoints{display:flex;gap:8px 15px;flex-wrap:wrap;margin:15px 0;font-size:12px}
+  .sim-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:12px 0}
+  .sim-toolbar button[aria-pressed="true"],.sim-mode button[aria-pressed="true"],.sim-view-tabs button[aria-pressed="true"]{border-color:#e2687f;background:#503346;color:#fff}
+  .sim-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(235px,320px);gap:14px}
+  .sim-preview,.sim-controls{border:1px solid #33475c;background:#101a28;border-radius:13px;padding:16px;min-width:0}
+  .sim-controls{display:grid;align-content:start;gap:15px}.sim-controls label{gap:8px}.sim-controls output{float:right;color:#e9a2af}
+  .sim-mode,.sim-view-tabs{display:flex;gap:7px;flex-wrap:wrap}.sim-control-actions{display:flex;gap:8px;flex-wrap:wrap}.sim-control-actions .btn{flex:1}
+  .sim-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:10px 0}.legend-dot{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:2px}
+  .legend-dot.forecast{background:#ef657e}.legend-dot.actual{background:#65aef5}
+  .sim-chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));align-items:end;gap:5px;height:280px;margin-top:12px}
+  .sim-column{display:flex;flex-direction:column;align-items:center;justify-content:end;gap:6px;background:none;border:1px solid transparent;border-radius:7px;color:#bdcbe0;cursor:pointer;height:100%;min-width:0;padding:4px 1px}
+  .sim-column:hover,.sim-column.active{border-color:#495a71;background:#1f2f43}
+  .sim-column strong{font-size:11px}.sim-column small{font-size:10px}
+  .sim-bar-pair{height:210px;width:100%;max-width:60px;display:flex;align-items:end;justify-content:center;gap:2px}
+  .sim-bar{width:40%;max-width:18px;border-radius:5px 5px 2px 2px;display:block;min-height:2px}
+  .sim-bar.actual{background:#65aef5}.sim-bar.forecast{background:linear-gradient(#ff8395,#df3e5e)}
+  .sim-totals{display:flex;gap:18px;font-size:12px;color:#a9bfd4;margin-top:14px}.sim-totals b{color:#fff}
+  .prep-approval{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:15px}
+  .sim-preview .tablewrap{max-height:300px}
+  @media(max-width:1000px){.sim-layout{grid-template-columns:1fr}.sim-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-controls>div:first-child,.sim-mode,.sim-control-actions,.sim-controls>p{grid-column:1/-1}}
+  @media(max-width:600px){.main{padding:16px 12px 35px}.country-board{grid-template-columns:1fr}.sim-controls{display:grid;grid-template-columns:1fr}.sim-controls>div:first-child,.sim-mode,.sim-control-actions,.sim-controls>p{grid-column:auto}.sim-chart{gap:1px}.sim-column small{font-size:8px}.journey-stats{flex-direction:column}}
+
   </style>
 </head>
 <body>
 <div id="shell">
-  <aside class="side">
-    <div class="brand"><div class="mark">GV</div><div><strong>GlobalView</strong><small>DEMO BUILDER · 0.1.1</small></div></div>
-    <div class="side-section">YOUR WORK</div>
-    <nav class="nav" aria-label="GlobalView Builder navigation">
-      <button type="button" class="nav-btn active" data-page="dashboard"><span>◈</span><span>Countries</span></button>
-      <button type="button" class="nav-btn" data-page="preparation"><span>▦</span><span>Preparation</span></button>
-      <button type="button" class="nav-btn" data-page="import"><span>⇩</span><span>Import</span></button>
-    </nav>
-    <div class="side-foot"><b>One country at a time</b><p>Prepare the calendar year, then track the monthly GlobalView imports. Your work stays on this device.</p></div>
-  </aside>
   <main class="main">
     <header class="top">
       <div><div class="eyebrow" id="page-eyebrow">Demo Building Tools / GlobalView</div><h1 id="page-title">Countries</h1><div class="muted small" id="page-subtitle">Annual employee event planning and export</div></div>
