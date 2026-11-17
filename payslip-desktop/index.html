@@ -8322,11 +8322,6 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     var apps = folderApps[folderKey] || [];
     modal.innerHTML = renderAppChrome(true) + '<main class="v5-home"><section><h1>'+title+'</h1><p>'+detail+'</p></section><section><div class="v5-grid">'+apps.map(plainAppCard).join('')+'</div></section></main>';
     bindBack(renderDashboard);
-    var gvCountryAction = modal.querySelector('[data-gv-add-country]');
-    if (gvCountryAction) gvCountryAction.addEventListener('click', function(){
-      var frame = modal.querySelector('.v5-resource-frame');
-      if (frame && frame.contentWindow) frame.contentWindow.postMessage({ source: 'dbt-gv-toolbar', action: 'add-country' }, '*');
-    });
     all('[data-mini-update]', modal).forEach(function(button){
       button.addEventListener('click', function(e){
         e.preventDefault();
@@ -8357,6 +8352,11 @@ body.show-edit .au-editable{background:rgba(255,225,80,.18);box-shadow:inset 0 0
     var resourceToolbar = (app === 'celergo-monthly-changes' || app === 'payslip-converter-v6') ? '' : '<div class="v5-resource-toolbar"><strong>'+resourceTitle(app)+'</strong><span class="v5-version" data-mini-version="'+app+'">'+displayVersion(appCurrentVersion(appInfo))+'</span>'+toolUpdateButton(app)+(app === 'gv-demo-builder' ? '<button type="button" class="v5-mini-update" data-gv-add-country><i class="fa-solid fa-plus"></i> Add country</button>' : '')+'</div>';
     modal.innerHTML = renderAppChrome(true) + '<main class="v5-resource-shell">'+resourceToolbar+'<iframe class="v5-resource-frame" data-mini-frame="'+app+'" src="'+appEntryUrl(appInfo, true)+'" title="'+resourceTitle(app)+'"></iframe></main>';
     bindBack(renderDashboard);
+    var gvCountryAction = modal.querySelector('[data-gv-add-country]');
+    if (gvCountryAction) gvCountryAction.addEventListener('click', function(){
+      var frame = modal.querySelector('.v5-resource-frame');
+      if (frame && frame.contentWindow) frame.contentWindow.postMessage({ source: 'dbt-gv-toolbar', action: 'add-country' }, '*');
+    });
     all('[data-mini-update]', modal).forEach(function(button){
       button.addEventListener('click', function(e){
         e.preventDefault();
