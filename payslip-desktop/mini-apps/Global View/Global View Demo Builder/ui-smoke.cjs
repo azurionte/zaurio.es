@@ -68,7 +68,7 @@ async function main(){
  await until(async()=>await evalJS("document.readyState==='complete' && window.GVGuided && window.GVBridge && document.querySelectorAll('[data-guide=\"select-country\"]').length===10"),
    "ten country cards");
  assert.equal(await evalJS("window.GVBridge.UI.page"),"dashboard","Start on country board.");
- assert.equal(await evalJS("document.querySelectorAll('.nav-btn').length"),3,"Only three top-level navigation choices.");
+ assert.equal(await evalJS("document.querySelectorAll('.nav-btn, .side').length"),0,"No duplicate sidebar navigation.");
  assert.equal(await evalJS("document.querySelector('[data-guide=\"select-country\"][data-code=\"AU\"]').innerText.includes('0%')"),true,
    "Australia begins at zero completion.");
  await screenshot("01-country-board");
@@ -76,19 +76,19 @@ async function main(){
  assert.equal(await evalJS("window.GVBridge.current().employeeIds.length"),0,"New country-year plan starts empty.");
  assert.equal(await evalJS("window.GVWorkflow.preparation(window.GVBridge.current(),window.GVBridge.country(),window.GVCore.validateProject).percent"),0);
  await click('[data-guide="confirm-setup"]');
- await click('[data-guide="prep-step"][data-step="1"]');
  await click('[data-guide="example-roster"]');
  assert.equal(await evalJS("window.GVBridge.current().employeeIds.length"),76);
- await click('[data-guide="prep-step"][data-step="2"]');
  await click('[data-guide="confirm-patterns"]');
  await screenshot("02-country-preparation");
- await click('[data-guide="prep-step"][data-step="3"]');
+ await click('[data-guide="sim-shuffle"]');
+ await click('[data-guide="sim-apply"]');
+ assert.equal(await evalJS("!!window.GVBridge.current().scenarios.P2010"),true,"Simulation settings saved per project.");
+ await click('[data-guide="confirm-patterns"]');
  await click('[data-guide="generate"]');
  await until(async()=>await evalJS("document.querySelector('.modal-foot button')?.textContent==='Cancel'"),"generation confirmation");
  await click(".modal-foot button:last-child");
  await until(async()=>await evalJS("window.GVBridge.current().events.length>100"),"events generated");
  await screenshot("03-year-chart");
- await click('[data-guide="prep-step"][data-step="4"]');
  await click('[data-guide="approve-plan"]');
  assert.equal(await evalJS("window.GVWorkflow.preparation(window.GVBridge.current(),window.GVBridge.country(),window.GVCore.validateProject).percent"),100,
    "Preparation should reach 100% after explicit approval.");
@@ -119,7 +119,7 @@ async function main(){
  assert.equal(await evalJS("document.querySelector('[data-guide=\"confirm-setup\"]')?.disabled"),true,
    "Unconfigured country must not be export-ready.");
  await screenshot("07-empty-country-setup");
- console.log("PASS: country-first UI, 0→100 preparation, monthly import milestones, ZIP action, restart persistence and blank-country setup");
+ console.log("PASS: country-first UI, live simulator, 0→100 preparation, monthly import milestones, ZIP action, restart persistence and blank-country setup");
 }
 main().then(()=>{try{ws?.close();}catch(_){}browser.kill("SIGTERM");process.exit(0);}).catch(err=>{
  console.error("UI SMOKE FAILED:",err.stack||err);
