@@ -1,6 +1,6 @@
 {
   "name": "payslip-desktop",
-  "version": "5.0.67",
+  "version": "5.0.68",
   "main": "main.js",
   "description": "Demo Building Tools desktop app for ADP demo document preparation",
   "author": "Maximiliano Robles",
@@ -36,7 +36,7 @@
       "url": "https://zaurio.es/payslip-updates/"
     },
     "releaseInfo": {
-      "releaseNotes": "Replaces the GlobalView Builder overview with a country-first experience: visible preparation/import progress, a five-step annual planner, easier event review and monthly import tracking. Existing projects are preserved."
+      "releaseNotes": "GlobalView Demo Builder 0.1.2: simpler country dashboard, live annual peak simulator with random/manual tuning, local flag assets, year selector and due import reminders. Legacy projects remain available. Team synchronization is not enabled."
     },
     "nsis": {
       "perMachine": false,
