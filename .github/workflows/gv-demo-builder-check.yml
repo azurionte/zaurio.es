@@ -38,10 +38,13 @@ jobs:
           target = Path('payslip-updates/apps/Global View/Global View Demo Builder')
           manifest = json.loads(Path('payslip-updates/apps/gv-demo-builder.json').read_text())
           assert manifest['app'] == 'gv-demo-builder'
-          assert manifest['version'] == '0.1.1'
+          assert manifest['version'] == '0.1.2'
           assert manifest['entry'] == 'Global View/Global View Demo Builder/index.html'
-          expected = {'core.js', 'workflow.js', 'app.js', 'guided.js', 'index.html'}
-          assert {Path(item['path']).name for item in manifest['files']} == expected
+          expected = {'core.js', 'workflow.js', 'app.js', 'guided.js', 'index.html', 'flags/LICENSE.txt'} | {
+              'flags/' + code + '.svg' for code in ('au','us','ca','es','mx','gb','cn','de','nl','fr')
+          }
+          root = Path('Global View/Global View Demo Builder')
+          assert {str(Path(item['path']).relative_to(root)) for item in manifest['files']} == expected
           for filename in sorted(expected):
               assert (source / filename).read_bytes() == (target / filename).read_bytes(), filename
               print(filename, 'mirrors bundled source')
