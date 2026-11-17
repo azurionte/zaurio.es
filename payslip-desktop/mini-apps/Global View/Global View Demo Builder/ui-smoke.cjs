@@ -111,7 +111,7 @@ async function main(){
  assert.ok(imported>0&&imported<100,"Confirmed months should advance progress.");
  await screenshot("05-import-confirmed");
  await send("Page.reload",{ignoreCache:true});
- await until(async()=>await evalJS("window.GVGuided && window.GVBridge?.UI.page==='dashboard' && document.querySelector('.country-card:has([data-guide=\"select-country\"][data-code=\"AU\"])')?.innerText.includes('100%')"),
+ await until(async()=>await evalJS("window.GVGuided && window.GVBridge?.UI.page==='dashboard' && (()=>{const b=window.GVBridge,p=b.W.projects.find(x=>x.profileId==='AU' && x.year===2027);return p && window.GVWorkflow.preparation(p,b.W.countries.AU,window.GVCore.validateProject).percent===100 && !!document.querySelector('.country-card:has([data-code=\\\"AU\\\"]) .mini-progress.complete');})()"),
    "dashboard progress restored after relaunch");
  await screenshot("06-country-board-restored");
  await click('[data-guide="select-country"][data-code="DE"]');
