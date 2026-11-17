@@ -130,7 +130,7 @@
     function build(config){
       var temporary={year:p.year,seed:p.seed,employeeIds:p.employeeIds.slice(),events:[],scenarios:{}};
       if(config)temporary.scenarios[type]=config;
-      var oneType={templates:pf.templates,rules:(pf.rules||[]).filter(function(r){return r.infotype===type;})};
+      var oneType={templates:pf.templates,currency:pf.currency,rules:(pf.rules||[]).filter(function(r){return r.infotype===type;})};
       G.generate(temporary,oneType,true);
       return temporary.events;
     }
