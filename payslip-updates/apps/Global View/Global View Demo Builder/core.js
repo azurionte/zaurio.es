@@ -126,12 +126,43 @@
     var raw=template.fields.map(function(f){return values[f.role]!==undefined&&values[f.role]!==""?String(values[f.role]):String(f.defaultValue||"");});
     return {id:uid(),infotype:rule.infotype,employee:employee,start:start,end:end,code:rule.code,raw:raw,origin:"generated",ruleId:rule.id,sourceIndex:null,notes:"",revision:1,updatedAt:new Date().toISOString()};
   }
+  // Country-year scenario tuning; never mutate the reusable country templates.
+  function scenarioFactors(type,config){
+    if(!config)return Array(12).fill(1);
+    var presets={natural:0.7,demo:1.65,intense:3.25};
+    var amplitude=presets[config.preset]||presets.demo;
+    var random=rngFor(String(config.seed||1)+"|"+type+"|spikes");
+    var ranked=Array.from({length:12},function(_,i){return {i:i,score:random(),height:random()};})
+      .sort(function(a,b){return b.score-a.score;});
+    var count=Math.max(0,Math.min(8,Number(config.count)||0));
+    var factors=Array(12).fill(1);
+    ranked.slice(0,count).forEach(function(item){factors[item.i]=1+amplitude*(0.35+item.height*0.65);});
+    Object.keys(config.overrides||{}).forEach(function(key){
+      var i=Number(key),v=Number(config.overrides[key]);
+      if(Number.isInteger(i)&&i>=0&&i<12&&Number.isFinite(v))factors[i]=Math.max(0.2,Math.min(5,v));
+    });
+    return factors;
+  }
+  function effectiveRules(project,profile){
+    var scenarios=project.scenarios||{};
+    return (profile.rules||[]).map(function(rule){
+      var copy=clone(rule),config=scenarios[rule.infotype];
+      if(!config)return copy;
+      var factors=scenarioFactors(rule.infotype,config);
+      copy.weights=(rule.weights||Array(12).fill(5)).map(function(weight,i){
+        return Math.max(0,Math.round(Number(weight||0)*factors[i]*100)/100);
+      });
+      copy.share=Math.min(100,Math.max(0,Math.round(Number(rule.share||0)*Math.max(0,Math.min(100,Number(config.coverage==null?75:config.coverage)))/75)));
+      return copy;
+    });
+  }
   function generate(project,profile,replaceDrafts){
     var retained=replaceDrafts?project.events.filter(function(e){return e.origin!=="generated"||e.locked;}):project.events.slice();
     var generated=[],skipped=0;
     var seen=new Set(retained.map(function(e){return e.infotype+"|"+e.employee+"|"+e.start+"|"+e.code;}));
-    for(var ri=0;ri<profile.rules.length;ri++){
-      var rule=profile.rules[ri];if(!rule.enabled||!profile.templates[rule.infotype])continue;
+    var rules=effectiveRules(project,profile);
+    for(var ri=0;ri<rules.length;ri++){
+      var rule=rules[ri];if(!rule.enabled||!profile.templates[rule.infotype])continue;
       for(var ei=0;ei<project.employeeIds.length;ei++){
         var employee=project.employeeIds[ei],r=rngFor(project.seed+"|"+employee+"|"+rule.id);
         if(r()*100>=Number(rule.share||0))continue;
@@ -288,7 +319,7 @@
   }
   return {MONTHS:MONTHS,ROLES:ROLES,typeNames:typeNames,clone:clone,uid:uid,pad:pad,yyyyMMdd:yyyyMMdd,isoDate:isoDate,fromISO:fromISO,
     field:field,rule:rule,auProfile:auProfile,blankCountry:blankCountry,newTemplate:newTemplate,defaultWorkspace:defaultWorkspace,newProject:newProject,
-    exampleEmployees:exampleEmployees,generate:generate,parseTxt:parseTxt,templateFromImport:templateFromImport,importParsed:importParsed,roleValue:roleValue,
+    exampleEmployees:exampleEmployees,generate:generate,scenarioFactors:scenarioFactors,effectiveRules:effectiveRules,parseTxt:parseTxt,templateFromImport:templateFromImport,importParsed:importParsed,roleValue:roleValue,
     dataLines:dataLines,utf16le:utf16le,generateTxt:generateTxt,batchEvents:batchEvents,activeEvents:activeEvents,validateEvent:validateEvent,
     validateProject:validateProject,monthlySeries:monthlySeries,makeFilename:makeFilename,zipFiles:zipFiles,crc32:crc32};
 });
