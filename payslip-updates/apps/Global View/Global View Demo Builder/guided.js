@@ -40,6 +40,183 @@
       '<button data-guide="phase-country" data-code="'+h(pf.id)+'" data-phase="import">'+progress("Import",st.imp.percent,st.imp.total>0&&st.imp.percent===100)+'</button></div>'+
       '<div class="country-foot"><span class="'+(due?"warn":done?"ok":"muted")+'">'+h(state)+'</span></div></article>';
   }
+
+  function fa(name){
+    return '<i class="fa-solid fa-'+h(name)+'" aria-hidden="true"></i>';
+  }
+  function flag(code){
+    code=String(code||"").toLowerCase();
+    var bundled=["au","us","ca","es","mx","gb","cn","de","nl","fr"].includes(code);
+    var source=bundled?"flags/"+code+".svg":"https://flagcdn.com/w80/"+encodeURIComponent(code)+".png";
+    return '<span class="country-flag" aria-hidden="true"><img loading="lazy" src="'+source+'" alt="" /></span>';
+  }
+  function yearLimit(){return Math.max(2027,Number(B.W.settings.gvMinYear)||2027);}
+  function yearComplete(y){
+    var all=Object.values(B.W.countries);
+    return all.length>0&&all.every(function(pf){
+      var p=projectFor(pf.id,y);
+      if(!p)return false;
+      var st=statuses(p,pf);
+      return st.pre.ready&&st.imp.total>0&&st.imp.completed===st.imp.total;
+    });
+  }
+  function yearChoices(){
+    var min=yearLimit(),max=Math.max(min+5,year()+3),pending=min;
+    while(pending<max&&yearComplete(pending))pending++;
+    var rows=[];
+    for(var y=min;y<=max;y++){
+      var done=y<pending,attention=y===pending;
+      rows.push('<button type="button" role="option" aria-selected="'+(y===year())+'" class="year-choice '+
+        (done?"complete":attention?"pending":"")+(y===year()?" selected":"")+'" data-guide="choose-year" data-year="'+y+'">'+
+        '<strong>'+y+'</strong><small>'+(done?fa("check")+" Completed":attention?"Pending next":"Future")+'</small></button>');
+    }
+    return rows.join("");
+  }
+  var COUNTRY_CODES=("AD AE AF AG AI AL AM AO AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BM BN BO BR BS BT BW BY BZ "+
+    "CA CD CF CG CH CI CL CM CN CO CR CU CV CW CY CZ DE DJ DK DM DO DZ EC EE EG ER ES ET FI FJ FM FO FR "+
+    "GA GB GD GE GH GI GL GM GN GQ GR GT GU GW GY HK HN HR HT HU ID IE IL IM IN IQ IR IS IT JE JM JO JP "+
+    "KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MG MH MK ML MM MN "+
+    "MO MR MT MU MV MW MX MY MZ NA NC NE NG NI NL NO NP NR NU NZ OM PA PE PG PH PK PL PM PR PS PT PW PY "+
+    "QA RO RS RU RW SA SB SC SD SE SG SI SK SL SM SN SO SR SS ST SV SY SZ TD TG TH TJ TL TM TN TO TR "+
+    "TT TV TW TZ UA UG US UY UZ VA VC VE VN VU WS YE ZA ZM ZW").split(/\s+/);
+  function countryPicker(){
+    var names=new Intl.DisplayNames(["en-GB"],{type:"region"});
+    var countries=COUNTRY_CODES.filter(function(c){return !B.W.countries[c];}).map(function(c){return {code:c,name:names.of(c)};})
+      .sort(function(a,b){return a.name.localeCompare(b.name);});
+    function list(query){
+      var key=String(query||"").trim().toLowerCase();
+      var matches=countries.filter(function(c){return !key||c.name.toLowerCase().includes(key)||c.code.toLowerCase()===key;}).slice(0,18);
+      return matches.length?matches.map(function(c){
+        return '<button class="country-choice" type="button" data-country-pick="'+h(c.code)+'">'+flag(c.code)+
+          '<span><strong>'+h(c.name)+'</strong></span><small>'+h(c.code)+'</small></button>';
+      }).join(""):'<p class="muted small">No matching country available.</p>';
+    }
+    B.modal("Add country",'<label>Search for a country<input id="countrySearch" type="search" autocomplete="off" placeholder="Start typing a country name"></label>'+
+      '<div id="countryMatches" class="country-matches">'+list("")+'</div>',
+      [{label:"Close",cls:"ghost",run:B.closeModal}]);
+    var field=document.getElementById("countrySearch"),results=document.getElementById("countryMatches");
+    field.addEventListener("input",function(){results.innerHTML=list(field.value);});
+    results.addEventListener("click",function(e){
+      var button=e.target.closest("[data-country-pick]");if(!button)return;
+      var code=button.dataset.countryPick,item=countries.find(function(c){return c.code===code;});
+      if(!item)return;
+      B.newCountryModal(false);
+      var nameField=document.getElementById("country-name"),codeField=document.getElementById("country-code"),
+        currencyField=document.getElementById("country-currency");
+      if(nameField)nameField.value=item.name;
+      if(codeField)codeField.value=item.code;
+      var eur="AD AT BE CY DE EE ES FI FR GR HR IE IT LT LU LV MC MT NL PT SI SK SM VA".split(" ");
+      var currency={AU:"AUD",CA:"CAD",CH:"CHF",CN:"CNY",GB:"GBP",IN:"INR",JP:"JPY",MX:"MXN",NZ:"NZD",US:"USD",BR:"BRL",AR:"ARS",DK:"DKK",NO:"NOK",SE:"SEK",PL:"PLN",ZA:"ZAR",KR:"KRW"}[code]||(eur.includes(code)?"EUR":"USD");
+      if(currencyField)currencyField.value=currency;
+    });
+    field.focus();
+  }
+  function typeSelected(){
+    var templates=Object.keys(profile().templates||{}),preferred=templates.includes("P2010")?"P2010":templates[0]||"";
+    if(!UI.simType||!templates.includes(UI.simType))UI.simType=preferred;
+    return UI.simType;
+  }
+  function defaultScenario(){
+    return {seed:4,preset:"demo",count:4,coverage:75,overrides:{}};
+  }
+  function draftScenario(){
+    var type=typeSelected();
+    if(!UI.simDrafts)UI.simDrafts={};
+    if(!UI.simDrafts[type])UI.simDrafts[type]=G.clone((current().scenarios||{})[type]||defaultScenario());
+    return UI.simDrafts[type];
+  }
+  function previewData(){
+    var p=current(),pf=profile(),type=typeSelected(),draft=draftScenario();
+    function build(config){
+      var temporary={year:p.year,seed:p.seed,employeeIds:p.employeeIds.slice(),events:[],scenarios:{}};
+      if(config)temporary.scenarios[type]=config;
+      var oneType={templates:pf.templates,currency:pf.currency,rules:(pf.rules||[]).filter(function(r){return r.infotype===type;})};
+      G.generate(temporary,oneType,true);
+      return temporary.events;
+    }
+    var baseline=p.events.filter(function(e){return e.infotype===type;});
+    if(!baseline.length)baseline=build((p.scenarios||{})[type]||null);
+    var forecast=build(draft),starts=function(events){
+      var counts=Array(12).fill(0);
+      events.forEach(function(e){if(String(e.start).slice(0,4)!==String(p.year))return;var i=Number(String(e.start).slice(4,6))-1;if(i>=0&&i<12)counts[i]++;});
+      return counts;
+    };
+    return {saved:starts(baseline),forecast:starts(forecast),events:forecast};
+  }
+  function previewMarkup(){
+    var data=previewData(),months=G.MONTHS,max=Math.max(1,...data.saved,...data.forecast),view=UI.simView||"chart";
+    var total=data.forecast.reduce(function(a,b){return a+b;},0),top=data.forecast.indexOf(Math.max(...data.forecast));
+    var body='<div class="sim-totals"><span>Preview events <b>'+money(total)+'</b></span>'+
+      '<span>Busiest month <b>'+months[top]+'</b></span><span>Employees <b>'+money(current().employeeIds.length)+'</b></span></div>';
+    if(view==="table"){
+      body+='<div class="tablewrap"><table class="data"><thead><tr><th>Month</th><th>Saved baseline</th><th>Preview</th><th>Difference</th></tr></thead><tbody>'+
+        months.map(function(m,i){var diff=data.forecast[i]-data.saved[i];return '<tr><td>'+h(m)+'</td><td>'+data.saved[i]+'</td><td>'+data.forecast[i]+'</td><td>'+ (diff>0?"+":"")+diff+'</td></tr>';}).join("")+'</tbody></table></div>';
+    }else if(view==="employees"){
+      var byEmp={},saved=new Set(current().employeeIds);
+      data.events.forEach(function(e){if(!saved.has(e.employee))return;byEmp[e.employee]=(byEmp[e.employee]||0)+1;});
+      body+='<div class="tablewrap"><table class="data"><thead><tr><th>Employee ID</th><th>Preview events</th></tr></thead><tbody>'+
+        Object.keys(byEmp).sort().slice(0,60).map(function(k){return '<tr><td class="mono">'+h(k)+'</td><td>'+byEmp[k]+'</td></tr>';}).join("")+'</tbody></table></div>'+
+        '<p class="small muted">Preview counts for up to 60 employees. Use Review raw records to inspect saved data.</p>';
+    }else{
+      body+='<div class="sim-legend"><span><i class="legend-dot" style="background:#65aef5"></i>Saved baseline</span>'+
+        '<span><i class="legend-dot" style="background:#df3e5e"></i>Live preview</span></div>'+
+        '<div class="sim-chart" role="group" aria-label="Monthly event preview">'+months.map(function(m,i){
+          var a=data.saved[i],b=data.forecast[i],style=function(v){return 'height:'+Math.max(2,Math.round(100*v/max))+'%';};
+          return '<button class="sim-column '+(UI.simMonth===i?"active":"")+'" type="button" data-guide="sim-month" data-month="'+i+'" title="'+h(m)+': saved '+a+', preview '+b+'">'+
+            '<strong>'+b+'</strong><span class="sim-bar-pair"><span class="sim-bar actual" style="'+style(a)+'"></span>'+
+            '<span class="sim-bar forecast" style="'+style(b)+'"></span></span><small>'+h(m)+'</small></button>';
+        }).join("")+'</div>';
+    }
+    return '<div id="simPreviewBody">'+body+'</div>';
+  }
+  function refreshPreview(){
+    var el=document.getElementById("simPreviewBody");if(el)el.outerHTML=previewMarkup();
+  }
+  function simulator(){
+    var pf=profile(),type=typeSelected(),draft=draftScenario(),month=UI.simMonth||0,
+      templates=Object.keys(pf.templates||{}),p=current();
+    var typeButtons=templates.map(function(k){
+      return '<button class="btn ghost small" type="button" aria-pressed="'+(k===type)+'" data-guide="select-type" data-type="'+h(k)+'">'+
+        h(k)+' · '+h(pf.templates[k].label||G.typeNames[k]||"Events")+'</button>';
+    }).join("");
+    var modeButtons=["random","manual"].map(function(m){
+      return '<button class="btn ghost small" type="button" aria-pressed="'+(UI.simMode===m)+'" data-guide="sim-mode" data-mode="'+m+'">'+
+        (m==="random"?"Random peaks":"Manual peaks")+'</button>';
+    }).join("");
+    var viewButtons=[["chart","Chart"],["table","Monthly data"],["employees","Employees"]].map(function(v){
+      return '<button class="btn ghost small" type="button" aria-pressed="'+(UI.simView===v[0])+'" data-guide="sim-view" data-view="'+v[0]+'">'+v[1]+'</button>';
+    }).join("");
+    var currentWeight=draft.overrides&&draft.overrides[month]!=null?Number(draft.overrides[month]):G.scenarioFactors(type,draft)[month];
+    var controls=UI.simMode==="manual"?
+      '<label>Month<select id="simMonthSelect">'+G.MONTHS.map(function(m,i){return '<option value="'+i+'" '+(i===month?"selected":"")+'>'+m+'</option>';}).join("")+'</select></label>'+
+      '<label>Month intensity <output id="simMonthOut">'+currentWeight.toFixed(1)+'×</output><input type="range" id="simMonthWeight" min="0.2" max="5" step="0.1" value="'+currentWeight+'"></label>'+
+      press("Reset month","sim-reset-month","ghost small"):
+      '<label>Variability style<select id="simPreset">'+[["natural","Natural"],["demo","Demo"],["intense","Intense"]].map(function(x){
+        return '<option value="'+x[0]+'" '+(draft.preset===x[0]?"selected":"")+'>'+x[1]+'</option>';}).join("")+'</select></label>'+
+      '<label>Number of peaks <output id="simCountOut">'+draft.count+'</output><input type="range" id="simCount" min="0" max="8" step="1" value="'+draft.count+'"></label>'+
+      press(fa("shuffle")+" New distribution","sim-shuffle","ghost small");
+    return '<div class="card"><div class="flex-between"><div><h2>Annual variability simulator</h2><p class="small muted">Preview changes before applying them to this country and year.</p></div>'+
+      '<div class="sim-toolbar">'+typeButtons+'</div></div>'+
+      '<div class="sim-mode">'+modeButtons+'</div><div class="sim-layout" style="margin-top:14px">'+
+      '<div class="sim-preview"><div class="sim-view-tabs">'+viewButtons+'</div>'+previewMarkup()+'</div>'+
+      '<div class="sim-controls">'+controls+
+      '<label>Employees affected <output id="simCoverageOut">'+draft.coverage+'%</output>'+
+      '<input id="simCoverage" type="range" min="10" max="100" step="5" value="'+draft.coverage+'"></label>'+
+      '<p class="small muted">P2001 and P2010 have separate settings. The chart shows event counts, not hours or monetary totals.</p>'+
+      '<div class="sim-control-actions">'+press(fa("rotate-left")+" Discard","sim-discard","ghost small")+
+      press(fa("check")+" Apply changes","sim-apply","primary")+'</div></div></div>'+
+      '<div class="sim-totals"><span>Saved scenario: <b>'+((p.scenarios||{})[type]?"Configured":"Default")+'</b></span>'+
+      '<span>Changes stay in preview until Apply.</span></div></div>';
+  }
+  function applyScenario(){
+    var p=current(),type=typeSelected(),draft=draftScenario();
+    if(!p.scenarios)p.scenarios={};
+    p.scenarios[type]=G.clone(draft);
+    B.noteLog(p,"Scenario updated",type+" for "+p.year+": "+draft.count+" peaks, "+draft.preset+" intensity");
+    B.notify("Scenario settings saved for "+p.year+". Generate and review the year before approval.","success");
+    render();
+  }
+
   function board(){
     var y=year(),profiles=Object.values(B.W.countries).sort(function(a,b){return a.name.localeCompare(b.name);});
     var pending=profiles.filter(function(pf){var p=projectFor(pf.id,y);return p&&!statuses(p,pf).pre.ready;}).length;
