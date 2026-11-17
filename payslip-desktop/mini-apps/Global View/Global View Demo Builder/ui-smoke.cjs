@@ -69,7 +69,7 @@ async function main(){
    "ten country cards");
  assert.equal(await evalJS("window.GVBridge.UI.page"),"dashboard","Start on country board.");
  assert.equal(await evalJS("document.querySelectorAll('.nav-btn, .side').length"),0,"No duplicate sidebar navigation.");
- assert.equal(await evalJS("document.querySelector('[data-guide=\"select-country\"][data-code=\"AU\"]').innerText.includes('0%')"),true,
+ assert.equal(await evalJS("document.querySelector('.country-card:has([data-guide=\"select-country\"][data-code=\"AU\"])').innerText.includes('0%')"),true,
    "Australia begins at zero completion.");
  await screenshot("01-country-board");
  await click('[data-guide="select-country"][data-code="AU"]');
@@ -111,7 +111,7 @@ async function main(){
  assert.ok(imported>0&&imported<100,"Confirmed months should advance progress.");
  await screenshot("05-import-confirmed");
  await send("Page.reload",{ignoreCache:true});
- await until(async()=>await evalJS("window.GVGuided && window.GVBridge?.UI.page==='dashboard' && document.querySelector('[data-guide=\"select-country\"][data-code=\"AU\"]')?.innerText.includes('100%')"),
+ await until(async()=>await evalJS("window.GVGuided && window.GVBridge?.UI.page==='dashboard' && document.querySelector('.country-card:has([data-guide=\"select-country\"][data-code=\"AU\"])')?.innerText.includes('100%')"),
    "dashboard progress restored after relaunch");
  await screenshot("06-country-board-restored");
  await click('[data-guide="select-country"][data-code="DE"]');
