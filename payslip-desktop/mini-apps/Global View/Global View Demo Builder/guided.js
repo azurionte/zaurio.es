@@ -249,10 +249,15 @@
     if(!current()||!profile())return board();
     var p=current(),st=statuses(p,profile()),m=st.imp.months;
     if(UI.detail==="handover")return header(true)+'<div class="card">'+press("← Back to import","close-detail","ghost small")+'</div>'+B.renderActivity();
-    var result=header(true)+'<div class="card">'+intro("Import progress · "+p.year,"Download the selected months, upload them to GlobalView and confirm each completed upload.")+
+    var now=new Date(),due=m.filter(function(x){
+      return x.total>0&&!x.complete&&(p.year<now.getFullYear()||(p.year===now.getFullYear()&&x.month<=now.getMonth()+1));
+    });
+    var result=header(true)+'<div class="card">'+intro("Import progress · "+p.year,"Download a month or custom block, then track confirmed GlobalView uploads.")+
+      (due.length?'<div class="tip warning" style="margin-bottom:13px">'+due.length+' current or elapsed month(s) need attention: '+h(due.map(function(x){return G.MONTHS[x.month-1];}).join(", "))+'.</div>':"")+
       '<div class="mini-months">'+m.map(function(x){
-        var label=x.complete?"Uploaded":x.status==="downloaded"?"Downloaded":x.status==="partial"?"In progress":x.status==="planned"?"Pending":"No events";
-        return '<div class="mini-month '+(x.complete?"done":x.status==="downloaded"?"downloaded":x.status==="partial"?"pending":x.status==="empty"?"nodata":"")+'">'+G.MONTHS[x.month-1]+'<strong>'+h(label)+'</strong></div>';
+        var overdue=due.some(function(d){return d.month===x.month;});
+        var label=x.complete?"Uploaded":x.status==="downloaded"?"Downloaded":x.status==="partial"?"In progress":overdue?"Action needed":x.status==="planned"?"Upcoming":"No events";
+        return '<div class="mini-month '+(x.complete?"done":overdue?"overdue":x.status==="downloaded"?"downloaded":x.status==="partial"?"pending":x.status==="empty"?"nodata":"")+'">'+G.MONTHS[x.month-1]+'<strong>'+h(label)+'</strong></div>';
       }).join("")+'</div>'+
       '<p class="muted small" style="margin-top:13px">'+st.imp.completed+' of '+st.imp.total+' months with planned events have been confirmed as uploaded. Downloading alone does not complete a month.</p></div>';
     if(!st.pre.ready){
