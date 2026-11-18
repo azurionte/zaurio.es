@@ -1,0 +1,24 @@
+name: DinoFit checks
+on:
+  push:
+    paths:
+      - 'herramientas/dinofit/**'
+      - '.github/workflows/dinofit-tests.yml'
+  pull_request:
+    paths:
+      - 'herramientas/dinofit/**'
+      - '.github/workflows/dinofit-tests.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Legacy tracker checks
+        run: node herramientas/dinofit/tests/tracker.cjs
+      - name: Calendar and scale checks
+        run: node herramientas/dinofit/tests/calendar.cjs

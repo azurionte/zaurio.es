@@ -21,3 +21,31 @@ Los datos personales no se incluyen en el HTML ni en Git. Los usuarios nuevos em
 node tests/tracker.cjs
 
 Comprobados en producción: carga con sesión de Google existente, perfil con objetivo 77 guardado y conservado al recargar, vistas de móvil (390 px) y escritorio, políticas de acceso entre usuarios dentro de una transacción revertida.
+
+## Calendario y métricas (rama de revisión)
+
+- El menú de fechas situado arriba permite ir al día anterior, siguiente, elegir una fecha o volver a hoy. Las vistas **Mi día** y **Progreso** respetan la fecha seleccionada.
+- El editor de pesadas permite registrar los 12 indicadores de la báscula Arboleaf: peso, grasa corporal, IMC, músculo esquelético, masa muscular, proteína, metabolismo basal, masa libre de grasa, grasa subcutánea, grasa visceral (índice), agua corporal y masa ósea. Hora y nota son opcionales.
+- El gráfico principal representa **fecha en el eje X y kg en el eje Y**. Muestra la línea sólida de pesadas reales, una proyección punteada por tendencia observada de los últimos 14 días si existe, y otra que simula una ralentización progresiva de esa misma tendencia, con la opción de añadir VR de 0, 15 o 20 minutos cuatro días por semana. No se usan valores energéticos personales fijos en el código. Ninguna curva simulada es una medición ni una indicación clínica.
+- Las tarjetas de cada indicador de báscula abren su propio histórico.
+- Los diez atajos de comida son: café con leche desnatada, loncha de queso light, flan proteico, YoPRO, Activia con cereales 0 %, pollo, ternera, plato mixto, dos hamburguesas de ternera y dos de pollo. Todos abren el editor de cantidades antes de registrar; los valores nutricionales sin etiqueta confirmada son estimaciones.
+- El importador en **Importar mediciones preparadas en ChatGPT** acepta una lista JSON de pesadas; comprueba las fechas, los rangos y las duplicidades, pide confirmación y mezcla los campos con los datos ya existentes, sin borrar comidas ni objetivos. No requiere credenciales de ChatGPT. Ejemplo:
+
+```json
+[
+  {"date": "2026-01-15", "weight": 95.0, "bodyFat": 30.0, "muscleMass": 55.0, "bodyWater": 50.0}
+]
+```
+
+Esto permite preparar un bloque de mediciones desde una conversación y pegarlas tras revisarlas. No constituye una conexión directa entre ChatGPT y la cuenta autenticada: la sincronización sigue ejecutándose desde la sesión Google del usuario.
+
+Los cambios mantienen `schemaVersion: 1` y la tabla RLS `dinofit_documents`, evitando migraciones destructivas o pérdida de documentos ya guardados. No se añaden mediciones personales al repositorio.
+
+## Pruebas
+
+```sh
+node herramientas/dinofit/tests/tracker.cjs
+node herramientas/dinofit/tests/calendar.cjs
+```
+
+Los tests revisan compatibilidad con documentos antiguos, representación del calendario, doce indicadores, actualización sin borrar métricas, las diez comidas, curvas y la importación no destructiva. GitHub Actions repite ambas pruebas al modificar el directorio.
