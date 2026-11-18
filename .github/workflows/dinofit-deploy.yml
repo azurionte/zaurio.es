@@ -1,0 +1,59 @@
+name: Publicar DinoFit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'herramientas/dinofit/**'
+      - '.github/workflows/dinofit-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinofit-production
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build, deploy and verify DinoFit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify existing test suite
+        run: |
+          node herramientas/dinofit/tests/tracker.cjs
+          node herramientas/dinofit/tests/calendar.cjs
+      - name: Check deployment credentials without exposing them
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Missing GitHub Actions secret CLOUDFLARE_API_TOKEN (Workers Scripts Edit and Zone Read)."
+            exit 1
+          fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Missing GitHub Actions secret CLOUDFLARE_ACCOUNT_ID."
+            exit 1
+          fi
+      - name: Deploy only the DinoFit Worker
+        working-directory: herramientas/dinofit
+        run: npx --yes wrangler@4 deploy --config wrangler.jsonc
+      - name: Verify production URL and published features
+        run: |
+          url="https://herramientas.zaurio.es/dinofit/"
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --location --max-time 20 "$url" -o /tmp/dinofit-live.html               && grep -q 'id="globalDateNav"' /tmp/dinofit-live.html               && grep -q 'id="scale_bodyFat"' /tmp/dinofit-live.html               && grep -q 'id="scaleBulkImport"' /tmp/dinofit-live.html; then
+              echo "PASS: Published DinoFit calendar, scale measurements, and importer are reachable at $url"
+              exit 0
+            fi
+            echo "Waiting for worker route propagation ($attempt/12)"
+            sleep 10
+          done
+          echo "::error::The live route did not serve the new DinoFit after deployment"
+          exit 1
