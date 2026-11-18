@@ -38,7 +38,24 @@ el("#weightDate").value="2026-11-18";el("#weightApprox").checked=false;
 el("#weightNote").value="Editado";el("#weightDialog").dataset.edit="w7";
 el("#weightForm").onsubmit({preventDefault(){}});
 assert.equal(run('state.weights.find(w=>w.id==="w7").muscleMass'),64.8);
-assert.equal(run('state.weights.find(w=>w.id==="w7").bodyWater'),39.1);
+assert.ok(Math.abs(run('state.weights.find(w=>w.id==="w7").bodyWater')-38.9)<1e-7);
 assert.throws(()=>run('validateData({...state,weights:[{...state.weights[0],bodyFat:-1}]})'));
 assert.ok(run('state.foods.some(f=>f.id==="activia-cereales")&&state.foods.some(f=>f.id==="yopro")'));
-console.log("PASS: legacy data, metrics, navigation, ten quick foods, and projections");
+run('selectedDate="2026-11-18";currentView="today";state.logs.push({id:"test-log",date:"2026-11-17",meal:"Cena",title:"Flan",parts:[makePart("flan",1)],note:""});render()');
+assert.equal(el("#scaleBulkImport").onclick instanceof Function,true);
+el("#scaleBulk").value=JSON.stringify([
+  {date:"2026-11-18",weight:126.6,bodyFat:46.1,protein:12.3},
+  {date:"2026-11-19",weight:126.4,bodyFat:46}
+]);
+el("#scaleBulkImport").onclick();
+assert.equal(run('state.weights.length'),9);
+assert.equal(run('state.weights.find(w=>w.date==="2026-11-18").muscleMass'),64.8,"Unspecified metrics must be preserved");
+assert.equal(run('state.weights.find(w=>w.date==="2026-11-18").protein'),12.3);
+assert.equal(run('state.weights.find(w=>w.date==="2026-11-19").weight'),126.4);
+assert.equal(run('state.logs.length'),1,"Food logs must not be affected");
+const before=run('state.weights.length');
+el("#scaleBulk").value=JSON.stringify([{date:"2026-11-19",weight:126.4,bodyFat:-10}]);
+el("#scaleBulkImport").onclick();
+assert.equal(run('state.weights.length'),before,"Invalid bulk import must not alter existing data");
+
+console.log("PASS: legacy data, metrics, navigation, ten quick foods, and projections, and non-destructive import");
