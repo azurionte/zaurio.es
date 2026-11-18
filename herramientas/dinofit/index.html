@@ -384,7 +384,50 @@ async function boot(){
   }).join("");
   return `<section class="card dashboard-card"><div class="between mobile-stack"><div><h2>Todo lo que mide tu báscula</h2><p class="dino-datehint">Selecciona cualquier indicador para consultar su histórico</p></div><button class="btn secondary smallbtn" id="addWeight">+ Medición</button></div><div class="scale-grid">${tiles}</div><h3 class="spacer">${m.name} · histórico registrado</h3><div class="chart-wrap">${p.length?svgShape(p,{large:true,label:m.name, color:"#317d61"}):'<div class="empty">Todavía no hay lecturas de este indicador. Puedes incorporarlas al guardar tu próxima medición.</div>'}</div><p class="chart-note">Los porcentajes de grasa, agua y músculo son estimaciones de bioimpedancia de tu báscula, no medidas clínicas directas.</p></section>`;
  }
- function renderDashboard(mode){
+ function assistantImportPanel(){
+  return '<section class="card dashboard-card"><details><summary>Importar mediciones preparadas en ChatGPT</summary><div class="stack"><p class="small muted">Copia aquí un JSON con las fechas, peso y métricas de la báscula. Se añadirán o actualizarán únicamente las fechas que confirmes, sin sustituir tus comidas, objetivos ni otros registros.</p><textarea id="scaleBulk" rows="5" placeholder="[{&quot;date&quot;:&quot;2026-11-18&quot;,&quot;weight&quot;:126.6,&quot;bodyFat&quot;:46.1}]" aria-label="Mediciones en formato JSON"></textarea><button id="scaleBulkImport" class="btn secondary" type="button">Revisar e importar mediciones</button><p class="small muted">Campos admitidos: date, weight, bodyFat, bmi, skeletalMuscle, muscleMass, protein, bmr, fatFreeMass, subcutaneousFat, visceralFat, bodyWater, boneMass, time y note. Puedes dejar campos vacíos omitiéndolos.</p></div></details></section>';
+}
+function importAssistantReadings(){
+  const raw=document.querySelector("#scaleBulk")?.value.trim();
+  if(!raw){notify("Pega las mediciones en formato JSON.");return;}
+  if(raw.length>250000){notify("El texto es demasiado grande.");return;}
+  let rows;
+  try{rows=JSON.parse(raw)}catch(e){notify("El JSON no tiene un formato válido.");return;}
+  if(!Array.isArray(rows)||rows.length===0||rows.length>3000){notify("Debe ser una lista de 1 a 3.000 mediciones.");return;}
+  const unique=new Set(),normalized=[];
+  const numericRules={weight:500,bodyFat:100,bmi:100,skeletalMuscle:100,muscleMass:500,protein:100,bmr:10000,fatFreeMass:500,subcutaneousFat:100,visceralFat:100,bodyWater:100,boneMass:50};
+  for(const row of rows){
+    if(!row||typeof row!=="object"||Array.isArray(row)||typeof row.date!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(row.date)||!Number.isFinite(Date.parse(row.date+"T12:00:00Z"))||new Date(row.date+"T12:00:00Z").toISOString().slice(0,10)!==row.date||unique.has(row.date)){
+      notify("Hay fechas inválidas o repetidas.");return;
+    }
+    unique.add(row.date);
+    const w={date:row.date};
+    for(const [k,max] of Object.entries(numericRules)){
+      if(row[k]===null||row[k]===undefined||row[k]==="")continue;
+      const n=Number(typeof row[k]==="string"?row[k].replace(",","."):row[k]);
+      if(!Number.isFinite(n)||n<0||n>max||(k==="weight"&&n<20)){notify("Valor no válido: "+k+" del "+row.date);return;}
+      w[k]=n;
+    }
+    if(!Number.isFinite(w.weight)&&!state.weights.some(x=>x.date===w.date)){notify("Falta el peso en una fecha nueva: "+w.date);return;}
+    if(row.time!=null&&row.time!==""){if(typeof row.time!=="string"||!/^([01]\d|2[0-3]):[0-5]\d$/.test(row.time)){notify("Hora inválida en "+w.date);return;}w.time=row.time;}
+    if(row.note!=null){if(typeof row.note!=="string"||row.note.length>1000){notify("Nota demasiado larga.");return;}w.note=row.note;}
+    normalized.push(w);
+  }
+  const updated=normalized.filter(w=>state.weights.some(x=>x.date===w.date)).length;
+  if(!confirm("Revisa antes de continuar:\n"+normalized.length+" fechas; "+updated+" ya registradas se actualizarán en los campos proporcionados. Las comidas y los demás datos se conservarán.\n¿Importar ahora?"))return;
+  const byDate=new Map(state.weights.map(w=>[w.date,{...w}]));
+  for(const w of normalized){
+    const existing=byDate.get(w.date);
+    byDate.set(w.date,existing?{...existing,...w}:{id:uid(),approx:false,note:"Importado desde ChatGPT",...w});
+  }
+  const next=[...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date));
+  const previous=state.weights;state.weights=next;
+  try{validateData(state)}catch(e){state.weights=previous;notify("No se importó: "+e.message);return;}
+  selectedDate=normalized[normalized.length-1].date;
+  changed("Importadas "+normalized.length+" mediciones. Comprueba la sincronización.");
+}
+
+function renderDashboard(mode){
   const logs=state.logs.filter(l=>l.date===selectedDate);
   const total=totals(logs.flatMap(l=>l.parts));
   const ws=weightList().filter(w=>w.date<=selectedDate),last=ws.at(-1),first=ws[0];
@@ -401,7 +444,7 @@ async function boot(){
     <article class="card dashboard-stat"><span class="lbl">Comida registrada</span><div class="n">${logs.length?fmt(total.kcal):"—"} <small>kcal</small></div><span class="hint">${logs.length} registros</span></article>
    </div>`;
   }
-  out+=`<section class="card dashboard-card">${chartWeight()}</section>${drawMetricPanel()}`;
+  out+=`<section class="card dashboard-card">${chartWeight()}</section>${drawMetricPanel()}${assistantImportPanel()}`;
   if(mode==="progress"){
    out+=`<section class="card dashboard-card"><div class="between"><h2>Historial de mediciones</h2><button class="btn secondary smallbtn" id="extraWeight">+ Añadir</button></div><div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Peso</th><th>Grasa</th><th>Músculo</th><th>Agua</th><th>Acciones</th></tr></thead><tbody>${ws.slice().reverse().map(w=>`<tr><td>${dateText(w.date,true)}</td><td>${fmt(w.weight,1)} kg</td><td>${w.bodyFat==null?"—":fmt(w.bodyFat,1)+" %"}</td><td>${w.muscleMass==null?"—":fmt(w.muscleMass,1)+" kg"}</td><td>${w.bodyWater==null?"—":fmt(w.bodyWater,1)+" %"}</td><td><button class="linkbutton" data-edit-weight="${w.id}">Editar</button></td></tr>`).join("")}</tbody></table></div></section>`;
    return out;
@@ -415,6 +458,7 @@ async function boot(){
  renderProgress=function(){return renderDashboard("progress")};
  bindPage=function(){
   originalBind();
+  const importButton=document.querySelector("#scaleBulkImport");if(importButton)importButton.onclick=importAssistantReadings;
   document.querySelectorAll("[data-metric]").forEach(b=>b.onclick=()=>{activeMetric=b.dataset.metric;render();});
   document.querySelectorAll("[data-zoom]").forEach(b=>b.onclick=()=>{graphZoom=b.dataset.zoom;render();});
   document.querySelectorAll("[data-vr]").forEach(b=>b.onclick=()=>{vrMins=Number(b.dataset.vr);render();});
