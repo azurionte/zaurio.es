@@ -304,23 +304,23 @@ async function boot(){
  }
  function predictions(anchor,target){
   const slope=recentTrend(),linear=[],adaptive=[];
-  if(slope!==null&&slope<0){
-   const finish=Math.ceil((anchor.weight-target)/(-slope));
-   if(finish>0&&finish<=2300){
+  if(slope===null||slope>=0)return {linear,adaptive,slope,reached:false};
+  const finish=Math.ceil((anchor.weight-target)/(-slope));
+  if(finish>0&&finish<=2300){
     for(let d=0;d<=finish;d+=Math.max(1,Math.ceil(finish/100)))linear.push({date:addDays(anchor.date,d),weight:Math.max(target,anchor.weight+slope*d)});
     linear.push({date:addDays(anchor.date,finish),weight:target});
-   }
   }
-  let kg=anchor.weight;
-  const intake=1058;
+  let kg=anchor.weight,reached=false;
   for(let d=0;d<=2300;d++){
-   if(d%Math.max(1,Math.ceil(365/24))===0||d===0||kg<=target)adaptive.push({date:addDays(anchor.date,d),weight:Math.max(target,kg)});
-   if(kg<=target)break;
-   const tdee=2400*(kg/126.9)**.75;
-   const vr=vrMins?3*3.5*kg/200*vrMins*4/7:0;
-   kg=Math.max(target,kg-Math.max(0,tdee+vr-intake)/7700);
+    if(d%15===0||kg<=target)adaptive.push({date:addDays(anchor.date,d),weight:Math.max(target,kg)});
+    if(kg<=target){reached=true;break;}
+    // A hypothetical deceleration tied to the observed rate, not a fixed dietary intake.
+    const slowing=Math.pow(kg/anchor.weight,1.7)*Math.exp(-d/240);
+    const vr=vrMins?3*3.5*kg/200*vrMins*4/7/7700:0;
+    const next=Math.max(0,-slope*slowing+vr);
+    kg=Math.max(target,kg-next);
   }
-  return {linear,adaptive,slope};
+  return {linear,adaptive,slope,reached};
  }
  function svgShape(data,options={}){
   if(!data.length)return '<div class="empty">No hay mediciones para representar.</div>';
@@ -351,7 +351,7 @@ async function boot(){
   const target=Number(state.profile.targetWeight);
   const hasTarget=state.profile.targetWeight!=null&&target<current.weight;
   const pred=hasTarget?predictions({date:current.date,weight:current.weight},target):{linear:[],adaptive:[],slope:null};
-  const paths=[{points:actual,css:"#276a55",dash:"",name:"Pesos registrados"},{points:pred.linear,css:"#c87d40",dash:"9 7",name:"Extrapolación de tus pesadas"},{points:pred.adaptive,css:"#718dc5",dash:"5 7",name:"Modelo de ingesta y gasto"}];
+  const paths=[{points:actual,css:"#276a55",dash:"",name:"Pesos registrados"},{points:pred.linear,css:"#c87d40",dash:"9 7",name:"Extrapolación de tus pesadas"},{points:pred.adaptive,css:"#718dc5",dash:"5 7",name:"Tendencia con desaceleración"}];
   const allp=paths.flatMap(p=>p.points);const W=920,H=390,pad={l:59,r:28,t:29,b:48};
   const start=actual[0].date,end=allp.at(-1)?.date||current.date;
   const first=Math.min(...allp.map(p=>Date.parse(p.date+"T12:00:00Z"))),last=Math.max(...allp.map(p=>Date.parse(p.date+"T12:00:00Z")));
@@ -371,8 +371,8 @@ async function boot(){
   const slope=pred.slope;
   const datestr=p=>p.length>1?dateText(p[p.length-1].date,true):"—";
   return `<div class="between mobile-stack"><div><h2>Del primer peso al objetivo</h2><p class="dino-datehint">Eje vertical: kg · Eje horizontal: fecha</p></div><div class="dino-steps"><button data-zoom="all" aria-pressed="${graphZoom==="all"}">Histórico completo</button><button data-zoom="recent" aria-pressed="${graphZoom==="recent"}">90 días</button></div></div>${svg}
-   <div class="graph-legend"><span>Peso medido</span><span class="empirical">Ritmo observado</span><span class="adaptive">Balance energético estimado</span></div>
-   <p class="chart-note">Línea observada: mediciones reales, sin rellenar fechas vacías. Proyección observada: ${slope!=null&&slope<0?`≈${fmt(Math.abs(slope)*1000)} g/día · ${datestr(pred.linear)}`:"sin suficientes pesadas descendentes"}. Proyección energética: ≈1.058 kcal/día y gasto inicial estimado de 2.400 kcal/día${vrMins?`, más VR de ${vrMins} min × 4 días/semana`:""}; objetivo estimado ${datestr(pred.adaptive)}. Ambas curvas se recalculan al añadir lecturas y son simulaciones.</p>
+   <div class="graph-legend"><span>Peso medido</span><span class="empirical">Ritmo observado</span><span class="adaptive">Ritmo con desaceleración</span></div>
+   <p class="chart-note">Línea observada: mediciones reales, sin rellenar fechas vacías. Proyección observada: ${slope!=null&&slope<0?`≈${fmt(Math.abs(slope)*1000)} g/día · ${datestr(pred.linear)}`:"sin suficientes pesadas descendentes"}. Segunda curva: desaceleración hipotética del ritmo observado${vrMins?`, con VR de ${vrMins} min × 4 días/semana`:""}; ${pred.reached?`llegada calculada ${datestr(pred.adaptive)}`:"no alcanza el objetivo durante el horizonte de simulación"}. Ambas curvas se recalculan al añadir lecturas y son simulaciones.</p>
    <div class="dino-steps"><button data-vr="0" aria-pressed="${vrMins===0}">Sin VR</button><button data-vr="15" aria-pressed="${vrMins===15}">VR 15 min</button><button data-vr="20" aria-pressed="${vrMins===20}">VR 20 min</button><button data-edit-goal>${hasTarget?`Objetivo ${fmt(target,1)} kg`:"Definir peso objetivo"}</button></div>`;
  }
  function drawMetricPanel(){
@@ -385,7 +385,7 @@ async function boot(){
   return `<section class="card dashboard-card"><div class="between mobile-stack"><div><h2>Todo lo que mide tu báscula</h2><p class="dino-datehint">Selecciona cualquier indicador para consultar su histórico</p></div><button class="btn secondary smallbtn" id="addWeight">+ Medición</button></div><div class="scale-grid">${tiles}</div><h3 class="spacer">${m.name} · histórico registrado</h3><div class="chart-wrap">${p.length?svgShape(p,{large:true,label:m.name, color:"#317d61"}):'<div class="empty">Todavía no hay lecturas de este indicador. Puedes incorporarlas al guardar tu próxima medición.</div>'}</div><p class="chart-note">Los porcentajes de grasa, agua y músculo son estimaciones de bioimpedancia de tu báscula, no medidas clínicas directas.</p></section>`;
  }
  function assistantImportPanel(){
-  return '<section class="card dashboard-card"><details><summary>Importar mediciones preparadas en ChatGPT</summary><div class="stack"><p class="small muted">Copia aquí un JSON con las fechas, peso y métricas de la báscula. Se añadirán o actualizarán únicamente las fechas que confirmes, sin sustituir tus comidas, objetivos ni otros registros.</p><textarea id="scaleBulk" rows="5" placeholder="[{&quot;date&quot;:&quot;2026-11-18&quot;,&quot;weight&quot;:126.6,&quot;bodyFat&quot;:46.1}]" aria-label="Mediciones en formato JSON"></textarea><button id="scaleBulkImport" class="btn secondary" type="button">Revisar e importar mediciones</button><p class="small muted">Campos admitidos: date, weight, bodyFat, bmi, skeletalMuscle, muscleMass, protein, bmr, fatFreeMass, subcutaneousFat, visceralFat, bodyWater, boneMass, time y note. Puedes dejar campos vacíos omitiéndolos.</p></div></details></section>';
+  return '<section class="card dashboard-card"><details><summary>Importar mediciones preparadas en ChatGPT</summary><div class="stack"><p class="small muted">Copia aquí un JSON con las fechas, peso y métricas de la báscula. Se añadirán o actualizarán únicamente las fechas que confirmes, sin sustituir tus comidas, objetivos ni otros registros.</p><textarea id="scaleBulk" rows="5" placeholder="[{&quot;date&quot;:&quot;2026-01-15&quot;,&quot;weight&quot;:95,&quot;bodyFat&quot;:30}]" aria-label="Mediciones en formato JSON"></textarea><button id="scaleBulkImport" class="btn secondary" type="button">Revisar e importar mediciones</button><p class="small muted">Campos admitidos: date, weight, bodyFat, bmi, skeletalMuscle, muscleMass, protein, bmr, fatFreeMass, subcutaneousFat, visceralFat, bodyWater, boneMass, time y note. Puedes dejar campos vacíos omitiéndolos.</p></div></details></section>';
 }
 function importAssistantReadings(){
   const raw=document.querySelector("#scaleBulk")?.value.trim();
