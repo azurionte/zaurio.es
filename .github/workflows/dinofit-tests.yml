@@ -18,7 +18,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Legacy tracker checks
-        run: node herramientas/dinofit/tests/tracker.cjs
-      - name: Calendar and scale checks
-        run: node herramientas/dinofit/tests/calendar.cjs
+      - name: Rewritten Dinofit functionality
+        run: node herramientas/dinofit/tests/rewrite.cjs

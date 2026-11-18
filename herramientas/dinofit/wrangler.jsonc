@@ -6,7 +6,11 @@
     {
       "type": "Text",
       "globs": [
-        "**/*.html"
+        "**/*.html",
+        "**/app.css",
+        "**/app.js",
+        "**/app-ui.js",
+        "**/app-events.js"
       ],
       "fallthrough": true
     }

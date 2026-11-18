@@ -1,51 +1,30 @@
 # DinoFit
 
-Seguimiento de comidas, calorías, despensa, peso y objetivo en español.
+Registro privado de peso, composición corporal, actividad y comidas.
 
-## Publicación
+## Reescritura de noviembre de 2026
 
-URL: https://herramientas.zaurio.es/dinofit/
+La aplicación actual está implementada en archivos independientes: `index.html`, `app.css`, `app.js` (estado y Supabase), `app-ui.js` (interfaz y gráficos), `app-events.js` (acciones) y `worker.mjs` (servidor de rutas estáticas). No queda código visual antiguo en el documento HTML.
 
-Este directorio tiene su propio Worker para publicar únicamente las rutas /dinofit y /dinofit/* sin reemplazar las otras herramientas. Desde este directorio: npx wrangler deploy. La página también funciona como activo estático dentro del router principal de Zaurio.
+**Uso:** en https://herramientas.zaurio.es/dinofit/ inicia sesión con Google. El calendario en la cabecera controla todas las secciones; las flechas pasan al día anterior o siguiente. El seguimiento actual, desde su fecha seleccionada, presenta la evolución del peso, los 12 indicadores de báscula y el desglose de comidas y actividad. El archivo de pesos anterior continúa accesible en Historial, pero no se une a la curva actual.
 
-## Supabase
+Las dos líneas punteadas son **simulaciones**: prolongación lineal de la tendencia de las pesadas de los últimos 14 días y variante con desaceleración hipotética. El selector VR añade el gasto orientativo de sesiones de 15/20 minutos cuatro veces por semana. La línea sólida representa únicamente lecturas reales.
 
-Proyecto compartido con Dinerozaurio: adpjitccwwvlydrtvvqk. Acceso Google con el cliente público, reutilizando la sesión del mismo origen. La lista de redirecciones de Auth debe incluir exactamente https://herramientas.zaurio.es/dinofit/.
+Las 10 opciones rápidas de comida mantienen el editor de cantidades antes de guardar. Las calorías que dependen de productos sin envase confirmado son estimaciones. Se pueden registrar actividades reales, incluidos minutos de Beat Saber y Pistol Whip.
 
-Aplicar la migración dinofit_documents antes de publicar en un entorno nuevo. Cada cuenta tiene un documento JSONB con revisión incremental. RLS limita SELECT, INSERT y UPDATE a auth.uid() = user_id; anon no tiene permisos. El guardado compara la revisión leída; ante un conflicto conserva la copia en pantalla y requiere descargarla antes de cargar la nube.
+**Importación desde ChatGPT:** abrir un enlace privado en el formato `/dinofit/#import=<base64url>` permite que el navegador recoja un JSON solo en la sesión local del usuario, elimine el fragmento de la barra y, una vez autenticado con Google, añada las fechas de forma no destructiva a su documento privado de Supabase. Conserva campos existentes no mencionados y lecturas adicionales del mismo día. También admite pegar JSON desde Ajustes. El enlace no permite a ChatGPT acceder directamente a Supabase y no incluye datos personales en GitHub. Los únicos datos que se guardan se confirman mediante la sincronización real del documento privado de la cuenta activa.
 
-Los datos personales no se incluyen en el HTML ni en Git. Los usuarios nuevos empiezan sin pesajes, comidas, existencias ni objetivos personales. El catálogo de alimentos inicial es editable. Solo la sesión de autenticación se mantiene en el navegador; el seguimiento se almacena en Supabase. JSON y el HTML anterior de Mi ritmo se pueden importar desde Mi cuenta; también se exportan JSON y CSV.
-
-## Verificación
-
-node tests/tracker.cjs
-
-Comprobados en producción: carga con sesión de Google existente, perfil con objetivo 77 guardado y conservado al recargar, vistas de móvil (390 px) y escritorio, políticas de acceso entre usuarios dentro de una transacción revertida.
-
-## Calendario y métricas (rama de revisión)
-
-- El menú de fechas situado arriba permite ir al día anterior, siguiente, elegir una fecha o volver a hoy. Las vistas **Mi día** y **Progreso** respetan la fecha seleccionada.
-- El editor de pesadas permite registrar los 12 indicadores de la báscula Arboleaf: peso, grasa corporal, IMC, músculo esquelético, masa muscular, proteína, metabolismo basal, masa libre de grasa, grasa subcutánea, grasa visceral (índice), agua corporal y masa ósea. Hora y nota son opcionales.
-- El gráfico principal representa **fecha en el eje X y kg en el eje Y**. Muestra la línea sólida de pesadas reales, una proyección punteada por tendencia observada de los últimos 14 días si existe, y otra que simula una ralentización progresiva de esa misma tendencia, con la opción de añadir VR de 0, 15 o 20 minutos cuatro días por semana. No se usan valores energéticos personales fijos en el código. Ninguna curva simulada es una medición ni una indicación clínica.
-- Las tarjetas de cada indicador de báscula abren su propio histórico.
-- Los diez atajos de comida son: café con leche desnatada, loncha de queso light, flan proteico, YoPRO, Activia con cereales 0 %, pollo, ternera, plato mixto, dos hamburguesas de ternera y dos de pollo. Todos abren el editor de cantidades antes de registrar; los valores nutricionales sin etiqueta confirmada son estimaciones.
-- El importador en **Importar mediciones preparadas en ChatGPT** acepta una lista JSON de pesadas; comprueba las fechas, los rangos y las duplicidades, pide confirmación y mezcla los campos con los datos ya existentes, sin borrar comidas ni objetivos. No requiere credenciales de ChatGPT. Ejemplo:
-
-```json
-[
-  {"date": "2026-01-15", "weight": 95.0, "bodyFat": 30.0, "muscleMass": 55.0, "bodyWater": 50.0}
-]
-```
-
-Esto permite preparar un bloque de mediciones desde una conversación y pegarlas tras revisarlas. No constituye una conexión directa entre ChatGPT y la cuenta autenticada: la sincronización sigue ejecutándose desde la sesión Google del usuario.
-
-Los cambios mantienen `schemaVersion: 1` y la tabla RLS `dinofit_documents`, evitando migraciones destructivas o pérdida de documentos ya guardados. No se añaden mediciones personales al repositorio.
+La base de datos existente `dinofit_documents` utiliza el esquema JSONB `schemaVersion=1` y controles por usuario. No se ha modificado el esquema SQL ni eliminado registros antiguos. El cliente solo utiliza la clave publicable de Supabase.
 
 ## Pruebas
 
-```sh
-node herramientas/dinofit/tests/tracker.cjs
-node herramientas/dinofit/tests/calendar.cjs
+```bash
+node herramientas/dinofit/tests/rewrite.cjs
 ```
 
-Los tests revisan compatibilidad con documentos antiguos, representación del calendario, doce indicadores, actualización sin borrar métricas, las diez comidas, curvas y la importación no destructiva. GitHub Actions repite ambas pruebas al modificar el directorio.
+El test cubre compatibilidad con documento preexistente, interfaz oscura, 12 indicadores, 10 comidas, calendario, proyecciones, archivo histórico y fusión idempotente de mediciones. GitHub Actions ejecuta estas pruebas antes de desplegar el Worker y comprueba que el servidor publica los recursos de la nueva interfaz.
+
+## Operación y publicación
+
+Cloudflare Worker **dinofit** con rutas `herramientas.zaurio.es/dinofit` y `herramientas.zaurio.es/dinofit/*`. GitHub Actions `Publicar DinoFit` despliega únicamente este Worker cuando cambia el directorio en `main`. Requiere secretos ya configurados `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ACCOUNT_ID`; la comprobación posterior solicita el HTML y los recursos CSS/JS de producción.
+
