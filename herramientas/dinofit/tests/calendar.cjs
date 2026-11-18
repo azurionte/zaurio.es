@@ -42,7 +42,7 @@ assert.ok(Math.abs(run('state.weights.find(w=>w.id==="w7").bodyWater')-50.9)<1e-
 assert.throws(()=>run('validateData({...state,weights:[{...state.weights[0],bodyFat:-1}]})'));
 assert.ok(run('state.foods.some(f=>f.id==="activia-cereales")&&state.foods.some(f=>f.id==="yopro")'));
 run('selectedDate="2026-04-18";currentView="today";state.logs.push({id:"test-log",date:"2026-04-17",meal:"Cena",title:"Flan",parts:[makePart("flan",1)],note:""});render()');
-assert.equal(el("#scaleBulkImport").onclick instanceof Function,true);
+assert.equal(typeof el("#scaleBulkImport").onclick,"function");
 el("#scaleBulk").value=JSON.stringify([
   {date:"2026-04-18",weight:107.0,bodyFat:29.5,protein:15.2},
   {date:"2026-04-19",weight:106.8,bodyFat:29.4}
