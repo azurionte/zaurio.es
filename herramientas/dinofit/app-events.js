@@ -100,7 +100,7 @@ function saveFoodForm(form){
  const parts=readFoodParts(form),values=new FormData(form);
  const recipe=RECIPES.find(x=>x.id===form.dataset.recipeId);
  const previous=formEntryId?state.logs.find(x=>x.id===formEntryId):null;
- const title=previous?.title||recipe?.name||openFoodModal.currentTitle||'Comida';
+ const title=previous?.title||recipe?.name||'Comida';
  const next={id:previous?.id||uid(),date,meal:String(values.get('meal')||'Otro'),title,note:String(values.get('note')||'').trim().slice(0,500),parts};
  if(!['Desayuno','Comida','Merienda','Cena','Otro'].includes(next.meal))throw Error('Momento no válido.');
  state.logs=state.logs.filter(x=>x.id!==next.id).concat(next);
