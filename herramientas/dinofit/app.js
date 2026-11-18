@@ -82,7 +82,7 @@ function validateState(d){
   dates.add(w.date);
   if(Array.isArray(w.alternates))for(const alt of w.alternates){
    if(!alt||!isNumber(alt.weight)||alt.weight<20||alt.weight>500)throw Error('Pesada adicional no válida en '+w.date);
-   if(alt.time!==undefined&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(alt.time))throw Error('Hora adicional no válida.');
+   if(alt.time!==undefined&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(alt.time))throw Error('Hora adicional no válida.');
    for(const m of METRICS)if(alt[m.id]!==undefined&&(!isNumber(alt[m.id])||alt[m.id]<0||alt[m.id]>m.max))throw Error('Indicador adicional no válido: '+m.name);
   }
   for(const m of METRICS){
@@ -230,7 +230,7 @@ function normalizeImport(input){
   if(w.alternates!==undefined){
    if(!Array.isArray(w.alternates)||w.alternates.length>10)throw Error('Demasiadas pesadas adicionales.');
    normalized.alternates=w.alternates.map(a=>{
-    if(!a||!isNumber(a.weight)||a.weight<20||a.weight>500||a.time!==undefined&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(a.time))throw Error('Pesada adicional inválida.');
+    if(!a||!isNumber(a.weight)||a.weight<20||a.weight>500||a.time!==undefined&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(a.time))throw Error('Pesada adicional inválida.');
     const alt={weight:a.weight};if(a.time)alt.time=a.time;
     for(const m of METRICS.filter(m=>m.id!=='weight')){
       if(a[m.id]!==undefined&&a[m.id]!==null){if(!isNumber(a[m.id])||a[m.id]<0||a[m.id]>m.max)throw Error('Métrica adicional no válida.');alt[m.id]=a[m.id]}
