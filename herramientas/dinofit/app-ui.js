@@ -27,7 +27,7 @@ function bestFit(list){
 function projections(){
  const actual=timeLine(),anchor=actual.at(-1),goal=state?.profile?.targetWeight;
  if(!anchor||!isNumber(goal)||goal>=anchor.weight)return {emp:[],adjusted:[],slope:null,empDate:null,adjDate:null};
- const recent=actual.filter(w=>dayDiff(w.date,anchor.date)>=-14);
+ const recent=actual.filter(w=>dayDiff(w.date,anchor.date)<=14);
  const slope=bestFit(recent);
  if(slope===null||slope>=0)return {emp:[],adjusted:[],slope,empDate:null,adjDate:null};
  const emp=[],adjusted=[],endDay=Math.ceil((anchor.weight-goal)/-slope);
