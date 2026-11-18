@@ -244,10 +244,19 @@ function normalizeImport(input){
  }
  if(input.targetWeight!==undefined&&(!isNumber(input.targetWeight)||input.targetWeight<20||input.targetWeight>500))throw Error('Objetivo no válido.');
  if(input.trackingStartDate!==undefined&&!dateValid(input.trackingStartDate))throw Error('Periodo de seguimiento no válido.');
+ const logs=Array.isArray(input.logs)?input.logs:[];
+ if(logs.length>100)throw Error('Demasiados registros de comida.');
+ for(const l of logs){
+  if(!l||!dateValid(l.date)||typeof l.importKey!=='string'||!/^chat-[a-zA-Z0-9_-]{3,90}$/.test(l.importKey)||
+      typeof l.title!=='string'||l.title.length>120||
+      !['Desayuno','Comida','Merienda','Cena','Otro'].includes(l.meal)||
+      !Array.isArray(l.parts)||l.parts.length<1||l.parts.length>12)throw Error('Comida importada inválida.');
+  for(const p of l.parts)if(!p||typeof p.foodId!=='string'||typeof p.qty!=='number'||!Number.isFinite(p.qty)||p.qty<=0||p.qty>100000)throw Error('Cantidad de comida importada inválida.');
+ }
  const activities=Array.isArray(input.activities)?input.activities:[];
  if(activities.length>100)throw Error('Demasiadas actividades.');
  for(const a of activities)if(!dateValid(a.date)||!isNumber(a.minutes)||a.minutes<=0||a.minutes>240||typeof a.type!=='string')throw Error('Actividad no válida.');
- return {weights,activities,targetWeight:input.targetWeight,trackingStartDate:input.trackingStartDate};
+ return {weights,activities,logs,targetWeight:input.targetWeight,trackingStartDate:input.trackingStartDate};
 }
 function mergeImport(imported){
  const dates=new Map(sortedWeights().map(w=>[w.date,{...w}]));
@@ -259,7 +268,14 @@ function mergeImport(imported){
  const nextWeights=[...dates.values()].sort((a,b)=>a.date.localeCompare(b.date));
  const acts=new Map((state.activities||[]).map(a=>[a.date+'|'+a.type,a]));
  for(const a of imported.activities)acts.set(a.date+'|'+a.type,{...acts.get(a.date+'|'+a.type),id:acts.get(a.date+'|'+a.type)?.id||uid(),...a});
- const next={...state,weights:nextWeights,activities:[...acts.values()]};
+ const nextLogs=(state.logs||[]).slice();
+ for(const l of imported.logs||[]){
+  const parts=l.parts.map(p=>makePart(p.foodId,p.qty));
+  const same=nextLogs.find(x=>x.importKey===l.importKey||
+   x.date===l.date&&x.title===l.title&&x.parts.length===parts.length&&x.parts.every((p,i)=>p.foodId===parts[i].foodId&&p.qty===parts[i].qty));
+  if(!same)nextLogs.push({id:uid(),date:l.date,meal:l.meal,title:l.title,parts,note:l.note||'Registro anotado en conversación',importKey:l.importKey});
+ }
+ const next={...state,weights:nextWeights,activities:[...acts.values()],logs:nextLogs};
  if(imported.targetWeight!==undefined)next.profile={...next.profile,targetWeight:imported.targetWeight};
  if(imported.trackingStartDate)next.trackingStartDate=imported.trackingStartDate;
  validateState(next);
