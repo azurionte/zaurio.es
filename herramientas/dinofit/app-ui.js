@@ -48,8 +48,9 @@ function projections(){
 function svgLine(series,{small=false,unit='kg',yBounds=null,showGoal=null}={}){
  const all=series.flatMap(s=>s.points||[]);
  if(!all.length)return '<div class="empty">Todavía no hay datos para mostrar.</div>';
- const W=small?220:1080,H=small?65:405;
- const margin=small?{l:3,r:3,t:6,b:6}:{l:66,r:28,t:22,b:48};
+ const compact=!small && typeof window!=='undefined' && window.innerWidth<=700;
+ const W=small?220:compact?430:1080,H=small?65:compact?300:405;
+ const margin=small?{l:3,r:3,t:6,b:6}:compact?{l:45,r:10,t:15,b:42}:{l:66,r:28,t:22,b:48};
  const timestamps=all.map(p=>utcDay(p.date));
  const first=Math.min(...timestamps),last=Math.max(...timestamps),duration=Math.max(86400000,last-first);
  const vv=all.map(p=>p.value),lowest=Math.min(...vv,showGoal??Infinity),highest=Math.max(...vv,showGoal??-Infinity);
