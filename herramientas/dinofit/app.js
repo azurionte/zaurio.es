@@ -80,6 +80,11 @@ function validateState(d){
  for(const w of d.weights){
   if(!dateValid(w.date)||!isNumber(w.weight)||w.weight<20||w.weight>500||dates.has(w.date))throw Error('Peso o fecha repetidos en '+String(w.date));
   dates.add(w.date);
+  if(Array.isArray(w.alternates))for(const alt of w.alternates){
+   if(!alt||!isNumber(alt.weight)||alt.weight<20||alt.weight>500)throw Error('Pesada adicional no válida en '+w.date);
+   if(alt.time!==undefined&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(alt.time))throw Error('Hora adicional no válida.');
+   for(const m of METRICS)if(alt[m.id]!==undefined&&(!isNumber(alt[m.id])||alt[m.id]<0||alt[m.id]>m.max))throw Error('Indicador adicional no válido: '+m.name);
+  }
   for(const m of METRICS){
    if(w[m.id] == null)continue;
    if(!isNumber(w[m.id])||w[m.id]<0||w[m.id]>m.max)throw Error('Indicador no válido: '+m.name+' en '+w.date);
@@ -221,6 +226,17 @@ function normalizeImport(input){
    const n=asNum(v);
    if(!Number.isFinite(n)||n<0||n>m.max||(m.id==='weight'&&n<20))throw Error('Dato inválido: '+m.name);
    normalized[m.id]=n;
+  }
+  if(w.alternates!==undefined){
+   if(!Array.isArray(w.alternates)||w.alternates.length>10)throw Error('Demasiadas pesadas adicionales.');
+   normalized.alternates=w.alternates.map(a=>{
+    if(!a||!isNumber(a.weight)||a.weight<20||a.weight>500||a.time!==undefined&&!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(a.time))throw Error('Pesada adicional inválida.');
+    const alt={weight:a.weight};if(a.time)alt.time=a.time;
+    for(const m of METRICS.filter(m=>m.id!=='weight')){
+      if(a[m.id]!==undefined&&a[m.id]!==null){if(!isNumber(a[m.id])||a[m.id]<0||a[m.id]>m.max)throw Error('Métrica adicional no válida.');alt[m.id]=a[m.id]}
+    }
+    return alt;
+   });
   }
   if(w.note!==undefined){if(typeof w.note!=='string'||w.note.length>500)throw Error('Nota demasiado larga.');normalized.note=w.note;}
   if(w.time!==undefined){if(typeof w.time!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(w.time))throw Error('Hora no válida.');normalized.time=w.time;}
