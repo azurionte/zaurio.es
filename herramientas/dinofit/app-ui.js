@@ -151,9 +151,16 @@ function currentDay(){
  return out;
 }
 function quickFoods(){
- return '<section class="section"><div class="section-head"><div><h2>Añadir una comida</h2><p>Accesos rápidos a tus alimentos habituales · '+htmlSafe(readableDate(selectedDate))+'</p></div><span class="helper">Puedes ajustar cantidades</span></div>'+
- '<div class="quick-grid">'+RECIPES.map(r=>'<button class="food-button" type="button" data-action="add-food" data-recipe="'+r.id+'">'+
- '<span class="food-top"><span class="em" aria-hidden="true">'+r.emoji+'</span><span class="plus">＋</span></span><strong>'+htmlSafe(r.name)+'</strong><small>'+htmlSafe(r.hint)+'</small></button>').join('')+'</div></section>';
+ const groups=[
+  {id:'usual',title:'Habituales',hint:'Café, lácteos y tentempiés'},
+  {id:'mixed',title:'Tuppers con salteados',hint:'Salteado de pollo y patata con Frankfurt; aceite repartido entre 8 raciones'},
+  {id:'plain',title:'Tuppers solo proteína',hint:'Cuando hay hamburguesas, se cuentan siempre dos'}
+ ];
+ const buttons=r=>'<button class="food-button" type="button" data-action="add-food" data-recipe="'+r.id+'">'+
+  '<span class="food-top"><span class="em" aria-hidden="true">'+r.emoji+'</span><span class="plus">＋</span></span><strong>'+htmlSafe(r.name)+'</strong><small>'+htmlSafe(r.hint)+'</small></button>';
+ return '<section class="section"><div class="section-head"><div><h2>Añadir una comida</h2><p>Tuppers aproximados, sin necesidad de pesar ingredientes · '+htmlSafe(readableDate(selectedDate))+'</p></div><span class="helper">Puedes ajustar cantidades</span></div>'+
+  groups.map(g=>'<div class="quick-group"><h3>'+htmlSafe(g.title)+'</h3><p class="helper">'+htmlSafe(g.hint)+'</p><div class="quick-grid">'+
+   RECIPES.filter(r=>r.group===g.id).map(buttons).join('')+'</div></div>').join('')+'</section>';
 }
 function dayRecords(){
  const entries=dayLogs().sort((a,b)=>(a.meal||'').localeCompare(b.meal||'')),activities=getActivity(selectedDate);
