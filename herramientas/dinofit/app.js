@@ -18,16 +18,19 @@ const METRICS = [
  {id:'boneMass',name:'Masa ósea',unit:'kg',decimals:2,max:30}
 ];
 const RECIPES = [
- {id:'coffee',name:'Café con leche desnatada',emoji:'☕',hint:'1 café + 120 ml de leche',meal:'Desayuno',parts:[['coffee',1],['milk',120]]},
- {id:'cheese',name:'Loncha de queso light',emoji:'🧀',hint:'1 loncha · 25 g',meal:'Otro',parts:[['cheese',1]]},
- {id:'flan',name:'Flan proteico',emoji:'🍮',hint:'1 unidad · 100 g',meal:'Otro',parts:[['flan',1]]},
- {id:'yopro',name:'YoPRO',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro',1]]},
- {id:'activia',name:'Activia cereales',emoji:'🥣',hint:'1 unidad · 115 g',meal:'Otro',parts:[['activia-cereales',1]]},
- {id:'chicken',name:'Plato de pollo',emoji:'🍗',hint:'150 g de carne',meal:'Comida',parts:[['chicken',150]]},
- {id:'beef',name:'Plato de ternera',emoji:'🥩',hint:'150 g de carne',meal:'Comida',parts:[['beef',150]]},
- {id:'mixed',name:'Plato mixto con verduras',emoji:'🥘',hint:'Carne, salteados y aceite',meal:'Cena',parts:[['chicken',145],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]},
- {id:'beefburgers',name:'2 hamburguesas de ternera',emoji:'🍔',hint:'2 unidades',meal:'Comida',parts:[['burger-beef',2]]},
- {id:'chickenburgers',name:'2 hamburguesas de pollo',emoji:'🍔',hint:'2 unidades',meal:'Comida',parts:[['burger-chicken',2]]}
+ {id:'coffee',group:'usual',name:'Café con leche desnatada',emoji:'☕',hint:'1 café + 120 ml de leche',meal:'Desayuno',parts:[['coffee',1],['milk',120]]},
+ {id:'cheese',group:'usual',name:'Loncha de queso light',emoji:'🧀',hint:'1 loncha · 25 g',meal:'Otro',parts:[['cheese',1]]},
+ {id:'flan',group:'usual',name:'Flan proteico',emoji:'🍮',hint:'1 unidad · 100 g',meal:'Otro',parts:[['flan',1]]},
+ {id:'yopro',group:'usual',name:'YoPRO',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro',1]]},
+ {id:'activia',group:'usual',name:'Activia cereales',emoji:'🥣',hint:'1 unidad · 115 g',meal:'Otro',parts:[['activia-cereales',1]]},
+ {id:'mixed-chicken',group:'mixed',name:'Pechuga + salteados',emoji:'🥘',hint:'≈350 kcal · aceite incluido',meal:'Comida',parts:[['chicken',145],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]},
+ {id:'mixed-beef',group:'mixed',name:'Ternera + salteados',emoji:'🥘',hint:'≈430 kcal · aceite incluido',meal:'Comida',parts:[['beef',150],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]},
+ {id:'mixed-chickenburgers',group:'mixed',name:'2 burgers de pollo + salteados',emoji:'🍔',hint:'≈450–460 kcal · 2 burgers',meal:'Comida',parts:[['burger-chicken',2],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]},
+ {id:'mixed-beefburgers',group:'mixed',name:'2 burgers de ternera + salteados',emoji:'🍔',hint:'≈560 kcal · 2 burgers',meal:'Comida',parts:[['burger-beef',2],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]},
+ {id:'chicken',group:'plain',name:'Solo pechuga de pollo',emoji:'🍗',hint:'≈165 kcal · 150 g orientativos',meal:'Comida',parts:[['chicken',150]]},
+ {id:'beef',group:'plain',name:'Solo filete de ternera',emoji:'🥩',hint:'≈240 kcal · 150 g orientativos',meal:'Comida',parts:[['beef',150]]},
+ {id:'chickenburgers',group:'plain',name:'Solo 2 burgers de pollo',emoji:'🍔',hint:'≈265 kcal · 2 unidades',meal:'Comida',parts:[['burger-chicken',2]]},
+ {id:'beefburgers',group:'plain',name:'Solo 2 burgers de ternera',emoji:'🍔',hint:'≈375 kcal · 2 unidades',meal:'Comida',parts:[['burger-beef',2]]}
 ];
 const $ = q => document.querySelector(q);
 const $$ = q => [...document.querySelectorAll(q)];
