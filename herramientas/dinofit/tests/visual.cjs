@@ -44,7 +44,7 @@ async function main(){
     metricCards:document.querySelectorAll('.scale-card').length,foodButtons:document.querySelectorAll('.food-button').length,
     mainWidth:layout.getBoundingClientRect().width,saveText:document.querySelector('#saveStatus').textContent};
   });
-  assert.equal(measured.metricCards,12);assert.equal(measured.foodButtons,10);
+  assert.equal(measured.metricCards,12);assert.equal(measured.foodButtons,13);
   assert.ok(measured.charts>8);
   assert.ok(measured.horizontalOverflow<=3,'Horizontal overflow: '+JSON.stringify(measured));
   assert.notEqual(measured.cardBackground,'rgb(255, 255, 255)','Metric cards must not be white');
