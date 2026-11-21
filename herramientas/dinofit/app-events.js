@@ -169,7 +169,7 @@ async function actionHandler(event){
  if(action==='modal-backdrop'){if(event.target===button)closeModal();return;}
  try{
   switch(action){
-   case 'view': activeView=button.dataset.view;render();break;
+   case 'view':activeView=button.dataset.view;if(activeView==='today')selectCalendarDay(isoToday());else render();break;
    case 'date-prev':selectCalendarDay(addDays(selectedDate,-1));break;
    case 'date-next':selectCalendarDay(addDays(selectedDate,1));break;
    case 'date-today':selectCalendarDay(isoToday());break;
