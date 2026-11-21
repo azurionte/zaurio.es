@@ -122,4 +122,23 @@ assert.equal(run('state.weights.length'),9);
 assert.equal(run('state.weights.find(x=>x.date==="2026-04-14").bodyWater'),stateBefore,'preserve fields omitted by update');
 assert.equal(run('state.weights.find(x=>x.date==="2026-04-14").bodyFat'),31);
 assert.equal(run('state.weights.find(x=>x.date==="2026-04-14").alternates.length'),1);
+// Midnight regression: yesterday's diary must not appear as today's.
+run('state.logs=[{id:"only-nov20",date:"2026-11-20",meal:"Comida",title:"Cena del 20 (única)",parts:[{foodId:"chicken",qty:150,kcal:165}],note:""}];selectedDate="2026-11-20";lastObservedToday="2026-11-20";followCurrentDay=true;dashboardArea="nutrition"');
+const snapshot=run('JSON.stringify(state.logs)');
+assert.ok(run('currentDay()').includes('Cena del 20 (única)'),'the November 20 diary is visible on November 20');
+assert.equal(run('refreshCalendarDay("2026-11-21")'),true,'the app observes the new date');
+assert.equal(run('selectedDate'),'2026-11-21','the selected date automatically rolls over at midnight');
+assert.equal(run('dayLogs().length'),0,'November 21 has no entries when no foods were logged');
+const freshDiary=run('currentDay()');
+assert.ok(freshDiary.includes('Tu plato está vacío por ahora')&&freshDiary.includes('Sin registros'));
+assert.ok(!freshDiary.includes('Cena del 20 (única)'),'yesterday food never appears in the new day');
+assert.equal(run('JSON.stringify(state.logs)'),snapshot,'the rollover is display-only, never edits meals');
+// Manually viewing an older date must not be redirected at midnight.
+run('selectedDate="2026-11-19";lastObservedToday="2026-11-20";followCurrentDay=false');
+assert.equal(run('refreshCalendarDay("2026-11-21")'),true);
+assert.equal(run('selectedDate'),'2026-11-19','manual history selection is preserved');
+run('selectCalendarDay("2026-11-20",false)');
+assert.equal(run('dayLogs().length'),1,'previous day's meals can still be opened');
+assert.ok(run('currentDay()').includes('Estás consultando el'),'historical viewing is explicitly labeled');
+assert.equal(run('JSON.stringify(state.logs)'),snapshot,'date navigation leaves stored logs unchanged');
 console.log('PASS DinoFit: 4 pestañas, seguimiento activo, composición interactiva, 14 accesos, fecha, histórico e importación segura.');
