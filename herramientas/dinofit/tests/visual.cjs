@@ -83,22 +83,24 @@ async function main(){
   await page.locator('[data-action=dashboard-tab][data-tab=nutrition]').click();
   assert.equal(await page.locator('.food-button').count(),14,'14 shortcuts available in nutrition tab');
   assert.equal(await page.locator('.food-record-card').count(),6,'six illustrated food cards');
-  assert.equal(await page.locator('.plate-sticker').count(),6,'six food icons in daily plate');
+  assert.equal(await page.locator('.plate-gallery').count(),0,'duplicate gallery must not render');
+  assert.equal(await page.locator('.nutrition-overview').count(),1,'one panel contains summary and food diary');
+  assert.equal(await page.locator('.food-record-card [data-action=edit-food]').count(),6,'one editable item for each meal log');
   assert.equal(await page.locator('.meal-slice').count(),3,'three colored meal groups');
   assert.equal(await page.locator('.food-record-card.tone-lunch').count(),2,'lunch has two food cards');
   assert.ok((await page.locator('.nutrition-overview').innerText()).includes('825'),'daily calories preserved');
   const art=await page.evaluate(()=>({
    icons:document.querySelector('.food-record-card.tone-lunch .food-picture-icons')?.innerText,
-   burgerIcons:document.querySelector('[title="2 burgers de pollo + salteados"] .food-sticker-icons')?.innerText,
+   burgerIcons:[...document.querySelectorAll('.food-record-card')].find(card=>card.querySelector('h3')?.textContent==='2 burgers de pollo + salteados')?.querySelector('.food-picture-icons')?.innerText,
    toneA:getComputedStyle(document.querySelector('.meal-slice.tone-lunch')).borderColor,
    toneB:getComputedStyle(document.querySelector('.meal-slice.tone-other')).borderColor,
-   plateFits:document.querySelector('.plate-gallery').scrollHeight<=document.querySelector('.plate-gallery').clientHeight+2,
+   nutritionFits:document.querySelector('.nutrition-overview').scrollHeight<=document.querySelector('.nutrition-overview').clientHeight+2,
    cardsFit:document.querySelector('.food-record-grid').scrollHeight<=document.querySelector('.food-record-grid').clientHeight+2
   }));
   assert.ok(art.icons?.includes('🍗'),'chicken shown as food illustration');
   assert.ok(art.burgerIcons?.includes('🍔'),'burger illustration exists');
   assert.notEqual(art.toneA,art.toneB,'meal groups have distinct accent colors');
-  assert.equal(art.plateFits,true,'no inner scrolling in food illustration');
+  assert.equal(art.nutritionFits,true,'no inner scrolling in nutrition area');
   assert.equal(art.cardsFit,true,'no inner scrolling in food diary');
   measured=await measure();
   assert.ok(measured.horizontalOverflow<=3,'nutrition horizontal overflow');
@@ -117,8 +119,8 @@ async function main(){
   });
   assert.equal(await page.locator('#globalDate').inputValue(),'2026-04-19','new day selected automatically');
   assert.equal(await page.locator('.food-record-card').count(),0,'yesterday food must not appear on the new day');
-  assert.equal(await page.locator('.plate-sticker').count(),0,'gallery must be empty on the new day');
-  assert.ok((await page.locator('#dashboard-panel').innerText()).includes('Tu plato está vacío por ahora'));
+  assert.equal(await page.locator('.plate-gallery').count(),0,'duplicate gallery never appears');
+  assert.ok((await page.locator('#dashboard-panel').innerText()).includes('Aún no hay comidas registradas'));
   await page.evaluate(()=>selectCalendarDay('2026-04-18'));
   assert.equal(await page.locator('.food-record-card').count(),6,'yesterday records remain accessible');
   // An explicit historical view remains selected when midnight arrives.
