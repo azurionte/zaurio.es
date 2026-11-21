@@ -79,7 +79,7 @@ assert.ok(goals.includes('Tu camino hasta')&&goals.includes('Actividad física')
 run('dashboardArea="nutrition"');
 const foods=run('currentDay()');
 assert.equal((foods.match(/data-recipe=/g)||[]).length,14,'eight tuppers and six drink/snack shortcuts');
-assert.ok(foods.includes('Platos · con salteados')&&foods.includes('Platos · solo proteína'));
+assert.ok(foods.includes('Platos con salteados')&&foods.includes('Solo proteína'));
 assert.ok(foods.includes('Postres y lácteos')&&foods.includes('Bebidas'));
 assert.ok(foods.includes('Día completo'));
 assert.ok(foods.includes('data-recipe="cola"'));
