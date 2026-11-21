@@ -334,7 +334,7 @@ function foodPartsCaption(entry){
 function dayRecords(kind='all'){
  const entries=dayLogs().sort((a,b)=>(a.meal||'').localeCompare(b.meal||'')),activities=getActivity(selectedDate);
  const body=entries.length?entries.map(entry=>{
-  const emojis=foodEmojis(entry),tone=foodTone(entry.meal);
+  const tone=foodTone(entry.meal);
   return '<article role="listitem" class="food-record-card tone-'+tone+'">'+
    '<div class="food-card-art">'+foodPicture(entry)+'<span class="food-art-spark" aria-hidden="true">✦</span></div>'+
    '<div class="food-card-content"><span class="food-meal-tag">'+mealIcon(entry.meal)+' '+htmlSafe(entry.meal||'Otro')+'</span>'+
