@@ -24,26 +24,59 @@ function bestFit(list){
  if(div===0)return null;
  return sum/div;
 }
+function bestFitField(list,measure){
+ const values=list.filter(w=>isNumber(measure(w)));
+ if(values.length<3)return null;
+ const x0=values[0].date,xx=values.map(w=>dayDiff(x0,w.date)),yy=values.map(measure);
+ const n=values.length,mx=xx.reduce((a,b)=>a+b,0)/n,my=yy.reduce((a,b)=>a+b,0)/n;
+ const denominator=xx.reduce((sum,x)=>sum+(x-mx)**2,0);
+ return denominator>0?xx.reduce((sum,x,i)=>sum+(x-mx)*(yy[i]-my),0)/denominator:null;
+}
+function projectionPoints(anchor,goal,slope){
+ if(!anchor||!isNumber(goal)||!isNumber(slope)||slope>=0||goal>=anchor.weight)return {points:[],date:null};
+ const days=Math.ceil((anchor.weight-goal)/-slope);
+ if(days<1||days>3650)return {points:[],date:null};
+ const points=[];
+ for(let d=0;d<days;d+=Math.max(1,Math.ceil(days/85))){
+  points.push({date:addDays(anchor.date,d),value:Math.max(goal,anchor.weight+slope*d)});
+ }
+ points.push({date:addDays(anchor.date,days),value:goal});
+ return {points,date:addDays(anchor.date,days)};
+}
+function monitoringEvidence(anchor,recent){
+ if(!anchor)return {completed:0,logged:0,averageKcal:null,activities:0,minutes:0,fatSlope:null,leanSlope:null};
+ const since=addDays(anchor.date,-13);
+ const complete=new Set((state?.completeDays||[]).filter(d=>dateValid(d)&&d>=since&&d<=anchor.date));
+ const logged=(state?.logs||[]).filter(x=>x.date>=since&&x.date<=anchor.date);
+ const completeDates=[...complete].filter(d=>logged.some(l=>l.date===d));
+ const calories=completeDates.map(d=>logged.filter(l=>l.date===d).reduce((sum,l)=>sum+logTotal(l.parts||[]),0));
+ const activities=(state?.activities||[]).filter(a=>a.date>=since&&a.date<=anchor.date);
+ return {
+  completed:completeDates.length,
+  logged:new Set(logged.map(x=>x.date)).size,
+  averageKcal:calories.length?calories.reduce((a,b)=>a+b,0)/calories.length:null,
+  activities:activities.length,
+  minutes:activities.reduce((sum,a)=>sum+(isNumber(a.minutes)?a.minutes:0),0),
+  fatSlope:bestFitField(recent,w=>isNumber(w.bodyFat)?w.weight*w.bodyFat/100:null),
+  leanSlope:bestFitField(recent,w=>isNumber(w.bodyFat)?w.weight*(1-w.bodyFat/100):null)
+ };
+}
 function projections(){
  const actual=timeLine(),anchor=actual.at(-1),goal=state?.profile?.targetWeight;
- if(!anchor||!isNumber(goal)||goal>=anchor.weight)return {emp:[],adjusted:[],slope:null,empDate:null,adjDate:null};
+ const empty={emp:[],adjusted:[],slope:null,activeSlope:null,empDate:null,adjDate:null,usedShortTrend:false,evidence:monitoringEvidence(anchor,[])};
+ if(!anchor||!isNumber(goal)||goal>=anchor.weight)return empty;
  const recent=actual.filter(w=>dayDiff(w.date,anchor.date)<=14);
  const slope=bestFit(recent);
- if(slope===null||slope>=0)return {emp:[],adjusted:[],slope,empDate:null,adjDate:null};
- const emp=[],adjusted=[],endDay=Math.ceil((anchor.weight-goal)/-slope);
- if(endDay>0&&endDay<=3650){
-  for(let d=0;d<=endDay;d+=Math.max(1,Math.ceil(endDay/80)))emp.push({date:addDays(anchor.date,d),value:Math.max(goal,anchor.weight+slope*d)});
-  emp.push({date:addDays(anchor.date,endDay),value:goal});
- }
- let weight=anchor.weight,adjDate=null;
- for(let d=0;d<=1825;d++){
-  if(d%12===0||d===0||weight<=goal)adjusted.push({date:addDays(anchor.date,d),value:+weight.toFixed(3)});
-  if(weight<=goal+1e-6){adjDate=addDays(anchor.date,d);break}
-  const residual= Math.abs(slope)*Math.pow(weight/anchor.weight,1.3)*Math.exp(-d/510);
-  const kcalExtra=vrMinutes?3*3.5*weight/200*vrMinutes*4/7:0;
-  weight=Math.max(goal,weight-residual-(kcalExtra/7700));
- }
- return {emp,adjusted,slope,empDate:emp.length?emp.at(-1).date:null,adjDate};
+ const short=recent.filter(w=>dayDiff(w.date,anchor.date)<=6);
+ const shortSlope=short.length>=4&&dayDiff(short[0].date,short.at(-1).date)>=4?bestFit(short):null;
+ const activeSlope=isNumber(slope)&&isNumber(shortSlope)?(slope+shortSlope)/2:slope;
+ const baseline=projectionPoints(anchor,goal,slope);
+ const adaptive=projectionPoints(anchor,goal,activeSlope);
+ const evidence=monitoringEvidence(anchor,recent);
+ // Activity and logged food are monitored, but not added to observed weight loss twice.
+ // Incomplete food days never count as zero kcal and are never extrapolated to future days.
+ return {emp:baseline.points,adjusted:adaptive.points,slope,activeSlope,
+  empDate:baseline.date,adjDate:adaptive.date,usedShortTrend:isNumber(shortSlope),evidence};
 }
 function svgLine(series,{small=false,unit='kg',yBounds=null,showGoal=null}={}){
  const all=series.flatMap(s=>s.points||[]);
