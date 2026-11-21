@@ -147,7 +147,8 @@ function dayLogs(d=selectedDate){
 function foodKind(parts=[],recipe=null){
  const ids=(parts||[]).map(part=>Array.isArray(part)?part[0]:part?.foodId).filter(Boolean);
  if(recipe?.group==='mixed'||recipe?.group==='plain'||ids.some(id=>id==='chicken'||id==='beef'||id.startsWith('burger-')||id.startsWith('saute-')))return 'main';
- if(ids.includes('egg')&&(parts.find(p=>(Array.isArray(p)?p[0]:p.foodId)==='egg')?.qty>=2))return 'main';
+ const eggs=(parts||[]).reduce((total,p)=>total+((Array.isArray(p)?p[0]:p?.foodId)==='egg'?Number(Array.isArray(p)?p[1]:p?.qty)||0:0),0);
+ if(eggs>=2)return 'main';
  if(ids.some(id=>['coffee','milk','cheese','flan','yopro','activia-cereales','yogurt','yogurt-berries','yogurt-pineapple','egg'].includes(id)))return 'light';
  return 'extra';
 }
