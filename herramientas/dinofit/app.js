@@ -19,6 +19,7 @@ const METRICS = [
 ];
 const RECIPES = [
  {id:'coffee',group:'usual',name:'Café con leche desnatada',emoji:'☕',hint:'1 café + 120 ml de leche',meal:'Desayuno',parts:[['coffee',1],['milk',120]]},
+ {id:'cola',group:'usual',name:'Coca-Cola Zero',emoji:'🥤',hint:'330 ml · estimación 0 kcal',meal:'Otro',parts:[['cola',330]]},
  {id:'cheese',group:'usual',name:'Loncha de queso light',emoji:'🧀',hint:'1 loncha · 25 g',meal:'Otro',parts:[['cheese',1]]},
  {id:'flan',group:'usual',name:'Flan proteico',emoji:'🍮',hint:'1 unidad · 100 g',meal:'Otro',parts:[['flan',1]]},
  {id:'yopro',group:'usual',name:'YoPRO',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro',1]]},
@@ -50,6 +51,8 @@ const isNumber = x => typeof x === 'number' && Number.isFinite(x);
 const asNum = x => typeof x === 'string' ? Number(x.replace(',','.')) : Number(x);
 let db=null,account=null,state=null,revision=null,activeView='today',selectedDate=isoToday(),selectedMetric='bodyFat',chartZoom='full',vrMinutes=0;
 let authEpoch=0,loadingUser=null,saveTimeout=null,savePromise=null,changeCount=0,dirty=false,saving=false,conflict=false,saveError='',openModalType='',formEntryId=null;
+// Dashboard UI state is session-only. Never store navigation or chart choices in the health record.
+let dashboardArea='weight',compositionFocus='all',forecastMode='both';
 const PENDING_IMPORT_KEY='dinofit_chat_import_pending_v3';
 let importInProgress=false,notice='',lastImportSummary='';
 
