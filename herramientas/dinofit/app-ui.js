@@ -24,26 +24,59 @@ function bestFit(list){
  if(div===0)return null;
  return sum/div;
 }
+function bestFitField(list,measure){
+ const values=list.filter(w=>isNumber(measure(w)));
+ if(values.length<3)return null;
+ const x0=values[0].date,xx=values.map(w=>dayDiff(x0,w.date)),yy=values.map(measure);
+ const n=values.length,mx=xx.reduce((a,b)=>a+b,0)/n,my=yy.reduce((a,b)=>a+b,0)/n;
+ const denominator=xx.reduce((sum,x)=>sum+(x-mx)**2,0);
+ return denominator>0?xx.reduce((sum,x,i)=>sum+(x-mx)*(yy[i]-my),0)/denominator:null;
+}
+function projectionPoints(anchor,goal,slope){
+ if(!anchor||!isNumber(goal)||!isNumber(slope)||slope>=0||goal>=anchor.weight)return {points:[],date:null};
+ const days=Math.ceil((anchor.weight-goal)/-slope);
+ if(days<1||days>3650)return {points:[],date:null};
+ const points=[];
+ for(let d=0;d<days;d+=Math.max(1,Math.ceil(days/85))){
+  points.push({date:addDays(anchor.date,d),value:Math.max(goal,anchor.weight+slope*d)});
+ }
+ points.push({date:addDays(anchor.date,days),value:goal});
+ return {points,date:addDays(anchor.date,days)};
+}
+function monitoringEvidence(anchor,recent){
+ if(!anchor)return {completed:0,logged:0,averageKcal:null,activities:0,minutes:0,fatSlope:null,leanSlope:null};
+ const since=addDays(anchor.date,-13);
+ const complete=new Set((state?.completeDays||[]).filter(d=>dateValid(d)&&d>=since&&d<=anchor.date));
+ const logged=(state?.logs||[]).filter(x=>x.date>=since&&x.date<=anchor.date);
+ const completeDates=[...complete].filter(d=>logged.some(l=>l.date===d));
+ const calories=completeDates.map(d=>logged.filter(l=>l.date===d).reduce((sum,l)=>sum+logTotal(l.parts||[]),0));
+ const activities=(state?.activities||[]).filter(a=>a.date>=since&&a.date<=anchor.date);
+ return {
+  completed:completeDates.length,
+  logged:new Set(logged.map(x=>x.date)).size,
+  averageKcal:calories.length?calories.reduce((a,b)=>a+b,0)/calories.length:null,
+  activities:activities.length,
+  minutes:activities.reduce((sum,a)=>sum+(isNumber(a.minutes)?a.minutes:0),0),
+  fatSlope:bestFitField(recent,w=>isNumber(w.bodyFat)?w.weight*w.bodyFat/100:null),
+  leanSlope:bestFitField(recent,w=>isNumber(w.bodyFat)?w.weight*(1-w.bodyFat/100):null)
+ };
+}
 function projections(){
  const actual=timeLine(),anchor=actual.at(-1),goal=state?.profile?.targetWeight;
- if(!anchor||!isNumber(goal)||goal>=anchor.weight)return {emp:[],adjusted:[],slope:null,empDate:null,adjDate:null};
+ const empty={emp:[],adjusted:[],slope:null,activeSlope:null,empDate:null,adjDate:null,usedShortTrend:false,evidence:monitoringEvidence(anchor,[])};
+ if(!anchor||!isNumber(goal)||goal>=anchor.weight)return empty;
  const recent=actual.filter(w=>dayDiff(w.date,anchor.date)<=14);
  const slope=bestFit(recent);
- if(slope===null||slope>=0)return {emp:[],adjusted:[],slope,empDate:null,adjDate:null};
- const emp=[],adjusted=[],endDay=Math.ceil((anchor.weight-goal)/-slope);
- if(endDay>0&&endDay<=3650){
-  for(let d=0;d<=endDay;d+=Math.max(1,Math.ceil(endDay/80)))emp.push({date:addDays(anchor.date,d),value:Math.max(goal,anchor.weight+slope*d)});
-  emp.push({date:addDays(anchor.date,endDay),value:goal});
- }
- let weight=anchor.weight,adjDate=null;
- for(let d=0;d<=1825;d++){
-  if(d%12===0||d===0||weight<=goal)adjusted.push({date:addDays(anchor.date,d),value:+weight.toFixed(3)});
-  if(weight<=goal+1e-6){adjDate=addDays(anchor.date,d);break}
-  const residual= Math.abs(slope)*Math.pow(weight/anchor.weight,1.3)*Math.exp(-d/510);
-  const kcalExtra=vrMinutes?3*3.5*weight/200*vrMinutes*4/7:0;
-  weight=Math.max(goal,weight-residual-(kcalExtra/7700));
- }
- return {emp,adjusted,slope,empDate:emp.length?emp.at(-1).date:null,adjDate};
+ const short=recent.filter(w=>dayDiff(w.date,anchor.date)<=6);
+ const shortSlope=short.length>=4&&dayDiff(short[0].date,short.at(-1).date)>=4?bestFit(short):null;
+ const activeSlope=isNumber(slope)&&isNumber(shortSlope)?(slope+shortSlope)/2:slope;
+ const baseline=projectionPoints(anchor,goal,slope);
+ const adaptive=projectionPoints(anchor,goal,activeSlope);
+ const evidence=monitoringEvidence(anchor,recent);
+ // Activity and logged food are monitored, but not added to observed weight loss twice.
+ // Incomplete food days never count as zero kcal and are never extrapolated to future days.
+ return {emp:baseline.points,adjusted:adaptive.points,slope,activeSlope,
+  empDate:baseline.date,adjDate:adaptive.date,usedShortTrend:isNumber(shortSlope),evidence};
 }
 function svgLine(series,{small=false,unit='kg',yBounds=null,showGoal=null}={}){
  const all=series.flatMap(s=>s.points||[]);
@@ -84,93 +117,167 @@ function svgLine(series,{small=false,unit='kg',yBounds=null,showGoal=null}={}){
 }
 function weightGraph(){
  const actual=timeLine(),goal=state?.profile?.targetWeight,pr=projections();
- const zoom=chartZoom==='short';
- const last=actual.at(-1);
- let series=[
-  {id:'real',color:'#64dfc5',points:actual.map(w=>({date:w.date,value:w.weight}))}
- ];
- if(pr.emp.length)series.push({id:'emp',color:'#b79bfa',dash:'9 7',points:pr.emp});
- if(pr.adjusted.length)series.push({id:'slow',color:'#8dbdff',dash:'6 7',points:pr.adjusted});
+ const zoom=chartZoom==='short',last=actual.at(-1),e=pr.evidence;
+ const obs=pr.emp,adapt=pr.adjusted;
+ let series=[{id:'real',color:'#64dfc5',points:actual.map(w=>({date:w.date,value:w.weight}))}];
+ if((forecastMode==='observed'||forecastMode==='both')&&obs.length)series.push({id:'emp',color:'#b79bfa',dash:'9 7',points:obs});
+ if((forecastMode==='active'||forecastMode==='both')&&adapt.length)series.push({id:'active',color:'#8dbdff',dash:'6 7',points:adapt});
  if(zoom&&last){
   const begin=addDays(last.date,-30),end=addDays(last.date,30);
-  series=series.map(s=>({...s,points:s.points.filter(p=>p.date>=begin&&p.date<=end)}));
+  series=series.map(item=>({...item,points:item.points.filter(p=>p.date>=begin&&p.date<=end)}));
  }
- const targetPart=isNumber(goal)?'<strong class="accent">Objetivo '+locale(goal,1)+' kg</strong>':'<span class="dim">Define tu peso objetivo en Ajustes</span>';
+ const showDate=date=>date?htmlSafe(readableDate(date)):'Esperando más mediciones';
+ const trend=pr.slope==null?'Sin datos suficientes':locale(Math.abs(pr.slope)*1000,0)+' g/día '+(pr.slope<0?'de descenso':'de aumento');
+ const active=pr.activeSlope==null?'Sin datos suficientes':locale(Math.abs(pr.activeSlope)*1000,0)+' g/día '+(pr.activeSlope<0?'de descenso':'de aumento');
+ const evidence=e||{};
  return '<section class="section">'+
- '<div class="section-head"><div><h2>Tu peso y el objetivo</h2><p>Datos observados y dos proyecciones diferenciadas · '+htmlSafe(readableDate(trackingStart()))+' en adelante</p></div>'+
- '<div class="tools"><button type="button" class="pillbutton '+(zoom?'active':'')+'" data-action="chart-zoom" data-mode="short">±30 días</button>'+
- '<button type="button" class="pillbutton '+(!zoom?'active':'')+'" data-action="chart-zoom" data-mode="full">Hasta el objetivo</button></div></div>'+
- svgLine(series,{unit:'kg',showGoal:goal})+
- '<div class="chart-legend"><span><i class="legend-line"></i> Peso registrado</span><span><i class="legend-line emp"></i> Proyección del ritmo reciente</span><span><i class="legend-line dec"></i> Proyección con ralentización</span></div>'+
- '<div class="proj-info">'+
-  '<div class="proj-stat"><span>Meta de peso</span><strong>'+targetPart+'</strong></div>'+
-  '<div class="proj-stat"><span>Ritmo observado (últimos 14 días)</span><strong>'+(pr.slope!=null?locale(pr.slope*1000,0)+' g/día':'Aún sin tendencia suficiente')+'</strong></div>'+
-  '<div class="proj-stat"><span>Proyección lineal</span><strong>'+(pr.empDate?htmlSafe(readableDate(pr.empDate)):'Pendiente')+'</strong></div>'+
-  '<div class="proj-stat"><span>Con ralentización</span><strong>'+(pr.adjDate?htmlSafe(readableDate(pr.adjDate)):'Fuera del horizonte simulado')+'</strong></div>'+
- '</div><div class="tools section-gap"><span class="helper">Cardio VR hipotético:</span>'+
- [0,15,20].map(x=>'<button type="button" class="pillbutton '+(vrMinutes===x?'active':'')+'" data-action="set-vr" data-minutes="'+x+'">'+(x?x+' min × 4 días/semana':'Sin VR')+'</button>').join('')+
- '</div><p class="chart-comment">La línea verde representa las pesadas reales. Las líneas punteadas son cálculos a partir del ritmo reciente, no valores medidos. La segunda supone una desaceleración progresiva; VR añade gasto orientativo y no sustituye datos de actividad real. El historial antiguo se conserva por separado.</p>'+
- '</section>';
+  '<div class="section-head"><div><h2>Evolución del peso y previsión</h2><p>Las fechas se recalculan al incorporar tus mediciones. No usamos una tasa de pérdida inventada.</p></div>'+
+  '<div class="tools"><button type="button" class="pillbutton '+(zoom?'active':'')+'" data-action="chart-zoom" data-mode="short">Últimos 30 días</button>'+
+  '<button type="button" class="pillbutton '+(!zoom?'active':'')+'" data-action="chart-zoom" data-mode="full">Hasta la meta</button></div></div>'+
+  '<div class="forecast-switch" aria-label="Modelos de proyección">'+
+  [{id:'observed',label:'Ritmo medido'},{id:'active',label:'Seguimiento activo'},{id:'both',label:'Comparar modelos'}].map(m=>
+   '<button type="button" class="pillbutton '+(forecastMode===m.id?'active':'')+'" data-action="forecast-mode" data-mode="'+m.id+'" aria-pressed="'+(forecastMode===m.id)+'">'+htmlSafe(m.label)+'</button>').join('')+'</div>'+
+  svgLine(series,{unit:'kg',showGoal:zoom?null:goal})+
+  '<div class="chart-legend"><span><i class="legend-line"></i> Peso registrado</span>'+
+  ((forecastMode==='observed'||forecastMode==='both')?'<span><i class="legend-line emp"></i> Ritmo medido (14 días)</span>':'')+
+  ((forecastMode==='active'||forecastMode==='both')?'<span><i class="legend-line dec"></i> Seguimiento activo (7 + 14 días)</span>':'')+'</div>'+
+  '<div class="proj-info">'+
+   '<div class="proj-stat"><span>Ritmo medido</span><strong>'+htmlSafe(trend)+'</strong><small>'+showDate(pr.empDate)+'</small></div>'+
+   '<div class="proj-stat"><span>Seguimiento activo</span><strong>'+htmlSafe(active)+'</strong><small>'+showDate(pr.adjDate)+'</small></div>'+
+   '<div class="proj-stat"><span>Peso objetivo</span><strong>'+(isNumber(goal)?locale(goal,1)+' kg':'Sin definir')+'</strong><small>'+(pr.usedShortTrend?'Recalibración semanal activa':'Se activa con más pesadas recientes')+'</small></div>'+
+  '</div>'+
+  '<div class="monitor-panel"><div class="section-head"><div><h3>Monitorización de tus datos</h3><p>Se actualiza cuando guardas una pesada, una comida o una actividad.</p></div><span class="monitor-indicator">Seguimiento activo</span></div>'+
+  '<div class="monitor-grid">'+
+   '<div><strong>'+(e.fatSlope==null?'—':locale(Math.abs(e.fatSlope)*1000,0)+' g/día')+'</strong><span>Tendencia de grasa calculada'+(e.fatSlope==null?'':e.fatSlope<0?' · descenso':' · aumento')+'</span></div>'+
+   '<div><strong>'+e.completed+' días completos</strong><span>Alimentación · últimas 2 semanas'+(e.averageKcal!=null?' · '+locale(e.averageKcal,0)+' kcal/día registradas':'')+'</span></div>'+
+   '<div><strong>'+e.activities+' sesiones · '+locale(e.minutes,0)+' min</strong><span>Ejercicio registrado · últimas 2 semanas</span></div>'+
+  '</div>'+
+  '<p class="chart-comment">La tendencia del peso determina las fechas. El modelo activo combina las regresiones de 7 y 14 días cuando hay lecturas suficientes. La composición, las comidas y el ejercicio se muestran como contexto; no se añaden como calorías extra al peso ya observado ni se consideran completos los días sin cerrar. No hay vigilancia en segundo plano.</p></div>'+
+  '</section>';
 }
 function metricGrid(){
- const points=timeLine();
- const cards=METRICS.map(m=>{
-  const a=points.filter(w=>isNumber(w[m.id])).map(w=>({date:w.date,value:w[m.id]}));
-  const last=a.at(-1);
-  return '<button type="button" class="scale-card '+(selectedMetric===m.id?'active':'')+'" data-action="metric" data-id="'+m.id+'" aria-pressed="'+(selectedMetric===m.id)+'">'+
-   '<span class="s-label">'+htmlSafe(m.name)+'</span><span class="s-value">'+(last?locale(last.value,m.decimals)+' <small>'+htmlSafe(m.unit)+'</small>':'—')+'</span>'+
-   (a.length>1?svgLine([{points:a,color:selectedMetric===m.id?'#64dfc5':'#a4b6d6'}],{small:true,unit:m.unit}):'<span class="dim tiny">Sin evolución todavía</span>')+'</button>';
- }).join('');
- const metric=METRICS.find(x=>x.id===selectedMetric)||METRICS[1];
- const selectedPoints=metricData(metric.id);
- return '<section class="section"><div class="section-head"><div><h2>Composición corporal</h2><p>Los doce indicadores de tu báscula, con su gráfico individual.</p></div>'+
- '<button type="button" class="click sm" data-action="weight-new">+ Medición</button></div>'+
- '<div class="scale-grid">'+cards+'</div>'+
- '<div class="scale-detail"><div class="detail-header"><strong>'+htmlSafe(metric.name)+'</strong><span class="helper">'+selectedPoints.length+' lecturas</span></div>'+
- svgLine([{points:selectedPoints,color:'#b79bfa'}],{unit:metric.unit||'índice'})+
- '<p class="chart-comment">Los valores de composición son estimaciones de bioimpedancia y pueden variar con la hidratación y las condiciones de la medición.</p></div></section>';
+ const records=timeLine();
+ const palette=['#60e3c8','#b79bfa','#ffcc7f','#8dbdff','#fc91ae','#7edbb9','#f1af80','#f0a8fc','#9be17d','#72bce4','#eecc86','#e4a4a2','#69daa9','#ffa97e','#b9a7f4'];
+ const specs=[...METRICS.map(m=>({id:m.id,name:m.name,unit:m.unit,decimals:m.decimals,formula:w=>w[m.id]})),
+  {id:'fatKg',name:'Grasa calculada',unit:'kg',decimals:2,formula:w=>isNumber(w.bodyFat)?w.weight*w.bodyFat/100:null},
+  {id:'leanKg',name:'Masa sin grasa calculada',unit:'kg',decimals:2,formula:w=>isNumber(w.bodyFat)?w.weight*(1-w.bodyFat/100):null},
+  {id:'waterKg',name:'Agua calculada',unit:'kg',decimals:2,formula:w=>isNumber(w.bodyWater)?w.weight*w.bodyWater/100:null}
+ ];
+ const items=specs.map((spec,i)=>{
+  const values=records.map(w=>({date:w.date,value:spec.formula(w)})).filter(p=>isNumber(p.value));
+  return {...spec,color:palette[i%palette.length],values};
+ });
+ const isolated=compositionFocus!=='all',selected=items.find(item=>item.id===compositionFocus);
+ const chartItems=isolated&&selected?[selected]:items;
+ const series=chartItems.filter(item=>item.values.length>0).map(item=>{
+  const baseline=item.values[0].value;
+  const points=isolated?item.values:item.values.filter(p=>baseline!==0).map(p=>({date:p.date,value:(p.value/baseline-1)*100}));
+  return {id:item.id,color:item.color,points};
+ });
+ const lastSelected=selected?.values?.at(-1);
+ const detail=isolated&&selected?'Vista individual: '+htmlSafe(selected.name)+' · '+(lastSelected?locale(lastSelected.value,selected.decimals)+' '+htmlSafe(selected.unit):'sin datos'):'Vista comparativa · variación porcentual respecto a la primera lectura de cada indicador';
+ return '<section class="section"><div class="section-head"><div><h2>Composición corporal</h2><p>Una gráfica para tus indicadores. Selecciona una línea de la leyenda para verla por separado.</p></div>'+
+  '<button class="click sm" type="button" data-action="weight-new">+ Medición</button></div>'+
+  '<div class="composition-heading"><strong>'+detail+'</strong><button type="button" class="pillbutton '+(!isolated?'active':'')+'" data-action="composition-all" aria-pressed="'+(!isolated)+'">Ver todos</button></div>'+
+  svgLine(series,{unit:isolated&&selected?selected.unit||'índice':'% de variación'})+
+  '<div class="composition-legend" aria-label="Indicadores de composición corporal">'+
+  items.map(item=>{
+   const last=item.values.at(-1);
+   return '<button type="button" class="composition-key '+(isolated?(compositionFocus===item.id?'isolate':'muted'):'')+'" data-action="composition-metric" data-id="'+item.id+'" aria-pressed="'+(compositionFocus===item.id)+'">'+
+    '<span class="composition-swatch" style="background:'+item.color+'"></span><span class="composition-key-text"><strong>'+htmlSafe(item.name)+'</strong>'+
+    '<small>'+(last?locale(last.value,item.decimals)+' '+htmlSafe(item.unit):'Sin lecturas')+'</small></span></button>';
+  }).join('')+'</div>'+
+  '<p class="chart-comment">Al mostrar todos, cada serie empieza en 0 % para poder comparar kg, porcentajes, índices y kcal en un mismo gráfico. Al seleccionar una métrica se muestran sus valores y unidades reales. La grasa, la masa sin grasa y el agua en kg se calculan a partir del peso y sus porcentajes registrados.</p>'+
+  '</section>';
 }
 function getActivity(d){
  return (state.activities||[]).filter(a=>a.date===d);
 }
-function currentDay(){
- const records=timeLine(),value=weightForDay(),last=latestWeight(),first=records[0],log=dayLogs();
- const sum=log.reduce((n,e)=>n+logTotal(e.parts),0);
- const change=last&&first?first.weight-last.weight:null;
- const latest=last?htmlSafe(readableDate(last.date)):'Sin datos';
- let rows=[
-  ['Peso de '+htmlSafe(shortDate(selectedDate)),value?locale(value.weight,1):'—','kg',value?'Medición registrada':'No se pesó este día','metric-main'],
-  ['Último peso conocido',last?locale(last.weight,1):'—','kg',latest,''],
-  ['Desde el primer registro',change==null?'—':(change>=0?'−':'+')+locale(Math.abs(change),1),'kg',htmlSafe(readableDate(first?.date)),''],
-  ['Comidas registradas',log.length?locale(sum,0):'—','kcal',log.length+' entradas','']
+function dashboardCards(){
+ const timeline=timeLine(),first=timeline[0],last=timeline.at(-1),day=weightForDay(),goal=state.profile.targetWeight;
+ const pr=projections(),sum=dayLogs().reduce((total,l)=>total+logTotal(l.parts||[]),0);
+ const lost=first&&last?first.weight-last.weight:null;
+ const missing=isNumber(goal)&&last?last.weight-goal:null;
+ const today=selectedDate===isoToday();
+ const cards=[
+  {id:'weight',label:'Peso · kilos perdidos',value:day?locale(day.weight,1)+' kg':last?locale(last.weight,1)+' kg':'—',
+   hint:lost==null?'Añade la primera pesada':(lost>=0?'−':'+')+locale(Math.abs(lost),1)+' kg desde '+shortDate(first.date)},
+  {id:'composition',label:'Ritmo y composición',value:isNumber(pr.slope)&&pr.slope<0?locale(-pr.slope*1000,0)+' g/día':'—',
+   hint:'Promedio de los últimos 14 días · ver grasa y músculo'},
+  {id:'goal',label:'Kilos que faltan',value:missing==null?'—':locale(Math.max(0,missing),1)+' kg',
+   hint:isNumber(goal)?'Para llegar a '+locale(goal,1)+' kg':'Configura tu objetivo'},
+  {id:'nutrition',label:today?'Kcal consumidas hoy':'Kcal del '+shortDate(selectedDate),value:dayLogs().length?locale(sum,0)+' kcal':'—',
+   hint:dayLogs().length+' entradas · ver alimentos y añadir'}
  ];
- let out='<div class="view-head"><span class="eyebrow">TU SEGUIMIENTO</span><h1>'+ (selectedDate===isoToday()?'Hoy':'Tu día')+' · '+htmlSafe(readableDate(selectedDate))+'</h1><p>Elige una fecha arriba para consultar o registrar sus datos.</p></div>';
+ return '<div class="metrics-row dashboard-tabs" role="tablist" aria-label="Áreas de tu seguimiento">'+
+  cards.map(c=>'<button type="button" role="tab" class="section metric-card dashboard-tab '+(dashboardArea===c.id?'selected':'')+' '+(c.id==='weight'?'metric-main':'')+'" data-action="dashboard-tab" data-tab="'+c.id+'" aria-selected="'+(dashboardArea===c.id)+'" aria-controls="dashboard-panel">'+
+   '<span class="eyebrow">'+htmlSafe(c.label)+'</span><span class="dashboard-value">'+htmlSafe(c.value)+'</span>'+
+   '<span class="micro">'+htmlSafe(c.hint)+'</span></button>').join('')+'</div>';
+}
+function goalDashboard(){
+ const timeline=timeLine(),first=timeline[0],last=timeline.at(-1),goal=state.profile.targetWeight,pr=projections();
+ if(!last||!isNumber(goal))return '<section class="section"><h2>Objetivo</h2><p class="helper">Registra tu peso y define tu objetivo en Ajustes.</p><button type="button" class="click sm section-gap" data-action="view" data-view="settings">Abrir ajustes</button></section>';
+ const start=first?.weight??last.weight,range=start-goal,remaining=Math.max(0,last.weight-goal);
+ const done=range>0?clamp((start-last.weight)/range*100,0,100):0;
+ const rate=pr.activeSlope!=null&&pr.activeSlope<0?pr.activeSlope:pr.slope;
+ const stages=[120,110,100,90,goal].filter((x,i,ar)=>x<=start&&x>=goal&&ar.indexOf(x)===i).sort((a,b)=>b-a);
+ return '<section class="section"><div class="section-head"><div><h2>Tu camino hasta '+locale(goal,1)+' kg</h2><p>Hitos estimados a partir de tus pesadas reales, no de un ritmo supuesto.</p></div>'+
+ '<button type="button" class="click sm" data-action="view" data-view="settings">Editar objetivo</button></div>'+
+ '<div class="goal-hero"><div><span class="helper">Quedan</span><strong>'+locale(remaining,1)+' kg</strong></div>'+
+ '<div><span class="helper">Ya has bajado</span><strong>'+locale(start-last.weight,1)+' kg</strong></div>'+
+ '<div><span class="helper">Previsión activa</span><strong>'+(pr.adjDate?htmlSafe(shortDate(pr.adjDate)):'Pendiente')+'</strong></div></div>'+
+ '<div class="goal-progress" role="progressbar" aria-label="Progreso hasta el objetivo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+done.toFixed(1)+'"><div style="width:'+done.toFixed(2)+'%"></div></div>'+
+ '<p class="helper">'+locale(done,1)+' % del trayecto desde '+locale(start,1)+' kg hasta '+locale(goal,1)+' kg</p>'+
+ '<div class="milestone-list section-gap">'+stages.map(x=>{
+ const reached=last.weight<=x;
+ const date=reached?'Conseguido':(isNumber(rate)&&rate<0?readableDate(addDays(last.date,Math.ceil((last.weight-x)/-rate))):'Esperando suficientes datos');
+ return '<div class="milestone"><span class="milestone-target">'+locale(x,1)+' kg</span><span>'+htmlSafe(date)+'</span><span class="milestone-dot '+(reached?'done':'')+'"></span></div>';
+ }).join('')+'</div>'+
+ '<p class="chart-comment">Las fechas de los hitos cambian automáticamente con tus nuevas pesadas. Si la tendencia cambia, también lo harán las previsiones.</p></section>';
+}
+function foodSummary(){
+ const entries=dayLogs(),total=entries.reduce((sum,l)=>sum+logTotal(l.parts||[]),0);
+ const groups=['Desayuno','Comida','Merienda','Cena','Otro'];
+ const byMeal=groups.map(meal=>({meal,entries:entries.filter(e=>e.meal===meal)})).filter(x=>x.entries.length);
+ return '<section class="section"><div class="section-head"><div><h2>Consumo del día · '+htmlSafe(readableDate(selectedDate))+'</h2>'+
+ '<p>Calorías aproximadas de las comidas que has registrado.</p></div><span class="food-total">'+locale(total,0)+' kcal</span></div>'+
+ '<div class="meal-summary">'+(byMeal.length?byMeal.map(g=>'<div><span>'+htmlSafe(g.meal)+'</span><strong>'+locale(g.entries.reduce((s,l)=>s+logTotal(l.parts||[]),0),0)+' kcal</strong></div>').join(''):'<p class="helper">No has registrado comidas en esta fecha.</p>')+'</div>'+
+ '<p class="chart-comment">Si aún faltan comidas, este total es parcial. No se interpreta automáticamente como la ingesta de un día completo.</p></section>';
+}
+function currentDay(){
+ let out='<div class="view-head"><span class="eyebrow">TU SEGUIMIENTO</span><h1>Tu día · '+htmlSafe(readableDate(selectedDate))+'</h1><p>Elige una fecha y utiliza las tarjetas para cambiar de área.</p></div>';
  if(notice)out+='<div class="notice section-gap">'+htmlSafe(notice)+'</div>';
- out+='<div class="metrics-row">'+rows.map(([label,val,unit,hint,cls])=>'<section class="section metric-card '+cls+'"><span class="eyebrow">'+label+'</span><div class="'+(cls?'big':'value')+'">'+val+' <span>'+unit+'</span></div><div class="micro">'+hint+'</div></section>').join('')+'</div>';
- out+=weightGraph()+metricGrid()+quickFoods()+dayRecords();
- return out;
+ out+=dashboardCards()+'<div id="dashboard-panel" role="tabpanel" class="dashboard-panel">';
+ if(dashboardArea==='composition')out+=metricGrid();
+ else if(dashboardArea==='goal')out+=goalDashboard()+dayRecords('activity');
+ else if(dashboardArea==='nutrition')out+=foodSummary()+dayRecords('food')+quickFoods();
+ else out+='<div class="section-head quick-weights"><div><h2>Pesadas y proyección</h2><p>Tu evolución medida, con acceso a los modelos de seguimiento.</p></div><button type="button" class="click sm" data-action="weight-new">+ Registrar peso</button></div>'+weightGraph();
+ return out+'</div>';
 }
 function quickFoods(){
  const groups=[
-  {id:'usual',title:'Habituales',hint:'Café, lácteos y tentempiés'},
-  {id:'mixed',title:'Tuppers con salteados',hint:'Salteado de pollo y patata con Frankfurt; aceite repartido entre 8 raciones'},
-  {id:'plain',title:'Tuppers solo proteína',hint:'Cuando hay hamburguesas, se cuentan siempre dos'}
+  {title:'Platos · con salteados',hint:'Tuppers con salteados · aceite repartido en ocho raciones',recipes:RECIPES.filter(r=>r.group==='mixed')},
+  {title:'Platos · solo proteína',hint:'Tuppers solo proteína · siempre dos hamburguesas por plato',recipes:RECIPES.filter(r=>r.group==='plain')},
+  {title:'Postres y lácteos',hint:'Flanes, yogures y queso light',recipes:RECIPES.filter(r=>['cheese','flan','yopro','activia'].includes(r.id))},
+  {title:'Bebidas',hint:'Café con leche y refrescos',recipes:RECIPES.filter(r=>['coffee','cola'].includes(r.id))}
  ];
  const buttons=r=>'<button class="food-button" type="button" data-action="add-food" data-recipe="'+r.id+'">'+
   '<span class="food-top"><span class="em" aria-hidden="true">'+r.emoji+'</span><span class="plus">＋</span></span><strong>'+htmlSafe(r.name)+'</strong><small>'+htmlSafe(r.hint)+'</small></button>';
- return '<section class="section"><div class="section-head"><div><h2>Añadir una comida</h2><p>Tuppers aproximados, sin necesidad de pesar ingredientes · '+htmlSafe(readableDate(selectedDate))+'</p></div><span class="helper">Puedes ajustar cantidades</span></div>'+
-  groups.map(g=>'<div class="quick-group"><h3>'+htmlSafe(g.title)+'</h3><p class="helper">'+htmlSafe(g.hint)+'</p><div class="quick-grid">'+
-   RECIPES.filter(r=>r.group===g.id).map(buttons).join('')+'</div></div>').join('')+'</section>';
+ return '<section class="section"><div class="section-head"><div><h2>Añadir una comida</h2><p>Accesos rápidos para tus raciones habituales. Cantidades orientativas y editables.</p></div></div>'+
+  groups.map(g=>'<div class="quick-group"><h3>'+htmlSafe(g.title)+'</h3><p class="helper">'+htmlSafe(g.hint)+'</p><div class="quick-grid">'+g.recipes.map(buttons).join('')+'</div></div>').join('')+'</section>';
 }
-function dayRecords(){
+function dayRecords(kind='all'){
  const entries=dayLogs().sort((a,b)=>(a.meal||'').localeCompare(b.meal||'')),activities=getActivity(selectedDate);
  let body=entries.length?entries.map(e=>'<div class="day-entry"><div><strong>'+htmlSafe(e.title||'Comida')+'</strong><small>'+htmlSafe(e.meal||'Otro')+' · '+(e.parts||[]).map(p=>htmlSafe(food(p.foodId)?.name||p.foodId)+' × '+locale(p.qty,0)).join(' · ')+'</small></div><span class="calories">'+locale(logTotal(e.parts))+' kcal</span><button type="button" class="click sm" data-action="edit-food" data-id="'+htmlSafe(e.id)+'">Editar</button></div>').join(''):
  '<div class="empty">Todavía no hay comidas registradas para esta fecha.</div>';
  let sport=activities.length?activities.map(a=>'<div class="day-entry"><div><strong>'+htmlSafe(a.type||'Actividad')+'</strong><small>'+htmlSafe(a.note||'Actividad física')+'</small></div><strong>'+locale(a.minutes,1)+' min</strong><button type="button" class="click sm" data-action="delete-activity" data-id="'+htmlSafe(a.id)+'">Eliminar</button></div>').join(''):
  '<div class="helper">Sin actividad registrada.</div>';
- return '<section class="section"><div class="section-head"><div><h2>Registro del día</h2><p>'+entries.length+' comidas anotadas</p></div>'+
+ const foodSection='<section class="section"><div class="section-head"><div><h2>Comidas registradas</h2><p>'+entries.length+' entradas para '+htmlSafe(readableDate(selectedDate))+'</p></div>'+
  '<label class="checkrow"><input type="checkbox" id="dayComplete" '+((state.completeDays||[]).includes(selectedDate)?'checked':'')+'>Día completo</label></div>'+
- '<div class="day-entries">'+body+'</div><div class="section-gap section-head"><div><h3>Actividad física</h3><p>Minutos reales, sin confundirlos con sesiones simuladas.</p></div><button type="button" class="click sm" data-action="add-activity">+ Actividad</button></div>'+sport+'</section>';
+ '<div class="day-entries">'+body+'</div></section>';
+ const activitySection='<section class="section"><div class="section-head"><div><h2>Actividad física</h2><p>Sesiones y minutos reales registrados.</p></div><button type="button" class="click sm" data-action="add-activity">+ Actividad</button></div>'+
+ '<div class="day-entries">'+sport+'</div></section>';
+ return kind==='food'?foodSection:kind==='activity'?activitySection:foodSection+activitySection;
 }
 function currentHistory(){
  const tracking=trackingStart(),valid=sortedWeights(),recent=valid.filter(w=>w.date>=tracking),older=valid.filter(w=>w.date<tracking);

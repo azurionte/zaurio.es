@@ -33,31 +33,56 @@ async function main(){
    document.querySelector('#identityName').textContent='Prueba';
    render();
   });
-  const screenshot=path.join(dir,name+'.png');
+  const screenshot=path.join(dir,name+'-weight.png');
   await page.screenshot({path:screenshot,fullPage:true});
-  const measured=await page.evaluate(()=>{
-   const card=document.querySelector('.scale-card');
-   const food=document.querySelector('.food-button');
-   const layout=document.querySelector('.main');
-   return {cardBackground:getComputedStyle(card).backgroundColor,cardColor:getComputedStyle(card).color,
-    horizontalOverflow:document.documentElement.scrollWidth-innerWidth,charts:document.querySelectorAll('svg.chart-svg').length,
-    metricCards:document.querySelectorAll('.scale-card').length,foodButtons:document.querySelectorAll('.food-button').length,
-    mainWidth:layout.getBoundingClientRect().width,saveText:document.querySelector('#saveStatus').textContent};
-  });
-  assert.equal(measured.metricCards,12);assert.equal(measured.foodButtons,13);
-  assert.ok(measured.charts>8);
-  assert.ok(measured.horizontalOverflow<=3,'Horizontal overflow: '+JSON.stringify(measured));
-  assert.notEqual(measured.cardBackground,'rgb(255, 255, 255)','Metric cards must not be white');
-  await page.locator('[data-action=date-prev]').click();
-  assert.match(await page.locator('#content h1').innerText(),/17 abr/);
+  const measure=()=>page.evaluate(()=>({
+    horizontalOverflow:document.documentElement.scrollWidth-innerWidth,
+    selectedTab:document.querySelector('.dashboard-tab.selected')?.dataset.tab,
+    tabs:document.querySelectorAll('.dashboard-tab').length,
+    charts:document.querySelectorAll('svg.chart-svg').length,
+    mainWidth:document.querySelector('.main').getBoundingClientRect().width,
+    saveText:document.querySelector('#saveStatus').textContent
+  }));
+  let measured=await measure();
+  assert.equal(measured.tabs,4,'four sections');
+  assert.equal(measured.selectedTab,'weight','weight selected by default');
+  assert.ok(measured.charts>=1,'weight chart visible');
+  assert.ok(measured.horizontalOverflow<=3,'weight horizontal overflow: '+JSON.stringify(measured));
+  await page.locator('[data-action=forecast-mode][data-mode=active]').click();
+  assert.equal(await page.locator('[data-action=forecast-mode][data-mode=active]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-action=dashboard-tab][data-tab=composition]').click();
+  measured=await measure();
+  assert.equal(measured.selectedTab,'composition');
+  assert.equal(await page.locator('.composition-key').count(),15,'interactive body composition legend');
+  assert.ok(measured.horizontalOverflow<=3,'composition horizontal overflow');
+  await page.screenshot({path:path.join(dir,name+'-composition.png'),fullPage:true});
+  await page.locator('[data-action=composition-metric][data-id=fatKg]').click();
+  assert.equal(await page.locator('[data-action=composition-metric][data-id=fatKg]').getAttribute('aria-pressed'),'true');
+  assert.ok((await page.locator('#dashboard-panel').innerText()).includes('Vista individual: Grasa calculada'));
+  await page.locator('[data-action=composition-all]').click();
+  assert.ok((await page.locator('#dashboard-panel').innerText()).includes('Vista comparativa'));
+  await page.locator('[data-action=dashboard-tab][data-tab=goal]').click();
+  assert.ok((await page.locator('#dashboard-panel').innerText()).includes('Tu camino hasta'));
+  await page.locator('[data-action=add-activity]').click();
+  assert.ok(await page.locator('#activityForm').isVisible());
+  await page.locator('[data-action=close-modal]').first().click();
+  await page.screenshot({path:path.join(dir,name+'-goal.png'),fullPage:true});
+  await page.locator('[data-action=dashboard-tab][data-tab=nutrition]').click();
+  assert.equal(await page.locator('.food-button').count(),14,'14 shortcuts available in nutrition tab');
+  measured=await measure();
+  assert.ok(measured.horizontalOverflow<=3,'nutrition horizontal overflow');
+  await page.screenshot({path:path.join(dir,name+'-nutrition.png'),fullPage:true});
   await page.locator('[data-action=add-food]').first().click();
   assert.ok(await page.locator('#foodForm').isVisible());
   await page.locator('[data-action=close-modal]').first().click();
+  await page.locator('[data-action=date-prev]').click();
+  assert.match(await page.locator('#content h1').innerText(),/17 abr/);
+  await page.locator('[data-action=dashboard-tab][data-tab=weight]').click();
   await page.locator('[data-action=weight-new]').first().click();
   assert.ok(await page.locator('#weightForm').isVisible());
   await page.locator('[data-action=close-modal]').first().click();
   assert.deepEqual(errors,[],'Browser console errors: '+errors.join(' | '));
-  console.log('PASS visual '+name,JSON.stringify(measured),'screenshot',screenshot);
+  console.log('PASS visual '+name,JSON.stringify(measured),'screenshots in',dir);
   await page.close();
  }
  }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}

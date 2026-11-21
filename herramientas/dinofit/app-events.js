@@ -171,7 +171,16 @@ async function actionHandler(event){
    case 'date-prev':selectedDate=addDays(selectedDate,-1);render();break;
    case 'date-next':selectedDate=addDays(selectedDate,1);render();break;
    case 'date-today':selectedDate=isoToday();render();break;
-   case 'chart-zoom':chartZoom=button.dataset.mode==='short'?'short':'full';render();break;
+   case 'dashboard-tab':
+     if(['weight','composition','goal','nutrition'].includes(button.dataset.tab)){dashboardArea=button.dataset.tab;render();}
+     break;
+    case 'forecast-mode':
+     if(['observed','active','both'].includes(button.dataset.mode)){forecastMode=button.dataset.mode;render();}
+     break;
+    case 'composition-all':compositionFocus='all';render();break;
+    case 'composition-metric':
+     compositionFocus=compositionFocus===button.dataset.id?'all':button.dataset.id;render();break;
+    case 'chart-zoom':chartZoom=button.dataset.mode==='short'?'short':'full';render();break;
    case 'set-vr':vrMinutes=Number(button.dataset.minutes);render();break;
    case 'metric':selectedMetric=button.dataset.id;render();break;
    case 'weight-new':openWeightModal(selectedDate);break;
