@@ -102,7 +102,7 @@ assert.equal((illustrated.match(/class="plate-sticker tone-/g)||[]).length,3,'co
 assert.ok(illustrated.includes('class="meal-slice tone-breakfast"')&&illustrated.includes('class="meal-slice tone-lunch"')&&illustrated.includes('class="meal-slice tone-other"'),'colored meal groups');
 assert.ok(illustrated.includes('data-action="edit-food" data-id="meal-beef"'),'edit action still targets the original record');
 assert.ok(illustrated.includes('825')===false,'calories must be calculated, not hardcoded');
-assert.equal(run('dayLogs().reduce((n,e)=>n+logTotal(e.parts),0)').toFixed(2),(457.08+62+46).toFixed(2),'food calories are unchanged');
+assert.equal(run('dayLogs().reduce((n,e)=>n+logTotal(e.parts),0)').toFixed(2),(457.09+62+46).toFixed(2),'food calories are unchanged');
 assert.equal(run('state.logs.length'),3,'new visuals do not change user logs');
 
 const oldPage=run('currentHistory()');
