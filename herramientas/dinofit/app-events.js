@@ -163,6 +163,8 @@ async function logout(){
 async function actionHandler(event){
  const button=event.target.closest('[data-action]');
  if(!button)return;
+ // Refresh the calendar before any click, including the first click after midnight.
+ refreshCalendarDay();
  const action=button.dataset.action;
  if(action==='modal-backdrop'){if(event.target===button)closeModal();return;}
  try{
