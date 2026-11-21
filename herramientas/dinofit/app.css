@@ -292,19 +292,9 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
 .nutrition-total strong{font-size:clamp(42px,5vw,63px);font-weight:790;line-height:1.05;letter-spacing:-1.8px;background:linear-gradient(115deg,#8ef3d1 5%,#68b9ff 64%,#d7a7ff);color:transparent;background-clip:text;-webkit-background-clip:text}
 .nutrition-total span{font-size:13px;font-weight:660;color:#bcf3e1}
 .nutrition-total small{font-size:11px;color:var(--muted);margin-top:5px}
-.plate-gallery{position:relative;isolation:isolate;overflow:hidden;border:1px solid #3c5070;border-radius:19px;background:radial-gradient(circle at 17% 5%,#62cab91d,transparent 40%),radial-gradient(circle at 90% 110%,#c68af71d,transparent 45%),#101c30;padding:18px 16px;margin:18px 0;min-height:144px}
-.plate-glow{pointer-events:none;position:absolute;inset:0;background-image:radial-gradient(circle at 12% 76%,#9cf2d439 0 2px,transparent 3px),radial-gradient(circle at 85% 22%,#d6a9ff30 0 2px,transparent 3px),radial-gradient(circle at 68% 90%,#f7b67f33 0 1px,transparent 2px)}
-.plate-gallery-items{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(116px,1fr));gap:11px;align-items:stretch}
-.plate-sticker{background:radial-gradient(circle at 50% 0,var(--food-glow),transparent 90%),#1b2a40;border:1px solid var(--food-edge,#41526c);border-radius:15px;min-width:0;min-height:124px;padding:13px 10px 11px;display:flex;align-items:center;flex-direction:column;justify-content:space-between;gap:11px;box-shadow:0 5px 19px #0002;transition:transform .18s,border-color .18s}
-.plate-sticker:hover{transform:translateY(-3px);border-color:var(--food-accent,#81cacc)}
-.plate-sticker small{display:block;color:#e9effa;font-weight:620;text-align:center;font-size:10.5px;line-height:1.35;overflow-wrap:anywhere}
 .food-sticker-icons{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:0;min-height:54px}
 .food-sticker-icons span{display:inline-block;font-size:clamp(27px,2.8vw,39px);line-height:1.1;filter:drop-shadow(0 4px 9px #0004)}
 .food-sticker-icons span:not(:first-child){margin-left:-7px}
-.plate-more{--food-edge:#5d6482;--food-glow:#a9abff22;justify-content:center}
-.plate-more strong{font-size:32px;color:#ddd4ff}
-.plate-empty{display:flex;align-items:center;gap:14px;color:var(--muted);font-size:13px}
-.empty-plate{font-size:45px;line-height:1}
 .meal-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:11px;margin-top:13px}
 .meal-summary>.meal-slice{min-width:0;padding:12px 13px 11px;border-radius:15px;background:radial-gradient(circle at 90% 10%,var(--food-glow),transparent 80%),#17283d;border:1px solid var(--food-edge)}
 .meal-slice-top{display:flex;align-items:center;gap:10px}
@@ -317,7 +307,14 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
 .meal-track>span{display:block;height:100%;border-radius:50px;background:var(--food-accent)}
 .nutrition-foot{display:flex;align-items:flex-start;gap:9px;border-top:1px solid #34465e;margin-top:17px;padding-top:14px;font-size:11px;line-height:1.6;color:#aabbd3}
 .nutrition-foot-star{color:#a9e9d7;font-size:17px;line-height:1}
-.food-records-section{background:linear-gradient(155deg,#171f36,#111a2d)}
+.food-records-section{min-width:0}
+.food-diary-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid #3b4b63;margin:18px 0 13px;padding-top:16px}
+.food-diary-heading h3{font-size:16px;color:#f2f7fd;letter-spacing:-.2px}
+.food-diary-heading p{font-size:11px;color:var(--muted);margin-top:4px}
+.nutrition-overview.food-records-section>.nutrition-overview-head{margin-bottom:0}
+.nutrition-overview.food-records-section>.meal-summary{margin:16px 0 0}
+.nutrition-overview.food-records-section>.nutrition-foot{margin-top:15px}
+
 .completed-toggle{font-size:12px}
 .food-record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
 .food-record-card{position:relative;overflow:hidden;min-width:0;min-height:148px;display:grid;grid-template-columns:100px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;background:radial-gradient(circle at 12% 8%,var(--food-glow),transparent 60%),linear-gradient(120deg,#1b2a40,#152139);border:1px solid var(--food-edge);border-radius:16px;box-shadow:0 4px 18px #0002}
@@ -365,7 +362,6 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
 @media(max-width:1150px){
  .food-record-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .quick-group>.quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
- .plate-gallery-items{grid-template-columns:repeat(auto-fit,minmax(105px,1fr))}
 }
 @media(max-width:700px){
  .nutrition-overview-head{gap:9px}
@@ -374,11 +370,7 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
  .nutrition-total strong{font-size:39px}
  .nutrition-total span{font-size:11px}
  .nutrition-total small{font-size:10px}
- .plate-gallery{padding:11px;margin:15px 0}
- .plate-gallery-items{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
- .plate-sticker{padding:10px 5px;min-height:113px;gap:8px}
  .food-sticker-icons span{font-size:27px}
- .plate-sticker small{font-size:9.5px}
  .meal-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
  .meal-summary>.meal-slice{padding:9px}
  .meal-slice-top{gap:6px}
@@ -394,7 +386,6 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
  .illustrated-quick small{font-size:10px}
 }
 @media(max-width:380px){
- .plate-gallery-items{grid-template-columns:repeat(2,minmax(0,1fr))}
  .nutrition-overview-head{align-items:flex-start}
  .nutrition-total strong{font-size:35px}
  .food-card-bottom{gap:6px;padding-right:9px}
@@ -404,3 +395,13 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
  .food-card-bottom{padding-left:10px}
  .food-edit-button{padding:6px 7px}
 }
+
+/* Suggest a meal occasion rather than asking for one on every quick add. */
+.food-modal-header{align-items:start}
+.food-auto-block{display:flex;flex-direction:column;gap:8px;min-width:0;padding:8px 0}
+.food-auto-preview{font-size:12px;line-height:1.5;color:#b9cbdb}
+.food-auto-preview strong{color:#86e4ca;font-weight:750}
+.food-meal-adjust{font-size:11px;color:#a9bbd0}
+.food-meal-adjust summary{cursor:pointer;display:inline-block;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.food-meal-adjust label{margin-top:8px}
+@media(max-width:700px){.food-modal-header{grid-template-columns:minmax(0,1fr)}}

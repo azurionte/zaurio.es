@@ -96,14 +96,45 @@ assert.equal(JSON.stringify(run('foodEmojis({parts:[{foodId:"coffee",qty:2},{foo
 assert.equal(JSON.stringify(run('foodEmojis({parts:[{foodId:"unknown-custom-id",qty:1}],title:"Mi plato"})')),JSON.stringify(['🍽️']),'unknown foods have a neutral fallback');
 run('state.logs=[{id:"meal-beef",date:"2026-04-18",meal:"Comida",title:"2 burgers de pollo + salteados",parts:[makePart("burger-chicken",2),makePart("saute-chicken",56.25),makePart("saute-frank",56.25),makePart("oil",7)]},{id:"meal-flan",date:"2026-04-18",meal:"Otro",title:"Flan proteico",parts:[makePart("flan",1)]},{id:"meal-coffee",date:"2026-04-18",meal:"Desayuno",title:"Café con leche desnatada",parts:[makePart("coffee",2),makePart("milk",120)]}]');
 const illustrated=run('currentDay()');
-assert.ok(illustrated.includes('Así ha sido tu plato')&&illustrated.includes('Lo que has comido'));
+assert.ok(illustrated.includes('Tu diario de comidas')&&illustrated.includes('Alimentos registrados'));
 assert.equal((illustrated.match(/class="food-record-card/g)||[]).length,3,'each recorded item has a visual card');
-assert.equal((illustrated.match(/class="plate-sticker tone-/g)||[]).length,3,'consumed items visualized without duplication');
+assert.equal((illustrated.match(/class="plate-sticker tone-/g)||[]).length,0,'no duplicate gallery of recorded foods');
+assert.equal((illustrated.match(/class="section nutrition-overview food-records-section"/g)||[]).length,1,'single nutrition panel for summary and entries');
+assert.equal((illustrated.match(/data-action="edit-food"/g)||[]).length,3,'one editable card for each record');
 assert.ok(illustrated.includes('class="meal-slice tone-breakfast"')&&illustrated.includes('class="meal-slice tone-lunch"')&&illustrated.includes('class="meal-slice tone-other"'),'colored meal groups');
 assert.ok(illustrated.includes('data-action="edit-food" data-id="meal-beef"'),'edit action still targets the original record');
 assert.ok(illustrated.includes('825')===false,'calories must be calculated, not hardcoded');
 assert.equal(run('dayLogs().reduce((n,e)=>n+logTotal(e.parts),0)').toFixed(2),(457.09+62+46).toFixed(2),'food calories are unchanged');
 assert.equal(run('state.logs.length'),3,'new visuals do not change user logs');
+
+// Automatic meal categorisation uses food type + existing entries of that date.
+const originalFoodLogs=run('JSON.stringify(state.logs)');
+const recipeCoffee=run('RECIPES.find(r=>r.id==="coffee")');
+const recipeFlan=run('RECIPES.find(r=>r.id==="flan")');
+const recipeChicken=run('RECIPES.find(r=>r.id==="chicken")');
+const coffeeParts=[{foodId:'coffee',qty:1},{foodId:'milk',qty:120}];
+const dessertParts=[{foodId:'flan',qty:1}];
+const mainParts=[{foodId:'chicken',qty:150}];
+const infer=(parts,recipe,date='2026-04-18')=>run('inferFoodMeal('+JSON.stringify(date)+','+JSON.stringify(parts)+',RECIPES.find(r=>r.id==='+JSON.stringify(recipe)+'))');
+run('state.logs=[]');
+assert.equal(infer(coffeeParts,'coffee'),'Desayuno','first coffee becomes breakfast');
+assert.equal(infer(dessertParts,'flan'),'Desayuno','first dessert becomes breakfast');
+assert.equal(infer(mainParts,'chicken'),'Comida','first protein meal becomes lunch');
+run('state.logs=[{id:"morning",date:"2026-04-18",meal:"Desayuno",parts:[{foodId:"coffee",qty:1}]}]');
+assert.equal(infer(coffeeParts,'coffee'),'Merienda','second coffee becomes a snack');
+assert.equal(infer(mainParts,'chicken'),'Comida','first main meal is lunch even after breakfast');
+run('state.logs.push({id:"lunch",date:"2026-04-18",meal:"Comida",parts:[{foodId:"beef",qty:150}]})');
+assert.equal(infer(mainParts,'chicken'),'Cena','second protein meal becomes dinner');
+assert.equal(infer(dessertParts,'flan'),'Merienda','dessert following lunch is a snack');
+assert.equal(infer(coffeeParts,'coffee'),'Merienda','coffee after lunch is a snack');
+assert.equal(infer([{foodId:'cola',qty:330}],'cola'),'Otro','soft drink remains an extra');
+assert.equal(infer(mainParts,'chicken','2026-04-19'),'Comida','entries from a prior day never change today\'s inference');
+run('state.logs.push({id:"dinner",date:"2026-04-18",meal:"Cena",parts:[{foodId:"burger-chicken",qty:2}]})');
+assert.equal(infer(dessertParts,'flan'),'Otro','light food after dinner is an extra');
+assert.equal(infer(mainParts,'chicken'),'Cena','additional mains remain dinner');
+assert.equal(run('foodKind([{foodId:"egg",qty:2}])'),'main','two eggs count as a protein plate');
+assert.equal(run('foodKind([["egg",2]])'),'main','recipe ingredients and log ingredients classify consistently');
+run('state.logs=JSON.parse('+JSON.stringify(originalFoodLogs)+')');
 
 const oldPage=run('currentHistory()');
 assert.ok(oldPage.includes('Archivo anterior')&&oldPage.includes('20 mar'));
@@ -130,7 +161,7 @@ assert.equal(run('refreshCalendarDay("2026-11-21")'),true,'the app observes the 
 assert.equal(run('selectedDate'),'2026-11-21','the selected date automatically rolls over at midnight');
 assert.equal(run('dayLogs().length'),0,'November 21 has no entries when no foods were logged');
 const freshDiary=run('currentDay()');
-assert.ok(freshDiary.includes('Tu plato está vacío por ahora')&&freshDiary.includes('Sin registros'));
+assert.ok(freshDiary.includes('Aún no hay comidas registradas')&&freshDiary.includes('Sin registros'));
 assert.ok(!freshDiary.includes('Cena del 20 (única)'),'yesterday food never appears in the new day');
 assert.equal(run('JSON.stringify(state.logs)'),snapshot,'the rollover is display-only, never edits meals');
 // Manually viewing an older date must not be redirected at midnight.

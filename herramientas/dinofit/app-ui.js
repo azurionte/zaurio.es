@@ -272,26 +272,16 @@ function foodSummary(){
  const entries=dayLogs(),total=entries.reduce((sum,l)=>sum+logTotal(l.parts||[]),0);
  const groups=['Desayuno','Comida','Merienda','Cena','Otro'];
  const byMeal=groups.map(meal=>({meal,entries:entries.filter(e=>e.meal===meal)})).filter(x=>x.entries.length);
- const completed=(state.completeDays||[]).includes(selectedDate);
- const bites=entries.slice(0,12).map(entry=>'<div class="plate-sticker tone-'+foodTone(entry.meal)+'" title="'+htmlSafe(entry.title||'Comida')+'">'+
-  foodPicture(entry,'sticker')+'<small>'+htmlSafe(entry.title||'Comida')+'</small></div>').join('');
- return '<section class="section nutrition-overview">'+
-  '<div class="nutrition-overview-head"><div><span class="eyebrow">TU ALIMENTACIÓN</span><h2>Así ha sido tu plato</h2><p>Lo que has registrado el '+htmlSafe(readableDate(selectedDate))+'</p></div>'+
-  '<div class="nutrition-total"><strong>'+locale(total,0)+'</strong><span>kcal anotadas</span><small>'+entries.length+' '+(entries.length===1?'alimento registrado':'alimentos registrados')+'</small></div></div>'+
-  (entries.length?'<div class="plate-gallery" aria-label="Alimentos consumidos"><span class="plate-glow" aria-hidden="true"></span><div class="plate-gallery-items">'+bites+
-   (entries.length>12?'<div class="plate-sticker plate-more"><strong>+'+(entries.length-12)+'</strong><small>más alimentos</small></div>':'')+
-   '</div></div>':'<div class="plate-gallery plate-empty"><div class="empty-plate" aria-hidden="true">🍽️</div><p>Tu plato está vacío por ahora. Añade lo que hayas comido con los accesos rápidos de abajo.</p></div>')+
-  '<div class="meal-summary">'+byMeal.map(g=>{
+ return '<div class="nutrition-overview-head"><div><span class="eyebrow">TU ALIMENTACIÓN</span><h2>Tu diario de comidas</h2>'+
+  '<p>'+htmlSafe(readableDate(selectedDate))+'</p></div>'+
+  '<div class="nutrition-total"><strong>'+locale(total,0)+'</strong><span>kcal anotadas</span></div></div>'+
+  (byMeal.length?'<div class="meal-summary">'+byMeal.map(g=>{
    const kcal=g.entries.reduce((sum,l)=>sum+logTotal(l.parts||[]),0);
    const share=total>0?clamp(kcal/total*100,0,100):0;
    return '<div class="meal-slice tone-'+foodTone(g.meal)+'"><div class="meal-slice-top"><span class="meal-slice-emoji" aria-hidden="true">'+mealIcon(g.meal)+'</span>'+
     '<div><span>'+htmlSafe(g.meal)+'</span><strong>'+locale(kcal,0)+' kcal</strong></div><small>'+g.entries.length+' '+(g.entries.length===1?'registro':'registros')+'</small></div>'+
     '<div class="meal-track" aria-label="'+locale(share,0)+' por ciento de las calorías registradas"><span style="width:'+share.toFixed(2)+'%"></span></div></div>';
-  }).join('')+'</div>'+
-  '<div class="nutrition-foot"><span class="nutrition-foot-star" aria-hidden="true">✦</span><span>'+
-  (completed?'Día marcado como completo.':'Registro en curso: puede que todavía falten comidas.')+
-  ' Las calorías son orientativas y las barras representan el reparto de lo anotado, no un límite diario.</span></div>'+
-  '</section>';
+  }).join('')+'</div>':'');
 }
 function currentDay(){
  let out='<div class="view-head"><span class="eyebrow">TU SEGUIMIENTO</span><h1>Tu día · '+htmlSafe(readableDate(selectedDate))+'</h1><p>Elige una fecha y utiliza las tarjetas para cambiar de área.</p></div>';
@@ -300,7 +290,7 @@ function currentDay(){
  out+=dashboardCards()+'<div id="dashboard-panel" role="tabpanel" class="dashboard-panel">';
  if(dashboardArea==='composition')out+=metricGrid();
  else if(dashboardArea==='goal')out+=goalDashboard()+dayRecords('activity');
- else if(dashboardArea==='nutrition')out+=foodSummary()+dayRecords('food')+quickFoods();
+ else if(dashboardArea==='nutrition')out+=dayRecords('food')+quickFoods();
  else out+='<div class="section-head quick-weights"><div><h2>Pesadas y proyección</h2><p>Tu evolución medida, con acceso a los modelos de seguimiento.</p></div><button type="button" class="click sm" data-action="weight-new">+ Registrar peso</button></div>'+weightGraph();
  return out+'</div>';
 }
@@ -346,10 +336,13 @@ function dayRecords(kind='all'){
  const sport=activities.length?activities.map(a=>'<div class="day-entry"><div><strong>'+htmlSafe(a.type||'Actividad')+'</strong><small>'+htmlSafe(a.note||'Actividad física')+'</small></div><strong>'+locale(a.minutes,1)+' min</strong><button type="button" class="click sm" data-action="delete-activity" data-id="'+htmlSafe(a.id)+'">Eliminar</button></div>').join(''):
  '<div class="helper">Sin actividad registrada.</div>';
  const complete=(state.completeDays||[]).includes(selectedDate);
- const foodSection='<section class="section food-records-section"><div class="section-head"><div><span class="eyebrow">TU DIARIO</span><h2>Lo que has comido</h2>'+
-  '<p>'+entries.length+' '+(entries.length===1?'entrada':'entradas')+' · '+htmlSafe(readableDate(selectedDate))+'</p></div>'+
+ const foodSection='<section class="section nutrition-overview food-records-section">'+foodSummary()+
+  '<div class="food-diary-heading"><div><h3>Alimentos registrados</h3><p>Pulsa Editar para ajustar cualquier entrada.</p></div>'+
   '<label class="checkrow completed-toggle"><input type="checkbox" id="dayComplete" '+(complete?'checked':'')+'>Día completo</label></div>'+
-  '<div class="food-record-grid" role="list">'+body+'</div></section>';
+  '<div class="food-record-grid" role="list">'+body+'</div>'+
+  '<div class="nutrition-foot"><span class="nutrition-foot-star" aria-hidden="true">✦</span><span>'+
+  (complete?'Día marcado como completo.':'Registro en curso: puede que todavía falten comidas.')+
+  ' Las calorías son orientativas y las barras muestran el reparto de lo anotado.</span></div></section>';
  const activitySection='<section class="section"><div class="section-head"><div><h2>Actividad física</h2><p>Sesiones y minutos reales registrados.</p></div><button type="button" class="click sm" data-action="add-activity">+ Actividad</button></div>'+
   '<div class="day-entries">'+sport+'</div></section>';
  return kind==='food'?foodSection:kind==='activity'?activitySection:foodSection+activitySection;

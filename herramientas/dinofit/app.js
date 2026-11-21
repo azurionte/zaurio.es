@@ -142,6 +142,28 @@ function trackingStart(){
 function dayLogs(d=selectedDate){
  return (state?.logs||[]).filter(x=>x.date===d).slice();
 }
+// Infer the meal occasion from the food type and entries already saved for this date.
+// No clock-time assumptions: meals may be entered retrospectively or on a night schedule.
+function foodKind(parts=[],recipe=null){
+ const ids=(parts||[]).map(part=>Array.isArray(part)?part[0]:part?.foodId).filter(Boolean);
+ if(recipe?.group==='mixed'||recipe?.group==='plain'||ids.some(id=>id==='chicken'||id==='beef'||id.startsWith('burger-')||id.startsWith('saute-')))return 'main';
+ const eggs=(parts||[]).reduce((total,p)=>total+((Array.isArray(p)?p[0]:p?.foodId)==='egg'?Number(Array.isArray(p)?p[1]:p?.qty)||0:0),0);
+ if(eggs>=2)return 'main';
+ if(ids.some(id=>['coffee','milk','cheese','flan','yopro','activia-cereales','yogurt','yogurt-berries','yogurt-pineapple','egg'].includes(id)))return 'light';
+ return 'extra';
+}
+function inferFoodMeal(date,parts,recipe=null,excludeId=null){
+ if(!dateValid(date))return 'Otro';
+ const kind=foodKind(parts,recipe);
+ if(kind==='extra')return 'Otro';
+ const prior=dayLogs(date).filter(e=>e.id!==excludeId);
+ if(kind==='main')return prior.some(e=>foodKind(e.parts)==='main'||e.meal==='Comida')?'Cena':'Comida';
+ // A first coffee, yoghurt or dessert is breakfast unless a meal was recorded earlier.
+ // Later light foods are snacks, or extras when dinner is already registered.
+ if(prior.some(e=>e.meal==='Cena'))return 'Otro';
+ const priorMeaningful=prior.some(e=>foodKind(e.parts)!=='extra'||e.meal==='Desayuno'||e.meal==='Comida');
+ return priorMeaningful?'Merienda':'Desayuno';
+}
 function logTotal(parts){
  return parts.reduce((n,p)=>n+(isNumber(p.kcal)?p.kcal:0),0);
 }

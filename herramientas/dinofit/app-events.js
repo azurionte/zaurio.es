@@ -54,31 +54,56 @@ function saveWeightForm(form){
  try{validateState(state)}catch(e){state.weights=backup;throw e}
  selectCalendarDay(next.date,false);closeModal();changed(old?'Medición actualizada.':'Medición añadida.');
 }
+function foodMealSelect(moment){
+ return '<select name="meal" aria-label="Momento de la comida">'+
+ ['Desayuno','Comida','Merienda','Cena','Otro'].map(x=>
+ '<option value="'+x+'" '+(x===moment?'selected':'')+'>'+x+'</option>').join('')+'</select>';
+}
+function updateFoodMealPreview(){
+ const form=$('#foodForm'),hint=$('#foodSuggestedMeal');
+ if(!form||!hint||form.dataset.editId)return;
+ const date=form.querySelector('[name="date"]')?.value||selectedDate;
+ const recipe=RECIPES.find(x=>x.id===form.dataset.recipeId);
+ const parts=[...form.querySelectorAll('[data-food-id]')].map(el=>({foodId:el.dataset.foodId,qty:asNum(el.value)}));
+ const choice=form.querySelector('[name="meal"]');
+ if(form.dataset.mealOverride==='true'){
+  hint.textContent=choice?.value||'Otro';
+ }else{
+  const meal=inferFoodMeal(date,parts,recipe);
+  hint.textContent=meal;
+  if(choice)choice.value=meal;
+ }
+}
 function openFoodModal(recipeId,entryId=null){
- let recipe=RECIPES.find(x=>x.id===recipeId);
- let existing=entryId?(state.logs||[]).find(x=>x.id===entryId):null;
+ const recipe=RECIPES.find(x=>x.id===recipeId);
+ const existing=entryId?(state.logs||[]).find(x=>x.id===entryId):null;
  if(!existing&&!recipe)throw Error('Alimento no encontrado.');
  const items=existing?existing.parts.map(x=>[x.foodId,x.qty]):recipe.parts;
  const title=existing?existing.title:recipe.name;
- const moment=existing?.meal||recipe?.meal||'Otro';
+ const moment=existing?.meal||inferFoodMeal(existing?.date||selectedDate,items.map(([foodId,qty])=>({foodId,qty})),recipe,entryId);
  openModalType='food';formEntryId=entryId;
  const lines=items.map(([id,qty],i)=>{
   const f=food(id);return '<label>'+htmlSafe(f?.name||id)+' ('+htmlSafe(f?.unit||'unidades')+')'+
    '<input type="number" name="qty_'+i+'" data-food-id="'+htmlSafe(id)+'" min="0.01" step="any" inputmode="decimal" value="'+htmlSafe(qty)+'" required></label>';
  }).join('');
+ const momentField=existing?
+  '<label>Momento del día'+foodMealSelect(moment)+'</label>':
+  '<div class="food-auto-block"><div class="food-auto-preview">Momento asignado automáticamente: <strong id="foodSuggestedMeal">'+htmlSafe(moment)+'</strong></div>'+
+  '<details class="food-meal-adjust"><summary>Cambiar momento (opcional)</summary><label>Momento del día'+foodMealSelect(moment)+'</label></details></div>';
  renderModal(existing?'Editar comida':title,
- '<form id="foodForm">'+
- '<div class="input-grid">'+
- '<label>Momento del día<select name="meal">'+['Desayuno','Comida','Merienda','Cena','Otro'].map(x=>'<option value="'+x+'" '+(x===moment?'selected':'')+'>'+x+'</option>').join('')+'</select></label>'+
- '<label>Fecha<input type="date" name="date" required value="'+htmlSafe(existing?.date||selectedDate)+'"></label>'+
- '</div><div class="input-grid section-gap">'+lines+'</div>'+
- '<div class="section-gap notice">Calorías estimadas: <strong id="foodEstimate">—</strong>. Puedes corregir las cantidades.</div>'+
- '<label class="section-gap">Observación (opcional)<textarea name="note" rows="2">'+htmlSafe(existing?.note||'')+'</textarea></label>'+
- '<div class="tools section-gap" style="justify-content:flex-end">'+
- (existing?'<button type="button" class="click danger" data-action="delete-food" data-id="'+htmlSafe(existing.id)+'">Eliminar</button>':'')+
- '<button type="button" class="click" data-action="close-modal">Cancelar</button><button type="submit" class="click primary">Guardar comida</button></div>'+
- '</form>');
+  '<form id="foodForm" data-recipe-id="'+htmlSafe(recipe?.id||'')+'" data-edit-id="'+htmlSafe(existing?.id||'')+'">'+
+  '<div class="input-grid food-modal-header">'+
+  momentField+
+  '<label>Fecha<input type="date" name="date" required value="'+htmlSafe(existing?.date||selectedDate)+'"></label>'+
+  '</div><div class="input-grid section-gap">'+lines+'</div>'+
+  '<div class="section-gap notice">Calorías estimadas: <strong id="foodEstimate">—</strong>. Puedes corregir las cantidades.</div>'+
+  '<label class="section-gap">Observación (opcional)<textarea name="note" rows="2">'+htmlSafe(existing?.note||'')+'</textarea></label>'+
+  '<div class="tools section-gap" style="justify-content:flex-end">'+
+  (existing?'<button type="button" class="click danger" data-action="delete-food" data-id="'+htmlSafe(existing.id)+'">Eliminar</button>':'')+
+  '<button type="button" class="click" data-action="close-modal">Cancelar</button><button type="submit" class="click primary">Guardar comida</button></div>'+
+  '</form>');
  updateFoodEstimate();
+ updateFoodMealPreview();
 }
 function readFoodParts(form){
  const entries=[...form.querySelectorAll('[data-food-id]')];
@@ -101,7 +126,10 @@ function saveFoodForm(form){
  const recipe=RECIPES.find(x=>x.id===form.dataset.recipeId);
  const previous=formEntryId?state.logs.find(x=>x.id===formEntryId):null;
  const title=previous?.title||recipe?.name||'Comida';
- const next={id:previous?.id||uid(),date,meal:String(values.get('meal')||'Otro'),title,note:String(values.get('note')||'').trim().slice(0,500),parts};
+ const inferred=inferFoodMeal(date,parts,recipe,previous?.id);
+ const meal=previous?String(values.get('meal')||previous.meal||'Otro'):
+  form.dataset.mealOverride==='true'?String(values.get('meal')||inferred):inferred;
+ const next={id:previous?.id||uid(),date,meal,title,note:String(values.get('note')||'').trim().slice(0,500),parts};
  if(!['Desayuno','Comida','Merienda','Cena','Otro'].includes(next.meal))throw Error('Momento no válido.');
  state.logs=state.logs.filter(x=>x.id!==next.id).concat(next);
  selectCalendarDay(date,false);closeModal();changed('Comida guardada.');
@@ -222,6 +250,12 @@ function formHandler(event){
  }catch(e){toast('No se guardó: '+e.message)}
 }
 function changeHandler(event){
+ const form=event.target.closest?.('#foodForm');
+ if(form){
+  if(event.target.name==='meal')form.dataset.mealOverride='true';
+  if(event.target.name==='meal'||event.target.name==='date')updateFoodMealPreview();
+  return;
+ }
  if(event.target.id==='globalDate'){
   const date=event.target.value;
   if(dateValid(date))selectCalendarDay(date);return;
