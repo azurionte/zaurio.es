@@ -117,51 +117,78 @@ function svgLine(series,{small=false,unit='kg',yBounds=null,showGoal=null}={}){
 }
 function weightGraph(){
  const actual=timeLine(),goal=state?.profile?.targetWeight,pr=projections();
- const zoom=chartZoom==='short';
- const last=actual.at(-1);
- let series=[
-  {id:'real',color:'#64dfc5',points:actual.map(w=>({date:w.date,value:w.weight}))}
- ];
- if(pr.emp.length)series.push({id:'emp',color:'#b79bfa',dash:'9 7',points:pr.emp});
- if(pr.adjusted.length)series.push({id:'slow',color:'#8dbdff',dash:'6 7',points:pr.adjusted});
+ const zoom=chartZoom==='short',last=actual.at(-1),e=pr.evidence;
+ const obs=pr.emp,adapt=pr.adjusted;
+ let series=[{id:'real',color:'#64dfc5',points:actual.map(w=>({date:w.date,value:w.weight}))}];
+ if((forecastMode==='observed'||forecastMode==='both')&&obs.length)series.push({id:'emp',color:'#b79bfa',dash:'9 7',points:obs});
+ if((forecastMode==='active'||forecastMode==='both')&&adapt.length)series.push({id:'active',color:'#8dbdff',dash:'6 7',points:adapt});
  if(zoom&&last){
   const begin=addDays(last.date,-30),end=addDays(last.date,30);
-  series=series.map(s=>({...s,points:s.points.filter(p=>p.date>=begin&&p.date<=end)}));
+  series=series.map(item=>({...item,points:item.points.filter(p=>p.date>=begin&&p.date<=end)}));
  }
- const targetPart=isNumber(goal)?'<strong class="accent">Objetivo '+locale(goal,1)+' kg</strong>':'<span class="dim">Define tu peso objetivo en Ajustes</span>';
+ const showDate=date=>date?htmlSafe(readableDate(date)):'Esperando más mediciones';
+ const trend=pr.slope==null?'Sin datos suficientes':locale(Math.abs(pr.slope)*1000,0)+' g/día '+(pr.slope<0?'de descenso':'de aumento');
+ const active=pr.activeSlope==null?'Sin datos suficientes':locale(Math.abs(pr.activeSlope)*1000,0)+' g/día '+(pr.activeSlope<0?'de descenso':'de aumento');
+ const evidence=e||{};
  return '<section class="section">'+
- '<div class="section-head"><div><h2>Tu peso y el objetivo</h2><p>Datos observados y dos proyecciones diferenciadas · '+htmlSafe(readableDate(trackingStart()))+' en adelante</p></div>'+
- '<div class="tools"><button type="button" class="pillbutton '+(zoom?'active':'')+'" data-action="chart-zoom" data-mode="short">±30 días</button>'+
- '<button type="button" class="pillbutton '+(!zoom?'active':'')+'" data-action="chart-zoom" data-mode="full">Hasta el objetivo</button></div></div>'+
- svgLine(series,{unit:'kg',showGoal:goal})+
- '<div class="chart-legend"><span><i class="legend-line"></i> Peso registrado</span><span><i class="legend-line emp"></i> Proyección del ritmo reciente</span><span><i class="legend-line dec"></i> Proyección con ralentización</span></div>'+
- '<div class="proj-info">'+
-  '<div class="proj-stat"><span>Meta de peso</span><strong>'+targetPart+'</strong></div>'+
-  '<div class="proj-stat"><span>Ritmo observado (últimos 14 días)</span><strong>'+(pr.slope!=null?locale(pr.slope*1000,0)+' g/día':'Aún sin tendencia suficiente')+'</strong></div>'+
-  '<div class="proj-stat"><span>Proyección lineal</span><strong>'+(pr.empDate?htmlSafe(readableDate(pr.empDate)):'Pendiente')+'</strong></div>'+
-  '<div class="proj-stat"><span>Con ralentización</span><strong>'+(pr.adjDate?htmlSafe(readableDate(pr.adjDate)):'Fuera del horizonte simulado')+'</strong></div>'+
- '</div><div class="tools section-gap"><span class="helper">Cardio VR hipotético:</span>'+
- [0,15,20].map(x=>'<button type="button" class="pillbutton '+(vrMinutes===x?'active':'')+'" data-action="set-vr" data-minutes="'+x+'">'+(x?x+' min × 4 días/semana':'Sin VR')+'</button>').join('')+
- '</div><p class="chart-comment">La línea verde representa las pesadas reales. Las líneas punteadas son cálculos a partir del ritmo reciente, no valores medidos. La segunda supone una desaceleración progresiva; VR añade gasto orientativo y no sustituye datos de actividad real. El historial antiguo se conserva por separado.</p>'+
- '</section>';
+  '<div class="section-head"><div><h2>Evolución del peso y previsión</h2><p>Las fechas se recalculan al incorporar tus mediciones. No usamos una tasa de pérdida inventada.</p></div>'+
+  '<div class="tools"><button type="button" class="pillbutton '+(zoom?'active':'')+'" data-action="chart-zoom" data-mode="short">Últimos 30 días</button>'+
+  '<button type="button" class="pillbutton '+(!zoom?'active':'')+'" data-action="chart-zoom" data-mode="full">Hasta la meta</button></div></div>'+
+  '<div class="forecast-switch" aria-label="Modelos de proyección">'+
+  [{id:'observed',label:'Ritmo medido'},{id:'active',label:'Seguimiento activo'},{id:'both',label:'Comparar modelos'}].map(m=>
+   '<button type="button" class="pillbutton '+(forecastMode===m.id?'active':'')+'" data-action="forecast-mode" data-mode="'+m.id+'" aria-pressed="'+(forecastMode===m.id)+'">'+htmlSafe(m.label)+'</button>').join('')+'</div>'+
+  svgLine(series,{unit:'kg',showGoal:zoom?null:goal})+
+  '<div class="chart-legend"><span><i class="legend-line"></i> Peso registrado</span>'+
+  ((forecastMode==='observed'||forecastMode==='both')?'<span><i class="legend-line emp"></i> Ritmo medido (14 días)</span>':'')+
+  ((forecastMode==='active'||forecastMode==='both')?'<span><i class="legend-line dec"></i> Seguimiento activo (7 + 14 días)</span>':'')+'</div>'+
+  '<div class="proj-info">'+
+   '<div class="proj-stat"><span>Ritmo medido</span><strong>'+htmlSafe(trend)+'</strong><small>'+showDate(pr.empDate)+'</small></div>'+
+   '<div class="proj-stat"><span>Seguimiento activo</span><strong>'+htmlSafe(active)+'</strong><small>'+showDate(pr.adjDate)+'</small></div>'+
+   '<div class="proj-stat"><span>Peso objetivo</span><strong>'+(isNumber(goal)?locale(goal,1)+' kg':'Sin definir')+'</strong><small>'+(pr.usedShortTrend?'Recalibración semanal activa':'Se activa con más pesadas recientes')+'</small></div>'+
+  '</div>'+
+  '<div class="monitor-panel"><div class="section-head"><div><h3>Monitorización de tus datos</h3><p>Se actualiza cuando guardas una pesada, una comida o una actividad.</p></div><span class="monitor-indicator">Seguimiento activo</span></div>'+
+  '<div class="monitor-grid">'+
+   '<div><strong>'+(e.fatSlope==null?'—':locale(Math.abs(e.fatSlope)*1000,0)+' g/día')+'</strong><span>Tendencia de grasa calculada'+(e.fatSlope==null?'':e.fatSlope<0?' · descenso':' · aumento')+'</span></div>'+
+   '<div><strong>'+e.completed+' días completos</strong><span>Alimentación · últimas 2 semanas'+(e.averageKcal!=null?' · '+locale(e.averageKcal,0)+' kcal/día registradas':'')+'</span></div>'+
+   '<div><strong>'+e.activities+' sesiones · '+locale(e.minutes,0)+' min</strong><span>Ejercicio registrado · últimas 2 semanas</span></div>'+
+  '</div>'+
+  '<p class="chart-comment">La tendencia del peso determina las fechas. El modelo activo combina las regresiones de 7 y 14 días cuando hay lecturas suficientes. La composición, las comidas y el ejercicio se muestran como contexto; no se añaden como calorías extra al peso ya observado ni se consideran completos los días sin cerrar. No hay vigilancia en segundo plano.</p></div>'+
+  '</section>';
 }
 function metricGrid(){
- const points=timeLine();
- const cards=METRICS.map(m=>{
-  const a=points.filter(w=>isNumber(w[m.id])).map(w=>({date:w.date,value:w[m.id]}));
-  const last=a.at(-1);
-  return '<button type="button" class="scale-card '+(selectedMetric===m.id?'active':'')+'" data-action="metric" data-id="'+m.id+'" aria-pressed="'+(selectedMetric===m.id)+'">'+
-   '<span class="s-label">'+htmlSafe(m.name)+'</span><span class="s-value">'+(last?locale(last.value,m.decimals)+' <small>'+htmlSafe(m.unit)+'</small>':'—')+'</span>'+
-   (a.length>1?svgLine([{points:a,color:selectedMetric===m.id?'#64dfc5':'#a4b6d6'}],{small:true,unit:m.unit}):'<span class="dim tiny">Sin evolución todavía</span>')+'</button>';
- }).join('');
- const metric=METRICS.find(x=>x.id===selectedMetric)||METRICS[1];
- const selectedPoints=metricData(metric.id);
- return '<section class="section"><div class="section-head"><div><h2>Composición corporal</h2><p>Los doce indicadores de tu báscula, con su gráfico individual.</p></div>'+
- '<button type="button" class="click sm" data-action="weight-new">+ Medición</button></div>'+
- '<div class="scale-grid">'+cards+'</div>'+
- '<div class="scale-detail"><div class="detail-header"><strong>'+htmlSafe(metric.name)+'</strong><span class="helper">'+selectedPoints.length+' lecturas</span></div>'+
- svgLine([{points:selectedPoints,color:'#b79bfa'}],{unit:metric.unit||'índice'})+
- '<p class="chart-comment">Los valores de composición son estimaciones de bioimpedancia y pueden variar con la hidratación y las condiciones de la medición.</p></div></section>';
+ const records=timeLine();
+ const palette=['#60e3c8','#b79bfa','#ffcc7f','#8dbdff','#fc91ae','#7edbb9','#f1af80','#f0a8fc','#9be17d','#72bce4','#eecc86','#e4a4a2','#69daa9','#ffa97e','#b9a7f4'];
+ const specs=[...METRICS.map(m=>({id:m.id,name:m.name,unit:m.unit,decimals:m.decimals,formula:w=>w[m.id]})),
+  {id:'fatKg',name:'Grasa calculada',unit:'kg',decimals:2,formula:w=>isNumber(w.bodyFat)?w.weight*w.bodyFat/100:null},
+  {id:'leanKg',name:'Masa sin grasa calculada',unit:'kg',decimals:2,formula:w=>isNumber(w.bodyFat)?w.weight*(1-w.bodyFat/100):null},
+  {id:'waterKg',name:'Agua calculada',unit:'kg',decimals:2,formula:w=>isNumber(w.bodyWater)?w.weight*w.bodyWater/100:null}
+ ];
+ const items=specs.map((spec,i)=>{
+  const values=records.map(w=>({date:w.date,value:spec.formula(w)})).filter(p=>isNumber(p.value));
+  return {...spec,color:palette[i%palette.length],values};
+ });
+ const isolated=compositionFocus!=='all',selected=items.find(item=>item.id===compositionFocus);
+ const chartItems=isolated&&selected?[selected]:items;
+ const series=chartItems.filter(item=>item.values.length>0).map(item=>{
+  const baseline=item.values[0].value;
+  const points=isolated?item.values:item.values.filter(p=>baseline!==0).map(p=>({date:p.date,value:(p.value/baseline-1)*100}));
+  return {id:item.id,color:item.color,points};
+ });
+ const lastSelected=selected?.values?.at(-1);
+ const detail=isolated&&selected?'Vista individual: '+htmlSafe(selected.name)+' · '+(lastSelected?locale(lastSelected.value,selected.decimals)+' '+htmlSafe(selected.unit):'sin datos'):'Vista comparativa · variación porcentual respecto a la primera lectura de cada indicador';
+ return '<section class="section"><div class="section-head"><div><h2>Composición corporal</h2><p>Una gráfica para tus indicadores. Selecciona una línea de la leyenda para verla por separado.</p></div>'+
+  '<button class="click sm" type="button" data-action="weight-new">+ Medición</button></div>'+
+  '<div class="composition-heading"><strong>'+detail+'</strong><button type="button" class="pillbutton '+(!isolated?'active':'')+'" data-action="composition-all" aria-pressed="'+(!isolated)+'">Ver todos</button></div>'+
+  svgLine(series,{unit:isolated&&selected?selected.unit||'índice':'% de variación'})+
+  '<div class="composition-legend" aria-label="Indicadores de composición corporal">'+
+  items.map(item=>{
+   const last=item.values.at(-1);
+   return '<button type="button" class="composition-key '+(isolated?(compositionFocus===item.id?'isolate':'muted'):'')+'" data-action="composition-metric" data-id="'+item.id+'" aria-pressed="'+(compositionFocus===item.id)+'">'+
+    '<span class="composition-swatch" style="background:'+item.color+'"></span><span class="composition-key-text"><strong>'+htmlSafe(item.name)+'</strong>'+
+    '<small>'+(last?locale(last.value,item.decimals)+' '+htmlSafe(item.unit):'Sin lecturas')+'</small></span></button>';
+  }).join('')+'</div>'+
+  '<p class="chart-comment">Al mostrar todos, cada serie empieza en 0 % para poder comparar kg, porcentajes, índices y kcal en un mismo gráfico. Al seleccionar una métrica se muestran sus valores y unidades reales. La grasa, la masa sin grasa y el agua en kg se calculan a partir del peso y sus porcentajes registrados.</p>'+
+  '</section>';
 }
 function getActivity(d){
  return (state.activities||[]).filter(a=>a.date===d);
