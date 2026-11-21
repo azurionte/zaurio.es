@@ -79,11 +79,32 @@ assert.ok(goals.includes('Tu camino hasta')&&goals.includes('Actividad física')
 run('dashboardArea="nutrition"');
 const foods=run('currentDay()');
 assert.equal((foods.match(/data-recipe=/g)||[]).length,14,'eight tuppers and six drink/snack shortcuts');
-assert.ok(foods.includes('Platos · con salteados')&&foods.includes('Platos · solo proteína'));
+assert.ok(foods.includes('Platos con salteados')&&foods.includes('Solo proteína'));
 assert.ok(foods.includes('Postres y lácteos')&&foods.includes('Bebidas'));
 assert.ok(foods.includes('Día completo'));
 assert.ok(foods.includes('data-recipe="cola"'));
 assert.equal(run('makePart("cola",330).kcal'),0);
+
+assert.equal(run('foodTone("Desayuno")'),'breakfast');
+assert.equal(run('foodTone("Comida")'),'lunch');
+assert.equal(run('foodTone("Merienda")'),'snack');
+assert.equal(run('foodTone("Otro")'),'other');
+const burgerArt=run('foodEmojis({parts:[{foodId:"burger-chicken",qty:2},{foodId:"saute-chicken",qty:56.25},{foodId:"saute-frank",qty:56.25},{foodId:"oil",qty:7}]})');
+assert.equal(JSON.stringify(burgerArt),JSON.stringify(['🍔','🍔','🥦','🥔']),'the drawing represents both burgers and the two salteados');
+assert.equal(JSON.stringify(run('foodEmojis({parts:[{foodId:"flan",qty:1}]})')),JSON.stringify(['🍮']));
+assert.equal(JSON.stringify(run('foodEmojis({parts:[{foodId:"coffee",qty:2},{foodId:"milk",qty:120}]})')),JSON.stringify(['☕','🥛']));
+assert.equal(JSON.stringify(run('foodEmojis({parts:[{foodId:"unknown-custom-id",qty:1}],title:"Mi plato"})')),JSON.stringify(['🍽️']),'unknown foods have a neutral fallback');
+run('state.logs=[{id:"meal-beef",date:"2026-04-18",meal:"Comida",title:"2 burgers de pollo + salteados",parts:[makePart("burger-chicken",2),makePart("saute-chicken",56.25),makePart("saute-frank",56.25),makePart("oil",7)]},{id:"meal-flan",date:"2026-04-18",meal:"Otro",title:"Flan proteico",parts:[makePart("flan",1)]},{id:"meal-coffee",date:"2026-04-18",meal:"Desayuno",title:"Café con leche desnatada",parts:[makePart("coffee",2),makePart("milk",120)]}]');
+const illustrated=run('currentDay()');
+assert.ok(illustrated.includes('Así ha sido tu plato')&&illustrated.includes('Lo que has comido'));
+assert.equal((illustrated.match(/class="food-record-card/g)||[]).length,3,'each recorded item has a visual card');
+assert.equal((illustrated.match(/class="plate-sticker tone-/g)||[]).length,3,'consumed items visualized without duplication');
+assert.ok(illustrated.includes('class="meal-slice tone-breakfast"')&&illustrated.includes('class="meal-slice tone-lunch"')&&illustrated.includes('class="meal-slice tone-other"'),'colored meal groups');
+assert.ok(illustrated.includes('data-action="edit-food" data-id="meal-beef"'),'edit action still targets the original record');
+assert.ok(illustrated.includes('825')===false,'calories must be calculated, not hardcoded');
+assert.equal(run('dayLogs().reduce((n,e)=>n+logTotal(e.parts),0)').toFixed(2),(457.09+62+46).toFixed(2),'food calories are unchanged');
+assert.equal(run('state.logs.length'),3,'new visuals do not change user logs');
+
 const oldPage=run('currentHistory()');
 assert.ok(oldPage.includes('Archivo anterior')&&oldPage.includes('20 mar'));
 const dateBefore=run('selectedDate');

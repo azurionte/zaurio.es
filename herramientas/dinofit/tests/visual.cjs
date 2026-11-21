@@ -26,6 +26,19 @@ async function main(){
     protein:12.5+i*.07,bmr:1850-i*2,fatFreeMass:72+i*.1,subcutaneousFat:34-i*.12,
     visceralFat:24-i*.2,bodyWater:38.5+i*.2,boneMass:3.25
    }));
+
+   // Six real-world-shaped synthetic entries; no remote data is touched.
+   const foodDate='2026-04-18';
+   const log=(id,meal,title,ingredients)=>({id,date:foodDate,meal,title,note:'',parts:ingredients.map(([foodId,qty])=>makePart(foodId,qty))});
+   state.logs=[
+    log('poultry','Comida','Solo pechuga de pollo',[['chicken',120]]),
+    log('burgers','Comida','2 burgers de pollo + salteados',[['burger-chicken',2],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]),
+    log('coffee','Desayuno','Café con leche desnatada',[['coffee',2],['milk',120]]),
+    log('flan-a','Otro','Flan proteico',[['flan',1]]),
+    log('flan-b','Otro','Flan proteico',[['flan',1]]),
+    log('yopro','Otro','YoPRO',[['yopro',1]])
+   ];
+
    state.profile.targetWeight=85;state.trackingStartDate='2026-04-11';
    selectedDate='2026-04-18';account={id:'synthetic',user_metadata:{}};
    document.querySelector('#authGate').hidden=true;
@@ -69,9 +82,30 @@ async function main(){
   await page.screenshot({path:path.join(dir,name+'-goal.png'),fullPage:true});
   await page.locator('[data-action=dashboard-tab][data-tab=nutrition]').click();
   assert.equal(await page.locator('.food-button').count(),14,'14 shortcuts available in nutrition tab');
+  assert.equal(await page.locator('.food-record-card').count(),6,'six illustrated food cards');
+  assert.equal(await page.locator('.plate-sticker').count(),6,'six food icons in daily plate');
+  assert.equal(await page.locator('.meal-slice').count(),3,'three colored meal groups');
+  assert.equal(await page.locator('.food-record-card.tone-lunch').count(),2,'lunch has two food cards');
+  assert.ok((await page.locator('.nutrition-overview').innerText()).includes('825'),'daily calories preserved');
+  const art=await page.evaluate(()=>({
+   icons:document.querySelector('.food-record-card.tone-lunch .food-picture-icons')?.innerText,
+   burgerIcons:document.querySelector('[title="2 burgers de pollo + salteados"] .food-sticker-icons')?.innerText,
+   toneA:getComputedStyle(document.querySelector('.meal-slice.tone-lunch')).borderColor,
+   toneB:getComputedStyle(document.querySelector('.meal-slice.tone-other')).borderColor,
+   plateFits:document.querySelector('.plate-gallery').scrollHeight<=document.querySelector('.plate-gallery').clientHeight+2,
+   cardsFit:document.querySelector('.food-record-grid').scrollHeight<=document.querySelector('.food-record-grid').clientHeight+2
+  }));
+  assert.ok(art.icons?.includes('🍗'),'chicken shown as food illustration');
+  assert.ok(art.burgerIcons?.includes('🍔'),'burger illustration exists');
+  assert.notEqual(art.toneA,art.toneB,'meal groups have distinct accent colors');
+  assert.equal(art.plateFits,true,'no inner scrolling in food illustration');
+  assert.equal(art.cardsFit,true,'no inner scrolling in food diary');
   measured=await measure();
   assert.ok(measured.horizontalOverflow<=3,'nutrition horizontal overflow');
   await page.screenshot({path:path.join(dir,name+'-nutrition.png'),fullPage:true});
+  await page.locator('.food-record-card [data-action=edit-food]').first().click();
+  assert.ok(await page.locator('#foodForm').isVisible(),'existing meal opens editable without losing it');
+  await page.locator('[data-action=close-modal]').first().click();
   await page.locator('[data-action=add-food]').first().click();
   assert.ok(await page.locator('#foodForm').isVisible());
   await page.locator('[data-action=close-modal]').first().click();

@@ -235,14 +235,63 @@ function goalDashboard(){
  }).join('')+'</div>'+
  '<p class="chart-comment">Las fechas de los hitos cambian automáticamente con tus nuevas pesadas. Si la tendencia cambia, también lo harán las previsiones.</p></section>';
 }
+// Visuals come from the food IDs recorded for each entry, not from inferred calories.
+function foodTone(meal){
+ return ({Desayuno:'breakfast',Comida:'lunch',Merienda:'snack',Cena:'dinner',Otro:'other'})[meal]||'other';
+}
+function mealIcon(meal){
+ return ({Desayuno:'🌤️',Comida:'🍽️',Merienda:'🍓',Cena:'🌙',Otro:'✨'})[meal]||'🍽️';
+}
+function foodEmojis(entry){
+ const pictures=[],parts=Array.isArray(entry?.parts)?entry.parts:[];
+ const pictureForId=id=>{
+  if(id.startsWith('burger-'))return '🍔';
+  return ({chicken:'🍗',beef:'🥩',egg:'🥚',cheese:'🧀',coffee:'☕',milk:'🥛',cola:'🥤',
+   flan:'🍮',yopro:'🥛','activia-cereales':'🥣',yogurt:'🥛','yogurt-berries':'🫐',
+   'yogurt-pineapple':'🍍','saute-chicken':'🥦','saute-frank':'🥔',onion:'🧅',garlic:'🧄'})[id]||null;
+ };
+ for(const part of parts){
+  const id=String(part?.foodId||'');
+  const emoji=pictureForId(id);
+  if(!emoji)continue;
+  // Two recorded burger patties are two burgers in the illustration, never one.
+  const qty=id.startsWith('burger-')&&part.qty>=2?2:1;
+  for(let i=0;i<qty;i++)pictures.push(emoji);
+ }
+ if(!pictures.length){
+  const recipe=RECIPES.find(r=>r.name.toLowerCase()===String(entry?.title||'').toLowerCase());
+  pictures.push(recipe?.emoji||'🍽️');
+ }
+ return pictures.slice(0,4);
+}
+function foodPicture(entry,kind='plate'){
+ return '<span class="'+(kind==='sticker'?'food-sticker-icons':'food-picture-icons')+'" aria-hidden="true">'+
+  foodEmojis(entry).map(emoji=>'<span>'+htmlSafe(emoji)+'</span>').join('')+'</span>';
+}
 function foodSummary(){
  const entries=dayLogs(),total=entries.reduce((sum,l)=>sum+logTotal(l.parts||[]),0);
  const groups=['Desayuno','Comida','Merienda','Cena','Otro'];
  const byMeal=groups.map(meal=>({meal,entries:entries.filter(e=>e.meal===meal)})).filter(x=>x.entries.length);
- return '<section class="section"><div class="section-head"><div><h2>Consumo del día · '+htmlSafe(readableDate(selectedDate))+'</h2>'+
- '<p>Calorías aproximadas de las comidas que has registrado.</p></div><span class="food-total">'+locale(total,0)+' kcal</span></div>'+
- '<div class="meal-summary">'+(byMeal.length?byMeal.map(g=>'<div><span>'+htmlSafe(g.meal)+'</span><strong>'+locale(g.entries.reduce((s,l)=>s+logTotal(l.parts||[]),0),0)+' kcal</strong></div>').join(''):'<p class="helper">No has registrado comidas en esta fecha.</p>')+'</div>'+
- '<p class="chart-comment">Si aún faltan comidas, este total es parcial. No se interpreta automáticamente como la ingesta de un día completo.</p></section>';
+ const completed=(state.completeDays||[]).includes(selectedDate);
+ const bites=entries.slice(0,12).map(entry=>'<div class="plate-sticker tone-'+foodTone(entry.meal)+'" title="'+htmlSafe(entry.title||'Comida')+'">'+
+  foodPicture(entry,'sticker')+'<small>'+htmlSafe(entry.title||'Comida')+'</small></div>').join('');
+ return '<section class="section nutrition-overview">'+
+  '<div class="nutrition-overview-head"><div><span class="eyebrow">TU ALIMENTACIÓN</span><h2>Así ha sido tu plato</h2><p>Lo que has registrado el '+htmlSafe(readableDate(selectedDate))+'</p></div>'+
+  '<div class="nutrition-total"><strong>'+locale(total,0)+'</strong><span>kcal anotadas</span><small>'+entries.length+' '+(entries.length===1?'alimento registrado':'alimentos registrados')+'</small></div></div>'+
+  (entries.length?'<div class="plate-gallery" aria-label="Alimentos consumidos"><span class="plate-glow" aria-hidden="true"></span><div class="plate-gallery-items">'+bites+
+   (entries.length>12?'<div class="plate-sticker plate-more"><strong>+'+(entries.length-12)+'</strong><small>más alimentos</small></div>':'')+
+   '</div></div>':'<div class="plate-gallery plate-empty"><div class="empty-plate" aria-hidden="true">🍽️</div><p>Tu plato está vacío por ahora. Añade lo que hayas comido con los accesos rápidos de abajo.</p></div>')+
+  '<div class="meal-summary">'+byMeal.map(g=>{
+   const kcal=g.entries.reduce((sum,l)=>sum+logTotal(l.parts||[]),0);
+   const share=total>0?clamp(kcal/total*100,0,100):0;
+   return '<div class="meal-slice tone-'+foodTone(g.meal)+'"><div class="meal-slice-top"><span class="meal-slice-emoji" aria-hidden="true">'+mealIcon(g.meal)+'</span>'+
+    '<div><span>'+htmlSafe(g.meal)+'</span><strong>'+locale(kcal,0)+' kcal</strong></div><small>'+g.entries.length+' '+(g.entries.length===1?'registro':'registros')+'</small></div>'+
+    '<div class="meal-track" aria-label="'+locale(share,0)+' por ciento de las calorías registradas"><span style="width:'+share.toFixed(2)+'%"></span></div></div>';
+  }).join('')+'</div>'+
+  '<div class="nutrition-foot"><span class="nutrition-foot-star" aria-hidden="true">✦</span><span>'+
+  (completed?'Día marcado como completo.':'Registro en curso: puede que todavía falten comidas.')+
+  ' Las calorías son orientativas y las barras representan el reparto de lo anotado, no un límite diario.</span></div>'+
+  '</section>';
 }
 function currentDay(){
  let out='<div class="view-head"><span class="eyebrow">TU SEGUIMIENTO</span><h1>Tu día · '+htmlSafe(readableDate(selectedDate))+'</h1><p>Elige una fecha y utiliza las tarjetas para cambiar de área.</p></div>';
@@ -256,27 +305,52 @@ function currentDay(){
 }
 function quickFoods(){
  const groups=[
-  {title:'Platos · con salteados',hint:'Tuppers con salteados · aceite repartido en ocho raciones',recipes:RECIPES.filter(r=>r.group==='mixed')},
-  {title:'Platos · solo proteína',hint:'Tuppers solo proteína · siempre dos hamburguesas por plato',recipes:RECIPES.filter(r=>r.group==='plain')},
-  {title:'Postres y lácteos',hint:'Flanes, yogures y queso light',recipes:RECIPES.filter(r=>['cheese','flan','yopro','activia'].includes(r.id))},
-  {title:'Bebidas',hint:'Café con leche y refrescos',recipes:RECIPES.filter(r=>['coffee','cola'].includes(r.id))}
+  {id:'mixed',title:'Platos con salteados',emoji:'🥘',hint:'Tu guarnición habitual y el aceite repartido entre ocho tuppers',recipes:RECIPES.filter(r=>r.group==='mixed')},
+  {id:'plain',title:'Solo proteína',emoji:'🍗',hint:'Pollo, ternera o dos hamburguesas por plato',recipes:RECIPES.filter(r=>r.group==='plain')},
+  {id:'treats',title:'Postres y lácteos',emoji:'🍮',hint:'Tus tentempiés habituales',recipes:RECIPES.filter(r=>['cheese','flan','yopro','activia'].includes(r.id))},
+  {id:'drinks',title:'Bebidas',emoji:'🥤',hint:'Café, leche y refrescos',recipes:RECIPES.filter(r=>['coffee','cola'].includes(r.id))}
  ];
- const buttons=r=>'<button class="food-button" type="button" data-action="add-food" data-recipe="'+r.id+'">'+
-  '<span class="food-top"><span class="em" aria-hidden="true">'+r.emoji+'</span><span class="plus">＋</span></span><strong>'+htmlSafe(r.name)+'</strong><small>'+htmlSafe(r.hint)+'</small></button>';
- return '<section class="section"><div class="section-head"><div><h2>Añadir una comida</h2><p>Accesos rápidos para tus raciones habituales. Cantidades orientativas y editables.</p></div></div>'+
-  groups.map(g=>'<div class="quick-group"><h3>'+htmlSafe(g.title)+'</h3><p class="helper">'+htmlSafe(g.hint)+'</p><div class="quick-grid">'+g.recipes.map(buttons).join('')+'</div></div>').join('')+'</section>';
+ const buttons=r=>{
+  const mock={title:r.name,parts:r.parts.map(([foodId,qty])=>({foodId,qty}))};
+  return '<button class="food-button illustrated-quick" type="button" data-action="add-food" data-recipe="'+r.id+'" aria-label="Añadir '+htmlSafe(r.name)+'">'+
+   '<span class="food-top"><span class="quick-pictures">'+foodPicture(mock,'sticker')+'</span><span class="quick-plus" aria-hidden="true">+</span></span>'+
+   '<span class="quick-copy"><strong>'+htmlSafe(r.name)+'</strong><small>'+htmlSafe(r.hint)+'</small></span></button>';
+ };
+ return '<section class="section quick-foods-section"><div class="section-head"><div><span class="eyebrow">A UN TOQUE</span><h2>¿Qué has comido?</h2><p>Selecciona un plato o tentempié para registrarlo. Puedes ajustar las cantidades.</p></div></div>'+
+  groups.map(g=>'<div class="quick-group food-group-'+g.id+'">'+
+   '<div class="quick-group-title"><span class="quick-group-em" aria-hidden="true">'+g.emoji+'</span><div><h3>'+htmlSafe(g.title)+'</h3><p class="helper">'+htmlSafe(g.hint)+'</p></div></div>'+
+   '<div class="quick-grid">'+g.recipes.map(buttons).join('')+'</div></div>').join('')+'</section>';
+}
+function foodPartsCaption(entry){
+ const parts=Array.isArray(entry.parts)?entry.parts:[];
+ if(!parts.length)return 'Registro personalizado';
+ if(parts.length>=3)return parts.length+' ingredientes registrados · pulsa Editar para verlos';
+ return parts.map(part=>{
+  const f=food(part.foodId),name=f?.name||part.foodId;
+  const unit=f?.unit==='g'?'g':f?.unit==='ml'?'ml':'ud';
+  return name+' · '+locale(part.qty,part.qty%1===0?0:1)+' '+unit;
+ }).join(' · ');
 }
 function dayRecords(kind='all'){
  const entries=dayLogs().sort((a,b)=>(a.meal||'').localeCompare(b.meal||'')),activities=getActivity(selectedDate);
- let body=entries.length?entries.map(e=>'<div class="day-entry"><div><strong>'+htmlSafe(e.title||'Comida')+'</strong><small>'+htmlSafe(e.meal||'Otro')+' · '+(e.parts||[]).map(p=>htmlSafe(food(p.foodId)?.name||p.foodId)+' × '+locale(p.qty,0)).join(' · ')+'</small></div><span class="calories">'+locale(logTotal(e.parts))+' kcal</span><button type="button" class="click sm" data-action="edit-food" data-id="'+htmlSafe(e.id)+'">Editar</button></div>').join(''):
- '<div class="empty">Todavía no hay comidas registradas para esta fecha.</div>';
- let sport=activities.length?activities.map(a=>'<div class="day-entry"><div><strong>'+htmlSafe(a.type||'Actividad')+'</strong><small>'+htmlSafe(a.note||'Actividad física')+'</small></div><strong>'+locale(a.minutes,1)+' min</strong><button type="button" class="click sm" data-action="delete-activity" data-id="'+htmlSafe(a.id)+'">Eliminar</button></div>').join(''):
+ const body=entries.length?entries.map(entry=>{
+  const tone=foodTone(entry.meal);
+  return '<article role="listitem" class="food-record-card tone-'+tone+'">'+
+   '<div class="food-card-art">'+foodPicture(entry)+'<span class="food-art-spark" aria-hidden="true">✦</span></div>'+
+   '<div class="food-card-content"><span class="food-meal-tag">'+mealIcon(entry.meal)+' '+htmlSafe(entry.meal||'Otro')+'</span>'+
+    '<h3>'+htmlSafe(entry.title||'Comida')+'</h3><p>'+htmlSafe(foodPartsCaption(entry))+'</p></div>'+
+   '<div class="food-card-bottom"><strong>'+locale(logTotal(entry.parts||[]),0)+' <small>kcal</small></strong>'+
+    '<button type="button" class="food-edit-button" data-action="edit-food" data-id="'+htmlSafe(entry.id)+'" aria-label="Editar '+htmlSafe(entry.title||'comida')+'">Editar <span aria-hidden="true">✎</span></button></div></article>';
+ }).join(''):'<div class="empty">Aún no hay comidas registradas para esta fecha. Puedes añadirlas debajo.</div>';
+ const sport=activities.length?activities.map(a=>'<div class="day-entry"><div><strong>'+htmlSafe(a.type||'Actividad')+'</strong><small>'+htmlSafe(a.note||'Actividad física')+'</small></div><strong>'+locale(a.minutes,1)+' min</strong><button type="button" class="click sm" data-action="delete-activity" data-id="'+htmlSafe(a.id)+'">Eliminar</button></div>').join(''):
  '<div class="helper">Sin actividad registrada.</div>';
- const foodSection='<section class="section"><div class="section-head"><div><h2>Comidas registradas</h2><p>'+entries.length+' entradas para '+htmlSafe(readableDate(selectedDate))+'</p></div>'+
- '<label class="checkrow"><input type="checkbox" id="dayComplete" '+((state.completeDays||[]).includes(selectedDate)?'checked':'')+'>Día completo</label></div>'+
- '<div class="day-entries">'+body+'</div></section>';
+ const complete=(state.completeDays||[]).includes(selectedDate);
+ const foodSection='<section class="section food-records-section"><div class="section-head"><div><span class="eyebrow">TU DIARIO</span><h2>Lo que has comido</h2>'+
+  '<p>'+entries.length+' '+(entries.length===1?'entrada':'entradas')+' · '+htmlSafe(readableDate(selectedDate))+'</p></div>'+
+  '<label class="checkrow completed-toggle"><input type="checkbox" id="dayComplete" '+(complete?'checked':'')+'>Día completo</label></div>'+
+  '<div class="food-record-grid" role="list">'+body+'</div></section>';
  const activitySection='<section class="section"><div class="section-head"><div><h2>Actividad física</h2><p>Sesiones y minutos reales registrados.</p></div><button type="button" class="click sm" data-action="add-activity">+ Actividad</button></div>'+
- '<div class="day-entries">'+sport+'</div></section>';
+  '<div class="day-entries">'+sport+'</div></section>';
  return kind==='food'?foodSection:kind==='activity'?activitySection:foodSection+activitySection;
 }
 function currentHistory(){
