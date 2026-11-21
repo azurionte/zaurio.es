@@ -109,6 +109,26 @@ async function main(){
   await page.locator('[data-action=add-food]').first().click();
   assert.ok(await page.locator('#foodForm').isVisible());
   await page.locator('[data-action=close-modal]').first().click();
+  // Test a browser left open overnight, without affecting any real user data.
+  await page.evaluate(()=>{
+    lastObservedToday='2026-04-18';
+    followCurrentDay=true;
+    refreshCalendarDay('2026-04-19');
+  });
+  assert.equal(await page.locator('#globalDate').inputValue(),'2026-04-19','new day selected automatically');
+  assert.equal(await page.locator('.food-record-card').count(),0,'yesterday food must not appear on the new day');
+  assert.equal(await page.locator('.plate-sticker').count(),0,'gallery must be empty on the new day');
+  assert.ok((await page.locator('#dashboard-panel').innerText()).includes('Tu plato está vacío por ahora'));
+  await page.evaluate(()=>selectCalendarDay('2026-04-18'));
+  assert.equal(await page.locator('.food-record-card').count(),6,'yesterday records remain accessible');
+  // An explicit historical view remains selected when midnight arrives.
+  await page.evaluate(()=>{
+    lastObservedToday='2026-04-18';
+    followCurrentDay=false;
+    refreshCalendarDay('2026-04-19');
+  });
+  assert.equal(await page.locator('#globalDate').inputValue(),'2026-04-18');
+  assert.equal(await page.locator('.food-record-card').count(),6);
   await page.locator('[data-action=date-prev]').click();
   assert.match(await page.locator('#content h1').innerText(),/17 abr/);
   await page.locator('[data-action=dashboard-tab][data-tab=weight]').click();

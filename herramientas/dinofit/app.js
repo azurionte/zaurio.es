@@ -53,6 +53,29 @@ let db=null,account=null,state=null,revision=null,activeView='today',selectedDat
 let authEpoch=0,loadingUser=null,saveTimeout=null,savePromise=null,changeCount=0,dirty=false,saving=false,conflict=false,saveError='',openModalType='',formEntryId=null;
 // Dashboard UI state is session-only. Never store navigation or chart choices in the health record.
 let dashboardArea='weight',compositionFocus='all',forecastMode='both';
+ // The day on screen follows Madrid's calendar only while the user is viewing today.
+let lastObservedToday=isoToday(),followCurrentDay=true;
+function selectCalendarDay(date,rerender=true){
+ if(!dateValid(date))return false;
+ const today=isoToday();
+ lastObservedToday=today;
+ selectedDate=date;
+ followCurrentDay=date===today;
+ if(rerender&&state&&account)render();
+ return true;
+}
+function refreshCalendarDay(current=isoToday()){
+ if(!dateValid(current)||current===lastObservedToday)return false;
+ const priorToday=lastObservedToday;
+ lastObservedToday=current;
+ // Don't carry yesterday's food into today in a tab left open overnight.
+ // Respect explicit historical selection, including during midnight rollover.
+ if(followCurrentDay&&selectedDate===priorToday)selectedDate=current;
+ else followCurrentDay=selectedDate===current;
+ if(state&&account)render();
+ return true;
+}
+
 const PENDING_IMPORT_KEY='dinofit_chat_import_pending_v3';
 let importInProgress=false,notice='',lastImportSummary='';
 
@@ -191,7 +214,7 @@ async function loadAccount(user){
   $('#privatePage').hidden=false;$('#authGate').hidden=true;
   $('#identityName').textContent=state.profile.name||'Mi cuenta';
   $('#avatarLetter').textContent=(state.profile.name||'M').slice(0,1).toUpperCase();
-  selectedDate=isoToday();activeView='today';
+  lastObservedToday=isoToday();selectedDate=lastObservedToday;followCurrentDay=true;activeView='today';
   const seeded=normalizeCatalog();if(seeded){dirty=true;changeCount++}
   await applyPendingChatImport();
   render();
@@ -294,7 +317,7 @@ async function applyPendingChatImport(){
  importInProgress=true;
  try{
   const imported=normalizeImport(JSON.parse(raw));if(!imported)throw Error('Importación no reconocida.');
-  const count=mergeImport(imported);selectedDate=isoToday();
+  const count=mergeImport(imported);selectCalendarDay(isoToday(),false);
   const ok=await persistNow();
   if(ok){sessionStorage.removeItem(PENDING_IMPORT_KEY);lastImportSummary=count+' mediciones incorporadas a tu cuenta';toast(lastImportSummary)}
   else{notice='La importación está preparada pero aún no se ha sincronizado.';toast(notice)}
