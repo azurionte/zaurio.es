@@ -52,7 +52,7 @@ function saveWeightForm(form){
  state.weights=backup.filter(w=>w.date!==next.date);
  state.weights.push(next);
  try{validateState(state)}catch(e){state.weights=backup;throw e}
- selectedDate=next.date;closeModal();changed(old?'Medición actualizada.':'Medición añadida.');
+ selectCalendarDay(next.date,false);closeModal();changed(old?'Medición actualizada.':'Medición añadida.');
 }
 function openFoodModal(recipeId,entryId=null){
  let recipe=RECIPES.find(x=>x.id===recipeId);
@@ -104,7 +104,7 @@ function saveFoodForm(form){
  const next={id:previous?.id||uid(),date,meal:String(values.get('meal')||'Otro'),title,note:String(values.get('note')||'').trim().slice(0,500),parts};
  if(!['Desayuno','Comida','Merienda','Cena','Otro'].includes(next.meal))throw Error('Momento no válido.');
  state.logs=state.logs.filter(x=>x.id!==next.id).concat(next);
- selectedDate=date;closeModal();changed('Comida guardada.');
+ selectCalendarDay(date,false);closeModal();changed('Comida guardada.');
 }
 function openActivityModal(){
  openModalType='activity';
@@ -121,7 +121,7 @@ function saveActivity(form){
  if(!dateValid(date)||!isNumber(minutes)||minutes<=0||minutes>240||!type)throw Error('Revisa los datos de la actividad.');
  if(!Array.isArray(state.activities))state.activities=[];
  state.activities.push({id:uid(),date,type,minutes,note:String(data.get('note')||'').slice(0,500)});
- selectedDate=date;closeModal();changed('Actividad registrada.');
+ selectCalendarDay(date,false);closeModal();changed('Actividad registrada.');
 }
 function saveProfile(form){
  const values=new FormData(form),name=String(values.get('profileName')||'').trim(),w=String(values.get('targetWeight')||'').trim();
@@ -168,9 +168,9 @@ async function actionHandler(event){
  try{
   switch(action){
    case 'view': activeView=button.dataset.view;render();break;
-   case 'date-prev':selectedDate=addDays(selectedDate,-1);render();break;
-   case 'date-next':selectedDate=addDays(selectedDate,1);render();break;
-   case 'date-today':selectedDate=isoToday();render();break;
+   case 'date-prev':selectCalendarDay(addDays(selectedDate,-1));break;
+   case 'date-next':selectCalendarDay(addDays(selectedDate,1));break;
+   case 'date-today':selectCalendarDay(isoToday());break;
    case 'dashboard-tab':
      if(['weight','composition','goal','nutrition'].includes(button.dataset.tab)){dashboardArea=button.dataset.tab;render();}
      break;
@@ -222,7 +222,7 @@ function formHandler(event){
 function changeHandler(event){
  if(event.target.id==='globalDate'){
   const date=event.target.value;
-  if(dateValid(date)){selectedDate=date;render()}return;
+  if(dateValid(date))selectCalendarDay(date);return;
  }
  if(event.target.id==='dayComplete'){
   const dates=new Set(state.completeDays||[]);
@@ -241,7 +241,10 @@ async function boot(){
  document.addEventListener('input',e=>{if(e.target.closest('#foodForm'))updateFoodEstimate()});
  document.addEventListener('keydown',keyHandler);
  window.addEventListener('online',()=>{if(dirty&&!conflict)persistNow()});
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&dirty)persistNow()});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&dirty)persistNow();else if(document.visibilityState==='visible')refreshCalendarDay()});
+ window.addEventListener('focus',()=>refreshCalendarDay());
+ // A tab kept open across midnight must show the new day's empty diary immediately.
+ window.setInterval(()=>refreshCalendarDay(),30000);
  try{capturePendingFromFragment()}catch(e){notice='No se pudo interpretar el enlace de importación.'}
  login.onclick=async()=>{
   if(!db)return saveMessage('No se ha cargado la conexión.');
