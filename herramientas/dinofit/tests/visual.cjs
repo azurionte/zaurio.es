@@ -117,6 +117,7 @@ async function main(){
   await page.locator('#foodForm select[name=meal]').selectOption('Comida');
   assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Comida','manual override wins');
   await page.locator('[data-action=close-modal]').first().click();
+  const initialFoodLogs=await page.evaluate(()=>structuredClone(state.logs));
   await page.evaluate(()=>{
    state.logs=[];selectedDate='2026-04-18';render();
   });
@@ -131,6 +132,7 @@ async function main(){
   await page.locator('[data-recipe=coffee]').click();
   assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Merienda','second coffee is suggested as snack');
   await page.locator('[data-action=close-modal]').first().click();
+  await page.evaluate(logs=>{state.logs=logs;render();},initialFoodLogs);
   // Test a browser left open overnight, without affecting any real user data.
   await page.evaluate(()=>{
     lastObservedToday='2026-04-18';
