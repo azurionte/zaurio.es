@@ -107,6 +107,35 @@ assert.ok(illustrated.includes('825')===false,'calories must be calculated, not 
 assert.equal(run('dayLogs().reduce((n,e)=>n+logTotal(e.parts),0)').toFixed(2),(457.09+62+46).toFixed(2),'food calories are unchanged');
 assert.equal(run('state.logs.length'),3,'new visuals do not change user logs');
 
+// Automatic meal categorisation uses food type + existing entries of that date.
+const originalFoodLogs=run('JSON.stringify(state.logs)');
+const recipeCoffee=run('RECIPES.find(r=>r.id==="coffee")');
+const recipeFlan=run('RECIPES.find(r=>r.id==="flan")');
+const recipeChicken=run('RECIPES.find(r=>r.id==="chicken")');
+const coffeeParts=[{foodId:'coffee',qty:1},{foodId:'milk',qty:120}];
+const dessertParts=[{foodId:'flan',qty:1}];
+const mainParts=[{foodId:'chicken',qty:150}];
+const infer=(parts,recipe,date='2026-04-18')=>run('inferFoodMeal('+JSON.stringify(date)+','+JSON.stringify(parts)+',RECIPES.find(r=>r.id==='+JSON.stringify(recipe)+'))');
+run('state.logs=[]');
+assert.equal(infer(coffeeParts,'coffee'),'Desayuno','first coffee becomes breakfast');
+assert.equal(infer(dessertParts,'flan'),'Desayuno','first dessert becomes breakfast');
+assert.equal(infer(mainParts,'chicken'),'Comida','first protein meal becomes lunch');
+run('state.logs=[{id:"morning",date:"2026-04-18",meal:"Desayuno",parts:[{foodId:"coffee",qty:1}]}]');
+assert.equal(infer(coffeeParts,'coffee'),'Merienda','second coffee becomes a snack');
+assert.equal(infer(mainParts,'chicken'),'Comida','first main meal is lunch even after breakfast');
+run('state.logs.push({id:"lunch",date:"2026-04-18",meal:"Comida",parts:[{foodId:"beef",qty:150}]})');
+assert.equal(infer(mainParts,'chicken'),'Cena','second protein meal becomes dinner');
+assert.equal(infer(dessertParts,'flan'),'Merienda','dessert following lunch is a snack');
+assert.equal(infer(coffeeParts,'coffee'),'Merienda','coffee after lunch is a snack');
+assert.equal(infer([{foodId:'cola',qty:330}],'cola'),'Otro','soft drink remains an extra');
+assert.equal(infer(mainParts,'chicken','2026-04-19'),'Comida','entries from a prior day never change today\'s inference');
+run('state.logs.push({id:"dinner",date:"2026-04-18",meal:"Cena",parts:[{foodId:"burger-chicken",qty:2}]})');
+assert.equal(infer(dessertParts,'flan'),'Otro','light food after dinner is an extra');
+assert.equal(infer(mainParts,'chicken'),'Cena','additional mains remain dinner');
+assert.equal(run('foodKind([{foodId:"egg",qty:2}])'),'main','two eggs count as a protein plate');
+assert.equal(run('foodKind([["egg",2]])'),'main','recipe ingredients and log ingredients classify consistently');
+run('state.logs=JSON.parse('+JSON.stringify(originalFoodLogs)+')');
+
 const oldPage=run('currentHistory()');
 assert.ok(oldPage.includes('Archivo anterior')&&oldPage.includes('20 mar'));
 const dateBefore=run('selectedDate');
