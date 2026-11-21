@@ -395,3 +395,13 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
  .food-card-bottom{padding-left:10px}
  .food-edit-button{padding:6px 7px}
 }
+
+/* Suggest a meal occasion rather than asking for one on every quick add. */
+.food-modal-header{align-items:start}
+.food-auto-block{display:flex;flex-direction:column;gap:8px;min-width:0;padding:8px 0}
+.food-auto-preview{font-size:12px;line-height:1.5;color:#b9cbdb}
+.food-auto-preview strong{color:#86e4ca;font-weight:750}
+.food-meal-adjust{font-size:11px;color:#a9bbd0}
+.food-meal-adjust summary{cursor:pointer;display:inline-block;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.food-meal-adjust label{margin-top:8px}
+@media(max-width:700px){.food-modal-header{grid-template-columns:minmax(0,1fr)}}
