@@ -96,9 +96,11 @@ assert.equal(JSON.stringify(run('foodEmojis({parts:[{foodId:"coffee",qty:2},{foo
 assert.equal(JSON.stringify(run('foodEmojis({parts:[{foodId:"unknown-custom-id",qty:1}],title:"Mi plato"})')),JSON.stringify(['🍽️']),'unknown foods have a neutral fallback');
 run('state.logs=[{id:"meal-beef",date:"2026-04-18",meal:"Comida",title:"2 burgers de pollo + salteados",parts:[makePart("burger-chicken",2),makePart("saute-chicken",56.25),makePart("saute-frank",56.25),makePart("oil",7)]},{id:"meal-flan",date:"2026-04-18",meal:"Otro",title:"Flan proteico",parts:[makePart("flan",1)]},{id:"meal-coffee",date:"2026-04-18",meal:"Desayuno",title:"Café con leche desnatada",parts:[makePart("coffee",2),makePart("milk",120)]}]');
 const illustrated=run('currentDay()');
-assert.ok(illustrated.includes('Así ha sido tu plato')&&illustrated.includes('Lo que has comido'));
+assert.ok(illustrated.includes('Tu diario de comidas')&&illustrated.includes('Alimentos registrados'));
 assert.equal((illustrated.match(/class="food-record-card/g)||[]).length,3,'each recorded item has a visual card');
-assert.equal((illustrated.match(/class="plate-sticker tone-/g)||[]).length,3,'consumed items visualized without duplication');
+assert.equal((illustrated.match(/class="plate-sticker tone-/g)||[]).length,0,'no duplicate gallery of recorded foods');
+assert.equal((illustrated.match(/class="section nutrition-overview food-records-section"/g)||[]).length,1,'single nutrition panel for summary and entries');
+assert.equal((illustrated.match(/data-action="edit-food"/g)||[]).length,3,'one editable card for each record');
 assert.ok(illustrated.includes('class="meal-slice tone-breakfast"')&&illustrated.includes('class="meal-slice tone-lunch"')&&illustrated.includes('class="meal-slice tone-other"'),'colored meal groups');
 assert.ok(illustrated.includes('data-action="edit-food" data-id="meal-beef"'),'edit action still targets the original record');
 assert.ok(illustrated.includes('825')===false,'calories must be calculated, not hardcoded');
@@ -130,7 +132,7 @@ assert.equal(run('refreshCalendarDay("2026-11-21")'),true,'the app observes the 
 assert.equal(run('selectedDate'),'2026-11-21','the selected date automatically rolls over at midnight');
 assert.equal(run('dayLogs().length'),0,'November 21 has no entries when no foods were logged');
 const freshDiary=run('currentDay()');
-assert.ok(freshDiary.includes('Tu plato está vacío por ahora')&&freshDiary.includes('Sin registros'));
+assert.ok(freshDiary.includes('Aún no hay comidas registradas')&&freshDiary.includes('Sin registros'));
 assert.ok(!freshDiary.includes('Cena del 20 (única)'),'yesterday food never appears in the new day');
 assert.equal(run('JSON.stringify(state.logs)'),snapshot,'the rollover is display-only, never edits meals');
 // Manually viewing an older date must not be redirected at midnight.
