@@ -74,6 +74,9 @@ legend{font-weight:650;color:var(--muted);font-size:12px;margin-bottom:7px}
 .save-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#4dbb9a;margin-right:6px}
 .save-dot.pending{background:#f7be75}
 .save-dot.fail{background:#ff7a82}
+.historical-day-note{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:11px 15px;margin:0 0 14px;border:1px solid #60758e;background:linear-gradient(100deg,#1c3043,#172339);border-radius:13px;color:#d5e2f0;font-size:12px;line-height:1.5}
+.historical-day-note strong{color:#f1f7ff}
+.historical-day-note button{white-space:nowrap}
 .view-head{margin-bottom:20px}
 .view-head p{font-size:13px;color:var(--muted);margin-top:6px}
 .section{border:1px solid var(--border);background:linear-gradient(155deg,#172138,#131b2d);border-radius:21px;padding:clamp(15px,2vw,23px);box-shadow:0 10px 30px #0002;min-width:0}
