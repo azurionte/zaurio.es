@@ -110,6 +110,26 @@ async function main(){
   await page.locator('[data-action=close-modal]').first().click();
   await page.locator('[data-action=add-food]').first().click();
   assert.ok(await page.locator('#foodForm').isVisible());
+  assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Cena','another main plate is inferred as dinner');
+  assert.equal(await page.locator('#foodForm select[name=meal]').isVisible(),false,'quick add must not ask for a meal category');
+  await page.locator('.food-meal-adjust summary').click();
+  assert.equal(await page.locator('#foodForm select[name=meal]').isVisible(),true,'manual correction is available when requested');
+  await page.locator('#foodForm select[name=meal]').selectOption('Comida');
+  assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Comida','manual override wins');
+  await page.locator('[data-action=close-modal]').first().click();
+  await page.evaluate(()=>{
+   state.logs=[];selectedDate='2026-04-18';render();
+  });
+  await page.locator('[data-recipe=coffee]').click();
+  assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Desayuno','first coffee is suggested as breakfast');
+  await page.locator('#foodForm [name=date]').fill('2026-04-19');
+  assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Desayuno','suggestion recalculates for changed date');
+  await page.locator('[data-action=close-modal]').first().click();
+  await page.evaluate(()=>{
+   state.logs=[{id:'breakfast',date:'2026-04-18',meal:'Desayuno',title:'Café',parts:[makePart('coffee',1)]}];render();
+  });
+  await page.locator('[data-recipe=coffee]').click();
+  assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Merienda','second coffee is suggested as snack');
   await page.locator('[data-action=close-modal]').first().click();
   // Test a browser left open overnight, without affecting any real user data.
   await page.evaluate(()=>{
