@@ -193,44 +193,91 @@ function metricGrid(){
 function getActivity(d){
  return (state.activities||[]).filter(a=>a.date===d);
 }
-function currentDay(){
- const records=timeLine(),value=weightForDay(),last=latestWeight(),first=records[0],log=dayLogs();
- const sum=log.reduce((n,e)=>n+logTotal(e.parts),0);
- const change=last&&first?first.weight-last.weight:null;
- const latest=last?htmlSafe(readableDate(last.date)):'Sin datos';
- let rows=[
-  ['Peso de '+htmlSafe(shortDate(selectedDate)),value?locale(value.weight,1):'—','kg',value?'Medición registrada':'No se pesó este día','metric-main'],
-  ['Último peso conocido',last?locale(last.weight,1):'—','kg',latest,''],
-  ['Desde el primer registro',change==null?'—':(change>=0?'−':'+')+locale(Math.abs(change),1),'kg',htmlSafe(readableDate(first?.date)),''],
-  ['Comidas registradas',log.length?locale(sum,0):'—','kcal',log.length+' entradas','']
+function dashboardCards(){
+ const timeline=timeLine(),first=timeline[0],last=timeline.at(-1),day=weightForDay(),goal=state.profile.targetWeight;
+ const pr=projections(),sum=dayLogs().reduce((total,l)=>total+logTotal(l.parts||[]),0);
+ const lost=first&&last?first.weight-last.weight:null;
+ const missing=isNumber(goal)&&last?last.weight-goal:null;
+ const today=selectedDate===isoToday();
+ const cards=[
+  {id:'weight',label:'Peso · kilos perdidos',value:day?locale(day.weight,1)+' kg':last?locale(last.weight,1)+' kg':'—',
+   hint:lost==null?'Añade la primera pesada':(lost>=0?'−':'+')+locale(Math.abs(lost),1)+' kg desde '+shortDate(first.date)},
+  {id:'composition',label:'Ritmo y composición',value:isNumber(pr.slope)&&pr.slope<0?locale(-pr.slope*1000,0)+' g/día':'—',
+   hint:'Promedio de los últimos 14 días · ver grasa y músculo'},
+  {id:'goal',label:'Kilos que faltan',value:missing==null?'—':locale(Math.max(0,missing),1)+' kg',
+   hint:isNumber(goal)?'Para llegar a '+locale(goal,1)+' kg':'Configura tu objetivo'},
+  {id:'nutrition',label:today?'Kcal consumidas hoy':'Kcal del '+shortDate(selectedDate),value:dayLogs().length?locale(sum,0)+' kcal':'—',
+   hint:dayLogs().length+' entradas · ver alimentos y añadir'}
  ];
- let out='<div class="view-head"><span class="eyebrow">TU SEGUIMIENTO</span><h1>'+ (selectedDate===isoToday()?'Hoy':'Tu día')+' · '+htmlSafe(readableDate(selectedDate))+'</h1><p>Elige una fecha arriba para consultar o registrar sus datos.</p></div>';
+ return '<div class="metrics-row dashboard-tabs" role="tablist" aria-label="Áreas de tu seguimiento">'+
+  cards.map(c=>'<button type="button" role="tab" class="section metric-card dashboard-tab '+(dashboardArea===c.id?'selected':'')+' '+(c.id==='weight'?'metric-main':'')+'" data-action="dashboard-tab" data-tab="'+c.id+'" aria-selected="'+(dashboardArea===c.id)+'" aria-controls="dashboard-panel">'+
+   '<span class="eyebrow">'+htmlSafe(c.label)+'</span><span class="dashboard-value">'+htmlSafe(c.value)+'</span>'+
+   '<span class="micro">'+htmlSafe(c.hint)+'</span></button>').join('')+'</div>';
+}
+function goalDashboard(){
+ const timeline=timeLine(),first=timeline[0],last=timeline.at(-1),goal=state.profile.targetWeight,pr=projections();
+ if(!last||!isNumber(goal))return '<section class="section"><h2>Objetivo</h2><p class="helper">Registra tu peso y define tu objetivo en Ajustes.</p><button type="button" class="click sm section-gap" data-action="view" data-view="settings">Abrir ajustes</button></section>';
+ const start=first?.weight??last.weight,range=start-goal,remaining=Math.max(0,last.weight-goal);
+ const done=range>0?clamp((start-last.weight)/range*100,0,100):0;
+ const rate=pr.activeSlope!=null&&pr.activeSlope<0?pr.activeSlope:pr.slope;
+ const stages=[120,110,100,90,goal].filter((x,i,ar)=>x<=start&&x>=goal&&ar.indexOf(x)===i).sort((a,b)=>b-a);
+ return '<section class="section"><div class="section-head"><div><h2>Tu camino hasta '+locale(goal,1)+' kg</h2><p>Hitos estimados a partir de tus pesadas reales, no de un ritmo supuesto.</p></div>'+
+ '<button type="button" class="click sm" data-action="view" data-view="settings">Editar objetivo</button></div>'+
+ '<div class="goal-hero"><div><span class="helper">Quedan</span><strong>'+locale(remaining,1)+' kg</strong></div>'+
+ '<div><span class="helper">Ya has bajado</span><strong>'+locale(start-last.weight,1)+' kg</strong></div>'+
+ '<div><span class="helper">Previsión activa</span><strong>'+(pr.adjDate?htmlSafe(shortDate(pr.adjDate)):'Pendiente')+'</strong></div></div>'+
+ '<div class="goal-progress" role="progressbar" aria-label="Progreso hasta el objetivo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+done.toFixed(1)+'"><div style="width:'+done.toFixed(2)+'%"></div></div>'+
+ '<p class="helper">'+locale(done,1)+' % del trayecto desde '+locale(start,1)+' kg hasta '+locale(goal,1)+' kg</p>'+
+ '<div class="milestone-list section-gap">'+stages.map(x=>{
+ const reached=last.weight<=x;
+ const date=reached?'Conseguido':(isNumber(rate)&&rate<0?readableDate(addDays(last.date,Math.ceil((last.weight-x)/-rate))):'Esperando suficientes datos');
+ return '<div class="milestone"><span class="milestone-target">'+locale(x,1)+' kg</span><span>'+htmlSafe(date)+'</span><span class="milestone-dot '+(reached?'done':'')+'"></span></div>';
+ }).join('')+'</div>'+
+ '<p class="chart-comment">Las fechas de los hitos cambian automáticamente con tus nuevas pesadas. Si la tendencia cambia, también lo harán las previsiones.</p></section>';
+}
+function foodSummary(){
+ const entries=dayLogs(),total=entries.reduce((sum,l)=>sum+logTotal(l.parts||[]),0);
+ const groups=['Desayuno','Comida','Merienda','Cena','Otro'];
+ const byMeal=groups.map(meal=>({meal,entries:entries.filter(e=>e.meal===meal)})).filter(x=>x.entries.length);
+ return '<section class="section"><div class="section-head"><div><h2>Consumo del día · '+htmlSafe(readableDate(selectedDate))+'</h2>'+
+ '<p>Calorías aproximadas de las comidas que has registrado.</p></div><span class="food-total">'+locale(total,0)+' kcal</span></div>'+
+ '<div class="meal-summary">'+(byMeal.length?byMeal.map(g=>'<div><span>'+htmlSafe(g.meal)+'</span><strong>'+locale(g.entries.reduce((s,l)=>s+logTotal(l.parts||[]),0),0)+' kcal</strong></div>').join(''):'<p class="helper">No has registrado comidas en esta fecha.</p>')+'</div>'+
+ '<p class="chart-comment">Si aún faltan comidas, este total es parcial. No se interpreta automáticamente como la ingesta de un día completo.</p></section>';
+}
+function currentDay(){
+ let out='<div class="view-head"><span class="eyebrow">TU SEGUIMIENTO</span><h1>Tu día · '+htmlSafe(readableDate(selectedDate))+'</h1><p>Elige una fecha y utiliza las tarjetas para cambiar de área.</p></div>';
  if(notice)out+='<div class="notice section-gap">'+htmlSafe(notice)+'</div>';
- out+='<div class="metrics-row">'+rows.map(([label,val,unit,hint,cls])=>'<section class="section metric-card '+cls+'"><span class="eyebrow">'+label+'</span><div class="'+(cls?'big':'value')+'">'+val+' <span>'+unit+'</span></div><div class="micro">'+hint+'</div></section>').join('')+'</div>';
- out+=weightGraph()+metricGrid()+quickFoods()+dayRecords();
- return out;
+ out+=dashboardCards()+'<div id="dashboard-panel" role="tabpanel" class="dashboard-panel">';
+ if(dashboardArea==='composition')out+=metricGrid();
+ else if(dashboardArea==='goal')out+=goalDashboard()+dayRecords('activity');
+ else if(dashboardArea==='nutrition')out+=foodSummary()+dayRecords('food')+quickFoods();
+ else out+='<div class="section-head quick-weights"><div><h2>Pesadas y proyección</h2><p>Tu evolución medida, con acceso a los modelos de seguimiento.</p></div><button type="button" class="click sm" data-action="weight-new">+ Registrar peso</button></div>'+weightGraph();
+ return out+'</div>';
 }
 function quickFoods(){
  const groups=[
-  {id:'usual',title:'Habituales',hint:'Café, lácteos y tentempiés'},
-  {id:'mixed',title:'Tuppers con salteados',hint:'Salteado de pollo y patata con Frankfurt; aceite repartido entre 8 raciones'},
-  {id:'plain',title:'Tuppers solo proteína',hint:'Cuando hay hamburguesas, se cuentan siempre dos'}
+  {title:'Platos · con salteados',hint:'Tuppers con salteados · aceite repartido en ocho raciones',recipes:RECIPES.filter(r=>r.group==='mixed')},
+  {title:'Platos · solo proteína',hint:'Tuppers solo proteína · siempre dos hamburguesas por plato',recipes:RECIPES.filter(r=>r.group==='plain')},
+  {title:'Postres y lácteos',hint:'Flanes, yogures y queso light',recipes:RECIPES.filter(r=>['cheese','flan','yopro','activia'].includes(r.id))},
+  {title:'Bebidas',hint:'Café con leche y refrescos',recipes:RECIPES.filter(r=>['coffee','cola'].includes(r.id))}
  ];
  const buttons=r=>'<button class="food-button" type="button" data-action="add-food" data-recipe="'+r.id+'">'+
   '<span class="food-top"><span class="em" aria-hidden="true">'+r.emoji+'</span><span class="plus">＋</span></span><strong>'+htmlSafe(r.name)+'</strong><small>'+htmlSafe(r.hint)+'</small></button>';
- return '<section class="section"><div class="section-head"><div><h2>Añadir una comida</h2><p>Tuppers aproximados, sin necesidad de pesar ingredientes · '+htmlSafe(readableDate(selectedDate))+'</p></div><span class="helper">Puedes ajustar cantidades</span></div>'+
-  groups.map(g=>'<div class="quick-group"><h3>'+htmlSafe(g.title)+'</h3><p class="helper">'+htmlSafe(g.hint)+'</p><div class="quick-grid">'+
-   RECIPES.filter(r=>r.group===g.id).map(buttons).join('')+'</div></div>').join('')+'</section>';
+ return '<section class="section"><div class="section-head"><div><h2>Añadir una comida</h2><p>Accesos rápidos para tus raciones habituales. Cantidades orientativas y editables.</p></div></div>'+
+  groups.map(g=>'<div class="quick-group"><h3>'+htmlSafe(g.title)+'</h3><p class="helper">'+htmlSafe(g.hint)+'</p><div class="quick-grid">'+g.recipes.map(buttons).join('')+'</div></div>').join('')+'</section>';
 }
-function dayRecords(){
+function dayRecords(kind='all'){
  const entries=dayLogs().sort((a,b)=>(a.meal||'').localeCompare(b.meal||'')),activities=getActivity(selectedDate);
  let body=entries.length?entries.map(e=>'<div class="day-entry"><div><strong>'+htmlSafe(e.title||'Comida')+'</strong><small>'+htmlSafe(e.meal||'Otro')+' · '+(e.parts||[]).map(p=>htmlSafe(food(p.foodId)?.name||p.foodId)+' × '+locale(p.qty,0)).join(' · ')+'</small></div><span class="calories">'+locale(logTotal(e.parts))+' kcal</span><button type="button" class="click sm" data-action="edit-food" data-id="'+htmlSafe(e.id)+'">Editar</button></div>').join(''):
  '<div class="empty">Todavía no hay comidas registradas para esta fecha.</div>';
  let sport=activities.length?activities.map(a=>'<div class="day-entry"><div><strong>'+htmlSafe(a.type||'Actividad')+'</strong><small>'+htmlSafe(a.note||'Actividad física')+'</small></div><strong>'+locale(a.minutes,1)+' min</strong><button type="button" class="click sm" data-action="delete-activity" data-id="'+htmlSafe(a.id)+'">Eliminar</button></div>').join(''):
  '<div class="helper">Sin actividad registrada.</div>';
- return '<section class="section"><div class="section-head"><div><h2>Registro del día</h2><p>'+entries.length+' comidas anotadas</p></div>'+
+ const foodSection='<section class="section"><div class="section-head"><div><h2>Comidas registradas</h2><p>'+entries.length+' entradas para '+htmlSafe(readableDate(selectedDate))+'</p></div>'+
  '<label class="checkrow"><input type="checkbox" id="dayComplete" '+((state.completeDays||[]).includes(selectedDate)?'checked':'')+'>Día completo</label></div>'+
- '<div class="day-entries">'+body+'</div><div class="section-gap section-head"><div><h3>Actividad física</h3><p>Minutos reales, sin confundirlos con sesiones simuladas.</p></div><button type="button" class="click sm" data-action="add-activity">+ Actividad</button></div>'+sport+'</section>';
+ '<div class="day-entries">'+body+'</div></section>';
+ const activitySection='<section class="section"><div class="section-head"><div><h2>Actividad física</h2><p>Sesiones y minutos reales registrados.</p></div><button type="button" class="click sm" data-action="add-activity">+ Actividad</button></div>'+
+ '<div class="day-entries">'+sport+'</div></section>';
+ return kind==='food'?foodSection:kind==='activity'?activitySection:foodSection+activitySection;
 }
 function currentHistory(){
  const tracking=trackingStart(),valid=sortedWeights(),recent=valid.filter(w=>w.date>=tracking),older=valid.filter(w=>w.date<tracking);
