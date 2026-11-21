@@ -206,8 +206,8 @@ function dashboardCards(){
    hint:'Promedio de los últimos 14 días · ver grasa y músculo'},
   {id:'goal',label:'Kilos que faltan',value:missing==null?'—':locale(Math.max(0,missing),1)+' kg',
    hint:isNumber(goal)?'Para llegar a '+locale(goal,1)+' kg':'Configura tu objetivo'},
-  {id:'nutrition',label:today?'Kcal consumidas hoy':'Kcal del '+shortDate(selectedDate),value:dayLogs().length?locale(sum,0)+' kcal':'—',
-   hint:dayLogs().length+' entradas · ver alimentos y añadir'}
+  {id:'nutrition',label:today?'Kcal anotadas hoy':'Kcal del '+shortDate(selectedDate),value:dayLogs().length?locale(sum,0)+' kcal':'Sin registros',
+   hint:dayLogs().length+' entradas de '+shortDate(selectedDate)+' · ver alimentos y añadir'}
  ];
  return '<div class="metrics-row dashboard-tabs" role="tablist" aria-label="Áreas de tu seguimiento">'+
   cards.map(c=>'<button type="button" role="tab" class="section metric-card dashboard-tab '+(dashboardArea===c.id?'selected':'')+' '+(c.id==='weight'?'metric-main':'')+'" data-action="dashboard-tab" data-tab="'+c.id+'" aria-selected="'+(dashboardArea===c.id)+'" aria-controls="dashboard-panel">'+
@@ -295,6 +295,7 @@ function foodSummary(){
 }
 function currentDay(){
  let out='<div class="view-head"><span class="eyebrow">TU SEGUIMIENTO</span><h1>Tu día · '+htmlSafe(readableDate(selectedDate))+'</h1><p>Elige una fecha y utiliza las tarjetas para cambiar de área.</p></div>';
+ if(selectedDate!==isoToday())out+='<div class="historical-day-note" role="status"><span>Estás consultando el <strong>'+htmlSafe(readableDate(selectedDate))+'</strong>, no el día de hoy. Las comidas no se trasladan de una fecha a otra.</span><button type="button" class="click sm" data-action="date-today">Ir a hoy · '+htmlSafe(shortDate(isoToday()))+'</button></div>';
  if(notice)out+='<div class="notice section-gap">'+htmlSafe(notice)+'</div>';
  out+=dashboardCards()+'<div id="dashboard-panel" role="tabpanel" class="dashboard-panel">';
  if(dashboardArea==='composition')out+=metricGrid();
