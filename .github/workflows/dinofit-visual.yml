@@ -5,6 +5,10 @@ on:
     paths:
       - 'herramientas/dinofit/**'
       - '.github/workflows/dinofit-visual.yml'
+  pull_request:
+    paths:
+      - 'herramientas/dinofit/**'
+      - '.github/workflows/dinofit-visual.yml'
   workflow_dispatch:
 
 permissions:
