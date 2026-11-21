@@ -138,7 +138,7 @@ run('selectedDate="2026-11-19";lastObservedToday="2026-11-20";followCurrentDay=f
 assert.equal(run('refreshCalendarDay("2026-11-21")'),true);
 assert.equal(run('selectedDate'),'2026-11-19','manual history selection is preserved');
 run('selectCalendarDay("2026-11-20",false)');
-assert.equal(run('dayLogs().length'),1,'previous day's meals can still be opened');
+assert.equal(run('dayLogs().length'),1,'the previous date remains accessible');
 assert.ok(run('currentDay()').includes('Estás consultando el'),'historical viewing is explicitly labeled');
 assert.equal(run('JSON.stringify(state.logs)'),snapshot,'date navigation leaves stored logs unchanged');
 console.log('PASS DinoFit: 4 pestañas, seguimiento activo, composición interactiva, 14 accesos, fecha, histórico e importación segura.');
