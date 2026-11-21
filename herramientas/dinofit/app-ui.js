@@ -273,7 +273,7 @@ function foodSummary(){
  const groups=['Desayuno','Comida','Merienda','Cena','Otro'];
  const byMeal=groups.map(meal=>({meal,entries:entries.filter(e=>e.meal===meal)})).filter(x=>x.entries.length);
  return '<div class="nutrition-overview-head"><div><span class="eyebrow">TU ALIMENTACIÓN</span><h2>Tu diario de comidas</h2>'+
-  '<p>'+htmlSafe(readableDate(selectedDate))+' · '+entries.length+' '+(entries.length===1?'entrada':'entradas')+' registradas</p></div>'+
+  '<p>'+htmlSafe(readableDate(selectedDate))+'</p></div>'+
   '<div class="nutrition-total"><strong>'+locale(total,0)+'</strong><span>kcal anotadas</span></div></div>'+
   (byMeal.length?'<div class="meal-summary">'+byMeal.map(g=>{
    const kcal=g.entries.reduce((sum,l)=>sum+logTotal(l.parts||[]),0);
@@ -337,7 +337,7 @@ function dayRecords(kind='all'){
  '<div class="helper">Sin actividad registrada.</div>';
  const complete=(state.completeDays||[]).includes(selectedDate);
  const foodSection='<section class="section nutrition-overview food-records-section">'+foodSummary()+
-  '<div class="food-diary-heading"><div><h3>Alimentos registrados</h3><p>'+entries.length+' '+(entries.length===1?'plato o bebida':'platos y bebidas')+' · cada entrada aparece una sola vez</p></div>'+
+  '<div class="food-diary-heading"><div><h3>Alimentos registrados</h3><p>Pulsa Editar para ajustar cualquier entrada.</p></div>'+
   '<label class="checkrow completed-toggle"><input type="checkbox" id="dayComplete" '+(complete?'checked':'')+'>Día completo</label></div>'+
   '<div class="food-record-grid" role="list">'+body+'</div>'+
   '<div class="nutrition-foot"><span class="nutrition-foot-star" aria-hidden="true">✦</span><span>'+
