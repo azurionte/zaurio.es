@@ -40,7 +40,7 @@ jobs:
 
       - name: Build unsigned Windows installer
         working-directory: payslip-desktop
-        run: npm run build:unsigned -- --publish never
+        run: npm run build:unsigned -- --win nsis nsis-web --publish never
 
       - name: Stage update assets
         shell: pwsh
@@ -51,12 +51,19 @@ jobs:
           $installer = Join-Path $dist "DemoBuildingToolsSetup-$version.exe"
           $blockmap = "$installer.blockmap"
           $latest = Join-Path $dist "latest.yml"
+          $webInstaller = Join-Path $dist "DemoBuildingToolsWebSetup-$version.exe"
+          $webPackage = Get-ChildItem -Path $dist -Filter "*.nsis.7z" | Select-Object -First 1
 
           if (!(Test-Path $installer)) { throw "Installer not found: $installer" }
           if (!(Test-Path $blockmap)) { throw "Blockmap not found: $blockmap" }
           if (!(Test-Path $latest)) { throw "latest.yml not found: $latest" }
 
+          if (!(Test-Path $webInstaller)) { throw "Web installer not found: $webInstaller" }
+          if (!$webPackage) { throw "Web installer package (*.nsis.7z) not found" }
           Copy-Item $installer "payslip-updates/" -Force
+          Copy-Item $webInstaller "payslip-updates/DBT.exe" -Force
+          Copy-Item $webInstaller "payslip-updates/" -Force
+          Copy-Item $webPackage.FullName "payslip-updates/" -Force
           Copy-Item $blockmap "payslip-updates/" -Force
           Copy-Item $latest "payslip-updates/latest.yml" -Force
 
@@ -74,6 +81,9 @@ jobs:
             payslip-updates/DemoBuildingToolsSetup-${{ env.DBT_VERSION }}.exe.blockmap
             payslip-updates/DemoBuildingToolsSetup-${{ env.DBT_VERSION }}.exe.sha256.txt
             payslip-updates/latest.yml
+            payslip-updates/DBT.exe
+            payslip-updates/DemoBuildingToolsWebSetup-${{ env.DBT_VERSION }}.exe
+            payslip-updates/*.nsis.7z
           if-no-files-found: error
 
       - name: Publish update feed to repository
@@ -85,6 +95,9 @@ jobs:
           git add "payslip-updates/DemoBuildingToolsSetup-$env:DBT_VERSION.exe.blockmap"
           git add "payslip-updates/DemoBuildingToolsSetup-$env:DBT_VERSION.exe.sha256.txt"
           git add "payslip-updates/latest.yml"
+          git add "payslip-updates/DBT.exe"
+          git add "payslip-updates/DemoBuildingToolsWebSetup-$env:DBT_VERSION.exe"
+          git add "payslip-updates/*.nsis.7z"
 
           if (git diff --cached --quiet) {
             Write-Host "No release asset changes to publish."
