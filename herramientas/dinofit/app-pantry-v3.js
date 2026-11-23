@@ -42,9 +42,9 @@ function pantry3RememberSize(id,size){
  const p=pantry2Data(),formats=pantry3Format(id).sizes;if(formats.includes(size))return;
  p.packageFormats=p.packageFormats||{};p.packageFormats[id]=formats.length?[formats[0],size]:[size];
 }
-function pantry3PartialBaseline(id){
+function pantry3PartialBaseline(id,pieces=null){
  const p=pantry2Data(),f=food(id);if(!f||p.stock[id])return;
- p.stock[id]={qty:0,pieces:f.unit==='ud'?0:null,grams:f.unit==='g'?0:null,
+ p.stock[id]={qty:0,pieces:f.unit==='ud'||pieces!==null?0:null,grams:f.unit==='g'?0:null,
   min:pantry2ProductMin(id,null),countedAt:new Date().toISOString(),partial:true,
   logIds:(state.logs||[]).map(x=>x.id),
   purchaseIds:p.purchases.filter(x=>x.foodId===id&&x.active!==false).map(x=>x.id),
@@ -56,7 +56,7 @@ function pantry3BuyPack(id,size,packages=1,pieces=null,grams=null){
   throw Error('Revisa la cantidad de envases y su contenido.');
  if(pieces!==null&&(!Number.isInteger(pieces)||pieces<0||pieces>10000))throw Error('Revisa las piezas por envase.');
  const qty=pantry2Round(size*packages);if(qty>1e6)throw Error('Cantidad excesiva.');
- pantry3PartialBaseline(id);
+ pantry3PartialBaseline(id,pieces);
  const purchase=pantry2Purchase(id,qty,pieces===null?null:pieces*packages,f.unit==='g'?qty:grams);
  purchase.packSize=size;purchase.packCount=packages;purchase.packName=pantry3Format(id).name;
  return purchase;
@@ -163,7 +163,7 @@ function pantry3OpenBuy(id){
   '<div class="pantry3-buy-title"><strong>He comprado...</strong>'+ 
   '<button type="button" data-action="pantry3-edit-buy" aria-label="Personalizar formato o corregir inventario" class="pantry3-edit-icon" aria-expanded="false">✎</button></div>'+ 
   choices+sizeField+
-  '<div class="pantry3-pack-count"><span>¿Cuántos '+pantry3Escape(fmt.name)+'s?</span><div><button type="button" data-action="pantry3-package-minus" aria-label="Un envase menos">−</button>'+ 
+  '<div class="pantry3-pack-count"><span>Cantidad de envases</span><div><button type="button" data-action="pantry3-package-minus" aria-label="Un envase menos">−</button>'+ 
   '<input name="packages" type="number" inputmode="numeric" min="1" max="100" step="1" value="1" required aria-label="Cantidad de envases">'+ 
   '<button type="button" data-action="pantry3-package-plus" aria-label="Un envase más">+</button></div></div>'+ 
   (piecesRequired?'<label class="pantry3-pieces-simple">Filetes dentro de cada bandeja (opcional)<input name="pieces" type="number" min="0" max="10000" step="1" inputmode="numeric" placeholder="Ej. 5"></label>':'')+
@@ -231,7 +231,7 @@ function pantry3ApplyPortion(row,fraction){
  if(!pack)throw Error('Primero registra la compra de ese envase para calcular sus porciones.');
  const count=Number($('#pantry2CookForm [name="count"]')?.value||1);
  if(!Number.isInteger(count)||count<1)return;
- const total=pantry2Round(pack.size*fraction),qty=pantry2Round(total/count),pieces=pack.pieces*fraction/count;
+ const total=pantry2Round(pack.size*fraction),qty=Math.floor((total/count+1e-9)*1000)/1000,pieces=pack.pieces*fraction/count;
  row.querySelector('[data-basic-qty]').value=qty;
  row.querySelector('[data-basic-pcs]').value=Number.isInteger(pieces)&&pieces>0?pieces:'';
  row.dataset.pantry3Fraction=String(fraction);row.dataset.pantry3Pack=String(pack.size);
