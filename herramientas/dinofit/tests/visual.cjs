@@ -202,6 +202,20 @@ async function main(){
   await page.locator('.pantry2-tupper [data-action="pantry2-eat-tupper"]').first().click();
   assert.equal(await page.evaluate(()=>DinoPantry.available().length),1,'one prepared tupper remains');
   assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),319,'eating does not debit raw twice');
+  // Editing a meal from the normal diary must preserve its link to the prepared tupper.
+  const tupperMeal=await page.evaluate(()=>state.logs.find(x=>x.pantryTupperId)?.id);
+  const eatenTupper=await page.evaluate(id=>state.logs.find(x=>x.id===id)?.pantryTupperId,tupperMeal);
+  await page.evaluate(()=>{activeView='today';dashboardArea='nutrition';selectCalendarDay(isoToday(),false);render();});
+  await page.locator('[data-action="edit-food"][data-id="'+tupperMeal+'"]').click();
+  await page.locator('#foodForm [data-food-id="chicken"]').fill('140');
+  await page.locator('#foodForm button[type="submit"]').click();
+  assert.equal(await page.evaluate(id=>state.logs.find(x=>x.id===id)?.pantryTupperId,tupperMeal),eatenTupper,
+    'editing the meal keeps its pantry tupper link');
+  assert.equal(await page.evaluate(()=>DinoPantry.available().length),1,
+    'edited meal does not free the consumed tupper');
+  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),319,
+    'editing an already prepared tupper meal does not debit raw chicken twice');
+  await page.evaluate(()=>{activeView='pantry';render();});
   await page.evaluate(()=>{
     const last=state.logs.find(x=>x.pantryTupperId);
     state.logs=state.logs.filter(x=>x.id!==last.id);
