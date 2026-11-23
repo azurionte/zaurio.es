@@ -115,7 +115,7 @@ function pantry3Cards(){
  if(pantry3Tab==='tuppers')return pantry3TupperCards();
  const items=pantry3Filtered();
  return items.length?'<div class="pantry3-tiles">'+items.map(pantry3Card).join('')+'</div>':
-  '<p class="pantry3-empty">No hay productos con ese nombre en esta sección.</p>';
+  '<div class="pantry3-empty">No hay productos con ese nombre. <button type="button" class="pantry3-close" data-action="pantry-product-new">+ Nuevo producto</button></div>';
 }
 function pantry3Current(){
  const p=pantry2Data(),foods=(state.foods||[]).filter(f=>f?.id&&f.id!=='burger-unknown');
@@ -141,8 +141,10 @@ function pantry3OpenTupperGroup(id){
  const group=p.tuppers.filter(t=>t.recipeId===first.recipeId&&t.title===first.title&&t.status===first.status);
  const used=pantry2Consumed().used;
  renderModal(first.title,'<div class="pantry3-form"><p>Revisa y corrige tus preparaciones aquí. Para registrar que has comido un tupper, utiliza Mi día.</p>'+ 
-  '<div class="pantry3-tupper-list">'+group.map((t,i)=>'<div class="pantry3-tupper-line"><span>Tupper '+(i+1)+(used.has(t.id)?' · consumido':'')+'</span>'+ 
-   '<button type="button" data-action="pantry2-edit-tupper" data-id="'+pantry3Escape(t.id)+'">✎ Editar</button></div>').join('')+'</div>'+ 
+  '<div class="pantry3-tupper-list">'+group.map((t,i)=>'<div class="pantry3-tupper-line"><span>Tupper '+(i+1)+(used.has(t.id)?' · consumido':'')+'</span><span class="pantry3-actions">'+ 
+   '<button type="button" data-action="pantry2-edit-tupper" data-id="'+pantry3Escape(t.id)+'">✎ Editar</button>'+ 
+   (!used.has(t.id)?'<button type="button" data-action="pantry2-delete-tupper" data-id="'+pantry3Escape(t.id)+'">Eliminar</button>':'')+'</span></div>').join('')+'</div>'+ 
+  (first.status==='planned'?'<button type="button" class="pantry3-prepare" data-action="pantry2-prepare-group" data-id="'+pantry3Escape(first.id)+'">Confirmar preparación</button>':'')+ 
   '<button type="button" class="pantry3-close" data-action="close-modal">Cerrar</button></div>');
 }
 function pantry3OpenBuy(id){
