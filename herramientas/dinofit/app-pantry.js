@@ -143,7 +143,7 @@ function openPantryProduct(){
 }
 function openPantryShop(){
  renderModal('Anadir a la compra','<form id="pantryShopForm" class="input-grid">'+
- '<label style="grid-column:1/-1">Producto<select name="id">'+pantryOptions()+'</select></label>'+
+ '<label style="grid-column:1/-1">Producto<select name="productId">'+pantryOptions()+'</select></label>'+
  '<label>Cantidad en las unidades indicadas<input type="number" name="qty" min=".001" max="1000000" step="any" value="1" required></label>'+
  '<label>Observaciones<input name="note" maxlength="100" placeholder="Tienda o formato"></label>'+
  pantryFooter('Anadir a la lista')+'</form>');
@@ -196,7 +196,7 @@ function pantryForm(form){
   closeModal();changed('Producto guardado.');return true;
  }
  if(form.id==='pantryShopForm'){
-  const foodId=String(v.get('id')||''),qty=asNum(v.get('qty'));
+  const foodId=String(v.get('productId')||''),qty=asNum(v.get('qty'));
   if(!food(foodId)||!isNumber(qty)||qty<=0||qty>1000000)throw Error('Producto o cantidad no validos.');
   state.pantry.shopping.push({id:uid(),foodId,qty,note:String(v.get('note')||'').trim().slice(0,100),status:'pending'});
   closeModal();changed('Anadido a la compra.');return true;
