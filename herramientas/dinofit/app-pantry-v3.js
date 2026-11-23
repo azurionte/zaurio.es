@@ -99,6 +99,17 @@ function pantry3Filtered(){
   (pantry3Tab==='raw'?pantry2Raw(f):!pantry2Raw(f))&&(!pantryQuery||f.name.toLocaleLowerCase('es').includes(pantryQuery)))
   .sort((a,b)=>Number(pantry2Stock(b.id).known)-Number(pantry2Stock(a.id).known)||a.name.localeCompare(b.name,'es'));
 }
+function pantry3TupperKcal(t){
+ const ingredients=t?.ingredients||[];
+ if(!ingredients.length)return null;
+ let total=0;
+ for(const item of ingredients){
+  const f=food(item.foodId);
+  if(!f||!pantry2N(f.kcal)||!pantry2N(item.qty))return null;
+  total+=item.qty*(f.unit==='ud'?(f.factor||1):1)*f.kcal/100;
+ }
+ return Math.round(total);
+}
 function pantry3TupperCards(){
  const p=pantry2Data(),used=pantry2Consumed().used,groups=new Map();
  for(const t of p.tuppers){
@@ -109,10 +120,14 @@ function pantry3TupperCards(){
  return '<div class="pantry3-tiles">'+[...groups.values()].reverse().map(g=>{
   const available=g.items.filter(t=>t.status==='prepared'&&!used.has(t.id));
   const count=g.status==='planned'?g.items.length:available.length;
+  const availableCalories=(g.status==='planned'?g.items:available).map(pantry3TupperKcal).filter(n=>n!==null);
+  const minKcal=availableCalories.length?Math.min(...availableCalories):null;
+  const maxKcal=availableCalories.length?Math.max(...availableCalories):null;
+  const calorieLabel=minKcal===null?'':(minKcal===maxKcal?'≈ '+minKcal+' kcal/tupper':'≈ '+minKcal+'–'+maxKcal+' kcal/tupper');
   return '<button class="pantry3-tile pantry3-tupper-tile" type="button" data-action="pantry3-open-tuppers" data-id="'+pantry3Escape(g.items[0].id)+'">'+
    '<span class="pantry3-tile-emoji">🍲</span><span class="pantry3-tile-name">'+pantry3Escape(g.name)+'</span>'+ 
    '<span class="pantry3-tile-quantity"><strong class="pantry3-big">'+count+'</strong><span class="pantry3-bigunit">'+(g.status==='planned'?'planificados':'disponibles')+'</span></span>'+ 
-   '<span class="pantry3-tile-hint">Toca para revisar</span></button>';
+   '<span class="pantry3-tile-hint">'+(calorieLabel?pantry3Escape(calorieLabel)+' · ':'')+'Toca para revisar</span></button>';
  }).join('')+'</div>';
 }
 function pantry3Cards(){
@@ -145,9 +160,12 @@ function pantry3OpenTupperGroup(id){
  const group=p.tuppers.filter(t=>t.recipeId===first.recipeId&&t.title===first.title&&t.status===first.status);
  const used=pantry2Consumed().used;
  renderModal(first.title,'<div class="pantry3-form"><p>Revisa y corrige tus preparaciones aquí. Para registrar que has comido un tupper, utiliza Mi día.</p>'+ 
-  '<div class="pantry3-tupper-list">'+group.map((t,i)=>'<div class="pantry3-tupper-line"><span>Tupper '+(i+1)+(used.has(t.id)?' · consumido':'')+'</span><span class="pantry3-actions">'+ 
+  '<div class="pantry3-tupper-list">'+group.map((t,i)=>{
+    const kcal=pantry3TupperKcal(t);
+    return '<div class="pantry3-tupper-line"><span>Tupper '+(i+1)+(kcal===null?'':' · ≈ '+kcal+' kcal')+(used.has(t.id)?' · consumido':'')+'</span><span class="pantry3-actions">'+ 
    '<button type="button" data-action="pantry2-edit-tupper" data-id="'+pantry3Escape(t.id)+'">✎ Editar</button>'+ 
-   (!used.has(t.id)?'<button type="button" data-action="pantry2-delete-tupper" data-id="'+pantry3Escape(t.id)+'">Eliminar</button>':'')+'</span></div>').join('')+'</div>'+ 
+   (!used.has(t.id)?'<button type="button" data-action="pantry2-delete-tupper" data-id="'+pantry3Escape(t.id)+'">Eliminar</button>':'')+'</span></div>';
+  }).join('')+'</div>'+ 
   (first.status==='planned'?'<button type="button" class="pantry3-prepare" data-action="pantry2-prepare-group" data-id="'+pantry3Escape(first.id)+'">Confirmar preparación</button>':'')+ 
   '<button type="button" class="pantry3-close" data-action="close-modal">Cerrar</button></div>');
 }
