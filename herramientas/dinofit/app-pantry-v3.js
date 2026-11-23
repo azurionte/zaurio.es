@@ -29,6 +29,10 @@ const pantry3Defaults={
  'yogurt-pineapple':{name:'pack de yogures bebibles',sizes:[],unit:'g'}
 };
 const pantry3Escape=v=>htmlSafe(String(v??''));
+const pantry3Icon=id=>({
+ yogurt:'🥛','yogurt-berries':'🫐','yogurt-pineapple':'🍍',
+ curry:'🧂',oregano:'🌿',pepper:'🧂'
+})[id]||pantry2Visual(id);
 function pantry3Format(id){
  const f=food(id),known=pantry3Defaults[id],p=pantry2Data();
  const custom=p.packageFormats?.[id];
@@ -84,7 +88,7 @@ function pantry3Card(f){
   b.known&&f.unit==='ud'&&b.grams!==null?' · '+locale(b.grams,0)+' g':'';
  return '<button type="button" class="pantry3-tile'+(min?' pantry3-low':'')+'" data-action="pantry3-open" data-id="'+pantry3Escape(f.id)+'"'+
   ' aria-label="'+pantry3Escape('Abrir '+f.name+', '+(b.known?pantryQty(Math.max(0,b.qty),pantry3QtyLabel(f.id)):'sin inventario'))+'">'+
-  '<span class="pantry3-tile-emoji" aria-hidden="true">'+pantry2Visual(f.id)+'</span>'+ 
+  '<span class="pantry3-tile-emoji" aria-hidden="true">'+pantry3Icon(f.id)+'</span>'+ 
   '<span class="pantry3-tile-name">'+pantry3Escape(f.name)+'</span>'+ 
   '<span class="pantry3-tile-quantity">'+pantry3DisplayNumber(f.id,b)+'</span>'+ 
   (extra?'<span class="pantry3-tile-extra">'+pantry3Escape(extra.slice(3))+'</span>':'')+
@@ -160,7 +164,7 @@ function pantry3OpenBuy(id){
  const piecesRequired=['chicken','beef'].includes(id);
  const note=id==='oil'?'<p class="pantry3-note">El aceite se registra en gramos (500 ml ≈ 455 g). Puedes ajustar la cantidad si la conoces.</p>':'<p class="pantry3-note">Se suma el contenido de los envases; no tendrás que contar unidades una a una.</p>';
  renderModal('Compra de '+f.name,'<form id="pantry3BuyForm" class="pantry3-form" data-id="'+pantry3Escape(id)+'">'+
-  '<div class="pantry3-modal-intro"><span aria-hidden="true">'+pantry2Visual(id)+'</span><div><strong>'+pantry3Escape(f.name)+'</strong>'+ 
+  '<div class="pantry3-modal-intro"><span aria-hidden="true">'+pantry3Icon(id)+'</span><div><strong>'+pantry3Escape(f.name)+'</strong>'+ 
   '<small>Ahora: '+(stock.known?pantry3Escape(pantryQty(Math.max(0,stock.qty),pantry3QtyLabel(id))):'Sin recuento inicial')+'</small></div></div>'+ 
   '<div class="pantry3-buy-title"><strong>He comprado...</strong>'+ 
   '<button type="button" data-action="pantry3-edit-buy" aria-label="Personalizar formato o corregir inventario" class="pantry3-edit-icon" aria-expanded="false">✎</button></div>'+ 
@@ -185,7 +189,7 @@ function pantry3IngredientRow(x,i){
  const portions=pack?'<div class="pantry3-portions"><span>Del último '+pantry3Escape(pack.name)+' comprado:</span>'+ 
   [[0.25,'¼'],[0.5,'½'],[1,'Entero']].map(([frac,label])=>'<button type="button" data-action="pantry3-portion" data-index="'+i+'" data-fraction="'+frac+'">'+label+'</button>').join('')+'</div>':'';
  return '<div class="pantry3-ingredient" data-row="'+i+'">'+ 
-  '<div class="pantry3-ingredient-head"><span aria-hidden="true">'+pantry2Visual(f?.id)+'</span><div><strong class="pantry3-ing-name">'+pantry3Escape(f?.name||'Ingrediente')+'</strong>'+ 
+  '<div class="pantry3-ingredient-head"><span aria-hidden="true">'+pantry3Icon(f?.id)+'</span><div><strong class="pantry3-ing-name">'+pantry3Escape(f?.name||'Ingrediente')+'</strong>'+ 
   '<small class="pantry3-ing-total">'+pantry3Escape(n?pantryQty(n,unit)+' por tupper':'Indicar cantidad')+'</small></div>'+ 
   '<button type="button" class="pantry3-ing-pencil" data-action="pantry3-ingredient-edit" data-index="'+i+'" aria-label="Editar ingrediente">✎</button></div>'+ 
   portions+'<div class="pantry3-ing-edit" hidden><label>Ingrediente<select name="ing'+i+'" aria-label="Ingrediente '+(i+1)+'"><option value="">Selecciona uno</option>'+pantry2ProductOptions(x.foodId)+'</select></label>'+ 
