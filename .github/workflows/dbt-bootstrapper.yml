@@ -1,0 +1,46 @@
+name: Build DBT Permanent Bootstrapper
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'payslip-desktop/bootstrapper/**'
+      - '.github/workflows/dbt-bootstrapper.yml'
+permissions:
+  contents: write
+concurrency:
+  group: dbt-bootstrapper
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Publish native Windows installer
+        shell: pwsh
+        run: dotnet publish payslip-desktop/bootstrapper/DBTInstaller.csproj -c Release -r win-x64 -o payslip-desktop/bootstrapper/out
+      - name: Verify and stage executable
+        shell: pwsh
+        run: |
+          $exe = "payslip-desktop/bootstrapper/out/DemoBuildingToolsInstaller.exe"
+          if (!(Test-Path $exe)) { throw "Missing bootstrapper executable" }
+          Copy-Item $exe "payslip-updates/DemoBuildingToolsInstaller.exe" -Force
+          Get-FileHash "payslip-updates/DemoBuildingToolsInstaller.exe" -Algorithm SHA256 | Format-List
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DemoBuildingToolsInstaller
+          path: payslip-updates/DemoBuildingToolsInstaller.exe
+          if-no-files-found: error
+      - name: Publish permanent installer
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add payslip-updates/DemoBuildingToolsInstaller.exe
+          if (git diff --cached --quiet) { exit 0 }
+          git commit -m "Publish permanent DBT bootstrapper"
+          git pull --rebase origin main
+          git push origin HEAD:main
