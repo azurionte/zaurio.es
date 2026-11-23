@@ -129,7 +129,7 @@ function saveFoodForm(form){
  const inferred=inferFoodMeal(date,parts,recipe,previous?.id);
  const meal=previous?String(values.get('meal')||previous.meal||'Otro'):
   form.dataset.mealOverride==='true'?String(values.get('meal')||inferred):inferred;
- const next={id:previous?.id||uid(),date,meal,title,note:String(values.get('note')||'').trim().slice(0,500),parts};
+ const next={...(previous||{}),id:previous?.id||uid(),date,meal,title,note:String(values.get('note')||'').trim().slice(0,500),parts};
  if(!['Desayuno','Comida','Merienda','Cena','Otro'].includes(next.meal))throw Error('Momento no válido.');
  state.logs=state.logs.filter(x=>x.id!==next.id).concat(next);
  selectCalendarDay(date,false);closeModal();changed('Comida guardada.');
