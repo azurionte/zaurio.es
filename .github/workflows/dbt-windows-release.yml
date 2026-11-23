@@ -51,8 +51,8 @@ jobs:
           $installer = Join-Path $dist "DemoBuildingToolsSetup-$version.exe"
           $blockmap = "$installer.blockmap"
           $latest = Join-Path $dist "latest.yml"
-          $webInstaller = Join-Path $dist "DemoBuildingToolsWebSetup-$version.exe"
-          $webPackage = Get-ChildItem -Path $dist -Filter "*.nsis.7z" | Select-Object -First 1
+          $webInstaller = Join-Path $dist "nsis-web/DemoBuildingToolsWebSetup-$version.exe"
+          $webPackage = Get-ChildItem -Path (Join-Path $dist "nsis-web") -Filter "*.nsis.7z" | Select-Object -First 1
 
           if (!(Test-Path $installer)) { throw "Installer not found: $installer" }
           if (!(Test-Path $blockmap)) { throw "Blockmap not found: $blockmap" }
