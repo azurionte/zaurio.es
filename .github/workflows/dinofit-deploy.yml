@@ -55,6 +55,14 @@ jobs:
             fi
             if ! grep -Fq -- "$marker" "$output"; then
               echo "::warning::DinoFit $route HTTP 200 but missing expected marker: $marker"
+              echo "Diagnostic: $route bytes $(wc -c <"$output")"
+              if [ "$route" = "/app-pantry.js" ]; then
+                echo "Pantry first 180 bytes (public script):"
+                head -c 180 "$output" || true
+                echo
+                echo "Pantry productId occurrences:"
+                grep -o -F 'productId' "$output" | wc -l || true
+              fi
               return 1
             fi
             echo "PASS $route ($(wc -c <"$output") bytes)"
