@@ -9,6 +9,7 @@
         "**/*.html",
         "**/app.css",
         "**/app.js",
+        "**/app-pantry.js",
         "**/app-ui.js",
         "**/app-events.js"
       ],
