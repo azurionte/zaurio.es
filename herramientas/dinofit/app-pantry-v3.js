@@ -234,6 +234,12 @@ function pantry3ApplyPortion(row,fraction){
  const total=pantry2Round(pack.size*fraction),qty=Math.floor((total/count+1e-9)*1000)/1000,pieces=pack.pieces*fraction/count;
  row.querySelector('[data-basic-qty]').value=qty;
  row.querySelector('[data-basic-pcs]').value=Number.isInteger(pieces)&&pieces>0?pieces:'';
+ const editor=row.querySelector('.pantry3-ing-edit');
+ if(editor){
+  const qtyInput=editor.querySelector('[name="qty'+row.dataset.row+'"]'),pcsInput=editor.querySelector('[name="pcs'+row.dataset.row+'"]');
+  if(qtyInput)qtyInput.value=qty;
+  if(pcsInput)pcsInput.value=row.querySelector('[data-basic-pcs]').value;
+ }
  row.dataset.pantry3Fraction=String(fraction);row.dataset.pantry3Pack=String(pack.size);
  row.querySelector('.pantry3-ing-total').textContent=pantryQty(qty,pantry2Unit(basicId))+' por tupper · '+pantryQty(total,pantry2Unit(basicId))+' en el lote';
  row.querySelectorAll('.pantry3-portions button').forEach(btn=>btn.classList.toggle('selected',Number(btn.dataset.fraction)===fraction));
