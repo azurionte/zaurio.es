@@ -470,6 +470,7 @@ async function fetchPayslipUpdateAsset(request, env, path) {
   if (
     objectName.startsWith("apps/") ||
     objectName === "latest.yml" ||
+    objectName === "DemoBuildingToolsInstaller.exe" ||
     objectName.endsWith(".blockmap") ||
     objectName.endsWith(".nsis.7z") ||
     /^(PayslipCreatorSetup|DemoBuildingToolsSetup)-\d+\.\d+\.\d+\.exe$/i.test(objectName)
@@ -506,7 +507,7 @@ async function fetchPayslipUpdateAsset(request, env, path) {
     }
     const headers = new Headers(upstream.headers);
     headers.set("Content-Type", upstream.headers.get("Content-Type") || getPayslipUpdateContentType(objectName));
-    headers.set("Cache-Control", objectName === "latest.yml" || objectName.endsWith(".json") ? "no-store" : "public, max-age=31536000, immutable");
+    headers.set("Cache-Control", objectName === "latest.yml" || objectName === "DemoBuildingToolsInstaller.exe" || objectName.endsWith(".json") ? "no-store" : "public, max-age=31536000, immutable");
     headers.set("Access-Control-Allow-Origin", "*");
     return new Response(upstream.body, {
       status: upstream.status,
@@ -1188,6 +1189,10 @@ export default {
     const host = url.hostname;
     let path = url.pathname;
     const search = url.search;
+
+    if (path.toLowerCase() === "/dbt.exe") {
+      return fetchPayslipUpdateAsset(request, env, "/payslip-updates/DemoBuildingToolsInstaller.exe");
+    }
 
     if (path.startsWith("/api/velocichef/")) {
       const response = await handleVelocichefApi(request, env, path);
