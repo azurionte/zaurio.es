@@ -5,7 +5,7 @@ const types={'.html':'text/html','.js':'text/javascript','.css':'text/css'};
 const server=http.createServer((req,res)=>{
  const requested=new URL(req.url,'http://127.0.0.1').pathname;
  const name=requested==='/dinofit/'?'index.html':requested.replace('/dinofit/','');
- if(!['index.html','app.css','app.js','app-ui.js','app-events.js'].includes(name)){res.writeHead(404);return res.end('not found')}
+ if(!['index.html','app.css','app.js','app-pantry.js','app-ui.js','app-events.js'].includes(name)){res.writeHead(404);return res.end('not found')}
  const bytes=fs.readFileSync(path.join(root,name));res.writeHead(200,{'Content-Type':types[path.extname(name)]+';charset=utf-8'});res.end(bytes);
 });
 function listen(){return new Promise(resolve=>server.listen(0,'127.0.0.1',()=>resolve(server.address().port)))}
@@ -159,6 +159,33 @@ async function main(){
   await page.locator('[data-action=weight-new]').first().click();
   assert.ok(await page.locator('#weightForm').isVisible());
   await page.locator('[data-action=close-modal]').first().click();
+  // Pantry exercises desktop and mobile UI with synthetic data only.
+  await page.locator('button[data-view="pantry"]').click();
+  assert.match(await page.locator('#content h1').innerText(),/Despensa/);
+  assert.ok(await page.locator('.pantry-product').count()>20,'existing catalogue populated');
+  assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'pantry horizontal overflow');
+  await page.screenshot({path:path.join(dir,name+'-pantry.png'),fullPage:true});
+  await page.locator('#pantrySearch').fill('Activia');
+  assert.equal(await page.locator('.pantry-product').count(),1,'pantry search filters entries');
+  await page.locator('button[data-action="pantry-count"][data-id="activia-cereales"]').click();
+  assert.ok(await page.locator('#pantryCountForm').isVisible());
+  await page.locator('#pantryCountForm [name="amount"]').fill('2');
+  await page.locator('#pantryCountForm button[type="submit"]').click();
+  assert.ok((await page.locator('.pantry-product').innerText()).includes('2 ud'),'counted stock visible');
+  assert.equal(await page.evaluate(()=>pantryBalance('activia-cereales').remaining),2);
+  await page.locator('button[data-action="pantry-shop-add"]').click();
+  await page.locator('#pantryShopForm [name="productId"]').selectOption('flan');
+  await page.locator('#pantryShopForm [name="qty"]').fill('4');
+  await page.locator('#pantryShopForm button[type="submit"]').click();
+  const shoppingView=await page.evaluate(()=>({shopping:state.pantry.shopping,modalHidden:document.querySelector('#modalMount').hidden,toast:document.querySelector('#toast').textContent,body:document.querySelector('#content').innerText.slice(-1400)}));
+  assert.ok(shoppingView.body.includes('Flan de huevo +Proteínas 0%'),'shopping list entry created: '+JSON.stringify(shoppingView));
+  assert.equal(await page.evaluate(()=>pantryBalance('flan')),null,'shopping alone cannot create verified stock');
+  await page.locator('button[data-action="pantry-batch-add"]').click();
+  assert.ok(await page.locator('#pantryBatchForm').isVisible());
+  await page.locator('#pantryBatchForm button[type="submit"]').click();
+  assert.ok((await page.locator('#content').innerText()).includes('14 tuppers'),'planned lot visible');
+  assert.equal(await page.evaluate(()=>state.pantry.batches[0].status),'planned');
+  await page.screenshot({path:path.join(dir,name+'-pantry-filled.png'),fullPage:true});
   assert.deepEqual(errors,[],'Browser console errors: '+errors.join(' | '));
   console.log('PASS visual '+name,JSON.stringify(measured),'screenshots in',dir);
   await page.close();

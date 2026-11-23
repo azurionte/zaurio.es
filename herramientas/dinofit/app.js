@@ -101,7 +101,7 @@ function defaultDocument(user){
    name:user.user_metadata?.given_name||user.user_metadata?.full_name||'Mi cuenta',
    age:null,height:null,startDate:isoToday(),startWeight:null,targetWeight:null,reference:'',historySource:''
   },foods:cat.foods,stocks:cat.stocks,logs:[],weights:[],unallocated:[],
-  history:[],activities:[],batch:{yield:1800},completeDays:[],savedAt:null};
+  history:[],activities:[],batch:{yield:1800},completeDays:[],pantry:{version:1,inventory:{},shopping:[],batches:[]},savedAt:null};
 }
 function validateState(d){
  if(!d||d.schemaVersion!==1||!d.profile||!Array.isArray(d.weights)||!Array.isArray(d.logs)||!Array.isArray(d.history)||!Array.isArray(d.foods))throw Error('Formato del seguimiento no válido.');
@@ -122,6 +122,7 @@ function validateState(d){
  for(const entry of d.logs)if(!dateValid(entry.date)||!Array.isArray(entry.parts))throw Error('Registro de comida no válido.');
  if(d.profile.targetWeight!=null&&(!isNumber(d.profile.targetWeight)||d.profile.targetWeight<20||d.profile.targetWeight>500))throw Error('Objetivo no válido.');
  if(d.activities && !Array.isArray(d.activities))throw Error('Actividades no válidas.');
+ if(d.pantry && (typeof d.pantry!=='object'||!d.pantry.inventory||!Array.isArray(d.pantry.shopping)||!Array.isArray(d.pantry.batches)))throw Error('Despensa no válida.');
  return true;
 }
 function sortedWeights(){
@@ -237,7 +238,7 @@ async function loadAccount(user){
   $('#identityName').textContent=state.profile.name||'Mi cuenta';
   $('#avatarLetter').textContent=(state.profile.name||'M').slice(0,1).toUpperCase();
   lastObservedToday=isoToday();selectedDate=lastObservedToday;followCurrentDay=true;activeView='today';
-  const seeded=normalizeCatalog();if(seeded){dirty=true;changeCount++}
+  const seeded=normalizeCatalog()+Number(normalizePantry());if(seeded){dirty=true;changeCount++}
   await applyPendingChatImport();
   render();
   if(dirty&&!saveError)persistNow();

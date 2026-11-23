@@ -28,3 +28,12 @@ El test cubre compatibilidad con documento preexistente, interfaz oscura, 12 ind
 
 Cloudflare Worker **dinofit** con rutas `herramientas.zaurio.es/dinofit` y `herramientas.zaurio.es/dinofit/*`. GitHub Actions `Publicar DinoFit` despliega únicamente este Worker cuando cambia el directorio en `main`. Requiere secretos ya configurados `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ACCOUNT_ID`; la comprobación posterior solicita el HTML y los recursos CSS/JS de producción.
 
+
+## Despensa: catálogo, compra y tuppers
+
+La pestaña **Despensa** reutiliza `state.foods` y la autenticación existente. `app-pantry.js` almacena inventario contado, lista de compra y lotes semanales en `document.pantry` de `dinofit_documents` (sin migración ni proveedor nuevo). Las antiguas cantidades de `stocks.initial` son referencias de compra y nunca se interpretan como saldo actual.
+
+- Los consumos de lácteos y bebidas registrados después de un recuento descuentan unidades del inventario; las materias primas se descuentan al confirmar la preparación de un lote, y comer el tupper no vuelve a descontarlas.
+- La lista de compra no modifica existencias hasta marcar su recepción. Sin recuento previo, una entrega permanece como recibida pero requiere contar stock para determinar el saldo total.
+- El lote permite calcular calorías totales con los pesos de ingredientes cuando están disponibles. No reparte automáticamente esa suma entre 14 platos de composición distinta ni da por consumida una comida planificada.
+- Recuento, productos personalizados, compras, preparaciones y consumos se guardan con la misma sincronización privada y control de revisión.

@@ -51,12 +51,14 @@ jobs:
             if curl -fsSL --max-time 20 "$url" -o /tmp/dinofit-live.html \
               && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app.css" -o /tmp/dinofit-live.css \
               && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app.js" -o /tmp/dinofit-live.js \
+              && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app-pantry.js" -o /tmp/dinofit-live-pantry.js \
               && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app-ui.js" -o /tmp/dinofit-live-ui.js \
               && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app-events.js" -o /tmp/dinofit-live-events.js \
               && grep -Fq 'id="calendarBar"' /tmp/dinofit-live.html \
               && grep -Fq 'href="/dinofit/app.css"' /tmp/dinofit-live.html \
               && grep -Fq -- '--bg:#090e1a' /tmp/dinofit-live.css \
               && grep -Fq 'dinofit-chat-import-v1' /tmp/dinofit-live.js \
+              && grep -Fq 'function currentPantry()' /tmp/dinofit-live-pantry.js \
               && grep -Fq 'function currentDay()' /tmp/dinofit-live-ui.js \
               && grep -Fq 'function openWeightModal(' /tmp/dinofit-live-events.js; then
               echo "PASS: live DinoFit HTML, CSS, scripts and import logic verified"
