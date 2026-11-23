@@ -60,3 +60,7 @@
 .pantry3-tupper-list{display:grid;gap:8px}.pantry3-tupper-line{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #405b6d}.pantry3-tupper-line button{border:1px solid #5c8582;background:#254c50;color:#d9f7eb;padding:8px 12px;border-radius:10px;min-height:38px}
 @media(max-width:700px){.pantry3-intro{padding:0 0 10px}.pantry3-tabs{margin-bottom:10px;gap:6px}.pantry3-tab{min-height:59px}.pantry3-section{padding:10px}.pantry3-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pantry3-tile{min-height:148px;padding:10px 7px;gap:6px}.pantry3-tile-emoji{width:40px;height:40px;font-size:25px}.pantry3-tile-name{font-size:11px;min-height:28px}.pantry3-tile .pantry3-big{font-size:30px}.pantry3-tile .pantry3-bigunit{font-size:10px}.pantry3-ing-edit{grid-template-columns:1fr 1fr}.pantry3-ing-edit label:first-child{grid-column:1/-1}.pantry3-pack-count{align-items:center}.pantry3-choice strong{font-size:13px}}
 @media(max-width:365px){.pantry3-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.pantry3-tile .pantry3-big{font-size:26px}}
+
+/* Keep inventory heading coherent on mobile and desktop. */
+.pantry3-intro{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px}
+.pantry3-intro .eyebrow{margin-right:0}
