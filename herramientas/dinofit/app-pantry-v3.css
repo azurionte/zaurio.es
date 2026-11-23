@@ -8,3 +8,59 @@
 .pantry3-form{display:grid;gap:16px}.pantry3-form label{display:grid;gap:6px;font-size:12px;color:#c8d9e5}.pantry3-form input,.pantry3-form select{min-width:0;width:100%;min-height:44px;border-radius:11px}.pantry3-quick-packs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pantry3-quick-packs button{min-height:58px;font-size:12px;border-radius:12px;border:1px solid #5d8c89;background:#244958;color:#dceee9;padding:9px}.pantry3-quick-packs button.selected{border-color:#93e3b7;background:#28634f;box-shadow:inset 0 0 0 1px #93e3b750}.pantry3-quick-packs button b{font-size:19px}.pantry3-buy-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.pantry3-note{font-size:11px;color:#a8c9ce}.pantry3-modal-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;padding-top:13px;border-top:1px solid #3e6378}.pantry3-modal-actions button{min-height:43px;padding:9px 15px;border-radius:11px;border:1px solid #567987;background:#243e54;color:#e4eefd;font-weight:690;font-size:12px}.pantry3-modal-actions button.pantry3-submit{background:linear-gradient(128deg,#8fe2ad,#e7c184);border-color:#b1eac5;color:#17302e}.pantry3-modal-product{font-size:15px;color:#e2ffe9}.pantry3-options{padding:12px;border:1px solid #476e79;border-radius:13px;background:#1c3341}.pantry3-options summary{cursor:pointer;font-size:12px;font-weight:700;color:#ade6cd}.pantry3-extra{display:grid;gap:11px;margin-top:15px}.pantry3-ingredient-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.pantry3-ingredient-head strong{font-size:12px}.pantry3-ingredient-head button{border-radius:8px;background:#284f51;border:1px solid #568e84;color:#cce9e1;font-size:11px;padding:8px}.pantry3-form .pantry2-ingredient{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(60px,.6fr) minmax(60px,.6fr);gap:7px;margin-top:6px}.pantry3-cook-count{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.pantry3-cook-count button{min-height:43px;border:1px solid #5a8792;background:#243a4c;color:#e5eef3;border-radius:10px}.pantry3-cook-count button.selected{border-color:#a4ecbd;background:#2c624c;color:#e5ffe3}
 @media(max-width:740px){.pantry3-intro{padding:2px 0 15px}.pantry3-tabs{gap:6px;margin-bottom:10px}.pantry3-tab{min-height:65px;padding:8px 3px;display:flex;flex-direction:column;gap:2px;font-size:11px;border-radius:14px}.pantry3-tab span{font-size:20px}.pantry3-tab small{position:absolute;margin:0;transform:translate(38px,-18px);min-width:19px;height:19px;padding:0 3px;font-size:9px}.pantry3-tab{position:relative}.pantry3-section{padding:12px;border-radius:18px}.pantry3-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pantry3-card{padding:11px;gap:5px}.pantry3-heading{min-height:43px;gap:6px}.pantry3-heading h3{font-size:11px}.pantry3-emoji{width:33px;height:33px;font-size:20px;border-radius:10px}.pantry3-quantity{gap:5px;margin:3px 0}.pantry3-big{font-size:38px;letter-spacing:-1px}.pantry3-bigunit{font-size:10px}.pantry3-buyrow{padding-top:11px;gap:5px}.pantry3-buyrow button{font-size:10px;padding:6px 3px;min-height:43px}.pantry3-buyrow b{font-size:12px}.pantry3-footer{gap:2px}.pantry3-footer button{font-size:10px;padding:5px 5px}.pantry3-footer button.pantry3-eat{min-height:36px}.pantry3-footer .pantry3-subtle:last-child{margin-left:0}.pantry3-sectionhead{margin-bottom:11px}.pantry3-header-action{padding:9px 10px;font-size:11px}.pantry3-form .pantry2-ingredient{gap:4px}.pantry3-form .pantry2-ingredient input,.pantry3-form .pantry2-ingredient select{font-size:11px;padding:6px}}
 @media(max-width:365px){.pantry3-grid{grid-template-columns:1fr}.pantry3-big{font-size:47px}}
+
+/* Personal pantry: compact, single-action stock tiles. No consume controls here. */
+.pantry3-page{max-width:1320px}
+.pantry3-intro{display:flex;align-items:center;gap:10px;padding:0 0 12px}
+.pantry3-intro h1{margin:0;font-size:clamp(26px,3.5vw,36px)}
+.pantry3-intro .eyebrow{margin-right:auto;font-size:10px}
+.pantry3-tabs{gap:8px;margin-bottom:11px}
+.pantry3-tab{min-height:59px;border-radius:14px}
+.pantry3-section{padding:clamp(9px,1.5vw,15px);border-radius:18px}
+.pantry3-compact-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 10px;color:#a9c0d1;font-size:11px}
+.pantry3-search-toggle,.pantry3-prepare{border:1px solid #537c82;border-radius:10px;color:#d5f4e6;background:#244e4c;min-height:36px;padding:5px 12px;font-size:18px}
+.pantry3-prepare{font-size:12px}
+.pantry3-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,164px),1fr));gap:9px}
+.pantry3-tile{appearance:none;display:flex;align-items:center;flex-direction:column;justify-content:flex-start;min-width:0;min-height:159px;padding:13px 10px;border:1px solid #4a6473;border-radius:15px;background:radial-gradient(circle at 50% -15%,#62bca71c,transparent 66%),linear-gradient(155deg,#23394b,#1a293b);color:#f3f8fc;text-align:center;cursor:pointer;gap:7px;box-shadow:0 4px 12px #0002;transition:border-color .15s,transform .15s}
+.pantry3-tile:hover{border-color:#80cab7;transform:translateY(-1px)}.pantry3-tile:active{transform:scale(.99)}
+.pantry3-tile:focus-visible{outline:2px solid #92efc5;outline-offset:3px}
+.pantry3-tile-emoji{display:grid;place-items:center;width:45px;height:45px;border-radius:14px;background:#ffffff12;font-size:28px;line-height:1.2}
+.pantry3-tile-name{font-size:12px;font-weight:700;line-height:1.3;min-height:31px;max-width:100%;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pantry3-tile-quantity{display:flex;justify-content:center;gap:5px;align-items:baseline;flex-wrap:wrap}
+.pantry3-tile .pantry3-big{font-size:clamp(25px,2.75vw,39px);line-height:1;letter-spacing:-1px}
+.pantry3-tile .pantry3-bigunit{font-size:11px;color:#b8d6d2}
+.pantry3-tile-extra,.pantry3-tile-hint{font-size:10px;color:#a9bccb;line-height:1.25}
+.pantry3-tile.pantry3-low{border-color:#b18c59}.pantry3-tile.pantry3-low .pantry3-tile-hint{color:#edca95}
+.pantry3-empty{padding:20px;text-align:center;font-size:12px;color:#c1d2dc}
+.pantry3-history{margin-top:12px}
+.pantry3-modal-intro{display:flex;align-items:center;gap:12px;padding:8px 0 5px}
+.pantry3-modal-intro>span{display:grid;place-items:center;border-radius:14px;background:#2b4850;width:49px;height:49px;font-size:28px}
+.pantry3-modal-intro>div{display:grid;gap:3px}.pantry3-modal-intro strong{font-size:15px;color:#f4fff9}.pantry3-modal-intro small{font-size:12px;color:#b8d8d4}
+.pantry3-form{gap:12px}.pantry3-buy-title{display:flex;justify-content:space-between;align-items:center}
+.pantry3-buy-title strong{font-size:14px}.pantry3-edit-icon,.pantry3-ing-pencil{border:1px solid #557886;border-radius:11px;background:#274451;color:#c6f1da;font-size:19px;min-width:43px;min-height:43px}
+.pantry3-choicegrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pantry3-choice{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:70px;border-radius:12px;border:1px solid #516c80;background:#243b50;color:#e7f4ef;padding:9px 6px;text-align:center}
+.pantry3-choice strong{font-size:15px}.pantry3-choice small{font-size:11px;color:#afc7cb}.pantry3-choice.selected{border-color:#a6e6be;background:#2d5b4e}
+.pantry3-size-inline{font-size:12px}
+.pantry3-pack-count{display:flex;align-items:center;justify-content:space-between;gap:8px}.pantry3-pack-count>span{font-size:12px;color:#c7d7de}
+.pantry3-pack-count>div{display:flex;align-items:center;gap:8px}.pantry3-pack-count button{width:43px;height:43px;border-radius:12px;border:1px solid #587b86;background:#274555;color:#ecf8f3;font-size:24px}
+.pantry3-pack-count input[name=packages]{text-align:center;width:56px;min-width:56px;max-width:65px;height:43px;padding:4px}
+.pantry3-pieces-simple input{max-width:180px}
+.pantry3-advanced{display:grid;gap:10px;padding:13px;background:#1b3541;border:1px solid #4d7780;border-radius:13px}
+.pantry3-advanced[hidden],.pantry3-ing-edit[hidden],.pantry3-current-count[hidden]{display:none!important}
+.pantry3-advanced strong{font-size:12px}.pantry3-note{line-height:1.35}
+.pantry3-modal-actions{gap:8px;justify-content:space-between}.pantry3-modal-actions button{flex:1 1 auto;max-width:240px}
+.pantry3-ingredients-heading{display:grid;gap:3px}.pantry3-ingredients-heading strong{font-size:14px}.pantry3-ingredients-heading small{font-size:11px;color:#b2cad2}
+.pantry3-ingredient{display:grid;gap:9px;padding:11px 12px;border:1px solid #435e70;border-radius:13px;background:#1b2e40}
+.pantry3-ingredient-head{display:flex;align-items:center;gap:8px}.pantry3-ingredient-head>span{font-size:24px}.pantry3-ingredient-head>div{display:grid;gap:4px;flex:1;min-width:0}.pantry3-ingredient-head strong{font-size:12px;line-height:1.3}.pantry3-ingredient-head small{font-size:11px;color:#afcbd4}
+.pantry3-portions{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.pantry3-portions span{font-size:10px;color:#9fbccc;margin-right:auto}
+.pantry3-portions button{min-height:36px;min-width:43px;border:1px solid #5c7c85;border-radius:9px;background:#284b50;color:#eff9f2;padding:5px 9px;font-weight:650;font-size:12px}.pantry3-portions button.selected{border-color:#a4ebc2;background:#346c57}
+.pantry3-ing-edit{display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px}.pantry3-ing-edit label{min-width:0}.pantry3-ing-edit input,.pantry3-ing-edit select{font-size:12px;min-width:0;padding:8px 5px}
+.pantry3-cook-more{display:flex;justify-content:space-between;gap:8px}.pantry3-cook-more button,.pantry3-close{border:1px solid #5a7981;background:#264656;border-radius:10px;color:#d5f1e3;padding:9px 12px;min-height:42px;font-size:12px}
+.pantry3-tupper-list{display:grid;gap:8px}.pantry3-tupper-line{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #405b6d}.pantry3-tupper-line button{border:1px solid #5c8582;background:#254c50;color:#d9f7eb;padding:8px 12px;border-radius:10px;min-height:38px}
+@media(max-width:700px){.pantry3-intro{padding:0 0 10px}.pantry3-tabs{margin-bottom:10px;gap:6px}.pantry3-tab{min-height:59px}.pantry3-section{padding:10px}.pantry3-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pantry3-tile{min-height:148px;padding:10px 7px;gap:6px}.pantry3-tile-emoji{width:40px;height:40px;font-size:25px}.pantry3-tile-name{font-size:11px;min-height:28px}.pantry3-tile .pantry3-big{font-size:30px}.pantry3-tile .pantry3-bigunit{font-size:10px}.pantry3-ing-edit{grid-template-columns:1fr 1fr}.pantry3-ing-edit label:first-child{grid-column:1/-1}.pantry3-pack-count{align-items:center}.pantry3-choice strong{font-size:13px}}
+@media(max-width:365px){.pantry3-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.pantry3-tile .pantry3-big{font-size:26px}}
+
+/* Keep inventory heading coherent on mobile and desktop. */
+.pantry3-intro{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px}
+.pantry3-intro .eyebrow{margin-right:0}
