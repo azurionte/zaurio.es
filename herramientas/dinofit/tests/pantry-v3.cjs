@@ -76,5 +76,5 @@ p.recount('chicken',619,5);
 const made=p.makeTuppers({date:'2026-11-23',count:2,title:'Pollo y verduras',recipeId:'custom',ingredients:[{foodId:'chicken',qty:150,pieces:1},{foodId:'saute-chicken',qty:25}],prepared:true});
 assert.equal(made.length,2);assert.equal(p.stock('chicken').pieces,3);assert.equal(p.stock('chicken').qty,319);
 p.eatTupper(made[0].id);assert.equal(p.stock('chicken').qty,319,'no double debit');
-assert.equal(p.available().length,1);assert.ok(Array.isArray(state.pantry.batches),'legacy preserved');
+assert.equal(p.available().length,1);assert.match(ctx.currentPantry(),/≈ 190 kcal\/tupper/,'Tupper tile shows nutrition estimate for remaining portion');assert.ok(Array.isArray(state.pantry.batches),'legacy preserved');
 console.log('PASS pantry: compact cards, correct packaging, unit consumption, half-bag portions, reversible inventory');
