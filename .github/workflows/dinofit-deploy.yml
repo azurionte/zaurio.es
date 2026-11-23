@@ -45,27 +45,34 @@ jobs:
         run: npx --yes wrangler@4 deploy --config wrangler.jsonc
       - name: Verify actual live DinoFit assets
         run: |
-          url="https://herramientas.zaurio.es/dinofit/"
+          base="https://herramientas.zaurio.es/dinofit"
+          check_asset() {
+            local route="$1" output="$2" marker="$3" code
+            code="$(curl -sSL --max-time 20 -w '%{http_code}' "$base$route" -o "$output" || true)"
+            if [ "$code" != "200" ]; then
+              echo "::warning::DinoFit $route HTTP $code"
+              return 1
+            fi
+            if ! grep -Fq -- "$marker" "$output"; then
+              echo "::warning::DinoFit $route HTTP 200 but missing expected marker: $marker"
+              return 1
+            fi
+            echo "PASS $route ($(wc -c <"$output") bytes)"
+          }
           for attempt in $(seq 1 8); do
-            echo "Verifying public worker, attempt $attempt/8"
-            if curl -fsSL --max-time 20 "$url" -o /tmp/dinofit-live.html \
-              && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app.css" -o /tmp/dinofit-live.css \
-              && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app.js" -o /tmp/dinofit-live.js \
-              && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app-pantry.js" -o /tmp/dinofit-live-pantry.js \
-              && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app-ui.js" -o /tmp/dinofit-live-ui.js \
-              && curl -fsSL --max-time 20 "https://herramientas.zaurio.es/dinofit/app-events.js" -o /tmp/dinofit-live-events.js \
-              && grep -Fq 'id="calendarBar"' /tmp/dinofit-live.html \
-              && grep -Fq 'href="/dinofit/app.css"' /tmp/dinofit-live.html \
-              && grep -Fq -- '--bg:#090e1a' /tmp/dinofit-live.css \
-              && grep -Fq 'dinofit-chat-import-v1' /tmp/dinofit-live.js \
-              && grep -Fq 'function currentPantry()' /tmp/dinofit-live-pantry.js \
-              && grep -Fq 'function currentDay()' /tmp/dinofit-live-ui.js \
-              && grep -Fq 'function openWeightModal(' /tmp/dinofit-live-events.js; then
-              echo "PASS: live DinoFit HTML, CSS, scripts and import logic verified"
+            echo "Checking deployed DinoFit, attempt $attempt/8"
+            failed=0
+            check_asset "/" /tmp/dino-html 'data-view="pantry"' || failed=1
+            check_asset "/app.css" /tmp/dino-css '.pantry-product{' || failed=1
+            check_asset "/app.js" /tmp/dino-core 'function normalizeCatalog()' || failed=1
+            check_asset "/app-pantry.js" /tmp/dino-pantry 'name="productId"' || failed=1
+            check_asset "/app-ui.js" /tmp/dino-ui "activeView==='pantry'?currentPantry()" || failed=1
+            check_asset "/app-events.js" /tmp/dino-events 'if(pantryAction(button))return;' || failed=1
+            if [ "$failed" -eq 0 ]; then
+              echo "PASS: all live pantry assets and frontend integration are available"
               exit 0
             fi
-            echo "Published page details: $(wc -c </tmp/dinofit-live.html 2>/dev/null || echo 0) bytes"
             sleep 4
           done
-          echo "::error::Live DinoFit is not serving all required rewritten assets"
+          echo "::error::DinoFit live verification failed; see the per-asset diagnostics"
           exit 1
