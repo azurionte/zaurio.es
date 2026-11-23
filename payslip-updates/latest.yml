@@ -1,9 +1,9 @@
 version: 5.0.68
 files:
   - url: DemoBuildingToolsSetup-5.0.68.exe
-    sha512: wYQg1m5a12UgVPSYSlS+G1RF/ymLMowTIYf93b5Dbbl+dk5tIbHBTkrjOAO9bvPc+qB+vobSjeOrlZ5SVDZbCQ==
-    size: 101982992
+    sha512: Hqnw7iHxrfmULoS7zcFYKBB6a8W12fnYcW8wqsB6kUYwe82EbQIWay3PbrYUdKtSQ3y5k/QR9oBWlCXKpj84jA==
+    size: 101982989
 path: DemoBuildingToolsSetup-5.0.68.exe
-sha512: wYQg1m5a12UgVPSYSlS+G1RF/ymLMowTIYf93b5Dbbl+dk5tIbHBTkrjOAO9bvPc+qB+vobSjeOrlZ5SVDZbCQ==
+sha512: Hqnw7iHxrfmULoS7zcFYKBB6a8W12fnYcW8wqsB6kUYwe82EbQIWay3PbrYUdKtSQ3y5k/QR9oBWlCXKpj84jA==
 releaseNotes: 'GlobalView Demo Builder 0.1.2: simpler country dashboard, live annual peak simulator with random/manual tuning, local flag assets, year selector and due import reminders. Legacy projects remain available. Team synchronization is not enabled.'
-releaseDate: '2026-11-17T14:49:47.143Z'
+releaseDate: '2026-11-23T12:31:01.962Z'
