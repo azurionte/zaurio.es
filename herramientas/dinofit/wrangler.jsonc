@@ -11,6 +11,8 @@
         "**/app.js",
         "**/app-pantry.js",
         "**/app-pantry-v2.js",
+        "**/app-pantry-v3.js",
+        "**/app-pantry-v3.css",
         "**/app-ui.js",
         "**/app-events.js"
       ],

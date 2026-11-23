@@ -5,7 +5,7 @@ const types={'.html':'text/html','.js':'text/javascript','.css':'text/css'};
 const server=http.createServer((req,res)=>{
  const requested=new URL(req.url,'http://127.0.0.1').pathname;
  const name=requested==='/dinofit/'?'index.html':requested.replace('/dinofit/','');
- if(!['index.html','app.css','app.js','app-pantry.js','app-ui.js','app-events.js','app-pantry-v2.js'].includes(name)){res.writeHead(404);return res.end('not found')}
+ if(!['index.html','app.css','app.js','app-pantry.js','app-ui.js','app-events.js','app-pantry-v2.js','app-pantry-v3.js','app-pantry-v3.css'].includes(name)){res.writeHead(404);return res.end('not found')}
  const bytes=fs.readFileSync(path.join(root,name));res.writeHead(200,{'Content-Type':types[path.extname(name)]+';charset=utf-8'});res.end(bytes);
 });
 function listen(){return new Promise(resolve=>server.listen(0,'127.0.0.1',()=>resolve(server.address().port)))}
@@ -160,70 +160,61 @@ async function main(){
   assert.ok(await page.locator('#weightForm').isVisible());
   await page.locator('[data-action=close-modal]').first().click();
 
-  // Despensa v2: verify the actual loaded script, responsive layout, and complete flows.
+  // Despensa v3: exactly three tabs, prominent stock, pack-first buying, compact forms.
   await page.locator('button[data-view="pantry"]').click();
   assert.match(await page.locator('#content h1').innerText(),/Despensa/);
-  assert.ok(await page.locator('.pantry2-card').count()>5,'v2 cards must render');
-  assert.equal(await page.locator('.pantry2-zone h2').count(),3,'three pantry sections');
-  assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'v2 horizontal overflow');
-  assert.ok(await page.evaluate(()=>!!globalThis.DinoPantry),'pantry v2 script must be loaded');
-  await page.screenshot({path:path.join(dir,name+'-pantry-v2.png'),fullPage:true});
+  assert.equal(await page.locator('[role="tab"]').count(),3,'three exclusive pantry tabs');
+  assert.equal(await page.locator('[role="tabpanel"]').count(),1,'single visible pantry panel');
+  assert.equal(await page.locator('.pantry3-card').count()>5,true,'consumables visually available');
+  assert.equal(await page.locator('#calendarBar').isVisible(),false,'pantry has no calendar');
+  assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'no pantry horizontal overflow');
+  assert.ok(await page.evaluate(()=>!!globalThis.DinoPantryV3),'pantry v3 loaded');
+  await page.screenshot({path:path.join(dir,name+'-pantry-v3.png'),fullPage:true});
   await page.locator('#pantrySearch').fill('Activia');
-  assert.equal(await page.locator('.pantry2-card').count(),1,'product search filters visual cards');
-  await page.locator('[data-action="pantry2-count"][data-id="activia-cereales"]').click();
-  assert.ok(await page.locator('#pantry2CountForm').isVisible(),'quick inventory edit opens');
-  await page.locator('#pantry2CountForm [name="qty"]').fill('2');
-  await page.locator('#pantry2CountForm button[type="submit"]').last().click();
-  assert.equal(await page.evaluate(()=>DinoPantry.stock('activia-cereales').qty),2,'recount confirmed');
-  await page.locator('[data-action="pantry2-buy-one"][data-id="activia-cereales"]').click();
-  await page.locator('#pantry2BuyForm [name="qty"]').fill('6');
-  await page.locator('#pantry2BuyForm [name="mode"]').selectOption('purchase');
-  await page.locator('#pantry2BuyForm button[type="submit"]').last().click();
-  assert.equal(await page.evaluate(()=>DinoPantry.stock('activia-cereales').qty),8,'buy sums to current inventory');
+  assert.equal(await page.locator('.pantry3-card').count(),1,'search filters cards');
+  await page.locator('[data-action="pantry3-recount"][data-id="activia-cereales"]').click();
+  await page.locator('#pantry3CountForm [name="qty"]').fill('2');
+  await page.locator('#pantry3CountForm button[type="submit"]').click();
+  assert.equal(await page.evaluate(()=>DinoPantry.stock('activia-cereales').qty),2);
+  await page.locator('[data-action="pantry3-buy-quick"][data-id="activia-cereales"][data-size="4"]').click();
+  assert.equal(await page.evaluate(()=>DinoPantry.stock('activia-cereales').qty),6,'one pack adds four yogurts');
   await page.locator('[data-action="pantry2-eat"][data-id="activia-cereales"]').click();
-  assert.equal(await page.evaluate(()=>DinoPantry.stock('activia-cereales').qty),7,'consumption subtracts one');
-  await page.locator('#pantrySearch').fill('');
-  await page.locator('[data-action="pantry2-buy"]').first().click();
-  await page.locator('#pantry2BuyProduct').selectOption('chicken');
-  await page.locator('#pantry2BuyForm [name="qty"]').fill('619');
-  await page.locator('#pantry2BuyForm [name="pieces"]').fill('5');
-  await page.locator('#pantry2BuyForm [name="grams"]').fill('619');
-  await page.locator('#pantry2BuyForm [name="mode"]').selectOption('count');
-  await page.locator('#pantry2BuyForm button[type="submit"]').last().click();
-  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),619,'verified chicken pack weighs 619g');
-  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').pieces),5,'five fillets counted');
+  assert.equal(await page.evaluate(()=>DinoPantry.stock('activia-cereales').qty),5,'eat only one yogurt');
+  await page.locator('[data-action="pantry3-tab"][data-id="raw"]').click();
+  assert.equal(await page.locator('[role="tabpanel"]').count(),1);
+  assert.equal(await page.locator('.pantry3-card').filter({hasText:'Activia'}).count(),0,'raw tab excludes consumables');
+  await page.locator('[data-action="pantry3-buy-custom"][data-id="chicken"]').first().click();
+  await page.locator('#pantry3BuyForm [name="grams"]').fill('619');
+  await page.locator('#pantry3BuyForm [name="pieces"]').fill('5');
+  await page.locator('#pantry3BuyForm button[type="submit"]').click();
+  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),619,'purchased chicken grams counted');
+  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').pieces),5,'purchased filets counted');
+  await page.locator('[data-action="pantry3-tab"][data-id="tuppers"]').click();
+  assert.equal(await page.locator('.pantry3-card').count(),0,'tuppers tab does not show raw or consumables');
   await page.locator('[data-action="pantry2-cook"]').first().click();
+  assert.equal(await page.locator('#pantry2CookForm details').getAttribute('open'),null,'advanced ingredients collapsed');
   await page.locator('#pantry2Recipe').selectOption('chicken');
-  await page.locator('#pantry2CookForm [name="count"]').fill('2');
+  await page.locator('[data-action="pantry3-cook-number"][data-value="2"]').click();
   await page.locator('#pantry2CookForm button[type="submit"]').last().click();
-  assert.equal(await page.evaluate(()=>DinoPantry.available().length),2,'two individual tuppers available');
-  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),319,'cooking deducts 300g');
-  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').pieces),3,'cooking uses two fillets');
+  assert.equal(await page.evaluate(()=>DinoPantry.available().length),2,'two prepared tuppers');
+  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),319,'raw debited only during preparation');
   await page.locator('.pantry2-tupper [data-action="pantry2-eat-tupper"]').first().click();
-  assert.equal(await page.evaluate(()=>DinoPantry.available().length),1,'one prepared tupper remains');
-  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),319,'eating does not debit raw twice');
-  // Editing a meal from the normal diary must preserve its link to the prepared tupper.
-  const tupperMeal=await page.evaluate(()=>state.logs.find(x=>x.pantryTupperId)?.id);
-  const eatenTupper=await page.evaluate(id=>state.logs.find(x=>x.id===id)?.pantryTupperId,tupperMeal);
-  await page.evaluate(()=>{activeView='today';dashboardArea='nutrition';selectCalendarDay(isoToday(),false);render();});
-  await page.locator('[data-action="edit-food"][data-id="'+tupperMeal+'"]').click();
+  assert.equal(await page.evaluate(()=>DinoPantry.available().length),1);
+  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),319,'not debited again');
+  const mealId=await page.evaluate(()=>state.logs.find(x=>x.pantryTupperId)?.id);
+  const tupperId=await page.evaluate(id=>state.logs.find(x=>x.id===id)?.pantryTupperId,mealId);
+  await page.evaluate(()=>{activeView='today';dashboardArea='nutrition';selectCalendarDay(isoToday(),false);render()});
+  assert.equal(await page.locator('#calendarBar').isVisible(),true,'calendar returns in daily diary');
+  await page.locator('[data-action="edit-food"][data-id="'+mealId+'"]').click();
   await page.locator('#foodForm [data-food-id="chicken"]').fill('140');
   await page.locator('#foodForm button[type="submit"]').click();
-  assert.equal(await page.evaluate(id=>state.logs.find(x=>x.id===id)?.pantryTupperId,tupperMeal),eatenTupper,
-    'editing the meal keeps its pantry tupper link');
-  assert.equal(await page.evaluate(()=>DinoPantry.available().length),1,
-    'edited meal does not free the consumed tupper');
-  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),319,
-    'editing an already prepared tupper meal does not debit raw chicken twice');
-  await page.evaluate(()=>{activeView='pantry';render();});
-  await page.evaluate(()=>{
-    const last=state.logs.find(x=>x.pantryTupperId);
-    state.logs=state.logs.filter(x=>x.id!==last.id);
-    render();
-  });
-  assert.equal(await page.evaluate(()=>DinoPantry.available().length),2,'removing diary entry reverses tupper consumption');
-  assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'no mobile overflow after activity');
-  await page.screenshot({path:path.join(dir,name+'-pantry-v2-filled.png'),fullPage:true});
+  assert.equal(await page.evaluate(id=>state.logs.find(x=>x.id===id)?.pantryTupperId,mealId),tupperId,'edit retains tupper link');
+  assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),319,'editing meal does not double debit');
+  await page.evaluate(()=>{activeView='pantry';const l=state.logs.find(x=>x.pantryTupperId);state.logs=state.logs.filter(x=>x.id!==l.id);render()});
+  assert.equal(await page.evaluate(()=>DinoPantry.available().length),2,'deleting meal makes tupper available');
+  assert.equal(await page.locator('#calendarBar').isVisible(),false);
+  assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'no mobile overflow');
+  await page.screenshot({path:path.join(dir,name+'-pantry-v3-filled.png'),fullPage:true});
   assert.deepEqual(errors,[],'Browser console errors: '+errors.join(' | '));
   console.log('PASS visual '+name,JSON.stringify(measured),'screenshots in',dir);
   await page.close();
