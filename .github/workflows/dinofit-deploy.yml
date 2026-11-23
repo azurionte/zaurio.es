@@ -30,6 +30,7 @@ jobs:
       - name: Verify existing test suite
         run: |
           node herramientas/dinofit/tests/rewrite.cjs
+          node herramientas/dinofit/tests/pantry-v3.cjs
           node herramientas/dinofit/tests/pantry-v2.cjs
       - name: Check deployment credentials without exposing them
         run: |
@@ -75,6 +76,8 @@ jobs:
             check_asset "/app.css" /tmp/dino-css '.pantry2-zone{' || failed=1
             check_asset "/app.js" /tmp/dino-core 'function normalizeCatalog()' || failed=1
             check_asset "/app-pantry.js" /tmp/dino-pantry 'name="productId"' || failed=1
+            check_asset "/app-pantry-v3.js" /tmp/dino-pantry-v3 "pantry3-tab" || failed=1
+            check_asset "/app-pantry-v3.css" /tmp/dino-pantry-v3-css ".pantry3-tabs" || failed=1
             check_asset "/app-pantry-v2.js" /tmp/dino-pantry-v2 'function pantry2Current()' || failed=1
             check_asset "/app-ui.js" /tmp/dino-ui "activeView==='pantry'?currentPantry()" || failed=1
             check_asset "/app-events.js" /tmp/dino-events 'if(pantryAction(button))return;' || failed=1
