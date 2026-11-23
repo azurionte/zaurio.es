@@ -30,6 +30,7 @@ jobs:
       - name: Verify existing test suite
         run: |
           node herramientas/dinofit/tests/rewrite.cjs
+          node herramientas/dinofit/tests/pantry-v2.cjs
       - name: Check deployment credentials without exposing them
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
@@ -70,14 +71,15 @@ jobs:
           for attempt in $(seq 1 8); do
             echo "Checking deployed DinoFit, attempt $attempt/8"
             failed=0
-            check_asset "/" /tmp/dino-html 'data-view="pantry"' || failed=1
-            check_asset "/app.css" /tmp/dino-css '.pantry-product{' || failed=1
+            check_asset "/" /tmp/dino-html '/dinofit/app-pantry-v2.js' || failed=1
+            check_asset "/app.css" /tmp/dino-css '.pantry2-zone{' || failed=1
             check_asset "/app.js" /tmp/dino-core 'function normalizeCatalog()' || failed=1
             check_asset "/app-pantry.js" /tmp/dino-pantry 'name="productId"' || failed=1
+            check_asset "/app-pantry-v2.js" /tmp/dino-pantry-v2 'function pantry2Current()' || failed=1
             check_asset "/app-ui.js" /tmp/dino-ui "activeView==='pantry'?currentPantry()" || failed=1
             check_asset "/app-events.js" /tmp/dino-events 'if(pantryAction(button))return;' || failed=1
             if [ "$failed" -eq 0 ]; then
-              echo "PASS: all live pantry assets and frontend integration are available"
+              echo "PASS: live pantry v2 source assets and frontend integration are available"
               exit 0
             fi
             sleep 4

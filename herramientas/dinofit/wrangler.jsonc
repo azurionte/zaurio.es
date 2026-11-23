@@ -10,6 +10,7 @@
         "**/app.css",
         "**/app.js",
         "**/app-pantry.js",
+        "**/app-pantry-v2.js",
         "**/app-ui.js",
         "**/app-events.js"
       ],

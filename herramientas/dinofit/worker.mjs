@@ -2,6 +2,7 @@ import page from './index.html';
 import css from './app.css';
 import core from './app.js';
 import pantry from './app-pantry.js';
+import pantryV2 from './app-pantry-v2.js';
 import ui from './app-ui.js';
 import events from './app-events.js';
 const staticFiles = new Map([
@@ -10,6 +11,7 @@ const staticFiles = new Map([
  ['/dinofit/app.css',{body:css,type:'text/css; charset=utf-8'}],
  ['/dinofit/app.js',{body:core,type:'application/javascript; charset=utf-8'}],
  ['/dinofit/app-pantry.js',{body:pantry,type:'application/javascript; charset=utf-8'}],
+ ['/dinofit/app-pantry-v2.js',{body:pantryV2,type:'application/javascript; charset=utf-8'}],
  ['/dinofit/app-ui.js',{body:ui,type:'application/javascript; charset=utf-8'}],
  ['/dinofit/app-events.js',{body:events,type:'application/javascript; charset=utf-8'}]
 ]);
