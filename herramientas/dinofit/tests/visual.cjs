@@ -174,7 +174,7 @@ async function main(){
   assert.ok((await page.locator('.pantry-product').innerText()).includes('2 ud'),'counted stock visible');
   assert.equal(await page.evaluate(()=>pantryBalance('activia-cereales').remaining),2);
   await page.locator('button[data-action="pantry-shop-add"]').click();
-  await page.locator('#pantryShopForm [name="id"]').selectOption('flan');
+  await page.locator('#pantryShopForm [name="productId"]').selectOption('flan');
   await page.locator('#pantryShopForm [name="qty"]').fill('4');
   await page.locator('#pantryShopForm button[type="submit"]').click();
   const shoppingView=await page.evaluate(()=>({shopping:state.pantry.shopping,modalHidden:document.querySelector('#modalMount').hidden,toast:document.querySelector('#toast').textContent,body:document.querySelector('#content').innerText.slice(-1400)}));
