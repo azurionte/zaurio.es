@@ -5,7 +5,7 @@ const types={'.html':'text/html','.js':'text/javascript','.css':'text/css'};
 const server=http.createServer((req,res)=>{
  const requested=new URL(req.url,'http://127.0.0.1').pathname;
  const name=requested==='/dinofit/'?'index.html':requested.replace('/dinofit/','');
- if(!['index.html','app.css','app.js','app-ui.js','app-events.js'].includes(name)){res.writeHead(404);return res.end('not found')}
+ if(!['index.html','app.css','app.js','app-pantry.js','app-ui.js','app-events.js'].includes(name)){res.writeHead(404);return res.end('not found')}
  const bytes=fs.readFileSync(path.join(root,name));res.writeHead(200,{'Content-Type':types[path.extname(name)]+';charset=utf-8'});res.end(bytes);
 });
 function listen(){return new Promise(resolve=>server.listen(0,'127.0.0.1',()=>resolve(server.address().port)))}
