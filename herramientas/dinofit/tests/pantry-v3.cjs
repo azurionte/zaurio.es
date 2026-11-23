@@ -71,6 +71,7 @@ const row={dataset:{row:'0'},store:{'[data-basic-ing]':{value:'saute-chicken'},'
 v3.portion(row,0.5);
 assert.equal(+row.store['[data-basic-qty]'].value,25,'half a 400g bag split across 8 tuppers = 25g each');
 assert.ok(row.store['.pantry3-ing-total'].textContent.includes('200'),'show total consumed by batch');
+mockCount=14;v3.portion(row,0.5);assert.equal(+row.store['[data-basic-qty]'].value,14.285,'14 portions must not round above half pack');
 p.recount('chicken',619,5);
 const made=p.makeTuppers({date:'2026-11-23',count:2,title:'Pollo y verduras',recipeId:'custom',ingredients:[{foodId:'chicken',qty:150,pieces:1},{foodId:'saute-chicken',qty:25}],prepared:true});
 assert.equal(made.length,2);assert.equal(p.stock('chicken').pieces,3);assert.equal(p.stock('chicken').qty,319);
