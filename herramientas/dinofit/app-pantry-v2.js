@@ -277,7 +277,8 @@ function pantry2Current(){
   '<div id="pantryCatalog">'+pantry2Cards()+'</div>'+
   (p.purchases.some(x=>x.active!==false)?'<details class="pantry2-history"><summary>Últimas compras y correcciones</summary>'+p.purchases.filter(x=>x.active!==false).slice(-8).reverse().map(x=>
    '<div><span>'+htmlSafe(pantry2FoodName(x.foodId))+' · +'+pantryQty(x.qty,pantry2Unit(x.foodId))+'</span><button type="button" data-action="pantry2-undo-buy" data-id="'+x.id+'">Deshacer</button></div>').join('')+'</details>':'')+
-  ((state.pantry.batches||[]).length?'<details class="pantry2-history"><summary>Preparaciones anteriores (conservadas)</summary>'+pantryBatchHtml()+'</details>':'');
+  ((state.pantry.batches||[]).length?'<details class="pantry2-history"><summary>Preparaciones anteriores (conservadas)</summary>'+(state.pantry.batches||[]).map(x=>'<div><span>Lote '+htmlSafe(x.date||'')+' · '+htmlSafe((x.mixed||0)+(x.plain||0))+' tuppers · '+htmlSafe(x.status||'planificado')+'</span></div>').join('')+'</details>':'')+
+  ((state.pantry.shopping||[]).length?'<details class="pantry2-history"><summary>Lista de compra anterior (conservada)</summary>'+(state.pantry.shopping||[]).map(x=>'<div><span>'+htmlSafe(pantry2FoodName(x.foodId))+' · '+htmlSafe(pantryQty(x.qty||0,pantry2Unit(x.foodId)))+' · '+htmlSafe(x.status||'pendiente')+'</span></div>').join('')+'</details>':'');
 }
 function pantry2ProductOptions(selected='',raw=false){
  return (state.foods||[]).filter(f=>f.id!=='burger-unknown'&&(!raw||pantry2Raw(f)))
