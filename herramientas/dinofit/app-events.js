@@ -196,6 +196,7 @@ async function actionHandler(event){
  const action=button.dataset.action;
  if(action==='modal-backdrop'){if(event.target===button)closeModal();return;}
  try{
+  if(pantryAction(button))return;
   switch(action){
    case 'view':activeView=button.dataset.view;if(activeView==='today')selectCalendarDay(isoToday());else render();break;
    case 'date-prev':selectCalendarDay(addDays(selectedDate,-1));break;
@@ -240,13 +241,14 @@ async function actionHandler(event){
  }catch(e){toast('No se completó: '+e.message)}
 }
 function formHandler(event){
- const form=event.target;if(!['weightForm','foodForm','activityForm','profileForm'].includes(form.id))return;
+ const form=event.target;if(!['weightForm','foodForm','activityForm','profileForm','pantryCountForm','pantryProductForm','pantryShopForm','pantryBatchForm','pantryConsumeForm'].includes(form.id))return;
  event.preventDefault();
  try{
   if(form.id==='weightForm')saveWeightForm(form);
   else if(form.id==='foodForm')saveFoodForm(form);
   else if(form.id==='activityForm')saveActivity(form);
   else if(form.id==='profileForm')saveProfile(form);
+  else pantryForm(form);
  }catch(e){toast('No se guardó: '+e.message)}
 }
 function changeHandler(event){
@@ -274,7 +276,10 @@ async function boot(){
  document.addEventListener('click',actionHandler);
  document.addEventListener('submit',formHandler);
  document.addEventListener('change',changeHandler);
- document.addEventListener('input',e=>{if(e.target.closest('#foodForm'))updateFoodEstimate()});
+ document.addEventListener('input',e=>{
+  if(e.target.closest('#foodForm'))updateFoodEstimate();
+  if(e.target.id==='pantrySearch'){pantryQuery=String(e.target.value||'').trim().toLocaleLowerCase('es');const cards=$('#pantryCatalog');if(cards)cards.innerHTML=pantryCards();}
+ });
  document.addEventListener('keydown',keyHandler);
  window.addEventListener('online',()=>{if(dirty&&!conflict)persistNow()});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&dirty)persistNow();else if(document.visibilityState==='visible')refreshCalendarDay()});
