@@ -177,7 +177,7 @@ async function main(){
   await page.locator('#pantryShopForm [name="id"]').selectOption('flan');
   await page.locator('#pantryShopForm [name="qty"]').fill('4');
   await page.locator('#pantryShopForm button[type="submit"]').click();
-  assert.ok((await page.locator('#content').innerText()).includes('Flanes +Proteínas 0%'),'shopping list entry created');
+  assert.ok((await page.locator('#content').innerText()).includes('Flan de huevo +Proteínas 0%'),'shopping list entry created');
   assert.equal(await page.evaluate(()=>pantryBalance('flan')),null,'shopping alone cannot create verified stock');
   await page.locator('button[data-action="pantry-batch-add"]').click();
   assert.ok(await page.locator('#pantryBatchForm').isVisible());
