@@ -138,7 +138,11 @@ function pantry3Cards(){
 }
 function pantry3Current(){
  const p=pantry2Data(),foods=(state.foods||[]).filter(f=>f?.id&&f.id!=='burger-unknown');
- const stockCount=type=>type==='tuppers'?pantry2AvailableTuppers().length:foods.filter(f=>(type==='raw'?pantry2Raw(f):!pantry2Raw(f))&&pantry2Stock(f.id).known).length;
+ const stockCount=type=>type==='tuppers'?pantry2AvailableTuppers().length:foods.filter(f=>{
+  if(pantry2Raw(f)!==(type==='raw'))return false;
+  const stock=pantry2Stock(f.id);
+  return stock.known && stock.qty > 0;
+ }).length;
  const tabs=[['consumables','Consumibles','🥛'],['raw','Crudos','🥩'],['tuppers','Tuppers','🍲']];
  const purchases=p.purchases.filter(x=>x.active!==false&&pantry3Tab!=='tuppers'&&(pantry3Tab==='raw'?pantry2Raw(food(x.foodId)):!pantry2Raw(food(x.foodId))));
  return '<div class="pantry3-page"><header class="pantry3-intro"><span class="eyebrow">INVENTARIO PERSONAL</span><h1>Despensa</h1></header>'+ 
