@@ -10,7 +10,7 @@ assert.ok(html.includes('app-pantry-v2.js'),'v2 script wired');
 assert.ok(read('worker.mjs').includes("import pantryV2 from './app-pantry-v2.js'"),'worker serves v2');
 for(const script of scripts){assert.ok(html.includes('/dinofit/'+script),'script used '+script);new vm.Script(read(script),{filename:script})}
 const elements=new Map();
-function el(key){if(!elements.has(key))elements.set(key,{_value:'',innerHTML:'',textContent:key==='#catalog-data'?catalog:'',hidden:false,dataset:{},classList:{toggle(){},add(){},remove(){}},addEventListener(){},setAttribute(){},removeAttribute(){},querySelector(){return null},get value(){return this._value},set value(v){this._value=String(v)}});return elements.get(key)}
+function el(key){if(!elements.has(key))elements.set(key,{_value:'',innerHTML:'',textContent:key==='#catalog-data'?catalog:'',hidden:false,dataset:{},classList:{toggle(){},add(){},remove(){}},addEventListener(){},getAttribute(key){return this.attrs?.[key]??null},setAttribute(key,value){(this.attrs??={})[key]=String(value)},removeAttribute(key){delete this.attrs?.[key]},querySelector(){return null},get value(){return this._value},set value(v){this._value=String(v)}});return elements.get(key)}
 const ctx=vm.createContext({document:{readyState:'loading',querySelector:el,querySelectorAll(){return []},addEventListener(){},body:{appendChild(){}}},window:{addEventListener(){},location:{hash:''}},location:{origin:'https://herramientas.zaurio.es',pathname:'/dinofit/',search:''},history:{replaceState(){}},sessionStorage:{getItem(){return null},setItem(){}},Intl,Date,Math,JSON,String,Number,Array,Object,Set,Map,Blob,TextDecoder,Uint8Array,FormData:class {constructor(form){this.values=form.values}get(key){return this.values[key]??null}},console,crypto:require('node:crypto').webcrypto,structuredClone,setTimeout:()=>1,clearTimeout(){}});
 for(const script of scripts)vm.runInContext(read(script),ctx,{filename:script});
 const run=src=>vm.runInContext(src,ctx);
@@ -116,6 +116,51 @@ async function checkDiary(){
  run('formEntryId='+JSON.stringify(old));
  use('coffee',[['coffee',1],['milk',120]]);
  assert.equal(run('state.logs.at(-1).id'),old,'editing saved items is not blocked by zero current stock');
+ // Cacaolat is a private, user-added catalogue item, not shipped with the defaults.
+ run('formEntryId=null');
+ assert.equal(hasRecipe('cacaolat'),false,'no Cacaolat recipe on accounts without the product');
+ refresh(`state.foods.push({id:'cacaolat-0',name:'Cacaolat 0% sin azúcares añadidos',
+  category:'drinks',unit:'ml',factor:1,kcal:53,min:53,max:53});DinoPantry.recount('cacaolat-0',199)`);
+ assert.equal(hasRecipe('cacaolat'),false,'less than a full glass does not offer a shortcut');
+ refresh(`DinoPantry.recount('cacaolat-0',400)`);
+ const drinks=content().split('food-group-drinks')[1];
+ assert.match(drinks,/<h3>Bebidas<\/h3>[\s\S]*?data-recipe="cacaolat"[\s\S]*?≈ 106 kcal[\s\S]*?Vaso de Cacaolat 0% · 200 ml<\/strong>/);
+ const beforeGlass=run('state.logs.length');
+ const openGlass=()=>click({action:'add-food',recipe:'cacaolat'});
+ const plus=()=>click({action:'cacaolat-more'});
+ const minus=()=>click({action:'cacaolat-less'});
+ const drink=()=>click({action:'cacaolat-drink'});
+ const amount=()=>el('#cacaolat-amount').textContent;
+ await openGlass();
+ assert.equal(amount(),'200 ml','modal starts at 200 ml');
+ assert.match(el('#modalMount').innerHTML,/<button[^>]*data-action="cacaolat-drink"[\s\S]*?<svg[\s\S]*?class="cacaolat-amount">200 ml<\/span><\/button>/,'the illustrated glass is the actionable button and contains the amount');
+ assert.doesNotMatch(el('#modalMount').innerHTML,/type="submit"|Guardar comida/,'no separate submit');
+ await minus();assert.equal(amount(),'150 ml');
+ await plus();await plus();assert.equal(amount(),'250 ml');
+ assert.match(el('#cacaolat-summary').textContent,/250 ml · 133 kcal/);
+ assert.equal(run('state.logs.length'),beforeGlass,'opening and adjusting do not log');
+ assert.equal(run('DinoPantry.stock("cacaolat-0").qty'),400,'opening and adjusting do not debit stock');
+ run("keyHandler({key:'Escape'})");
+ assert.equal(el('#modalMount').hidden,true,'Escape dismisses');
+ await drink();assert.equal(run('state.logs.length'),beforeGlass,'dismissed pour cannot be saved');
+ await openGlass();assert.equal(amount(),'200 ml','reopening resets the default');
+ for(let i=0;i<5;i++)await plus();
+ assert.equal(amount(),'400 ml','maximum respects stock');
+ assert.equal(el('#cacaolat-more').getAttribute('aria-disabled'),'true');
+ for(let i=0;i<8;i++)await minus();
+ assert.equal(amount(),'50 ml','minus never selects zero');
+ assert.equal(el('#cacaolat-less').getAttribute('aria-disabled'),'true');
+ await plus();await plus();await plus();
+ await Promise.all([drink(),drink()]);
+ assert.equal(run('state.logs.length'),beforeGlass+1,'rapid double tap only records one glass');
+ assert.equal(run('DinoPantry.stock("cacaolat-0").qty'),200,'saving one glass debits 200 ml once');
+ assert.equal(run('logTotal(state.logs.at(-1).parts)'),106);
+ assert.equal(hasRecipe('cacaolat'),true,'exactly one glass of stock keeps the shortcut');
+ await openGlass();assert.equal(el('#cacaolat-more').getAttribute('aria-disabled'),'true');
+ await minus();await drink();
+ assert.equal(run('DinoPantry.stock("cacaolat-0").qty'),50,'saving a 150 ml glass debits selected amount');
+ assert.equal(run('state.logs.at(-1).parts[0].qty'),150);
+ assert.equal(hasRecipe('cacaolat'),false,'less than a default glass removes the shortcut');
  refresh(`DinoPantry.recount('burger-chicken',4);
   const burger=DinoPantry.makeTuppers({recipeId:'mixed-chickenburgers',title:'2 hamburguesas de pollo + verduras',ingredients:[{foodId:'burger-chicken',qty:2},{foodId:'saute-chicken',qty:20}],date:selectedDate})[0];
   DinoPantry.makeTuppers({recipeId:'mixed-chickenburgers',title:'2 hamburguesas de pollo + verduras',ingredients:[{foodId:'burger-chicken',qty:2},{foodId:'saute-chicken',qty:40}],date:selectedDate})`);

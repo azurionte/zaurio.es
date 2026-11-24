@@ -186,7 +186,7 @@ function pantry2QuickGroups(date){
  return [
   {id:'tuppers',title:'Tuppers preparados',emoji:'🍲',choices:tuppers},
   {id:'treats',title:'Postres y lácteos',emoji:'🍮',choices:stocked(['cheese','flan','yopro','activia'])},
-  {id:'drinks',title:'Bebidas',emoji:'🥤',choices:stocked(['coffee','cola'])}
+  {id:'drinks',title:'Bebidas',emoji:'🥤',choices:stocked(['coffee','cola','cacaolat'])}
  ];
 }
 function pantry2Ingredients(recipeId,custom=null){
