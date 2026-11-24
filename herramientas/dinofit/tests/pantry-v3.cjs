@@ -6,6 +6,7 @@ const foods=[
  {id:'cheese',name:'Queso light',unit:'ud',factor:25,kcal:267,min:267,max:267,category:'dairy'},
  {id:'activia-cereales',name:'Activia cereales',unit:'ud',factor:115,kcal:49,min:49,max:49,category:'dairy'},
  {id:'chicken',name:'Pechuga de pollo',unit:'g',factor:1,kcal:110,min:100,max:120,category:'proteins'},
+ {id:'beef',name:'Filetes de ternera',unit:'g',factor:1,kcal:160,min:150,max:180,category:'proteins'},
  {id:'saute-chicken',name:'Salteado de verduras',unit:'g',factor:1,kcal:101,min:80,max:101,category:'veg'},
  {id:'garlic',name:'Ajo troceado congelado',unit:'g',factor:1,kcal:149,min:140,max:160,category:'veg'},
  {id:'oil',name:'Aceite de oliva',unit:'g',factor:1,kcal:900,min:900,max:900,category:'other'},
@@ -77,4 +78,33 @@ const made=p.makeTuppers({date:'2026-11-23',count:2,title:'Pollo y verduras',rec
 assert.equal(made.length,2);assert.equal(p.stock('chicken').pieces,3);assert.equal(p.stock('chicken').qty,319);
 p.eatTupper(made[0].id);assert.equal(p.stock('chicken').qty,319,'no double debit');
 assert.equal(p.available().length,1);assert.match(ctx.currentPantry(),/≈ 190 kcal\/tupper/,'Tupper tile shows nutrition estimate for remaining portion');assert.ok(Array.isArray(state.pantry.batches),'legacy preserved');
+
+// A counted product at zero is still shown as a tile, but must no longer inflate the badge.
+state.logs=[];
+state.pantry.v2={version:2,stock:{},purchases:[],tuppers:[],history:[]};
+p.recount('chicken',429,6);
+for(const id of ['beef','saute-chicken','garlic','oil','burger-chicken'])p.recount(id,0);
+p.recount('activia-cereales',1);
+p.recount('cheese',0);
+p.purchase('coffee',4); // A received purchase with no baseline is still unknown.
+p.recount('curry',0);
+state.logs.push({id:'overdrawn-curry',date:'2026-11-23',parts:[{foodId:'curry',qty:1}]});
+assert.equal(p.stock('curry').qty,-1);
+assert.equal(p.stock('coffee').known,false);
+assert.equal(p.stock('coffee').received,4);
+p.makeTuppers({recipeId:'chicken',prepared:false});
+const counted=p.makeTuppers({recipeId:'chicken',count:2,ingredients:[{foodId:'chicken',qty:100,pieces:1}]});
+p.eatTupper(counted[0].id);
+p.recount('chicken',429,6); // The remaining tray is separate from the prepared portions.
+assert.equal(p.stock('chicken').pieces,6);
+const badge=(view,id)=>Number(view.match(new RegExp('data-action="pantry3-tab" data-id="'+id+'">[^]*?<small>([0-9]+)</small>'))?.[1]);
+v3.setTab('raw');
+const exactRawView=ctx.currentPantry();
+assert.equal(badge(exactRawView,'raw'),1,'Crudos counts one product, not six pieces or counted empty products');
+assert.equal(badge(exactRawView,'consumables'),1,'Consumibles excludes zero and unknown balances');
+assert.equal(badge(exactRawView,'tuppers'),1,'Tuppers counts prepared unconsumed units only');
+assert.match(exactRawView,/data-action="pantry3-open" data-id="garlic" aria-label="Abrir Ajo troceado congelado, 0 g"/,'counted empty products remain in the catalog');
+v3.setTab('consumables');
+const exactConsumablesView=ctx.currentPantry();
+assert.match(exactConsumablesView,/data-action="pantry3-open" data-id="coffee" aria-label="Abrir Café en cápsulas, sin inventario"/,'unverified products remain in the catalog');
 console.log('PASS pantry: compact cards, correct packaging, unit consumption, half-bag portions, reversible inventory');
