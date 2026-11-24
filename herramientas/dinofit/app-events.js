@@ -1,7 +1,11 @@
 
+const CACAOLAT_STEP=50;
+let cacaolatPour=null;
 function closeModal(){
  const mount=$('#modalMount');if(!mount)return;
- mount.hidden=true;mount.innerHTML='';openModalType='';formEntryId=null;
+ const restore=cacaolatPour?.trigger;
+ cacaolatPour=null;mount.hidden=true;mount.innerHTML='';openModalType='';formEntryId=null;
+ if(restore?.isConnected)restore.focus();
 }
 function renderModal(title,body,footer=''){
  const mount=$('#modalMount');
@@ -105,6 +109,55 @@ function openFoodModal(recipeId,entryId=null){
  updateFoodEstimate();
  updateFoodMealPreview();
 }
+function openCacaolatGlass(recipe,trigger){
+ const [foodId,amount]=recipe.parts[0];
+ cacaolatPour={recipe,foodId,amount,date:selectedDate,trigger};
+ openModalType='cacaolat-glass';
+ renderModal(recipe.name,
+  '<p id="cacaolat-help" class="cacaolat-help">Pulsa el vaso para registrar la cantidad elegida.</p>'+
+  '<div class="cacaolat-controls" role="group" aria-label="Cantidad de Cacaolat">'+
+  '<button type="button" id="cacaolat-less" class="cacaolat-step" data-action="cacaolat-less" aria-label="Restar 50 ml">−</button>'+
+  '<button type="button" id="cacaolat-glass" class="cacaolat-glass" data-action="cacaolat-drink" aria-describedby="cacaolat-help">'+
+  '<svg viewBox="0 0 132 166" aria-hidden="true" focusable="false">'+
+  '<path d="M9 16h114l-13 133a9 9 0 0 1-9 8H31a9 9 0 0 1-9-8Z" fill="#253d50" stroke="#cce7ec" stroke-width="3"/>'+
+  '<path d="M16 59c26-13 40 10 64 0 14-6 27-6 36-2l-9 89q-1 5-6 5H31q-5 0-6-5Z" fill="#844732"/>'+
+  '<path d="M16 59c26-13 40 10 64 0 14-6 27-6 36-2" fill="none" stroke="#f2b488" stroke-width="3"/>'+
+  '<path d="m23 30 4 20m8 89h62" fill="none" stroke="#d7edf2" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>'+
+  '<ellipse cx="66" cy="15" rx="57" ry="8" fill="#253d50" stroke="#cce7ec" stroke-width="3"/></svg>'+
+  '<span id="cacaolat-amount" class="cacaolat-amount">'+locale(amount)+' ml</span></button>'+
+  '<button type="button" id="cacaolat-more" class="cacaolat-step" data-action="cacaolat-more" aria-label="Añadir 50 ml">+</button>'+
+  '</div><p id="cacaolat-summary" class="cacaolat-summary" role="status"></p>');
+ updateCacaolatGlass();
+}
+function updateCacaolatGlass(){
+ const {foodId,amount}=cacaolatPour;
+ const stock=pantry2Stock(foodId);
+ const serving=locale(amount)+' ml';
+ $('#cacaolat-amount').textContent=serving;
+ $('#cacaolat-glass').setAttribute('aria-label','Registrar '+serving+' de Cacaolat');
+ $('#cacaolat-less').setAttribute('aria-disabled',String(amount<=CACAOLAT_STEP));
+ $('#cacaolat-more').setAttribute('aria-disabled',String(!pantry2HasStock([[foodId,amount+CACAOLAT_STEP]])));
+ $('#cacaolat-summary').textContent=serving+' · '+locale(logTotal([makePart(foodId,amount)]))+' kcal'+
+  (stock.known?' · '+locale(stock.qty,stock.qty%1?1:0)+' ml disponibles':'');
+}
+function adjustCacaolatGlass(delta){
+ if(!cacaolatPour)return;
+ const next=cacaolatPour.amount+delta;
+ if(next<CACAOLAT_STEP||!pantry2HasStock([[cacaolatPour.foodId,next]]))return;
+ cacaolatPour.amount=next;updateCacaolatGlass();
+}
+function drinkCacaolatGlass(){
+ const pour=cacaolatPour;
+ if(!pour)return;
+ const {foodId,amount,date,recipe}=pour;
+ if(!pantry2HasStock([[foodId,amount]]))throw Error('No quedan existencias suficientes.');
+ const parts=[makePart(foodId,amount)];
+ // Closing clears the pending pour synchronously. A repeated click cannot save it twice.
+ closeModal();
+ saveFoodEntry({date,parts,recipe,meal:inferFoodMeal(date,parts,recipe)});
+ const next=$('[data-action="add-food"][data-recipe="cacaolat"]');
+ (next||$('#dashboard-tab-nutrition'))?.focus?.();
+}
 function readFoodParts(form){
  const entries=[...form.querySelectorAll('[data-food-id]')];
  if(!entries.length)throw Error('No hay alimentos en esta entrada.');
@@ -126,11 +179,14 @@ function saveFoodForm(form){
  const recipe=RECIPES.find(x=>x.id===form.dataset.recipeId);
  const previous=formEntryId?state.logs.find(x=>x.id===formEntryId):null;
  if(!previous&&recipe&&typeof pantry2HasStock==='function'&&!pantry2HasStock(parts))throw Error('No hay existencias suficientes para estas cantidades.');
- const title=previous?.title||recipe?.name||'Comida';
  const inferred=inferFoodMeal(date,parts,recipe,previous?.id);
  const meal=previous?String(values.get('meal')||previous.meal||'Otro'):
   form.dataset.mealOverride==='true'?String(values.get('meal')||inferred):inferred;
- const next={...(previous||{}),id:previous?.id||uid(),date,meal,title,note:String(values.get('note')||'').trim().slice(0,500),parts};
+ saveFoodEntry({date,parts,recipe,previous,meal,note:values.get('note')});
+}
+function saveFoodEntry({date,parts,recipe,previous,meal,note}){
+ const title=previous?.title||recipe?.name||'Comida';
+ const next={...(previous||{}),id:previous?.id||uid(),date,meal,title,note:String(note||'').trim().slice(0,500),parts};
  if(!['Desayuno','Comida','Merienda','Cena','Otro'].includes(next.meal))throw Error('Momento no válido.');
  state.logs=state.logs.filter(x=>x.id!==next.id).concat(next);
  selectCalendarDay(date,false);closeModal();changed('Comida guardada.');
@@ -229,10 +285,14 @@ async function actionHandler(event){
    case 'add-food':{
     const recipe=RECIPES.find(x=>x.id===button.dataset.recipe);
     if(recipe&&typeof pantry2HasStock==='function'&&!pantry2HasStock(recipe.parts))throw Error('No quedan existencias suficientes.');
+    if(recipe?.id==='cacaolat'){openCacaolatGlass(recipe,button);break;}
     openFoodModal(button.dataset.recipe);
     if($('#foodForm'))$('#foodForm').dataset.recipeId=button.dataset.recipe;
     break;
    }
+   case 'cacaolat-less':adjustCacaolatGlass(-CACAOLAT_STEP);break;
+   case 'cacaolat-more':adjustCacaolatGlass(CACAOLAT_STEP);break;
+   case 'cacaolat-drink':drinkCacaolatGlass();break;
    case 'edit-food':openFoodModal(null,button.dataset.id);break;
    case 'delete-food':{
     const id=button.dataset.id;
@@ -281,7 +341,13 @@ function changeHandler(event){
  }
 }
 function keyHandler(event){
- if(event.key==='Escape'&&!$('#modalMount').hidden)closeModal();
+ if(event.key==='Escape'&&!$('#modalMount').hidden){closeModal();return;}
+ if(cacaolatPour&&event.key==='Tab'){
+  const controls=[...$('#modalMount').querySelectorAll('button')],first=controls[0],last=controls.at(-1);
+  if(event.shiftKey&&event.target===first){event.preventDefault();last?.focus();}
+  else if(!event.shiftKey&&event.target===last){event.preventDefault();first?.focus();}
+  return;
+ }
  const tab=event.target.closest?.('[data-action="dashboard-tab"]');
  if(!tab)return;
  const index=DASHBOARD_TAB_ORDER.indexOf(tab.dataset.tab),last=DASHBOARD_TAB_ORDER.length-1;
