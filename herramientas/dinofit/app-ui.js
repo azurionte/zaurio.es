@@ -294,7 +294,7 @@ function currentDay(){
  else out+='<div class="section-head quick-weights"><div><h2>Pesadas y proyección</h2><p>Tu evolución medida, con acceso a los modelos de seguimiento.</p></div><button type="button" class="click sm" data-action="weight-new">+ Registrar peso</button></div>'+weightGraph();
  return out+'</div>';
 }
-function quickFoods(){
+function quickFoods(preparedShortcut=''){
  const groups=[
   {id:'mixed',title:'Platos con salteados',emoji:'🥘',hint:'Tu guarnición habitual y el aceite repartido entre ocho tuppers',recipes:RECIPES.filter(r=>r.group==='mixed')},
   {id:'plain',title:'Solo proteína',emoji:'🍗',hint:'Pollo, ternera o dos hamburguesas por plato',recipes:RECIPES.filter(r=>r.group==='plain')},
@@ -307,7 +307,7 @@ function quickFoods(){
    '<span class="food-top"><span class="quick-pictures">'+foodPicture(mock,'sticker')+'</span><span class="quick-plus" aria-hidden="true">+</span></span>'+
    '<span class="quick-copy"><strong>'+htmlSafe(r.name)+'</strong><small>'+htmlSafe(r.hint)+'</small></span></button>';
  };
- return '<section class="section quick-foods-section"><div class="section-head"><div><span class="eyebrow">A UN TOQUE</span><h2>¿Qué has comido?</h2><p>Selecciona un plato o tentempié para registrarlo. Puedes ajustar las cantidades.</p></div></div>'+
+ return '<section class="section quick-foods-section"><div class="section-head"><div><span class="eyebrow">A UN TOQUE</span><h2>¿Qué has comido?</h2><p>Selecciona un plato o tentempié para registrarlo. Puedes ajustar las cantidades.</p></div>'+preparedShortcut+'</div>'+
   groups.map(g=>'<div class="quick-group food-group-'+g.id+'">'+
    '<div class="quick-group-title"><span class="quick-group-em" aria-hidden="true">'+g.emoji+'</span><div><h3>'+htmlSafe(g.title)+'</h3><p class="helper">'+htmlSafe(g.hint)+'</p></div></div>'+
    '<div class="quick-grid">'+g.recipes.map(buttons).join('')+'</div></div>').join('')+'</section>';

@@ -219,13 +219,21 @@ async function main(){
   assert.equal(await page.locator('.pantry3-tupper-line').count(),2,'individual tuppers editable');
   await page.locator('[data-action="close-modal"]').first().click();
   // Consumption remains exclusively available through the diary.
-  await page.evaluate(()=>{activeView='today';dashboardArea='nutrition';selectCalendarDay(isoToday(),false);render()});
+  await page.locator('button[data-view="today"]').click();
+  await page.locator('[data-action="dashboard-tab"][data-tab="nutrition"]').click();
   assert.equal(await page.locator('#calendarBar').isVisible(),true,'calendar returns in diary');
-  await page.locator('#content [data-action="pantry2-eat-tupper"]').first().click();
+  assert.equal(await page.getByText('Tuppers disponibles',{exact:true}).count(),0,'the kcal tab never shows a standalone stock list');
+  assert.equal(await page.locator('#content [data-action="pantry2-eat-tupper"]').count(),0,'individual choices only show in the picker');
+  await page.locator('.quick-foods-section [data-action="pantry2-pick-tupper"]').click();
+  const picker=page.getByRole('dialog',{name:'Registrar un tupper'});
+  assert.equal(await picker.locator('[data-action="pantry2-eat-tupper"]').count(),2,'prepared quantities remain selectable');
+  await picker.locator('[data-action="pantry2-eat-tupper"]').first().click();
+  assert.equal(await picker.isVisible(),false);
   assert.equal(await page.evaluate(()=>DinoPantry.available().length),1,'one consumed, one remains');
   assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),309.5,'no double debit');
   const mealId=await page.evaluate(()=>state.logs.find(x=>x.pantryTupperId)?.id);
   const tupperId=await page.evaluate(id=>state.logs.find(x=>x.id===id)?.pantryTupperId,mealId);
+  assert.equal(await page.locator('.food-record-grid .food-record-card').filter({hasText:'Solo pechuga de pollo'}).count(),1,'actual tupper type appears in the food diary');
   await page.locator('[data-action="edit-food"][data-id="'+mealId+'"]').click();
   await page.locator('#foodForm [data-food-id="chicken"]').fill('140');
   await page.locator('#foodForm button[type="submit"]').click();

@@ -9,7 +9,8 @@ assert.ok(css.includes('.pantry2-zone{'),'v2 CSS loaded');
 assert.ok(html.includes('app-pantry-v2.js'),'v2 script wired');
 assert.ok(read('worker.mjs').includes("import pantryV2 from './app-pantry-v2.js'"),'worker serves v2');
 for(const script of scripts){assert.ok(html.includes('/dinofit/'+script),'script used '+script);new vm.Script(read(script),{filename:script})}
-function el(key){return {_value:'',innerHTML:'',textContent:key==='#catalog-data'?catalog:'',hidden:false,dataset:{},classList:{toggle(){},add(){},remove(){}},addEventListener(){},setAttribute(){},removeAttribute(){},get value(){return this._value},set value(v){this._value=String(v)}}}
+const elements=new Map();
+function el(key){if(!elements.has(key))elements.set(key,{_value:'',innerHTML:'',textContent:key==='#catalog-data'?catalog:'',hidden:false,dataset:{},classList:{toggle(){},add(){},remove(){}},addEventListener(){},setAttribute(){},removeAttribute(){},querySelector(){return null},get value(){return this._value},set value(v){this._value=String(v)}});return elements.get(key)}
 const ctx=vm.createContext({document:{readyState:'loading',querySelector:el,querySelectorAll(){return []},addEventListener(){},body:{appendChild(){}}},window:{addEventListener(){},location:{hash:''}},location:{origin:'https://herramientas.zaurio.es',pathname:'/dinofit/',search:''},history:{replaceState(){}},sessionStorage:{getItem(){return null},setItem(){}},Intl,Date,Math,JSON,String,Number,Array,Object,Set,Map,Blob,TextDecoder,Uint8Array,console,crypto:require('node:crypto').webcrypto,structuredClone,setTimeout:()=>1,clearTimeout(){}});
 for(const script of scripts)vm.runInContext(read(script),ctx,{filename:script});
 const run=src=>vm.runInContext(src,ctx);
@@ -46,5 +47,37 @@ assert.equal(run('DinoPantry.stock("chicken").qty'),469);
 const merged=run('state.pantry');
 assert.ok(merged.inventory&&Array.isArray(merged.batches),'legacy pantry preserved');
 assert.equal(run('validateState(state)'),true,'document valid for persistence');
-assert.ok(run('quickFoods()').includes('Tuppers disponibles'),'diary has prepared food shortcut');
-console.log('PASS full DinoFit pantry: original document preserved, purchase, count, dairy, raw pieces, tuppers, undo, UI');
+async function checkDiary(){
+ const click=dataset=>ctx.actionHandler({target:{closest:()=>({dataset})}});
+ run(`activeView='today';selectCalendarDay('2026-11-23',false);
+  state.logs.push({id:'existing-snack',date:selectedDate,meal:'Merienda',title:'Tentempié anotado',parts:[{foodId:'activia-cereales',qty:1,kcal:88}]});
+  const availableFixture=DinoPantry.makeTuppers({recipeId:'mixed-chicken',title:'Pollo y verduras de la tanda',count:9,ingredients:[{foodId:'chicken',qty:10}],date:selectedDate});
+  const futureFixture=DinoPantry.makeTuppers({recipeId:'chicken',title:'Preparación posterior',ingredients:[{foodId:'chicken',qty:10}],date:'2026-11-24'});`);
+ await click({action:'dashboard-tab',tab:'nutrition'});
+ let view=el('#content').innerHTML;
+ assert.match(view,/<div class="nutrition-total"><strong>88<\/strong>/,'opening kcal preserves the existing 88 kcal');
+ assert.doesNotMatch(view,/Tuppers disponibles|data-action="pantry2-eat-tupper"/,'no standalone availability list in kcal');
+ assert.doesNotMatch(view,/Pollo y verduras de la tanda/,'uneaten containers do not appear in the diary or as inline buttons');
+ assert.match(view,/¿Qué has comido\?[\s\S]*?data-action="pantry2-pick-tupper"/,'picker inside existing food entry section');
+ assert.equal(run('state.logs.length'),1,'opening the kcal view never records a meal');
+ await click({action:'pantry2-pick-tupper',date:'2026-11-23'});
+ const dialog=el('#modalMount');
+ assert.equal(dialog.hidden,false);
+ assert.equal((dialog.innerHTML.match(/data-action="pantry2-eat-tupper"/g)||[]).length,10,'picker shows every prepared portion for the date, not only the first eight');
+ assert.doesNotMatch(dialog.innerHTML,/Preparación posterior/,'does not include containers prepared after the diary date');
+ assert.equal(run('state.logs.length'),1,'opening the picker never records a meal');
+ const id=run('availableFixture.at(-1).id'),before=run('DinoPantry.stock("chicken").qty');
+ await click({action:'pantry2-eat-tupper',date:'2026-11-23',id});
+ assert.equal(dialog.hidden,true);
+ assert.equal(run('state.logs.at(-1).pantryTupperId'),id);
+ assert.equal(run('state.logs.at(-1).date'),'2026-11-23','records the date selected by the user');
+ assert.equal(run('DinoPantry.stock("chicken").qty'),before,'logging a prepared tupper does not debit raw stock again');
+ view=el('#content').innerHTML;
+ const diary=view.split('<div class="food-record-grid"')[1].split('<div class="nutrition-foot"')[0];
+ assert.match(diary,/<h3>Pollo y verduras de la tanda<\/h3>/,'the consumed tupper type appears exactly in the registered food diary');
+ assert.match(view,/<div class="nutrition-total"><strong>99<\/strong>/,'existing calories plus the genuinely logged portion');
+ await click({action:'pantry2-pick-tupper',date:'2026-11-23'});
+ assert.doesNotMatch(dialog.innerHTML,new RegExp('data-id="'+id+'"'),'consumed portion no longer appears in the picker');
+ console.log('PASS full DinoFit pantry: original document, inventory, tupper accounting, and calories diary picker');
+}
+checkDiary().catch(error=>{console.error(error);process.exitCode=1});
