@@ -200,18 +200,18 @@ function dashboardCards(){
  const missing=isNumber(goal)&&last?last.weight-goal:null;
  const today=selectedDate===isoToday();
  const cards=[
-  {id:'weight',label:'Peso · kilos perdidos',value:day?locale(day.weight,1)+' kg':last?locale(last.weight,1)+' kg':'—',
+  {id:'weight',short:'Peso',label:'Peso · kilos perdidos',value:day?locale(day.weight,1)+' kg':last?locale(last.weight,1)+' kg':'—',
    hint:lost==null?'Añade la primera pesada':(lost>=0?'−':'+')+locale(Math.abs(lost),1)+' kg desde '+shortDate(first.date)},
-  {id:'composition',label:'Ritmo y composición',value:isNumber(pr.slope)&&pr.slope<0?locale(-pr.slope*1000,0)+' g/día':'—',
+  {id:'composition',short:'Ritmo',label:'Ritmo y composición',value:isNumber(pr.slope)&&pr.slope<0?locale(-pr.slope*1000,0)+' g/día':'—',
    hint:'Promedio de los últimos 14 días · ver grasa y músculo'},
-  {id:'goal',label:'Kilos que faltan',value:missing==null?'—':locale(Math.max(0,missing),1)+' kg',
+  {id:'goal',short:'Objetivo',label:'Kilos que faltan',value:missing==null?'—':locale(Math.max(0,missing),1)+' kg',
    hint:isNumber(goal)?'Para llegar a '+locale(goal,1)+' kg':'Configura tu objetivo'},
-  {id:'nutrition',label:today?'Kcal anotadas hoy':'Kcal del '+shortDate(selectedDate),value:dayLogs().length?locale(sum,0)+' kcal':'Sin registros',
+  {id:'nutrition',short:'Kcal',label:today?'Kcal anotadas hoy':'Kcal del '+shortDate(selectedDate),value:dayLogs().length?locale(sum,0)+' kcal':'Sin registros',
    hint:dayLogs().length+' entradas de '+shortDate(selectedDate)+' · ver alimentos y añadir'}
  ];
  return '<div class="dashboard-tabs-frame"><div class="dashboard-tabs" role="tablist" aria-label="Áreas de tu seguimiento">'+
-  cards.map(c=>'<button type="button" role="tab" class="section metric-card dashboard-tab '+(dashboardArea===c.id?'selected':'')+' '+(c.id==='weight'?'metric-main':'')+'" data-action="dashboard-tab" data-tab="'+c.id+'" id="dashboard-tab-'+c.id+'" tabindex="'+(dashboardArea===c.id?0:-1)+'" aria-selected="'+(dashboardArea===c.id)+'" aria-controls="dashboard-panel">'+
-   '<span class="eyebrow">'+htmlSafe(c.label)+'</span><span class="dashboard-value">'+htmlSafe(c.value)+'</span>'+
+  cards.map(c=>'<button type="button" role="tab" class="section metric-card dashboard-tab '+(dashboardArea===c.id?'selected':'')+' '+(c.id==='weight'?'metric-main':'')+'" data-action="dashboard-tab" data-tab="'+c.id+'" id="dashboard-tab-'+c.id+'" tabindex="'+(dashboardArea===c.id?0:-1)+'" aria-selected="'+(dashboardArea===c.id)+'" aria-controls="dashboard-panel" aria-label="'+htmlSafe(c.short+' · '+c.label+': '+c.value+'. '+c.hint)+'">'+
+   '<span class="eyebrow dashboard-label-full">'+htmlSafe(c.label)+'</span><span class="eyebrow dashboard-label-short">'+htmlSafe(c.short)+'</span><span class="dashboard-value">'+htmlSafe(c.value)+'</span>'+
    '<span class="micro">'+htmlSafe(c.hint)+'</span></button>').join('')+'</div></div>';
 }
 function goalDashboard(){
