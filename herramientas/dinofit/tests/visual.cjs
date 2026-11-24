@@ -110,6 +110,7 @@ async function main(){
   await page.screenshot({path:path.join(dir,name+'-goal.png'),fullPage:true});
   await page.locator('[data-action=dashboard-tab][data-tab=nutrition]').click();
   assert.equal(await page.locator('.food-button').count(),0,'no stock-backed shortcut if balances are unknown');
+  const stockBeforeQuickChecks=await page.evaluate(()=>structuredClone(state.pantry));
   await page.evaluate(()=>{DinoPantry.recount('activia-cereales',1);DinoPantry.recount('coffee',3);render()});
   assert.equal(await page.locator('.food-button').count(),1,'only stocked Activia is suggested');
   assert.equal(await page.locator('[data-recipe="coffee"]').count(),0,'coffee requires milk too');
@@ -165,7 +166,7 @@ async function main(){
   await page.locator('[data-recipe=coffee]').click();
   assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Merienda','second coffee is suggested as snack');
   await page.locator('[data-action=close-modal]').first().click();
-  await page.evaluate(logs=>{state.logs=logs;render();},initialFoodLogs);
+  await page.evaluate(({logs,pantry})=>{state.logs=logs;state.pantry=pantry;render();},{logs:initialFoodLogs,pantry:stockBeforeQuickChecks});
   // Test a browser left open overnight, without affecting any real user data.
   await page.evaluate(()=>{
     lastObservedToday='2026-04-18';
