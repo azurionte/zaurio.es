@@ -157,11 +157,17 @@ function pantry2TupperPortion(t){
  const main=t.ingredients.find(x=>['chicken','beef','burger-beef','burger-chicken','burger-mixed','egg'].includes(x.foodId))||t.ingredients[0];
  if(!main)return '';
  const unit=pantry2Unit(main.foodId),pieces=main.pieces;
- if(unit==='ud')return locale(main.qty,Number.isInteger(main.qty)?0:2)+' '+({egg:'huevos','burger-beef':'hamburguesas','burger-chicken':'hamburguesas','burger-mixed':'hamburguesas'}[main.foodId]||'ud');
+ const titleParts=String(t.title||'').toLocaleLowerCase('es').split(/[^a-záéíóúüñ0-9]+/);
+ const titled=qty=>Number.isInteger(qty)&&titleParts.some((word,i)=>{
+  const equivalent=['','un','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez'][qty];
+  return (word===String(qty)||(equivalent&&word===equivalent)||(qty===1&&['una','uno'].includes(word)))&&
+    /^(?:hamburguesas?|burgers?|huevos?|filetes?|piezas?|ud|unidades?)$/.test(titleParts[i+1]||'');
+ });
+ if(unit==='ud')return titled(main.qty)?'':locale(main.qty,Number.isInteger(main.qty)?0:2)+' '+({egg:'huevos','burger-beef':'hamburguesas','burger-chicken':'hamburguesas','burger-mixed':'hamburguesas'}[main.foodId]||'ud');
  const size=locale(main.qty,0)+' '+unit;
  const fillets=['chicken','beef'].includes(main.foodId);
  const amount=fillets?(pieces===1?'filete':'filetes'):(pieces===1?'pieza':'piezas');
- return pantry2N(pieces)&&pieces>0?locale(pieces,0)+' '+amount+' · '+size:size;
+ return pantry2N(pieces)&&pieces>0&&!titled(pieces)?locale(pieces,0)+' '+amount+' · '+size:size;
 }
 function pantry2QuickGroups(date){
  const groups=new Map();
@@ -171,8 +177,11 @@ function pantry2QuickGroups(date){
   if(!groups.has(key))groups.set(key,{t,count:0});
   groups.get(key).count++;
  }
- const tuppers=[...groups.values()].map(({t,count})=>({tupperId:t.id,name:t.title||'Tupper',
-  parts:t.ingredients.map(x=>[x.foodId,x.qty]),hint:[pantry2TupperPortion(t),count===1?'1 disponible':count+' disponibles'].filter(Boolean).join(' · ')}));
+ const entries=[...groups.values()],names=new Map();
+ const nameKey=t=>String(t.title||'Tupper').trim().toLocaleLowerCase('es');
+ for(const {t} of entries){const key=nameKey(t);names.set(key,(names.get(key)||0)+1);}
+ const tuppers=entries.map(({t,count})=>({tupperId:t.id,name:t.title||'Tupper',
+  parts:t.ingredients.map(x=>[x.foodId,x.qty]),available:count,variant:names.get(nameKey(t))>1?pantry2TupperPortion(t):''}));
  const stocked=ids=>RECIPES.filter(r=>ids.includes(r.id)&&pantry2HasStock(r.parts));
  return [
   {id:'tuppers',title:'Tuppers preparados',emoji:'🍲',choices:tuppers},
