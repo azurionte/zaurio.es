@@ -75,7 +75,7 @@ jobs:
             check_asset "/" /tmp/dino-html '/dinofit/app-pantry-v2.js' || failed=1
             check_asset "/app.css" /tmp/dino-css '.pantry2-zone{' || failed=1
             check_asset "/app.css" /tmp/dino-css '.quick-kcal{font-size:11px' || failed=1
-            check_asset "/app.css" /tmp/dino-css 'grid-template-columns:repeat(4,minmax(8.5rem,1fr))' || failed=1
+            check_asset "/app.css" /tmp/dino-css '@container dashboard-summary (max-width:32rem)' || failed=1
             check_asset "/app.js" /tmp/dino-core 'function normalizeCatalog()' || failed=1
             check_asset "/app-pantry.js" /tmp/dino-pantry 'name="productId"' || failed=1
             check_asset "/app-pantry-v3.js" /tmp/dino-pantry-v3 "pantry3-tab" || failed=1

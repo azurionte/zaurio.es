@@ -195,8 +195,7 @@ function selectDashboardTab(id){
  dashboardArea=id;
  render();
  const tab=$('#dashboard-tab-'+id);
- tab?.focus?.({preventScroll:true});
- revealDashboardTab(tab);
+ tab?.focus?.();
 }
 async function actionHandler(event){
  const button=event.target.closest('[data-action]');

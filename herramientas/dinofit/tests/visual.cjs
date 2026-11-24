@@ -14,7 +14,7 @@ async function main(){
  const dir=path.join(__dirname,'visual');fs.mkdirSync(dir,{recursive:true});
  try{
  for(const [name,width,height] of [['desktop',1366,850],['iphone',390,844]]){
-  const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
+  const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1,isMobile:name==='iphone',hasTouch:name==='iphone'});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/cdn.jsdelivr.net/**',route=>route.fulfill({status:200,contentType:'application/javascript',body:"window.supabase={createClient:()=>({auth:{onAuthStateChange(){},getSession:async()=>({data:{session:null},error:null})}})};"}));
   await page.goto('http://127.0.0.1:'+port+'/dinofit/',{waitUntil:'domcontentloaded'});
@@ -64,17 +64,45 @@ async function main(){
   const tabGeometry=()=>page.locator('.dashboard-tabs').evaluate(list=>{
    const tabs=[...list.querySelectorAll('[role=tab]')],bounds=list.getBoundingClientRect(),selected=list.querySelector('[aria-selected=true]');
    const selectedBounds=selected.getBoundingClientRect();
+   const colRows=new Map();
+   for(const tab of tabs){const top=Math.round(tab.getBoundingClientRect().top);colRows.set(top,(colRows.get(top)||0)+1);}
+   const viewport=document.documentElement.clientWidth;
    return {rows:new Set(tabs.map(tab=>Math.round(tab.getBoundingClientRect().top))).size,
+    cols:[...colRows.values()],pageOverflow:Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)-viewport,
     minHeight:Math.min(...tabs.map(tab=>tab.getBoundingClientRect().height)),
     maxHeight:Math.max(...tabs.map(tab=>tab.getBoundingClientRect().height)),
     overflow:list.scrollWidth-list.clientWidth,scroll:list.scrollLeft,
-    intact:tabs.every(tab=>tab.scrollWidth<=tab.clientWidth+1&&tab.querySelector('.eyebrow')?.textContent&&tab.querySelector('.dashboard-value')?.textContent),
+    allShown:tabs.every(tab=>{const rect=tab.getBoundingClientRect();return rect.left>=bounds.left-1&&rect.right<=bounds.right+1&&rect.left>=-1&&rect.right<=viewport+1;}),
+    intact:tabs.every(tab=>tab.scrollWidth<=tab.clientWidth+1&&tab.scrollHeight<=tab.clientHeight+1),
+    labels:tabs.map(tab=>[...tab.querySelectorAll('.eyebrow,.dashboard-value,.micro')].map(n=>n.textContent.trim())),
     fullyShown:selectedBounds.left>=bounds.left-1&&selectedBounds.right<=bounds.right+1};
   });
   const initialTabs=await tabGeometry();
-  assert.equal(initialTabs.rows,1,'all dashboard areas share one row');
-  assert.ok(initialTabs.intact&&initialTabs.minHeight>=44&&initialTabs.maxHeight<122,'compact readable labels and values with usable touch targets');
-  assert.equal(initialTabs.overflow>1,name==='iphone','only the narrow viewport scrolls the tab bar');
+  const assertTabFit=(g,wide,description)=>{
+   assert.deepEqual(g.cols,wide?[4]:[2,2],`${description}: four columns or compact 2×2`);
+   assert.ok(g.intact&&g.allShown&&g.minHeight>=44&&g.maxHeight<122,`${description}: full content, visible cards, compact touch targets`);
+   assert.ok(g.pageOverflow<=0&&g.overflow<=0&&g.scroll===0,`${description}: neither the page nor the summary scrolls horizontally (${JSON.stringify(g)})`);
+   assert.ok(g.labels.every(l=>l.length===3&&l.every(Boolean)),`${description}: complete label, value and hint in every tab`);
+  };
+  assertTabFit(initialTabs,name==='desktop',name);
+  if(name==='desktop'){
+   for(const narrow of [320,350,390]){
+    await page.setViewportSize({width:narrow,height:844});
+    const narrowTabs=await tabGeometry();
+    assertTabFit(narrowTabs,false,`${narrow}px`);
+    assert.deepEqual(narrowTabs.labels,initialTabs.labels,'narrow widths preserve exact labels, values and hints');
+    for(const id of ['composition','goal','nutrition','weight']){
+     await page.locator('#dashboard-tab-'+id).click();
+     const selected=await tabGeometry();
+     assertTabFit(selected,false,`${narrow}px ${id}`);
+     assert.equal(await page.locator('#dashboard-panel').getAttribute('aria-labelledby'),'dashboard-tab-'+id,'each tab opens its own panel');
+    }
+   }
+   await page.setViewportSize({width,height});
+  }else{
+   await page.locator('#dashboard-tab-nutrition').tap();
+   assert.equal(await page.locator('#dashboard-panel').getAttribute('aria-labelledby'),'dashboard-tab-nutrition','both mobile rows accept a touch tap');
+  }
   const weightTab=page.locator('#dashboard-tab-weight');
   await weightTab.focus();
   await page.keyboard.press('ArrowRight');
@@ -83,7 +111,7 @@ async function main(){
   await page.keyboard.press('End');
   assert.equal(await page.locator(':focus').getAttribute('id'),'dashboard-tab-nutrition');
   const endTabs=await tabGeometry();
-  assert.ok(endTabs.fullyShown&&(name!=='iphone'||endTabs.scroll>0),'scrolled active tab stays visible after re-render');
+  assertTabFit(endTabs,name==='desktop','keyboard-selected area');
   await page.evaluate(()=>render());
   assert.ok((await tabGeometry()).fullyShown,'rightmost active area remains visible during an ordinary refresh');
   await page.locator('#dashboard-tab-nutrition').focus();
@@ -129,6 +157,13 @@ async function main(){
   await checkCompact(page.locator('[data-recipe="activia"]'),56);
   await checkCompact(page.locator('[data-recipe="coffee"]'),44);
   assert.equal(await page.locator('[data-recipe="coffee"] .quick-copy small').count(),0,'no recipe quantity subline for coffee');
+  if(name==='iphone'){
+   for(const narrow of [320,350,390]){
+    await page.setViewportSize({width:narrow,height});
+    assertTabFit(await tabGeometry(),false,`${narrow}px stocked mobile diary`);
+   }
+   await page.setViewportSize({width,height});
+  }
   assert.equal(await page.locator('.food-record-card').count(),6,'six illustrated food cards');
   assert.equal(await page.locator('.plate-gallery').count(),0,'duplicate gallery must not render');
   assert.equal(await page.locator('.nutrition-overview').count(),1,'one panel contains summary and food diary');
