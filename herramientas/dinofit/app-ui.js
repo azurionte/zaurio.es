@@ -304,11 +304,16 @@ function quickFoods(groups=[]){
  const stocked=groups.filter(g=>g.choices.length);
  const button=r=>{
   const mock={title:r.name,parts:r.parts.map(([foodId,qty])=>({foodId,qty}))};
+  const kcal=mock.parts.every(p=>isNumber(food(p.foodId)?.kcal))?
+   '≈ '+locale(logTotal(mock.parts.map(p=>makePart(p.foodId,p.qty))),0)+' kcal':'';
+  const title=r.variant?r.name+' · '+r.variant:r.name;
+  const availability=r.available?(r.available===1?'1 disponible':r.available+' disponibles'):'';
   const action=r.tupperId? 'data-action="pantry2-eat-tupper" data-id="'+htmlSafe(r.tupperId)+'" data-date="'+htmlSafe(selectedDate)+'"':
    'data-action="add-food" data-recipe="'+htmlSafe(r.id)+'"';
-  return '<button class="food-button illustrated-quick" type="button" '+action+' aria-label="Añadir '+htmlSafe(r.name+(r.tupperId?' · '+r.hint:''))+'">'+
-   '<span class="food-top"><span class="quick-pictures">'+foodPicture(mock,'sticker')+'</span><span class="quick-plus" aria-hidden="true">+</span></span>'+
-   '<span class="quick-copy"><strong>'+htmlSafe(r.name)+'</strong><small>'+htmlSafe(r.hint)+'</small></span></button>';
+  return '<button class="food-button illustrated-quick" type="button" '+action+' aria-label="'+htmlSafe(['Añadir '+title,kcal,availability].filter(Boolean).join(' · '))+'">'+
+   '<span class="food-top"><span class="quick-pictures">'+foodPicture(mock,'sticker')+
+   (kcal?'<span class="quick-kcal">'+htmlSafe(kcal)+'</span>':'')+'</span><span class="quick-plus" aria-hidden="true">+</span></span>'+
+   '<span class="quick-copy"><strong>'+htmlSafe(title)+'</strong>'+(availability?'<small class="quick-availability">'+htmlSafe(availability)+'</small>':'')+'</span></button>';
  };
  return '<section class="section quick-foods-section"><div class="section-head"><div><span class="eyebrow">A UN TOQUE</span><h2>¿Qué has comido?</h2><p>Registra un tupper, un tentempié o una bebida de tu despensa.</p></div></div>'+
   (stocked.length?stocked.map(g=>'<div class="quick-group food-group-'+g.id+'">'+

@@ -116,6 +116,19 @@ async function main(){
   assert.equal(await page.locator('[data-recipe="coffee"]').count(),0,'coffee requires milk too');
   await page.evaluate(()=>{DinoPantry.recount('milk',360);render()});
   assert.equal(await page.locator('.food-button').count(),2,'stocked coffee appears with both ingredients');
+  const checkCompact=async(card,kcal)=>{
+   assert.equal(await card.locator('.food-top .quick-kcal').innerText(),'≈ '+kcal+' kcal','kcal appears next to the icons');
+   const rect=await card.evaluate(el=>{
+    const top=el.querySelector('.food-top'),title=el.querySelector('.quick-copy'),art=el.querySelector('.food-sticker-icons'),kcal=el.querySelector('.quick-kcal');
+    const topBounds=top.getBoundingClientRect(),kcalBounds=kcal.getBoundingClientRect();
+    return {inner:el.scrollWidth-el.clientWidth,topHeight:topBounds.height,titleGap:title.getBoundingClientRect().top-topBounds.bottom,
+     sameRow:kcalBounds.top<art.getBoundingClientRect().bottom&&kcalBounds.bottom>art.getBoundingClientRect().top};
+   });
+   assert.ok(rect.inner<=1&&rect.topHeight<35&&rect.titleGap>=0&&rect.titleGap<9&&rect.sameRow,'compact single icon/kcal row and no blank band: '+JSON.stringify(rect));
+  };
+  await checkCompact(page.locator('[data-recipe="activia"]'),56);
+  await checkCompact(page.locator('[data-recipe="coffee"]'),44);
+  assert.equal(await page.locator('[data-recipe="coffee"] .quick-copy small').count(),0,'no recipe quantity subline for coffee');
   assert.equal(await page.locator('.food-record-card').count(),6,'six illustrated food cards');
   assert.equal(await page.locator('.plate-gallery').count(),0,'duplicate gallery must not render');
   assert.equal(await page.locator('.nutrition-overview').count(),1,'one panel contains summary and food diary');
@@ -259,6 +272,7 @@ async function main(){
   assert.equal(await page.getByText('Tuppers disponibles',{exact:true}).count(),0,'the kcal tab never shows a standalone stock list');
   const quickTupper=page.locator('.quick-foods-section [data-action="pantry2-eat-tupper"]');
   assert.equal(await quickTupper.count(),1,'two identical portions share an existing-section shortcut');
+  await checkCompact(quickTupper,170);
   assert.match(await quickTupper.innerText(),/2 disponibles/);
   await quickTupper.click();
   assert.equal(await quickTupper.count(),1,'shortcut stays with the remaining portion');

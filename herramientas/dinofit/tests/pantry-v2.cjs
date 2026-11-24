@@ -71,10 +71,11 @@ async function checkDiary(){
  assert.doesNotMatch(view,/Tuppers disponibles|Aún planificado|Preparación posterior/,'no standalone list, planned or later meals');
  assert.match(view,/¿Qué has comido\?[\s\S]*?data-action="pantry2-eat-tupper"/,'actual quick choices appear inside the existing section');
  assert.equal(cardCount(),3,'identical preparations collapse; other recipes and different piece counts remain distinct');
- assert.match(view,/2 filetes · 100 g · 2 disponibles/);
- assert.match(view,/4 filetes · 100 g · 1 disponible/);
+ assert.match(view,/<strong>Pollo con verduras · 2 filetes · 100 g<\/strong><small class="quick-availability">2 disponibles<\/small>/);
+ assert.match(view,/<strong>Pollo con verduras · 4 filetes · 100 g<\/strong><small class="quick-availability">1 disponible<\/small>/);
  assert.equal(run('state.logs.length'),1,'opening the kcal view never records a meal');
  assert.equal(hasRecipe('activia'),true);
+ assert.match(view,/<span class="quick-kcal">≈ 56 kcal<\/span>/,'stocked Activia shows kcal for one yogurt');
  for(const id of ['cheese','flan','yopro','cola','coffee','mixed-chicken'])assert.equal(hasRecipe(id),false,id+' not stocked');
  const before=run('DinoPantry.stock("chicken").qty');
  const normal=run('normal.id'),duplicate=run('duplicate.id');
@@ -106,6 +107,7 @@ async function checkDiary(){
  assert.equal(hasRecipe('coffee'),false,'milk alone does not offer coffee');
  refresh(`DinoPantry.purchase('coffee',1)`);
  assert.equal(hasRecipe('coffee'),true,'both stocked ingredients unlock exactly one serving');
+ assert.match(content(),/<span class="quick-kcal">≈ 44 kcal<\/span>/,'coffee estimate includes the capsule and milk');
  use('coffee',[['coffee',1],['milk',120]]);
  assert.equal(run('DinoPantry.stock("milk").qty'),0);
  assert.equal(run('DinoPantry.stock("coffee").qty'),0);
@@ -114,6 +116,13 @@ async function checkDiary(){
  run('formEntryId='+JSON.stringify(old));
  use('coffee',[['coffee',1],['milk',120]]);
  assert.equal(run('state.logs.at(-1).id'),old,'editing saved items is not blocked by zero current stock');
+ refresh(`DinoPantry.recount('burger-chicken',4);
+  const burger=DinoPantry.makeTuppers({recipeId:'mixed-chickenburgers',title:'2 hamburguesas de pollo + verduras',ingredients:[{foodId:'burger-chicken',qty:2},{foodId:'saute-chicken',qty:20}],date:selectedDate})[0];
+  DinoPantry.makeTuppers({recipeId:'mixed-chickenburgers',title:'2 hamburguesas de pollo + verduras',ingredients:[{foodId:'burger-chicken',qty:2},{foodId:'saute-chicken',qty:40}],date:selectedDate})`);
+ const burgerId=run('burger.id');
+ const card=content().split('data-id="'+burgerId+'"')[1].split('</button>')[0];
+ assert.match(card,/<span class="quick-kcal">≈ 287 kcal<\/span>/,'per-tupper calories include both burgers and the vegetables');
+ assert.match(card,/<span class="quick-copy"><strong>2 hamburguesas de pollo \+ verduras<\/strong><small class="quick-availability">1 disponible<\/small><\/span>/,'show the complete food name once and only availability below');
  console.log('PASS DinoFit pantry: diary, stock-only shortcuts, grouping, depletion, restock and compatible edits');
 }
 checkDiary().catch(error=>{console.error(error);process.exitCode=1});
