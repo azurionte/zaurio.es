@@ -83,8 +83,11 @@ legend{font-weight:650;color:var(--muted);font-size:12px;margin-bottom:7px}
 .section + .section{margin-top:15px}
 .section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:15px}
 .section-head p{font-size:12px;color:var(--muted);margin-top:5px}
-.dashboard-tabs{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(8.5rem,1fr));gap:8px;margin:0 -3px 13px;padding:3px 3px 6px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
-.dashboard-tabs>.dashboard-tab{margin:0;padding:9px 11px;border-radius:13px;min-height:68px;box-shadow:none;touch-action:pan-x pan-y pinch-zoom}
+.dashboard-tabs-frame{container:dashboard-summary / inline-size;margin:0 0 13px;min-width:0}
+.dashboard-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-width:0}
+@container dashboard-summary (max-width:32rem){.dashboard-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@supports not (container-type:inline-size){@media(max-width:750px){.dashboard-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}}
+.dashboard-tabs>.dashboard-tab{margin:0;padding:9px 11px;border-radius:13px;min-height:68px;min-width:0;box-shadow:none;overflow-wrap:anywhere}
 .dashboard-tabs>.dashboard-tab:focus-visible{outline-offset:-3px}
 .metric-main{background:radial-gradient(circle at 95% 0%,#54ccaf24,transparent 64%),linear-gradient(135deg,#194c56,#1b294b);border-color:#3d7379}
 .metric-main .big{font-size:clamp(35px,4.6vw,56px);font-weight:770;line-height:1.04;letter-spacing:-1.6px;margin:8px 0}
@@ -252,8 +255,10 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
  .modal-bottom{padding:12px 14px}
 }
 @media(max-width:370px){
- .calendar-bar .date-info{min-width:65px}
- .calendar-bar .date-info strong{font-size:11px}
+ .calendar-bar{min-width:0;gap:5px}
+ .calendar-bar .date-info{min-width:0;flex:1 1 auto}
+ .calendar-bar .date-info strong{font-size:11px;white-space:normal}
+ .calendar-bar input{min-width:0;flex:0 1 40px}
  .scale-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .main{padding-left:9px;padding-right:9px}
 }

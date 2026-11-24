@@ -209,16 +209,10 @@ function dashboardCards(){
   {id:'nutrition',label:today?'Kcal anotadas hoy':'Kcal del '+shortDate(selectedDate),value:dayLogs().length?locale(sum,0)+' kcal':'Sin registros',
    hint:dayLogs().length+' entradas de '+shortDate(selectedDate)+' · ver alimentos y añadir'}
  ];
- return '<div class="metrics-row dashboard-tabs" role="tablist" aria-label="Áreas de tu seguimiento">'+
+ return '<div class="dashboard-tabs-frame"><div class="dashboard-tabs" role="tablist" aria-label="Áreas de tu seguimiento">'+
   cards.map(c=>'<button type="button" role="tab" class="section metric-card dashboard-tab '+(dashboardArea===c.id?'selected':'')+' '+(c.id==='weight'?'metric-main':'')+'" data-action="dashboard-tab" data-tab="'+c.id+'" id="dashboard-tab-'+c.id+'" tabindex="'+(dashboardArea===c.id?0:-1)+'" aria-selected="'+(dashboardArea===c.id)+'" aria-controls="dashboard-panel">'+
    '<span class="eyebrow">'+htmlSafe(c.label)+'</span><span class="dashboard-value">'+htmlSafe(c.value)+'</span>'+
-   '<span class="micro">'+htmlSafe(c.hint)+'</span></button>').join('')+'</div>';
-}
-function revealDashboardTab(tab){
- const list=tab?.parentElement;if(!list)return;
- const {left,right}=tab.getBoundingClientRect(),bounds=list.getBoundingClientRect();
- if(left<bounds.left)list.scrollLeft+=left-bounds.left;
- else if(right>bounds.right)list.scrollLeft+=right-bounds.right;
+   '<span class="micro">'+htmlSafe(c.hint)+'</span></button>').join('')+'</div></div>';
 }
 function goalDashboard(){
  const timeline=timeLine(),first=timeline[0],last=timeline.at(-1),goal=state.profile.targetWeight,pr=projections();
@@ -394,10 +388,5 @@ function render(){
  renderCalendar();setSaveUI();
  for(const b of $$('button[data-view]'))b.classList.toggle('selected',b.dataset.view===activeView);
  const content=$('#content');if(!content)return;
- const scroll=content.querySelector?.('.dashboard-tabs')?.scrollLeft;
  content.innerHTML=activeView==='pantry'?currentPantry():activeView==='history'?currentHistory():activeView==='settings'?currentSettings():currentDay();
- const tabs=content.querySelector?.('.dashboard-tabs');
- if(!tabs)return;
- if(scroll!==undefined)tabs.scrollLeft=scroll;
- else revealDashboardTab(tabs.querySelector('[aria-selected="true"]'));
 }
