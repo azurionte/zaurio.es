@@ -78,11 +78,9 @@ const goals=run('currentDay()');
 assert.ok(goals.includes('Tu camino hasta')&&goals.includes('Actividad física'));
 run('dashboardArea="nutrition"');
 const foods=run('currentDay()');
-assert.equal((foods.match(/data-recipe=/g)||[]).length,14,'eight tuppers and six drink/snack shortcuts');
-assert.ok(foods.includes('Platos con salteados')&&foods.includes('Solo proteína'));
-assert.ok(foods.includes('Postres y lácteos')&&foods.includes('Bebidas'));
+assert.equal((foods.match(/data-recipe=/g)||[]).length,0,'no unverified template choices when pantry state is unavailable');
+assert.ok(foods.includes('¿Qué has comido?')&&foods.includes('existencias confirmadas'));
 assert.ok(foods.includes('Día completo'));
-assert.ok(foods.includes('data-recipe="cola"'));
 assert.equal(run('makePart("cola",330).kcal'),0);
 
 assert.equal(run('foodTone("Desayuno")'),'breakfast');
@@ -193,4 +191,4 @@ assert.equal(run('pantryBalance("chicken")'),null,'planned ingredients do not in
 assert.equal(run('validateState(state)'),true,'pantry extension preserves existing JSON document');
 assert.ok(run('currentPantry()').includes('Compra pendiente'));
 
-console.log('PASS DinoFit: 4 pestañas, seguimiento activo, composición interactiva, 14 accesos, fecha, histórico e importación segura.');
+console.log('PASS DinoFit: 4 pestañas, seguimiento activo, composición interactiva, diario, fecha, histórico e importación segura.');

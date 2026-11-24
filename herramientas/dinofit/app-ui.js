@@ -210,9 +210,15 @@ function dashboardCards(){
    hint:dayLogs().length+' entradas de '+shortDate(selectedDate)+' · ver alimentos y añadir'}
  ];
  return '<div class="metrics-row dashboard-tabs" role="tablist" aria-label="Áreas de tu seguimiento">'+
-  cards.map(c=>'<button type="button" role="tab" class="section metric-card dashboard-tab '+(dashboardArea===c.id?'selected':'')+' '+(c.id==='weight'?'metric-main':'')+'" data-action="dashboard-tab" data-tab="'+c.id+'" aria-selected="'+(dashboardArea===c.id)+'" aria-controls="dashboard-panel">'+
+  cards.map(c=>'<button type="button" role="tab" class="section metric-card dashboard-tab '+(dashboardArea===c.id?'selected':'')+' '+(c.id==='weight'?'metric-main':'')+'" data-action="dashboard-tab" data-tab="'+c.id+'" id="dashboard-tab-'+c.id+'" tabindex="'+(dashboardArea===c.id?0:-1)+'" aria-selected="'+(dashboardArea===c.id)+'" aria-controls="dashboard-panel">'+
    '<span class="eyebrow">'+htmlSafe(c.label)+'</span><span class="dashboard-value">'+htmlSafe(c.value)+'</span>'+
    '<span class="micro">'+htmlSafe(c.hint)+'</span></button>').join('')+'</div>';
+}
+function revealDashboardTab(tab){
+ const list=tab?.parentElement;if(!list)return;
+ const {left,right}=tab.getBoundingClientRect(),bounds=list.getBoundingClientRect();
+ if(left<bounds.left)list.scrollLeft+=left-bounds.left;
+ else if(right>bounds.right)list.scrollLeft+=right-bounds.right;
 }
 function goalDashboard(){
  const timeline=timeLine(),first=timeline[0],last=timeline.at(-1),goal=state.profile.targetWeight,pr=projections();
@@ -287,30 +293,28 @@ function currentDay(){
  let out='<div class="view-head"><span class="eyebrow">TU SEGUIMIENTO</span><h1>Tu día · '+htmlSafe(readableDate(selectedDate))+'</h1><p>Elige una fecha y utiliza las tarjetas para cambiar de área.</p></div>';
  if(selectedDate!==isoToday())out+='<div class="historical-day-note" role="status"><span>Estás consultando el <strong>'+htmlSafe(readableDate(selectedDate))+'</strong>, no el día de hoy. Las comidas no se trasladan de una fecha a otra.</span><button type="button" class="click sm" data-action="date-today">Ir a hoy · '+htmlSafe(shortDate(isoToday()))+'</button></div>';
  if(notice)out+='<div class="notice section-gap">'+htmlSafe(notice)+'</div>';
- out+=dashboardCards()+'<div id="dashboard-panel" role="tabpanel" class="dashboard-panel">';
+ out+=dashboardCards()+'<div id="dashboard-panel" role="tabpanel" aria-labelledby="dashboard-tab-'+dashboardArea+'" class="dashboard-panel">';
  if(dashboardArea==='composition')out+=metricGrid();
  else if(dashboardArea==='goal')out+=goalDashboard()+dayRecords('activity');
  else if(dashboardArea==='nutrition')out+=dayRecords('food')+quickFoods();
  else out+='<div class="section-head quick-weights"><div><h2>Pesadas y proyección</h2><p>Tu evolución medida, con acceso a los modelos de seguimiento.</p></div><button type="button" class="click sm" data-action="weight-new">+ Registrar peso</button></div>'+weightGraph();
  return out+'</div>';
 }
-function quickFoods(){
- const groups=[
-  {id:'mixed',title:'Platos con salteados',emoji:'🥘',hint:'Tu guarnición habitual y el aceite repartido entre ocho tuppers',recipes:RECIPES.filter(r=>r.group==='mixed')},
-  {id:'plain',title:'Solo proteína',emoji:'🍗',hint:'Pollo, ternera o dos hamburguesas por plato',recipes:RECIPES.filter(r=>r.group==='plain')},
-  {id:'treats',title:'Postres y lácteos',emoji:'🍮',hint:'Tus tentempiés habituales',recipes:RECIPES.filter(r=>['cheese','flan','yopro','activia'].includes(r.id))},
-  {id:'drinks',title:'Bebidas',emoji:'🥤',hint:'Café, leche y refrescos',recipes:RECIPES.filter(r=>['coffee','cola'].includes(r.id))}
- ];
- const buttons=r=>{
+function quickFoods(groups=[]){
+ const stocked=groups.filter(g=>g.choices.length);
+ const button=r=>{
   const mock={title:r.name,parts:r.parts.map(([foodId,qty])=>({foodId,qty}))};
-  return '<button class="food-button illustrated-quick" type="button" data-action="add-food" data-recipe="'+r.id+'" aria-label="Añadir '+htmlSafe(r.name)+'">'+
+  const action=r.tupperId? 'data-action="pantry2-eat-tupper" data-id="'+htmlSafe(r.tupperId)+'" data-date="'+htmlSafe(selectedDate)+'"':
+   'data-action="add-food" data-recipe="'+htmlSafe(r.id)+'"';
+  return '<button class="food-button illustrated-quick" type="button" '+action+' aria-label="Añadir '+htmlSafe(r.name+(r.tupperId?' · '+r.hint:''))+'">'+
    '<span class="food-top"><span class="quick-pictures">'+foodPicture(mock,'sticker')+'</span><span class="quick-plus" aria-hidden="true">+</span></span>'+
    '<span class="quick-copy"><strong>'+htmlSafe(r.name)+'</strong><small>'+htmlSafe(r.hint)+'</small></span></button>';
  };
- return '<section class="section quick-foods-section"><div class="section-head"><div><span class="eyebrow">A UN TOQUE</span><h2>¿Qué has comido?</h2><p>Selecciona un plato o tentempié para registrarlo. Puedes ajustar las cantidades.</p></div></div>'+
-  groups.map(g=>'<div class="quick-group food-group-'+g.id+'">'+
-   '<div class="quick-group-title"><span class="quick-group-em" aria-hidden="true">'+g.emoji+'</span><div><h3>'+htmlSafe(g.title)+'</h3><p class="helper">'+htmlSafe(g.hint)+'</p></div></div>'+
-   '<div class="quick-grid">'+g.recipes.map(buttons).join('')+'</div></div>').join('')+'</section>';
+ return '<section class="section quick-foods-section"><div class="section-head"><div><span class="eyebrow">A UN TOQUE</span><h2>¿Qué has comido?</h2><p>Registra un tupper, un tentempié o una bebida de tu despensa.</p></div></div>'+
+  (stocked.length?stocked.map(g=>'<div class="quick-group food-group-'+g.id+'">'+
+   '<div class="quick-group-title"><span class="quick-group-em" aria-hidden="true">'+g.emoji+'</span><div><h3>'+htmlSafe(g.title)+'</h3></div></div>'+
+   '<div class="quick-grid">'+g.choices.map(button).join('')+'</div></div>').join(''):
+   '<p class="empty">No hay platos preparados ni tentempiés o bebidas con existencias confirmadas para añadir.</p>')+'</section>';
 }
 function foodPartsCaption(entry){
  const parts=Array.isArray(entry.parts)?entry.parts:[];
@@ -385,5 +389,10 @@ function render(){
  renderCalendar();setSaveUI();
  for(const b of $$('button[data-view]'))b.classList.toggle('selected',b.dataset.view===activeView);
  const content=$('#content');if(!content)return;
+ const scroll=content.querySelector?.('.dashboard-tabs')?.scrollLeft;
  content.innerHTML=activeView==='pantry'?currentPantry():activeView==='history'?currentHistory():activeView==='settings'?currentSettings():currentDay();
+ const tabs=content.querySelector?.('.dashboard-tabs');
+ if(!tabs)return;
+ if(scroll!==undefined)tabs.scrollLeft=scroll;
+ else revealDashboardTab(tabs.querySelector('[aria-selected="true"]'));
 }

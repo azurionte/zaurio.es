@@ -61,6 +61,34 @@ async function main(){
   assert.equal(measured.selectedTab,'weight','weight selected by default');
   assert.ok(measured.charts>=1,'weight chart visible');
   assert.ok(measured.horizontalOverflow<=3,'weight horizontal overflow: '+JSON.stringify(measured));
+  const tabGeometry=()=>page.locator('.dashboard-tabs').evaluate(list=>{
+   const tabs=[...list.querySelectorAll('[role=tab]')],bounds=list.getBoundingClientRect(),selected=list.querySelector('[aria-selected=true]');
+   const selectedBounds=selected.getBoundingClientRect();
+   return {rows:new Set(tabs.map(tab=>Math.round(tab.getBoundingClientRect().top))).size,
+    minHeight:Math.min(...tabs.map(tab=>tab.getBoundingClientRect().height)),
+    maxHeight:Math.max(...tabs.map(tab=>tab.getBoundingClientRect().height)),
+    overflow:list.scrollWidth-list.clientWidth,scroll:list.scrollLeft,
+    intact:tabs.every(tab=>tab.scrollWidth<=tab.clientWidth+1&&tab.querySelector('.eyebrow')?.textContent&&tab.querySelector('.dashboard-value')?.textContent),
+    fullyShown:selectedBounds.left>=bounds.left-1&&selectedBounds.right<=bounds.right+1};
+  });
+  const initialTabs=await tabGeometry();
+  assert.equal(initialTabs.rows,1,'all dashboard areas share one row');
+  assert.ok(initialTabs.intact&&initialTabs.minHeight>=44&&initialTabs.maxHeight<122,'compact readable labels and values with usable touch targets');
+  assert.equal(initialTabs.overflow>1,name==='iphone','only the narrow viewport scrolls the tab bar');
+  const weightTab=page.locator('#dashboard-tab-weight');
+  await weightTab.focus();
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.locator(':focus').getAttribute('id'),'dashboard-tab-composition','arrow activates and retains keyboard focus');
+  assert.equal(await page.locator('#dashboard-panel').getAttribute('aria-labelledby'),'dashboard-tab-composition');
+  await page.keyboard.press('End');
+  assert.equal(await page.locator(':focus').getAttribute('id'),'dashboard-tab-nutrition');
+  const endTabs=await tabGeometry();
+  assert.ok(endTabs.fullyShown&&(name!=='iphone'||endTabs.scroll>0),'scrolled active tab stays visible after re-render');
+  await page.evaluate(()=>render());
+  assert.ok((await tabGeometry()).fullyShown,'rightmost active area remains visible during an ordinary refresh');
+  await page.locator('#dashboard-tab-nutrition').focus();
+  await page.keyboard.press('Home');
+  assert.equal(await page.locator(':focus').getAttribute('id'),'dashboard-tab-weight');
   await page.locator('[data-action=forecast-mode][data-mode=active]').click();
   assert.equal(await page.locator('[data-action=forecast-mode][data-mode=active]').getAttribute('aria-pressed'),'true');
   await page.locator('[data-action=dashboard-tab][data-tab=composition]').click();
@@ -81,7 +109,13 @@ async function main(){
   await page.locator('[data-action=close-modal]').first().click();
   await page.screenshot({path:path.join(dir,name+'-goal.png'),fullPage:true});
   await page.locator('[data-action=dashboard-tab][data-tab=nutrition]').click();
-  assert.equal(await page.locator('.food-button').count(),14,'14 shortcuts available in nutrition tab');
+  assert.equal(await page.locator('.food-button').count(),0,'no stock-backed shortcut if balances are unknown');
+  const stockBeforeQuickChecks=await page.evaluate(()=>structuredClone(state.pantry));
+  await page.evaluate(()=>{DinoPantry.recount('activia-cereales',1);DinoPantry.recount('coffee',3);render()});
+  assert.equal(await page.locator('.food-button').count(),1,'only stocked Activia is suggested');
+  assert.equal(await page.locator('[data-recipe="coffee"]').count(),0,'coffee requires milk too');
+  await page.evaluate(()=>{DinoPantry.recount('milk',360);render()});
+  assert.equal(await page.locator('.food-button').count(),2,'stocked coffee appears with both ingredients');
   assert.equal(await page.locator('.food-record-card').count(),6,'six illustrated food cards');
   assert.equal(await page.locator('.plate-gallery').count(),0,'duplicate gallery must not render');
   assert.equal(await page.locator('.nutrition-overview').count(),1,'one panel contains summary and food diary');
@@ -108,9 +142,9 @@ async function main(){
   await page.locator('.food-record-card [data-action=edit-food]').first().click();
   assert.ok(await page.locator('#foodForm').isVisible(),'existing meal opens editable without losing it');
   await page.locator('[data-action=close-modal]').first().click();
-  await page.locator('[data-action=add-food]').first().click();
+  await page.locator('[data-recipe=activia]').click();
   assert.ok(await page.locator('#foodForm').isVisible());
-  assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Cena','another main plate is inferred as dinner');
+  assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Merienda','an available yogurt is inferred as a snack');
   assert.equal(await page.locator('#foodForm select[name=meal]').isVisible(),false,'quick add must not ask for a meal category');
   await page.locator('.food-meal-adjust summary').click();
   assert.equal(await page.locator('#foodForm select[name=meal]').isVisible(),true,'manual correction is available when requested');
@@ -132,7 +166,7 @@ async function main(){
   await page.locator('[data-recipe=coffee]').click();
   assert.equal(await page.locator('#foodSuggestedMeal').innerText(),'Merienda','second coffee is suggested as snack');
   await page.locator('[data-action=close-modal]').first().click();
-  await page.evaluate(logs=>{state.logs=logs;render();},initialFoodLogs);
+  await page.evaluate(({logs,pantry})=>{state.logs=logs;state.pantry=pantry;render();},{logs:initialFoodLogs,pantry:stockBeforeQuickChecks});
   // Test a browser left open overnight, without affecting any real user data.
   await page.evaluate(()=>{
     lastObservedToday='2026-04-18';
@@ -219,13 +253,22 @@ async function main(){
   assert.equal(await page.locator('.pantry3-tupper-line').count(),2,'individual tuppers editable');
   await page.locator('[data-action="close-modal"]').first().click();
   // Consumption remains exclusively available through the diary.
-  await page.evaluate(()=>{activeView='today';dashboardArea='nutrition';selectCalendarDay(isoToday(),false);render()});
+  await page.locator('button[data-view="today"]').click();
+  await page.locator('[data-action="dashboard-tab"][data-tab="nutrition"]').click();
   assert.equal(await page.locator('#calendarBar').isVisible(),true,'calendar returns in diary');
-  await page.locator('#content [data-action="pantry2-eat-tupper"]').first().click();
+  assert.equal(await page.getByText('Tuppers disponibles',{exact:true}).count(),0,'the kcal tab never shows a standalone stock list');
+  const quickTupper=page.locator('.quick-foods-section [data-action="pantry2-eat-tupper"]');
+  assert.equal(await quickTupper.count(),1,'two identical portions share an existing-section shortcut');
+  assert.match(await quickTupper.innerText(),/2 disponibles/);
+  await quickTupper.click();
+  assert.equal(await quickTupper.count(),1,'shortcut stays with the remaining portion');
+  assert.match(await quickTupper.innerText(),/1 disponible/);
+  assert.ok((await tabGeometry()).fullyShown,'active tab stays visible after recording a tupper rerenders the diary');
   assert.equal(await page.evaluate(()=>DinoPantry.available().length),1,'one consumed, one remains');
   assert.equal(await page.evaluate(()=>DinoPantry.stock('chicken').qty),309.5,'no double debit');
   const mealId=await page.evaluate(()=>state.logs.find(x=>x.pantryTupperId)?.id);
   const tupperId=await page.evaluate(id=>state.logs.find(x=>x.id===id)?.pantryTupperId,mealId);
+  assert.equal(await page.locator('.food-record-grid .food-record-card').filter({hasText:'Solo pechuga de pollo'}).count(),1,'actual tupper type appears in the food diary');
   await page.locator('[data-action="edit-food"][data-id="'+mealId+'"]').click();
   await page.locator('#foodForm [data-food-id="chicken"]').fill('140');
   await page.locator('#foodForm button[type="submit"]').click();

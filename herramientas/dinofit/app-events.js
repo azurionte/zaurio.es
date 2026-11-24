@@ -125,6 +125,7 @@ function saveFoodForm(form){
  const parts=readFoodParts(form),values=new FormData(form);
  const recipe=RECIPES.find(x=>x.id===form.dataset.recipeId);
  const previous=formEntryId?state.logs.find(x=>x.id===formEntryId):null;
+ if(!previous&&recipe&&typeof pantry2HasStock==='function'&&!pantry2HasStock(parts))throw Error('No hay existencias suficientes para estas cantidades.');
  const title=previous?.title||recipe?.name||'Comida';
  const inferred=inferFoodMeal(date,parts,recipe,previous?.id);
  const meal=previous?String(values.get('meal')||previous.meal||'Otro'):
@@ -188,6 +189,15 @@ async function logout(){
  if(error){toast('No se pudo cerrar la sesión.');return;}
  resetSession();saveMessage('Sesión cerrada.');$('#googleLogin').hidden=false;
 }
+const DASHBOARD_TAB_ORDER=['weight','composition','goal','nutrition'];
+function selectDashboardTab(id){
+ if(!DASHBOARD_TAB_ORDER.includes(id))return;
+ dashboardArea=id;
+ render();
+ const tab=$('#dashboard-tab-'+id);
+ tab?.focus?.({preventScroll:true});
+ revealDashboardTab(tab);
+}
 async function actionHandler(event){
  const button=event.target.closest('[data-action]');
  if(!button)return;
@@ -203,7 +213,7 @@ async function actionHandler(event){
    case 'date-next':selectCalendarDay(addDays(selectedDate,1));break;
    case 'date-today':selectCalendarDay(isoToday());break;
    case 'dashboard-tab':
-     if(['weight','composition','goal','nutrition'].includes(button.dataset.tab)){dashboardArea=button.dataset.tab;render();}
+     selectDashboardTab(button.dataset.tab);
      break;
     case 'forecast-mode':
      if(['observed','active','both'].includes(button.dataset.mode)){forecastMode=button.dataset.mode;render();}
@@ -217,10 +227,13 @@ async function actionHandler(event){
    case 'weight-new':openWeightModal(selectedDate);break;
    case 'weight-edit':openWeightModal(button.dataset.date);break;
    case 'close-modal':closeModal();break;
-   case 'add-food':
+   case 'add-food':{
+    const recipe=RECIPES.find(x=>x.id===button.dataset.recipe);
+    if(recipe&&typeof pantry2HasStock==='function'&&!pantry2HasStock(recipe.parts))throw Error('No quedan existencias suficientes.');
     openFoodModal(button.dataset.recipe);
     if($('#foodForm'))$('#foodForm').dataset.recipeId=button.dataset.recipe;
     break;
+   }
    case 'edit-food':openFoodModal(null,button.dataset.id);break;
    case 'delete-food':{
     const id=button.dataset.id;
@@ -270,6 +283,19 @@ function changeHandler(event){
 }
 function keyHandler(event){
  if(event.key==='Escape'&&!$('#modalMount').hidden)closeModal();
+ const tab=event.target.closest?.('[data-action="dashboard-tab"]');
+ if(!tab)return;
+ const index=DASHBOARD_TAB_ORDER.indexOf(tab.dataset.tab),last=DASHBOARD_TAB_ORDER.length-1;
+ let next;
+ switch(event.key){
+  case 'ArrowRight':next=index===last?0:index+1;break;
+  case 'ArrowLeft':next=index===0?last:index-1;break;
+  case 'Home':next=0;break;
+  case 'End':next=last;break;
+  default:return;
+ }
+ event.preventDefault();
+ selectDashboardTab(DASHBOARD_TAB_ORDER[next]);
 }
 async function boot(){
  const login=$('#googleLogin'),retry=$('#retryLoad');
