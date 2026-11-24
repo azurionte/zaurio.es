@@ -135,12 +135,50 @@ function pantry2AvailableTuppers(){
 function pantry2DiaryTuppers(date){
  return pantry2AvailableTuppers().filter(t=>!dateValid(t.date)||t.date<=date);
 }
-function pantry2OpenDiaryTuppers(date){
- const available=pantry2DiaryTuppers(date);
- const body=available.length?'<p class="helper">Selecciona el tupper que has comido.</p><div class="pantry2-diary-items section-gap">'+
-  available.map(t=>'<button type="button" data-action="pantry2-eat-tupper" data-id="'+htmlSafe(t.id)+'" data-date="'+htmlSafe(date)+'">🍲 '+htmlSafe(t.title)+'</button>').join('')+'</div>':
-  '<p class="empty">No hay tuppers preparados sin registrar para esta fecha.</p>';
- renderModal('Registrar un tupper',body);
+function pantry2HasStock(parts){
+ if(!parts.length)return false;
+ const needed=new Map();
+ for(const part of parts){
+  const [id,qty]=Array.isArray(part)?part:[part.foodId,part.qty];
+  if(!pantry2N(qty)||qty<=0)return false;
+  needed.set(id,(needed.get(id)||0)+qty);
+ }
+ return [...needed].every(([id,qty])=>{
+  const balance=pantry2Stock(id);
+  return balance.known&&balance.qty>0&&balance.qty+1e-9>=qty;
+ });
+}
+function pantry2TupperKey(t){
+ const amounts=t.ingredients.map(x=>[x.foodId,pantry2Round(x.qty),x.pieces??null])
+  .sort((a,b)=>a[0].localeCompare(b[0]));
+ return JSON.stringify([String(t.title||'Tupper').trim().toLocaleLowerCase('es'),amounts]);
+}
+function pantry2TupperPortion(t){
+ const main=t.ingredients.find(x=>['chicken','beef','burger-beef','burger-chicken','burger-mixed','egg'].includes(x.foodId))||t.ingredients[0];
+ if(!main)return '';
+ const unit=pantry2Unit(main.foodId),pieces=main.pieces;
+ if(unit==='ud')return locale(main.qty,Number.isInteger(main.qty)?0:2)+' '+({egg:'huevos','burger-beef':'hamburguesas','burger-chicken':'hamburguesas','burger-mixed':'hamburguesas'}[main.foodId]||'ud');
+ const size=locale(main.qty,0)+' '+unit;
+ const fillets=['chicken','beef'].includes(main.foodId);
+ const amount=fillets?(pieces===1?'filete':'filetes'):(pieces===1?'pieza':'piezas');
+ return pantry2N(pieces)&&pieces>0?locale(pieces,0)+' '+amount+' · '+size:size;
+}
+function pantry2QuickGroups(date){
+ const groups=new Map();
+ for(const t of pantry2DiaryTuppers(date)){
+  if(!t.ingredients?.length||t.ingredients.some(x=>!food(x.foodId)))continue;
+  const key=pantry2TupperKey(t);
+  if(!groups.has(key))groups.set(key,{t,count:0});
+  groups.get(key).count++;
+ }
+ const tuppers=[...groups.values()].map(({t,count})=>({tupperId:t.id,name:t.title||'Tupper',
+  parts:t.ingredients.map(x=>[x.foodId,x.qty]),hint:[pantry2TupperPortion(t),count===1?'1 disponible':count+' disponibles'].filter(Boolean).join(' · ')}));
+ const stocked=ids=>RECIPES.filter(r=>ids.includes(r.id)&&pantry2HasStock(r.parts));
+ return [
+  {id:'tuppers',title:'Tuppers preparados',emoji:'🍲',choices:tuppers},
+  {id:'treats',title:'Postres y lácteos',emoji:'🍮',choices:stocked(['cheese','flan','yopro','activia'])},
+  {id:'drinks',title:'Bebidas',emoji:'🥤',choices:stocked(['coffee','cola'])}
+ ];
 }
 function pantry2Ingredients(recipeId,custom=null){
  const r=RECIPES.find(x=>x.id===recipeId);
@@ -391,12 +429,11 @@ function pantry2Action(button){
    if(pantry2Unit(id)!=='ud'){openPantryConsume(id);return true}
    pantry2EatUnit(id);changed('Consumo añadido al diario.');return true;
   }
-  case 'pantry2-pick-tupper':pantry2OpenDiaryTuppers(button.dataset.date);return true;
   case 'pantry2-eat-tupper':{
    const date=button.dataset.date;
    if(date&&!pantry2DiaryTuppers(date).some(t=>t.id===id))throw Error('Tupper no disponible para esta fecha.');
    pantry2EatTupper(id,date||isoToday());
-   if(date){closeModal();selectCalendarDay(date,false);}
+   if(date)selectCalendarDay(date,false);
    changed('Tupper registrado en el diario.');return true;
   }
   case 'pantry2-delete-tupper':{
@@ -417,10 +454,7 @@ function pantry2Action(button){
 pantryAction=function(button){return pantry2Action(button)||pantry2LegacyAction(button)};
 currentPantry=pantry2Current;
 pantryCards=pantry2Cards;
-quickFoods=function(){
- const shortcut=pantry2DiaryTuppers(selectedDate).length?'<button type="button" class="click sm" data-action="pantry2-pick-tupper" data-date="'+htmlSafe(selectedDate)+'">Registrar un tupper</button>':'';
- return pantry2LegacyQuickFoods(shortcut);
-};
+quickFoods=function(){return pantry2LegacyQuickFoods(pantry2QuickGroups(selectedDate))};
 if(typeof document!=='undefined'&&document.addEventListener){
  document.addEventListener('submit',event=>{
   if(!['pantry2BuyForm','pantry2CountForm','pantry2CookForm'].includes(event.target.id))return;

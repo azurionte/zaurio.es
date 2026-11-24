@@ -83,7 +83,9 @@ legend{font-weight:650;color:var(--muted);font-size:12px;margin-bottom:7px}
 .section + .section{margin-top:15px}
 .section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:15px}
 .section-head p{font-size:12px;color:var(--muted);margin-top:5px}
-.metrics-row{display:grid;grid-template-columns:minmax(220px,1.5fr) repeat(3,minmax(0,1fr));gap:13px;margin-bottom:16px}
+.dashboard-tabs{display:grid;grid-auto-flow:column;grid-template-columns:repeat(4,minmax(8.5rem,1fr));gap:8px;margin:0 -3px 13px;padding:3px 3px 6px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+.dashboard-tabs>.dashboard-tab{margin:0;padding:9px 11px;border-radius:13px;min-height:68px;box-shadow:none;touch-action:pan-x pan-y pinch-zoom}
+.dashboard-tabs>.dashboard-tab:focus-visible{outline-offset:-3px}
 .metric-main{background:radial-gradient(circle at 95% 0%,#54ccaf24,transparent 64%),linear-gradient(135deg,#194c56,#1b294b);border-color:#3d7379}
 .metric-main .big{font-size:clamp(35px,4.6vw,56px);font-weight:770;line-height:1.04;letter-spacing:-1.6px;margin:8px 0}
 .metric-main .big span{font-size:17px;letter-spacing:0;font-weight:570;color:#c1dfdc}
@@ -160,13 +162,12 @@ legend{font-weight:650;color:var(--muted);font-size:12px;margin-bottom:7px}
 .login .click{min-width:195px}
 .toast{position:fixed;bottom:21px;right:21px;z-index:110;background:#21364c;color:white;border:1px solid #537991;border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);max-width:90vw;font-size:12px}
 footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
-.dashboard-tab{font:inherit;color:inherit;cursor:pointer;text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:8px;width:100%;transition:border-color .18s,transform .18s,background .18s;min-height:134px}
-.dashboard-tab:hover{border-color:#5ca3aa;transform:translateY(-1px)}
-.dashboard-tab.selected{border-color:#6ed9c8;box-shadow:inset 0 0 0 1px #5dd2c25c,0 10px 30px #0002}
-.dashboard-tab .eyebrow{font-size:10px;line-height:1.4;letter-spacing:1.5px}
-.dashboard-value{font-size:clamp(23px,2.9vw,39px);line-height:1.05;font-weight:760;letter-spacing:-.8px}
-.dashboard-tab.metric-main .dashboard-value{font-size:clamp(28px,4vw,50px)}
-.dashboard-tab .micro{line-height:1.4;min-height:24px}
+.dashboard-tab{font:inherit;color:inherit;cursor:pointer;text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:3px;width:100%;transition:border-color .18s,background .18s}
+.dashboard-tab:hover{border-color:#5ca3aa}
+.dashboard-tab.selected{border-color:#6ed9c8;box-shadow:inset 0 -2px #6ed9c8}
+.dashboard-tab .eyebrow{font-size:10px;line-height:1.35;letter-spacing:.75px}
+.dashboard-value{font-size:clamp(19px,2vw,27px);line-height:1.12;font-weight:760;letter-spacing:-.45px}
+.dashboard-tab .micro{line-height:1.35}
 .dashboard-panel{min-width:0}
 .quick-weights{margin:2px 2px 13px}
 .forecast-switch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -208,7 +209,6 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
 @media(max-width:1150px){
  .page{grid-template-columns:190px minmax(0,1fr)}
  .sidebar{padding:22px 12px}
- .metrics-row{grid-template-columns:repeat(2,minmax(0,1fr))}
  .quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
  .scale-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
  .main{padding:18px 18px 45px}
@@ -237,7 +237,6 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
  .calendar-bar .arrow{width:35px;height:35px}
  .calendar-bar input{width:40px}
  .calendar-bar .today{padding:7px}
- .metrics-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
  .metric-card{min-height:108px}
  .metric-main .big{font-size:32px}
  .metric-card .value{font-size:22px;margin:10px 0 6px}
@@ -264,9 +263,8 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
  .composition-legend{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:700px){
- .dashboard-tab{min-height:125px;padding:13px}
- .dashboard-tab .eyebrow{font-size:9px;letter-spacing:.9px}
- .dashboard-value,.dashboard-tab.metric-main .dashboard-value{font-size:clamp(23px,6.2vw,30px)}
+ .dashboard-tabs{gap:6px}
+ .dashboard-tabs>.dashboard-tab{padding:8px 10px}
  .dashboard-tab .micro{font-size:10px}
  .monitor-grid{grid-template-columns:minmax(0,1fr)}
  .monitor-panel{padding:12px}
