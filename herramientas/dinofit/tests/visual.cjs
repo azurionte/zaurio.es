@@ -67,22 +67,32 @@ async function main(){
    const colRows=new Map();
    for(const tab of tabs){const top=Math.round(tab.getBoundingClientRect().top);colRows.set(top,(colRows.get(top)||0)+1);}
    const viewport=document.documentElement.clientWidth;
+   const visible=el=>el&&el.getClientRects().length>0;
+   const textFits=(el,tab)=>{
+    const text=document.createRange();text.selectNodeContents(el);
+    const bounds=tab.getBoundingClientRect();
+    return [...text.getClientRects()].every(rect=>rect.left>=bounds.left-1&&rect.right<=bounds.right+1&&rect.top>=bounds.top-1&&rect.bottom<=bounds.bottom+1);
+   };
    return {rows:new Set(tabs.map(tab=>Math.round(tab.getBoundingClientRect().top))).size,
     cols:[...colRows.values()],pageOverflow:Math.max(document.documentElement.scrollWidth,document.body.scrollWidth)-viewport,
     minHeight:Math.min(...tabs.map(tab=>tab.getBoundingClientRect().height)),
     maxHeight:Math.max(...tabs.map(tab=>tab.getBoundingClientRect().height)),
     overflow:list.scrollWidth-list.clientWidth,scroll:list.scrollLeft,
     allShown:tabs.every(tab=>{const rect=tab.getBoundingClientRect();return rect.left>=bounds.left-1&&rect.right<=bounds.right+1&&rect.left>=-1&&rect.right<=viewport+1;}),
-    intact:tabs.every(tab=>tab.scrollWidth<=tab.clientWidth+1&&tab.scrollHeight<=tab.clientHeight+1),
-    labels:tabs.map(tab=>[...tab.querySelectorAll('.eyebrow,.dashboard-value,.micro')].map(n=>n.textContent.trim())),
+    intact:tabs.every(tab=>tab.scrollWidth<=tab.clientWidth+1&&tab.scrollHeight<=tab.clientHeight+1&&[...tab.querySelectorAll('.eyebrow,.dashboard-value,.micro')].filter(visible).every(el=>textFits(el,tab))),
+    labels:tabs.map(tab=>[...tab.querySelectorAll('.dashboard-label-full,.dashboard-value,.micro')].map(n=>n.textContent.trim())),
+    visibleLabels:tabs.map(tab=>[...tab.querySelectorAll('.eyebrow')].filter(visible).map(el=>el.textContent.trim())),
+    visibleValues:tabs.every(tab=>visible(tab.querySelector('.dashboard-value'))),
+    names:tabs.map(tab=>tab.getAttribute('aria-label')),
     fullyShown:selectedBounds.left>=bounds.left-1&&selectedBounds.right<=bounds.right+1};
   });
   const initialTabs=await tabGeometry();
   const assertTabFit=(g,wide,description)=>{
-   assert.deepEqual(g.cols,wide?[4]:[2,2],`${description}: four columns or compact 2×2`);
+   assert.deepEqual(g.cols,[4],`${description}: all four cards in one row`);
    assert.ok(g.intact&&g.allShown&&g.minHeight>=44&&g.maxHeight<122,`${description}: full content, visible cards, compact touch targets`);
    assert.ok(g.pageOverflow<=0&&g.overflow<=0&&g.scroll===0,`${description}: neither the page nor the summary scrolls horizontally (${JSON.stringify(g)})`);
-   assert.ok(g.labels.every(l=>l.length===3&&l.every(Boolean)),`${description}: complete label, value and hint in every tab`);
+   assert.ok(g.visibleValues&&g.labels.every((l,i)=>l.length===3&&l.every(text=>text&&g.names[i].includes(text))),`${description}: full accessible labels and complete visible values`);
+   assert.deepEqual(g.visibleLabels,wide?g.labels.map(([label])=>[label]):[['Peso'],['Ritmo'],['Objetivo'],['Kcal']],`${description}: visible labels fit without truncation`);
   };
   assertTabFit(initialTabs,name==='desktop',name);
   if(name==='desktop'){
@@ -101,7 +111,7 @@ async function main(){
    await page.setViewportSize({width,height});
   }else{
    await page.locator('#dashboard-tab-nutrition').tap();
-   assert.equal(await page.locator('#dashboard-panel').getAttribute('aria-labelledby'),'dashboard-tab-nutrition','both mobile rows accept a touch tap');
+   assert.equal(await page.locator('#dashboard-panel').getAttribute('aria-labelledby'),'dashboard-tab-nutrition','the compact row accepts a touch tap');
   }
   const weightTab=page.locator('#dashboard-tab-weight');
   await weightTab.focus();
