@@ -116,6 +116,27 @@ async function checkDiary(){
  run('formEntryId='+JSON.stringify(old));
  use('coffee',[['coffee',1],['milk',120]]);
  assert.equal(run('state.logs.at(-1).id'),old,'editing saved items is not blocked by zero current stock');
+ // Cacaolat is a private, user-added catalogue item, not shipped with the defaults.
+ run('formEntryId=null');
+ assert.equal(hasRecipe('cacaolat'),false,'no Cacaolat recipe on accounts without the product');
+ refresh(`state.foods.push({id:'cacaolat-0',name:'Cacaolat 0% sin azúcares añadidos',
+  category:'drinks',unit:'ml',factor:1,kcal:53,min:53,max:53});DinoPantry.recount('cacaolat-0',199)`);
+ assert.equal(hasRecipe('cacaolat'),false,'less than a full glass does not offer a shortcut');
+ refresh(`DinoPantry.recount('cacaolat-0',400)`);
+ const drinks=content().split('food-group-drinks')[1];
+ assert.match(drinks,/<h3>Bebidas<\/h3>[\s\S]*?data-recipe="cacaolat"[\s\S]*?≈ 106 kcal[\s\S]*?Vaso de Cacaolat 0% · 200 ml<\/strong>/);
+ const beforeGlass=run('state.logs.length');
+ await click({action:'add-food',recipe:'cacaolat'});
+ assert.match(el('#modalMount').innerHTML,/data-food-id="cacaolat-0"[^>]*value="200"/,'modal starts at the labelled, editable pour');
+ assert.equal(run('state.logs.length'),beforeGlass,'opening a glass does not log it');
+ assert.throws(()=>use('cacaolat',[['cacaolat-0',401]]),/No hay existencias/,'a custom pour cannot exceed stock');
+ use('cacaolat',[['cacaolat-0',200]]);
+ assert.equal(run('DinoPantry.stock("cacaolat-0").qty'),200,'saving one glass debits 200 ml once');
+ assert.equal(run('logTotal(state.logs.at(-1).parts)'),106);
+ assert.equal(hasRecipe('cacaolat'),true,'exactly one glass of stock keeps the shortcut');
+ use('cacaolat',[['cacaolat-0',200]]);
+ assert.equal(run('DinoPantry.stock("cacaolat-0").qty'),0);
+ assert.equal(hasRecipe('cacaolat'),false,'the last glass removes the shortcut');
  refresh(`DinoPantry.recount('burger-chicken',4);
   const burger=DinoPantry.makeTuppers({recipeId:'mixed-chickenburgers',title:'2 hamburguesas de pollo + verduras',ingredients:[{foodId:'burger-chicken',qty:2},{foodId:'saute-chicken',qty:20}],date:selectedDate})[0];
   DinoPantry.makeTuppers({recipeId:'mixed-chickenburgers',title:'2 hamburguesas de pollo + verduras',ingredients:[{foodId:'burger-chicken',qty:2},{foodId:'saute-chicken',qty:40}],date:selectedDate})`);
