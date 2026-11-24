@@ -20,6 +20,7 @@ const METRICS = [
 const RECIPES = [
  {id:'coffee',group:'usual',name:'Café con leche desnatada',emoji:'☕',hint:'1 café + 120 ml de leche',meal:'Desayuno',parts:[['coffee',1],['milk',120]]},
  {id:'cola',group:'usual',name:'Coca-Cola Zero',emoji:'🥤',hint:'330 ml · estimación 0 kcal',meal:'Otro',parts:[['cola',330]]},
+ {id:'cacaolat',group:'usual',name:'Vaso de Cacaolat 0%',emoji:'🥛',variant:'200 ml',meal:'Otro',parts:[['cacaolat-0',200]]},
  {id:'cheese',group:'usual',name:'Loncha de queso light',emoji:'🧀',hint:'1 loncha · 25 g',meal:'Otro',parts:[['cheese',1]]},
  {id:'flan',group:'usual',name:'Flan proteico',emoji:'🍮',hint:'1 unidad · 100 g',meal:'Otro',parts:[['flan',1]]},
  {id:'yopro',group:'usual',name:'YoPRO',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro',1]]},
