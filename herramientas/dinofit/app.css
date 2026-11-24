@@ -480,3 +480,15 @@ footer{font-size:10px;color:var(--subtle);text-align:right;margin-top:24px}
 @media(max-width:1150px){.pantry2-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pantry2-tuppers{grid-template-columns:1fr}}
 @media(max-width:700px){.pantry2-intro{padding:19px 15px}.pantry2-main-actions{gap:7px}.pantry2-main-actions button{flex:1 1 auto;min-height:44px;padding:9px 10px}.pantry2-overview{gap:7px}.pantry2-overview>div{padding:11px 9px}.pantry2-overview strong{font-size:26px}.pantry2-overview small{font-size:10px;line-height:1.35}.pantry2-zone{padding:13px}.pantry2-zone-heading{gap:9px;flex-wrap:wrap}.pantry2-zone-emoji{width:40px;height:40px;font-size:22px}.pantry2-zone-total{margin-left:auto}.pantry2-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pantry2-card{padding:11px;min-height:193px}.pantry2-card .pantry2-art{font-size:27px}.pantry2-card strong{font-size:12px}.pantry2-count{font-size:11px}.pantry2-card-actions{gap:5px}.pantry2-card-actions button{padding:6px 7px;min-height:40px;font-size:10px}.pantry2-form-grid{grid-template-columns:1fr}.pantry2-ingredient{grid-template-columns:minmax(0,1.3fr) minmax(57px,.65fr) minmax(57px,.6fr);gap:4px}.pantry2-ingredient select,.pantry2-ingredient input{padding:8px 6px;font-size:11px}}
 @media(max-width:370px){.pantry2-grid{grid-template-columns:1fr}.pantry2-card{min-height:165px}}
+
+/* A single illustrated action logs the currently selected glass; the smaller controls only change its volume. */
+.cacaolat-help,.cacaolat-summary{text-align:center;color:#c8dbe5;font-size:13px}
+.cacaolat-controls{display:grid;grid-template-columns:44px minmax(0,132px) 44px;align-items:center;justify-content:center;gap:clamp(7px,3vw,18px);margin:12px 0}
+.cacaolat-step{width:44px;height:44px;border:1px solid #6b8294;border-radius:50%;background:#293d51;font-size:24px;line-height:1}
+.cacaolat-step[aria-disabled="true"]{opacity:.42;cursor:default}
+.cacaolat-glass{position:relative;display:grid;align-items:center;min-width:0;padding:0;border:0;border-radius:15px;background:transparent;touch-action:manipulation}
+.cacaolat-glass svg{display:block;width:100%;height:auto}
+.cacaolat-glass:hover svg{filter:brightness(1.14)}
+.cacaolat-glass:focus-visible,.cacaolat-step:focus-visible{outline:2px solid #c8f5dc;outline-offset:3px}
+.cacaolat-amount{position:absolute;inset:56% 0 auto;text-align:center;font-size:clamp(18px,5vw,24px);font-weight:780;line-height:1;color:#fff5e9;font-variant-numeric:tabular-nums;text-shadow:0 1px 3px #382015}
+.cacaolat-summary{min-height:1.5em}
