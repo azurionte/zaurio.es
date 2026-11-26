@@ -1,0 +1,4 @@
+Font Awesome Free 6.7.2 by Fonticons, Inc. (https://fontawesome.com)
+Icons are used under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+Source: https://github.com/FortAwesome/Font-Awesome/tree/6.7.2/svgs
+Used as inline SVGs with accessibility and styling attributes; paths unchanged.
