@@ -83,7 +83,7 @@ jobs:
               check alba/media/estil-ashtanga.webp alba/media/estil-ashtanga.webp &&
               check alba/media/estil-vinyasa.webp alba/media/estil-vinyasa.webp &&
               check alba/media/estil-hatha.webp alba/media/estil-hatha.webp &&
-              check alba/media/taller-anti-sofa.svg alba/media/taller-anti-sofa.svg &&
+              check alba/media/taller-anti-sofa-editorial.webp alba/media/taller-anti-sofa-editorial.webp &&
               check alba/media/estudi-estores.webp alba/media/estudi-estores.webp; then
               curl -fsSL --max-time 20 https://zaurio.es/ -o .alba-release/root-after
               cmp .alba-release/root-before .alba-release/root-after
