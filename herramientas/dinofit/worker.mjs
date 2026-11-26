@@ -1,4 +1,3 @@
-import {receiveAppleWorkouts} from './apple-health.mjs';
 import page from './index.html';
 import css from './app.css';
 import core from './app.js';
@@ -23,7 +22,6 @@ const staticFiles = new Map([
 export default {
  async fetch(request){
   const url = new URL(request.url);
-  if(url.pathname==='/dinofit/api/apple-health')return receiveAppleWorkouts(request);
   if(url.pathname==='/dinofit')return Response.redirect(url.origin+'/dinofit/'+url.search,308);
   if(!['GET','HEAD'].includes(request.method))return new Response('Método no permitido',{status:405,headers:{Allow:'GET, HEAD'}});
   const file=staticFiles.get(url.pathname);

@@ -336,9 +336,8 @@ function dayRecords(kind='all'){
    '<div class="food-card-bottom"><strong>'+locale(logTotal(entry.parts||[]),0)+' <small>kcal</small></strong>'+
     '<button type="button" class="food-edit-button" data-action="edit-food" data-id="'+htmlSafe(entry.id)+'" aria-label="Editar '+htmlSafe(entry.title||'comida')+'">Editar <span aria-hidden="true">✎</span></button></div></article>';
  }).join(''):'<div class="empty">Aún no hay comidas registradas para esta fecha. Puedes añadirlas debajo.</div>';
- const imported=appleActivityMarkup();
- const sport=activities.length?activities.map(a=>'<div class="day-entry"><div><strong>'+htmlSafe(a.type||'Actividad')+'</strong><small>'+htmlSafe(a.note||'Actividad física')+'</small></div><strong>'+locale(a.minutes,1)+' min</strong><button type="button" class="click sm" data-action="delete-activity" data-id="'+htmlSafe(a.id)+'">Eliminar</button></div>').join(''):
- (imported?'':'<div class="helper">Sin actividad registrada.</div>');
+ const sport=activities.length?activities.map(a=>'<div class="day-entry"><div><strong>'+htmlSafe(a.type||'Actividad')+'</strong><small>'+htmlSafe(a.note||'Actividad física')+'</small></div><strong>'+locale(a.minutes,1)+' min'+(Number.isFinite(a.activeKcal)?' · '+locale(a.activeKcal,0)+' kcal activas':'')+'</strong><button type="button" class="click sm" data-action="delete-activity" data-id="'+htmlSafe(a.id)+'">Eliminar</button></div>').join(''):
+ '<div class="helper">Sin actividad registrada.</div>';
  const complete=(state.completeDays||[]).includes(selectedDate);
  const foodSection='<section class="section nutrition-overview food-records-section">'+foodSummary()+
   dfNutritionTotalsMarkup(entries.flatMap(e=>e.parts||[]),entries.filter(e=>!(e.parts||[]).length).length,'Información nutricional del día')+
@@ -348,8 +347,8 @@ function dayRecords(kind='all'){
   '<div class="nutrition-foot"><span class="nutrition-foot-star" aria-hidden="true">✦</span><span>'+
   (complete?'Día marcado como completo.':'Registro en curso: puede que todavía falten comidas.')+
   ' Las calorías son orientativas y las barras muestran el reparto de lo anotado.</span></div></section>';
- const activitySection='<section class="section"><div class="section-head"><div><h2>Actividad física</h2><p>Sesiones y minutos reales registrados.</p></div><div class="tools"><button type="button" class="click sm" data-action="apple-health">Apple Salud</button><button type="button" class="click sm" data-action="apple-refresh">Actualizar</button><button type="button" class="click sm" data-action="add-activity">+ Actividad</button></div></div>'+
-  '<div class="day-entries">'+sport+imported+'</div></section>';
+ const activitySection='<section class="section"><div class="section-head"><div><h2>Actividad física</h2><p>Sesiones y minutos reales registrados.</p></div><button type="button" class="click sm" data-action="add-activity">+ Actividad</button></div>'+
+  '<div class="day-entries">'+sport+'</div></section>';
  return kind==='food'?foodSection:kind==='activity'?activitySection:foodSection+activitySection;
 }
 function currentHistory(){
@@ -387,17 +386,8 @@ function currentSettings(){
 }
 function render(){
  if(!state||!account)return;
- if(activeView==='today'&&dashboardArea==='goal')void loadAppleDay();
  renderCalendar();setSaveUI();
  for(const b of $$('button[data-view]'))b.classList.toggle('selected',b.dataset.view===activeView);
  const content=$('#content');if(!content)return;
  content.innerHTML=activeView==='pantry'?currentPantry():activeView==='history'?currentHistory():activeView==='settings'?currentSettings():currentDay();
-}
-
-
-function appleActivityMarkup(){
- const cache=appleDayCache?.scope===account?.id+'/'+selectedDate?appleDayCache:null;
- if(!cache)return '';
- if(cache.error)return '<p class="helper">No se pudo cargar la actividad de Apple Salud.</p>';
- return cache.rows.map(a=>'<div class="day-entry"><div><strong>'+htmlSafe(a.label)+'</strong><small>Apple Salud · '+locale(a.minutes,1)+' min</small></div><strong>'+(a.active_kcal==null?'':locale(a.active_kcal,0)+' kcal activas')+'</strong></div>').join('');
 }
