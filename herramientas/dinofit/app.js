@@ -24,6 +24,8 @@ const RECIPES = [
  {id:'cheese',group:'usual',name:'Loncha de queso light',emoji:'🧀',hint:'1 loncha · 25 g',meal:'Otro',parts:[['cheese',1]]},
  {id:'flan',group:'usual',name:'Flan proteico',emoji:'🍮',hint:'1 unidad · 100 g',meal:'Otro',parts:[['flan',1]]},
  {id:'yopro',group:'usual',name:'YoPRO',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro',1]]},
+ {id:'yopro-stracciatella',group:'usual',name:'YoPRO Stracciatella',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro-stracciatella',1]]},
+ {id:'yopro-fresa',group:'usual',name:'YoPRO Fresa',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro-fresa',1]]},
  {id:'activia',group:'usual',name:'Activia cereales',emoji:'🥣',hint:'1 unidad · 115 g',meal:'Otro',parts:[['activia-cereales',1]]},
  {id:'mixed-chicken',group:'mixed',name:'Pechuga + salteados',emoji:'🥘',hint:'≈350 kcal · aceite incluido',meal:'Comida',parts:[['chicken',145],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]},
  {id:'mixed-beef',group:'mixed',name:'Ternera + salteados',emoji:'🥘',hint:'≈430 kcal · aceite incluido',meal:'Comida',parts:[['beef',150],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]},
@@ -151,7 +153,7 @@ function foodKind(parts=[],recipe=null){
  if(recipe?.group==='mixed'||recipe?.group==='plain'||ids.some(id=>id==='chicken'||id==='beef'||id.startsWith('burger-')||id.startsWith('saute-')))return 'main';
  const eggs=(parts||[]).reduce((total,p)=>total+((Array.isArray(p)?p[0]:p?.foodId)==='egg'?Number(Array.isArray(p)?p[1]:p?.qty)||0:0),0);
  if(eggs>=2)return 'main';
- if(ids.some(id=>['coffee','milk','cheese','flan','yopro','activia-cereales','yogurt','yogurt-berries','yogurt-pineapple','egg'].includes(id)))return 'light';
+ if(ids.some(id=>['coffee','milk','cheese','flan','yopro','yopro-fresa','yopro-stracciatella','activia-cereales','yogurt','yogurt-berries','yogurt-pineapple','egg'].includes(id)))return 'light';
  return 'extra';
 }
 function inferFoodMeal(date,parts,recipe=null,excludeId=null){
@@ -347,4 +349,49 @@ async function applyPendingChatImport(){
   else{notice='La importación está preparada pero aún no se ha sincronizado.';toast(notice)}
  }catch(e){notice='Error al cargar las mediciones: '+e.message;toast(notice)}
  finally{importInProgress=false}
+}
+
+
+const dfNutrients=[
+ ['energy','Energía','kcal'],['fat','Grasas','g'],['saturated','Saturadas','g'],
+ ['carbs','Hidratos de carbono','g'],['sugars','Azúcares','g'],['fibre','Fibra','g'],
+ ['protein','Proteínas','g'],['salt','Sal','g'],['calcium','Calcio','mg'],
+ ['magnesium','Magnesio','mg'],['folate','Vitamina B9','µg'],['vitaminD','Vitamina D','µg']
+];
+let dfNutritionIndex;
+function dfNutritionProfile(f){
+ if(!f)return null;
+ if(f.nutrition?.values)return f.nutrition;
+ if(!dfNutritionIndex)dfNutritionIndex=new Map((rawCatalog().foods||[]).filter(x=>x.nutrition).map(x=>[x.id,x.nutrition]));
+ return dfNutritionIndex.get(f.id)||null;
+}
+function dfNutritionPart(part){
+ const f=food(part.foodId),n=dfNutritionProfile(f);
+ if(!n||!isNumber(part.qty)||part.qty<=0||!isNumber(n.amount)||n.amount<=0)return {};
+ const quantity=f.unit===n.unit?part.qty:
+  f.unit==='ud'&&n.unit==='g'&&isNumber(f.factor)&&f.factor>0?part.qty*f.factor:null;
+ if(quantity===null)return {};
+ return Object.fromEntries(dfNutrients.filter(([k])=>isNumber(n.values[k])&&n.values[k]>=0).map(([k])=>[k,n.values[k]*quantity/n.amount]));
+}
+function dfNutritionSummary(parts,extras=0){
+ const values=parts.map(dfNutritionPart),count=parts.length+extras;
+ return dfNutrients.filter(([k])=>k!=='energy').map(([key,label,unit])=>{
+  const known=values.filter(v=>isNumber(v[key]));
+  return {key,label,unit,total:known.length?known.reduce((s,v)=>s+v[key],0):null,known:known.length,count};
+ });
+}
+function dfNutritionTotalsMarkup(parts,extras=0,title='Información nutricional'){
+ if(!parts.length&&!extras)return '';
+ const rows=dfNutritionSummary(parts,extras);
+ return '<details class="section pantry3-nutrition"><summary>'+htmlSafe(title)+'</summary><p>Los subtotales solo incluyen los ingredientes con ficha. Si te interesa un valor pendiente, abre la ficha del producto en Despensa. Las calorías del diario no cambian.</p><dl>'+
+  rows.map(r=>'<div><dt>'+htmlSafe(r.label)+'</dt><dd>'+(r.total===null?'Sin dato':
+   htmlSafe(locale(r.total,2)+' '+r.unit)+(r.known===r.count?'':' <small>· parcial ('+r.known+'/'+r.count+')</small>'))+'</dd></div>').join('')+'</dl></details>';
+}
+function dfNutritionProductMarkup(f){
+ const n=dfNutritionProfile(f),esc=htmlSafe;
+ if(!n)return '<p><strong>Pendiente: identificar la variedad y verificar su etiqueta.</strong> Envía al chat una foto del envase y de su tabla nutricional o el código de barras. Puedes registrar la compra igualmente.</p>';
+ let url=null;try{const u=new URL(n.source);if(u.protocol==='https:')url=u.href}catch{}
+ return '<p>Por '+esc(locale(n.amount,0)+' '+n.unit)+(n.variant?' · '+esc(n.variant):'')+'</p><dl>'+
+  dfNutrients.map(([k,l,u])=>'<div><dt>'+esc(l)+'</dt><dd>'+(isNumber(n.values[k])?esc(locale(n.values[k],2)+' '+u):isNumber(n.upper?.[k])?esc('Menos de '+locale(n.upper[k],2)+' '+u):'Pendiente')+'</dd></div>').join('')+
+  '</dl><small>'+esc((n.kind||'Fuente')+(n.checked?' · revisada '+n.checked:''))+(url?' · <a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Ver fuente</a>':'')+'</small>';
 }
