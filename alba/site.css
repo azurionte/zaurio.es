@@ -27,6 +27,8 @@ body{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fw
 .foot{border-top:1px solid var(--line);padding:1.15rem 0 1.5rem}.foot .footer-brand{font:600 .8rem/1.25 var(--sans);color:#565c50;gap:.38rem}.foot .footer-brand svg{width:18px;height:18px;flex:none}.foot .footer-brand:hover{text-decoration:underline;text-underline-offset:.22em}
 
 /* Alba en Venus: serveis a domicili */
+.alba-service-label{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem .7rem}
+.alba-new-badge{display:inline-flex;align-items:center;border:1px solid #bf7863;border-radius:999px;padding:.26rem .55rem;background:var(--clay);color:#5e2d21;font-size:.68rem;font-weight:800;line-height:1.2;letter-spacing:.08em;text-transform:uppercase}
 .alba-massage-band{background:#ead6c4;border-block:1px solid var(--line)}
 .alba-service-split{display:grid;grid-template-columns:1.35fr .65fr;align-items:center;gap:clamp(1.15rem,5vw,4.3rem);padding-block:clamp(2.5rem,6vw,5.7rem)}
 .alba-service-split p:not(.tag),.alba-description{max-width:61ch}
