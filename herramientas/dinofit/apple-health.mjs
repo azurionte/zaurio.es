@@ -38,7 +38,7 @@ export async function receiveAppleWorkouts(req){
   let items;
   try{items=decode(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));}catch{return j(422,{ok:false});}
   const upstream=await fetch(SUPABASE_URL+'/rest/v1/rpc/dinofit_apple_ingest',{
-   method:'POST',redirect:'error',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json','X-Dinofit-Upload-Key':match[1]},
+   method:'POST',redirect:'manual',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json','X-Dinofit-Upload-Key':match[1]},
    body:JSON.stringify({items}),signal:AbortSignal.timeout(12000)
   });
   if(!upstream.ok)return j([400,401,413,422].includes(upstream.status)?upstream.status:502,{ok:false});
