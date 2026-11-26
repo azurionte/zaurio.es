@@ -8,6 +8,8 @@ const pantry3Defaults={
  'activia-cereales':{name:'pack',sizes:[4,8],unit:'yogures'},
  flan:{name:'pack',sizes:[4,6],unit:'flanes'},
  yopro:{name:'pack',sizes:[4,6],unit:'unidades'},
+ 'yopro-fresa':{name:'pack',sizes:[4],unit:'unidades'},
+ 'yopro-stracciatella':{name:'pack',sizes:[4],unit:'unidades'},
  egg:{name:'cartón',sizes:[6,12],unit:'huevos'},
  'burger-beef':{name:'bandeja',sizes:[2,4],unit:'hamburguesas'},
  'burger-chicken':{name:'bandeja',sizes:[2,4],unit:'hamburguesas'},
@@ -168,7 +170,7 @@ function pantry3OpenTupperGroup(id){
     const kcal=pantry3TupperKcal(t);
     return '<div class="pantry3-tupper-line"><span>Tupper '+(i+1)+(kcal===null?'':' · ≈ '+kcal+' kcal')+(used.has(t.id)?' · consumido':'')+'</span><span class="pantry3-actions">'+ 
    '<button type="button" data-action="pantry2-edit-tupper" data-id="'+pantry3Escape(t.id)+'">✎ Editar</button>'+ 
-   (!used.has(t.id)?'<button type="button" data-action="pantry2-delete-tupper" data-id="'+pantry3Escape(t.id)+'">Eliminar</button>':'')+'</span></div>';
+   (!used.has(t.id)?'<button type="button" data-action="pantry2-delete-tupper" data-id="'+pantry3Escape(t.id)+'">Eliminar</button>':'')+'</span></div>'+dfNutritionTotalsMarkup(t.ingredients||[],0,'Información nutricional · táper '+(i+1));
   }).join('')+'</div>'+ 
   (first.status==='planned'?'<button type="button" class="pantry3-prepare" data-action="pantry2-prepare-group" data-id="'+pantry3Escape(first.id)+'">Confirmar preparación</button>':'')+ 
   '<button type="button" class="pantry3-close" data-action="close-modal">Cerrar</button></div>');
@@ -200,7 +202,8 @@ function pantry3OpenBuy(id){
   '<label>Operación<select name="mode"><option value="purchase">Sumar compra</option><option value="count">Corregir lo que tengo</option></select></label>'+ 
   '<label class="pantry3-current-count" hidden>Existencias reales ('+pantry3Escape(pantry3QtyLabel(id))+')<input name="total" type="number" min="0" step="any" inputmode="decimal"></label>'+ 
   '<label>Avisarme cuando queden<input name="min" type="number" min="0" step="any" value="'+pantry3Escape(stock.min??'')+'" placeholder="Opcional"></label></div>'+ 
-  note+'<footer class="pantry3-modal-actions"><button type="button" data-action="close-modal">Cancelar</button>'+ 
+  note+'<button type="button" class="pantry3-close pantry3-nutrition-link" aria-expanded="false" data-action="pantry3-nutrition">Ficha nutricional</button>'+
+  '<div class="pantry3-nutrition" id="pantry3Nutrition" hidden></div><footer class="pantry3-modal-actions"><button type="button" data-action="close-modal">Cancelar</button>'+ 
   '<button type="submit" class="pantry3-submit">Registrar compra</button></footer></form>');
 }
 function pantry3Rows(ingredients=[]){
@@ -305,6 +308,12 @@ function pantry3Action(button){
   case 'pantry3-open':pantry3OpenBuy(id);return true;
   case 'pantry3-open-tuppers':pantry3OpenTupperGroup(id);return true;
   case 'pantry3-search-toggle':pantry3Searching=!pantry3Searching;pantryQuery='';render();if(pantry3Searching)$('#pantrySearch')?.focus();return true;
+  case 'pantry3-nutrition':{
+   const pane=$('#pantry3Nutrition'),form=$('#pantry3BuyForm');
+   if(pane&&form){if(pane.hidden)pane.innerHTML=dfNutritionProductMarkup(food(form.dataset.id));pane.hidden=!pane.hidden;
+    button.setAttribute('aria-expanded',String(!pane.hidden));}
+   return true;
+  }
   case 'pantry3-edit-buy':{
    const panel=$('#pantry3Advanced');if(panel){panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));}
    return true;
@@ -383,3 +392,4 @@ if(typeof document!=='undefined'&&document.addEventListener){
  });
 }
 globalThis.DinoPantryV3={formats:pantry3Format,buyPack:pantry3BuyPack,getTab:()=>pantry3Tab,setTab:x=>{pantry3Tab=x},recount:pantry2Recount,lastPack:pantry3LastPack,portion:pantry3ApplyPortion};
+

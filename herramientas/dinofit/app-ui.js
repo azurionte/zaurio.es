@@ -340,6 +340,7 @@ function dayRecords(kind='all'){
  '<div class="helper">Sin actividad registrada.</div>';
  const complete=(state.completeDays||[]).includes(selectedDate);
  const foodSection='<section class="section nutrition-overview food-records-section">'+foodSummary()+
+  dfNutritionTotalsMarkup(entries.flatMap(e=>e.parts||[]),entries.filter(e=>!(e.parts||[]).length).length,'Información nutricional del día')+
   '<div class="food-diary-heading"><div><h3>Alimentos registrados</h3><p>Pulsa Editar para ajustar cualquier entrada.</p></div>'+
   '<label class="checkrow completed-toggle"><input type="checkbox" id="dayComplete" '+(complete?'checked':'')+'>Día completo</label></div>'+
   '<div class="food-record-grid" role="list">'+body+'</div>'+
@@ -390,3 +391,4 @@ function render(){
  const content=$('#content');if(!content)return;
  content.innerHTML=activeView==='pantry'?currentPantry():activeView==='history'?currentHistory():activeView==='settings'?currentSettings():currentDay();
 }
+

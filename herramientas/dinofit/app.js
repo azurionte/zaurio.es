@@ -348,3 +348,48 @@ async function applyPendingChatImport(){
  }catch(e){notice='Error al cargar las mediciones: '+e.message;toast(notice)}
  finally{importInProgress=false}
 }
+
+
+const dfNutrients=[
+ ['energy','Energía','kcal'],['fat','Grasas','g'],['saturated','Saturadas','g'],
+ ['carbs','Hidratos de carbono','g'],['sugars','Azúcares','g'],['fibre','Fibra','g'],
+ ['protein','Proteínas','g'],['salt','Sal','g'],['calcium','Calcio','mg'],
+ ['magnesium','Magnesio','mg'],['folate','Vitamina B9','µg'],['vitaminD','Vitamina D','µg']
+];
+let dfNutritionIndex;
+function dfNutritionProfile(f){
+ if(!f)return null;
+ if(f.nutrition?.values)return f.nutrition;
+ if(!dfNutritionIndex)dfNutritionIndex=new Map((rawCatalog().foods||[]).filter(x=>x.nutrition).map(x=>[x.id,x.nutrition]));
+ return dfNutritionIndex.get(f.id)||null;
+}
+function dfNutritionPart(part){
+ const f=food(part.foodId),n=dfNutritionProfile(f);
+ if(!n||!isNumber(part.qty)||part.qty<=0||!isNumber(n.amount)||n.amount<=0)return {};
+ const quantity=f.unit===n.unit?part.qty:
+  f.unit==='ud'&&n.unit==='g'&&isNumber(f.factor)&&f.factor>0?part.qty*f.factor:null;
+ if(quantity===null)return {};
+ return Object.fromEntries(dfNutrients.filter(([k])=>isNumber(n.values[k])&&n.values[k]>=0).map(([k])=>[k,n.values[k]*quantity/n.amount]));
+}
+function dfNutritionSummary(parts,extras=0){
+ const values=parts.map(dfNutritionPart),count=parts.length+extras;
+ return dfNutrients.filter(([k])=>k!=='energy').map(([key,label,unit])=>{
+  const known=values.filter(v=>isNumber(v[key]));
+  return {key,label,unit,total:known.length?known.reduce((s,v)=>s+v[key],0):null,known:known.length,count};
+ });
+}
+function dfNutritionTotalsMarkup(parts,extras=0,title='Información nutricional'){
+ if(!parts.length&&!extras)return '';
+ const rows=dfNutritionSummary(parts,extras);
+ return '<details class="section pantry3-nutrition"><summary>'+htmlSafe(title)+'</summary><p>Los subtotales solo incluyen los ingredientes con datos. Las calorías del diario no cambian.</p><dl>'+
+  rows.map(r=>'<div><dt>'+htmlSafe(r.label)+'</dt><dd>'+(r.total===null?'Sin dato':
+   htmlSafe(locale(r.total,2)+' '+r.unit)+(r.known===r.count?'':' <small>· parcial ('+r.known+'/'+r.count+')</small>'))+'</dd></div>').join('')+'</dl></details>';
+}
+function dfNutritionProductMarkup(f){
+ const n=dfNutritionProfile(f),esc=htmlSafe;
+ if(!n)return '<p>No hay una ficha nutricional verificada para esta variante. Se conserva la estimación de calorías que ya tenía DinoFit.</p>';
+ let url=null;try{const u=new URL(n.source);if(u.protocol==='https:')url=u.href}catch{}
+ return '<p>Por '+esc(locale(n.amount,0)+' '+n.unit)+(n.variant?' · '+esc(n.variant):'')+'</p><dl>'+
+  dfNutrients.map(([k,l,u])=>'<div><dt>'+esc(l)+'</dt><dd>'+(isNumber(n.values[k])?esc(locale(n.values[k],2)+' '+u):'Sin dato')+'</dd></div>').join('')+
+  '</dl><small>'+esc((n.kind||'Fuente')+(n.checked?' · revisada '+n.checked:''))+(url?' · <a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Ver fuente</a>':'')+'</small>';
+}
