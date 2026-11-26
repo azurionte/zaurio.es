@@ -1,0 +1,60 @@
+name: DinoFit synthetic HTTPS preview
+on:
+  push:
+    branches: [lab/dinofit-health-https]
+    paths: ['.github/workflows/dinofit-health-lab.yml', '.github/labs/dinofit-health/**']
+permissions:
+  contents: read
+concurrency:
+  group: dinofit-health-synthetic-https
+  cancel-in-progress: false
+jobs:
+  preview:
+    if: github.repository == 'azurionte/zaurio.es' && github.ref == 'refs/heads/lab/dinofit-health-https'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare an isolated Wrangler package without credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --prefix "$RUNNER_TEMP/dinofit-health-lab-tools" --no-audit --no-fund --save-exact wrangler@4.135.0
+          node --check '.github/labs/dinofit-health/worker.mjs'
+      - name: Publish synthetic preview only and test HTTPS
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test "$GITHUB_REF" = refs/heads/lab/dinofit-health-https
+          export LAB_DIR="$RUNNER_TEMP/dinofit-health-lab"
+          mkdir -p "$LAB_DIR"
+          cp '.github/labs/dinofit-health/worker.mjs' "$LAB_DIR/worker.mjs"
+          cp '.github/labs/dinofit-health/probe.mjs' "$LAB_DIR/probe.mjs"
+          LAB_KEY="$(node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))")"
+          echo "::add-mask::$LAB_KEY"
+          export LAB_KEY
+          node --input-type=module <<'JS'
+          import { writeFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
+          const hash=createHash('sha256').update('Bearer '+process.env.LAB_KEY).digest('hex');
+          writeFileSync(process.env.LAB_DIR+'/wrangler.jsonc',JSON.stringify({
+            name:'zaurio-dinofit-health-synthetic-lab',main:'worker.mjs',
+            workers_dev:false,compatibility_date:'2026-11-26',compatibility_flags:['nodejs_compat'],
+            observability:{enabled:false},previews:{vars:{LAB_AUTH_HASH:hash}}
+          }));
+          JS
+          cd "$LAB_DIR"
+          "$RUNNER_TEMP/dinofit-health-lab-tools/node_modules/.bin/wrangler" preview --config wrangler.jsonc --name https-fixture | tee preview.log
+          PROBE_URL="$(grep -Eo 'https://[a-zA-Z0-9.-]+\.workers\.dev' preview.log | head -n 1)"
+          export PROBE_URL
+          node probe.mjs

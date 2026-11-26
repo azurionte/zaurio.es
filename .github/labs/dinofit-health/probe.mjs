@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+const fixture={"data":{"workouts":[{"id":"01010101-0101-0101-0101-010101010101","name":"Synthetic Walk","start":"2026-11-24 23:30:00 +0000","duration":900,"activeEnergyBurned":{"qty":51.25,"units":"kcal"}}]}};
+const url=process.env.PROBE_URL;
+assert.match(url,/^https:\/\/[a-z0-9.-]+\.workers\.dev$/);
+const req=(payload,key,method='POST')=>fetch(url+'/apple-health',{method,headers:{'content-type':'application/json',...(key?{authorization:'Bearer '+key}:{})},...(method==='POST'?{body:JSON.stringify(payload)}:{}),redirect:'error'});
+assert.equal((await req(fixture,null,'GET')).status,405);
+assert.equal((await req(fixture,null)).status,401);
+assert.equal((await req({},process.env.LAB_KEY)).status,422);
+const first=await req(fixture,process.env.LAB_KEY);
+assert.equal(first.status,200);
+const result=await first.json();
+assert.deepEqual(result,{ok:true,synthetic:true,activeKcal:51.25,madridDate:'2026-11-25',stored:false});
+const retry=await req(fixture,process.env.LAB_KEY);
+assert.equal(retry.status,200);assert.deepEqual(await retry.json(),result);
+console.log('PASS Cloudflare HTTPS: GET blocked; unauthenticated POST rejected; other payload rejected; fixed fixture accepted twice. No data is stored.');
+console.log('Synthetic-only endpoint: '+url+'/apple-health');
