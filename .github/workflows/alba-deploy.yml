@@ -77,8 +77,8 @@ jobs:
             if check alba alba/index.html && check alba/ alba/index.html &&
               check alba/classes alba/classes/index.html && check alba/tallers alba/tallers/index.html &&
               check alba/contacte alba/contacte/index.html && check alba/site.css alba/site.css &&
-              check alba/media/hero.webp alba/media/hero.webp && check alba/media/detail.webp alba/media/detail.webp &&
-              check alba/media/group.webp alba/media/group.webp; then
+              check alba/media/alba-practica.webp alba/media/alba-practica.webp &&
+              check alba/media/alba-retrat.webp alba/media/alba-retrat.webp; then
               curl -fsSL --max-time 20 https://zaurio.es/ -o .alba-release/root-after
               cmp .alba-release/root-before .alba-release/root-after
               exit 0
