@@ -79,7 +79,10 @@ jobs:
               check alba/contacte alba/contacte/index.html && check alba/site.css alba/site.css &&
               check alba/media/alba-practica.webp alba/media/alba-practica.webp &&
               check alba/media/alba-retrat.webp alba/media/alba-retrat.webp &&
-              check alba/media/alba-bosc.webp alba/media/alba-bosc.webp; then
+              check alba/media/alba-bosc.webp alba/media/alba-bosc.webp &&
+              check alba/media/estil-ashtanga.webp alba/media/estil-ashtanga.webp &&
+              check alba/media/estil-vinyasa.webp alba/media/estil-vinyasa.webp &&
+              check alba/media/estil-hatha.webp alba/media/estil-hatha.webp; then
               curl -fsSL --max-time 20 https://zaurio.es/ -o .alba-release/root-after
               cmp .alba-release/root-before .alba-release/root-after
               exit 0
