@@ -383,15 +383,15 @@ function dfNutritionSummary(parts,extras=0){
 function dfNutritionTotalsMarkup(parts,extras=0,title='Información nutricional'){
  if(!parts.length&&!extras)return '';
  const rows=dfNutritionSummary(parts,extras);
- return '<details class="section pantry3-nutrition"><summary>'+htmlSafe(title)+'</summary><p>Los subtotales solo incluyen los ingredientes con datos. Las calorías del diario no cambian.</p><dl>'+
+ return '<details class="section pantry3-nutrition"><summary>'+htmlSafe(title)+'</summary><p>Los subtotales solo incluyen los ingredientes con ficha. Si te interesa un valor pendiente, abre la ficha del producto en Despensa. Las calorías del diario no cambian.</p><dl>'+
   rows.map(r=>'<div><dt>'+htmlSafe(r.label)+'</dt><dd>'+(r.total===null?'Sin dato':
    htmlSafe(locale(r.total,2)+' '+r.unit)+(r.known===r.count?'':' <small>· parcial ('+r.known+'/'+r.count+')</small>'))+'</dd></div>').join('')+'</dl></details>';
 }
 function dfNutritionProductMarkup(f){
  const n=dfNutritionProfile(f),esc=htmlSafe;
- if(!n)return '<p>No hay una ficha nutricional verificada para esta variante. Se conserva la estimación de calorías que ya tenía DinoFit.</p>';
+ if(!n)return '<p><strong>Pendiente: identificar la variedad y verificar su etiqueta.</strong> Envía al chat una foto del envase y de su tabla nutricional o el código de barras. Puedes registrar la compra igualmente.</p>';
  let url=null;try{const u=new URL(n.source);if(u.protocol==='https:')url=u.href}catch{}
  return '<p>Por '+esc(locale(n.amount,0)+' '+n.unit)+(n.variant?' · '+esc(n.variant):'')+'</p><dl>'+
-  dfNutrients.map(([k,l,u])=>'<div><dt>'+esc(l)+'</dt><dd>'+(isNumber(n.values[k])?esc(locale(n.values[k],2)+' '+u):'Sin dato')+'</dd></div>').join('')+
+  dfNutrients.map(([k,l,u])=>'<div><dt>'+esc(l)+'</dt><dd>'+(isNumber(n.values[k])?esc(locale(n.values[k],2)+' '+u):isNumber(n.upper?.[k])?esc('Menos de '+locale(n.upper[k],2)+' '+u):'Pendiente')+'</dd></div>').join('')+
   '</dl><small>'+esc((n.kind||'Fuente')+(n.checked?' · revisada '+n.checked:''))+(url?' · <a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Ver fuente</a>':'')+'</small>';
 }
