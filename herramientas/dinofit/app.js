@@ -406,10 +406,10 @@ async function loadAppleDay(force=false){
   const {data,error}=await db.from('dinofit_apple_workouts').select('external_id,label,minutes,active_kcal').eq('owner_id',owner).eq('local_day',date).order('started_at');
   if(account?.id!==owner||selectedDate!==date)return;
   appleDayCache={scope,at:Date.now(),rows:error?[]:(data||[]),error:!!error};
-  if(activeView==='today'&&dashboardArea==='activity')render();
+  if(activeView==='today'&&dashboardArea==='goal')render();
  }catch{
   if(account?.id!==owner||selectedDate!==date)return;
   appleDayCache={scope,at:Date.now(),rows:[],error:true};
-  if(activeView==='today'&&dashboardArea==='activity')render();
+  if(activeView==='today'&&dashboardArea==='goal')render();
  }finally{if(appleDayLoad===scope)appleDayLoad=null;}
 }

@@ -387,7 +387,7 @@ function currentSettings(){
 }
 function render(){
  if(!state||!account)return;
- if(activeView==='today'&&dashboardArea==='activity')void loadAppleDay();
+ if(activeView==='today'&&dashboardArea==='goal')void loadAppleDay();
  renderCalendar();setSaveUI();
  for(const b of $$('button[data-view]'))b.classList.toggle('selected',b.dataset.view===activeView);
  const content=$('#content');if(!content)return;
