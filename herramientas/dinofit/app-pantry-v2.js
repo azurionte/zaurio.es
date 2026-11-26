@@ -185,7 +185,7 @@ function pantry2QuickGroups(date){
  const stocked=ids=>RECIPES.filter(r=>ids.includes(r.id)&&pantry2HasStock(r.parts));
  return [
   {id:'tuppers',title:'Tuppers preparados',emoji:'🍲',choices:tuppers},
-  {id:'treats',title:'Postres y lácteos',emoji:'🍮',choices:stocked(['cheese','flan','yopro','activia'])},
+  {id:'treats',title:'Postres y lácteos',emoji:'🍮',choices:stocked(['cheese','flan','yopro','yopro-fresa','yopro-stracciatella','activia'])},
   {id:'drinks',title:'Bebidas',emoji:'🥤',choices:stocked(['coffee','cola','cacaolat'])}
  ];
 }
@@ -484,3 +484,4 @@ globalThis.DinoPantry={data:pantry2Data,stock:pantry2Stock,recount:pantry2Recoun
  undoRecount:pantry2UndoRecount,available:pantry2AvailableTuppers,makeTuppers:pantry2MakeTuppers,prepare:pantry2Prepare,
  updateTupper:pantry2UpdateTupper,deleteTupper:pantry2DeleteTupper,eatTupper:pantry2EatTupper,eatUnit:pantry2EatUnit,
  consumed:pantry2Consumed,sameParts:pantry2SameParts};
+

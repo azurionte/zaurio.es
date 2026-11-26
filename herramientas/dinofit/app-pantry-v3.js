@@ -32,7 +32,7 @@ const pantry3Defaults={
 };
 const pantry3Escape=v=>htmlSafe(String(v??''));
 const pantry3Icon=id=>({
- yogurt:'🥛','yogurt-berries':'🫐','yogurt-pineapple':'🍍',
+ yogurt:'🥛','yopro-fresa':'🍓','yopro-stracciatella':'🥛','yogurt-berries':'🫐','yogurt-pineapple':'🍍',
  curry:'🧂',oregano:'🌿',pepper:'🧂'
 })[id]||pantry2Visual(id);
 function pantry3Format(id){

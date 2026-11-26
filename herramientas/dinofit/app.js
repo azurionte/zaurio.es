@@ -24,6 +24,8 @@ const RECIPES = [
  {id:'cheese',group:'usual',name:'Loncha de queso light',emoji:'🧀',hint:'1 loncha · 25 g',meal:'Otro',parts:[['cheese',1]]},
  {id:'flan',group:'usual',name:'Flan proteico',emoji:'🍮',hint:'1 unidad · 100 g',meal:'Otro',parts:[['flan',1]]},
  {id:'yopro',group:'usual',name:'YoPRO',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro',1]]},
+ {id:'yopro-stracciatella',group:'usual',name:'YoPRO Stracciatella',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro-stracciatella',1]]},
+ {id:'yopro-fresa',group:'usual',name:'YoPRO Fresa',emoji:'🥛',hint:'1 unidad · 120 g',meal:'Otro',parts:[['yopro-fresa',1]]},
  {id:'activia',group:'usual',name:'Activia cereales',emoji:'🥣',hint:'1 unidad · 115 g',meal:'Otro',parts:[['activia-cereales',1]]},
  {id:'mixed-chicken',group:'mixed',name:'Pechuga + salteados',emoji:'🥘',hint:'≈350 kcal · aceite incluido',meal:'Comida',parts:[['chicken',145],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]},
  {id:'mixed-beef',group:'mixed',name:'Ternera + salteados',emoji:'🥘',hint:'≈430 kcal · aceite incluido',meal:'Comida',parts:[['beef',150],['saute-chicken',56.25],['saute-frank',56.25],['oil',7]]},
@@ -151,7 +153,7 @@ function foodKind(parts=[],recipe=null){
  if(recipe?.group==='mixed'||recipe?.group==='plain'||ids.some(id=>id==='chicken'||id==='beef'||id.startsWith('burger-')||id.startsWith('saute-')))return 'main';
  const eggs=(parts||[]).reduce((total,p)=>total+((Array.isArray(p)?p[0]:p?.foodId)==='egg'?Number(Array.isArray(p)?p[1]:p?.qty)||0:0),0);
  if(eggs>=2)return 'main';
- if(ids.some(id=>['coffee','milk','cheese','flan','yopro','activia-cereales','yogurt','yogurt-berries','yogurt-pineapple','egg'].includes(id)))return 'light';
+ if(ids.some(id=>['coffee','milk','cheese','flan','yopro','yopro-fresa','yopro-stracciatella','activia-cereales','yogurt','yogurt-berries','yogurt-pineapple','egg'].includes(id)))return 'light';
  return 'extra';
 }
 function inferFoodMeal(date,parts,recipe=null,excludeId=null){
