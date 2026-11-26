@@ -25,3 +25,18 @@ body{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fw
 .contact-portrait{width:min(100%,420px);margin-inline:auto}.subhero .contact-portrait img{width:100%;height:auto;aspect-ratio:4/5;object-fit:contain;border-radius:1rem 4rem 1rem 1rem}.contact-portrait figcaption a{text-underline-offset:.2em}@media(max-width:580px){.contact-portrait{width:min(100%,340px);margin-inline:0}}
 
 .foot{border-top:1px solid var(--line);padding:1.15rem 0 1.5rem}.foot .footer-brand{font:600 .8rem/1.25 var(--sans);color:#565c50;gap:.38rem}.foot .footer-brand svg{width:18px;height:18px;flex:none}.foot .footer-brand:hover{text-decoration:underline;text-underline-offset:.22em}
+
+/* Alba en Venus: serveis a domicili */
+.alba-massage-band{background:#ead6c4;border-block:1px solid var(--line)}
+.alba-service-split{display:grid;grid-template-columns:1.35fr .65fr;align-items:center;gap:clamp(1.15rem,5vw,4.3rem);padding-block:clamp(2.5rem,6vw,5.7rem)}
+.alba-service-split p:not(.tag),.alba-description{max-width:61ch}
+.alba-service-split h1{font-size:clamp(2.8rem,6.3vw,6rem);overflow-wrap:anywhere}
+.alba-offer{position:relative;background:#f8f0e5;border:1px solid #cbb09a;border-radius:2.4rem 2.4rem .85rem .85rem;padding:clamp(1.2rem,3vw,2.6rem)}
+.alba-offer .tag{margin-bottom:.6rem}.alba-offer p:last-child{margin:0}.alba-offer strong{display:block;color:var(--pine);font:400 clamp(1.44rem,2.7vw,2.15rem)/1.14 var(--serif);margin-bottom:.45rem}
+.alba-catalog{padding-block:clamp(2rem,5.5vw,4.5rem);scroll-margin-top:1rem}
+.alba-catalog + .alba-catalog{padding-top:0}
+.alba-rate-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(.75rem,2vw,1.25rem);margin-top:1.4rem}.alba-rate-grid.alba-rate-two{grid-template-columns:repeat(2,minmax(0,1fr));max-width:54rem}
+.alba-rate{background:#fcf7ee;border:1px solid var(--line);border-radius:1rem;padding:clamp(1rem,2.4vw,1.8rem);display:flex;flex-direction:column;min-width:0}
+.alba-rate:nth-child(2){background:#e5eadc}.alba-rate .tag{margin-bottom:.6rem}.alba-rate h3{font-size:clamp(1.6rem,3vw,2.3rem);line-height:1.04}.alba-rate p:not(.tag){margin:.65rem 0}
+.alba-rate .alba-price{margin-top:auto!important;padding-top:.65rem;color:var(--pine);font-weight:750}.alba-price del{margin-left:.4rem;font-weight:400;color:#64594c}.alba-rate-note{font-size:.87rem}
+@media(max-width:680px){.alba-service-split,.alba-rate-grid,.alba-rate-grid.alba-rate-two{grid-template-columns:1fr}.top nav{flex-wrap:wrap;column-gap:.55rem;row-gap:0}.top nav a{font-size:.83rem}}

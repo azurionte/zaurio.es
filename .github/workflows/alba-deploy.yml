@@ -32,7 +32,7 @@ jobs:
           import assert from 'node:assert/strict';
           const host='zaurio.es', worker='zaurio-alba-demo', dir='.alba-release';
           const patterns=[host+'/alba',host+'/alba/',host+'/alba/*'];
-          const paths=['/alba','/alba/classes','/alba/tallers','/alba/contacte'];
+          const paths=['/alba','/alba/classes','/alba/massatges','/alba/tallers','/alba/contacte'];
           for(const p of paths) assert(readFileSync(p.slice(1)+'/index.html','utf8').includes('<html lang="ca">'));
           assert(process.env.CLOUDFLARE_API_TOKEN && process.env.CLOUDFLARE_ACCOUNT_ID);
           const get=async path=>{
@@ -56,7 +56,7 @@ jobs:
             const url=new URL(request.url);
             if(url.hostname!=='zaurio.es'||!(url.pathname==='/alba'||url.pathname.startsWith('/alba/')))return new Response('Not found',{status:404});
             if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405,headers:{Allow:'GET, HEAD'}});
-            if(['/alba','/alba/classes','/alba/tallers','/alba/contacte'].includes(url.pathname.replace(/\\/$/,'')))url.pathname=url.pathname.replace(/\\/$/,'')+'/index.html';
+            if(['/alba','/alba/classes','/alba/massatges','/alba/tallers','/alba/contacte'].includes(url.pathname.replace(/\\/$/,'')))url.pathname=url.pathname.replace(/\\/$/,'')+'/index.html';
             const response=await env.ASSETS.fetch(new Request(url,request));
             const headers=new Headers(response.headers);
             headers.set('X-Robots-Tag','noindex, nofollow');
@@ -75,7 +75,7 @@ jobs:
           }
           for attempt in $(seq 1 10); do
             if check alba alba/index.html && check alba/ alba/index.html &&
-              check alba/classes alba/classes/index.html && check alba/tallers alba/tallers/index.html &&
+              check alba/classes alba/classes/index.html && check alba/massatges alba/massatges/index.html && check alba/tallers alba/tallers/index.html &&
               check alba/contacte alba/contacte/index.html && check alba/site.css alba/site.css &&
               check alba/media/alba-practica.webp alba/media/alba-practica.webp &&
               check alba/media/alba-retrat.webp alba/media/alba-retrat.webp &&
