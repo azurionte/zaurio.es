@@ -300,6 +300,10 @@ async function actionHandler(event){
     state.logs=state.logs.filter(x=>x.id!==id);
     closeModal();changed('Entrada eliminada.');break;
    }
+   case 'apple-health':openAppleLink();break;
+   case 'apple-create':await changeAppleLink(button,false);break;
+   case 'apple-revoke':await changeAppleLink(button,true);break;
+   case 'apple-refresh':await loadAppleDay(true);break;
    case 'add-activity':openActivityModal();break;
    case 'delete-activity':{
     if(!confirm('¿Eliminar esta actividad?'))return;
@@ -404,3 +408,29 @@ async function boot(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
+
+function openAppleLink(){
+ openModalType='apple-health';
+ const url=location.origin+'/dinofit/api/apple-health';
+ renderModal('Conectar Apple Salud','<p class="helper">Pega esta dirección en la automatización REST de Health Auto Export. En Headers, añade Authorization con el valor que generes aquí.</p><label>URL<input readonly value="'+htmlSafe(url)+'" aria-label="URL del receptor"></label><div id="apple-connection-key" class="section-gap" aria-live="polite"></div>',
+ '<button type="button" class="click" data-action="apple-revoke">Desconectar</button> <button type="button" class="click primary" data-action="apple-create">Generar clave</button>');
+}
+async function changeAppleLink(button,revoke){
+ if(!db||!account||openModalType!=='apple-health')return;
+ if(revoke&&!confirm('¿Desconectar los próximos envíos de Apple Salud? No se borrará lo ya guardado.'))return;
+ const prior=account.id;
+ const mount=$('#apple-connection-key'); if(!mount)return;
+ button.disabled=true;
+ try{
+  const {data,error}=await db.rpc(revoke?'dinofit_apple_disconnect':'dinofit_apple_pair');
+  if(openModalType!=='apple-health'||account?.id!==prior||!mount.isConnected)return;
+  if(error||(!revoke&&!/^[0-9a-f]{64}$/.test(data)))throw new Error();
+  mount.textContent='';
+  if(revoke){mount.textContent='Conexión desactivada.';return;}
+  const label=document.createElement('label');label.textContent='Valor de Authorization (incluye Bearer)';
+  const input=document.createElement('input');input.type='text';input.readOnly=true;input.value='Bearer '+data;input.autocomplete='off';input.spellcheck=false;input.addEventListener('focus',()=>input.select());
+  label.appendChild(input);mount.appendChild(label);
+  const copy=document.createElement('button');copy.type='button';copy.className='click sm';copy.textContent='Copiar valor';copy.onclick=async()=>{try{await navigator.clipboard.writeText(input.value);copy.textContent='Copiado';}catch{input.focus();input.select();}};mount.appendChild(copy);
+ }catch{if(mount.isConnected)mount.textContent='No se pudo actualizar la conexión. Vuelve a intentarlo.';}
+ finally{if(button.isConnected)button.disabled=false;}
+}

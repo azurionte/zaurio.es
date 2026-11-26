@@ -218,7 +218,7 @@ function saveMessage(text){
 }
 function resetSession(){
  authEpoch++;clearTimeout(saveTimeout);
- state=null;account=null;revision=null;loadingUser=null;
+ state=null;account=null;revision=null;loadingUser=null;appleDayCache=null;appleDayLoad=null;
  dirty=false;saving=false;conflict=false;saveError='';savePromise=null;changeCount=0;
  $('#privatePage').hidden=true;$('#authGate').hidden=false;
 }
@@ -394,4 +394,22 @@ function dfNutritionProductMarkup(f){
  return '<p>Por '+esc(locale(n.amount,0)+' '+n.unit)+(n.variant?' · '+esc(n.variant):'')+'</p><dl>'+
   dfNutrients.map(([k,l,u])=>'<div><dt>'+esc(l)+'</dt><dd>'+(isNumber(n.values[k])?esc(locale(n.values[k],2)+' '+u):isNumber(n.upper?.[k])?esc('Menos de '+locale(n.upper[k],2)+' '+u):'Pendiente')+'</dd></div>').join('')+
   '</dl><small>'+esc((n.kind||'Fuente')+(n.checked?' · revisada '+n.checked:''))+(url?' · <a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Ver fuente</a>':'')+'</small>';
+}
+
+let appleDayCache=null,appleDayLoad=null;
+async function loadAppleDay(force=false){
+ if(!db||!account||!state)return;
+ const owner=account.id,date=selectedDate,scope=owner+'/'+date,now=Date.now();
+ if(appleDayLoad===scope||(!force&&appleDayCache?.scope===scope&&now-appleDayCache.at<25000))return;
+ appleDayLoad=scope;
+ try{
+  const {data,error}=await db.from('dinofit_apple_workouts').select('external_id,label,minutes,active_kcal').eq('owner_id',owner).eq('local_day',date).order('started_at');
+  if(account?.id!==owner||selectedDate!==date)return;
+  appleDayCache={scope,at:Date.now(),rows:error?[]:(data||[]),error:!!error};
+  if(activeView==='today'&&dashboardArea==='activity')render();
+ }catch{
+  if(account?.id!==owner||selectedDate!==date)return;
+  appleDayCache={scope,at:Date.now(),rows:[],error:true};
+  if(activeView==='today'&&dashboardArea==='activity')render();
+ }finally{if(appleDayLoad===scope)appleDayLoad=null;}
 }
