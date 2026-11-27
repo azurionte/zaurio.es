@@ -52,3 +52,16 @@ for (const [url,[type,body]] of Object.entries(liveAssets)) {
  assert.equal(body,readFileSync(new URL('../'+url.split('/').pop(),import.meta.url),'utf8'),url);
 }
 assert.equal(Object.keys(liveAssets).length,6);
+
+import {runInNewContext} from 'node:vm';
+const pantryScript=readFileSync(new URL('../app-pantry.js',import.meta.url),'utf8');
+class WorkerScope{}
+const testWorker=new WorkerScope(),events=[];
+testWorker.addEventListener=(name)=>events.push(name);
+runInNewContext(pantryScript,{self:testWorker,ServiceWorkerGlobalScope:WorkerScope});
+assert.deepEqual(events,['install','activate','push','notificationclick']);
+const appUi=readFileSync(new URL('../app-ui.js',import.meta.url),'utf8');
+assert.match(appUi,/app-pantry\.js\?compra-worker=1/);
+const browserSandbox={document:{addEventListener(){}},window:{document:{},addEventListener(){}},Intl};
+runInNewContext(appUi,browserSandbox);
+assert.equal(typeof browserSandbox.renderDinoCompra,'function');
