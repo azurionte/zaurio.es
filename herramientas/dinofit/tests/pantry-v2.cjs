@@ -104,6 +104,9 @@ assert.equal(run('validateState(state)'),true,'document valid for persistence');
   assert.equal(run('DinoPantry.stock("mercadona-16712").known'),false);
   assert.equal(run('syncDinoCompraInventory({...secondOrder,inventoryReceived:true}).posted'),0);
   assert.equal(run('state.foods.filter(f=>f.id==="mercadona-16712").length'),1);
+  run('state.logs.push({id:"maize-used",date:"2099-11-28",parts:[makePart("mercadona-16712",100)]})');
+  assert.throws(()=>run('syncDinoCompraInventory({...secondOrder,purchased:false})'),/consumos.+posteriores/,'uncounted stock with subsequent use cannot be silently reversed');
+  assert.equal(run('DinoPantry.stock("mercadona-16712").received'),420);
   run(`var bif={name:'Bífidus con nueces y cereales probióticos Hacendado 0% MG',productId:'21329',qty:1};
    state.foods.push({id:'custom-bifidus',name:bif.name,unit:'ud',factor:125,kcal:56.8,min:56.8,max:56.8,category:'dairy'});
    bif.inventory={foodId:'mercadona-21329',qty:4,pieces:4,grams:500};
@@ -238,4 +241,45 @@ async function checkDiary(){
  assert.match(card,/<span class="quick-copy"><strong>2 hamburguesas de pollo \+ verduras<\/strong><small class="quick-availability">1 disponible<\/small><\/span>/,'show the complete food name once and only availability below');
  console.log('PASS DinoFit pantry: diary, stock-only shortcuts, grouping, depletion, restock and compatible edits');
 }
-checkDiary().catch(error=>{console.error(error);process.exitCode=1});
+
+async function checkCompraPersistence(){
+ ctx.previousReceiptRuntime=run('({state,db,dirty,conflict,saveError,revision,changeCount,activeView})');
+ ctx.remotePurchaseDocument={revision:10,document:run('defaultDocument({user_metadata:{full_name:"Concurrent receipt"}})'),writes:0};
+ try{
+  run(`state=structuredClone(remotePurchaseDocument.document);revision=10;dirty=false;conflict=false;saveError='';activeView='pantry';
+   var stalePurchaseDocument=structuredClone(state);
+   var serverOrder={id:'mercado-concurrent',purchased:true,inventoryReceived:true,items:[
+    {id:'order-item',qty:1,inventory:{foodId:'flan',qty:4,pieces:4,grams:400}}
+   ]};
+   db={from(table){return {update(payload){let requiredRevision,owner; const q={
+    eq(key,value){if(key==='revision')requiredRevision=value;if(key==='user_id')owner=value;return q},
+    async select(){if(table!=='dinofit_documents'||owner!==account.id)throw Error('wrong document');
+     remotePurchaseDocument.writes++;
+     if(requiredRevision!==remotePurchaseDocument.revision)return {data:[]};
+     remotePurchaseDocument.document=structuredClone(payload.document);remotePurchaseDocument.revision++;
+     return {data:[{revision:remotePurchaseDocument.revision}]} }
+   };return q}}}};
+   syncDinoCompraInventory(serverOrder);
+   syncDinoCompraInventory(serverOrder);changed();`);
+  assert.deepEqual(Array.from(await run('Promise.all([persistNow(),persistNow()])')),[true,true],'rapid double save shares a revision-checked request');
+  assert.equal(ctx.remotePurchaseDocument.writes,1);
+  assert.equal(ctx.remotePurchaseDocument.document.pantry.v2.purchases.length,1);
+  const initialReceiptId=ctx.remotePurchaseDocument.document.pantry.v2.purchases[0].id;
+  run(`state=stalePurchaseDocument;revision=10;
+   syncDinoCompraInventory(serverOrder);changed();`);
+  assert.equal(await run('persistNow()'),false,'out-of-date device cannot overwrite the successful receipt');
+  assert.equal(run('conflict'),true);
+  assert.equal(ctx.remotePurchaseDocument.document.pantry.v2.purchases.length,1);
+  run(`state=structuredClone(remotePurchaseDocument.document);revision=remotePurchaseDocument.revision;dirty=false;conflict=false;saveError='';`);
+  assert.equal(run('syncDinoCompraInventory(serverOrder).posted'),0,'reloaded receipt replay is a no-op');
+  assert.equal(run('DinoPantry.stock("flan").received'),4);
+  assert.equal(await run('persistNow()'),true);
+  assert.equal(ctx.remotePurchaseDocument.writes,2,'no remote write for idempotent replay after load');
+  assert.equal(ctx.remotePurchaseDocument.document.pantry.v2.purchases[0].id,initialReceiptId);
+ }finally{
+  run(`({state,db,dirty,conflict,saveError,revision,changeCount,activeView}=previousReceiptRuntime);`);
+  delete ctx.previousReceiptRuntime;delete ctx.remotePurchaseDocument;
+ }
+}
+
+checkCompraPersistence().then(checkDiary).catch(error=>{console.error(error);process.exitCode=1});
