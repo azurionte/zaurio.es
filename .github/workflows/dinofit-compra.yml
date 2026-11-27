@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
       - 'herramientas/dinofit/**'
-      - 'workers/dinofit-push.mjs'
+      - 'supabase/functions/dinofit-push/**'
       - '_worker.js'
       - '.github/workflows/dinofit-compra.yml'
 permissions:
@@ -17,6 +17,7 @@ jobs:
           node --input-type=module --check < _worker.js
           node --check herramientas/dinofit/compra.mjs
           node --check herramientas/dinofit/compra-sw.js
+          node --check supabase/functions/dinofit-push/index.mjs
           node herramientas/dinofit/tests/compra.mjs
           node herramientas/dinofit/tests/pantry-v2.cjs
           node herramientas/dinofit/tests/pantry-v3.cjs

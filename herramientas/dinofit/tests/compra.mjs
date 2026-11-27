@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {cleanShopPlan,shopOccurrence,dueShopOccurrences,madridTime} from '../compra-core.mjs';
-import {dinoEndpoint,runDinoPush,handleDinoPush} from '../../../workers/dinofit-push.mjs';
+import {dinoEndpoint,runDinoPush,handleDinoPush} from '../../../supabase/functions/dinofit-push/handler.mjs';
 const plan=cleanShopPlan({coverStart:'2026-12-01',orderDate:'2026-11-27',deliveryDate:'2026-11-28',weeks:2,cadence:2,lead:0,time:'10:00',enabled:true,
  changes:{'2026-12-29':{order:'2026-12-22',delivery:'2026-12-23',remind:'2026-12-21'}}});
 assert.deepEqual(shopOccurrence(plan,0),{index:0,start:'2026-12-01',end:'2026-12-15',order:'2026-11-27',delivery:'2026-11-28',remind:'2026-11-27',skip:false,custom:false});

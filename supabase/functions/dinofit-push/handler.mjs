@@ -1,4 +1,4 @@
-import {dueShopOccurrences,shopLocalDate} from '../herramientas/dinofit/compra-core.mjs';
+import {dueShopOccurrences,shopLocalDate} from '../../../herramientas/dinofit/compra-core.mjs';
 
 const host='herramientas.zaurio.es', route='/api/dinofit/push/';
 const table='/dinofit_push_subscriptions', deliveries='/dinofit_push_deliveries';
@@ -64,15 +64,15 @@ async function send(admin,post,env,sub,key,payload,ttl){
  return response;
 }
 export async function handleDinoPush(request,env,helpers){
- const u=new URL(request.url),{admin,post,json,defaultUrl}=helpers;
- if(!u.pathname.startsWith(route))return null;
+ const u=new URL(request.url),{admin,post,json,defaultUrl}=helpers,prefix=helpers.routePrefix||route;
+ if(!u.pathname.startsWith(prefix))return null;
  const reply=(status,message)=>json({ok:false,message},{status});
- if(u.hostname!==host)return reply(404,'No encontrado.');
+ if(!helpers.expectedOrigin&&u.hostname!==host)return reply(404,'No encontrado.');
  if(request.method!=='POST')return reply(405,'Método no permitido.');
- if(request.headers.get('Origin')!==u.origin)return reply(403,'Origen no permitido.');
+ if(request.headers.get('Origin')!==(helpers.expectedOrigin||u.origin))return reply(403,'Origen no permitido.');
  try{
   const owner=await uid(request,env,defaultUrl);if(!owner)return reply(401,'Entra en DinoFit para gestionar avisos.');
-  const action=u.pathname.slice(route.length);
+  const action=u.pathname.slice(prefix.length);
   if(action==='key')return available(env)?json({ok:true,publicKey:env.VAPID_PUBLIC_KEY}):reply(503,'Los avisos todavía no están disponibles.');
   if(!['subscribe','unsubscribe','test'].includes(action))return reply(404,'No encontrado.');
   const data=await bodyLimit(request);
