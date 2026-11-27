@@ -88,7 +88,7 @@ async function pushApi(action,body){
  const {data}=await db.auth.getSession();
  const token=data.session?.access_token;
  if(!token)throw Error('Entra en tu cuenta para gestionar avisos.');
- const r=await fetch('/api/dinofit/push/'+action,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body)});
+ const r=await fetch(SUPABASE_URL+'/functions/v1/dinofit-push/'+action,{method:'POST',headers:{'Content-Type':'application/json',apikey:SUPABASE_KEY,Authorization:'Bearer '+token},body:JSON.stringify(body)});
  const result=await r.json().catch(()=>null);
  if(!r.ok||!result?.ok)throw Error(result?.message||'No se pudo conectar con el servicio de avisos.');
  return result;
