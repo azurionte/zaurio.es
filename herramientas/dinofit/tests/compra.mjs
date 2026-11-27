@@ -299,3 +299,24 @@ await new Promise(resolve=>setImmediate(resolve));
 assert.equal(refreshedCas.writes(),1);
 assert.equal(ownerBox.entries()[0].blocked,true);
 console.log('Compra outbox: localStorage after reload, cross-account isolation, offline→online replay, blocked conflict retained: OK');
+
+const followSource=appUi.match(/function moveReminderWithOrderDate\(editor\)\{[\s\S]+?(?=\nfunction viewOrder)/)?.[0];
+assert.ok(followSource);
+const changedEditor={elements:{orderDate:{value:'2026-12-21'},deliveryDate:{value:'2026-12-26'},
+ reminderDate:{value:'2026-12-24'},coverStart:{value:'2026-12-29'},coverEnd:{value:'2027-01-11'}}};
+let remembered=false;
+runInNewContext(followSource+'\nmoveReminderWithOrderDate(editor)',{
+ editor:changedEditor,rememberPurchaseDraft(editor){remembered=editor===changedEditor;}
+});
+assert.equal(changedEditor.elements.reminderDate.value,'2026-12-21');
+assert.equal(changedEditor.elements.deliveryDate.value,'2026-12-26');
+assert.equal(changedEditor.elements.coverStart.value,'2026-12-29');
+assert.ok(remembered);
+assert.match(appUi,/orderDate\.addEventListener\('change',\(\)=>moveReminderWithOrderDate\(editor\)\)/);
+
+const latestPlanned={...explicit,id:'latest-plan',orderDate:'2026-12-19',items:[{...line,name:'Compra editada',qty:2}]};
+const usual=usualPurchase([latestPlanned,{...purchased,items:[line,{...line,name:'Producto retirado'}]}]);
+assert.equal(usual.id,'latest-plan');
+assert.equal(usual.purchased,false);
+assert.deepEqual(usual.items.map(item=>[item.name,item.qty]),[['Compra editada',2]]);
+assert.equal(usualPurchase([{...latestPlanned,cancelled:true},purchased]).id,purchased.id);

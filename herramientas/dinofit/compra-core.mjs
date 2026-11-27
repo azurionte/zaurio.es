@@ -109,7 +109,8 @@ export function cleanPurchaseOrders(raw){
  return result;
 }
 export function usualPurchase(orders){
- return cleanPurchaseOrders(orders).filter(x=>x.purchased).sort((a,b)=>b.orderDate.localeCompare(a.orderDate))[0]||null;
+ // Newly registered orders are prepended; planned order dates do not define registration order.
+ return cleanPurchaseOrders(Array.isArray(orders)?orders.filter(x=>!x?.cancelled&&!x?.canceled):[])[0]||null;
 }
 export function purchaseEstimate(items){
  return items.reduce((s,x)=>({cents:s.cents+(x.cents==null?0:x.cents*x.qty),unknown:s.unknown+Number(x.cents==null)}),{cents:0,unknown:0});
