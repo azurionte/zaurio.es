@@ -16,3 +16,6 @@ payslip-desktop
 payslip-desktop/**
 payslip-updates
 payslip-updates/**
+workers/**
+herramientas/dinofit/sql/**
+herramientas/dinofit/tests/**

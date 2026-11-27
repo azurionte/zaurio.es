@@ -144,4 +144,5 @@ document.addEventListener('click',e=>{
   const plan=cleanShopPlan(currentShop().plan);if(plan){delete plan.changes[button.dataset.cover];void saveUpdate({plan},'Fechas habituales restauradas')}
  }else void changePush(a);
 },true);
+window.addEventListener('hashchange',()=>{if(location.hash==='#compra'&&state&&account){activeView='compra';render()}});
 if(typeof activeView!=='undefined'&&activeView==='compra')render();
