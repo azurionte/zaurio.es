@@ -1,0 +1,23 @@
+name: DinoFit Compra
+on:
+  pull_request:
+    paths:
+      - 'herramientas/dinofit/**'
+      - 'workers/dinofit-push.mjs'
+      - '_worker.js'
+      - '.github/workflows/dinofit-compra.yml'
+permissions:
+  contents: read
+jobs:
+  compra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: |
+          node --input-type=module --check < _worker.js
+          node --check herramientas/dinofit/compra.mjs
+          node --check herramientas/dinofit/compra-sw.js
+          node herramientas/dinofit/tests/compra.mjs
+          node herramientas/dinofit/tests/pantry-v2.cjs
+          node herramientas/dinofit/tests/pantry-v3.cjs
+          node herramientas/dinofit/tests/pantry-nutrition.cjs

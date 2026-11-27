@@ -263,7 +263,7 @@ async function actionHandler(event){
  try{
   if(pantryAction(button))return;
   switch(action){
-   case 'view':activeView=button.dataset.view;if(activeView==='today')selectCalendarDay(isoToday());else render();break;
+   case 'view':activeView=button.dataset.view;if(activeView!=='compra'&&location.hash==='#compra')history.replaceState(history.state,'',location.pathname+location.search);if(activeView==='today')selectCalendarDay(isoToday());else render();break;
    case 'date-prev':selectCalendarDay(addDays(selectedDate,-1));break;
    case 'date-next':selectCalendarDay(addDays(selectedDate,1));break;
    case 'date-today':selectCalendarDay(isoToday());break;

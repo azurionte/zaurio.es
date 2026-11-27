@@ -1,0 +1,19 @@
+{
+  "id": "/dinofit/",
+  "name": "DinoFit",
+  "short_name": "DinoFit",
+  "lang": "es",
+  "start_url": "/dinofit/",
+  "scope": "/dinofit/",
+  "display": "standalone",
+  "background_color": "#090e1a",
+  "theme_color": "#090e1a",
+  "icons": [
+    {
+      "src": "/dinofit/compra-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
