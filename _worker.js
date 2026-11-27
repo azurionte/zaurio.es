@@ -1,3 +1,5 @@
+import dinoCompraAssets from './workers/dinofit-compra-assets.mjs';
+
 const DEFAULT_SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
 const VELOCICHEF_PUSH_KEY_PATH = "/api/velocichef/push-public-key";
 const VELOCICHEF_PUSH_SEND_PATH = "/api/velocichef/push/send-due";
@@ -1191,6 +1193,12 @@ export default {
     const host = url.hostname;
     let path = url.pathname;
     const search = url.search;
+    if (host === "herramientas.zaurio.es" && Object.hasOwn(dinoCompraAssets,path) && (request.method === "GET" || request.method === "HEAD")) {
+      const [type, body] = dinoCompraAssets[path];
+      return new Response(request.method === "HEAD" ? null : body, {
+        headers: { "Content-Type": type + "; charset=utf-8", "Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff" },
+      });
+    }
 
     if (path.toLowerCase() === "/dbt.exe") {
       return fetchPayslipUpdateAsset(request, env, "/payslip-updates/DBT.exe");
