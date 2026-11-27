@@ -142,3 +142,47 @@ export function purchaseLeadDates(coverStart){
  const saturday=addShopDays(orderDate,2);
  return {orderDate,deliveryDate:saturday<coverStart?saturday:addShopDays(coverStart,-1),reminderDate:orderDate};
 }
+
+export function applyPurchaseOrderChange(document,intended,expected,applyInventory=()=>undefined){
+ const shopping=document.shoppingPlan||{};
+ const rows=Array.isArray(shopping.orders)?shopping.orders:[];
+ const found=rows.find(row=>row?.id===intended.id);
+ const actual=found?cleanPurchaseOrder(found):null;
+ const equivalent=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+ if(actual&&equivalent(actual,intended))return {kind:'already'};
+ if((found&&!actual)||!equivalent(actual,expected))return {kind:'changed'};
+ const detail=applyInventory(intended);
+ const next={...found,...intended};
+ // An edit can intentionally remove a previously confirmed receipt total.
+ for(const key of ['totalCents','feesCents','inventoryReceivedAt'])if(!Object.hasOwn(intended,key))delete next[key];
+ document.shoppingPlan={...shopping,orders:found?rows.map(row=>row?.id===intended.id?next:row):[next,...rows]};
+ return {kind:'apply',detail};
+}
+
+
+/* One key per operation avoids linear read/modify/write races between tabs. */
+export function makeCompraJournal(storage,owner){
+ const prefix='dinofit-compra-outbox-v1:'+owner+':';
+ function entry(raw,id){
+  if(!raw||raw.id!==id||!purchaseId.test(id))return null;
+  const item=cleanPurchaseOrder(raw.item),expected=raw.expected===null?null:cleanPurchaseOrder(raw.expected);
+  if(!item||raw.expected!==null&&expected?.id!==item.id)return null;
+  return {id,item,expected,at:Number(raw.at)||0,blocked:raw.blocked===true,
+   draft:typeof raw.draft==='string'?raw.draft:'',message:typeof raw.message==='string'?raw.message.slice(0,250):''};
+ }
+ return {
+  entries(){
+   const result=[];
+   for(let i=0;i<storage.length;i++){
+    const key=storage.key(i);if(!key?.startsWith(prefix))continue;
+    try{const op=entry(JSON.parse(storage.getItem(key)),key.slice(prefix.length));if(op)result.push(op);}catch{}
+   }
+   return result.sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id));
+  },
+  put(operation){
+   const op=entry(operation,operation.id);if(!op)throw Error('Invalid purchase operation');
+   storage.setItem(prefix+op.id,JSON.stringify(op));return op;
+  },
+  clear(id){if(purchaseId.test(id))storage.removeItem(prefix+id);}
+ };
+}

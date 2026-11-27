@@ -155,3 +155,145 @@ runInNewContext(removeSource+'\nremovePurchaseProduct(button)',{
 });
 assert.deepEqual(calls,['removed','recalculate',true]);
 assert.equal(offsets.scrollTop,510);
+
+
+import {applyPurchaseOrderChange} from '../compra-core.mjs';
+const appSource=readFileSync(new URL('../app.js',import.meta.url),'utf8');
+function casHarness(initial,hook=async()=>undefined){
+ let remote={document:structuredClone(initial),revision:123};
+ let writes=0;
+ const dbFixture={from:()=>({
+  select:()=>({eq:(field,owner)=>({
+   maybeSingle:async()=>{assert.equal(field,'user_id');assert.equal(owner,'cas-owner');return {data:structuredClone(remote)}}
+  })}),
+  update:arg=>({eq:(field,owner)=>({eq:(revField,rev)=>({
+   select:async()=>{
+    assert.equal(field,'user_id');assert.equal(owner,'cas-owner');assert.equal(revField,'revision');
+    const override=await hook(++writes,remote,arg.document);
+    if(override?.lost){
+     remote.document=structuredClone(arg.document);remote.revision++;
+     return {error:new Error('ack switched off')};
+    }
+    if(rev!==remote.revision)return {data:[]};
+    remote.document=structuredClone(arg.document);remote.revision++;
+    return {data:[{revision:remote.revision}]};
+   }
+  })})})
+ })};
+ const sandbox={structuredClone,Intl,Date,dbFixture,
+  document:{querySelector:()=>null},localMock:structuredClone(initial),
+  clearTimeout(){},setTimeout(){}};
+ runInNewContext(appSource,sandbox);
+ runInNewContext('db=dbFixture;account={id:"cas-owner"};revision=122;state=localMock;validateState=()=>true;',sandbox);
+ return {
+  remote:()=>remote,
+  writes:()=>writes,
+  live:()=>runInNewContext('({state,revision,dirty,conflict,changeCount})',sandbox),
+  run:callback=>sandbox.persistCompraMutation(callback),
+  set:code=>runInNewContext(code,sandbox)
+ };
+}
+const intended=cleanPurchaseOrder({...explicit,id:'browser-stable-draft'});
+const initial={logs:[{id:'fresh-remote-diary'}],profile:{owner:'test'},pantry:{movements:[]},shoppingPlan:{plan:{legacy:true},orders:[purchased],other:'keep'}};
+const racing=casHarness(initial,async (n,remote)=>{
+ if(n===1){remote.document.logs.push({id:'concurrent-diary'});remote.document.shoppingPlan.orders[0].unrelatedField='change-other-purchase';remote.revision++;}
+});
+let applyAttempts=0;
+const afterRace=await racing.run(draft=>{
+ assert.equal(draft.logs[0].id,'fresh-remote-diary');
+ return applyPurchaseOrderChange(draft,intended,null,()=>{applyAttempts++;draft.pantry.movements.push({id:intended.id});return {linked:1};});
+});
+assert.equal(afterRace.kind,'ok');
+assert.equal(applyAttempts,2);
+assert.equal(racing.writes(),2);
+assert.equal(racing.remote().document.logs.length,2);
+assert.equal(racing.remote().document.shoppingPlan.orders[1].unrelatedField,'change-other-purchase');
+assert.equal(racing.remote().document.shoppingPlan.other,'keep');
+assert.equal(racing.remote().document.pantry.movements.length,1);
+assert.equal(racing.live().revision,125);
+assert.equal((await racing.run(draft=>applyPurchaseOrderChange(draft,intended,null))).kind,'ok');
+assert.equal(racing.writes(),2);
+
+const lost=casHarness(initial,async n=>n===1?{lost:true}:undefined);
+assert.equal((await lost.run(draft=>applyPurchaseOrderChange(draft,intended,null))).kind,'ok');
+assert.equal(lost.writes(),1);
+assert.equal(lost.remote().document.shoppingPlan.orders.filter(o=>o.id===intended.id).length,1);
+
+const existing=cleanPurchaseOrder(purchased),edited=cleanPurchaseOrder({...purchased,coverEnd:'2027-01-15'});
+const competing=casHarness(initial);
+competing.remote().document.shoppingPlan.orders[0].coverEnd='2027-01-13';
+const blocked=await competing.run(draft=>applyPurchaseOrderChange(draft,edited,existing));
+assert.equal(blocked.kind,'changed');
+assert.equal(competing.writes(),0);
+assert.equal(competing.remote().document.shoppingPlan.orders[0].coverEnd,'2027-01-13');
+
+const pantryBlocked=casHarness(initial);
+const blockedPantry=await pantryBlocked.run(draft=>applyPurchaseOrderChange(draft,edited,existing,()=>{
+ draft.pantry.movements.push({id:'must-not-persist'});throw Error('Ya se han usado existencias.');
+}));
+assert.equal(blockedPantry.kind,'invalid');
+assert.equal(blockedPantry.message,'Ya se han usado existencias.');
+assert.equal(pantryBlocked.writes(),0);
+assert.equal(pantryBlocked.live().state.pantry.movements.length,0);
+assert.equal(pantryBlocked.remote().document.pantry.movements.length,0);
+
+const local=casHarness(initial);local.set('state.logs.push({id:"not-synced"});dirty=true;conflict=true;changeCount++;');
+assert.equal((await local.run(draft=>applyPurchaseOrderChange(draft,intended,null))).kind,'local');
+assert.equal(local.live().state.logs.length,2);
+assert.equal(local.remote().document.logs.length,1);
+
+let mid;
+mid=casHarness(initial,async()=>{mid.set('state.logs.push({id:"not-synced"});dirty=true;changeCount++;')});
+assert.equal((await mid.run(draft=>applyPurchaseOrderChange(draft,intended,null))).kind,'committed-with-local-edits');
+assert.equal(mid.live().state.logs.length,2);
+assert.equal(mid.live().revision,122);
+assert.equal(mid.remote().document.shoppingPlan.orders[0].id,intended.id);
+assert.equal(mid.remote().document.logs.length,1);
+
+const draftSession={
+ getItem:key=>key.endsWith(':isolated')?JSON.stringify({id:intended.id,expected:null,items:intended.items,dates:{}}):null
+};
+Object.assign(browserSandbox,{sessionStorage:draftSession});
+assert.match(browserSandbox.renderDinoCompra(),/Continuar borrador/);
+assert.match(browserSandbox.renderDinoCompra(),/Descartar borrador/);
+console.log('Compra CAS: reintentos, historial y almacén preservados, confirmación perdida, edición ajena, borrador y cambios locales: OK');
+
+import {makeCompraJournal} from '../compra-core.mjs';
+const storageFixture=new Map();
+const memoryStorage={
+ get length(){return storageFixture.size;},
+ key:index=>[...storageFixture.keys()][index]??null,
+ getItem:key=>storageFixture.get(key)??null,
+ setItem:(key,value)=>storageFixture.set(key,value),
+ removeItem:key=>storageFixture.delete(key)
+};
+const ownerBox=makeCompraJournal(memoryStorage,'isolated');
+const otherBox=makeCompraJournal(memoryStorage,'another-account');
+ownerBox.put({id:'durable-operation',item:intended,expected:null,at:123});
+otherBox.put({id:'foreign-operation',item:intended,expected:null,at:123});
+assert.equal(makeCompraJournal(memoryStorage,'isolated').entries()[0].id,'durable-operation');
+assert.equal(ownerBox.entries().length,1);
+assert.equal(otherBox.entries().length,1);
+const refreshedCas=casHarness(initial);
+const replayEvents=new Map();
+const target={document:{addEventListener(){}},window:{document:{},addEventListener:(name,cb)=>replayEvents.set(name,cb)},Intl,
+ state:initial,account:{id:'isolated'},navigator:{onLine:false},activeView:'today',localStorage:memoryStorage,
+ persistCompraMutation:cb=>refreshedCas.run(cb)};
+runInNewContext(appUi,target);
+target.resumeDinoCompraSync();
+assert.equal(ownerBox.entries().length,1);
+assert.equal(refreshedCas.writes(),0);
+target.navigator.onLine=true;
+replayEvents.get('online')();
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(ownerBox.entries().length,0);
+assert.equal(refreshedCas.remote().document.shoppingPlan.orders[0].id,intended.id);
+assert.equal(otherBox.entries().length,1);
+
+const blockedOp={id:'known-blocked',item:edited,expected:existing,at:125,blocked:true};
+ownerBox.put(blockedOp);
+target.resumeDinoCompraSync();
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(refreshedCas.writes(),1);
+assert.equal(ownerBox.entries()[0].blocked,true);
+console.log('Compra outbox: localStorage after reload, cross-account isolation, offline→online replay, blocked conflict retained: OK');

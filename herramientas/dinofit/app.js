@@ -53,6 +53,7 @@ const rawCatalog = () => JSON.parse($('#catalog-data').textContent);
 const isNumber = x => typeof x === 'number' && Number.isFinite(x);
 const asNum = x => typeof x === 'string' ? Number(x.replace(',','.')) : Number(x);
 let db=null,account=null,state=null,revision=null,activeView='today',selectedDate=isoToday(),selectedMetric='bodyFat',chartZoom='full',vrMinutes=0;
+let purchaseWriteBusy=false;
 let authEpoch=0,loadingUser=null,saveTimeout=null,savePromise=null,changeCount=0,dirty=false,saving=false,conflict=false,saveError='',openModalType='',formEntryId=null;
 // Dashboard UI state is session-only. Never store navigation or chart choices in the health record.
 let dashboardArea='weight',compositionFocus='all',forecastMode='both';
@@ -191,7 +192,7 @@ function changed(message){
 }
 async function persistNow(){
  clearTimeout(saveTimeout);
- if(!state||!account||conflict)return false;
+ if(!state||!account||conflict||purchaseWriteBusy)return false;
  if(savePromise){await savePromise;if(dirty&&!saveError&&!conflict)return persistNow();return !dirty;}
  if(!dirty){setSaveUI();return true;}
  let payload;try{validateState(state);payload=structuredClone(state)}catch(e){saveError=e.message;setSaveUI();toast(saveError);return false;}
@@ -213,13 +214,88 @@ async function persistNow(){
  if(dirty&&!conflict&&!saveError){clearTimeout(saveTimeout);saveTimeout=setTimeout(()=>persistNow(),600)}
  return ok;
 }
+
+/* Purchase saves are scoped mutations, not a replacement of the browser's
+   potentially stale diary. Read latest, rebuild against it and use the same
+   revision CAS. All other writers still go through persistNow unchanged. */
+async function persistCompraMutation(mutate){
+ if(!state||!account)return {kind:'session'};
+ if(purchaseWriteBusy)return {kind:'busy'};
+ const owner=account.id,epoch=authEpoch;
+ const sameAccount=()=>epoch===authEpoch&&account?.id===owner;
+ if(conflict)return {kind:'local'};
+ if(dirty||savePromise){
+  if(!await persistNow()||dirty||conflict)return {kind:'local'};
+ }
+ if(!sameAccount())return {kind:'session'};
+ if(!state||purchaseWriteBusy)return {kind:'busy'};
+ const seq=changeCount;
+ const locallyStable=()=>sameAccount()&&seq===changeCount&&!dirty&&!conflict;
+ purchaseWriteBusy=true;saving=true;setSaveUI();
+ function committed(document,version,detail){
+  if(!sameAccount())return {kind:'session'};
+  if(!locallyStable()){
+   // Do not overwrite edits made in another view while this write was in flight.
+   // The purchase is durable. Keep the other draft and the stale general CAS,
+   // rather than falsely adopting a version that could erase someone else's edits.
+   conflict=true;saveError='Hay otros cambios locales sin sincronizar.';
+   return {kind:'committed-with-local-edits',detail};
+  }
+  state=document;revision=version;saveError='';
+  return {kind:'ok',detail};
+ }
+ try{
+  let sawNetworkError=false;
+  for(let attempt=0;attempt<3;attempt++){
+   if(!sameAccount())return {kind:'session'};
+   if(!locallyStable())return {kind:'local'};
+   try{
+    const {data:latest,error:readError}=await db.from('dinofit_documents').select('document,revision').eq('user_id',owner).maybeSingle();
+    if(!sameAccount())return {kind:'session'};
+    if(!locallyStable())return {kind:'local'};
+    if(readError||!latest||latest.revision==null)throw Error('Read failed');
+    validateState(latest.document);
+    const draft=structuredClone(latest.document);
+    let result;
+    // The existing pantry code operates synchronously on state. Give it the
+    // private draft for this transaction and restore the live state immediately.
+    const live=state;
+    try{state=draft;result=mutate(draft);}
+    catch(e){return {kind:'invalid',message:e.message};}
+    finally{state=live;}
+    if(result.kind==='changed')return result;
+    if(result.kind==='already')return committed(latest.document,latest.revision,null);
+    if(result.kind!=='apply')return {kind:'invalid'};
+    validateState(draft);draft.savedAt=new Date().toISOString();
+    const {data:written,error:writeError}=await db.from('dinofit_documents').update({document:draft})
+     .eq('user_id',owner).eq('revision',latest.revision).select('revision,updated_at');
+    if(!sameAccount())return {kind:'session'};
+    if(writeError)throw Error('Write failed');
+    if(written?.length===1)return committed(draft,written[0].revision,result.detail);
+    // Some other writer won the CAS. Re-run the exact same targeted mutation
+    // against its latest document, not against the losing draft.
+   }catch{
+    sawNetworkError=true;
+    // A response may be lost after a commit. The next read can resolve it
+    // by the same stable purchase id and intended order fingerprint.
+   }
+  }
+  return {kind:sawNetworkError?'offline':'retries'};
+ }finally{
+  if(sameAccount()){
+   purchaseWriteBusy=false;saving=false;setSaveUI();
+   if(dirty&&!conflict){clearTimeout(saveTimeout);saveTimeout=setTimeout(()=>persistNow(),600)}
+  }
+ }
+}
+
 function saveMessage(text){
  const el=$('#authMessage');if(el)el.textContent=text;
 }
 function resetSession(){
  authEpoch++;clearTimeout(saveTimeout);
  state=null;account=null;revision=null;loadingUser=null;
- dirty=false;saving=false;conflict=false;saveError='';savePromise=null;changeCount=0;
+ dirty=false;saving=false;conflict=false;purchaseWriteBusy=false;saveError='';savePromise=null;changeCount=0;
  $('#privatePage').hidden=true;$('#authGate').hidden=false;
 }
 async function loadAccount(user){
@@ -245,6 +321,7 @@ async function loadAccount(user){
   await applyPendingChatImport();
   render();
   if(dirty&&!saveError)persistNow();
+  globalThis.resumeDinoCompraSync?.();
  }catch(e){
   loadingUser=null;saveMessage('No se pudo cargar tu seguimiento. Intenta de nuevo.');
   $('#retryLoad').hidden=false;$('#googleLogin').hidden=false;
