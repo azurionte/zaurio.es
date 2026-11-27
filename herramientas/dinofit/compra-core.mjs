@@ -119,3 +119,26 @@ export function duePurchaseOrders(raw,now=Date.now()){
  return orders.filter(o=>!o.purchased&&o.reminderDate===today).map(o=>({...o,when:madridTime(o.reminderDate,PURCHASE_REMINDER_TIME)}))
   .filter(o=>o.when!==null&&o.when<=now&&now-o.when<12*3600000);
 }
+
+export function nextPurchaseDates(raw,today=shopLocalDate()){
+ const fallback=addShopDays(today,3);
+ const scheduled=cleanPurchaseOrders(Array.isArray(raw)?raw.filter(x=>!x?.cancelled&&!x?.canceled):[])
+   .filter(x=>x.coverEnd>today).sort((a,b)=>a.coverStart.localeCompare(b.coverStart));
+ // Follow the current or imminent purchase, filling the first gap before a later booking.
+ let coverStart=scheduled[0]?.coverStart<=addShopDays(today,7)?scheduled[0].coverStart:fallback;
+ for(const order of scheduled){
+  if(order.coverStart>coverStart)break;
+  if(order.coverEnd>coverStart)coverStart=order.coverEnd;
+ }
+ const next=scheduled.find(x=>x.coverStart>coverStart);
+ const normalEnd=addShopDays(coverStart,14);
+ const coverEnd=next&&next.coverStart<normalEnd?next.coverStart:normalEnd;
+ return {coverStart,coverEnd,...purchaseLeadDates(coverStart)};
+}
+
+export function purchaseLeadDates(coverStart){
+ const weekday=new Date(coverStart+'T00:00:00Z').getUTCDay();
+ const orderDate=addShopDays(coverStart,-(((weekday+3)%7)||7));
+ const saturday=addShopDays(orderDate,2);
+ return {orderDate,deliveryDate:saturday<coverStart?saturday:addShopDays(coverStart,-1),reminderDate:orderDate};
+}
