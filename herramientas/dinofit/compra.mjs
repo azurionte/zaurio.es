@@ -121,6 +121,7 @@ function viewOrder(existing=null,draft=null){
  d.oncancel=e=>{if(compraSaving)e.preventDefault();};
  const editor=d.querySelector('#compra-order');
  let previousLead=purchaseLeadDates(savedDates?.coverStart||start);
+ editor.elements.orderDate.addEventListener('change',()=>moveReminderWithOrderDate(editor));
  editor.elements.coverStart.addEventListener('change',()=>{
   const value=editor.elements.coverStart.value;if(!value)return;
   const nextLead=purchaseLeadDates(value);
