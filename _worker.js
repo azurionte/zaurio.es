@@ -1,3 +1,5 @@
+import {handleDinoPush,runDinoPush} from './workers/dinofit-push.mjs';
+
 const DEFAULT_SUPABASE_URL = "https://adpjitccwwvlydrtvvqk.supabase.co";
 const VELOCICHEF_PUSH_KEY_PATH = "/api/velocichef/push-public-key";
 const VELOCICHEF_PUSH_SEND_PATH = "/api/velocichef/push/send-due";
@@ -247,7 +249,7 @@ async function encryptPushPayload(subscription, payloadText) {
   return concatBytes(header, cipherText);
 }
 
-async function sendWebPush(env, subscription, payload) {
+async function sendWebPush(env, subscription, payload, options = {}) {
   const endpoint = String(subscription.endpoint || "");
   const audience = new URL(endpoint).origin;
   const token = await createVapidJwt(env, audience);
@@ -256,13 +258,14 @@ async function sendWebPush(env, subscription, payload) {
   return fetch(endpoint, {
     method: "POST",
     headers: {
-      TTL: "2419200",
+      TTL: String(options.ttl ?? 2419200),
       Urgency: payload.urgency || (payload.kind === "thaw" ? "high" : "normal"),
       "Content-Encoding": "aes128gcm",
       "Content-Type": "application/octet-stream",
       Authorization: `vapid t=${token}, k=${env.VAPID_PUBLIC_KEY}`,
     },
     body,
+    redirect: options.redirect || "follow",
   });
 }
 
@@ -1196,6 +1199,10 @@ export default {
       return fetchPayslipUpdateAsset(request, env, "/payslip-updates/DBT.exe");
     }
 
+    if (path.startsWith("/api/dinofit/push/")) {
+      return handleDinoPush(request, env, {admin:supabaseAdminFetch,post:sendWebPush,json:jsonResponse,defaultUrl:DEFAULT_SUPABASE_URL});
+    }
+
     if (path.startsWith("/api/velocichef/")) {
       const response = await handleVelocichefApi(request, env, path);
       if (response) return response;
@@ -1274,6 +1281,7 @@ export default {
 
   async scheduled(controller, env, ctx) {
     const limit = controller.cron === "* * * * *" ? 80 : 50;
+    ctx.waitUntil(runDinoPush(env,{admin:supabaseAdminFetch,post:sendWebPush}).catch(() => console.error("DinoFit push cron failed")));
     ctx.waitUntil(
       processDueVelocichefNotifications(env, limit).catch((error) => {
         console.error("VelociChef push cron failed:", error);

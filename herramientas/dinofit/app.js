@@ -240,7 +240,7 @@ async function loadAccount(user){
   $('#privatePage').hidden=false;$('#authGate').hidden=true;
   $('#identityName').textContent=state.profile.name||'Mi cuenta';
   $('#avatarLetter').textContent=(state.profile.name||'M').slice(0,1).toUpperCase();
-  lastObservedToday=isoToday();selectedDate=lastObservedToday;followCurrentDay=true;activeView='today';
+  lastObservedToday=isoToday();selectedDate=lastObservedToday;followCurrentDay=true;activeView=location.hash==='#compra'?'compra':'today';
   const seeded=normalizeCatalog()+Number(normalizePantry());if(seeded){dirty=true;changeCount++}
   await applyPendingChatImport();
   render();

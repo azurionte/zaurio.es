@@ -389,5 +389,6 @@ function render(){
  renderCalendar();setSaveUI();
  for(const b of $$('button[data-view]'))b.classList.toggle('selected',b.dataset.view===activeView);
  const content=$('#content');if(!content)return;
- content.innerHTML=activeView==='pantry'?currentPantry():activeView==='history'?currentHistory():activeView==='settings'?currentSettings():currentDay();
+ content.innerHTML=activeView==='pantry'?currentPantry():activeView==='history'?currentHistory():activeView==='settings'?currentSettings():activeView==='compra'?(globalThis.renderDinoCompra?.()||'<section class="section">Cargando Compra…</section>'):currentDay();
+ if(activeView==='compra')globalThis.refreshDinoCompra?.();
 }
