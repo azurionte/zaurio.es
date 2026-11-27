@@ -1,4 +1,4 @@
-import {cleanShopPlan,shopLocalDate,shopUpcoming,addShopDays,cleanPurchaseOrder,cleanPurchaseOrders,usualPurchase,purchaseEstimate,madridTime,PURCHASE_REMINDER_TIME,nextPurchaseDates,purchaseLeadDates,applyPurchaseOrderChange,makeCompraJournal} from './compra-core.mjs';
+import {cleanShopPlan,shopLocalDate,shopUpcoming,addShopDays,cleanPurchaseOrder,cleanPurchaseOrders,usualPurchase,purchaseEstimate,madridTime,PURCHASE_REMINDER_TIME,nextPurchaseDates,purchaseLeadDates,applyPurchaseOrderChange,makeCompraJournal,purchaseCatalog,findPurchaseCatalogDraftIndex,purchaseLabelPart} from './compra-core.mjs';
 
 const eur=new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'});
 const esc=x=>htmlSafe(String(x??''));
@@ -78,7 +78,7 @@ function shopRender(){
     '<p class="compra-draft-bar">Compra del '+day(o.item.orderDate)+' <button type="button" class="click sm" data-shop="discard-blocked" data-id="'+esc(o.id)+'">Descartar cambio rechazado</button></p>').join(''):'')+
    (pending?'<p class="compra-draft-bar"><button class="click sm" type="button" data-shop="continue-draft">Continuar borrador</button> <button class="click sm" type="button" data-shop="discard-draft">Descartar borrador</button></p>':'')+
    (rows?'<div class="compra-board">'+rows+'</div>':'<div class="compra-empty">'+bag+'<strong>Todavía no hay compras guardadas</strong><p>Prepara la próxima y añade un aviso si lo necesitas.</p></div>')+
-   legacyCalendar()+'<dialog id="compra-dialog" class="compra-dialog" aria-labelledby="compra-dialog-title"></dialog></section>';
+   legacyCalendar()+'<dialog id="compra-dialog" class="compra-dialog" aria-labelledby="compra-dialog-title"></dialog><dialog id="compra-catalog-dialog" class="compra-dialog compra-catalog-dialog" aria-labelledby="compra-catalog-title"></dialog></section>';
 }
 globalThis.renderDinoCompra=shopRender;
 globalThis.refreshDinoCompra=()=>totals();
@@ -87,7 +87,7 @@ function purchaseRow(item){
  const p=item||{id:crypto.randomUUID(),name:'',pack:'',qty:1,cents:null};
  const product=esc(p.name),image=esc(p.imageUrl);
  const thumb='<div class="compra-thumb" aria-hidden="true">'+bag+(image?'<img data-mercadona-image="'+image+'" alt="" width="48" height="48" hidden>':'')+'</div>';
- return '<fieldset class="compra-item" data-item="'+esc(p.id)+'" data-image="'+image+'"'+(p.inventory?' data-inventory="'+esc(JSON.stringify(p.inventory))+'"':'')+' data-product-id="'+esc(p.productId)+'">'+
+ return '<fieldset class="compra-item" data-item="'+esc(p.id)+'" data-source-name="'+product+'" data-image="'+image+'"'+(p.inventory?' data-inventory="'+esc(JSON.stringify(p.inventory))+'"':'')+' data-product-id="'+esc(p.productId)+'" data-category="'+esc(p.category)+'">'+
   thumb+'<label class="compra-item-name">Producto<input name="producto" required maxlength="100" value="'+product+'"></label>'+
   '<label class="compra-item-qty">Cantidad<input name="cantidad" type="number" min="1" max="999" step="1" required value="'+esc(p.draftQty??p.qty)+'"></label>'+
   '<label class="compra-item-price">Precio (€)<input name="precio" type="number" min="0" max="1000" step="0.01" value="'+esc(p.draftPrice??(p.cents==null?'':p.cents/100))+'"></label>'+
@@ -123,7 +123,7 @@ function viewOrder(existing=null,draft=null){
  '<p id="compra-form-error" class="compra-form-error" role="alert" hidden></p></div>'+
  '<footer class="compra-modal-foot"><div class="compra-total"><span>Subtotal estimado de productos</span><output id="compra-total"></output></div><button class="click primary">Guardar compra</button></footer></form>';
  d.addEventListener('close',()=>{productObserver?.disconnect();editorDraft=null;if(activeView==='compra')render();},{once:true});
- d.oncancel=e=>{if(compraSaving)e.preventDefault();};
+ d.oncancel=e=>{if(compraSaving||document.querySelector('#compra-catalog-dialog[open]'))e.preventDefault();};
  const editor=d.querySelector('#compra-order');
  let previousLead=purchaseLeadDates(savedDates?.coverStart||start);
  editor.elements.orderDate.addEventListener('change',()=>moveReminderWithOrderDate(editor));
@@ -139,11 +139,130 @@ function viewOrder(existing=null,draft=null){
  d.showModal();totals();prepareProductImages(d);
 }
 function collected(el){
+ const name=el.elements.producto.value.trim();
+ const original=el.dataset.sourceName;
+ const fromSource=original==null||purchaseLabelPart(name)===purchaseLabelPart(original);
  let inventory=null;
- try{inventory=JSON.parse(el.dataset.inventory||'null')}catch{}
- return {id:el.dataset.item,name:el.elements.producto.value.trim(),pack:el.elements.formato.value.trim(),qty:Number(el.elements.cantidad.value),
-  cents:cents(el.elements.precio.value),...(el.dataset.productId?{productId:el.dataset.productId}:{}),...(el.dataset.image?{imageUrl:el.dataset.image}:{}),...(inventory?{inventory}:{})};
+ if(fromSource)try{inventory=JSON.parse(el.dataset.inventory||'null')}catch{}
+ return {id:el.dataset.item,name,pack:el.elements.formato.value.trim(),qty:Number(el.elements.cantidad.value),
+  cents:cents(el.elements.precio.value),...(fromSource&&el.dataset.productId?{productId:el.dataset.productId}:{}),...(fromSource&&el.dataset.category?{category:el.dataset.category}:{}),...(fromSource&&el.dataset.image?{imageUrl:el.dataset.image}:{}),...(inventory?{inventory}:{})};
 }
+
+/* The top-level browser dialog stacks natively over the still-live editor.
+   Closing it never calls render() or reconstructs the draft. */
+let catalogSession=null;
+function catalogScrollPositions(planner){
+ return [planner,planner?.querySelector('.compra-modal-body')].filter(Boolean).map(el=>[el,el.scrollTop]);
+}
+function restoreCatalogScroll(scrolls){
+ for(const [el,top] of scrolls)if(el.isConnected)el.scrollTop=Math.min(top,Math.max(0,el.scrollHeight-el.clientHeight));
+}
+const catalogSearchKey=value=>purchaseLabelPart(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+function renderCatalogProducts(search=''){
+ if(!catalogSession)return;
+ const {dialog,entries,categories,categoryIndex}=catalogSession,list=dialog.querySelector('#compra-catalog-grid');
+ for(const thumb of list.querySelectorAll('.compra-thumb'))productObserver?.unobserve(thumb);
+ const query=catalogSearchKey(search);
+ const category=categories[categoryIndex];
+ const indexes=entries.map((entry,i)=>[entry,i]).filter(([entry])=>(category===null||(entry.product.category||'')===category)&&
+  catalogSearchKey(entry.product.name+' '+entry.product.pack).includes(query));
+ list.innerHTML=indexes.map(([entry,i])=>{
+  const p=entry.product,price=p.cents===null?'Sin precio registrado':eur.format(p.cents/100);
+  const image=esc(p.imageUrl);
+  const photo='<div class="compra-thumb compra-catalog-photo">'+bag+(image?'<img data-mercadona-image="'+image+'" alt="" hidden>':'')+'</div>';
+  return '<article class="compra-catalog-card">'+photo+'<div class="compra-catalog-copy"><h3>'+esc(p.name)+'</h3>'+
+   (p.pack?'<p>'+esc(p.pack)+'</p>':'')+'<div class="compra-catalog-price"><strong>'+esc(price)+'</strong>'+
+   (entry.priceDate?'<small>Por formato · registrado el '+day(entry.priceDate)+'</small>':'')+'</div></div>'+
+   '<button type="button" class="click primary" data-shop="catalog-add" data-index="'+i+'" aria-label="Añadir '+esc(p.name)+'">Añadir</button></article>';
+ }).join('')||'<p class="compra-catalog-empty">'+(entries.length?'No hay coincidencias.':'Todavía no hay productos en tus compras guardadas.')+'</p>';
+ prepareProductImages(list);
+}
+
+function chooseCatalogCategory(index,focus=false){
+ if(!catalogSession||!Number.isInteger(index)||index<0||index>=catalogSession.categories.length)return;
+ const {dialog}=catalogSession;catalogSession.categoryIndex=index;
+ for(const tab of dialog.querySelectorAll('[data-shop="catalog-category"]')){
+  const active=Number(tab.dataset.index)===index;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;
+  if(active&&focus)tab.focus({preventScroll:true});
+ }
+ dialog.querySelector('#compra-catalog-grid').setAttribute('aria-labelledby','compra-catalog-tab-'+index);
+ renderCatalogProducts(dialog.querySelector('#compra-catalog-search')?.value||'');
+}
+function openPurchaseCatalog(opener){
+ const dialog=document.querySelector('#compra-catalog-dialog'),planner=document.querySelector('#compra-dialog[open]');
+ if(!dialog||!planner||dialog.open)return;
+ const form=planner.querySelector('#compra-order'),entries=purchaseCatalog(currentShop().orders,currentShop().catalogCategories);
+ if(!form)return;
+ const before=planner.getBoundingClientRect();
+ dialog.style.setProperty('--compra-plan-width',Math.floor(before.width)+'px');
+ dialog.style.setProperty('--compra-plan-height',Math.floor(before.height)+'px');
+ const group=new Set(entries.map(entry=>entry.product.category||''));
+ const categories=[null,...[...group].filter(Boolean).sort((a,b)=>a.localeCompare(b,'es')),...(group.has('')?['']:[])];
+ const session={dialog,form,opener,entries,categories,categoryIndex:0,scrolls:catalogScrollPositions(planner)};
+ const tabs='<div class="compra-catalog-tabs" role="tablist" aria-label="Categorías de productos">'+categories.map((category,i)=>
+  '<button type="button" role="tab" id="compra-catalog-tab-'+i+'" data-shop="catalog-category" data-index="'+i+'" aria-controls="compra-catalog-grid" aria-selected="'+(i===0)+'" tabindex="'+(i===0?'0':'-1')+'">'+esc(category===null?'Todos':(category||'Sin clasificar'))+'</button>').join('')+'</div>';
+ catalogSession=session;
+ dialog.innerHTML='<header class="compra-modal-head"><div><p class="eyebrow">TUS COMPRAS GUARDADAS</p><h2 id="compra-catalog-title">Añadir producto</h2></div>'+
+  '<button class="compra-close" type="button" data-shop="catalog-close" aria-label="Cerrar catálogo" autofocus>×</button></header>'+
+  '<div class="compra-catalog-body"><p class="helper compra-catalog-note">Los precios son los últimos registrados, no los precios actuales de la tienda.</p>'+
+  (entries.length?'<label class="compra-catalog-search">Buscar producto<input id="compra-catalog-search" type="search" placeholder="Nombre o formato" autocomplete="off"></label>':'')+
+  (entries.length?tabs:'')+'<p class="compra-catalog-feedback" role="status" aria-live="polite"></p><div class="compra-catalog-grid" id="compra-catalog-grid"'+(entries.length?' role="tabpanel" aria-labelledby="compra-catalog-tab-0"':'')+'></div>'+
+  '<details class="compra-catalog-manual"'+(entries.length?'':' open')+'><summary>Añadir un producto nuevo manualmente</summary>'+
+  '<form id="compra-catalog-manual"><label>Nombre<input name="nombre" type="text" maxlength="100" required></label>'+
+  '<label>Formato (opcional)<input name="formato" type="text" maxlength="60" placeholder="Pack, botella…"></label>'+
+  '<label>Precio estimado (€)<input name="precio" type="number" min="0" max="1000" step="0.01"></label>'+
+  '<button class="click" type="submit">Añadir a la lista</button></form></details></div>';
+ dialog.addEventListener('close',()=>{
+  if(catalogSession!==session)return;
+  for(const el of dialog.querySelectorAll('.compra-thumb'))productObserver?.unobserve(el);
+  catalogSession=null;
+  if(planner.open&&opener.isConnected){opener.focus({preventScroll:true});restoreCatalogScroll(session.scrolls);}
+ },{once:true});
+ dialog.querySelector('[role="tablist"]')?.addEventListener('keydown',ev=>{
+  const index=Number(ev.target.dataset?.index);if(!Number.isInteger(index))return;
+  const n=categories.length;
+  const next={ArrowLeft:(index+n-1)%n,ArrowRight:(index+1)%n,Home:0,End:n-1}[ev.key];
+  if(next===undefined)return;ev.preventDefault();chooseCatalogCategory(next,true);
+ });
+ // Populate after opening so the photo observer observes the top layer.
+ dialog.showModal();renderCatalogProducts();
+}
+function catalogFeedback(text){
+ const feedback=catalogSession?.dialog.querySelector('.compra-catalog-feedback');
+ if(feedback)feedback.textContent=text;
+}
+function addCatalogSelection(entry){
+ const session=catalogSession;if(!session?.form.isConnected||!entry?.product?.name)return false;
+ const list=session.form.querySelector('#compra-products');
+ const rows=[...list.querySelectorAll('.compra-item')],cur=rows.map(collected);
+ const found=findPurchaseCatalogDraftIndex(cur,entry,session.entries.includes(entry)?session.entries:[...session.entries,entry]);
+ if(found>=0){
+  const qty=rows[found].elements.cantidad;
+  const previous=Number.isInteger(Number(qty.value))?Math.max(0,Number(qty.value)):0;
+  if(previous>=999){catalogFeedback('No puedes superar 999 unidades por producto.');return false;}
+  qty.value=previous+1;
+  catalogFeedback(entry.product.name+' · '+qty.value+' en tu lista.');
+ }else{
+  if(rows.length>=100){catalogFeedback('La lista admite hasta 100 productos.');return false;}
+  list.insertAdjacentHTML('beforeend',purchaseRow({...entry.product,id:crypto.randomUUID(),qty:1}));
+  const thumb=list.lastElementChild.querySelector('.compra-thumb');
+  if(thumb)hydrateProductImage(thumb);
+  catalogFeedback(entry.product.name+' · 1 en tu lista.');
+ }
+ totals();rememberPurchaseDraft(session.form);restoreCatalogScroll(session.scrolls);
+ return true;
+}
+function addManualCatalogProduct(form){
+ const name=form.elements.nombre.value.trim(),pack=form.elements.formato.value.trim(),price=cents(form.elements.precio.value);
+ if(!name){catalogFeedback('Indica el nombre del producto antes de añadirlo.');form.elements.nombre.focus();return;}
+ const known=catalogSession?.entries||[];
+ const same=known.filter(entry=>purchaseLabelPart(entry.product.name)===purchaseLabelPart(name)&&purchaseLabelPart(entry.product.pack)===purchaseLabelPart(pack));
+ // An explicit manual price stays explicit; do not silently substitute a
+ // saved product or merge an ambiguous variant.
+ const entry=same.length===1&&same[0].product.cents===price?same[0]:{product:{name,pack,cents:price},labels:[JSON.stringify([purchaseLabelPart(name),purchaseLabelPart(pack)])]};
+ if(addCatalogSelection(entry))form.reset();
+}
+
 function totals(){
  const form=document.querySelector('#compra-order');if(!form)return;
  const rows=[...form.querySelectorAll('.compra-item')];
@@ -280,19 +399,23 @@ async function saveOrder(item,expected,msg,form=null){
  const problem=result.message||messages[result.kind]||messages.offline;
  if(form&&form.isConnected)formError(form,problem);else toast(problem);
 }
-document.addEventListener('input',e=>{const form=e.target.closest('#compra-order');if(form){totals();rememberPurchaseDraft(form);}});
+document.addEventListener('input',e=>{
+ if(e.target.id==='compra-catalog-search'){renderCatalogProducts(e.target.value);return;}
+ const form=e.target.closest('#compra-order');if(form){totals();rememberPurchaseDraft(form);}
+});
 document.addEventListener('error',e=>{if(e.target.matches?.('.compra-thumb img'))e.target.hidden=true},true);
 document.addEventListener('submit',e=>{
  const form=e.target;
- if(!form.matches('#compra-order,#compra-plan,.compra-override'))return;
+ if(!form.matches('#compra-order,#compra-plan,.compra-override,#compra-catalog-manual'))return;
  e.preventDefault();e.stopImmediatePropagation();
+ if(form.id==='compra-catalog-manual'){addManualCatalogProduct(form);return;}
  const data=Object.fromEntries(new FormData(form));
  if(form.id==='compra-order'){
   if(compraSaving||!editorDraft||editorDraft.id!==form.dataset.id)return;
   const previous=editorDraft.expected;
   const items=[...form.querySelectorAll('.compra-item')].map(row=>{
    const item=collected(row),old=previous?.items.find(x=>x.id===item.id);
-   if(old&&old.name!==item.name){delete item.inventory;delete item.imageUrl;delete item.productId;}
+   if(old&&old.name!==item.name){delete item.inventory;delete item.imageUrl;delete item.productId;delete item.category;}
    if(!item.inventory)item.inventory=globalThis.suggestDinoCompraInventory?.(item)||undefined;
    return item;
   });
@@ -465,10 +588,11 @@ document.addEventListener('click',e=>{
    reminderDate:!purchased&&previous.reminderDate&&madridTime(previous.reminderDate,PURCHASE_REMINDER_TIME)<=Date.now()?null:previous.reminderDate,
    items:previous.items.map(x=>({...x,id:x.id||crypto.randomUUID(),inventory:x.inventory||globalThis.suggestDinoCompraInventory?.(x)||undefined}))});
   if(item)void saveOrder(item,previous,received?'Recepción guardada. Los productos reconocidos se han añadido a Despensa.':purchased?'Compra marcada como comprada.':'Compra marcada como pendiente.');
- }else if(a==='add'){
-  const el=document.querySelector('#compra-products');if(!el)return;
-  if(el.children.length>=100){toast('La lista admite hasta 100 productos.');return}
-  el.insertAdjacentHTML('beforeend',purchaseRow());el.lastElementChild.querySelector('input').focus();totals();rememberPurchaseDraft(el.closest('form'));
+ }else if(a==='add')openPurchaseCatalog(button);
+ else if(a==='catalog-close')catalogSession?.dialog.close();
+ else if(a==='catalog-category')chooseCatalogCategory(Number(button.dataset.index));
+ else if(a==='catalog-add'){
+  const i=Number(button.dataset.index);if(Number.isInteger(i)&&i>=0)addCatalogSelection(catalogSession?.entries[i]);
  }else if(a==='remove'){
   removePurchaseProduct(button);
  }else if(a==='usual'){const latest=usualPurchase(currentShop().orders);if(latest)replaceProducts(latest.items)}

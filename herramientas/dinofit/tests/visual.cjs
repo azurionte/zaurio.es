@@ -338,6 +338,86 @@ async function main(){
   assert.equal(await page.locator('#calendarBar').isVisible(),false);
   assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'no mobile overflow');
   await page.screenshot({path:path.join(dir,name+'-pantry-compact-filled.png'),fullPage:true});
+
+
+  // Exercise the real nested picker with synthetic order history on both viewports.
+  const fakeMercadonaJpeg=await page.evaluate(()=>{
+   const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;
+   const ctx=canvas.getContext('2d');ctx.fillStyle='#67a66a';ctx.fillRect(0,0,32,32);return canvas.toDataURL('image/jpeg');
+  });
+  await page.route('**/functions/v1/dinofit-push/**',route=>{
+   const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'authorization, apikey, content-type'};
+   if(route.request().method()==='OPTIONS')return route.fulfill({status:204,headers});
+   const isImage=route.request().url().endsWith('/image');
+   return route.fulfill({status:200,headers,json:isImage?{ok:true,image:fakeMercadonaJpeg}:{ok:true,publicKey:'AQ'}});
+  });
+  await page.evaluate(()=>{
+   db.auth.getSession=async()=>({data:{session:{access_token:'synthetic-catalog-token'}},error:null});
+   const staple={id:'fit-line-oats',name:'Avena clásica de ensayo',productId:'fic-oats',pack:'Paquete 500 g',qty:2,cents:299,
+    imageUrl:'https://prod-mercadona.imgix.net/images/abc123.jpg'};
+   const other={id:'fit-red',name:'Fruta de prueba',productId:'fic-fruit',pack:'500 g',qty:1,cents:170};
+   const unnamed={id:'fit-other',name:'Producto sin categoría de ensayo',pack:'Unidad',qty:1,cents:199};
+   const fillers=Array.from({length:12},(_,i)=>({...unnamed,id:'fit-filler-'+i,name:'Ensayo de línea '+(i+1)}));
+   state.shoppingPlan={catalogCategories:{'fic-oats':'Cereales verificados','fic-fruit':'Frutas verificadas'},orders:[
+    {id:'fixture-history-latest',orderDate:'2026-04-15',coverStart:'2026-04-21',coverEnd:'2026-05-05',purchased:true,items:[staple,other,unnamed,...fillers]},
+    {id:'fixture-history-earlier',orderDate:'2026-04-01',coverStart:'2026-04-07',coverEnd:'2026-04-21',purchased:true,items:[{...staple,cents:199}]}
+   ]};
+  });
+  await page.locator('button[data-view="compra"]').click();
+  await page.getByRole('button',{name:'Planificar compra'}).click();
+  const planner=page.locator('#compra-dialog');
+  await planner.getByRole('button',{name:'Cargar compra usual'}).click();
+  const planInputs=planner.locator('input[name="producto"]');
+  const savedName=await planInputs.first().inputValue();
+  assert.equal(savedName,'Avena clásica de ensayo');
+  assert.equal(await planInputs.count(),15);
+  const preserved=await planner.evaluate(dialog=>{
+   const form=dialog.querySelector('form'),add=form.querySelector('[data-shop="add"]');
+   dialog.scrollTop=137;const begin=dialog.scrollTop;
+   window.fixturePlanner=form;
+   add.focus({preventScroll:true});add.click();
+   return {begin,date:form.elements.orderDate.value,rect:{width:dialog.offsetWidth,height:dialog.offsetHeight}};
+  });
+  const picker=page.locator('#compra-catalog-dialog');
+  await picker.waitFor({state:'visible'});
+  assert.ok(await planner.isVisible(),'planner stays visible behind the picker');
+  const dimensions=await picker.evaluate(el=>({width:el.offsetWidth,height:el.offsetHeight}));
+  assert.ok(dimensions.width<=preserved.rect.width&&dimensions.height<=preserved.rect.height,'picker is no larger than the planner');
+  assert.equal(await picker.getByRole('tab',{name:'Todos',exact:true}).getAttribute('aria-selected'),'true');
+  await picker.getByRole('tab',{name:'Cereales verificados'}).click();
+  assert.equal(await picker.locator('.compra-catalog-card').count(),1);
+  assert.match(await picker.locator('.compra-catalog-price').innerText(),/2,99/);
+  assert.match(await picker.locator('.compra-catalog-price').innerText(),/15\/04\/2026/);
+  const official=picker.locator('.compra-catalog-photo img');
+  await official.waitFor({state:'visible'});
+  assert.equal(await official.evaluate(img=>img.naturalWidth),32,'official-layout photo is hydrated through the mocked image endpoint');
+  const photoWidth=await picker.locator('.compra-catalog-photo').evaluate(el=>el.offsetWidth);
+  assert.ok(photoWidth>=90,'photo is a real card, not thumbnail-sized');
+  await picker.getByRole('button',{name:'Añadir Avena clásica de ensayo'}).click();
+  assert.equal(await planner.locator('input[name="cantidad"]').first().inputValue(),'3');
+  assert.equal(await planInputs.count(),15,'matching SKU increments instead of creating a duplicate');
+  await picker.getByRole('tab',{name:'Sin clasificar'}).click();
+  const search=picker.getByRole('searchbox',{name:'Buscar producto'});
+  await search.fill('sin categoria');
+  assert.equal(await picker.locator('.compra-catalog-card').count(),1,'search matches diacritic differences within the category');
+  await search.fill('');
+  await picker.getByRole('tab',{name:'Sin clasificar'}).focus();
+  await page.keyboard.press('Home');
+  assert.equal(await picker.getByRole('tab',{name:'Todos',exact:true}).getAttribute('aria-selected'),'true');
+  const pickerFit=await picker.evaluate(el=>el.scrollWidth<=el.clientWidth+1);
+  assert.ok(pickerFit,'picker does not overflow horizontally');
+  await page.screenshot({path:path.join(dir,name+'-compra-catalog.png')});
+  await page.keyboard.press('Escape');
+  await picker.waitFor({state:'hidden'});
+  assert.equal(await planner.isVisible(),true,'Escape closes only the picker');
+  await page.waitForFunction(()=>document.activeElement?.dataset.shop==='add');
+  const restored=await planner.evaluate(el=>({top:el.scrollTop,date:el.querySelector('form').elements.orderDate.value,same:window.fixturePlanner===el.querySelector('form')}));
+  assert.equal(restored.same,true,'planner form node was not recreated');
+  assert.equal(restored.date,preserved.date);
+  assert.ok(Math.abs(restored.top-preserved.begin)<=2,'planner scroll position was restored: '+JSON.stringify({preserved,restored}));
+  assert.equal(await planInputs.first().inputValue(),savedName);
+  await planner.getByRole('button',{name:'Cerrar',exact:true}).click();
+
   assert.deepEqual(errors,[],'Browser console errors: '+errors.join(' | '));
   console.log('PASS visual '+name,JSON.stringify(measured),'screenshots in',dir);
   await page.close();
