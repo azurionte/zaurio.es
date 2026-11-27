@@ -58,3 +58,64 @@ export function dueShopOccurrences(raw,now=Date.now()){
  }
  return due;
 }
+
+export const PURCHASE_REMINDER_TIME='11:30';
+const purchaseId=/^[A-Za-z0-9_-]{1,80}$/;
+const assetHosts=new Set(['prod-mercadona.imgix.net']);
+export function cleanPurchaseImage(value){
+ if(typeof value!=='string'||value.length>1024)return '';
+ let image;try{image=new URL(value);}catch{return '';}
+ if(image.protocol!=='https:'||image.port||image.username||image.password||image.hash||!assetHosts.has(image.hostname)||
+ !/^\/images\/[a-z0-9_-]+\.(?:png|webp|jpe?g)$/i.test(image.pathname))return '';
+ image.search='';
+ image.searchParams.set('fm','jpg');
+ image.searchParams.set('fit','crop');
+ image.searchParams.set('w','160');
+ image.searchParams.set('h','160');
+ return image.href;
+}
+export function cleanPurchaseItem(item){
+ const name=typeof item?.name==='string'?item.name.trim():'';
+ if(!name||name.length>100||!Number.isInteger(item.qty)||item.qty<1||item.qty>999||
+ (item.cents!=null&&(!Number.isInteger(item.cents)||item.cents<0||item.cents>100000)))return null;
+ const inventory=item.inventory;
+ return {...(typeof item.id==='string'&&purchaseId.test(item.id)?{id:item.id}:{}),name,...(/^[A-Za-z0-9_-]{1,80}$/.test(String(item.productId||''))?{productId:String(item.productId)}:{}),pack:typeof item.pack==='string'?item.pack.trim().slice(0,60):'',qty:item.qty,cents:item.cents??null,
+  ...(cleanPurchaseImage(item.imageUrl)?{imageUrl:cleanPurchaseImage(item.imageUrl)}:{}),
+  ...(/^[a-z0-9-]{1,80}$/.test(inventory?.foodId||'')&&typeof inventory.qty==='number'&&Number.isFinite(inventory.qty)&&inventory.qty>0&&inventory.qty<=100000?{
+    inventory:{foodId:inventory.foodId,qty:inventory.qty,...Object.fromEntries(['pieces','grams']
+     .filter(key=>typeof inventory[key]==='number'&&Number.isFinite(inventory[key])&&inventory[key]>0&&inventory[key]<=100000)
+     .map(key=>[key,inventory[key]]))}
+  }:{})};
+}
+export function cleanPurchaseOrder(raw){
+ if(!raw||!purchaseId.test(raw.id||'')||typeof raw.id!=='string'||![raw.orderDate,raw.coverStart,raw.coverEnd].every(validShopDate)||
+ raw.coverEnd<=raw.coverStart||(raw.deliveryDate!=null&&(!validShopDate(raw.deliveryDate)||raw.deliveryDate<raw.orderDate))||
+ (raw.reminderDate!=null&&!validShopDate(raw.reminderDate))||!Array.isArray(raw.items)||raw.items.length<1||raw.items.length>100)return null;
+ const items=raw.items.map(cleanPurchaseItem);
+ if(items.some(x=>!x))return null;
+ return {id:raw.id,orderDate:raw.orderDate,deliveryDate:raw.deliveryDate??null,coverStart:raw.coverStart,coverEnd:raw.coverEnd,
+  reminderDate:raw.reminderDate??null,purchased:raw.purchased===true,inventoryReceived:raw.inventoryReceived===true&&raw.purchased===true,items,
+  ...(Number.isSafeInteger(raw.totalCents)&&raw.totalCents>=0?{totalCents:raw.totalCents}:{}),
+  ...(Number.isSafeInteger(raw.feesCents)&&raw.feesCents>=0?{feesCents:raw.feesCents}:{}),
+  ...(raw.inventoryReceived===true&&typeof raw.inventoryReceivedAt==='string'&&Number.isFinite(Date.parse(raw.inventoryReceivedAt))?{inventoryReceivedAt:new Date(raw.inventoryReceivedAt).toISOString()}:{})};
+}
+export function cleanPurchaseOrders(raw){
+ const result=[], seen=new Set();
+ for(const item of Array.isArray(raw)?raw:[]){
+  const order=cleanPurchaseOrder(item);
+  if(!order||seen.has(order.id))continue;
+  seen.add(order.id);result.push(order);
+ }
+ return result;
+}
+export function usualPurchase(orders){
+ return cleanPurchaseOrders(orders).filter(x=>x.purchased).sort((a,b)=>b.orderDate.localeCompare(a.orderDate))[0]||null;
+}
+export function purchaseEstimate(items){
+ return items.reduce((s,x)=>({cents:s.cents+(x.cents==null?0:x.cents*x.qty),unknown:s.unknown+Number(x.cents==null)}),{cents:0,unknown:0});
+}
+export function duePurchaseOrders(raw,now=Date.now()){
+ const orders=cleanPurchaseOrders(raw),today=shopLocalDate(now);
+ return orders.filter(o=>!o.purchased&&o.reminderDate===today).map(o=>({...o,when:madridTime(o.reminderDate,PURCHASE_REMINDER_TIME)}))
+  .filter(o=>o.when!==null&&o.when<=now&&now-o.when<12*3600000);
+}
