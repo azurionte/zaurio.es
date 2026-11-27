@@ -44,3 +44,11 @@ const json=(body,init={})=>Response.json(body,init);
 assert.equal((await handleDinoPush(new Request(origin+'/api/dinofit/push/test',{method:'POST',headers:{Origin:origin}}),env,{admin,post,json})).status,401);
 assert.equal((await handleDinoPush(new Request(origin+'/api/dinofit/push/test',{method:'POST',headers:{Origin:'https://example.com'}}),env,{admin,post,json})).status,403);
 console.log('Compra: calendario, cambio horario, excepciones, permisos y envío sin duplicados: OK');
+
+import {readFileSync} from 'node:fs';
+import liveAssets from '../../../workers/dinofit-compra-assets.mjs';
+for (const [url,[type,body]] of Object.entries(liveAssets)) {
+ assert.match(type,/^(text|application|image)\//);
+ assert.equal(body,readFileSync(new URL('../'+url.split('/').pop(),import.meta.url),'utf8'),url);
+}
+assert.equal(Object.keys(liveAssets).length,6);
