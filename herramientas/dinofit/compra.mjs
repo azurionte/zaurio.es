@@ -1,4 +1,4 @@
-import {cleanShopPlan,shopLocalDate,shopUpcoming,addShopDays,cleanPurchaseOrder,cleanPurchaseOrders,usualPurchase,purchaseEstimate,madridTime,PURCHASE_REMINDER_TIME,nextPurchaseDates,purchaseLeadDates} from './compra-core.mjs';
+import {cleanShopPlan,shopLocalDate,shopUpcoming,addShopDays,cleanPurchaseOrder,cleanPurchaseOrders,usualPurchase,purchaseEstimate,madridTime,PURCHASE_REMINDER_TIME,nextPurchaseDates,purchaseLeadDates,applyPurchaseOrderChange,makeCompraJournal} from './compra-core.mjs';
 
 const eur=new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'});
 const esc=x=>htmlSafe(String(x??''));
@@ -33,7 +33,29 @@ function legacyCalendar(){
  dates('remind','Fecha de aviso',item.remind)+'<label class="compra-check"><input name="skip" type="checkbox"'+(item.skip?' checked':'')+'> Omitir aviso de esta compra</label>'+
  '<div class="tools"><button class="click primary">Guardar este ajuste</button>'+(item.custom?'<button class="click" type="button" data-shop="reset" data-cover="'+esc(item.start)+'">Volver a fechas habituales</button>':'')+'</div></form></details>').join(''):'')+'</details>';
 }
+
+let editorDraft=null,compraSaving=false;
+const draftKey=()=>account?.id?'dinofit-purchase-draft-v1:'+account.id:null;
+function readPurchaseDraft(){
+ try{
+  const key=draftKey(),draft=key?JSON.parse(sessionStorage.getItem(key)||'null'):null;
+  if(!draft||typeof draft.id!=='string'||!/^[A-Za-z0-9_-]{1,80}$/.test(draft.id)||!Array.isArray(draft.items)||draft.items.length>100||
+   (draft.expected!==null&&cleanPurchaseOrder(draft.expected)?.id!==draft.id))return null;
+  return {...draft,expected:draft.expected===null?null:cleanPurchaseOrder(draft.expected)};
+ }catch{return null;}
+}
+function forgetPurchaseDraft(id){
+ try{const key=draftKey();if(key&&readPurchaseDraft()?.id===id)sessionStorage.removeItem(key);}catch{}
+}
+function rememberPurchaseDraft(form){
+ if(!editorDraft||!form||editorDraft.id!==form.dataset.id||compraSaving)return;
+ const dates=Object.fromEntries(['orderDate','deliveryDate','coverStart','coverEnd','reminderDate'].map(k=>[k,form.elements[k].value]));
+ const items=[...form.querySelectorAll('.compra-item')].map(el=>({...collected(el),draftQty:el.elements.cantidad.value,draftPrice:el.elements.precio.value}));
+ try{const key=draftKey();if(key)sessionStorage.setItem(key,JSON.stringify({...editorDraft,dates,items}));}catch{}
+}
+
 function shopRender(){
+ const pending=readPurchaseDraft(), queued=journalEntries();
  const saved=orders().sort((a,b)=>b.coverStart.localeCompare(a.coverStart)||b.orderDate.localeCompare(a.orderDate));
  if(pushAccount!==account?.id){pushAccount=account?.id;deviceActive=false;readyDevice=null;deviceLoading=null;pushStatus='';}
  void preparePushDevice().catch(()=>{});
@@ -52,6 +74,9 @@ function shopRender(){
    '<details id="compra-push-options" class="compra-push-options" '+(deviceActive?'':'hidden')+'><summary>Opciones de aviso</summary><div><button type="button" class="click sm" data-shop="test">Enviar aviso de prueba</button><button type="button" class="click sm" data-shop="unsubscribe">Desactivar en este dispositivo</button></div></details></div></header>'+
    '<p id="compra-push-status" class="compra-push-status" role="status">'+esc(pushStatus)+'</p>'+
    '<div class="compra-board-head"><div><h2>Mis compras</h2><p class="helper">Organiza tus pedidos y el período que cubren.</p></div><button type="button" class="click primary compra-plan-button" data-shop="new"><span aria-hidden="true">+</span> Planificar compra</button></div>'+
+   (queued.length?'<p class="compra-draft-bar" role="status">'+(queued.some(op=>op.blocked)?'Hay cambios pendientes que necesitan revisión.':'Hay compras pendientes de sincronizar.')+' <button type="button" class="click sm" data-shop="retry-outbox">Reintentar sincronización</button></p>'+queued.filter(o=>o.blocked).map(o=>
+    '<p class="compra-draft-bar">Compra del '+day(o.item.orderDate)+' <button type="button" class="click sm" data-shop="discard-blocked" data-id="'+esc(o.id)+'">Descartar cambio rechazado</button></p>').join(''):'')+
+   (pending?'<p class="compra-draft-bar"><button class="click sm" type="button" data-shop="continue-draft">Continuar borrador</button> <button class="click sm" type="button" data-shop="discard-draft">Descartar borrador</button></p>':'')+
    (rows?'<div class="compra-board">'+rows+'</div>':'<div class="compra-empty">'+bag+'<strong>Todavía no hay compras guardadas</strong><p>Prepara la próxima y añade un aviso si lo necesitas.</p></div>')+
    legacyCalendar()+'<dialog id="compra-dialog" class="compra-dialog" aria-labelledby="compra-dialog-title"></dialog></section>';
 }
@@ -64,35 +89,38 @@ function purchaseRow(item){
  const thumb='<div class="compra-thumb" aria-hidden="true">'+bag+(image?'<img data-mercadona-image="'+image+'" alt="" width="48" height="48" hidden>':'')+'</div>';
  return '<fieldset class="compra-item" data-item="'+esc(p.id)+'" data-image="'+image+'"'+(p.inventory?' data-inventory="'+esc(JSON.stringify(p.inventory))+'"':'')+' data-product-id="'+esc(p.productId)+'">'+
   thumb+'<label class="compra-item-name">Producto<input name="producto" required maxlength="100" value="'+product+'"></label>'+
-  '<label class="compra-item-qty">Cantidad<input name="cantidad" type="number" min="1" max="999" step="1" required value="'+esc(p.qty)+'"></label>'+
-  '<label class="compra-item-price">Precio (€)<input name="precio" type="number" min="0" max="1000" step="0.01" value="'+esc(p.cents==null?'':p.cents/100)+'"></label>'+
+  '<label class="compra-item-qty">Cantidad<input name="cantidad" type="number" min="1" max="999" step="1" required value="'+esc(p.draftQty??p.qty)+'"></label>'+
+  '<label class="compra-item-price">Precio (€)<input name="precio" type="number" min="0" max="1000" step="0.01" value="'+esc(p.draftPrice??(p.cents==null?'':p.cents/100))+'"></label>'+
   '<button class="compra-trash" type="button" data-shop="remove" aria-label="'+(p.name?'Quitar '+product:'Quitar producto')+'">'+trash+'</button>'+
   '<input type="hidden" name="formato" value="'+esc(p.pack)+'">'+
   '<output class="compra-line-total" aria-label="Subtotal de este producto"></output></fieldset>';
 }
-function viewOrder(existing=null){
+function viewOrder(existing=null,draft=null){
  const d=document.querySelector('#compra-dialog');if(!d)return;
+ editorDraft={id:draft?.id||existing?.id||crypto.randomUUID(),expected:draft?draft.expected:existing};
+ const savedDates=draft?.dates;
  const suggested=existing||nextPurchaseDates(currentShop().orders),start=suggested.coverStart,last=usualPurchase(currentShop().orders);
  const lastDay=addShopDays(suggested.coverEnd,-1);
  const oldList=!last&&Array.isArray(currentShop().items)&&currentShop().items.length>0;
  const legacyItems=oldList?'<button class="click" type="button" data-shop="previous-list">Recuperar lista anterior</button>':'';
  const hasReceipt=existing?.totalCents!=null;
- d.innerHTML='<form id="compra-order" data-id="'+esc(existing?.id)+'">'+
+ d.innerHTML='<form id="compra-order" data-id="'+esc(editorDraft.id)+'">'+
  '<header class="compra-modal-head"><div><p class="eyebrow">'+(existing?'DETALLE DEL PEDIDO':'NUEVO PEDIDO')+'</p><h2 id="compra-dialog-title">'+(existing?'Compra del '+day(start):'Planificar compra')+'</h2></div><button class="compra-close" type="button" data-shop="close" aria-label="Cerrar">×</button></header>'+
  '<div class="compra-modal-body">'+
- '<details class="compra-period"><summary>Período que cubre <span id="compra-period-label">'+day(start)+' – '+day(lastDay)+'</span></summary><div class="compra-dates">'+dates('coverStart','Desde',start,true)+dates('coverEnd','Hasta',lastDay,true)+'</div></details>'+
- '<div class="compra-dates compra-order-dates">'+dates('orderDate','Fecha del pedido',suggested.orderDate,true)+dates('deliveryDate','Fecha de entrega (opcional)',suggested.deliveryDate)+dates('reminderDate','Fecha del recordatorio (opcional)',suggested.reminderDate)+'</div>'+
+ '<details class="compra-period"><summary>Período que cubre <span id="compra-period-label">'+day(start)+' – '+day(lastDay)+'</span></summary><div class="compra-dates">'+dates('coverStart','Desde',savedDates?.coverStart??start,true)+dates('coverEnd','Hasta',savedDates?.coverEnd??lastDay,true)+'</div></details>'+
+ '<div class="compra-dates compra-order-dates">'+dates('orderDate','Fecha del pedido',savedDates?.orderDate??suggested.orderDate,true)+dates('deliveryDate','Fecha de entrega (opcional)',savedDates?.deliveryDate??suggested.deliveryDate)+dates('reminderDate','Fecha del recordatorio (opcional)',savedDates?.reminderDate??suggested.reminderDate)+'</div>'+
  '<p class="helper compra-time">Los avisos se envían a las 11:30, hora peninsular.</p>'+
  '<div class="compra-products-head"><h3>Productos</h3><div class="compra-actions"><button class="click" type="button" data-shop="usual" '+(last?'':'disabled title="Todavía no hay una compra marcada como comprada"')+'>Cargar compra usual</button>'+
  '<button class="click" type="button" data-shop="add">Añadir producto</button><button class="click" type="button" data-shop="clear">Empezar de cero</button>'+legacyItems+'</div></div>'+
- '<div id="compra-products">'+(existing?.items||[]).map(x=>purchaseRow({...x,id:x.id||crypto.randomUUID()})).join('')+'</div>'+
+ '<div id="compra-products">'+(draft?.items||existing?.items||[]).filter(x=>x&&typeof x==='object').map(x=>purchaseRow({...x,id:x.id||crypto.randomUUID()})).join('')+'</div>'+
  '<p id="compra-products-empty" class="helper">Añade un producto o recupera los de tu última compra.</p>'+
  (hasReceipt?'<aside class="compra-receipt"><span>Total estimado del pedido</span><strong>'+eur.format(existing.totalCents/100)+'</strong>'+(existing.feesCents?'<small>Incluye '+eur.format(existing.feesCents/100)+' de preparación o envío.</small>':'')+'</aside>':'')+
  '<p id="compra-form-error" class="compra-form-error" role="alert" hidden></p></div>'+
  '<footer class="compra-modal-foot"><div class="compra-total"><span>Subtotal estimado de productos</span><output id="compra-total"></output></div><button class="click primary">Guardar compra</button></footer></form>';
- d.addEventListener('close',()=>productObserver?.disconnect(),{once:true});
+ d.addEventListener('close',()=>{productObserver?.disconnect();editorDraft=null;if(activeView==='compra')render();},{once:true});
+ d.oncancel=e=>{if(compraSaving)e.preventDefault();};
  const editor=d.querySelector('#compra-order');
- let previousLead=purchaseLeadDates(start);
+ let previousLead=purchaseLeadDates(savedDates?.coverStart||start);
  editor.elements.coverStart.addEventListener('change',()=>{
   const value=editor.elements.coverStart.value;if(!value)return;
   const nextLead=purchaseLeadDates(value);
@@ -100,7 +128,7 @@ function viewOrder(existing=null){
    const field=editor.elements[key];
    if(field.value===previousLead[key])field.value=nextLead[key];
   }
-  previousLead=nextLead;totals();
+  previousLead=nextLead;totals();rememberPurchaseDraft(editor);
  });
  d.showModal();totals();prepareProductImages(d);
 }
@@ -127,6 +155,7 @@ function replaceProducts(list){
  if(area.children.length&&!confirm('¿Sustituir los productos de esta compra?'))return;
  area.innerHTML=list.slice(0,100).map(x=>purchaseRow({...x,id:crypto.randomUUID()})).join('');
  totals();prepareProductImages(area);
+ rememberPurchaseDraft(area.closest('form'));
  area.querySelector('input:not([type=hidden])')?.focus();
 }
 async function saveUpdate(patch,msg){
@@ -134,20 +163,118 @@ async function saveUpdate(patch,msg){
  state.shoppingPlan={...currentShop(),...patch};changed();
  toast(await persistNow()?msg:'No se pudo guardar en tu cuenta. Revisa el estado de sincronización.');
 }
-async function saveOrder(item,msg){
- if(!state||!account)return;
- let stock;
- try{stock=globalThis.syncDinoCompraInventory?.(item);}catch(e){const f=document.querySelector('#compra-order');if(f)formError(f,e.message);else toast(e.message);return;}
- const prior=orders();
- const exists=prior.some(x=>x.id===item.id);
- const updated=exists?prior.map(x=>x.id===item.id?item:x):[item,...prior];
- const dialog=document.querySelector('#compra-dialog');
- if(dialog?.open)dialog.close();
- if(item.inventoryReceived&&stock?.skipped&&stock.linked)msg+=' Los demás productos no estaban vinculados.';
- if(item.inventoryReceived&&!stock?.linked)msg='Recepción guardada. No se añadieron existencias: no hay productos vinculados a Despensa.';
- await saveUpdate({orders:updated},msg);
+
+
+function journal(){
+ const owner=account?.id;if(!owner)return null;
+ try{return makeCompraJournal(localStorage,owner);}catch{return null;}
 }
-document.addEventListener('input',e=>{if(e.target.closest('#compra-order'))totals()});
+function journalEntries(){try{return journal()?.entries()||[];}catch{return [];}}
+function draftMarker(draft){return draft?JSON.stringify([draft.dates,draft.items]):'';}
+function stageCompraOperation(item,expected,message,keepDraft){
+ const box=journal();if(!box)return {error:'El navegador no permite conservar cambios pendientes. El editor sigue abierto.'};
+ try{
+  const prior=box.entries().filter(o=>o.item.id===item.id);
+  const existing=prior.find(o=>JSON.stringify(o.item)===JSON.stringify(item)&&JSON.stringify(o.expected)===JSON.stringify(expected));
+  if(existing)return {box,op:existing};
+  if(prior.length)return {error:'Ya hay cambios pendientes en esta compra. Revisa primero esa versión para no perder ninguno.'};
+  const op=box.put({id:crypto.randomUUID(),item,expected,at:Date.now(),message,draft:keepDraft?draftMarker(readPurchaseDraft()):''});
+  return {box,op};
+ }catch{return {error:'El navegador no pudo conservar esta compra. El editor y sus datos siguen abiertos.'};}
+}
+async function applyJournalEntry(box,op){
+ if(navigator.onLine===false)return {kind:'offline'};
+ let result;
+ try{result=await persistCompraMutation(document=>applyPurchaseOrderChange(document,op.item,op.expected,globalThis.syncDinoCompraInventory));}
+ catch{result={kind:'offline'};}
+ try{
+  if(result.kind==='ok'||result.kind==='committed-with-local-edits')box.clear(op.id);
+  else if(result.kind==='changed'||result.kind==='invalid')box.put({...op,blocked:true});
+ }catch{/* Save acknowledgement is separate from cleanup; operation remains idempotent. */}
+ return result;
+}
+let outboxTimer=null,outboxDelay=8000,outboxRunning=false;
+function scheduleCompraReplay(){
+ if(outboxTimer||!account||navigator.onLine===false)return;
+ const owner=account.id;
+ outboxTimer=setTimeout(()=>{
+  outboxTimer=null;if(account?.id===owner)void resumeCompraOutbox();
+ },outboxDelay);
+ outboxDelay=Math.min(120000,outboxDelay*2);
+}
+async function resumeCompraOutbox(includeBlocked=false){
+ if(outboxRunning||compraSaving||!state||!account||navigator.onLine===false)return;
+ const owner=account.id,box=journal();if(!box)return;
+ outboxRunning=true;
+ let needsRetry=false,redraw=false;
+ try{
+  const list=journalEntries().filter(op=>includeBlocked||!op.blocked);
+  for(const op of list){
+   if(account?.id!==owner||compraSaving)break;
+   const result=await applyJournalEntry(box,op);
+   if(account?.id!==owner)return;
+   redraw=true;
+   if(result.kind==='ok'||result.kind==='committed-with-local-edits'){
+    outboxDelay=8000;
+    const draft=readPurchaseDraft();
+    if(draft?.id===op.item.id&&op.draft&&draftMarker(draft)===op.draft)forgetPurchaseDraft(draft.id);
+    if(activeView==='compra')toast('Compra sincronizada'+(result.kind==='committed-with-local-edits'?'. Hay otros cambios locales pendientes.':'.'));
+   }else if(['offline','busy','retries'].includes(result.kind)){
+    needsRetry=true;break;
+   }else if(result.kind==='changed'&&activeView==='compra')toast('Otra sesión cambió una compra pendiente. No se ha sobrescrito.');
+  }
+ }finally{
+  outboxRunning=false;
+  if(needsRetry&&account?.id===owner)scheduleCompraReplay();
+  if(redraw&&account?.id===owner&&activeView==='compra')render();
+ }
+}
+globalThis.resumeDinoCompraSync=()=>{void resumeCompraOutbox();};
+window.addEventListener('online',()=>{outboxDelay=8000;void resumeCompraOutbox();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void resumeCompraOutbox();});
+window.addEventListener('storage',e=>{
+ if(account?.id&&e.key?.startsWith('dinofit-compra-outbox-v1:'+account.id+':'))void resumeCompraOutbox();
+});
+
+async function saveOrder(item,expected,msg,form=null){
+ if(!state||!account||compraSaving)return;
+ const owner=account.id;
+ if(form)rememberPurchaseDraft(form);
+ const staged=stageCompraOperation(item,expected,msg,!!form);
+ if(staged.error){if(form)formError(form,staged.error);else toast(staged.error);return;}
+ compraSaving=true;
+ if(form){formError(form,'');form.inert=true;form.setAttribute('aria-busy','true');}
+ let result;
+ try{result=await applyJournalEntry(staged.box,staged.op);}
+ catch{result={kind:'offline'};}
+ finally{compraSaving=false;if(form){form.inert=false;form.removeAttribute('aria-busy');}}
+ if(account?.id!==owner)return;
+ if(result.kind==='ok'||result.kind==='committed-with-local-edits'){
+  forgetPurchaseDraft(item.id);
+  const dialog=document.querySelector('#compra-dialog');
+  if(form&&dialog?.open)dialog.close();
+  const stock=result.detail;
+  if(stock&&item.inventoryReceived&&stock.skipped&&stock.linked)msg+=' Los demás productos no estaban vinculados.';
+  if(stock&&item.inventoryReceived&&!stock.linked)msg='Recepción guardada. No se añadieron existencias: no hay productos vinculados a Despensa.';
+  if(result.kind==='committed-with-local-edits')msg+=' Hay otros cambios locales que siguen sin sincronizarse.';
+  if(activeView==='compra')render();
+  toast(msg);
+  return;
+ }
+ const messages={
+  changed:'Otra sesión cambió esta compra. No se ha sobrescrito. Puedes cerrar el editor y descartar este cambio pendiente para abrir la versión guardada.',
+  local:'Hay otros cambios de esta pestaña sin sincronizar. La compra no se ha escrito y el borrador sigue guardado.',
+  session:'Vuelve a entrar en tu cuenta para guardar la compra.',
+  retries:'La cuenta está cambiando en otra sesión. El cambio queda pendiente y se reintentará automáticamente.',
+  busy:'Hay un guardado en curso. Vuelve a intentarlo en un momento.',
+  offline:'Sin confirmación del servidor. La compra queda pendiente y se guardará al recuperar la conexión.',
+  invalid:'No se pudo guardar la compra. Revisa los datos.'
+ };
+ if(['offline','busy','retries'].includes(result.kind))scheduleCompraReplay();
+ const problem=result.message||messages[result.kind]||messages.offline;
+ if(form&&form.isConnected)formError(form,problem);else toast(problem);
+}
+document.addEventListener('input',e=>{const form=e.target.closest('#compra-order');if(form){totals();rememberPurchaseDraft(form);}});
 document.addEventListener('error',e=>{if(e.target.matches?.('.compra-thumb img'))e.target.hidden=true},true);
 document.addEventListener('submit',e=>{
  const form=e.target;
@@ -155,7 +282,8 @@ document.addEventListener('submit',e=>{
  e.preventDefault();e.stopImmediatePropagation();
  const data=Object.fromEntries(new FormData(form));
  if(form.id==='compra-order'){
-  const previous=orders().find(o=>o.id===form.dataset.id);
+  if(compraSaving||!editorDraft||editorDraft.id!==form.dataset.id)return;
+  const previous=editorDraft.expected;
   const items=[...form.querySelectorAll('.compra-item')].map(row=>{
    const item=collected(row),old=previous?.items.find(x=>x.id===item.id);
    if(old&&old.name!==item.name){delete item.inventory;delete item.imageUrl;delete item.productId;}
@@ -170,10 +298,10 @@ document.addEventListener('submit',e=>{
   }
   const two=x=>x.map(z=>[z.name,z.pack,z.qty,z.cents]);
   const same=previous&&JSON.stringify(two(previous.items))===JSON.stringify(two(items));
-  const item=cleanPurchaseOrder({...previous,...data,coverEnd:addShopDays(data.coverEnd,1),id:previous?.id||crypto.randomUUID(),items,deliveryDate:data.deliveryDate||null,reminderDate:data.reminderDate||null,
+  const item=cleanPurchaseOrder({...previous,...data,coverEnd:addShopDays(data.coverEnd,1),id:editorDraft.id,items,deliveryDate:data.deliveryDate||null,reminderDate:data.reminderDate||null,
    totalCents:same?previous.totalCents:undefined,feesCents:same?previous.feesCents:undefined});
   if(!item){formError(form,'Revisa el nombre, las cantidades, los precios y las fechas.');return;}
-  void saveOrder(item,item.reminderDate&&!item.purchased?'Compra guardada con aviso a las 11:30.':'Compra guardada.');
+  void saveOrder(item,previous,item.reminderDate&&!item.purchased?'Compra guardada con aviso a las 11:30.':'Compra guardada.',form);
   return;
  }
  if(form.id==='compra-plan'){
@@ -306,9 +434,22 @@ document.addEventListener('click',e=>{
  const button=e.target.closest('[data-shop]');if(!button)return;
  e.preventDefault();e.stopImmediatePropagation();
  const a=button.dataset.shop;
- if(a==='new')viewOrder();
+ if(a==='retry-outbox'){outboxDelay=8000;void resumeCompraOutbox(true);}
+ else if(a==='discard-blocked'){
+  const box=journal(),op=journalEntries().find(entry=>entry.id===button.dataset.id&&entry.blocked);
+  if(!box||!op||!confirm('¿Descartar este cambio rechazado y su borrador? La compra guardada no se modificará.'))return;
+  try{box.clear(op.id);forgetPurchaseDraft(op.item.id);render();}catch{toast('No se pudo retirar este cambio del dispositivo.');}
+ }
+ else if(a==='continue-draft'){const draft=readPurchaseDraft();if(draft?.id)viewOrder(draft.expected,draft);}
+ else if(a==='discard-draft'){const draft=readPurchaseDraft();if(draft&&confirm('¿Descartar este borrador?')){forgetPurchaseDraft(draft.id);render();}}
+ else if(a==='new'){if(readPurchaseDraft()&&!confirm('Hay un borrador sin guardar. ¿Quieres descartarlo y empezar otra compra?'))return;const draft=readPurchaseDraft();if(draft)forgetPurchaseDraft(draft.id);viewOrder();}
  else if(a==='close')document.querySelector('#compra-dialog')?.close();
- else if(a==='edit'){const existing=orders().find(o=>o.id===button.dataset.id);if(existing)viewOrder(existing)}
+ else if(a==='edit'){
+  const existing=orders().find(o=>o.id===button.dataset.id),draft=readPurchaseDraft();if(!existing)return;
+  if(draft?.id===existing.id){viewOrder(draft.expected,draft);return;}
+  if(draft&&!confirm('Hay otro borrador sin guardar. ¿Quieres descartarlo antes de abrir esta compra?'))return;
+  if(draft)forgetPurchaseDraft(draft.id);viewOrder(existing);
+ }
  else if(a==='toggle'||a==='receive'){
   const previous=orders().find(o=>o.id===button.dataset.id);if(!previous)return;
   if(a==='receive'&&previous.deliveryDate>shopLocalDate()){toast('Aún no ha llegado la fecha de entrega. Confirma la entrada cuando recibas el pedido.');return;}
@@ -317,11 +458,11 @@ document.addEventListener('click',e=>{
   const item=cleanPurchaseOrder({...previous,purchased,inventoryReceived:received,inventoryReceivedAt:received?new Date().toISOString():null,
    reminderDate:!purchased&&previous.reminderDate&&madridTime(previous.reminderDate,PURCHASE_REMINDER_TIME)<=Date.now()?null:previous.reminderDate,
    items:previous.items.map(x=>({...x,id:x.id||crypto.randomUUID(),inventory:x.inventory||globalThis.suggestDinoCompraInventory?.(x)||undefined}))});
-  if(item)void saveOrder(item,received?'Recepción guardada. Los productos reconocidos se han añadido a Despensa.':purchased?'Compra marcada como comprada.':'Compra marcada como pendiente.');
+  if(item)void saveOrder(item,previous,received?'Recepción guardada. Los productos reconocidos se han añadido a Despensa.':purchased?'Compra marcada como comprada.':'Compra marcada como pendiente.');
  }else if(a==='add'){
   const el=document.querySelector('#compra-products');if(!el)return;
   if(el.children.length>=100){toast('La lista admite hasta 100 productos.');return}
-  el.insertAdjacentHTML('beforeend',purchaseRow());el.lastElementChild.querySelector('input').focus();totals();
+  el.insertAdjacentHTML('beforeend',purchaseRow());el.lastElementChild.querySelector('input').focus();totals();rememberPurchaseDraft(el.closest('form'));
  }else if(a==='remove'){
   removePurchaseProduct(button);
  }else if(a==='usual'){const latest=usualPurchase(currentShop().orders);if(latest)replaceProducts(latest.items)}
