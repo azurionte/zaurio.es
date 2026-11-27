@@ -313,3 +313,10 @@ assert.equal(changedEditor.elements.deliveryDate.value,'2026-12-26');
 assert.equal(changedEditor.elements.coverStart.value,'2026-12-29');
 assert.ok(remembered);
 assert.match(appUi,/orderDate\.addEventListener\('change',\(\)=>moveReminderWithOrderDate\(editor\)\)/);
+
+const latestPlanned={...explicit,id:'latest-plan',orderDate:'2026-12-19',items:[{...line,name:'Compra editada',qty:2}]};
+const usual=usualPurchase([latestPlanned,{...purchased,items:[line,{...line,name:'Producto retirado'}]}]);
+assert.equal(usual.id,'latest-plan');
+assert.equal(usual.purchased,false);
+assert.deepEqual(usual.items.map(item=>[item.name,item.qty]),[['Compra editada',2]]);
+assert.equal(usualPurchase([{...latestPlanned,cancelled:true},purchased]).id,purchased.id);

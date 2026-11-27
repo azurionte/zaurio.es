@@ -110,7 +110,7 @@ function viewOrder(existing=null,draft=null){
  '<details class="compra-period"><summary>Período que cubre <span id="compra-period-label">'+day(start)+' – '+day(lastDay)+'</span></summary><div class="compra-dates">'+dates('coverStart','Desde',savedDates?.coverStart??start,true)+dates('coverEnd','Hasta',savedDates?.coverEnd??lastDay,true)+'</div></details>'+
  '<div class="compra-dates compra-order-dates">'+dates('orderDate','Fecha del pedido',savedDates?.orderDate??suggested.orderDate,true)+dates('deliveryDate','Fecha de entrega (opcional)',savedDates?.deliveryDate??suggested.deliveryDate)+dates('reminderDate','Fecha del recordatorio (opcional)',savedDates?.reminderDate??suggested.reminderDate)+'</div>'+
  '<p class="helper compra-time">Los avisos se envían a las 11:30, hora peninsular.</p>'+
- '<div class="compra-products-head"><h3>Productos</h3><div class="compra-actions"><button class="click" type="button" data-shop="usual" '+(last?'':'disabled title="Todavía no hay una compra marcada como comprada"')+'>Cargar compra usual</button>'+
+ '<div class="compra-products-head"><h3>Productos</h3><div class="compra-actions"><button class="click" type="button" data-shop="usual" '+(last?'':'disabled title="Todavía no hay una compra registrada"')+'>Cargar compra usual</button>'+
  '<button class="click" type="button" data-shop="add">Añadir producto</button><button class="click" type="button" data-shop="clear">Empezar de cero</button>'+legacyItems+'</div></div>'+
  '<div id="compra-products">'+(draft?.items||existing?.items||[]).filter(x=>x&&typeof x==='object').map(x=>purchaseRow({...x,id:x.id||crypto.randomUUID()})).join('')+'</div>'+
  '<p id="compra-products-empty" class="helper">Añade un producto o recupera los de tu última compra.</p>'+
