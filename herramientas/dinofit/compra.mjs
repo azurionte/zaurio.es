@@ -95,6 +95,11 @@ function purchaseRow(item){
   '<input type="hidden" name="formato" value="'+esc(p.pack)+'">'+
   '<output class="compra-line-total" aria-label="Subtotal de este producto"></output></fieldset>';
 }
+function moveReminderWithOrderDate(editor){
+ const next=editor.elements.orderDate.value;if(!next)return;
+ editor.elements.reminderDate.value=next;
+ rememberPurchaseDraft(editor);
+}
 function viewOrder(existing=null,draft=null){
  const d=document.querySelector('#compra-dialog');if(!d)return;
  editorDraft={id:draft?.id||existing?.id||crypto.randomUUID(),expected:draft?draft.expected:existing};
