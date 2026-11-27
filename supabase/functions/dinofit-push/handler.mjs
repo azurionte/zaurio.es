@@ -1,4 +1,4 @@
-import {dueShopOccurrences,shopLocalDate} from '../../../herramientas/dinofit/compra-core.mjs';
+import {dueShopOccurrences,shopLocalDate,cleanPurchaseOrders,duePurchaseOrders,cleanPurchaseImage} from '../../../herramientas/dinofit/compra-core.mjs';
 
 const host='herramientas.zaurio.es', route='/api/dinofit/push/';
 const table='/dinofit_push_subscriptions', deliveries='/dinofit_push_deliveries';
@@ -63,6 +63,33 @@ async function send(admin,post,env,sub,key,payload,ttl){
  }
  return response;
 }
+
+const MAX_PRODUCT_IMAGE=180000;
+export async function dinoProductImage(raw,requestImage=fetch){
+ const url=cleanPurchaseImage(raw);
+ if(!url)return null;
+ try{
+  const r=await requestImage(url,{method:'GET',redirect:'error',signal:AbortSignal.timeout(4000),headers:{Accept:'image/jpeg'}});
+  if(!r.ok||r.headers.get('Content-Type')?.split(';')[0]!=='image/jpeg'||
+    Number(r.headers.get('Content-Length')||0)>MAX_PRODUCT_IMAGE||!r.body)return null;
+  const reader=r.body.getReader();const chunks=[];let size=0;
+  try{
+   for(;;){
+    const {value,done}=await reader.read();if(done)break;size+=value.length;
+    if(size>MAX_PRODUCT_IMAGE){await reader.cancel();return null;}
+    chunks.push(value);
+   }
+  }finally{reader.releaseLock();}
+  if(size<4)return null;
+  const bytes=new Uint8Array(size);let offset=0;
+  for(const c of chunks){bytes.set(c,offset);offset+=c.length;}
+  if(bytes[0]!==255||bytes[1]!==216||bytes[2]!==255||bytes[size-2]!==255||bytes[size-1]!==217)return null;
+  let binary='';
+  for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+  return 'data:image/jpeg;base64,'+btoa(binary);
+ }catch{return null;}
+}
+
 export async function handleDinoPush(request,env,helpers){
  const u=new URL(request.url),{admin,post,json,defaultUrl}=helpers,prefix=helpers.routePrefix||route;
  if(!u.pathname.startsWith(prefix))return null;
@@ -74,8 +101,12 @@ export async function handleDinoPush(request,env,helpers){
   const owner=await uid(request,env,defaultUrl);if(!owner)return reply(401,'Entra en DinoFit para gestionar avisos.');
   const action=u.pathname.slice(prefix.length);
   if(action==='key')return available(env)?json({ok:true,publicKey:env.VAPID_PUBLIC_KEY}):reply(503,'Los avisos todavía no están disponibles.');
-  if(!['subscribe','unsubscribe','test'].includes(action))return reply(404,'No encontrado.');
+  if(!['subscribe','unsubscribe','test','status','image'].includes(action))return reply(404,'No encontrado.');
   const data=await bodyLimit(request);
+  if(action==='image'){
+   const image=await dinoProductImage(data?.url,helpers.requestImage);
+   return image?json({ok:true,image}):reply(404,'No hay imagen disponible para este producto.');
+  }
   const endpoint=dinoEndpoint(action==='subscribe'?data?.subscription?.endpoint:data?.endpoint);
   if(!endpoint)return reply(400,'El servicio de notificaciones de este dispositivo no es compatible.');
   const query='?user_id=eq.'+encoder(owner)+'&endpoint=eq.'+encoder(endpoint);
@@ -85,6 +116,7 @@ export async function handleDinoPush(request,env,helpers){
   }
   if(!available(env))return reply(503,'Los avisos todavía no están disponibles.');
   const existing=(await rows(admin,env,table+query+'&select=id,endpoint,p256dh,auth'))[0];
+  if(action==='status')return json({ok:true,active:!!existing});
   if(action==='subscribe'){
    const keys=data?.subscription?.keys;
    if(!validKeys(keys))return reply(400,'No se pudo leer el permiso de este dispositivo.');
@@ -108,8 +140,14 @@ export async function runDinoPush(env,{admin,post},now=Date.now()){
   const subs=await rows(admin,env,table+'?select=id,endpoint,p256dh,auth,dinofit_documents!inner(document)&order=id.asc&limit=100&offset='+offset);
   // Keep endpoint calls serial for low authenticated fan-out and safe cleanup.
   for(const sub of subs){
-   const saved=sub.dinofit_documents?.document?.shoppingPlan?.plan;
-   for(const due of dueShopOccurrences(saved,now)){
+   const saved=sub.dinofit_documents?.document?.shoppingPlan;
+   const explicit=cleanPurchaseOrders(saved?.orders);
+   for(const due of duePurchaseOrders(explicit,now)){
+    try{await send(admin,post,env,sub,'order:purchase:'+due.id,plain('Tienes una compra pendiente para preparar.'),600)}catch{console.error('DinoFit push delivery failed');}
+   }
+   const covered=new Set(explicit.map(o=>o.coverStart));
+   for(const due of dueShopOccurrences(saved?.plan,now)){
+    if(covered.has(due.start))continue;
     try{await send(admin,post,env,sub,'order:'+due.start,plain('Toca revisar tu lista y preparar el pedido.'),600)}catch{console.error('DinoFit push delivery failed');}
    }
   }
