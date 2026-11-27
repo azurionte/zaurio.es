@@ -90,11 +90,11 @@ function pantry2Stock(id,excludeTupperId=null){
   grams:grams===null?null:pantry2Round(grams),min:pantry2ProductMin(id,s.min),
   shortage:qty<-.0001};
 }
-function pantry2Quantity(id,qty,pieces=null,grams=null){
- if(!food(id)||!pantry2N(qty)||qty<0||qty>1e6)throw Error('Cantidad no valida.');
+function pantry2Quantity(id,qty,pieces=null,grams=null,descriptor=food(id)){
+ if(!descriptor||!pantry2N(qty)||qty<0||qty>1e6)throw Error('Cantidad no valida.');
  for(const value of [pieces,grams])if(value!==null&&(!pantry2N(value)||value<0||value>1e6))throw Error('Revisa piezas y peso.');
- if(pantry2Unit(id)==='g')grams=qty;
- if(pantry2Unit(id)==='ud'&&pieces===null)pieces=qty;
+ if(descriptor.unit==='g')grams=qty;
+ if(descriptor.unit==='ud'&&pieces===null)pieces=qty;
  return {qty:pantry2Round(qty),pieces,grams};
 }
 function pantry2Recount(id,qty,pieces=null,grams=null,min=null){
@@ -114,9 +114,150 @@ function pantry2Purchase(id,qty,pieces=null,grams=null){
  const next={id:uid(),foodId:id,...fields,active:true,at:new Date().toISOString()};
  p.purchases.push(next);return next;
 }
+
+/* A purchase marked ordered is not stock. Only the physical receipt creates
+   movements in the same v2 ledger as manual pantry purchases. */
+const pantry2CompraSource='dinofit-compra';
+const pantry2CompraKey=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').replace(/\s+/g,' ').trim();
+// Manufacturer-label energy already provided for each exact pack. Units and
+// labels match the Mercadona product cards; no price or quantity is inferred.
+const pantry2CompraTemplates=new Map([
+ ['mercadona-16712',{mercadonaProductId:'16712',name:'Maíz dulce Hacendado',unit:'g',factor:1,kcal:75,category:'veg'}],
+ ['mercadona-12753',{mercadonaProductId:'12753',name:'Bebida láctea sabor fresa y plátano +Proteínas 17,4 g 0% MG 0% azúcares añadidos',unit:'g',factor:1,kcal:48.4,category:'dairy'}],
+ ['mercadona-21329',{mercadonaProductId:'21329',name:'Bífidus con nueces y cereales probióticos Hacendado 0% MG',unit:'ud',factor:125,kcal:56.8,category:'dairy'}],
+]);
+const pantry2CompraMatchTemplate=descriptor=>(state?.foods||[]).find(f=>f.unit===descriptor.unit&&f.factor===descriptor.factor&&
+ (String(f.mercadonaProductId??'')===descriptor.mercadonaProductId||pantry2CompraKey(f.name)===pantry2CompraKey(descriptor.name)));
+const pantry2CompraCatalog=new Map([
+ ['burger de pollo',{productId:'2622',foodId:'burger-chicken',qty:6,pieces:6,grams:540}],
+ ['burger de vacuno y cerdo',{productId:'2872',foodId:'burger-mixed',qty:6,pieces:6,grams:540}],
+ ['salteado de pollo hacendado ultracongelado',{foodId:'saute-chicken',qty:450,grams:450}],
+ ['salteado de patata y salchicha frankfurt hacendado ultracongelado',{foodId:'saute-frank',qty:450,grams:450}],
+ ['cebolla troceada hacendado ultracongelada',{foodId:'onion',qty:450,grams:450}],
+ ['ajo troceado hacendado ultracongelado',{foodId:'garlic',qty:150,grams:150}],
+ ['queso lonchas cremoso light de vaca hacendado',{foodId:'cheese',qty:12,pieces:12,grams:300}],
+ ['flan de huevo +proteinas 10 g 0% mg 0% azucares anadidos',{foodId:'flan',qty:4,pieces:4,grams:400}],
+ ['yogur liquido frutos silvestres hacendado 0% mg 0% azucares anadidos',{foodId:'yogurt-berries',qty:1000,grams:1000}],
+ ['yogur liquido pina y coco hacendado 0% mg 0% azucares anadidos',{foodId:'yogurt-pineapple',qty:1000,grams:1000}],
+ ['refresco coca-cola zero azucar',{productId:'27449',foodId:'cola',qty:4000,verifiedPack:/^(?:pack )?(?:2 x 2 l|2 botellas de 2 l)$/}],
+ ['maiz dulce hacendado',{productId:'16712',foodId:'mercadona-16712',qty:420,pieces:3,grams:420,verifiedPack:/^(?:pack )?3 x 140 g(?: escurrido)?$/}],
+ ['bebida lactea sabor fresa y platano +proteinas 17,4 g 0% mg 0% azucares anadidos',{productId:'12753',foodId:'mercadona-12753',qty:1000,grams:1000,exactName:true}],
+ ['bifidus con nueces y cereales probioticos hacendado 0% mg',{productId:'21329',foodId:'mercadona-21329',qty:4,pieces:4,grams:500,exactName:true}],
+]);
+function pantry2CompraOptions(){
+ return (state?.foods||[]).filter(f=>f.id!=='burger-unknown')
+  .map(f=>({foodId:f.id,name:f.name,unit:f.unit})).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+}
+function pantry2SuggestCompra(item){
+ const match=pantry2CompraCatalog.get(pantry2CompraKey(item?.name));
+ if(!match||(!food(match.foodId)&&!pantry2CompraTemplates.has(match.foodId)))return null;
+ const {productId,verifiedPack=/(?:^|\s)(?:6 (?:ud\.?|uds\.?|unidades|piezas)|540 g)(?:$|\s)/,exactName=false,...fields}=match;
+ const suppliedId=String(item?.productId??'').trim();
+ if(suppliedId&&productId&&suppliedId!==productId)return null;
+ // A product name that also occurs on unpackaged goods isn't enough: require
+ // the exact SKU or an explicit known pack size on the shopping line.
+ if(productId&&!exactName&&!suppliedId&&!verifiedPack.test(pantry2CompraKey(item?.pack)))return null;
+ const descriptor=pantry2CompraTemplates.get(fields.foodId);
+ const equivalent=descriptor&&pantry2CompraMatchTemplate(descriptor);
+ return equivalent?{...fields,foodId:equivalent.id}:{...fields};
+}
+function pantry2SyncCompra(order){
+ const orderId=typeof order?.id==='string'?order.id.trim():'';
+ if(!orderId||orderId.length>120)throw Error('La compra no tiene un identificador válido.');
+ const received=order.purchased===true&&order.inventoryReceived===true;
+ const target=new Map(),catalogAdds=new Map();
+ let skipped=0;
+ if(received)for(const item of (Array.isArray(order.items)?order.items:[])){
+  const mapped=item?.inventory;
+  if(!mapped||mapped.foodId==='burger-unknown'){skipped++;continue}
+  let id=mapped.foodId,descriptor=food(id)||catalogAdds.get(id);
+  const template=pantry2CompraTemplates.get(id);
+  if(!descriptor&&template){
+   const exact=pantry2SuggestCompra(item);
+   // Never create an official SKU from an unrelated line or unverified size.
+   if(!exact||pantry2CompraCatalog.get(pantry2CompraKey(item.name))?.foodId!==id){skipped++;continue}
+   descriptor=food(exact.foodId)||{
+    ...template,id,min:template.kcal,max:template.kcal,stock:null,brand:'Hacendado',
+    note:'Formato de Mercadona ·'+(id==='mercadona-16712'?' peso escurrido':' etiqueta'),
+    url:'https://tienda.mercadona.es/product/'+template.mercadonaProductId
+   };
+   if(food(exact.foodId))id=exact.foodId;
+   else catalogAdds.set(id,descriptor);
+  }
+  if(!descriptor){skipped++;continue}
+  const qty=item.qty,amount=mapped.qty;
+  if(!Number.isSafeInteger(qty)||qty<1||!pantry2N(amount)||amount<=0)throw Error('Revisa la cantidad vinculada a Despensa.');
+  for(const extra of [mapped.pieces,mapped.grams])if(extra!=null&&(!pantry2N(extra)||extra<0))throw Error('Revisa las piezas o el peso vinculados a Despensa.');
+  const fields=pantry2Quantity(id,amount*qty,mapped.pieces==null?null:mapped.pieces*qty,mapped.grams==null?null:mapped.grams*qty,descriptor);
+  if(fields.qty<=0)throw Error('La cantidad vinculada a Despensa es demasiado pequeña.');
+  const prior=target.get(id);
+  const itemIds=typeof item.id==='string'&&item.id? [item.id] : [];
+  if(!prior){target.set(id,{...fields,itemIds});continue}
+  const sum=(a,b)=>a==null||b==null?null:a+b;
+  target.set(id,{...pantry2Quantity(id,prior.qty+fields.qty,sum(prior.pieces,fields.pieces),sum(prior.grams,fields.grams),descriptor),
+   itemIds:[...new Set([...prior.itemIds,...itemIds])].sort()});
+ }
+ const p=state?.pantry?.v2||(target.size?pantry2Data():null);
+ if(!p)return {posted:0,withdrawn:0,skipped,linked:0};
+ const movements=p.purchases;
+ const owned=movements.filter(m=>m.source===pantry2CompraSource&&m.sourceOrderId===orderId);
+ const priorFor=new Map(owned.map(m=>[m.foodId,m]));
+ const slots=new Set([...target.keys(),...priorFor.keys()]);
+ const updates=[];
+ const parsedAt=typeof order.inventoryReceivedAt==='string'?Date.parse(order.inventoryReceivedAt):NaN;
+ const at=Number.isFinite(parsedAt)?new Date(parsedAt).toISOString():new Date().toISOString();
+ for(const foodId of slots){
+  const old=priorFor.get(foodId),desired=target.get(foodId);
+  const active=old&&old.active!==false;
+  if(!desired&&!active)continue;
+  if(desired&&active&&old.qty===desired.qty&&old.pieces===desired.pieces&&old.grams===desired.grams){
+   if(JSON.stringify(old.sourceItemIds||[])!==JSON.stringify(desired.itemIds)){
+    updates.push({old,next:{...old,sourceItemIds:desired.itemIds},metadataOnly:true});
+   }
+   continue;
+  }
+  if(old&&p.stock[foodId]?.purchaseIds?.includes(old.id)){
+   throw Error('Esta compra de '+pantry2FoodName(foodId)+' ya está incluida en un recuento. Si ese recuento era incorrecto, deshazlo en Despensa antes de rectificar la recepción.');
+  }
+  if(active){
+   const balance=pantry2Stock(foodId);
+   if(!balance.known&&(!desired||desired.qty<old.qty)){
+    const since=String(old.at||'').slice(0,10);
+    const wasUsed=(state.logs||[]).some(l=>l.date>=since&&(l.parts||[]).some(x=>x.foodId===foodId&&x.qty>0))||
+     p.tuppers.some(t=>t.status==='prepared'&&String(t.preparedAt||t.date||'').slice(0,10)>=since&&(t.ingredients||[]).some(x=>x.foodId===foodId&&x.qty>0));
+    if(wasUsed)throw Error('Hay consumos de '+pantry2FoodName(foodId)+' posteriores a esta recepción y no hay un recuento para verificar la corrección.');
+   }
+   if(balance.known)for(const key of ['qty','pieces','grams']){
+    if(!pantry2N(old[key])||!pantry2N(balance[key]))continue;
+    const replacement=desired?desired[key]:0;
+    if(pantry2N(replacement)&&replacement<old[key]&&balance[key]+replacement-old[key]<-.001){
+     throw Error('Ya se han usado existencias de '+pantry2FoodName(foodId)+'. Corrige el recuento de Despensa antes de cambiar la recepción.');
+    }
+   }
+  }
+  if(!desired){updates.push({old,next:{...old,active:false}});continue}
+  const {itemIds,...fields}=desired;
+  const id=old?.id||'compra-order:'+encodeURIComponent(orderId)+':'+encodeURIComponent(foodId);
+  updates.push({old,next:{...old,id,foodId,...fields,active:true,at:old?.at||at,
+   source:pantry2CompraSource,sourceOrderId:orderId,sourceItemIds:itemIds}});
+ }
+ // Commit only after checking all corrections. No effects on manual movements,
+ // counts, recipes, meal logs, or legacy pantry data.
+ if(updates.length){
+  for(const newFood of catalogAdds.values())state.foods.push(newFood);
+  const byId=new Map(updates.filter(u=>u.old).map(u=>[u.old.id,u.next]));
+  p.purchases=movements.map(m=>byId.get(m.id)||m).concat(updates.filter(u=>!u.old).map(u=>u.next));
+ }
+ return {posted:updates.filter(u=>u.next.active&&!u.metadataOnly).length,withdrawn:updates.filter(u=>!u.next.active).length,skipped,linked:target.size};
+}
+globalThis.syncDinoCompraInventory=pantry2SyncCompra;
+globalThis.getDinoCompraInventoryOptions=pantry2CompraOptions;
+globalThis.suggestDinoCompraInventory=pantry2SuggestCompra;
+
 function pantry2UndoPurchase(id){
  const p=pantry2Data(),x=p.purchases.find(x=>x.id===id&&x.active!==false);
  if(!x)throw Error('Compra no encontrada.');
+ if(x.source===pantry2CompraSource)throw Error('Corrige esta recepción desde la sección Compra.');
  if(p.stock[x.foodId]?.purchaseIds?.includes(id))throw Error('Esta compra ya se incluyo en un recuento posterior.');
  const b=pantry2Stock(x.foodId);
  if(b.known&&b.qty-x.qty<-.001)throw Error('Ya se han usado esas existencias. Corrige el recuento primero.');
@@ -333,7 +474,9 @@ function pantry2Current(){
   '<label class="pantry2-search">Buscar en mi despensa<input type="search" id="pantrySearch" placeholder="Yogur, pollo, filetes..." value="'+htmlSafe(pantryQuery)+'"></label>'+
   '<div id="pantryCatalog">'+pantry2Cards()+'</div>'+
   (p.purchases.some(x=>x.active!==false)?'<details class="pantry2-history"><summary>Últimas compras y correcciones</summary>'+p.purchases.filter(x=>x.active!==false).slice(-8).reverse().map(x=>
-   '<div><span>'+htmlSafe(pantry2FoodName(x.foodId))+' · +'+pantryQty(x.qty,pantry2Unit(x.foodId))+'</span><button type="button" data-action="pantry2-undo-buy" data-id="'+x.id+'">Deshacer</button></div>').join('')+'</details>':'')+
+   '<div><span>'+htmlSafe(pantry2FoodName(x.foodId))+' · +'+pantryQty(x.qty,pantry2Unit(x.foodId))+
+   (x.source===pantry2CompraSource?' · Compra':'')+'</span>'+
+   (x.source===pantry2CompraSource?'':'<button type="button" data-action="pantry2-undo-buy" data-id="'+htmlSafe(x.id)+'">Deshacer</button>')+'</div>').join('')+'</details>':'')+
   ((state.pantry.batches||[]).length?'<details class="pantry2-history"><summary>Preparaciones anteriores (conservadas)</summary>'+(state.pantry.batches||[]).map(x=>'<div><span>Lote '+htmlSafe(x.date||'')+' · '+htmlSafe((x.mixed||0)+(x.plain||0))+' tuppers · '+htmlSafe(x.status||'planificado')+'</span></div>').join('')+'</details>':'')+
   ((state.pantry.shopping||[]).length?'<details class="pantry2-history"><summary>Lista de compra anterior (conservada)</summary>'+(state.pantry.shopping||[]).map(x=>'<div><span>'+htmlSafe(pantry2FoodName(x.foodId))+' · '+htmlSafe(pantryQty(x.qty||0,pantry2Unit(x.foodId)))+' · '+htmlSafe(x.status||'pendiente')+'</span></div>').join('')+'</details>':'');
 }

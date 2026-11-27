@@ -47,6 +47,77 @@ assert.equal(run('DinoPantry.stock("chicken").qty'),469);
 const merged=run('state.pantry');
 assert.ok(merged.inventory&&Array.isArray(merged.batches),'legacy pantry preserved');
 assert.equal(run('validateState(state)'),true,'document valid for persistence');
+
+{
+ const savedState=run('structuredClone(state)');
+ ctx.priorCompraTestState=savedState;
+ run("state=defaultDocument({user_metadata:{full_name:'Compra test'}})");
+ try{
+  run("DinoPantry.recount('burger-chicken',2,2,180);DinoPantry.recount('flan',0,0,0);DinoPantry.purchase('flan',1)");
+  run(`var freshOrder={id:'mercado-123',purchased:true,inventoryReceived:false,items:[
+   {id:'raw-1',name:'Burger de pollo',productId:'2622',qty:1,inventory:{foodId:'burger-chicken',qty:6,pieces:6,grams:540}},
+   {id:'raw-2',name:'Burger de pollo',productId:'2622',qty:1,inventory:{foodId:'burger-chicken',qty:6,pieces:6,grams:540}},
+   {id:'dairy',name:'Flan',qty:2,inventory:{foodId:'flan',qty:4,pieces:4,grams:400}},
+   {id:'unlinked',name:'Bolsas de basura',qty:1}
+  ]}`);
+  assert.equal(run('syncDinoCompraInventory(freshOrder).posted'),0,'confirmed order is not received stock');
+  assert.equal(run('DinoPantry.stock("burger-chicken").qty'),2);
+  assert.equal(run('DinoPantry.stock("flan").qty'),1);
+  run('freshOrder.inventoryReceived=true;freshOrder.inventoryReceivedAt="2026-11-28T09:00:00Z"');
+  assert.equal(run('syncDinoCompraInventory(freshOrder).posted'),2);
+  assert.equal(run('syncDinoCompraInventory(freshOrder).skipped'),1,'unrelated goods not added');
+  assert.equal(run('syncDinoCompraInventory(freshOrder).posted'),0,'same purchase twice is idempotent');
+  assert.equal(run('DinoPantry.stock("burger-chicken").qty'),14);
+  assert.equal(run('DinoPantry.stock("burger-chicken").grams'),1260);
+  assert.equal(run('DinoPantry.stock("flan").qty'),9);
+  assert.equal(run('DinoPantry.data().purchases.length'),3,'two order lines of one food share a stable receipt plus the other food and manual receipt');
+  assert.equal(run('DinoPantry.data().purchases[1].at'),'2026-11-28T09:00:00.000Z');
+  assert.equal(run('DinoPantry.data().purchases[1].sourceItemIds.join(",")'),'raw-1,raw-2');
+  assert.throws(()=>run('DinoPantry.undoPurchase(DinoPantry.data().purchases[1].id)'),/desde la sección Compra/);
+  assert.equal(run('freshOrder.items.shift();syncDinoCompraInventory(freshOrder).posted'),1,'editing a line replaces its contribution rather than adding more stock');
+  assert.equal(run('DinoPantry.stock("burger-chicken").qty'),8);
+  run('state.logs.push({id:"used",date:"2026-11-28",parts:[makePart("flan",4)]})');
+  assert.throws(()=>run('syncDinoCompraInventory({...freshOrder,purchased:false})'),/Ya se han usado existencias/);
+  assert.equal(run('DinoPantry.stock("burger-chicken").qty'),8,'unsafe correction does not partially withdraw other goods');
+  assert.equal(run('state.logs.length'),1,'correction does not remove consumption diary');
+  assert.equal(run('state.logs.pop();syncDinoCompraInventory({...freshOrder,purchased:false}).withdrawn'),2);
+  assert.equal(run('DinoPantry.stock("burger-chicken").qty'),2);
+  assert.equal(run('DinoPantry.stock("flan").qty'),1,'manual receipt stays');
+  assert.equal(run('syncDinoCompraInventory(freshOrder).posted'),2);
+  assert.equal(run('DinoPantry.data().purchases.length'),3,'receive again reactivates existing receipt ids');
+  run("DinoPantry.recount('flan',9)");
+  assert.throws(()=>run('syncDinoCompraInventory({...freshOrder,items:[]})'),/incluida en un recuento/);
+  assert.equal(run('DinoPantry.stock("flan").qty'),9);
+  assert.equal(run('suggestDinoCompraInventory({name:"Burger de pollo"})'),null,'unverified ambiguous format is not guessed');
+  assert.equal(run('suggestDinoCompraInventory({name:"Burger de pollo",productId:"2622"}).qty'),6);
+  assert.equal(run('suggestDinoCompraInventory({name:"Refresco Coca-Cola zero azúcar",productId:"27449"}).qty'),4000);
+  assert.equal(run('suggestDinoCompraInventory({name:"Filetes pechuga de pollo",productId:"2787"})'),null,'variable-weight poultry has no assumed mass');
+  run(`var maize={name:'Maíz dulce Hacendado',productId:'16712',qty:1};
+   maize.inventory=suggestDinoCompraInventory(maize);
+   var secondOrder={id:'mercado-124',purchased:true,inventoryReceived:false,items:[maize]}`);
+  assert.equal(run('food("mercadona-16712")'),undefined);
+  assert.equal(run('syncDinoCompraInventory(secondOrder).posted'),0);
+  assert.equal(run('food("mercadona-16712")'),undefined,'an ordered but not received pack does not create a catalog item');
+  assert.equal(run('syncDinoCompraInventory({...secondOrder,inventoryReceived:true}).linked'),1);
+  assert.equal(run('food("mercadona-16712").unit'),'g');
+  assert.equal(run('DinoPantry.stock("mercadona-16712").received'),420,'raw maize uses verified drained weight without assuming prior stock');
+  assert.equal(run('DinoPantry.stock("mercadona-16712").known'),false);
+  assert.equal(run('syncDinoCompraInventory({...secondOrder,inventoryReceived:true}).posted'),0);
+  assert.equal(run('state.foods.filter(f=>f.id==="mercadona-16712").length'),1);
+  run('state.logs.push({id:"maize-used",date:"2099-11-28",parts:[makePart("mercadona-16712",100)]})');
+  assert.throws(()=>run('syncDinoCompraInventory({...secondOrder,purchased:false})'),/consumos.+posteriores/,'uncounted stock with subsequent use cannot be silently reversed');
+  assert.equal(run('DinoPantry.stock("mercadona-16712").received'),420);
+  run(`var bif={name:'Bífidus con nueces y cereales probióticos Hacendado 0% MG',productId:'21329',qty:1};
+   state.foods.push({id:'custom-bifidus',name:bif.name,unit:'ud',factor:125,kcal:56.8,min:56.8,max:56.8,category:'dairy'});
+   bif.inventory={foodId:'mercadona-21329',qty:4,pieces:4,grams:500};
+   syncDinoCompraInventory({id:'mercado-125',purchased:true,inventoryReceived:true,items:[bif]})`);
+  assert.equal(run('food("mercadona-21329")'),undefined,'reuse an equivalent user-created product');
+  assert.equal(run('DinoPantry.stock("custom-bifidus").received'),4,'consumable receipt counts individual pots');
+  assert.equal(run('getDinoCompraInventoryOptions().some(f=>f.foodId==="custom-bifidus")'),true);
+  assert.equal(run('validateState(state)'),true);
+ }finally{run('state=priorCompraTestState');delete ctx.priorCompraTestState}
+}
+
 async function checkDiary(){
  const click=dataset=>ctx.actionHandler({target:{closest:()=>({dataset})}});
  run(`activeView='today';selectCalendarDay('2026-11-23',false);
@@ -170,4 +241,45 @@ async function checkDiary(){
  assert.match(card,/<span class="quick-copy"><strong>2 hamburguesas de pollo \+ verduras<\/strong><small class="quick-availability">1 disponible<\/small><\/span>/,'show the complete food name once and only availability below');
  console.log('PASS DinoFit pantry: diary, stock-only shortcuts, grouping, depletion, restock and compatible edits');
 }
-checkDiary().catch(error=>{console.error(error);process.exitCode=1});
+
+async function checkCompraPersistence(){
+ ctx.previousReceiptRuntime=run('({state,db,dirty,conflict,saveError,revision,changeCount,activeView})');
+ ctx.remotePurchaseDocument={revision:10,document:run('defaultDocument({user_metadata:{full_name:"Concurrent receipt"}})'),writes:0};
+ try{
+  run(`state=structuredClone(remotePurchaseDocument.document);revision=10;dirty=false;conflict=false;saveError='';activeView='pantry';
+   var stalePurchaseDocument=structuredClone(state);
+   var serverOrder={id:'mercado-concurrent',purchased:true,inventoryReceived:true,items:[
+    {id:'order-item',qty:1,inventory:{foodId:'flan',qty:4,pieces:4,grams:400}}
+   ]};
+   db={from(table){return {update(payload){let requiredRevision,owner; const q={
+    eq(key,value){if(key==='revision')requiredRevision=value;if(key==='user_id')owner=value;return q},
+    async select(){if(table!=='dinofit_documents'||owner!==account.id)throw Error('wrong document');
+     remotePurchaseDocument.writes++;
+     if(requiredRevision!==remotePurchaseDocument.revision)return {data:[]};
+     remotePurchaseDocument.document=structuredClone(payload.document);remotePurchaseDocument.revision++;
+     return {data:[{revision:remotePurchaseDocument.revision}]} }
+   };return q}}}};
+   syncDinoCompraInventory(serverOrder);
+   syncDinoCompraInventory(serverOrder);changed();`);
+  assert.deepEqual(Array.from(await run('Promise.all([persistNow(),persistNow()])')),[true,true],'rapid double save shares a revision-checked request');
+  assert.equal(ctx.remotePurchaseDocument.writes,1);
+  assert.equal(ctx.remotePurchaseDocument.document.pantry.v2.purchases.length,1);
+  const initialReceiptId=ctx.remotePurchaseDocument.document.pantry.v2.purchases[0].id;
+  run(`state=stalePurchaseDocument;revision=10;
+   syncDinoCompraInventory(serverOrder);changed();`);
+  assert.equal(await run('persistNow()'),false,'out-of-date device cannot overwrite the successful receipt');
+  assert.equal(run('conflict'),true);
+  assert.equal(ctx.remotePurchaseDocument.document.pantry.v2.purchases.length,1);
+  run(`state=structuredClone(remotePurchaseDocument.document);revision=remotePurchaseDocument.revision;dirty=false;conflict=false;saveError='';`);
+  assert.equal(run('syncDinoCompraInventory(serverOrder).posted'),0,'reloaded receipt replay is a no-op');
+  assert.equal(run('DinoPantry.stock("flan").received'),4);
+  assert.equal(await run('persistNow()'),true);
+  assert.equal(ctx.remotePurchaseDocument.writes,2,'no remote write for idempotent replay after load');
+  assert.equal(ctx.remotePurchaseDocument.document.pantry.v2.purchases[0].id,initialReceiptId);
+ }finally{
+  run(`({state,db,dirty,conflict,saveError,revision,changeCount,activeView}=previousReceiptRuntime);`);
+  delete ctx.previousReceiptRuntime;delete ctx.remotePurchaseDocument;
+ }
+}
+
+checkCompraPersistence().then(checkDiary).catch(error=>{console.error(error);process.exitCode=1});
