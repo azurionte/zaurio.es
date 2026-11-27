@@ -3,7 +3,16 @@ import {dueShopOccurrences,shopLocalDate,cleanPurchaseOrders,duePurchaseOrders,c
 const host='herramientas.zaurio.es', route='/api/dinofit/push/';
 const table='/dinofit_push_subscriptions', deliveries='/dinofit_push_deliveries';
 const accountKey='sb_publishable_D8CL0HI8vLfD5L3g5ZgUGg_HOM6Ixdk';
-const plain=(label)=>({title:'DinoFit · Compra',body:label,url:'/dinofit/#compra',urgency:'normal'});
+const reminderDateLabel=date=>date.slice(8,10)+'/'+date.slice(5,7)+'/'+date.slice(0,4);
+export function dinoPurchaseReminder(coverStart,coverEnd){
+ const start=typeof coverStart==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(coverStart)?coverStart:null;
+ const end=typeof coverEnd==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(coverEnd)?coverEnd:null;
+ const days=start&&end?(Date.parse(end)-Date.parse(start))/86400000:14;
+ const body=days>0&&days!==14
+   ? 'Haz la compra para el periodo del '+reminderDateLabel(start)+' al '+reminderDateLabel(end)+'.'
+   : 'Haz la compra para las próximas dos semanas.';
+ return {title:'Compra de Mercadona',body,url:'/dinofit/#compra',urgency:'normal'};
+}
 const trusted=(h,s)=>h===s||h.endsWith('.'+s);
 export function dinoEndpoint(value){
  if(typeof value!=='string'||value.length>2048)return null;
@@ -128,7 +137,7 @@ export async function handleDinoPush(request,env,helpers){
   }
   if(!existing)return reply(404,'Activa de nuevo los avisos para este dispositivo.');
   const key='test:'+Math.floor(Date.now()/60000);
-  const r=await send(admin,post,env,existing,key,plain('Este es tu aviso de prueba de DinoFit.'),120);
+  const r=await send(admin,post,env,existing,key,dinoPurchaseReminder(),120);
   if(r.status===409)return reply(429,'Espera un minuto antes de repetir la prueba.');
   if(r.status===404||r.status===410)return reply(410,'El permiso caducó. Desactiva y vuelve a activar los avisos.');
   return r.ok?json({ok:true}):reply(503,'No se pudo enviar la notificación de prueba.');
@@ -143,12 +152,12 @@ export async function runDinoPush(env,{admin,post},now=Date.now()){
    const saved=sub.dinofit_documents?.document?.shoppingPlan;
    const explicit=cleanPurchaseOrders(saved?.orders);
    for(const due of duePurchaseOrders(explicit,now)){
-    try{await send(admin,post,env,sub,'order:purchase:'+due.id,plain('Tienes una compra pendiente para preparar.'),600)}catch{console.error('DinoFit push delivery failed');}
+    try{await send(admin,post,env,sub,'order:purchase:'+due.id,dinoPurchaseReminder(due.coverStart,due.coverEnd),600)}catch{console.error('DinoFit push delivery failed');}
    }
    const covered=new Set(explicit.map(o=>o.coverStart));
    for(const due of dueShopOccurrences(saved?.plan,now)){
     if(covered.has(due.start))continue;
-    try{await send(admin,post,env,sub,'order:'+due.start,plain('Toca revisar tu lista y preparar el pedido.'),600)}catch{console.error('DinoFit push delivery failed');}
+    try{await send(admin,post,env,sub,'order:'+due.start,dinoPurchaseReminder(due.start,due.end),600)}catch{console.error('DinoFit push delivery failed');}
    }
   }
   if(subs.length<100)break;
