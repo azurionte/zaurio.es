@@ -210,12 +210,23 @@ function pantry2SyncCompra(order){
   const old=priorFor.get(foodId),desired=target.get(foodId);
   const active=old&&old.active!==false;
   if(!desired&&!active)continue;
-  if(desired&&active&&old.qty===desired.qty&&old.pieces===desired.pieces&&old.grams===desired.grams)continue;
+  if(desired&&active&&old.qty===desired.qty&&old.pieces===desired.pieces&&old.grams===desired.grams){
+   if(JSON.stringify(old.sourceItemIds||[])!==JSON.stringify(desired.itemIds)){
+    updates.push({old,next:{...old,sourceItemIds:desired.itemIds},metadataOnly:true});
+   }
+   continue;
+  }
   if(old&&p.stock[foodId]?.purchaseIds?.includes(old.id)){
-   throw Error('Esta compra de '+pantry2FoodName(foodId)+' ya está incluida en un recuento. Corrige el recuento de Despensa antes de cambiar la recepción.');
+   throw Error('Esta compra de '+pantry2FoodName(foodId)+' ya está incluida en un recuento. Si ese recuento era incorrecto, deshazlo en Despensa antes de rectificar la recepción.');
   }
   if(active){
    const balance=pantry2Stock(foodId);
+   if(!balance.known&&(!desired||desired.qty<old.qty)){
+    const since=String(old.at||'').slice(0,10);
+    const wasUsed=(state.logs||[]).some(l=>l.date>=since&&(l.parts||[]).some(x=>x.foodId===foodId&&x.qty>0))||
+     p.tuppers.some(t=>t.status==='prepared'&&String(t.preparedAt||t.date||'').slice(0,10)>=since&&(t.ingredients||[]).some(x=>x.foodId===foodId&&x.qty>0));
+    if(wasUsed)throw Error('Hay consumos de '+pantry2FoodName(foodId)+' posteriores a esta recepción y no hay un recuento para verificar la corrección.');
+   }
    if(balance.known)for(const key of ['qty','pieces','grams']){
     if(!pantry2N(old[key])||!pantry2N(balance[key]))continue;
     const replacement=desired?desired[key]:0;
@@ -237,7 +248,7 @@ function pantry2SyncCompra(order){
   const byId=new Map(updates.filter(u=>u.old).map(u=>[u.old.id,u.next]));
   p.purchases=movements.map(m=>byId.get(m.id)||m).concat(updates.filter(u=>!u.old).map(u=>u.next));
  }
- return {posted:updates.filter(u=>u.next.active).length,withdrawn:updates.filter(u=>!u.next.active).length,skipped,linked:target.size};
+ return {posted:updates.filter(u=>u.next.active&&!u.metadataOnly).length,withdrawn:updates.filter(u=>!u.next.active).length,skipped,linked:target.size};
 }
 globalThis.syncDinoCompraInventory=pantry2SyncCompra;
 globalThis.getDinoCompraInventoryOptions=pantry2CompraOptions;
