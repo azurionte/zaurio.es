@@ -263,7 +263,10 @@ async function persistCompraMutation(mutate){
     try{state=draft;result=mutate(draft);}
     catch(e){return {kind:'invalid',message:e.message};}
     finally{state=live;}
-    if(result.kind==='changed')return result;
+    if(result.kind==='changed'){
+     if(locallyStable()){state=latest.document;revision=latest.revision;saveError='';}
+     return result;
+    }
     if(result.kind==='already')return committed(latest.document,latest.revision,null);
     if(result.kind!=='apply')return {kind:'invalid'};
     validateState(draft);draft.savedAt=new Date().toISOString();

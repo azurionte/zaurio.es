@@ -660,7 +660,8 @@ function shopRender(){
    '<details id="compra-push-options" class="compra-push-options" '+(deviceActive?'':'hidden')+'><summary>Opciones de aviso</summary><div><button type="button" class="click sm" data-shop="test">Enviar aviso de prueba</button><button type="button" class="click sm" data-shop="unsubscribe">Desactivar en este dispositivo</button></div></details></div></header>'+
    '<p id="compra-push-status" class="compra-push-status" role="status">'+esc(pushStatus)+'</p>'+
    '<div class="compra-board-head"><div><h2>Mis compras</h2><p class="helper">Organiza tus pedidos y el período que cubren.</p></div><button type="button" class="click primary compra-plan-button" data-shop="new"><span aria-hidden="true">+</span> Planificar compra</button></div>'+
-   (queued.length?'<p class="compra-draft-bar" role="status">'+(queued.some(op=>op.blocked)?'Hay cambios pendientes que necesitan revisión.':'Hay compras pendientes de sincronizar.')+' <button type="button" class="click sm" data-shop="retry-outbox">Reintentar sincronización</button></p>':'')+
+   (queued.length?'<p class="compra-draft-bar" role="status">'+(queued.some(op=>op.blocked)?'Hay cambios pendientes que necesitan revisión.':'Hay compras pendientes de sincronizar.')+' <button type="button" class="click sm" data-shop="retry-outbox">Reintentar sincronización</button></p>'+queued.filter(o=>o.blocked).map(o=>
+    '<p class="compra-draft-bar">Compra del '+day(o.item.orderDate)+' <button type="button" class="click sm" data-shop="discard-blocked" data-id="'+esc(o.id)+'">Descartar cambio rechazado</button></p>').join(''):'')+
    (pending?'<p class="compra-draft-bar"><button class="click sm" type="button" data-shop="continue-draft">Continuar borrador</button> <button class="click sm" type="button" data-shop="discard-draft">Descartar borrador</button></p>':'')+
    (rows?'<div class="compra-board">'+rows+'</div>':'<div class="compra-empty">'+bag+'<strong>Todavía no hay compras guardadas</strong><p>Prepara la próxima y añade un aviso si lo necesitas.</p></div>')+
    legacyCalendar()+'<dialog id="compra-dialog" class="compra-dialog" aria-labelledby="compra-dialog-title"></dialog></section>';
@@ -847,7 +848,7 @@ async function saveOrder(item,expected,msg,form=null){
   return;
  }
  const messages={
-  changed:'Otra sesión cambió esta compra. No se ha sobrescrito. Tu borrador sigue aquí; revisa la versión actual antes de decidir.',
+  changed:'Otra sesión cambió esta compra. No se ha sobrescrito. Puedes cerrar el editor y descartar este cambio pendiente para abrir la versión guardada.',
   local:'Hay otros cambios de esta pestaña sin sincronizar. La compra no se ha escrito y el borrador sigue guardado.',
   session:'Vuelve a entrar en tu cuenta para guardar la compra.',
   retries:'La cuenta está cambiando en otra sesión. El cambio queda pendiente y se reintentará automáticamente.',
@@ -1020,6 +1021,11 @@ document.addEventListener('click',e=>{
  e.preventDefault();e.stopImmediatePropagation();
  const a=button.dataset.shop;
  if(a==='retry-outbox'){outboxDelay=8000;void resumeCompraOutbox(true);}
+ else if(a==='discard-blocked'){
+  const box=journal(),op=journalEntries().find(entry=>entry.id===button.dataset.id&&entry.blocked);
+  if(!box||!op||!confirm('¿Descartar este cambio rechazado y su borrador? La compra guardada no se modificará.'))return;
+  try{box.clear(op.id);forgetPurchaseDraft(op.item.id);render();}catch{toast('No se pudo retirar este cambio del dispositivo.');}
+ }
  else if(a==='continue-draft'){const draft=readPurchaseDraft();if(draft?.id)viewOrder(draft.expected,draft);}
  else if(a==='discard-draft'){const draft=readPurchaseDraft();if(draft&&confirm('¿Descartar este borrador?')){forgetPurchaseDraft(draft.id);render();}}
  else if(a==='new'){if(readPurchaseDraft()&&!confirm('Hay un borrador sin guardar. ¿Quieres descartarlo y empezar otra compra?'))return;const draft=readPurchaseDraft();if(draft)forgetPurchaseDraft(draft.id);viewOrder();}

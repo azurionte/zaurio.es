@@ -226,6 +226,8 @@ const blocked=await competing.run(draft=>applyPurchaseOrderChange(draft,edited,e
 assert.equal(blocked.kind,'changed');
 assert.equal(competing.writes(),0);
 assert.equal(competing.remote().document.shoppingPlan.orders[0].coverEnd,'2027-01-13');
+assert.equal(competing.live().state.shoppingPlan.orders[0].coverEnd,'2027-01-13');
+assert.equal(competing.live().revision,123);
 
 const pantryBlocked=casHarness(initial);
 const blockedPantry=await pantryBlocked.run(draft=>applyPurchaseOrderChange(draft,edited,existing,()=>{
