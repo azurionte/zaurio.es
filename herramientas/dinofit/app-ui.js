@@ -517,6 +517,27 @@ function duePurchaseOrders(raw,now=Date.now()){
   .filter(o=>o.when!==null&&o.when<=now&&now-o.when<12*3600000);
 }
 
+function nextPurchaseDates(raw,today=shopLocalDate()){
+ const fallback=addShopDays(today,3);
+ const scheduled=cleanPurchaseOrders(Array.isArray(raw)?raw.filter(x=>!x?.cancelled&&!x?.canceled):[])
+   .filter(x=>x.coverEnd>today).sort((a,b)=>a.coverStart.localeCompare(b.coverStart));
+ // Follow the current or imminent purchase, filling the first gap before a later booking.
+ let coverStart=scheduled[0]?.coverStart<=addShopDays(today,7)?scheduled[0].coverStart:fallback;
+ for(const order of scheduled){
+  if(order.coverStart>coverStart)break;
+  if(order.coverEnd>coverStart)coverStart=order.coverEnd;
+ }
+ const next=scheduled.find(x=>x.coverStart>coverStart);
+ const normalEnd=addShopDays(coverStart,14);
+ const coverEnd=next&&next.coverStart<normalEnd?next.coverStart:normalEnd;
+ return {coverStart,coverEnd,...purchaseLeadDates(coverStart)};
+}
+function purchaseLeadDates(coverStart){
+ const weekday=new Date(coverStart+'T00:00:00Z').getUTCDay();
+ const orderDate=addShopDays(coverStart,-(((weekday+3)%7)||7));
+ const saturday=addShopDays(orderDate,2);
+ return {orderDate,deliveryDate:saturday<coverStart?saturday:addShopDays(coverStart,-1),reminderDate:orderDate};
+}
 const eur=new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'});
 const esc=x=>htmlSafe(String(x??''));
 const day=x=>x?x.split('-').reverse().join('/'):'—';
@@ -559,7 +580,7 @@ function shopRender(){
    const estimate=x.totalCents==null?priceText(purchaseEstimate(x.items)):eur.format(x.totalCents/100);
    const onList=x.purchased?'<span class="compra-stock-note">'+(x.inventoryReceived?'Recepción confirmada':x.deliveryDate?'Entrega prevista el '+day(x.deliveryDate):'Por añadir a Despensa')+'</span>':
      (x.reminderDate?'<span class="compra-stock-note">Aviso '+day(x.reminderDate)+' · 11:30</span>':'');
-   return '<article class="compra-card"><div class="compra-card-main"><button type="button" class="compra-open" data-shop="edit" data-id="'+id+'">Compra del '+day(x.coverStart)+' al '+day(x.coverEnd)+'</button>'+
+   return '<article class="compra-card"><div class="compra-card-main"><button type="button" class="compra-open" data-shop="edit" data-id="'+id+'">Compra del '+day(x.coverStart)+' al '+day(addShopDays(x.coverEnd,-1))+'</button>'+
     '<div class="compra-card-info"><span>Pedido del '+day(x.orderDate)+'</span><span>'+n+' '+(n===1?'producto':'productos')+'</span><span>'+esc(estimate)+' estimados</span></div>'+onList+'</div>'+
     '<div class="compra-card-actions"><button type="button" class="compra-state" data-shop="toggle" data-id="'+id+'" aria-pressed="'+x.purchased+'" title="'+(x.purchased?'Marcar pendiente':'Marcar comprado')+'">'+(x.purchased?'Comprado':'Pendiente')+'</button>'+
     (x.purchased&&!x.inventoryReceived?'<button type="button" class="compra-receive" data-shop="receive" data-id="'+id+'">Añadir a Despensa</button>':'')+'</div></article>';
@@ -589,15 +610,16 @@ function purchaseRow(item){
 }
 function viewOrder(existing=null){
  const d=document.querySelector('#compra-dialog');if(!d)return;
- const today=shopLocalDate(),start=existing?.coverStart||addShopDays(today,3),last=usualPurchase(currentShop().orders);
+ const suggested=existing||nextPurchaseDates(currentShop().orders),start=suggested.coverStart,last=usualPurchase(currentShop().orders);
+ const lastDay=addShopDays(suggested.coverEnd,-1);
  const oldList=!last&&Array.isArray(currentShop().items)&&currentShop().items.length>0;
  const legacyItems=oldList?'<button class="click" type="button" data-shop="previous-list">Recuperar lista anterior</button>':'';
  const hasReceipt=existing?.totalCents!=null;
  d.innerHTML='<form id="compra-order" data-id="'+esc(existing?.id)+'">'+
  '<header class="compra-modal-head"><div><p class="eyebrow">'+(existing?'DETALLE DEL PEDIDO':'NUEVO PEDIDO')+'</p><h2 id="compra-dialog-title">'+(existing?'Compra del '+day(start):'Planificar compra')+'</h2></div><button class="compra-close" type="button" data-shop="close" aria-label="Cerrar">×</button></header>'+
  '<div class="compra-modal-body">'+
- '<details class="compra-period"><summary>Período que cubre <span id="compra-period-label">'+day(start)+' – '+day(existing?.coverEnd||addShopDays(start,14))+'</span></summary><div class="compra-dates">'+dates('coverStart','Desde',start,true)+dates('coverEnd','Hasta',existing?.coverEnd||addShopDays(start,14),true)+'</div></details>'+
- '<div class="compra-dates compra-order-dates">'+dates('orderDate','Fecha del pedido',existing?.orderDate||today,true)+dates('deliveryDate','Fecha de entrega (opcional)',existing?.deliveryDate)+dates('reminderDate','Fecha del recordatorio (opcional)',existing?.reminderDate)+'</div>'+
+ '<details class="compra-period"><summary>Período que cubre <span id="compra-period-label">'+day(start)+' – '+day(lastDay)+'</span></summary><div class="compra-dates">'+dates('coverStart','Desde',start,true)+dates('coverEnd','Hasta',lastDay,true)+'</div></details>'+
+ '<div class="compra-dates compra-order-dates">'+dates('orderDate','Fecha del pedido',suggested.orderDate,true)+dates('deliveryDate','Fecha de entrega (opcional)',suggested.deliveryDate)+dates('reminderDate','Fecha del recordatorio (opcional)',suggested.reminderDate)+'</div>'+
  '<p class="helper compra-time">Los avisos se envían a las 11:30, hora peninsular.</p>'+
  '<div class="compra-products-head"><h3>Productos</h3><div class="compra-actions"><button class="click" type="button" data-shop="usual" '+(last?'':'disabled title="Todavía no hay una compra marcada como comprada"')+'>Cargar compra usual</button>'+
  '<button class="click" type="button" data-shop="add">Añadir producto</button><button class="click" type="button" data-shop="clear">Empezar de cero</button>'+legacyItems+'</div></div>'+
@@ -607,6 +629,17 @@ function viewOrder(existing=null){
  '<p id="compra-form-error" class="compra-form-error" role="alert" hidden></p></div>'+
  '<footer class="compra-modal-foot"><div class="compra-total"><span>Subtotal estimado de productos</span><output id="compra-total"></output></div><button class="click primary">Guardar compra</button></footer></form>';
  d.addEventListener('close',()=>productObserver?.disconnect(),{once:true});
+ const editor=d.querySelector('#compra-order');
+ let previousLead=purchaseLeadDates(start);
+ editor.elements.coverStart.addEventListener('change',()=>{
+  const value=editor.elements.coverStart.value;if(!value)return;
+  const nextLead=purchaseLeadDates(value);
+  for(const key of ['orderDate','deliveryDate','reminderDate']){
+   const field=editor.elements[key];
+   if(field.value===previousLead[key])field.value=nextLead[key];
+  }
+  previousLead=nextLead;totals();
+ });
  d.showModal();totals();prepareProductImages(d);
 }
 function collected(el){
@@ -668,14 +701,14 @@ document.addEventListener('submit',e=>{
    return item;
   });
   if(!items.length){formError(form,'Añade al menos un producto.');return;}
-  if(data.coverEnd<=data.coverStart){formError(form,'El final del período debe ser posterior al inicio.');form.querySelector('.compra-period').open=true;return;}
+  if(data.coverEnd<data.coverStart){formError(form,'El último día no puede ser anterior al inicio.');form.querySelector('.compra-period').open=true;return;}
   if(data.deliveryDate&&data.deliveryDate<data.orderDate){formError(form,'La entrega no puede ser anterior al pedido.');return;}
   if(!previous?.purchased&&data.reminderDate&&data.reminderDate!==previous?.reminderDate&&madridTime(data.reminderDate,PURCHASE_REMINDER_TIME)<=Date.now()){
    formError(form,'Elige una fecha cuyo aviso de las 11:30 todavía no haya pasado.');return;
   }
   const two=x=>x.map(z=>[z.name,z.pack,z.qty,z.cents]);
   const same=previous&&JSON.stringify(two(previous.items))===JSON.stringify(two(items));
-  const item=cleanPurchaseOrder({...previous,...data,id:previous?.id||crypto.randomUUID(),items,deliveryDate:data.deliveryDate||null,reminderDate:data.reminderDate||null,
+  const item=cleanPurchaseOrder({...previous,...data,coverEnd:addShopDays(data.coverEnd,1),id:previous?.id||crypto.randomUUID(),items,deliveryDate:data.deliveryDate||null,reminderDate:data.reminderDate||null,
    totalCents:same?previous.totalCents:undefined,feesCents:same?previous.feesCents:undefined});
   if(!item){formError(form,'Revisa el nombre, las cantidades, los precios y las fechas.');return;}
   void saveOrder(item,item.reminderDate&&!item.purchased?'Compra guardada con aviso a las 11:30.':'Compra guardada.');
@@ -796,6 +829,16 @@ function setDeviceActive(value){
  if(button){button.disabled=value;button.innerHTML=promptStatus();}
  if(options)options.hidden=!value;
 }
+function removePurchaseProduct(button){
+ const row=button.closest('.compra-item');if(!row)return;
+ const dialog=row.closest('.compra-dialog');
+ const scrolls=[dialog,dialog?.querySelector('.compra-modal-body')].filter(Boolean).map(el=>[el,el.scrollTop]);
+ const nearest=row.nextElementSibling||row.previousElementSibling;
+ const focus=nearest?.querySelector('[data-shop="remove"]')||dialog?.querySelector('[data-shop="add"]');
+ row.remove();totals();
+ focus?.focus({preventScroll:true});
+ for(const [el,top] of scrolls)el.scrollTop=Math.min(top,Math.max(0,el.scrollHeight-el.clientHeight));
+}
 function reportPush(msg){pushStatus=msg;const el=document.querySelector('#compra-push-status');if(el)el.textContent=msg}
 document.addEventListener('click',e=>{
  const button=e.target.closest('[data-shop]');if(!button)return;
@@ -818,7 +861,7 @@ document.addEventListener('click',e=>{
   if(el.children.length>=100){toast('La lista admite hasta 100 productos.');return}
   el.insertAdjacentHTML('beforeend',purchaseRow());el.lastElementChild.querySelector('input').focus();totals();
  }else if(a==='remove'){
-  button.closest('.compra-item').remove();totals();document.querySelector('#compra-order [data-shop="add"]')?.focus();
+  removePurchaseProduct(button);
  }else if(a==='usual'){const latest=usualPurchase(currentShop().orders);if(latest)replaceProducts(latest.items)}
  else if(a==='previous-list')replaceProducts(currentShop().items||[]);
  else if(a==='clear')replaceProducts([]);

@@ -117,8 +117,41 @@ Object.assign(browserSandbox,{state:{shoppingPlan:{orders:[purchased,explicit]}}
 const view=browserSandbox.renderDinoCompra();
 assert.match(view,/Planificar compra/);
 assert.match(view,/Activar notificaciones/);
-assert.match(view,/Compra del 29\/12\/2026 al 12\/01\/2027/);
+assert.match(view,/Compra del 29\/12\/2026 al 11\/01\/2027/);
 assert.match(view,/Comprado/);
 assert.match(view,/Pendiente/);
 assert.match(view,/Añadir a Despensa/);
 console.log('Compra: historial, clonación, imágenes oficiales y aviso por pedido a las 11:30 con deduplicación: OK');
+
+const {nextPurchaseDates,addShopDays,purchaseLeadDates}=await import('../compra-core.mjs');
+const booked={...explicit,id:'dec-1',orderDate:'2026-11-27',deliveryDate:'2026-11-28',
+ coverStart:'2026-12-01',coverEnd:'2026-12-15',purchased:true};
+assert.deepEqual(nextPurchaseDates([booked],'2026-11-27'),{
+ coverStart:'2026-12-15',coverEnd:'2026-12-29',orderDate:'2026-12-10',deliveryDate:'2026-12-12',reminderDate:'2026-12-10'
+});
+const late={...explicit,id:'dec-20',orderDate:'2026-12-17',deliveryDate:null,coverStart:'2026-12-20',coverEnd:'2027-01-03',reminderDate:null};
+assert.deepEqual(nextPurchaseDates([late,booked],'2026-11-27'),{
+ coverStart:'2026-12-15',coverEnd:'2026-12-20',orderDate:'2026-12-10',deliveryDate:'2026-12-12',reminderDate:'2026-12-10'
+});
+assert.equal(nextPurchaseDates([booked,{...late,cancelled:true}],'2026-11-27').coverEnd,'2026-12-29');
+assert.equal(nextPurchaseDates([],'2026-11-30').orderDate,'2026-11-26');
+assert.equal(addShopDays(nextPurchaseDates([booked],'2026-11-27').coverEnd,-1),'2026-12-28');
+
+assert.deepEqual(purchaseLeadDates('2026-12-11'),{
+ orderDate:'2026-12-10',deliveryDate:'2026-12-10',reminderDate:'2026-12-10'
+});
+assert.deepEqual(purchaseLeadDates('2026-12-17'),{
+ orderDate:'2026-12-10',deliveryDate:'2026-12-12',reminderDate:'2026-12-10'
+});
+
+const removeSource=appUi.match(/function removePurchaseProduct\(button\)\{[\s\S]+?(?=\nfunction reportPush)/)?.[0];
+assert.ok(removeSource);
+const offsets={scrollTop:510,scrollHeight:900,clientHeight:320},calls=[];
+const modal={scrollTop:0,scrollHeight:700,clientHeight:700,querySelector:()=>offsets};
+const right={querySelector:()=>({focus(options){calls.push(options.preventScroll);offsets.scrollTop=0;}})};
+const rowMiddle={closest:()=>modal,nextElementSibling:right,remove(){calls.push('removed');}};
+runInNewContext(removeSource+'\nremovePurchaseProduct(button)',{
+ button:{closest:()=>rowMiddle},totals(){calls.push('recalculate');}
+});
+assert.deepEqual(calls,['removed','recalculate',true]);
+assert.equal(offsets.scrollTop,510);

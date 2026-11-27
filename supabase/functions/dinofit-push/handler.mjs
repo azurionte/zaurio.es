@@ -1,4 +1,4 @@
-import {dueShopOccurrences,shopLocalDate,cleanPurchaseOrders,duePurchaseOrders,cleanPurchaseImage} from '../../../herramientas/dinofit/compra-core.mjs';
+import {dueShopOccurrences,shopLocalDate,addShopDays,cleanPurchaseOrders,duePurchaseOrders,cleanPurchaseImage} from '../../../herramientas/dinofit/compra-core.mjs';
 
 const host='herramientas.zaurio.es', route='/api/dinofit/push/';
 const table='/dinofit_push_subscriptions', deliveries='/dinofit_push_deliveries';
@@ -9,7 +9,7 @@ export function dinoPurchaseReminder(coverStart,coverEnd){
  const end=typeof coverEnd==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(coverEnd)?coverEnd:null;
  const days=start&&end?(Date.parse(end)-Date.parse(start))/86400000:14;
  const body=days>0&&days!==14
-   ? 'Haz la compra para el periodo del '+reminderDateLabel(start)+' al '+reminderDateLabel(end)+'.'
+   ? 'Haz la compra para el periodo del '+reminderDateLabel(start)+' al '+reminderDateLabel(addShopDays(end,-1))+'.'
    : 'Haz la compra para las próximas dos semanas.';
  return {title:'Compra de Mercadona',body,url:'/dinofit/#compra',urgency:'normal'};
 }
