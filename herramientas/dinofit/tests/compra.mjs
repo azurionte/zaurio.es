@@ -320,3 +320,35 @@ assert.equal(usual.id,'latest-plan');
 assert.equal(usual.purchased,false);
 assert.deepEqual(usual.items.map(item=>[item.name,item.qty]),[['Compra editada',2]]);
 assert.equal(usualPurchase([{...latestPlanned,cancelled:true},purchased]).id,purchased.id);
+
+
+import {purchaseCatalog,findPurchaseCatalogDraftIndex} from '../compra-core.mjs';
+const catalogLine=(productId,name,pack,cents,extra={})=>({productId,name,pack,cents,qty:1,...extra});
+const catalogOld={...explicit,id:'catalog-old',items:[
+ catalogLine('demo-porridge','Avena de ensayo','Paquete 500 g',155,{imageUrl}),
+ catalogLine('demo-other','Producto ambiguo','Bandeja',180),
+ catalogLine('demo-third','Producto ambiguo','Bandeja',210),
+ catalogLine(undefined,'Sin SKU de ensayo','Botella 1 l',300),
+ catalogLine(undefined,'Sin SKU de ensayo','Botella 2 l',450)
+]};
+const catalogNew={...catalogOld,id:'catalog-new',orderDate:'2026-12-22',items:[
+ catalogLine(undefined,' AVENA de ensayo ','Paquete 500 g',170),
+ catalogLine('demo-other','Producto ambiguo','Bandeja',199,{category:'Etiqueta antigua'}),
+ catalogLine(undefined,'Producto ambiguo','Bandeja',275)
+]};
+const catalogFixture=purchaseCatalog([catalogOld,catalogNew],{'demo-porridge':'Cereales verificados','demo-other':'Oficial'});
+assert.equal(catalogFixture.length,6);
+const oats=catalogFixture.find(e=>e.product.productId==='demo-porridge');
+assert.equal(oats.product.cents,170);
+assert.equal(oats.priceDate,'2026-12-22');
+assert.equal(oats.product.category,'Cereales verificados');
+assert.match(oats.product.imageUrl,/prod-mercadona\.imgix\.net/);
+assert.equal(oats.product.qty,1);
+assert.equal(catalogFixture.find(e=>e.product.productId==='demo-other').product.category,'Oficial');
+assert.equal(findPurchaseCatalogDraftIndex([{name:'Avena de ensayo',pack:'Paquete 500 g'}],oats,catalogFixture),0);
+assert.equal(findPurchaseCatalogDraftIndex([{name:'Avena de ensayo',pack:'Paquete 1 kg'}],oats,catalogFixture),-1);
+assert.equal(findPurchaseCatalogDraftIndex([{name:'Avena de ensayo',pack:'Paquete 500 g',productId:'different-known-sku'}],oats,catalogFixture),-1);
+assert.equal(findPurchaseCatalogDraftIndex([{name:'Producto ambiguo',pack:'Bandeja'}],catalogFixture.find(e=>e.product.productId==='demo-other'),catalogFixture),-1);
+assert.equal(findPurchaseCatalogDraftIndex([{name:'Producto ambiguo',pack:'Bandeja',productId:'demo-other'}],catalogFixture.find(e=>e.product.productId==='demo-other'),catalogFixture),0);
+assert.equal(purchaseCatalog([{...catalogNew,items:[catalogLine('demo-porridge','Avena de ensayo','Paquete 500 g',null)]}])[0].priceDate,null);
+console.log('Compra catálogo: historia de pedidos, formatos, SKU sin mezclas, precio registrado, fotos y categorías verificadas: OK');

@@ -68,3 +68,43 @@
  .compra-item .compra-item-name{grid-column:2/-1}.compra-item-qty{grid-column:1/3}.compra-item-price{grid-column:3}.compra-trash{grid-column:4}
  .compra-line-total{grid-column:1/-1}.compra-products-head{display:grid;justify-content:stretch;gap:.45rem}.compra-actions{justify-content:flex-start}
 }
+
+
+/* Product picker: the same native stacking as the planner, with a smaller
+   viewport and product photos taking priority over controls. */
+.compra-catalog-dialog{width:min(42rem,calc(100% - 1.4rem),var(--compra-plan-width,42rem));max-height:min(76dvh,var(--compra-plan-height,76dvh));overflow:hidden}
+.compra-catalog-dialog[open]{display:flex;flex-direction:column}
+.compra-catalog-dialog::backdrop{background:rgba(3,8,7,.58);backdrop-filter:blur(2px)}
+.compra-catalog-dialog .compra-modal-head{flex:none;position:relative;padding:.63rem .82rem}
+.compra-catalog-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:.62rem .78rem .85rem;scrollbar-gutter:stable}
+.compra-catalog-note{margin:0 0 .52rem;font-size:.82rem;color:#bdd2c2}
+.compra-catalog-search,.compra-catalog-manual label{display:grid;gap:.22rem;font-size:.81rem}
+.compra-catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem;margin:.48rem 0 .73rem}
+.compra-catalog-card{display:flex;flex-direction:column;gap:.4rem;min-width:0;background:#142821;border:1px solid var(--compra-edge);border-radius:12px;padding:.38rem}
+.compra-catalog-photo{width:100%;height:auto;aspect-ratio:1/1;box-sizing:border-box;overflow:hidden}
+.compra-catalog-photo img{width:100%;height:100%}
+.compra-catalog-photo svg{width:2.25rem;height:2.25rem}
+.compra-catalog-copy{display:flex;min-width:0;flex:1;flex-direction:column;justify-content:flex-start;gap:.23rem;padding-inline:.12rem}
+.compra-catalog-copy h3,.compra-catalog-copy p{margin:0;overflow-wrap:anywhere}
+.compra-catalog-copy h3{font-size:.87rem;line-height:1.22}
+.compra-catalog-copy p,.compra-catalog-price small{font-size:.72rem;color:#b4d0bd}
+.compra-catalog-price{display:grid;gap:.1rem;margin-top:auto}
+.compra-catalog-price strong{font-size:.96rem;color:#e0f6e6}
+.compra-catalog-card .click{align-self:stretch;text-align:center;min-height:40px;margin-top:auto;padding:.3rem .38rem;font-size:.80rem}
+.compra-catalog-feedback{min-height:1.2em;color:#d9f2df;font-size:.79rem;margin:.44rem 0 .25rem}
+.compra-catalog-empty{grid-column:1/-1;color:#c0d6c6;margin:.35rem .15rem}
+.compra-catalog-manual{border-top:1px solid var(--compra-edge);padding-top:.58rem;font-size:.82rem}
+.compra-catalog-manual summary{cursor:pointer;color:#c9dfcf}
+.compra-catalog-manual form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;align-items:end;margin-top:.45rem}
+.compra-catalog-manual form .click{min-height:39px}
+@media(max-width:530px){
+ .compra-catalog-dialog .compra-modal-head{padding-inline:.59rem}
+ .compra-catalog-body{padding-inline:.54rem;scrollbar-gutter:auto}
+ .compra-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.40rem}
+ .compra-catalog-card{padding:.30rem}.compra-catalog-copy h3{font-size:.78rem}
+}
+
+.compra-catalog-tabs{display:flex;gap:.28rem;flex-wrap:wrap;margin:.45rem 0}
+.compra-catalog-tabs button{font:inherit;font-size:.75rem;color:#c1d9ca;background:#172a24;border:1px solid #6c927982;border-radius:10px;min-height:35px;padding:.27rem .58rem;cursor:pointer}
+.compra-catalog-tabs button[aria-selected="true"]{color:#dff5e4;background:#273f32;border-color:#a2d5ab;text-decoration:underline;text-underline-offset:.17em}
+@media(max-width:530px){.compra-catalog-tabs button{min-height:39px}}

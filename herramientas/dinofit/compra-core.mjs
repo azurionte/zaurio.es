@@ -79,7 +79,7 @@ export function cleanPurchaseItem(item){
  if(!name||name.length>100||!Number.isInteger(item.qty)||item.qty<1||item.qty>999||
  (item.cents!=null&&(!Number.isInteger(item.cents)||item.cents<0||item.cents>100000)))return null;
  const inventory=item.inventory;
- return {...(typeof item.id==='string'&&purchaseId.test(item.id)?{id:item.id}:{}),name,...(/^[A-Za-z0-9_-]{1,80}$/.test(String(item.productId||''))?{productId:String(item.productId)}:{}),pack:typeof item.pack==='string'?item.pack.trim().slice(0,60):'',qty:item.qty,cents:item.cents??null,
+ return {...(typeof item.id==='string'&&purchaseId.test(item.id)?{id:item.id}:{}),name,...(typeof item.category==='string'&&item.category.trim()?{category:item.category.trim().slice(0,80)}:{}),...(/^[A-Za-z0-9_-]{1,80}$/.test(String(item.productId||''))?{productId:String(item.productId)}:{}),pack:typeof item.pack==='string'?item.pack.trim().slice(0,60):'',qty:item.qty,cents:item.cents??null,
   ...(cleanPurchaseImage(item.imageUrl)?{imageUrl:cleanPurchaseImage(item.imageUrl)}:{}),
   ...(/^[a-z0-9-]{1,80}$/.test(inventory?.foodId||'')&&typeof inventory.qty==='number'&&Number.isFinite(inventory.qty)&&inventory.qty>0&&inventory.qty<=100000?{
     inventory:{foodId:inventory.foodId,qty:inventory.qty,...Object.fromEntries(['pieces','grams']
@@ -186,4 +186,54 @@ export function makeCompraJournal(storage,owner){
   },
   clear(id){if(purchaseId.test(id))storage.removeItem(prefix+id);}
  };
+}
+
+
+/* Catalog identity keeps the whole variant and sale format. We only infer a
+   missing SKU when that exact label has one unambiguous saved SKU. */
+export const purchaseLabelPart=value=>String(value??'').normalize('NFKC').toLocaleLowerCase('es')
+ .replace(/[’‘]/g,"'").replace(/[‐‑‒–—]/g,'-').trim().replace(/\s+/g,' ');
+const shelfLabel=item=>JSON.stringify([purchaseLabelPart(item?.name),purchaseLabelPart(item?.pack)]);
+export function purchaseCatalog(raw,officialCategories={}){
+ const all=cleanPurchaseOrders(raw).sort((a,b)=>b.orderDate.localeCompare(a.orderDate));
+ const labels=new Map(), groups=new Map();
+ for(const order of all)for(const item of order.items){
+  if(!item.productId)continue;
+  const label=shelfLabel(item),known=labels.get(label)||new Set();
+  known.add(item.productId);labels.set(label,known);
+ }
+ for(const order of all)for(const item of order.items){
+  const label=shelfLabel(item),known=labels.get(label);
+  const productId=item.productId||(known?.size===1?[...known][0]:null);
+  const key=productId?'sku:'+productId:'label:'+label;
+  let entry=groups.get(key);
+  if(!entry){
+   const {id,qty,...product}=item;
+   entry={key,product:{...product,...(productId?{productId}:{}),qty:1},priceDate:item.cents===null?null:order.orderDate,labels:new Set()};
+   groups.set(key,entry);
+  }
+  entry.labels.add(label);
+  if(item.cents!==null&&entry.priceDate===null){entry.product.cents=item.cents;entry.priceDate=order.orderDate;}
+  if(!entry.product.imageUrl&&item.imageUrl)entry.product.imageUrl=item.imageUrl;
+  if(!entry.product.inventory&&item.inventory)entry.product.inventory=item.inventory;
+  if(!entry.product.category&&item.category)entry.product.category=item.category;
+ }
+ return [...groups.values()].map(entry=>{
+  const id=entry.product.productId;
+  const category=id&&officialCategories&&typeof officialCategories==='object'&&Object.hasOwn(officialCategories,id)?officialCategories[id]:null;
+  if(typeof category==='string'&&category.trim())entry.product.category=category.trim().slice(0,80);
+  return {...entry,labels:[...entry.labels]};
+ });
+}
+export function findPurchaseCatalogDraftIndex(items,entry,catalog){
+ const {product}=entry;
+ const exact=product.productId?items.findIndex(item=>item.productId===product.productId):-1;
+ if(exact>=0)return exact;
+ return items.findIndex(item=>{
+  if(item.productId&&product.productId)return false;
+  const label=shelfLabel(item);
+  if(!entry.labels.includes(label))return false;
+  // Do not guess which SKU an indistinguishable legacy label refers to.
+  return catalog.filter(x=>x.labels.includes(label)).length===1;
+ });
 }
